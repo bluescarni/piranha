@@ -29,6 +29,7 @@
 #include <functional>
 #include <initializer_list>
 #include <limits>
+#include <list>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -92,6 +93,36 @@ struct constructor_tester
 			}
 			BOOST_CHECK_NO_THROW(m0 = m1);
 			BOOST_CHECK_NO_THROW(m0 = std::move(m1));
+			// From range and symbol set.
+			std::vector<int> v1;
+			m0 = monomial_type(v1.begin(),v1.end(),symbol_set{});
+			BOOST_CHECK_EQUAL(m0.size(),0u);
+			v1 = {-1};
+			m0 = monomial_type(v1.begin(),v1.end(),symbol_set{symbol{"x"}});
+			BOOST_CHECK_EQUAL(m0.size(),1u);
+			BOOST_CHECK_EQUAL(m0[0],-1);
+			v1 = {-1,2};
+			m0 = monomial_type(v1.begin(),v1.end(),symbol_set{symbol{"x"},symbol{"y"}});
+			BOOST_CHECK_EQUAL(m0.size(),2u);
+			BOOST_CHECK_EQUAL(m0[0],-1);
+			BOOST_CHECK_EQUAL(m0[1],2);
+			BOOST_CHECK_THROW(m0 = monomial_type(v1.begin(),v1.end(),symbol_set{symbol{"x"}}),std::invalid_argument);
+			std::list<int> l1;
+			m0 = monomial_type(l1.begin(),l1.end(),symbol_set{});
+			BOOST_CHECK_EQUAL(m0.size(),0u);
+			l1 = {-1};
+			m0 = monomial_type(l1.begin(),l1.end(),symbol_set{symbol{"x"}});
+			BOOST_CHECK_EQUAL(m0.size(),1u);
+			BOOST_CHECK_EQUAL(m0[0],-1);
+			l1 = {-1,2};
+			m0 = monomial_type(l1.begin(),l1.end(),symbol_set{symbol{"x"},symbol{"y"}});
+			BOOST_CHECK_EQUAL(m0.size(),2u);
+			BOOST_CHECK_EQUAL(m0[0],-1);
+			BOOST_CHECK_EQUAL(m0[1],2);
+			BOOST_CHECK_THROW(m0 = monomial_type(l1.begin(),l1.end(),symbol_set{symbol{"x"}}),std::invalid_argument);
+			struct foo {};
+			BOOST_CHECK((!std::is_constructible<monomial_type,foo *, foo *,symbol_set>::value));
+			BOOST_CHECK((std::is_constructible<monomial_type,int *, int *,symbol_set>::value));
 			// Constructor from arguments vector.
 			monomial_type m2 = monomial_type(symbol_set{});
 			BOOST_CHECK_EQUAL(m2.size(),unsigned(0));

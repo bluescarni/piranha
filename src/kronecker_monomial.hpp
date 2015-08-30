@@ -21,7 +21,6 @@
 #ifndef PIRANHA_KRONECKER_MONOMIAL_HPP
 #define PIRANHA_KRONECKER_MONOMIAL_HPP
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <functional>
@@ -104,6 +103,12 @@ class kronecker_monomial
 		 * piranha::kronecker_array.
 		 */
 		typedef typename ka::size_type size_type;
+		/// Vector type used for temporary packing/unpacking.
+		// NOTE: this essentially defines a maximum number of small ints that can be packed in m_value,
+		// as we always need to pass through pack/unpack. In practice, it does not matter: in current
+		// architectures the bit width limit will result in kronecker array's limits to be smaller than
+		// 255 items.
+		using v_type = static_vector<value_type,255u>;
 	private:
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
 		// Eval and sub typedef.
@@ -131,13 +136,6 @@ class kronecker_monomial
 		{
 			ar & m_value;
 		}
-		// Enabler for ctor from init list.
-		template <typename U>
-		using init_list_enabler = typename std::enable_if<has_safe_cast<value_type,U>::value,int>::type;
-		// Enabler for ctor from iterator.
-		template <typename Iterator>
-		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
-			has_safe_cast<value_type,decltype(*std::declval<Iterator &>())>::value,int>::type;
 		// Enabler for multiply().
 		template <typename Cf>
 		using multiply_enabler = typename std::enable_if<detail::true_tt<detail::cf_mult_enabler<Cf>>::value,int>::type;
@@ -170,16 +168,30 @@ class kronecker_monomial
 		};
 		template <typename U>
 		using ipow_subs_type = typename ipow_subs_type_<U>::type;
+		// Enablers for the ctors from container, init list and iterator.
+		template <typename U>
+		using container_ctor_enabler = typename std::enable_if<has_begin_end<const U>::value &&
+			has_safe_cast<T,typename std::iterator_traits<decltype(std::begin(std::declval<const U &>()))>::value_type>::value,int>::type;
+		template <typename U>
+		using init_list_ctor_enabler = container_ctor_enabler<std::initializer_list<U>>;
+		template <typename Iterator>
+		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
+			has_safe_cast<value_type,typename std::iterator_traits<Iterator>::value_type>::value,int>::type;
+		// Implementation of the ctor from range.
+		template <typename Iterator>
+		typename v_type::size_type construct_from_range(Iterator begin, Iterator end)
+		{
+			v_type tmp;
+			for (; begin != end; ++begin) {
+				tmp.push_back(safe_cast<value_type>(*begin));
+			}
+			m_value = ka::encode(tmp);
+			return tmp.size();
+		}
 #endif
 	public:
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
-		/// Vector type used for temporary packing/unpacking.
-		// NOTE: this essentially defines a maximum number of small ints that can be packed in m_value,
-		// as we always need to pass through pack/unpack. In practice, it does not matter: in current
-		// architectures the bit width limit will result in kronecker array's limits to be smaller than
-		// 255 items.
-		using v_type = static_vector<value_type,255u>;
 		/// Default constructor.
 		/**
 		 * After construction all exponents in the monomial will be zero.
@@ -189,30 +201,44 @@ class kronecker_monomial
 		kronecker_monomial(const kronecker_monomial &) = default;
 		/// Defaulted move constructor.
 		kronecker_monomial(kronecker_monomial &&) = default;
-		/// Constructor from initalizer list.
+		/// Constructor from container.
 		/**
 		 * \note
-		 * This constructor is enabled only if \p U can be cast safely to \p T.
+		 * This constructor is enabled only if \p U satisfies piranha::has_begin_end, and the value type
+		 * of the iterator type of \p U can be safely cast to \p T.
 		 *
-		 * The values in the initializer list are intended to represent the exponents of the monomial:
-		 * they will be converted to type \p T (if \p T and \p U are not the same type),
-		 * encoded using piranha::kronecker_array::encode() and the result assigned to the internal integer instance.
-		 * 
-		 * @param[in] list initializer list representing the exponents.
-		 * 
+		 * This constructor will build internally a vector of values from the input container \p c, encode it and assign the result
+		 * to the internal integer instance. The value type of the container is converted to \p T using
+		 * piranha::safe_cast().
+		 *
+		 * @param[in] c the input container.
+		 *
+		 * @throws std::overflow_error if the container has a size greater than an implementation-defined value.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
-		 * - piranha::safe_cast() (in case \p U is not the same as \p T),
+		 * - piranha::safe_cast(),
 		 * - piranha::static_vector::push_back().
 		 */
-		template <typename U, init_list_enabler<U> = 0>
+		template <typename U, container_ctor_enabler<U> = 0>
+		explicit kronecker_monomial(const U &c):m_value(0)
+		{
+			construct_from_range(std::begin(c),std::end(c));
+		}
+		/// Constructor from initializer list.
+		/**
+		 * \note
+		 * This constructor is enabled only if the corresponding constructor from container is enabled.
+		 *
+		 * This constructor is identical to the constructor from container. It is provided for convenience.
+		 *
+		 * @param[in] list the input initializer list.
+		 *
+		 * @throws unspecified any exception thrown by the constructor from container.
+		 */
+		template <typename U, init_list_ctor_enabler<U> = 0>
 		explicit kronecker_monomial(std::initializer_list<U> list):m_value(0)
 		{
-			v_type tmp;
-			for (const auto &x: list) {
-				tmp.push_back(safe_cast<value_type>(x));
-			}
-			m_value = ka::encode(tmp);
+			construct_from_range(list.begin(),list.end());
 		}
 		/// Constructor from range.
 		/**
@@ -220,25 +246,48 @@ class kronecker_monomial
 		 * This constructor is enabled only if \p Iterator is an input iterator whose value type
 		 * is safely convertible to \p T.
 		 *
-		 * Will build internally a vector of values from the input iterators, encode it and assign the result
+		 * This constructor will build internally a vector of values from the input iterators, encode it and assign the result
 		 * to the internal integer instance. The value type of the iterator is converted to \p T using
 		 * piranha::safe_cast().
-		 * 
-		 * @param[in] start beginning of the range.
+		 *
+		 * @param[in] begin beginning of the range.
 		 * @param[in] end end of the range.
-		 * 
+		 *
+		 * @throws std::overflow_error if the distance between \p begin and \p end is greater than an implementation-defined value.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
-		 * - piranha::safe_cast() (in case the value type of \p Iterator is not the same as \p T),
-		 * - piranha::static_vector::push_back().
+		 * - piranha::safe_cast(),
+		 * - piranha::static_vector::push_back(),
+		 * - increment and dereference of the input iterators.
 		 */
 		template <typename Iterator, it_ctor_enabler<Iterator> = 0>
-		explicit kronecker_monomial(const Iterator &start, const Iterator &end):m_value(0)
+		explicit kronecker_monomial(Iterator begin, Iterator end):m_value(0)
 		{
-			typedef typename std::iterator_traits<Iterator>::value_type it_v_type;
-			v_type tmp;
-			std::transform(start,end,std::back_inserter(tmp),[](const it_v_type &v) {return safe_cast<value_type>(v);});
-			m_value = ka::encode(tmp);
+			construct_from_range(begin,end);
+		}
+		/// Constructor from range and symbol set.
+		/**
+		 * \note
+		 * This constructor is enabled only if the corresponding range constructor is enabled.
+		 *
+		 * This constructor is identical to the constructor from range. In addition, after construction
+		 * it will also check that the distance between \p begin and \p end is equal to the size of \p s.
+		 * This constructor is used by piranha::polynomial::find_cf().
+		 *
+		 * @param[in] begin beginning of the range.
+		 * @param[in] end end of the range.
+		 * @param[in] s reference symbol set.
+		 *
+		 * @throws std::invalid_argument if the distance between \p begin and \p end is different from
+		 * the size of \p s.
+		 * @throws unspecified any exception thrown by the constructor from range.
+		 */
+		template <typename Iterator, it_ctor_enabler<Iterator> = 0>
+		explicit kronecker_monomial(Iterator begin, Iterator end, const symbol_set &s):m_value(0)
+		{
+			if (unlikely(construct_from_range(begin,end) != s.size())) {
+				piranha_throw(std::invalid_argument,"invalid Kronecker monomial");
+			}
 		}
 		/// Constructor from set of symbols.
 		/**
