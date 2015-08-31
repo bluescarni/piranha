@@ -156,6 +156,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a709356cc3fd86c72427846a8e0a912a8"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a709356cc3fd86c72427846a8e0a912a8">monomial</a> (std::initializer_list&lt; U &gt; list)</td></tr>
 <tr class="memdesc:a709356cc3fd86c72427846a8e0a912a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from initializer list.  <a href="#a709356cc3fd86c72427846a8e0a912a8">More...</a><br /></td></tr>
 <tr class="separator:a709356cc3fd86c72427846a8e0a912a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50800a09b41373002619b445670153a5"><td class="memTemplParams" colspan="2">template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a50800a09b41373002619b445670153a5"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a50800a09b41373002619b445670153a5">monomial</a> (Iterator <a class="el" href="classpiranha_1_1array__key.html#a8a09ccefe471c51f8b0f2443f8233197">begin</a>, Iterator <a class="el" href="classpiranha_1_1array__key.html#a8ba0308c021992cc5d4979dbd3deab98">end</a>, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;s)</td></tr>
+<tr class="memdesc:a50800a09b41373002619b445670153a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from range and symbol set.  <a href="#a50800a09b41373002619b445670153a5">More...</a><br /></td></tr>
+<tr class="separator:a50800a09b41373002619b445670153a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a940f491c890f89daa658bb6301affc6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a940f491c890f89daa658bb6301affc6c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a940f491c890f89daa658bb6301affc6c">~monomial</a> ()</td></tr>
 <tr class="memdesc:a940f491c890f89daa658bb6301affc6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trivial destructor. <br /></td></tr>
@@ -315,7 +319,7 @@ class piranha::monomial&lt; T, S &gt;</h3>
 <p>This class supports serialization if the base class supports it.</p>
 <dl class="section author"><dt>Author</dt><dd>Francesco Biscani (<a href="#" onclick="location.href='mai'+'lto:'+'blu'+'es'+'car'+'ni'+'@gm'+'ai'+'l.c'+'om'; return false;">blues<span style="display: none;">.nosp@m.</span>carn<span style="display: none;">.nosp@m.</span>i@gma<span style="display: none;">.nosp@m.</span>il.c<span style="display: none;">.nosp@m.</span>om</a>) </dd></dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00090">90</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00091">91</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a709356cc3fd86c72427846a8e0a912a8"></a>
 <div class="memitem">
@@ -344,6 +348,7 @@ template&lt;typename U , init_list_enabler&lt; U &gt;  = 0&gt; </div>
 </div><div class="memdoc">
 
 <p>Constructor from initializer list. </p>
+<dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if the corresponding constructor in <a class="el" href="classpiranha_1_1array__key.html" title="Array key. ">piranha::array_key</a> is enabled.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">list</td><td>initializer list.</td></tr>
@@ -352,7 +357,76 @@ template&lt;typename U , init_list_enabler&lt; U &gt;  = 0&gt; </div>
 </dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="classpiranha_1_1array__key.html" title="Array key. ">piranha::array_key</a>'s constructor from initializer list. </dd></dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00260">260</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00254">254</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a50800a09b41373002619b445670153a5"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&gt;&gt; </div>
+<div class="memtemplate">
+template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpiranha_1_1monomial.html">piranha::monomial</a>&lt; T, S &gt;::<a class="el" href="classpiranha_1_1monomial.html">monomial</a> </td>
+          <td>(</td>
+          <td class="paramtype">Iterator&#160;</td>
+          <td class="paramname"><em>begin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Iterator&#160;</td>
+          <td class="paramname"><em>end</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
+          <td class="paramname"><em>s</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructor from range and symbol set. </p>
+<dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if <code>Iterator</code> is an input iterator whose value type can be cast safely to <code>T</code>.</dd></dl>
+<p>This constructor will copy the elements from the range defined by <code>begin</code> and <code>end</code> into <code>this</code>, using <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a> for any necessary type conversion. If the final size of <code>this</code> is different from the size of <code>s</code>, a runtime error will be produced. This constructor is used by <a class="el" href="classpiranha_1_1polynomial.html#a82b987c418295f567782f6bb1c78a190" title="Find coefficient. ">piranha::polynomial::find_cf()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">begin</td><td>beginning of the range. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">end</td><td>end of the range. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>reference symbol set.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">std::invalid_argument</td><td>if the final size of <code>this</code> and the size of <code>s</code> differ. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
+<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="classpiranha_1_1array__key.html#aa5a80146f0f863be9d85407b2d7eb26c" title="Move-add element at the end. ">push_back()</a>. </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00275">275</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -457,7 +531,7 @@ template&lt;typename U  = T&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00334">334</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00357">357</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -517,7 +591,7 @@ template&lt;typename U  = T&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00369">369</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00392">392</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -642,7 +716,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00693">693</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00716">716</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -737,7 +811,7 @@ template&lt;typename U  = T, integrate_enabler&lt; U &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00558">558</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00581">581</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -824,7 +898,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00798">798</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00821">821</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -862,7 +936,7 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>this-&gt;<a class="el" href="classpiranha_1_1array__key.html#afc5d1e0dd401e3bbe1940199b74ba348" title="Size. ">size()</a> == args.size()</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00279">279</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00302">302</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -900,7 +974,7 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>false</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00291">291</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00314">314</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -945,7 +1019,7 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00308">308</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00331">331</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -992,7 +1066,7 @@ template&lt;typename U  = T, linarg_enabler&lt; U &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00408">408</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00431">431</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1113,7 +1187,8 @@ template&lt;typename Cf , typename U  = monomial, multiply_enabler&lt; Cf, U &gt
 <li><code>Cf</code> satisfies <a class="el" href="classpiranha_1_1is__cf.html" title="Type trait to detect coefficient types. ">piranha::is_cf</a>, it is multipliable in-place, it is multipliable yielding a result of type <code>Cf</code>, and it is copy-assignable.</li>
 </ul>
 </dd></dl>
-<p>Multiply <code>t1</code> by <code>t2</code>, storing the result in the only element of <code>res</code>. This method offers the basic exception safety guarantee.</p>
+<p>Multiply <code>t1</code> by <code>t2</code>, storing the result in the only element of <code>res</code>. If <code>Cf</code> is an instance of <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>, then only the numerators of the coefficients will be multiplied.</p>
+<p>This method offers the basic exception safety guarantee.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>return value. </td></tr>
@@ -1131,7 +1206,7 @@ template&lt;typename Cf , typename U  = monomial, multiply_enabler&lt; Cf, U &gt
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00846">846</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00873">873</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1348,7 +1423,7 @@ template&lt;typename U  = T, partial_enabler&lt; U &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00501">501</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00524">524</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1407,7 +1482,7 @@ template&lt;typename U , pow_enabler&lt; U &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00459">459</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00482">482</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1467,7 +1542,7 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00605">605</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00628">628</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1527,7 +1602,7 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00640">640</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00663">663</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1754,7 +1829,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00742">742</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="monomial_8hpp_source.html#l00765">765</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1924,7 +1999,7 @@ template&lt;typename U &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

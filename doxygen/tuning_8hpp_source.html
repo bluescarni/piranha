@@ -157,36 +157,47 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                        s_parallel_memory_set.store(flag);</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                }</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
-<div class="line"><a name="l00097"></a><span class="lineno"><a class="line" href="classpiranha_1_1tuning.html#a4ecdf7a7d2238cfc1ca41ddd36afe111">   97</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">unsigned</span> <a class="code" href="classpiranha_1_1tuning.html#a4ecdf7a7d2238cfc1ca41ddd36afe111">get_multiplication_block_size</a>()</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;                {</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                        <span class="keywordflow">return</span> s_mult_block_size.load();</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                }</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
-<div class="line"><a name="l00109"></a><span class="lineno"><a class="line" href="classpiranha_1_1tuning.html#aaafec64bb24628ea2179ca3921f96298">  109</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1tuning.html#aaafec64bb24628ea2179ca3921f96298">set_multiplication_block_size</a>(<span class="keywordtype">unsigned</span> size)</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                {</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                        <span class="keywordflow">if</span> (unlikely(size &lt; 16u || size &gt; 4096u)) {</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;invalid block size&quot;</span>);</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                        }</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                        s_mult_block_size.store(size);</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                }</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;};</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;}</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="classpiranha_1_1tuning.html#a63a2db5dd00e5826e4cbf09abba23dba">   91</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1tuning.html#a63a2db5dd00e5826e4cbf09abba23dba">reset_parallel_memory_set</a>()</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                {</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                        s_parallel_memory_set.store(<span class="keyword">true</span>);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                }</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
+<div class="line"><a name="l00107"></a><span class="lineno"><a class="line" href="classpiranha_1_1tuning.html#a4ecdf7a7d2238cfc1ca41ddd36afe111">  107</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">unsigned</span> <a class="code" href="classpiranha_1_1tuning.html#a4ecdf7a7d2238cfc1ca41ddd36afe111">get_multiplication_block_size</a>()</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                {</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;                        <span class="keywordflow">return</span> s_mult_block_size.load();</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                }</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
+<div class="line"><a name="l00119"></a><span class="lineno"><a class="line" href="classpiranha_1_1tuning.html#aaafec64bb24628ea2179ca3921f96298">  119</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1tuning.html#aaafec64bb24628ea2179ca3921f96298">set_multiplication_block_size</a>(<span class="keywordtype">unsigned</span> size)</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                {</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                        <span class="keywordflow">if</span> (unlikely(size &lt; 16u || size &gt; 4096u)) {</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;invalid block size&quot;</span>);</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;                        }</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;                        s_mult_block_size.store(size);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;                }</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;</div>
+<div class="line"><a name="l00132"></a><span class="lineno"><a class="line" href="classpiranha_1_1tuning.html#a251f972a0b3afb218058878330471500">  132</a></span>&#160;                 <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1tuning.html#a251f972a0b3afb218058878330471500">reset_multiplication_block_size</a>()</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;                 {</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;                        s_mult_block_size.store(256u);</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;                 }</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;};</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;}</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="classpiranha_1_1tuning_html"><div class="ttname"><a href="classpiranha_1_1tuning.html">piranha::tuning</a></div><div class="ttdoc">Performance tuning. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00057">tuning.hpp:57</a></div></div>
 <div class="ttc" id="exceptions_8hpp_html"><div class="ttname"><a href="exceptions_8hpp.html">exceptions.hpp</a></div><div class="ttdoc">Exceptions. </div></div>
-<div class="ttc" id="classpiranha_1_1tuning_html_aaafec64bb24628ea2179ca3921f96298"><div class="ttname"><a href="classpiranha_1_1tuning.html#aaafec64bb24628ea2179ca3921f96298">piranha::tuning::set_multiplication_block_size</a></div><div class="ttdeci">static void set_multiplication_block_size(unsigned size)</div><div class="ttdoc">Set the multiplication block size. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00109">tuning.hpp:109</a></div></div>
+<div class="ttc" id="classpiranha_1_1tuning_html_aaafec64bb24628ea2179ca3921f96298"><div class="ttname"><a href="classpiranha_1_1tuning.html#aaafec64bb24628ea2179ca3921f96298">piranha::tuning::set_multiplication_block_size</a></div><div class="ttdeci">static void set_multiplication_block_size(unsigned size)</div><div class="ttdoc">Set the multiplication block size. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00119">tuning.hpp:119</a></div></div>
+<div class="ttc" id="classpiranha_1_1tuning_html_a63a2db5dd00e5826e4cbf09abba23dba"><div class="ttname"><a href="classpiranha_1_1tuning.html#a63a2db5dd00e5826e4cbf09abba23dba">piranha::tuning::reset_parallel_memory_set</a></div><div class="ttdeci">static void reset_parallel_memory_set()</div><div class="ttdoc">Reset the parallel_memory_set flag. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00091">tuning.hpp:91</a></div></div>
 <div class="ttc" id="classpiranha_1_1tuning_html_a8dc29f4f524003dc531125c64f383659"><div class="ttname"><a href="classpiranha_1_1tuning.html#a8dc29f4f524003dc531125c64f383659">piranha::tuning::set_parallel_memory_set</a></div><div class="ttdeci">static void set_parallel_memory_set(bool flag)</div><div class="ttdoc">Set the parallel_memory_set flag. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00081">tuning.hpp:81</a></div></div>
 <div class="ttc" id="exceptions_8hpp_html_a2327080f0dc9f806bae763f2c28dd301"><div class="ttname"><a href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a></div><div class="ttdeci">#define piranha_throw(exception_type,...)</div><div class="ttdoc">Exception-throwing macro. </div><div class="ttdef"><b>Definition:</b> <a href="exceptions_8hpp_source.html#l00106">exceptions.hpp:106</a></div></div>
 <div class="ttc" id="namespacepiranha_html"><div class="ttname"><a href="namespacepiranha.html">piranha</a></div><div class="ttdoc">Root piranha namespace. </div><div class="ttdef"><b>Definition:</b> <a href="array__key_8hpp_source.html#l00044">array_key.hpp:44</a></div></div>
-<div class="ttc" id="classpiranha_1_1tuning_html_a4ecdf7a7d2238cfc1ca41ddd36afe111"><div class="ttname"><a href="classpiranha_1_1tuning.html#a4ecdf7a7d2238cfc1ca41ddd36afe111">piranha::tuning::get_multiplication_block_size</a></div><div class="ttdeci">static unsigned get_multiplication_block_size()</div><div class="ttdoc">Get the multiplication block size. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00097">tuning.hpp:97</a></div></div>
+<div class="ttc" id="classpiranha_1_1tuning_html_a251f972a0b3afb218058878330471500"><div class="ttname"><a href="classpiranha_1_1tuning.html#a251f972a0b3afb218058878330471500">piranha::tuning::reset_multiplication_block_size</a></div><div class="ttdeci">static void reset_multiplication_block_size()</div><div class="ttdoc">Reset the multiplication block size. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00132">tuning.hpp:132</a></div></div>
+<div class="ttc" id="classpiranha_1_1tuning_html_a4ecdf7a7d2238cfc1ca41ddd36afe111"><div class="ttname"><a href="classpiranha_1_1tuning.html#a4ecdf7a7d2238cfc1ca41ddd36afe111">piranha::tuning::get_multiplication_block_size</a></div><div class="ttdeci">static unsigned get_multiplication_block_size()</div><div class="ttdoc">Get the multiplication block size. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00107">tuning.hpp:107</a></div></div>
 <div class="ttc" id="classpiranha_1_1tuning_html_a0332c484abd2cffbb81df0ff847019bd"><div class="ttname"><a href="classpiranha_1_1tuning.html#a0332c484abd2cffbb81df0ff847019bd">piranha::tuning::get_parallel_memory_set</a></div><div class="ttdeci">static bool get_parallel_memory_set()</div><div class="ttdoc">Get the parallel_memory_set flag. </div><div class="ttdef"><b>Definition:</b> <a href="tuning_8hpp_source.html#l00071">tuning.hpp:71</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:54 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

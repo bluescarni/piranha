@@ -143,10 +143,9 @@ class piranha::future_list&lt; F &gt;</h3>
 <p>Class to store a list of futures. </p>
 <p>This class is a minimal thin wrapper around an <code>std::list</code> of <code>std::future</code> objects. The class provides convenience methods to interact with the set of futures in an exception-safe manner.</p>
 <h2>Type requirements</h2>
-<p><code>F</code> must be an instance of <code>std::future</code>.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>provide method to retrieve future values from <a class="el" href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095" title="Get all the futures. ">get_all()</a> using a vector (in case the future type is not void or a reference, in which case the <a class="el" href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095" title="Get all the futures. ">get_all()</a> method stays as it is). </dd></dl>
+<p><code>F</code> must be an instance of <code>std::future</code>. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00353">353</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00365">365</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a51a48aaf8039b83a1071c1edbe705d28"></a>
 <div class="memitem">
@@ -202,7 +201,7 @@ template&lt;typename F&gt; </div>
 <p>Destructor. </p>
 <p>Will call <a class="el" href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1" title="Wait on all the futures. ">wait_all()</a>. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00385">385</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00397">397</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -239,7 +238,7 @@ template&lt;typename F&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00435">435</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00447">447</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -282,7 +281,7 @@ template&lt;typename F&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00399">399</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00411">411</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -312,7 +311,7 @@ template&lt;typename F&gt; </div>
 <p>Wait on all the futures. </p>
 <p>This method will call <code>wait()</code> on all the valid futures stored within the object. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00420">420</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00432">432</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -322,7 +321,7 @@ template&lt;typename F&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

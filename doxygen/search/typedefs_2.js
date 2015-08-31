@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['base',['base',['../classpiranha_1_1series__multiplier_3_01_series_00_01typename_01std_1_1enable__if_3_01detail_1_1kb459da37a0ddb37444991a23278e9f36.html#afcf129081fe508bd023fb4534628ee64',1,'piranha::series_multiplier&lt; Series, typename std::enable_if&lt; detail::kronecker_enabler&lt; Series &gt;::value &gt;::type &gt;']]]
+  ['bucket_5fsize_5ftype',['bucket_size_type',['../classpiranha_1_1base__series__multiplier.html#af6c675eb2cbe3887a15eb06f5f6b70dd',1,'piranha::base_series_multiplier']]]
 ];

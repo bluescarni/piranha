@@ -5,10 +5,11 @@ var searchData=
   ['register_5fcustom_5fderivative',['register_custom_derivative',['../classpiranha_1_1series.html#a5ee2cef7972c1ed1a410351c9f3e175e',1,'piranha::series']]],
   ['rehash',['rehash',['../classpiranha_1_1hash__set.html#a19de666eb17d34c1a97725c04b6238fd',1,'piranha::hash_set']]],
   ['remove',['remove',['../classpiranha_1_1symbol__set.html#ad9713d112f97ddd466f8a84c4598f6f6',1,'piranha::symbol_set::remove(const symbol &amp;s)'],['../classpiranha_1_1symbol__set.html#a3957412a0cb81a857739b2b08a2ae6a7',1,'piranha::symbol_set::remove(const std::string &amp;name)']]],
-  ['reset',['reset',['../classpiranha_1_1tracing.html#a428f389544f3416caaf7b2fa600625cb',1,'piranha::tracing']]],
-  ['reset_5fcache_5fline_5fsize',['reset_cache_line_size',['../classpiranha_1_1settings.html#a490339547bc64247d1888257dd5ef131',1,'piranha::settings']]],
-  ['reset_5fmax_5fterm_5foutput',['reset_max_term_output',['../classpiranha_1_1settings.html#a6f32b28858f67c4fcb86f8644b881e5e',1,'piranha::settings']]],
-  ['reset_5fmin_5fwork_5fper_5fthread',['reset_min_work_per_thread',['../classpiranha_1_1settings.html#ae00ec4197d29dfc5f1c0eab5fd1d8b55',1,'piranha::settings']]],
-  ['reset_5fn_5fthreads',['reset_n_threads',['../classpiranha_1_1settings.html#a842617fe228c95d53227e5bf3939d8fe',1,'piranha::settings']]],
-  ['resize',['resize',['../classpiranha_1_1array__key.html#a9f283fd5207371337ab7da427270959f',1,'piranha::array_key::resize()'],['../classpiranha_1_1small__vector.html#a22f10384372abdc0a59e1a117d919b12',1,'piranha::small_vector::resize()'],['../classpiranha_1_1static__vector.html#a803ccc49077582a3f84169615f54a99c',1,'piranha::static_vector::resize()'],['../classpiranha_1_1thread__pool.html#a6fe0d62525f87aa4267f41df5601167c',1,'piranha::thread_pool::resize()']]]
+  ['reset_5fcache_5fline_5fsize',['reset_cache_line_size',['../classpiranha_1_1settings__.html#a80ee027e6df1050f18e3862b34d83e26',1,'piranha::settings_']]],
+  ['reset_5fmax_5fterm_5foutput',['reset_max_term_output',['../classpiranha_1_1settings__.html#a49abab03ad431f53a040d3acc11819ac',1,'piranha::settings_']]],
+  ['reset_5fmin_5fwork_5fper_5fthread',['reset_min_work_per_thread',['../classpiranha_1_1settings__.html#accae41ba22ddd3d931a2e05f7e31d488',1,'piranha::settings_']]],
+  ['reset_5fmultiplication_5fblock_5fsize',['reset_multiplication_block_size',['../classpiranha_1_1tuning.html#a251f972a0b3afb218058878330471500',1,'piranha::tuning']]],
+  ['reset_5fn_5fthreads',['reset_n_threads',['../classpiranha_1_1settings__.html#a906ced1de208a8ae1b50674a52618036',1,'piranha::settings_']]],
+  ['reset_5fparallel_5fmemory_5fset',['reset_parallel_memory_set',['../classpiranha_1_1tuning.html#a63a2db5dd00e5826e4cbf09abba23dba',1,'piranha::tuning']]],
+  ['resize',['resize',['../classpiranha_1_1array__key.html#a9f283fd5207371337ab7da427270959f',1,'piranha::array_key::resize()'],['../classpiranha_1_1small__vector.html#a22f10384372abdc0a59e1a117d919b12',1,'piranha::small_vector::resize()'],['../classpiranha_1_1static__vector.html#a803ccc49077582a3f84169615f54a99c',1,'piranha::static_vector::resize()'],['../classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e',1,'piranha::thread_pool_::resize()']]]
 ];

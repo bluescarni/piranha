@@ -121,14 +121,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a072fe4b33e4313b641786483c8b3f0d6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1not__implemented__error.html#a072fe4b33e4313b641786483c8b3f0d6">not_implemented_error</a> (const std::string &amp;s)</td></tr>
 <tr class="memdesc:a072fe4b33e4313b641786483c8b3f0d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#a072fe4b33e4313b641786483c8b3f0d6">More...</a><br /></td></tr>
 <tr class="separator:a072fe4b33e4313b641786483c8b3f0d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90a99e8c60ce2fca6603f88cae6474d7"><td class="memItemLeft" align="right" valign="top">virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1base__exception.html#a90a99e8c60ce2fca6603f88cae6474d7">what</a> () const override  throw ()</td></tr>
-<tr class="memdesc:a90a99e8c60ce2fca6603f88cae6474d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error description.  <a href="#a90a99e8c60ce2fca6603f88cae6474d7">More...</a><br /></td></tr>
-<tr class="separator:a90a99e8c60ce2fca6603f88cae6474d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8645fc1f64c82b4b9986e8523daaca20"><td class="memItemLeft" align="right" valign="top">virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1base__exception.html#a8645fc1f64c82b4b9986e8523daaca20">what</a> () const noexceptoverride</td></tr>
+<tr class="memdesc:a8645fc1f64c82b4b9986e8523daaca20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error description.  <a href="#a8645fc1f64c82b4b9986e8523daaca20">More...</a><br /></td></tr>
+<tr class="separator:a8645fc1f64c82b4b9986e8523daaca20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Exception for functionality not implemented or not available on the current platform. </p>
 
-<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00144">144</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
+<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00148">148</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a072fe4b33e4313b641786483c8b3f0d6"></a>
 <div class="memitem">
@@ -166,12 +166,12 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00152">152</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
+<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00156">156</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a90a99e8c60ce2fca6603f88cae6474d7"></a>
+<a class="anchor" id="a8645fc1f64c82b4b9986e8523daaca20"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -184,16 +184,10 @@ Public Member Functions</h2></td></tr>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
-        <tr>
-          <td align="right">throw </td><td>(</td><td colspan="2"></td>
-        </tr>
-        <tr>
-          <td align="right"></td><td>)</td><td></td><td></td>
-        </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span><span class="mlabel">inherited</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span><span class="mlabel">noexcept</span><span class="mlabel">inherited</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -201,7 +195,7 @@ Public Member Functions</h2></td></tr>
 <p>Error description. </p>
 <dl class="section return"><dt>Returns</dt><dd>const pointer to the internal error message. </dd></dl>
 
-<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00133">133</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
+<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00137">137</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
 
 </div>
 </div>
@@ -211,7 +205,7 @@ Public Member Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

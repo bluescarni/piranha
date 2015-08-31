@@ -183,10 +183,19 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4a7647e2eb723ec6bc3e739ffc5b878d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpiranha_1_1static__vector.html#a0b3ae07d4618f520193098abbe667378">size_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1static__vector.html#a4a7647e2eb723ec6bc3e739ffc5b878d">size</a> () const </td></tr>
 <tr class="memdesc:a4a7647e2eb723ec6bc3e739ffc5b878d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size.  <a href="#a4a7647e2eb723ec6bc3e739ffc5b878d">More...</a><br /></td></tr>
 <tr class="separator:a4a7647e2eb723ec6bc3e739ffc5b878d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add413227261f35b9935e0fb9dcc7ec82"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1static__vector.html#add413227261f35b9935e0fb9dcc7ec82">empty</a> () const </td></tr>
+<tr class="memdesc:add413227261f35b9935e0fb9dcc7ec82"><td class="mdescLeft">&#160;</td><td class="mdescRight">Empty test.  <a href="#add413227261f35b9935e0fb9dcc7ec82">More...</a><br /></td></tr>
+<tr class="separator:add413227261f35b9935e0fb9dcc7ec82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a803ccc49077582a3f84169615f54a99c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1static__vector.html#a803ccc49077582a3f84169615f54a99c">resize</a> (const <a class="el" href="classpiranha_1_1static__vector.html#a0b3ae07d4618f520193098abbe667378">size_type</a> &amp;new_size)</td></tr>
 <tr class="memdesc:a803ccc49077582a3f84169615f54a99c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resize.  <a href="#a803ccc49077582a3f84169615f54a99c">More...</a><br /></td></tr>
 <tr class="separator:a803ccc49077582a3f84169615f54a99c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8475a06525fa761a32779e823ee8357c"><td class="memTemplParams" colspan="2">template&lt;typename U  = T, typename  = typename std::enable_if&lt;			is_hashable&lt;U&gt;::value			&gt;::type&gt; </td></tr>
+<tr class="memitem:aea485b6b8d19055eb9c1f904c1e70f9b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpiranha_1_1static__vector.html#a1d7179251d548a1d3efae5a4939fb5d8">iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1static__vector.html#aea485b6b8d19055eb9c1f904c1e70f9b">erase</a> (<a class="el" href="classpiranha_1_1static__vector.html#aa83affd4c295b531f8b2591d9ff61256">const_iterator</a> it)</td></tr>
+<tr class="memdesc:aea485b6b8d19055eb9c1f904c1e70f9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Erase element.  <a href="#aea485b6b8d19055eb9c1f904c1e70f9b">More...</a><br /></td></tr>
+<tr class="separator:aea485b6b8d19055eb9c1f904c1e70f9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f498d06318ec5de32a9f5503afeddd7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1static__vector.html#a7f498d06318ec5de32a9f5503afeddd7">clear</a> ()</td></tr>
+<tr class="memdesc:a7f498d06318ec5de32a9f5503afeddd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear.  <a href="#a7f498d06318ec5de32a9f5503afeddd7">More...</a><br /></td></tr>
+<tr class="separator:a7f498d06318ec5de32a9f5503afeddd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8475a06525fa761a32779e823ee8357c"><td class="memTemplParams" colspan="2">template&lt;typename U  = T, typename  = typename std::enable_if&lt;is_hashable&lt;U&gt;::value&gt;::type&gt; </td></tr>
 <tr class="memitem:a8475a06525fa761a32779e823ee8357c"><td class="memTemplItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1static__vector.html#a8475a06525fa761a32779e823ee8357c">hash</a> () const </td></tr>
 <tr class="memdesc:a8475a06525fa761a32779e823ee8357c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hash value.  <a href="#a8475a06525fa761a32779e823ee8357c">More...</a><br /></td></tr>
 <tr class="separator:a8475a06525fa761a32779e823ee8357c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -496,6 +505,36 @@ template&lt;typename T, std::size_t MaxSize&gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a7f498d06318ec5de32a9f5503afeddd7"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T, std::size_t MaxSize&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classpiranha_1_1static__vector.html">piranha::static_vector</a>&lt; T, MaxSize &gt;::clear </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Clear. </p>
+<p>This method will destroy all elements of the vector and set the size to zero. </p>
+
+<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00535">535</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="ac83b72fe22c02cb079dd7799644ac83a"></a>
 <div class="memitem">
 <div class="memproto">
@@ -540,6 +579,36 @@ template&lt;typename... Args, typename  = typename std::enable_if&lt;std::is_con
 </dl>
 
 <p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00420">420</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="add413227261f35b9935e0fb9dcc7ec82"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T, std::size_t MaxSize&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool <a class="el" href="classpiranha_1_1static__vector.html">piranha::static_vector</a>&lt; T, MaxSize &gt;::empty </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Empty test. </p>
+<dl class="section return"><dt>Returns</dt><dd><code>true</code> if the size of the container is zero, <code>false</code> otherwise. </dd></dl>
+
+<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00440">440</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
 
 </div>
 </div>
@@ -603,13 +672,52 @@ template&lt;typename T, std::size_t MaxSize&gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="aea485b6b8d19055eb9c1f904c1e70f9b"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T, std::size_t MaxSize&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpiranha_1_1static__vector.html#a1d7179251d548a1d3efae5a4939fb5d8">iterator</a> <a class="el" href="classpiranha_1_1static__vector.html">piranha::static_vector</a>&lt; T, MaxSize &gt;::erase </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classpiranha_1_1static__vector.html#aa83affd4c295b531f8b2591d9ff61256">const_iterator</a>&#160;</td>
+          <td class="paramname"><em>it</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Erase element. </p>
+<p>This method will erase the element to which <code>it</code> points. The return value will be the iterator following the erased element (which will be the end iterator if <code>it</code> points to the last element of the vector).</p>
+<p><code>it</code> must be a valid iterator to an element in <code>this</code>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">it</td><td>iterator to the element of <code>this</code> to be removed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the iterator following the erased element. </dd></dl>
+
+<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00505">505</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="a8475a06525fa761a32779e823ee8357c"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T, std::size_t MaxSize&gt; </div>
 <div class="memtemplate">
-template&lt;typename U  = T, typename  = typename std::enable_if&lt;			is_hashable&lt;U&gt;::value			&gt;::type&gt; </div>
+template&lt;typename U  = T, typename  = typename std::enable_if&lt;is_hashable&lt;U&gt;::value&gt;::type&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -644,7 +752,7 @@ template&lt;typename U  = T, typename  = typename std::enable_if&lt;			is_hashab
 </dl>
 <dl class="section see"><dt>See also</dt><dd><a href="http://www.boost.org/doc/libs/release/doc/html/hash/combine.html">http://www.boost.org/doc/libs/release/doc/html/hash/combine.html</a> </dd></dl>
 
-<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00505">505</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
+<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00558">558</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
 
 </div>
 </div>
@@ -1015,7 +1123,7 @@ template&lt;typename T, std::size_t MaxSize&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00448">448</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
+<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00456">456</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
 
 </div>
 </div>
@@ -1101,7 +1209,7 @@ template&lt;typename T, std::size_t MaxSize&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00520">520</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
+<p>Definition at line <a class="el" href="static__vector_8hpp_source.html#l00573">573</a> of file <a class="el" href="static__vector_8hpp_source.html">static_vector.hpp</a>.</p>
 
 </div>
 </div>
@@ -1139,7 +1247,7 @@ template&lt;typename T, std::size_t MaxSize&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:28 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:56 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

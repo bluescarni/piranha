@@ -114,10 +114,10 @@ typedef T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href=
 <tr class="memitem:a8f1fb0492ceff777e0d72b133b908334"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classpiranha_1_1kronecker__array.html#a94e1c56fc7429807f6f3a2f4305dc78c">ka::size_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a8f1fb0492ceff777e0d72b133b908334">size_type</a></td></tr>
 <tr class="memdesc:a8f1fb0492ceff777e0d72b133b908334"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size type.  <a href="#a8f1fb0492ceff777e0d72b133b908334">More...</a><br /></td></tr>
 <tr class="separator:a8f1fb0492ceff777e0d72b133b908334"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7114cee8c72912920dab890d49b98af0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7114cee8c72912920dab890d49b98af0"></a>
-typedef <a class="el" href="classpiranha_1_1static__vector.html">static_vector</a>&lt; <a class="el" href="classpiranha_1_1kronecker__monomial.html#a34c8c65587c911f881e74ff31babaf4f">value_type</a>, <a class="el" href="classpiranha_1_1kronecker__monomial.html#a14be9d3e0cabb34cfbed3c4330f2dfd5">max_size</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a7114cee8c72912920dab890d49b98af0">v_type</a></td></tr>
-<tr class="memdesc:a7114cee8c72912920dab890d49b98af0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector type used for temporary packing/unpacking. <br /></td></tr>
-<tr class="separator:a7114cee8c72912920dab890d49b98af0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ce166442a1f12b424aa9870999b47e3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ce166442a1f12b424aa9870999b47e3"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a9ce166442a1f12b424aa9870999b47e3">v_type</a> = <a class="el" href="classpiranha_1_1static__vector.html">static_vector</a>&lt; <a class="el" href="classpiranha_1_1kronecker__monomial.html#a34c8c65587c911f881e74ff31babaf4f">value_type</a>, 255u &gt;</td></tr>
+<tr class="memdesc:a9ce166442a1f12b424aa9870999b47e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector type used for temporary packing/unpacking. <br /></td></tr>
+<tr class="separator:a9ce166442a1f12b424aa9870999b47e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -132,14 +132,22 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a04e6fe24ef3b3f823d91ebdee4768f54">kronecker_monomial</a> (<a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &amp;&amp;)=default</td></tr>
 <tr class="memdesc:a04e6fe24ef3b3f823d91ebdee4768f54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defaulted move constructor. <br /></td></tr>
 <tr class="separator:a04e6fe24ef3b3f823d91ebdee4768f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47b127b046db8bf93493df5e5b90d106"><td class="memTemplParams" colspan="2">template&lt;typename U , init_list_enabler&lt; U &gt;  = 0&gt; </td></tr>
+<tr class="memitem:ab81fc89a2633dbc88acf018646b799ca"><td class="memTemplParams" colspan="2">template&lt;typename U , container_ctor_enabler&lt; U &gt;  = 0&gt; </td></tr>
+<tr class="memitem:ab81fc89a2633dbc88acf018646b799ca"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#ab81fc89a2633dbc88acf018646b799ca">kronecker_monomial</a> (const U &amp;c)</td></tr>
+<tr class="memdesc:ab81fc89a2633dbc88acf018646b799ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from container.  <a href="#ab81fc89a2633dbc88acf018646b799ca">More...</a><br /></td></tr>
+<tr class="separator:ab81fc89a2633dbc88acf018646b799ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47b127b046db8bf93493df5e5b90d106"><td class="memTemplParams" colspan="2">template&lt;typename U , init_list_ctor_enabler&lt; U &gt;  = 0&gt; </td></tr>
 <tr class="memitem:a47b127b046db8bf93493df5e5b90d106"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a47b127b046db8bf93493df5e5b90d106">kronecker_monomial</a> (std::initializer_list&lt; U &gt; list)</td></tr>
-<tr class="memdesc:a47b127b046db8bf93493df5e5b90d106"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from initalizer list.  <a href="#a47b127b046db8bf93493df5e5b90d106">More...</a><br /></td></tr>
+<tr class="memdesc:a47b127b046db8bf93493df5e5b90d106"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from initializer list.  <a href="#a47b127b046db8bf93493df5e5b90d106">More...</a><br /></td></tr>
 <tr class="separator:a47b127b046db8bf93493df5e5b90d106"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae574c27a8e41b73578f8504f2a8d9490"><td class="memTemplParams" colspan="2">template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </td></tr>
-<tr class="memitem:ae574c27a8e41b73578f8504f2a8d9490"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#ae574c27a8e41b73578f8504f2a8d9490">kronecker_monomial</a> (const Iterator &amp;start, const Iterator &amp;end)</td></tr>
-<tr class="memdesc:ae574c27a8e41b73578f8504f2a8d9490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from range.  <a href="#ae574c27a8e41b73578f8504f2a8d9490">More...</a><br /></td></tr>
-<tr class="separator:ae574c27a8e41b73578f8504f2a8d9490"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9e59c39a4ef518613865bde619dd877"><td class="memTemplParams" colspan="2">template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </td></tr>
+<tr class="memitem:af9e59c39a4ef518613865bde619dd877"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#af9e59c39a4ef518613865bde619dd877">kronecker_monomial</a> (Iterator begin, Iterator end)</td></tr>
+<tr class="memdesc:af9e59c39a4ef518613865bde619dd877"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from range.  <a href="#af9e59c39a4ef518613865bde619dd877">More...</a><br /></td></tr>
+<tr class="separator:af9e59c39a4ef518613865bde619dd877"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9cede8fe5662c6582bc5e9ff99e2c3b"><td class="memTemplParams" colspan="2">template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </td></tr>
+<tr class="memitem:ae9cede8fe5662c6582bc5e9ff99e2c3b"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#ae9cede8fe5662c6582bc5e9ff99e2c3b">kronecker_monomial</a> (Iterator begin, Iterator end, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;s)</td></tr>
+<tr class="memdesc:ae9cede8fe5662c6582bc5e9ff99e2c3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from range and symbol set.  <a href="#ae9cede8fe5662c6582bc5e9ff99e2c3b">More...</a><br /></td></tr>
+<tr class="separator:ae9cede8fe5662c6582bc5e9ff99e2c3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8e1e56e91d27ab61e1ba57312ca0c7d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#ae8e1e56e91d27ab61e1ba57312ca0c7d">kronecker_monomial</a> (const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args)</td></tr>
 <tr class="memdesc:ae8e1e56e91d27ab61e1ba57312ca0c7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from set of symbols.  <a href="#ae8e1e56e91d27ab61e1ba57312ca0c7d">More...</a><br /></td></tr>
 <tr class="separator:ae8e1e56e91d27ab61e1ba57312ca0c7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -209,7 +217,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a6b31b0e48c74a08392b0ed68a051cfaa"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a6b31b0e48c74a08392b0ed68a051cfaa">pow</a> (const U &amp;x, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const </td></tr>
 <tr class="memdesc:a6b31b0e48c74a08392b0ed68a051cfaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exponentiation.  <a href="#a6b31b0e48c74a08392b0ed68a051cfaa">More...</a><br /></td></tr>
 <tr class="separator:a6b31b0e48c74a08392b0ed68a051cfaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a903b9f5d535d49b08deacdb4ea44b965"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a7114cee8c72912920dab890d49b98af0">v_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a903b9f5d535d49b08deacdb4ea44b965">unpack</a> (const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const </td></tr>
+<tr class="memitem:a903b9f5d535d49b08deacdb4ea44b965"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a9ce166442a1f12b424aa9870999b47e3">v_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a903b9f5d535d49b08deacdb4ea44b965">unpack</a> (const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const </td></tr>
 <tr class="memdesc:a903b9f5d535d49b08deacdb4ea44b965"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unpack internal integer instance.  <a href="#a903b9f5d535d49b08deacdb4ea44b965">More...</a><br /></td></tr>
 <tr class="separator:a903b9f5d535d49b08deacdb4ea44b965"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae7f86dffa45f88f0a3d4e9a85339534e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#ae7f86dffa45f88f0a3d4e9a85339534e">print</a> (std::ostream &amp;os, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const </td></tr>
@@ -245,20 +253,16 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a9063b50eacad5bd44b0d72d931f1d0ee"><td class="memTemplParams" colspan="2">template&lt;typename Cf , multiply_enabler&lt; Cf &gt;  = 0&gt; </td></tr>
-<tr class="memitem:a9063b50eacad5bd44b0d72d931f1d0ee"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a9063b50eacad5bd44b0d72d931f1d0ee">multiply</a> (std::array&lt; <a class="el" href="classpiranha_1_1term.html">term</a>&lt; Cf, <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &gt;, <a class="el" href="classpiranha_1_1kronecker__monomial.html#a72df51af35aa110218c166a3198ad6d4">multiply_arity</a> &gt; &amp;res, const <a class="el" href="classpiranha_1_1term.html">term</a>&lt; Cf, <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &gt; &amp;t1, const <a class="el" href="classpiranha_1_1term.html">term</a>&lt; Cf, <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &gt; &amp;t2, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args)</td></tr>
-<tr class="memdesc:a9063b50eacad5bd44b0d72d931f1d0ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiply terms with a Kronecker monomial key.  <a href="#a9063b50eacad5bd44b0d72d931f1d0ee">More...</a><br /></td></tr>
-<tr class="separator:a9063b50eacad5bd44b0d72d931f1d0ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72619c0354aad0e40fb1fc0bc4accfd0"><td class="memTemplParams" colspan="2">template&lt;typename Cf , multiply_enabler&lt; Cf &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a72619c0354aad0e40fb1fc0bc4accfd0"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a72619c0354aad0e40fb1fc0bc4accfd0">multiply</a> (std::array&lt; <a class="el" href="classpiranha_1_1term.html">term</a>&lt; Cf, <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &gt;, <a class="el" href="classpiranha_1_1kronecker__monomial.html#a72df51af35aa110218c166a3198ad6d4">multiply_arity</a> &gt; &amp;res, const <a class="el" href="classpiranha_1_1term.html">term</a>&lt; Cf, <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &gt; &amp;t1, const <a class="el" href="classpiranha_1_1term.html">term</a>&lt; Cf, <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &gt; &amp;t2, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;)</td></tr>
+<tr class="memdesc:a72619c0354aad0e40fb1fc0bc4accfd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiply terms with a Kronecker monomial key.  <a href="#a72619c0354aad0e40fb1fc0bc4accfd0">More...</a><br /></td></tr>
+<tr class="separator:a72619c0354aad0e40fb1fc0bc4accfd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a14be9d3e0cabb34cfbed3c4330f2dfd5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a14be9d3e0cabb34cfbed3c4330f2dfd5"></a>
-static const <a class="el" href="classpiranha_1_1kronecker__monomial.html#a8f1fb0492ceff777e0d72b133b908334">size_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a14be9d3e0cabb34cfbed3c4330f2dfd5">max_size</a> = 255u</td></tr>
-<tr class="memdesc:a14be9d3e0cabb34cfbed3c4330f2dfd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum monomial size. <br /></td></tr>
-<tr class="separator:a14be9d3e0cabb34cfbed3c4330f2dfd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72df51af35aa110218c166a3198ad6d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a72df51af35aa110218c166a3198ad6d4"></a>
 static const std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a72df51af35aa110218c166a3198ad6d4">multiply_arity</a> = 1u</td></tr>
-<tr class="memdesc:a72df51af35aa110218c166a3198ad6d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Arity of the <a class="el" href="classpiranha_1_1kronecker__monomial.html#a9063b50eacad5bd44b0d72d931f1d0ee" title="Multiply terms with a Kronecker monomial key. ">multiply()</a> method. <br /></td></tr>
+<tr class="memdesc:a72df51af35aa110218c166a3198ad6d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Arity of the <a class="el" href="classpiranha_1_1kronecker__monomial.html#a72619c0354aad0e40fb1fc0bc4accfd0" title="Multiply terms with a Kronecker monomial key. ">multiply()</a> method. <br /></td></tr>
 <tr class="separator:a72df51af35aa110218c166a3198ad6d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -278,7 +282,7 @@ class piranha::kronecker_monomial&lt; T &gt;</h3>
 <p>This class supports serialization.</p>
 <dl class="section author"><dt>Author</dt><dd>Francesco Biscani (<a href="#" onclick="location.href='mai'+'lto:'+'blu'+'es'+'car'+'ni'+'@gm'+'ai'+'l.c'+'om'; return false;">blues<span style="display: none;">.nosp@m.</span>carn<span style="display: none;">.nosp@m.</span>i@gma<span style="display: none;">.nosp@m.</span>il.c<span style="display: none;">.nosp@m.</span>om</a>) </dd></dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00096">96</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00092">92</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
 <a class="anchor" id="a8f1fb0492ceff777e0d72b133b908334"></a>
 <div class="memitem">
@@ -295,7 +299,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <p>Size type. </p>
 <p>Used to represent the number of variables in the monomial. Equivalent to the size type of <a class="el" href="classpiranha_1_1kronecker__array.html" title="Kronecker array. ">piranha::kronecker_array</a>. </p>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00109">109</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00105">105</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -326,7 +330,59 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <p>Default constructor. </p>
 <p>After construction all exponents in the monomial will be zero. </p>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00190">190</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00199">199</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ab81fc89a2633dbc88acf018646b799ca"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
+<div class="memtemplate">
+template&lt;typename U , container_ctor_enabler&lt; U &gt;  = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpiranha_1_1kronecker__monomial.html">piranha::kronecker_monomial</a>&lt; T &gt;::<a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> </td>
+          <td>(</td>
+          <td class="paramtype">const U &amp;&#160;</td>
+          <td class="paramname"><em>c</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructor from container. </p>
+<dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if <code>U</code> satisfies <a class="el" href="classpiranha_1_1has__begin__end.html" title="Detect the availability of std::begin() and std::end(). ">piranha::has_begin_end</a>, and the value type of the iterator type of <code>U</code> can be safely cast to <code>T</code>.</dd></dl>
+<p>This constructor will build internally a vector of values from the input container <code>c</code>, encode it and assign the result to the internal integer instance. The value type of the container is converted to <code>T</code> using <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">c</td><td>the input container.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">std::overflow_error</td><td>if the container has a size greater than an implementation-defined value. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
+<li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>. </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00223">223</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -336,7 +392,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <div class="memtemplate">
 template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <div class="memtemplate">
-template&lt;typename U , init_list_enabler&lt; U &gt;  = 0&gt; </div>
+template&lt;typename U , init_list_ctor_enabler&lt; U &gt;  = 0&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -356,32 +412,27 @@ template&lt;typename U , init_list_enabler&lt; U &gt;  = 0&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Constructor from initalizer list. </p>
-<dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if <code>U</code> can be cast safely to <code>T</code>.</dd></dl>
-<p>The values in the initializer list are intended to represent the exponents of the monomial: they will be converted to type <code>T</code> (if <code>T</code> and <code>U</code> are not the same type), encoded using <a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a> and the result assigned to the internal integer instance.</p>
+<p>Constructor from initializer list. </p>
+<dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if the corresponding constructor from container is enabled.</dd></dl>
+<p>This constructor is identical to the constructor from container. It is provided for convenience.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">list</td><td>initializer list representing the exponents.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">list</td><td>the input initializer list.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>,</li>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a> (in case <code>U</code> is not the same as <code>T</code>),</li>
-<li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>. </li>
-</ul>
-</td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by the constructor from container. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00212">212</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00239">239</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ae574c27a8e41b73578f8504f2a8d9490"></a>
+<a class="anchor" id="af9e59c39a4ef518613865bde619dd877"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -395,13 +446,13 @@ template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </div
         <tr>
           <td class="memname"><a class="el" href="classpiranha_1_1kronecker__monomial.html">piranha::kronecker_monomial</a>&lt; T &gt;::<a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> </td>
           <td>(</td>
-          <td class="paramtype">const Iterator &amp;&#160;</td>
-          <td class="paramname"><em>start</em>, </td>
+          <td class="paramtype">Iterator&#160;</td>
+          <td class="paramname"><em>begin</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const Iterator &amp;&#160;</td>
+          <td class="paramtype">Iterator&#160;</td>
           <td class="paramname"><em>end</em>&#160;</td>
         </tr>
         <tr>
@@ -418,28 +469,95 @@ template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </div
 </div><div class="memdoc">
 
 <p>Constructor from range. </p>
-<dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if <code>Iterator</code> is an input iterator whose value type is convertible to <code>T</code>.</dd></dl>
-<p>Will build internally a vector of values from the input iterators, encode it and assign the result to the internal integer instance. The value type of the iterator is converted to <code>T</code> using <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
+<dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if <code>Iterator</code> is an input iterator whose value type is safely convertible to <code>T</code>.</dd></dl>
+<p>This constructor will build internally a vector of values from the input iterators, encode it and assign the result to the internal integer instance. The value type of the iterator is converted to <code>T</code> using <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>beginning of the range. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">begin</td><td>beginning of the range. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">end</td><td>end of the range.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
+    <tr><td class="paramname">std::overflow_error</td><td>if the distance between <code>begin</code> and <code>end</code> is greater than an implementation-defined value. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>,</li>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a> (in case the value type of <code>Iterator</code> is not the same as <code>T</code>),</li>
-<li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>. </li>
+<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>,</li>
+<li>increment and dereference of the input iterators. </li>
 </ul>
 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00239">239</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00264">264</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ae9cede8fe5662c6582bc5e9ff99e2c3b"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
+<div class="memtemplate">
+template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpiranha_1_1kronecker__monomial.html">piranha::kronecker_monomial</a>&lt; T &gt;::<a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> </td>
+          <td>(</td>
+          <td class="paramtype">Iterator&#160;</td>
+          <td class="paramname"><em>begin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Iterator&#160;</td>
+          <td class="paramname"><em>end</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
+          <td class="paramname"><em>s</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructor from range and symbol set. </p>
+<dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if the corresponding range constructor is enabled.</dd></dl>
+<p>This constructor is identical to the constructor from range. In addition, after construction it will also check that the distance between <code>begin</code> and <code>end</code> is equal to the size of <code>s</code>. This constructor is used by <a class="el" href="classpiranha_1_1polynomial.html#a82b987c418295f567782f6bb1c78a190" title="Find coefficient. ">piranha::polynomial::find_cf()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">begin</td><td>beginning of the range. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">end</td><td>end of the range. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>reference symbol set.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">std::invalid_argument</td><td>if the distance between <code>begin</code> and <code>end</code> is different from the size of <code>s</code>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by the constructor from range. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00286">286</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -486,7 +604,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00256">256</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00302">302</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -540,7 +658,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00275">275</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00324">324</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -577,7 +695,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00288">288</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00337">337</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -621,7 +739,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00407">407</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00456">456</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -677,7 +795,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00436">436</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00485">485</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -747,7 +865,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00800">800</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00833">833</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -777,7 +895,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <p>Get internal instance. </p>
 <dl class="section return"><dt>Returns</dt><dd>value of the internal integer instance. </dd></dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00313">313</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00362">362</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -807,7 +925,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <p>Hash value. </p>
 <dl class="section return"><dt>Returns</dt><dd>the internal integer instance, cast to <code>std::size_t</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00499">499</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00537">537</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -870,7 +988,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00741">741</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00774">774</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -956,7 +1074,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00887">887</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00920">920</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1000,7 +1118,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>compatibility flag for the monomial. </dd></dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00331">331</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00380">380</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1032,7 +1150,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <p>A monomial is never considered ignorable.</p>
 <dl class="section return"><dt>Returns</dt><dd><code>false</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00356">356</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00405">405</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1075,7 +1193,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00390">390</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00439">439</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1120,7 +1238,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00536">536</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00574">574</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1185,11 +1303,11 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00378">378</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00427">427</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a9063b50eacad5bd44b0d72d931f1d0ee"></a>
+<a class="anchor" id="a72619c0354aad0e40fb1fc0bc4accfd0"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -1222,7 +1340,7 @@ template&lt;typename Cf , multiply_enabler&lt; Cf &gt;  = 0&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
-          <td class="paramname"><em>args</em>&#160;</td>
+          <td class="paramname">&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1238,32 +1356,25 @@ template&lt;typename Cf , multiply_enabler&lt; Cf &gt;  = 0&gt; </div>
 </div><div class="memdoc">
 
 <p>Multiply terms with a Kronecker monomial key. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is enabled only if <code>Cf</code> satisfies <a class="el" href="classpiranha_1_1is__cf.html" title="Type trait to detect coefficient types. ">piranha::is_cf</a> and it is multipliable, yielding a result of type <code>Cf</code>.</dd></dl>
-<p>Multiply <code>t1</code> by <code>t2</code>, storing the result in the only element of <code>res</code>. This method offers the basic exception safety guarantee.</p>
+<dl class="section note"><dt>Note</dt><dd>This method is enabled only if <code>Cf</code> satisfies <a class="el" href="classpiranha_1_1is__cf.html" title="Type trait to detect coefficient types. ">piranha::is_cf</a>, it is multipliable in-place, it is multipliable yielding a result of type <code>Cf</code>, and it is copy-assignable.</dd></dl>
+<p>Multiply <code>t1</code> by <code>t2</code>, storing the result in the only element of <code>res</code>. This method offers the basic exception safety guarantee. If <code>Cf</code> is an instance of <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>, then only the numerators of the coefficients will be multiplied.</p>
+<p>Note that the key of the return value is generated directly from the addition of the values of the input keys. No check is performed for overflow of either the limits of the integral type or the limits of the Kronecker codification.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>return value. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">t1</td><td>first argument. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">t2</td><td>second argument. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">args</td><td>reference set of arguments.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">t2</td><td>second argument.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">std::overflow_error</td><td>if the computation of the result overflows type <code>value_type</code>. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li>the multiplication of the coefficients,</li>
-<li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>,</li>
-<li><a class="el" href="classpiranha_1_1kronecker__monomial.html#a903b9f5d535d49b08deacdb4ea44b965" title="Unpack internal integer instance. ">unpack()</a>,</li>
-<li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>. </li>
-</ul>
-</td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by the multiplication of the coefficients. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00477">477</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00524">524</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1300,7 +1411,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the opposite of <a class="el" href="classpiranha_1_1kronecker__monomial.html#a83284694af3e88bf2771a0a677ec137e" title="Equality operator. ">operator==()</a>. </dd></dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00520">520</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00558">558</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1337,7 +1448,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> if the internal integral instance of <code>this</code> is equal to the integral instance of <code>other</code>, <code>false</code> otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00510">510</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00548">548</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1398,7 +1509,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00692">692</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00725">725</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1462,7 +1573,7 @@ template&lt;typename U , pow_enabler&lt; U &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00584">584</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00617">617</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1516,7 +1627,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00619">619</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00652">652</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1570,7 +1681,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00647">647</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00680">680</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1606,7 +1717,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00305">305</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00354">354</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1682,7 +1793,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00841">841</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00874">874</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1741,7 +1852,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00940">940</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00973">973</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1800,7 +1911,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00922">922</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00955">955</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1814,7 +1925,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a7114cee8c72912920dab890d49b98af0">v_type</a> <a class="el" href="classpiranha_1_1kronecker__monomial.html">piranha::kronecker_monomial</a>&lt; T &gt;::unpack </td>
+          <td class="memname"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a9ce166442a1f12b424aa9870999b47e3">v_type</a> <a class="el" href="classpiranha_1_1kronecker__monomial.html">piranha::kronecker_monomial</a>&lt; T &gt;::unpack </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
           <td class="paramname"><em>args</em></td><td>)</td>
@@ -1845,7 +1956,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00606">606</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00639">639</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1855,7 +1966,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

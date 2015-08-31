@@ -280,179 +280,191 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;}</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;</div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;</div>
-<div class="line"><a name="l00205"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool.html">  205</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpiranha_1_1thread__pool.html">thread_pool</a>: <span class="keyword">private</span> detail::thread_pool_base&lt;&gt;</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;{</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;                <span class="keyword">using</span> base = detail::thread_pool_base&lt;&gt;;</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                <span class="comment">// Enabler for use_threads.</span></div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Int&gt;</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;                <span class="keyword">using</span> use_threads_enabler = <span class="keyword">typename</span> std::enable_if&lt;(std::is_integral&lt;Int&gt;::value &amp;&amp; std::is_unsigned&lt;Int&gt;::value) ||</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;                        std::is_same&lt;Int,integer&gt;::value,<span class="keywordtype">int</span>&gt;::type;</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">typename</span> F, <span class="keyword">typename</span> ... Args&gt;</div>
-<div class="line"><a name="l00235"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool.html#a3478c7cb97f5030d943d5d99e50717a3">  235</a></span>&#160;                <span class="keyword">static</span> <span class="keyword">auto</span> <a class="code" href="classpiranha_1_1thread__pool.html#a3478c7cb97f5030d943d5d99e50717a3">enqueue</a>(<span class="keywordtype">unsigned</span> n, F &amp;&amp;f, Args &amp;&amp; ... args) -&gt;</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;                        decltype(base::s_queues[0u]-&gt;<a class="code" href="classpiranha_1_1thread__pool.html#a3478c7cb97f5030d943d5d99e50717a3">enqueue</a>(std::forward&lt;F&gt;(f),std::forward&lt;Args&gt;(args)...))</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;                {</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;                        std::lock_guard&lt;std::mutex&gt; lock(s_mutex);</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;                        <span class="keyword">using</span> size_type = decltype(base::s_queues.<a class="code" href="classpiranha_1_1thread__pool.html#a28ee9a80c039c6f37a69cf3d9c77fc51">size</a>());</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;                        <span class="keywordflow">if</span> (n &gt;= s_queues.size()) {</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;thread index is out of range&quot;</span>);</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;                        }</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;                        <span class="keywordflow">return</span> base::s_queues[<span class="keyword">static_cast&lt;</span>size_type<span class="keyword">&gt;</span>(n)]-&gt;<a class="code" href="classpiranha_1_1thread__pool.html#a3478c7cb97f5030d943d5d99e50717a3">enqueue</a>(std::forward&lt;F&gt;(f),std::forward&lt;Args&gt;(args)...);</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;                }</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;</div>
-<div class="line"><a name="l00251"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool.html#a28ee9a80c039c6f37a69cf3d9c77fc51">  251</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">unsigned</span> <a class="code" href="classpiranha_1_1thread__pool.html#a28ee9a80c039c6f37a69cf3d9c77fc51">size</a>()</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;                {</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;                        std::lock_guard&lt;std::mutex&gt; lock(s_mutex);</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                        <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keywordtype">unsigned</span><span class="keyword">&gt;</span>(base::s_queues.size());</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;                }</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;</div>
-<div class="line"><a name="l00271"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool.html#a6fe0d62525f87aa4267f41df5601167c">  271</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1thread__pool.html#a6fe0d62525f87aa4267f41df5601167c">resize</a>(<span class="keywordtype">unsigned</span> new_size)</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;                {</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;                        <span class="keywordflow">if</span> (unlikely(new_size == 0u)) {</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;cannot resize the thread pool to zero&quot;</span>);</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;                        }</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;                        std::lock_guard&lt;std::mutex&gt; lock(s_mutex);</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;                        <span class="keyword">using</span> size_type = decltype(base::s_queues.<a class="code" href="classpiranha_1_1thread__pool.html#a28ee9a80c039c6f37a69cf3d9c77fc51">size</a>());</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                        <span class="keyword">const</span> size_type new_s = <span class="keyword">static_cast&lt;</span>size_type<span class="keyword">&gt;</span>(new_size);</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;                        <span class="keywordflow">if</span> (unlikely(new_s != new_size)) {</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;invalid size&quot;</span>);</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;                        }</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;                        std::vector&lt;std::unique_ptr&lt;detail::task_queue&gt;&gt; new_queues;</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;                        new_queues.reserve(new_s);</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;                        <span class="keywordflow">for</span> (size_type i = 0u; i &lt; new_s; ++i) {</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;                                new_queues.emplace_back(::<span class="keyword">new</span> detail::task_queue(static_cast&lt;unsigned&gt;(i)));</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="comment">// \todo work around MSVC bug in destruction of statically allocated threads (if needed once we support MSVC), as per:</span></div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="comment">// http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc</span></div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="comment">// detach() and wait as a workaround?</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;<span class="comment">// \todo try to understand if we can suppress the future list class below in favour of STL-like algorithms.</span></div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> = <span class="keywordtype">void</span>&gt;</div>
+<div class="line"><a name="l00210"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool__.html">  210</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpiranha_1_1thread__pool__.html">thread_pool_</a>: <span class="keyword">private</span> detail::thread_pool_base&lt;&gt;</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;{</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;                <span class="keyword">using</span> base = detail::thread_pool_base&lt;&gt;;</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;                <span class="comment">// Enabler for use_threads.</span></div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Int&gt;</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;                <span class="keyword">using</span> use_threads_enabler = <span class="keyword">typename</span> std::enable_if&lt;(std::is_integral&lt;Int&gt;::value &amp;&amp; std::is_unsigned&lt;Int&gt;::value) ||</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;                        std::is_same&lt;Int,integer&gt;::value,<span class="keywordtype">int</span>&gt;::type;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;        <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">typename</span> F, <span class="keyword">typename</span> ... Args&gt;</div>
+<div class="line"><a name="l00240"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8">  240</a></span>&#160;                <span class="keyword">static</span> <span class="keyword">auto</span> <a class="code" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8">enqueue</a>(<span class="keywordtype">unsigned</span> n, F &amp;&amp;f, Args &amp;&amp; ... args) -&gt;</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;                        decltype(base::s_queues[0u]-&gt;<a class="code" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8">enqueue</a>(std::forward&lt;F&gt;(f),std::forward&lt;Args&gt;(args)...))</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;                {</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;                        std::lock_guard&lt;std::mutex&gt; lock(s_mutex);</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;                        <span class="keyword">using</span> size_type = decltype(base::s_queues.<a class="code" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">size</a>());</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;                        <span class="keywordflow">if</span> (n &gt;= s_queues.size()) {</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;thread index is out of range&quot;</span>);</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;                        }</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;                        <span class="keywordflow">return</span> base::s_queues[<span class="keyword">static_cast&lt;</span>size_type<span class="keyword">&gt;</span>(n)]-&gt;<a class="code" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8">enqueue</a>(std::forward&lt;F&gt;(f),std::forward&lt;Args&gt;(args)...);</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;                }</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;</div>
+<div class="line"><a name="l00256"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">  256</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">unsigned</span> <a class="code" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">size</a>()</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;                {</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;                        std::lock_guard&lt;std::mutex&gt; lock(s_mutex);</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;                        <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keywordtype">unsigned</span><span class="keyword">&gt;</span>(base::s_queues.size());</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;                }</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;</div>
+<div class="line"><a name="l00276"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e">  276</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e">resize</a>(<span class="keywordtype">unsigned</span> new_size)</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;                {</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                        <span class="keywordflow">if</span> (unlikely(new_size == 0u)) {</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;cannot resize the thread pool to zero&quot;</span>);</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;                        }</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;                        std::lock_guard&lt;std::mutex&gt; lock(s_mutex);</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;                        <span class="keyword">using</span> size_type = decltype(base::s_queues.<a class="code" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">size</a>());</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;                        <span class="keyword">const</span> size_type new_s = <span class="keyword">static_cast&lt;</span>size_type<span class="keyword">&gt;</span>(new_size);</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;                        <span class="keywordflow">if</span> (unlikely(new_s != new_size)) {</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;invalid size&quot;</span>);</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;                        }</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;                        <span class="comment">// NOTE: here the allocator is not swapped, as std::allocator won&#39;t propagate on swap.</span></div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;                        <span class="comment">// Besides, all instances of std::allocator are equal, so the operation is well-defined.</span></div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;                        <span class="comment">// http://en.cppreference.com/w/cpp/container/vector/swap</span></div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;                        <span class="comment">// If an exception gets actually thrown, no big deal.</span></div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;                        new_queues.swap(base::s_queues);</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;                }</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Int, use_threads_enabler&lt;Int&gt; = 0&gt;</div>
-<div class="line"><a name="l00314"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool.html#ac147eecbc994f3968b77a58178dc4b26">  314</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">unsigned</span> <a class="code" href="classpiranha_1_1thread__pool.html#ac147eecbc994f3968b77a58178dc4b26">use_threads</a>(<span class="keyword">const</span> Int &amp;work_size, <span class="keyword">const</span> Int &amp;min_work_per_thread)</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                {</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;                        <span class="comment">// Check input params.</span></div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;                        <span class="keywordflow">if</span> (unlikely(work_size &lt;= Int(0))) {</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;invalid value for work size&quot;</span>);</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;                        }</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;                        <span class="keywordflow">if</span> (unlikely(min_work_per_thread &lt;= Int(0))) {</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;invalid value for minimum work per thread&quot;</span>);</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;                        }</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;                        <span class="comment">// Don&#39;t use threads if we are not in the main thread.</span></div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;                        <span class="keywordflow">if</span> (std::this_thread::get_id() != <a class="code" href="classpiranha_1_1runtime__info.html#a22dc7ca3be0fcaa901702c5cd48291a6">runtime_info::get_main_thread_id</a>()) {</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;                                <span class="keywordflow">return</span> 1u;</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;                        }</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;                        std::lock_guard&lt;std::mutex&gt; lock(s_mutex);</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;                        <span class="keyword">const</span> <span class="keyword">auto</span> n_threads = <span class="keyword">static_cast&lt;</span><span class="keywordtype">unsigned</span><span class="keyword">&gt;</span>(base::s_queues.size());</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;                        piranha_assert(n_threads);</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;                        <span class="keywordflow">if</span> (work_size / n_threads &gt;= min_work_per_thread) {</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;                                <span class="comment">// Enough work per thread, use them all.</span></div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;                                <span class="keywordflow">return</span> n_threads;</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;                        }</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;                        <span class="comment">// Return a number of threads such that each thread consumes at least min_work_per_thread.</span></div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;                        <span class="comment">// Never return 0.</span></div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;                        <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keywordtype">unsigned</span><span class="keyword">&gt;</span>(std::max(Int(1),static_cast&lt;Int&gt;(work_size / min_work_per_thread)));</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;                }</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;};</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> F&gt;</div>
-<div class="line"><a name="l00353"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html">  353</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpiranha_1_1future__list.html">future_list</a></div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;{</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;                PIRANHA_TT_CHECK(<a class="code" href="classpiranha_1_1is__instance__of.html">is_instance_of</a>,F,std::future);</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;                <span class="comment">// Wait on a valid future, or abort.</span></div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;                <span class="keyword">static</span> <span class="keywordtype">void</span> wait_or_abort(<span class="keyword">const</span> F &amp;fut)</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;                {</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;                        piranha_assert(fut.valid());</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;                        <span class="keywordflow">try</span> {</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;                                fut.wait();</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;                        } <span class="keywordflow">catch</span> (...) {</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;                                <span class="comment">// TODO logging candidate, with info from exception.</span></div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;                                std::abort();</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;                        }</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;                }</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;        <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html#a51a48aaf8039b83a1071c1edbe705d28">future_list</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html#a51a48aaf8039b83a1071c1edbe705d28">future_list</a>(<span class="keyword">const</span> <a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html#a51a48aaf8039b83a1071c1edbe705d28">future_list</a>(<a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;<a class="code" href="classpiranha_1_1future__list.html#ab5684c6934963e4f5b0f701990c04c6d">operator=</a>(<span class="keyword">const</span> <a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;<a class="code" href="classpiranha_1_1future__list.html#ab5684c6934963e4f5b0f701990c04c6d">operator=</a>(<a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;</div>
-<div class="line"><a name="l00385"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html#a029eb558a5d1ad7acff2292dd815344b">  385</a></span>&#160;                <a class="code" href="classpiranha_1_1future__list.html#a029eb558a5d1ad7acff2292dd815344b">~future_list</a>()</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;                {</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;                        <a class="code" href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1">wait_all</a>();</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;                }</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;</div>
-<div class="line"><a name="l00399"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942">  399</a></span>&#160;                <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942">push_back</a>(F &amp;&amp;f)</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;                {</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;                        <span class="comment">// Push back empty future.</span></div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;                        <span class="keywordflow">try</span> {</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;                                m_list.emplace_back();</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;                        } <span class="keywordflow">catch</span> (...) {</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;                                <span class="comment">// If we get some error here, we want to make sure we wait on the future</span></div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;                                <span class="comment">// before escaping out.</span></div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;                                <span class="comment">// NOTE: calling wait() on an invalid future is UB.</span></div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;                                <span class="keywordflow">if</span> (f.valid()) {</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;                                        wait_or_abort(f);</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;                                }</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;                                <span class="keywordflow">throw</span>;</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;                        }</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;                        <span class="comment">// This cannot throw.</span></div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;                        m_list.back() = std::move(f);</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;                }</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;</div>
-<div class="line"><a name="l00420"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1">  420</a></span>&#160;                <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1">wait_all</a>()</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;                {</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;                        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;f: m_list) {</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;                                <span class="keywordflow">if</span> (f.valid()) {</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;                                        wait_or_abort(f);</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;                                }</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;                        }</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;                        std::vector&lt;std::unique_ptr&lt;detail::task_queue&gt;&gt; new_queues;</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;                        new_queues.reserve(new_s);</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;                        <span class="keywordflow">for</span> (size_type i = 0u; i &lt; new_s; ++i) {</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;                                new_queues.emplace_back(::<span class="keyword">new</span> detail::task_queue(static_cast&lt;unsigned&gt;(i)));</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;                        }</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;                        <span class="comment">// NOTE: here the allocator is not swapped, as std::allocator won&#39;t propagate on swap.</span></div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;                        <span class="comment">// Besides, all instances of std::allocator are equal, so the operation is well-defined.</span></div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;                        <span class="comment">// http://en.cppreference.com/w/cpp/container/vector/swap</span></div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;                        <span class="comment">// If an exception gets actually thrown, no big deal.</span></div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;                        new_queues.swap(base::s_queues);</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;                }</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;                <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Int, use_threads_enabler&lt;Int&gt; = 0&gt;</div>
+<div class="line"><a name="l00319"></a><span class="lineno"><a class="line" href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b">  319</a></span>&#160;                <span class="keyword">static</span> <span class="keywordtype">unsigned</span> <a class="code" href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b">use_threads</a>(<span class="keyword">const</span> Int &amp;work_size, <span class="keyword">const</span> Int &amp;min_work_per_thread)</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;                {</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;                        <span class="comment">// Check input params.</span></div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;                        <span class="keywordflow">if</span> (unlikely(work_size &lt;= Int(0))) {</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;invalid value for work size&quot;</span>);</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;                        }</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;                        <span class="keywordflow">if</span> (unlikely(min_work_per_thread &lt;= Int(0))) {</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;                                <a class="code" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(std::invalid_argument,<span class="stringliteral">&quot;invalid value for minimum work per thread&quot;</span>);</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;                        }</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;                        <span class="comment">// Don&#39;t use threads if we are not in the main thread.</span></div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;                        <span class="keywordflow">if</span> (std::this_thread::get_id() != <a class="code" href="classpiranha_1_1runtime__info.html#a22dc7ca3be0fcaa901702c5cd48291a6">runtime_info::get_main_thread_id</a>()) {</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;                                <span class="keywordflow">return</span> 1u;</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;                        }</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;                        std::lock_guard&lt;std::mutex&gt; lock(s_mutex);</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;                        <span class="keyword">const</span> <span class="keyword">auto</span> n_threads = <span class="keyword">static_cast&lt;</span><span class="keywordtype">unsigned</span><span class="keyword">&gt;</span>(base::s_queues.size());</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;                        piranha_assert(n_threads);</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;                        <span class="keywordflow">if</span> (work_size / n_threads &gt;= min_work_per_thread) {</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;                                <span class="comment">// Enough work per thread, use them all.</span></div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;                                <span class="keywordflow">return</span> n_threads;</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;                        }</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;                        <span class="comment">// Return a number of threads such that each thread consumes at least min_work_per_thread.</span></div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;                        <span class="comment">// Never return 0.</span></div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;                        <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keywordtype">unsigned</span><span class="keyword">&gt;</span>(std::max(Int(1),static_cast&lt;Int&gt;(work_size / min_work_per_thread)));</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;                }</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;};</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;</div>
+<div class="line"><a name="l00349"></a><span class="lineno"><a class="line" href="namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6">  349</a></span>&#160;<span class="keyword">using</span> <a class="code" href="classpiranha_1_1thread__pool__.html">thread_pool</a> = <a class="code" href="classpiranha_1_1thread__pool__.html">thread_pool_&lt;&gt;</a>;</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="comment">// \todo provide method to retrieve future values from get_all() using a vector (in case the future type</span></div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;<span class="comment">// is not void or a reference, in which case the get_all() method stays as it is).</span></div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;<span class="comment">// NOTE: is it really needed that this is parameterisd over F, instead of - say, T - and force it to be</span></div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;<span class="comment">// future&lt;T&gt; instead?</span></div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> F&gt;</div>
+<div class="line"><a name="l00365"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html">  365</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpiranha_1_1future__list.html">future_list</a></div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;{</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;                PIRANHA_TT_CHECK(<a class="code" href="classpiranha_1_1is__instance__of.html">is_instance_of</a>,F,std::future);</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;                <span class="comment">// Wait on a valid future, or abort.</span></div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;                <span class="keyword">static</span> <span class="keywordtype">void</span> wait_or_abort(<span class="keyword">const</span> F &amp;fut)</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;                {</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;                        piranha_assert(fut.valid());</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;                        <span class="keywordflow">try</span> {</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;                                fut.wait();</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;                        } <span class="keywordflow">catch</span> (...) {</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;                                <span class="comment">// TODO logging candidate, with info from exception.</span></div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;                                std::abort();</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;                        }</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;                }</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;        <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html#a51a48aaf8039b83a1071c1edbe705d28">future_list</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html#a51a48aaf8039b83a1071c1edbe705d28">future_list</a>(<span class="keyword">const</span> <a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html#a51a48aaf8039b83a1071c1edbe705d28">future_list</a>(<a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;<a class="code" href="classpiranha_1_1future__list.html#ab5684c6934963e4f5b0f701990c04c6d">operator=</a>(<span class="keyword">const</span> <a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;                <a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;<a class="code" href="classpiranha_1_1future__list.html#ab5684c6934963e4f5b0f701990c04c6d">operator=</a>(<a class="code" href="classpiranha_1_1future__list.html">future_list</a> &amp;&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;</div>
+<div class="line"><a name="l00397"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html#a029eb558a5d1ad7acff2292dd815344b">  397</a></span>&#160;                <a class="code" href="classpiranha_1_1future__list.html#a029eb558a5d1ad7acff2292dd815344b">~future_list</a>()</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;                {</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;                        <a class="code" href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1">wait_all</a>();</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;                }</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;</div>
+<div class="line"><a name="l00411"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942">  411</a></span>&#160;                <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942">push_back</a>(F &amp;&amp;f)</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;                {</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;                        <span class="comment">// Push back empty future.</span></div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;                        <span class="keywordflow">try</span> {</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;                                m_list.emplace_back();</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;                        } <span class="keywordflow">catch</span> (...) {</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;                                <span class="comment">// If we get some error here, we want to make sure we wait on the future</span></div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;                                <span class="comment">// before escaping out.</span></div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;                                <span class="comment">// NOTE: calling wait() on an invalid future is UB.</span></div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;                                <span class="keywordflow">if</span> (f.valid()) {</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;                                        wait_or_abort(f);</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;                                }</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;                                <span class="keywordflow">throw</span>;</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;                        }</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;                        <span class="comment">// This cannot throw.</span></div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;                        m_list.back() = std::move(f);</div>
 <div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;                }</div>
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;</div>
-<div class="line"><a name="l00435"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095">  435</a></span>&#160;                <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095">get_all</a>()</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;                {</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;                        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;f: m_list) {</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;                                <span class="comment">// NOTE: std::future&#39;s valid() method is noexcept.</span></div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;                                <span class="keywordflow">if</span> (f.valid()) {</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;                                        (void)f.get();</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;                                }</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;                        }</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;                }</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;        <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;                std::list&lt;F&gt; m_list;</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;};</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;}</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="classpiranha_1_1thread__pool_html_a6fe0d62525f87aa4267f41df5601167c"><div class="ttname"><a href="classpiranha_1_1thread__pool.html#a6fe0d62525f87aa4267f41df5601167c">piranha::thread_pool::resize</a></div><div class="ttdeci">static void resize(unsigned new_size)</div><div class="ttdoc">Pool resize. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00271">thread_pool.hpp:271</a></div></div>
-<div class="ttc" id="classpiranha_1_1future__list_html_a2e80f33417eef5cb4ac2ecf6d7c5c942"><div class="ttname"><a href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942">piranha::future_list::push_back</a></div><div class="ttdeci">void push_back(F &amp;&amp;f)</div><div class="ttdoc">Move-insert a future. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00399">thread_pool.hpp:399</a></div></div>
+<div class="line"><a name="l00432"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1">  432</a></span>&#160;                <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1">wait_all</a>()</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;                {</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;                        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;f: m_list) {</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;                                <span class="keywordflow">if</span> (f.valid()) {</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;                                        wait_or_abort(f);</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;                                }</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;                        }</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;                }</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;</div>
+<div class="line"><a name="l00447"></a><span class="lineno"><a class="line" href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095">  447</a></span>&#160;                <span class="keywordtype">void</span> <a class="code" href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095">get_all</a>()</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;                {</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;                        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;f: m_list) {</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;                                <span class="comment">// NOTE: std::future&#39;s valid() method is noexcept.</span></div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;                                <span class="keywordflow">if</span> (f.valid()) {</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;                                        (void)f.get();</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;                                }</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;                        }</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;                }</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;        <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;                std::list&lt;F&gt; m_list;</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;};</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;}</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="classpiranha_1_1future__list_html_a2e80f33417eef5cb4ac2ecf6d7c5c942"><div class="ttname"><a href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942">piranha::future_list::push_back</a></div><div class="ttdeci">void push_back(F &amp;&amp;f)</div><div class="ttdoc">Move-insert a future. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00411">thread_pool.hpp:411</a></div></div>
 <div class="ttc" id="exceptions_8hpp_html"><div class="ttname"><a href="exceptions_8hpp.html">exceptions.hpp</a></div><div class="ttdoc">Exceptions. </div></div>
-<div class="ttc" id="classpiranha_1_1future__list_html_a029eb558a5d1ad7acff2292dd815344b"><div class="ttname"><a href="classpiranha_1_1future__list.html#a029eb558a5d1ad7acff2292dd815344b">piranha::future_list::~future_list</a></div><div class="ttdeci">~future_list()</div><div class="ttdoc">Destructor. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00385">thread_pool.hpp:385</a></div></div>
-<div class="ttc" id="classpiranha_1_1thread__pool_html_ac147eecbc994f3968b77a58178dc4b26"><div class="ttname"><a href="classpiranha_1_1thread__pool.html#ac147eecbc994f3968b77a58178dc4b26">piranha::thread_pool::use_threads</a></div><div class="ttdeci">static unsigned use_threads(const Int &amp;work_size, const Int &amp;min_work_per_thread)</div><div class="ttdoc">Compute number of threads to use. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00314">thread_pool.hpp:314</a></div></div>
+<div class="ttc" id="classpiranha_1_1thread__pool___html_a4a2a1765622d427968dba7e49ffa5da0"><div class="ttname"><a href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">piranha::thread_pool_::size</a></div><div class="ttdeci">static unsigned size()</div><div class="ttdoc">Size. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00256">thread_pool.hpp:256</a></div></div>
+<div class="ttc" id="classpiranha_1_1thread__pool___html_ace98a230b3be7e60053190ee1abe4fb8"><div class="ttname"><a href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8">piranha::thread_pool_::enqueue</a></div><div class="ttdeci">static auto enqueue(unsigned n, F &amp;&amp;f, Args &amp;&amp;...args) -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt; F &gt;(f), std::forward&lt; Args &gt;(args)...))</div><div class="ttdoc">Append task. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00240">thread_pool.hpp:240</a></div></div>
+<div class="ttc" id="classpiranha_1_1future__list_html_a029eb558a5d1ad7acff2292dd815344b"><div class="ttname"><a href="classpiranha_1_1future__list.html#a029eb558a5d1ad7acff2292dd815344b">piranha::future_list::~future_list</a></div><div class="ttdeci">~future_list()</div><div class="ttdoc">Destructor. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00397">thread_pool.hpp:397</a></div></div>
+<div class="ttc" id="classpiranha_1_1thread__pool___html_a103d3b72ea9564dc55566f3ab303189e"><div class="ttname"><a href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e">piranha::thread_pool_::resize</a></div><div class="ttdeci">static void resize(unsigned new_size)</div><div class="ttdoc">Pool resize. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00276">thread_pool.hpp:276</a></div></div>
 <div class="ttc" id="classpiranha_1_1future__list_html_a51a48aaf8039b83a1071c1edbe705d28"><div class="ttname"><a href="classpiranha_1_1future__list.html#a51a48aaf8039b83a1071c1edbe705d28">piranha::future_list::future_list</a></div><div class="ttdeci">future_list()=default</div><div class="ttdoc">Defaulted default constructor. </div></div>
-<div class="ttc" id="classpiranha_1_1future__list_html_a79b7d84dbfa53c18ac0f7447975999e1"><div class="ttname"><a href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1">piranha::future_list::wait_all</a></div><div class="ttdeci">void wait_all()</div><div class="ttdoc">Wait on all the futures. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00420">thread_pool.hpp:420</a></div></div>
+<div class="ttc" id="classpiranha_1_1future__list_html_a79b7d84dbfa53c18ac0f7447975999e1"><div class="ttname"><a href="classpiranha_1_1future__list.html#a79b7d84dbfa53c18ac0f7447975999e1">piranha::future_list::wait_all</a></div><div class="ttdeci">void wait_all()</div><div class="ttdoc">Wait on all the futures. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00432">thread_pool.hpp:432</a></div></div>
 <div class="ttc" id="exceptions_8hpp_html_a2327080f0dc9f806bae763f2c28dd301"><div class="ttname"><a href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a></div><div class="ttdeci">#define piranha_throw(exception_type,...)</div><div class="ttdoc">Exception-throwing macro. </div><div class="ttdef"><b>Definition:</b> <a href="exceptions_8hpp_source.html#l00106">exceptions.hpp:106</a></div></div>
 <div class="ttc" id="classpiranha_1_1is__instance__of_html"><div class="ttname"><a href="classpiranha_1_1is__instance__of.html">piranha::is_instance_of</a></div><div class="ttdoc">Type trait for detecting instances of class templates. </div><div class="ttdef"><b>Definition:</b> <a href="type__traits_8hpp_source.html#l00488">type_traits.hpp:488</a></div></div>
 <div class="ttc" id="classpiranha_1_1thread__management_html_ae3fb4a118907d0c14e1e9b862f807c94"><div class="ttname"><a href="classpiranha_1_1thread__management.html#ae3fb4a118907d0c14e1e9b862f807c94">piranha::thread_management::bind_to_proc</a></div><div class="ttdeci">static void bind_to_proc(unsigned n)</div><div class="ttdoc">Bind thread to specific processor. </div><div class="ttdef"><b>Definition:</b> <a href="thread__management_8hpp_source.html#l00088">thread_management.hpp:88</a></div></div>
-<div class="ttc" id="classpiranha_1_1thread__pool_html"><div class="ttname"><a href="classpiranha_1_1thread__pool.html">piranha::thread_pool</a></div><div class="ttdoc">Static thread pool. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00205">thread_pool.hpp:205</a></div></div>
 <div class="ttc" id="classpiranha_1_1future__list_html_ab5684c6934963e4f5b0f701990c04c6d"><div class="ttname"><a href="classpiranha_1_1future__list.html#ab5684c6934963e4f5b0f701990c04c6d">piranha::future_list::operator=</a></div><div class="ttdeci">future_list &amp; operator=(const future_list &amp;)=delete</div><div class="ttdoc">Deleted copy assignment. </div></div>
-<div class="ttc" id="classpiranha_1_1future__list_html"><div class="ttname"><a href="classpiranha_1_1future__list.html">piranha::future_list</a></div><div class="ttdoc">Class to store a list of futures. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00353">thread_pool.hpp:353</a></div></div>
-<div class="ttc" id="classpiranha_1_1thread__pool_html_a28ee9a80c039c6f37a69cf3d9c77fc51"><div class="ttname"><a href="classpiranha_1_1thread__pool.html#a28ee9a80c039c6f37a69cf3d9c77fc51">piranha::thread_pool::size</a></div><div class="ttdeci">static unsigned size()</div><div class="ttdoc">Size. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00251">thread_pool.hpp:251</a></div></div>
+<div class="ttc" id="classpiranha_1_1future__list_html"><div class="ttname"><a href="classpiranha_1_1future__list.html">piranha::future_list</a></div><div class="ttdoc">Class to store a list of futures. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00365">thread_pool.hpp:365</a></div></div>
+<div class="ttc" id="classpiranha_1_1thread__pool___html_a03d28eff2b4c7636f8219c656cdd2f4b"><div class="ttname"><a href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b">piranha::thread_pool_::use_threads</a></div><div class="ttdeci">static unsigned use_threads(const Int &amp;work_size, const Int &amp;min_work_per_thread)</div><div class="ttdoc">Compute number of threads to use. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00319">thread_pool.hpp:319</a></div></div>
 <div class="ttc" id="namespacepiranha_html"><div class="ttname"><a href="namespacepiranha.html">piranha</a></div><div class="ttdoc">Root piranha namespace. </div><div class="ttdef"><b>Definition:</b> <a href="array__key_8hpp_source.html#l00044">array_key.hpp:44</a></div></div>
 <div class="ttc" id="type__traits_8hpp_html"><div class="ttname"><a href="type__traits_8hpp.html">type_traits.hpp</a></div><div class="ttdoc">Type traits. </div></div>
-<div class="ttc" id="classpiranha_1_1thread__pool_html_a3478c7cb97f5030d943d5d99e50717a3"><div class="ttname"><a href="classpiranha_1_1thread__pool.html#a3478c7cb97f5030d943d5d99e50717a3">piranha::thread_pool::enqueue</a></div><div class="ttdeci">static auto enqueue(unsigned n, F &amp;&amp;f, Args &amp;&amp;...args) -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt; F &gt;(f), std::forward&lt; Args &gt;(args)...))</div><div class="ttdoc">Append task. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00235">thread_pool.hpp:235</a></div></div>
 <div class="ttc" id="classpiranha_1_1runtime__info_html_ac3fd942fc4483b8b12a1214e13acea9b"><div class="ttname"><a href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b">piranha::runtime_info::get_hardware_concurrency</a></div><div class="ttdeci">static unsigned get_hardware_concurrency()</div><div class="ttdoc">Hardware concurrency. </div><div class="ttdef"><b>Definition:</b> <a href="runtime__info_8hpp_source.html#l00117">runtime_info.hpp:117</a></div></div>
-<div class="ttc" id="classpiranha_1_1future__list_html_a768ec5d6187ff911e39f8da460eab095"><div class="ttname"><a href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095">piranha::future_list::get_all</a></div><div class="ttdeci">void get_all()</div><div class="ttdoc">Get all the futures. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00435">thread_pool.hpp:435</a></div></div>
+<div class="ttc" id="classpiranha_1_1future__list_html_a768ec5d6187ff911e39f8da460eab095"><div class="ttname"><a href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095">piranha::future_list::get_all</a></div><div class="ttdeci">void get_all()</div><div class="ttdoc">Get all the futures. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00447">thread_pool.hpp:447</a></div></div>
 <div class="ttc" id="classpiranha_1_1runtime__info_html_a22dc7ca3be0fcaa901702c5cd48291a6"><div class="ttname"><a href="classpiranha_1_1runtime__info.html#a22dc7ca3be0fcaa901702c5cd48291a6">piranha::runtime_info::get_main_thread_id</a></div><div class="ttdeci">static const std::thread::id &amp; get_main_thread_id()</div><div class="ttdoc">Main thread ID. </div><div class="ttdef"><b>Definition:</b> <a href="runtime__info_8hpp_source.html#l00107">runtime_info.hpp:107</a></div></div>
+<div class="ttc" id="classpiranha_1_1thread__pool___html"><div class="ttname"><a href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a></div><div class="ttdoc">Static thread pool. </div><div class="ttdef"><b>Definition:</b> <a href="thread__pool_8hpp_source.html#l00210">thread_pool.hpp:210</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:54 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

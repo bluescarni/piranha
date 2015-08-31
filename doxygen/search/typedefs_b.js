@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['r_5fpolynomial',['r_polynomial',['../namespacepiranha.html#a469297997965d98c43c9e42a375934fb',1,'piranha']]],
   ['rational',['rational',['../namespacepiranha.html#ae329702ab296cd14e0e6d780ef09d5eb',1,'piranha']]],
   ['rebind',['rebind',['../classpiranha_1_1divisor__series.html#a86128b25d6bcf61b3943025f6f3b44eb',1,'piranha::divisor_series::rebind()'],['../classpiranha_1_1poisson__series.html#abace7da8a87c85cd5fcab30bfc6b4aa3',1,'piranha::poisson_series::rebind()'],['../classpiranha_1_1polynomial.html#a776347c2b504a0b842a3952b9fdc54f6',1,'piranha::polynomial::rebind()']]],
   ['reference',['reference',['../classpiranha_1_1cache__aligning__allocator.html#a49e9740fb70e176a89b504f5d592b9f6',1,'piranha::cache_aligning_allocator']]],

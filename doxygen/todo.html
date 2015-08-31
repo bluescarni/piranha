@@ -82,21 +82,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><dl class="reflist">
-<dt><a class="anchor" id="_todo000003"></a>Class <a class="el" href="classpiranha_1_1future__list.html">piranha::future_list&lt; F &gt;</a>  </dt>
-<dd>provide method to retrieve future values from <a class="el" href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095" title="Get all the futures. ">get_all()</a> using a vector (in case the future type is not void or a reference, in which case the <a class="el" href="classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095" title="Get all the futures. ">get_all()</a> method stays as it is).  </dd>
 <dt><a class="anchor" id="_todo000001"></a>Member <a class="el" href="classpiranha_1_1series.html#a4d2be8f9cd018cea990d8d33ff74b34e">piranha::series&lt; Cf, Key, Derived &gt;::transform</a>  (std::function&lt; std::pair&lt; typename term_type::cf_type, Derived &gt;(const std::pair&lt; typename term_type::cf_type, Derived &gt; &amp;)&gt; func) const </dt>
-<dd>require multipliability of cf * Derived and addability of the result to Derived in place.  </dd>
-<dt><a class="anchor" id="_todo000002"></a>Class <a class="el" href="classpiranha_1_1thread__pool.html">piranha::thread_pool</a>  </dt>
-<dd><p class="startdd">work around MSVC bug in destruction of statically allocated threads (if needed once we support MSVC), as per: <a href="http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc">http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc</a> detach() and wait as a workaround? </p>
-<p class="enddd">try to understand if we can suppress the future list class below in favour of STL-like algorithms.  </p>
-</dd>
-<dt><a class="anchor" id="_todo000004"></a>Class <a class="el" href="classpiranha_1_1tracing.html">piranha::tracing</a>  </dt>
-<dd><a class="el" href="classpiranha_1_1settings.html#abf78f72e46b7cde3aab9a6b2c84d30b5" title="Get tracing status. ">settings::get_tracing()</a> should use an atomic variable instead of mutex, to maximize performance in those cases in which we are not tracing. </dd>
+<dd>require multipliability of cf * Derived and addability of the result to Derived in place. </dd>
 </dl>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

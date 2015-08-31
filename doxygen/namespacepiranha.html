@@ -113,6 +113,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1base__exception.html">base_exception</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base exception class.  <a href="classpiranha_1_1base__exception.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1base__series__multiplier.html">base_series_multiplier</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base series multiplier.  <a href="classpiranha_1_1base__series__multiplier.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1cache__aligning__allocator.html">cache_aligning_allocator</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocator that tries to align memory to the cache line size.  <a href="classpiranha_1_1cache__aligning__allocator.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,6 +142,9 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1future__list.html">future_list</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Class to store a list of futures.  <a href="classpiranha_1_1future__list.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__begin__end.html">has_begin_end</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect the availability of <code>std::begin()</code> and <code>std::end()</code>.  <a href="classpiranha_1_1has__begin__end.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__binomial.html">has_binomial</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type trait to detect the presence of the <a class="el" href="namespacepiranha_1_1math.html#a5a44533ef3963c6c96f4aca746c92d07" title="Generalised binomial coefficient. ">piranha::math::binomial</a> function.  <a href="classpiranha_1_1has__binomial.html#details">More...</a><br /></td></tr>
@@ -426,10 +432,16 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if a series can be rebound.  <a href="structpiranha_1_1series__is__rebindable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1series__multiplier.html">series_multiplier</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default series multiplier.  <a href="classpiranha_1_1series__multiplier.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Series multiplier.  <a href="classpiranha_1_1series__multiplier.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1series__multiplier_3_01_series_00_01typename_01std_1_1enable__if_3_01detail_1_1kb459da37a0ddb37444991a23278e9f36.html">series_multiplier&lt; Series, typename std::enable_if&lt; detail::kronecker_enabler&lt; Series &gt;::value &gt;::type &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Series multiplier specialisation for polynomials with Kronecker monomials.  <a href="classpiranha_1_1series__multiplier_3_01_series_00_01typename_01std_1_1enable__if_3_01detail_1_1kb459da37a0ddb37444991a23278e9f36.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1divisor__series__multiplier__enabler_3_01_series_01_4_01_4.html">series_multiplier&lt; Series, detail::divisor_series_multiplier_enabler&lt; Series &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a> for <a class="el" href="classpiranha_1_1divisor__series.html" title="Divisor series. ">piranha::divisor_series</a>.  <a href="classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1divisor__series__multiplier__enabler_3_01_series_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html">series_multiplier&lt; Series, detail::poly_multiplier_enabler&lt; Series &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Series multiplier specialisation for polynomials.  <a href="classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1ps__series__multiplier__enabler_3_01_series_01_4_01_4.html">series_multiplier&lt; Series, detail::ps_series_multiplier_enabler&lt; Series &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a> for <a class="el" href="classpiranha_1_1poisson__series.html" title="Poisson series class. ">piranha::poisson_series</a>.  <a href="classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1ps__series__multiplier__enabler_3_01_series_01_4_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1series__operators.html">series_operators</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Series operators.  <a href="classpiranha_1_1series__operators.html#details">More...</a><br /></td></tr>
@@ -437,8 +449,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1series__recursion__index.html">series_recursion_index</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Series recursion index.  <a href="classpiranha_1_1series__recursion__index.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1settings.html">settings</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Global settings.  <a href="classpiranha_1_1settings.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1settings__.html">settings_</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Global settings.  <a href="classpiranha_1_1settings__.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1small__vector.html">small_vector</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Small vector class.  <a href="classpiranha_1_1small__vector.html#details">More...</a><br /></td></tr>
@@ -467,11 +479,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__management.html">thread_management</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Thread management.  <a href="classpiranha_1_1thread__management.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool.html">thread_pool</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Static thread pool.  <a href="classpiranha_1_1thread__pool.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1tracing.html">tracing</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tracing class.  <a href="classpiranha_1_1tracing.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html">thread_pool_</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Static thread pool.  <a href="classpiranha_1_1thread__pool__.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1trigonometric__series.html">trigonometric_series</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trigonometric series toolbox.  <a href="classpiranha_1_1trigonometric__series.html#details">More...</a><br /></td></tr>
@@ -497,6 +506,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nam
 using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#ae329702ab296cd14e0e6d780ef09d5eb">rational</a> = <a class="el" href="classpiranha_1_1mp__rational.html">mp_rational</a>&lt;&gt;</td></tr>
 <tr class="memdesc:ae329702ab296cd14e0e6d780ef09d5eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a> with default bit size. <br /></td></tr>
 <tr class="separator:ae329702ab296cd14e0e6d780ef09d5eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a469297997965d98c43c9e42a375934fb"><td class="memTemplParams" colspan="2">template&lt;unsigned N, typename Cf , typename Key &gt; </td></tr>
+<tr class="memitem:a469297997965d98c43c9e42a375934fb"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#a469297997965d98c43c9e42a375934fb">r_polynomial</a> = typename detail::r_poly_impl&lt; N, Cf, Key &gt;::type</td></tr>
+<tr class="memdesc:a469297997965d98c43c9e42a375934fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Recursive polynomial.  <a href="#a469297997965d98c43c9e42a375934fb">More...</a><br /></td></tr>
+<tr class="separator:a469297997965d98c43c9e42a375934fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf8373ab492b3cd9e4ae7ba5f42e4805"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf8373ab492b3cd9e4ae7ba5f42e4805"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#acf8373ab492b3cd9e4ae7ba5f42e4805">rtk_monomial</a> = <a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html">real_trigonometric_kronecker_monomial</a>&lt;&gt;</td></tr>
 <tr class="memdesc:acf8373ab492b3cd9e4ae7ba5f42e4805"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for <a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html" title="Real trigonometric Kronecker monomial class. ">piranha::real_trigonometric_kronecker_monomial</a> with default type. <br /></td></tr>
@@ -505,6 +518,12 @@ using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nam
 <tr class="memitem:a3b08e44f8cff8872d8708fa58e4efcd3"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#a3b08e44f8cff8872d8708fa58e4efcd3">series_rebind</a> = detail::series_rebind_&lt; T, Cf &gt;</td></tr>
 <tr class="memdesc:a3b08e44f8cff8872d8708fa58e4efcd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rebind series.  <a href="#a3b08e44f8cff8872d8708fa58e4efcd3">More...</a><br /></td></tr>
 <tr class="separator:a3b08e44f8cff8872d8708fa58e4efcd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b3bd7640a743985bcb412ed5918068d"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#a2b3bd7640a743985bcb412ed5918068d">settings</a> = <a class="el" href="classpiranha_1_1settings__.html">settings_</a>&lt;&gt;</td></tr>
+<tr class="memdesc:a2b3bd7640a743985bcb412ed5918068d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for <a class="el" href="classpiranha_1_1settings__.html" title="Global settings. ">piranha::settings_</a>.  <a href="#a2b3bd7640a743985bcb412ed5918068d">More...</a><br /></td></tr>
+<tr class="separator:a2b3bd7640a743985bcb412ed5918068d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1372bc168006768fa64731fe9f85fb6"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6">thread_pool</a> = <a class="el" href="classpiranha_1_1thread__pool__.html">thread_pool_</a>&lt;&gt;</td></tr>
+<tr class="memdesc:af1372bc168006768fa64731fe9f85fb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for <a class="el" href="classpiranha_1_1thread__pool__.html" title="Static thread pool. ">piranha::thread_pool_</a>.  <a href="#af1372bc168006768fa64731fe9f85fb6">More...</a><br /></td></tr>
+<tr class="separator:af1372bc168006768fa64731fe9f85fb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd41e4fdc9e391a963e34667f19e62ad"><td class="memTemplParams" colspan="2">template&lt;typename T , typename... Args&gt; </td></tr>
 <tr class="memitem:afd41e4fdc9e391a963e34667f19e62ad"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#afd41e4fdc9e391a963e34667f19e62ad">min_int</a> = typename detail::min_int_impl&lt; T, Args...&gt;::type</td></tr>
 <tr class="memdesc:afd41e4fdc9e391a963e34667f19e62ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect narrowest integer type.  <a href="#afd41e4fdc9e391a963e34667f19e62ad">More...</a><br /></td></tr>
@@ -596,6 +615,30 @@ template&lt;typename T , typename... Args&gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a469297997965d98c43c9e42a375934fb"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;unsigned N, typename Cf , typename Key &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="namespacepiranha.html#a469297997965d98c43c9e42a375934fb">piranha::r_polynomial</a> = typedef typename detail::r_poly_impl&lt;N,Cf,Key&gt;::type</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Recursive polynomial. </p>
+<p>This is a convenience alias that can be used to define multivariate polynomials as univariate polynomials with univariate polynomials as coefficients.</p>
+<p>For instance, the type </p><div class="fragment"><div class="line">r_polynomial&lt;1,double,k_monomial&gt;;</div>
+</div><!-- fragment --><p> is exactly equivalent to </p><div class="fragment"><div class="line">polynomial&lt;double,k_monomial&gt;;</div>
+</div><!-- fragment --><p> The type </p><div class="fragment"><div class="line">r_polynomial&lt;2,double,k_monomial&gt;;</div>
+</div><!-- fragment --><p> is exactly equivalent to </p><div class="fragment"><div class="line">polynomial&lt;polynomial&lt;double,k_monomial&gt;,<a class="code" href="namespacepiranha.html#a8a41a40472e52a050f1c6a80ee9cf340">k_monomial</a>&gt;;</div>
+</div><!-- fragment --><p> And so on for increasing values of <code>N</code>. <code>N</code> must be nonzero, or a compile-time error will be generated. </p>
+
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l00745">745</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="a3b08e44f8cff8872d8708fa58e4efcd3"></a>
 <div class="memitem">
 <div class="memproto">
@@ -611,7 +654,41 @@ template&lt;typename T , typename Cf &gt; </div>
 <p>Rebind series. </p>
 <p>Utility alias to rebind series <code>T</code> to coefficient <code>Cf</code>. See <a class="el" href="structpiranha_1_1series__is__rebindable.html" title="Check if a series can be rebound. ">piranha::series_is_rebindable</a> for an explanation. In addition to being a shortcut to the <code>rebind</code> alias in <code>T</code> (if present), the implementation will also check that <code>T</code> and <code>Cf</code> satisfy the <a class="el" href="structpiranha_1_1series__is__rebindable.html" title="Check if a series can be rebound. ">piranha::series_is_rebindable</a> type traits. </p>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l00233">233</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l00217">217</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a2b3bd7640a743985bcb412ed5918068d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="namespacepiranha.html#a2b3bd7640a743985bcb412ed5918068d">piranha::settings</a> = typedef <a class="el" href="classpiranha_1_1settings__.html">settings_</a>&lt;&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Alias for <a class="el" href="classpiranha_1_1settings__.html" title="Global settings. ">piranha::settings_</a>. </p>
+<p>This is the alias through which the methods in <a class="el" href="classpiranha_1_1settings__.html" title="Global settings. ">piranha::settings_</a> should be called. </p>
+
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00231">231</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="af1372bc168006768fa64731fe9f85fb6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6">piranha::thread_pool</a> = typedef <a class="el" href="classpiranha_1_1thread__pool__.html">thread_pool_</a>&lt;&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Alias for <a class="el" href="classpiranha_1_1thread__pool__.html" title="Static thread pool. ">piranha::thread_pool_</a>. </p>
+<p>This is the alias through which the methods in <a class="el" href="classpiranha_1_1thread__pool__.html" title="Static thread pool. ">piranha::thread_pool_</a> should be called. </p>
+
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00349">349</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -917,7 +994,7 @@ template&lt;typename T , typename  = typename std::enable_if&lt;is_container_ele
 
 <p>Parallel destruction. </p>
 <dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>T</code> satisfies the <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a> type trait.</dd></dl>
-<p>This function will destroy in parallel the element of an array <code>ptr</code> of size <code>size</code>. If <code>n_threads</code> is 0 or 1, the operation will be performed in the calling thread, otherwise the first <code>n_threads</code> in <a class="el" href="classpiranha_1_1thread__pool.html" title="Static thread pool. ">piranha::thread_pool</a> will be used to perform the operation concurrently.</p>
+<p>This function will destroy in parallel the element of an array <code>ptr</code> of size <code>size</code>. If <code>n_threads</code> is 0 or 1, the operation will be performed in the calling thread, otherwise the first <code>n_threads</code> in <a class="el" href="namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6" title="Alias for piranha::thread_pool_. ">piranha::thread_pool</a> will be used to perform the operation concurrently.</p>
 <p>The function is a no-op if <code>ptr</code> is null or if <code>T</code> has a trivial destructor.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -974,7 +1051,7 @@ template&lt;typename T , typename  = typename std::enable_if&lt;is_container_ele
 
 <p>Parallel value initialisation. </p>
 <dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>T</code> satisfies the <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a> type trait.</dd></dl>
-<p>This function will value-initialise in parallel the array <code>ptr</code> of size <code>size</code>. The routine will use the first <code>n_threads</code> from <a class="el" href="classpiranha_1_1thread__pool.html" title="Static thread pool. ">piranha::thread_pool</a> to perform the operation concurrently. If <code>n_threads</code> is 1 or 0, the operation will be performed in the calling thread. If <code>ptr</code> is null, this function will be a no-op.</p>
+<p>This function will value-initialise in parallel the array <code>ptr</code> of size <code>size</code>. The routine will use the first <code>n_threads</code> from <a class="el" href="namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6" title="Alias for piranha::thread_pool_. ">piranha::thread_pool</a> to perform the operation concurrently. If <code>n_threads</code> is 1 or 0, the operation will be performed in the calling thread. If <code>ptr</code> is null, this function will be a no-op.</p>
 <p>This function provides the strong exception safety guarantee: in case of errors, any constructed instance of <code>T</code> will be destroyed before the error is re-thrown.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -989,7 +1066,7 @@ template&lt;typename T , typename  = typename std::enable_if&lt;is_container_ele
     <tr><td class="paramname">std::bad_alloc</td><td>in case of memory allocation errors in multithreaded mode. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>the value initialisation of instances of type <code>T</code>,</li>
-<li><a class="el" href="classpiranha_1_1thread__pool.html#a3478c7cb97f5030d943d5d99e50717a3" title="Append task. ">piranha::thread_pool::enqueue()</a> and <a class="el" href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942" title="Move-insert a future. ">piranha::future_list::push_back()</a>, only in multithreaded mode. </li>
+<li><a class="el" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8" title="Append task. ">piranha::thread_pool::enqueue()</a> and <a class="el" href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942" title="Move-insert a future. ">piranha::future_list::push_back()</a>, only in multithreaded mode. </li>
 </ul>
 </td></tr>
   </table>
@@ -1164,7 +1241,7 @@ template&lt;typename To , typename From , detail::safe_cast_enabler&lt; To, From
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

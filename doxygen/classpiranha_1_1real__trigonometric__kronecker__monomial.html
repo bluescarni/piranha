@@ -297,7 +297,7 @@ class piranha::real_trigonometric_kronecker_monomial&lt; T &gt;</h3>
 <p>This class supports serialization.</p>
 <dl class="section author"><dt>Author</dt><dd>Francesco Biscani (<a href="#" onclick="location.href='mai'+'lto:'+'blu'+'es'+'car'+'ni'+'@gm'+'ai'+'l.c'+'om'; return false;">blues<span style="display: none;">.nosp@m.</span>carn<span style="display: none;">.nosp@m.</span>i@gma<span style="display: none;">.nosp@m.</span>il.c<span style="display: none;">.nosp@m.</span>om</a>) </dd></dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00110">110</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00111">111</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
 <a class="anchor" id="a3d1bb5886071dbfc60b86469841e78b7"></a>
 <div class="memitem">
@@ -314,7 +314,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <p>Size type. </p>
 <p>Used to represent the number of variables in the monomial. Equivalent to the size type of <a class="el" href="classpiranha_1_1kronecker__array.html" title="Kronecker array. ">piranha::kronecker_array</a>. </p>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00125">125</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00126">126</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -720,7 +720,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00974">974</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00970">970</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -810,7 +810,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <p>Hash value. </p>
 <dl class="section return"><dt>Returns</dt><dd>the internal integer instance, cast to <code>std::size_t</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00732">732</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00728">728</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -871,7 +871,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00930">930</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00926">926</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1115,7 +1115,7 @@ template&lt;typename Cf , multiply_enabler&lt; Cf &gt;  = 0&gt; </div>
 <li><code>Cf</code> is copy-assignable and it satisfies <a class="el" href="classpiranha_1_1has__negate.html" title="Type trait to detect the presence of the piranha::math::negate function. ">piranha::has_negate</a>.</li>
 </ul>
 </dd></dl>
-<p>This method will compute the result of the multiplication of the two terms <code>t1</code> and <code>t2</code> with trigonometric key. The result is stored in the two terms of <code>res</code> and it is computed using basic trigonometric formulae.</p>
+<p>This method will compute the result of the multiplication of the two terms <code>t1</code> and <code>t2</code> with trigonometric key. The result is stored in the two terms of <code>res</code> and it is computed using basic trigonometric formulae. Note however that this method will <b>not</b> perform the division by two implied by Werner's formulae. Also, in case <code>Cf</code> is an instance of <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>, only the numerators of the coefficients will be multiplied.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>result of the multiplication. </td></tr>
@@ -1140,7 +1140,7 @@ template&lt;typename Cf , multiply_enabler&lt; Cf &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00667">667</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00669">669</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1177,7 +1177,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the opposite of <a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#a00bd726fdc1ecbc030c493f8ca4a946a" title="Equality operator. ">operator==()</a>. </dd></dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00753">753</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00749">749</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1214,7 +1214,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> if the internal integral instance and the flavour of <code>this</code> are the same of <code>other</code>, <code>false</code> otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00743">743</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00739">739</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1274,7 +1274,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00880">880</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00876">876</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1328,7 +1328,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00782">782</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00778">778</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1382,7 +1382,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00826">826</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00822">822</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1536,7 +1536,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l01050">1050</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l01046">1046</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1855,7 +1855,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l01114">1114</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l01110">1110</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1914,7 +1914,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l01212">1212</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l01208">1208</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1973,7 +1973,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l01194">1194</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l01190">1190</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2018,7 +2018,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00769">769</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html#l00765">765</a> of file <a class="el" href="real__trigonometric__kronecker__monomial_8hpp_source.html">real_trigonometric_kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2028,7 +2028,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:28 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

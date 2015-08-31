@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['has_5fbegin_5fend',['has_begin_end',['../classpiranha_1_1has__begin__end.html',1,'piranha']]],
   ['has_5fbinomial',['has_binomial',['../classpiranha_1_1has__binomial.html',1,'piranha']]],
   ['has_5fconvert_5fto',['has_convert_to',['../classpiranha_1_1has__convert__to.html',1,'piranha']]],
   ['has_5fcosine',['has_cosine',['../classpiranha_1_1has__cosine.html',1,'piranha']]],

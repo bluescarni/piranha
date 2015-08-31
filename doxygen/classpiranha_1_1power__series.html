@@ -91,7 +91,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classpiranha_1_1power__series-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">piranha::power_series&lt; Series, Derived &gt; Class Template Reference</div>  </div>
@@ -155,29 +154,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ab6c335e9114a9be65cc447eed2605c43"><td class="memTemplItemLeft" align="right" valign="top">Derived&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1power__series.html#ab6c335e9114a9be65cc447eed2605c43">truncate_degree</a> (const T &amp;max_degree, const std::vector&lt; std::string &gt; &amp;names) const </td></tr>
 <tr class="memdesc:ab6c335e9114a9be65cc447eed2605c43"><td class="mdescLeft">&#160;</td><td class="mdescRight">Partial degree truncation.  <a href="#ab6c335e9114a9be65cc447eed2605c43">More...</a><br /></td></tr>
 <tr class="separator:ab6c335e9114a9be65cc447eed2605c43"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b7c4667e6e9e527e744479cb8baf06c"><td class="memTemplParams" colspan="2">template&lt;typename T  = power_series, at_degree_enabler&lt; T &gt;  = 0&gt; </td></tr>
-<tr class="memitem:a6b7c4667e6e9e527e744479cb8baf06c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1power__series.html#a6b7c4667e6e9e527e744479cb8baf06c">auto_truncate</a> ()</td></tr>
-<tr class="memdesc:a6b7c4667e6e9e527e744479cb8baf06c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform automatic truncation.  <a href="#a6b7c4667e6e9e527e744479cb8baf06c">More...</a><br /></td></tr>
-<tr class="separator:a6b7c4667e6e9e527e744479cb8baf06c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:abc967cd40e03ec98f1036506be9aaba0"><td class="memTemplParams" colspan="2">template&lt;typename U , typename T  = power_series, at_degree_set_enabler&lt; T, U &gt;  = 0&gt; </td></tr>
-<tr class="memitem:abc967cd40e03ec98f1036506be9aaba0"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1power__series.html#abc967cd40e03ec98f1036506be9aaba0">set_auto_truncate_degree</a> (const U &amp;max_degree)</td></tr>
-<tr class="memdesc:abc967cd40e03ec98f1036506be9aaba0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set total-degree-based auto-truncation.  <a href="#abc967cd40e03ec98f1036506be9aaba0">More...</a><br /></td></tr>
-<tr class="separator:abc967cd40e03ec98f1036506be9aaba0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf63eaabd12a4442ef8db73d6408e0e4"><td class="memTemplParams" colspan="2">template&lt;typename U , typename T  = power_series, at_degree_set_enabler&lt; T, U &gt;  = 0&gt; </td></tr>
-<tr class="memitem:adf63eaabd12a4442ef8db73d6408e0e4"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1power__series.html#adf63eaabd12a4442ef8db73d6408e0e4">set_auto_truncate_degree</a> (const U &amp;max_degree, const std::vector&lt; std::string &gt; &amp;names)</td></tr>
-<tr class="memdesc:adf63eaabd12a4442ef8db73d6408e0e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set partial-degree-based auto-truncation.  <a href="#adf63eaabd12a4442ef8db73d6408e0e4">More...</a><br /></td></tr>
-<tr class="separator:adf63eaabd12a4442ef8db73d6408e0e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c74bd5642d0acd2cb40697f67502266"><td class="memTemplParams" colspan="2">template&lt;typename T  = power_series, at_degree_enabler&lt; T &gt;  = 0&gt; </td></tr>
-<tr class="memitem:a9c74bd5642d0acd2cb40697f67502266"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1power__series.html#a9c74bd5642d0acd2cb40697f67502266">unset_auto_truncate_degree</a> ()</td></tr>
-<tr class="memdesc:a9c74bd5642d0acd2cb40697f67502266"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disable degree-based auto-truncation.  <a href="#a9c74bd5642d0acd2cb40697f67502266">More...</a><br /></td></tr>
-<tr class="separator:a9c74bd5642d0acd2cb40697f67502266"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c21ffcb7def44fda1f2f50dacc9f3ae"><td class="memTemplParams" colspan="2">template&lt;typename T  = power_series, at_degree_enabler&lt; T &gt;  = 0&gt; </td></tr>
-<tr class="memitem:a9c21ffcb7def44fda1f2f50dacc9f3ae"><td class="memTemplItemLeft" align="right" valign="top">static std::tuple&lt; int, degree_type&lt; T &gt;, std::vector&lt; std::string &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1power__series.html#a9c21ffcb7def44fda1f2f50dacc9f3ae">get_auto_truncate_degree</a> ()</td></tr>
-<tr class="memdesc:a9c21ffcb7def44fda1f2f50dacc9f3ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query the status of the degree-based auto-truncation mechanism.  <a href="#a9c21ffcb7def44fda1f2f50dacc9f3ae">More...</a><br /></td></tr>
-<tr class="separator:a9c21ffcb7def44fda1f2f50dacc9f3ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Series, typename Derived&gt;<br />
@@ -185,10 +161,8 @@ class piranha::power_series&lt; Series, Derived &gt;</h3>
 
 <p>Power series toolbox. </p>
 <p>This toolbox is intended to extend the <code>Series</code> type with properties of formal power series.</p>
-<p>Specifically, the toolbox will conditionally augment a <code>Series</code> type by adding methods to query the total and partial (low) degree of a <code>Series</code> object. Such augmentation takes place if the series' coefficient and/or key types expose methods to query their degree properties (as established by the <a class="el" href="classpiranha_1_1has__degree.html" title="Type trait to detect if type has a degree property. ">piranha::has_degree</a>, <a class="el" href="classpiranha_1_1key__has__degree.html" title="Type trait to detect if a key type has a degree property. ">piranha::key_has_degree</a> and similar type traits).</p>
-<p>As an additional requirement, the types returned when querying the degree must be constructible from <code>int</code>, copy or move constructible, less-than comparable and nothrow move-assignable.</p>
+<p>Specifically, the toolbox will conditionally augment a <code>Series</code> type by adding methods to query the total and partial (low) degree of a <code>Series</code> object. Such augmentation takes place if the series' coefficient and/or key types expose methods to query their degree properties (as established by the <a class="el" href="classpiranha_1_1has__degree.html" title="Type trait to detect if type has a degree property. ">piranha::has_degree</a>, <a class="el" href="classpiranha_1_1key__has__degree.html" title="Type trait to detect if a key type has a degree property. ">piranha::key_has_degree</a> and similar type traits), and if the necessary arithmetic operations are supported by the involved types. As an additional requirement, the types returned when querying the degree must be constructible from <code>int</code>, less-than comparable and they must satisfy <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a>.</p>
 <p>This toolbox provides also support for truncation based on the total or partial degree. In addition to the requirements of the degree-querying methods, the truncation methods also require the supplied degree limit to be comparable to the type returned by the degree-querying methods. The truncation methods will recursively truncate the coefficients of the series via the <a class="el" href="namespacepiranha_1_1math.html#ab529e82af5b6a2f2a87d7c4f2c4268a8" title="Truncation based on the total degree. ">piranha::math::truncate_degree()</a> function.</p>
-<p>This class supports also the automatic truncation mechanism, via <a class="el" href="classpiranha_1_1power__series.html#a6b7c4667e6e9e527e744479cb8baf06c" title="Perform automatic truncation. ">auto_truncate()</a>, used, e.g., by the multiplication operator in <a class="el" href="classpiranha_1_1series__operators.html" title="Series operators. ">piranha::series_operators</a>. The degree-based automatic truncation can be configured via a set of thread-safe static methods, enabled if the total and partial degree of the series are the same type, and if truncation is supported.</p>
 <p>If the requirements outlined above are not satisfied, the degree-querying and the truncation methods will be disabled.</p>
 <p>This class satisfies the <a class="el" href="classpiranha_1_1is__series.html" title="Type trait to detect series types. ">piranha::is_series</a> type trait.</p>
 <h2>Type requirements</h2>
@@ -204,54 +178,8 @@ class piranha::power_series&lt; Series, Derived &gt;</h3>
 <p>This class supports serialization if <code>Series</code> does.</p>
 <dl class="section author"><dt>Author</dt><dd>Francesco Biscani (<a href="#" onclick="location.href='mai'+'lto:'+'blu'+'es'+'car'+'ni'+'@gm'+'ai'+'l.c'+'om'; return false;">blues<span style="display: none;">.nosp@m.</span>carn<span style="display: none;">.nosp@m.</span>i@gma<span style="display: none;">.nosp@m.</span>il.c<span style="display: none;">.nosp@m.</span>om</a>) </dd></dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00093">93</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00158">158</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a6b7c4667e6e9e527e744479cb8baf06c"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename Series, typename Derived&gt; </div>
-<div class="memtemplate">
-template&lt;typename T  = power_series, at_degree_enabler&lt; T &gt;  = 0&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classpiranha_1_1power__series.html">piranha::power_series</a>&lt; Series, Derived &gt;::auto_truncate </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Perform automatic truncation. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is available only if the requisites outlined in <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a> are satisfied.</dd></dl>
-<p>This method will truncate <code>this</code> according to the truncation settings from <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a>. Additionally, it will also call the <code>auto_truncate()</code> method from the parent series type, if it exists.</p>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li>threading primitives,</li>
-<li>construction and/or assignment of the degree type,</li>
-<li>memory errors in standard containers,</li>
-<li><a class="el" href="classpiranha_1_1power__series.html#a3c426d939bc75a2ba8365a6f82c91196" title="Total degree truncation. ">truncate_degree()</a>,</li>
-<li>the <code>auto_truncate()</code> method from the parent series type, if it exists. </li>
-</ul>
-</td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00585">585</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="a6ceadbb37c9f10543e8859af0a759814"></a>
 <div class="memitem">
 <div class="memproto">
@@ -293,7 +221,7 @@ template&lt;typename T  = power_series&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00313">313</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00284">284</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -345,51 +273,7 @@ template&lt;typename T  = power_series&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00361">361</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a9c21ffcb7def44fda1f2f50dacc9f3ae"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename Series, typename Derived&gt; </div>
-<div class="memtemplate">
-template&lt;typename T  = power_series, at_degree_enabler&lt; T &gt;  = 0&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static std::tuple&lt;int,degree_type&lt;T&gt;,std::vector&lt;std::string&gt; &gt; <a class="el" href="classpiranha_1_1power__series.html">piranha::power_series</a>&lt; Series, Derived &gt;::get_auto_truncate_degree </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Query the status of the degree-based auto-truncation mechanism. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is available only if the requisites outlined in <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a> are satisfied.</dd></dl>
-<p>This method will return a tuple of three elements describing the status of the degree-based auto-truncation mechanism. The elements of the tuple have the following meaning:</p><ul>
-<li>truncation mode (0 if disabled, 1 for total-degree truncation and 2 for partial-degree truncation),</li>
-<li>the maximum degree allowed,</li>
-<li>the list of names to be considered for partial truncation.</li>
-</ul>
-<dl class="section return"><dt>Returns</dt><dd>a tuple representing the status of the degree-based auto-truncation mechanism.</dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by threading primitives or by the involved constructors. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00564">564</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00332">332</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -434,7 +318,7 @@ template&lt;typename T  = power_series&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00336">336</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00307">307</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -486,121 +370,7 @@ template&lt;typename T  = power_series&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00387">387</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="abc967cd40e03ec98f1036506be9aaba0"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename Series, typename Derived&gt; </div>
-<div class="memtemplate">
-template&lt;typename U , typename T  = power_series, at_degree_set_enabler&lt; T, U &gt;  = 0&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void <a class="el" href="classpiranha_1_1power__series.html">piranha::power_series</a>&lt; Series, Derived &gt;::set_auto_truncate_degree </td>
-          <td>(</td>
-          <td class="paramtype">const U &amp;&#160;</td>
-          <td class="paramname"><em>max_degree</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Set total-degree-based auto-truncation. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is available only if the requisites outlined in <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a> are satisfied, and if <code>U</code> can be safely cast to the degree type.</dd></dl>
-<p>Setup the degree-based auto-truncation mechanism to truncate according to the total maximum degree.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">max_degree</td><td>maximum total degree that will be retained during automatic truncation.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li>threading primitives,</li>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
-<li>the constructor of the degree type. </li>
-</ul>
-</td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00482">482</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="adf63eaabd12a4442ef8db73d6408e0e4"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename Series, typename Derived&gt; </div>
-<div class="memtemplate">
-template&lt;typename U , typename T  = power_series, at_degree_set_enabler&lt; T, U &gt;  = 0&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void <a class="el" href="classpiranha_1_1power__series.html">piranha::power_series</a>&lt; Series, Derived &gt;::set_auto_truncate_degree </td>
-          <td>(</td>
-          <td class="paramtype">const U &amp;&#160;</td>
-          <td class="paramname"><em>max_degree</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>names</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Set partial-degree-based auto-truncation. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is available only if the requisites outlined in <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a> are satisfied, and if <code>U</code> can be safely cast to the degree type.</dd></dl>
-<p>Setup the degree-based auto-truncation mechanism to truncate according to the partial degree.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">max_degree</td><td>maximum partial degree that will be retained during automatic truncation. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">names</td><td>names of the variables that will be considered during the computation of the partial degree.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li>threading primitives,</li>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
-<li>the constructor of the degree type,</li>
-<li>memory allocation errors in standard containers. </li>
-</ul>
-</td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00515">515</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00358">358</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -653,7 +423,7 @@ template&lt;typename T , typename U  = power_series, truncate_degree_enabler&lt;
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00419">419</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00390">390</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -717,51 +487,7 @@ template&lt;typename T , typename U  = power_series, truncate_pdegree_enabler&lt
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00452">452</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a9c74bd5642d0acd2cb40697f67502266"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename Series, typename Derived&gt; </div>
-<div class="memtemplate">
-template&lt;typename T  = power_series, at_degree_enabler&lt; T &gt;  = 0&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void <a class="el" href="classpiranha_1_1power__series.html">piranha::power_series</a>&lt; Series, Derived &gt;::unset_auto_truncate_degree </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Disable degree-based auto-truncation. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is available only if the requisites outlined in <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a> are satisfied.</dd></dl>
-<p>Disable the degree-based auto-truncation mechanism.</p>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li>threading primitives,</li>
-<li>the constructor of the degree type,</li>
-<li>memory allocation errors in standard containers. </li>
-</ul>
-</td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00539">539</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00423">423</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -771,7 +497,7 @@ template&lt;typename T  = power_series, at_degree_enabler&lt; T &gt;  = 0&gt; </
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:28 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

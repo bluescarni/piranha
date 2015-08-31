@@ -168,12 +168,12 @@ Friends</h2></td></tr>
 <li>in case two series arguments have different symbol sets, either one or both series will be copied in a new series in which the symbols have been merged, and the operation will be performed on those series instead;</li>
 <li>in-place arithmetic operators are implemented as binary operators plus move-assignment;</li>
 <li>addition and subtraction are always available for any series type;</li>
-<li>series multiplication requires the coefficient types to be multipliable and a valid specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Default series multiplier. ">piranha::series_multiplier</a> for the promoted series type. Additionally, the <code>auto_truncate()</code> method of the result, if present, will be called before the result is returned;</li>
+<li>series multiplication requires the coefficient types to be multipliable and a valid specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a> for the promoted series type;</li>
 <li>division is implemented only when the first argument has a recursion index greater than the second argument and the first argument's coefficient type is divisible by the second argument;</li>
 <li>the comparison operators will use <code><a class="el" href="classpiranha_1_1series__operators.html#ac4c7f91006ad874e0fd7284aeef4952f" title="Binary addition involving piranha::series. ">operator+()</a></code> on the coefficient types to determine if any type promotion is necessary before performing the comparison. </li>
 </ul>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l00526">526</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l00510">510</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 </div><h2 class="groupheader">Friends And Related Function Documentation</h2>
 <a class="anchor" id="af1e648b0a86ea3b802ef18400e595f4c"></a>
 <div class="memitem">
@@ -226,7 +226,7 @@ template&lt;typename T , typename U , eq_enabler&lt; T, U &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l01139">1139</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l01111">1111</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -280,15 +280,14 @@ template&lt;typename T , typename U &gt; </div>
 <li>any invoked series, coefficient or key constructor,</li>
 <li>construction, assignment and other operations on <a class="el" href="classpiranha_1_1symbol__set.html" title="Symbol set. ">piranha::symbol_set</a>,</li>
 <li><a class="el" href="classpiranha_1_1series.html#ac049565106ddee1881fedf6481de9458" title="Insert term. ">piranha::series::insert()</a>,</li>
-<li>the call operator of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Default series multiplier. ">piranha::series_multiplier</a>,</li>
-<li>the <code>auto_truncate()</code> method of the result, if it exists. </li>
+<li>the call operator of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a>. </li>
 </ul>
 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l01037">1037</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l01009">1009</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -343,7 +342,7 @@ template&lt;typename T , typename U , in_place_mul_enabler&lt; T, U &gt;  = 0&gt
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l01055">1055</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l01027">1027</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -403,7 +402,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l00956">956</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l00929">929</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -458,7 +457,7 @@ template&lt;typename T , typename U , in_place_add_enabler&lt; T, U &gt;  = 0&gt
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l00974">974</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l00947">947</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -519,7 +518,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l00996">996</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l00969">969</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -574,7 +573,7 @@ template&lt;typename T , typename U , in_place_sub_enabler&lt; T, U &gt;  = 0&gt
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l01014">1014</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l00987">987</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -628,7 +627,7 @@ template&lt;typename T , typename U &gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>any invoked series constructor,</li>
 <li><a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>,</li>
-<li><a class="el" href="classpiranha_1_1hash__set.html#a02e4d798ba7678f8874e5ca09696feed" title="Erase element. ">piranha::hash_set::erase()</a>,</li>
+<li><a class="el" href="classpiranha_1_1hash__set.html#a42c0ef2f03b797b1f509044a6ec3b80d" title="Erase element. ">piranha::hash_set::erase()</a>,</li>
 <li>the division operator on the coefficient type of the result. </li>
 </ul>
 </td></tr>
@@ -636,7 +635,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l01078">1078</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l01050">1050</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -691,7 +690,7 @@ template&lt;typename T , typename U , in_place_div_enabler&lt; T, U &gt;  = 0&gt
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l01096">1096</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l01068">1068</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -753,7 +752,7 @@ template&lt;typename T , typename U , eq_enabler&lt; T, U &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l01121">1121</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l01093">1093</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -763,7 +762,7 @@ template&lt;typename T , typename U , eq_enabler&lt; T, U &gt;  = 0&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:28 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:56 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

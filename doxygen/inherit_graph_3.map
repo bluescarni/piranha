@@ -1,3 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structpiranha_1_1cache__aligning__allocator_1_1rebind.html" title="Allocator rebind. " alt="" coords="5,5,192,47"/>
+<area shape="rect" id="node1" href="$classpiranha_1_1base__series__multiplier.html" title="Base series multiplier. " alt="" coords="5,108,148,149"/>
+<area shape="rect" id="node2" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1divisor__series__multiplier__enabler_3_01_series_01_4_01_4.html" title="Specialisation of piranha::series_multiplier for piranha::divisor_series. " alt="" coords="211,5,383,76"/>
+<area shape="rect" id="node3" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html" title="Series multiplier specialisation for polynomials. " alt="" coords="197,101,398,157"/>
+<area shape="rect" id="node4" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1ps__series__multiplier__enabler_3_01_series_01_4_01_4.html" title="Specialisation of piranha::series_multiplier for piranha::poisson_series. " alt="" coords="196,181,399,237"/>
 </map>

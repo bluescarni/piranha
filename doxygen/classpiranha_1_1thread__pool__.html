@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.9.1"/>
-<title>piranha: piranha::thread_pool Class Reference</title>
+<title>piranha: piranha::thread_pool_&lt; typename &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -85,20 +85,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="classpiranha_1_1thread__pool.html">thread_pool</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="classpiranha_1_1thread__pool__.html">thread_pool_</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classpiranha_1_1thread__pool-members.html">List of all members</a>  </div>
+<a href="classpiranha_1_1thread__pool__-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::thread_pool Class Reference</div>  </div>
+<div class="title">piranha::thread_pool_&lt; typename &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p>Static thread pool.  
- <a href="classpiranha_1_1thread__pool.html#details">More...</a></p>
+ <a href="classpiranha_1_1thread__pool__.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>&gt;</code></p>
 
@@ -106,34 +106,37 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a3478c7cb97f5030d943d5d99e50717a3"><td class="memTemplParams" colspan="2">template&lt;typename F , typename... Args&gt; </td></tr>
-<tr class="memitem:a3478c7cb97f5030d943d5d99e50717a3"><td class="memTemplItemLeft" align="right" valign="top">static auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool.html#a3478c7cb97f5030d943d5d99e50717a3">enqueue</a> (unsigned n, F &amp;&amp;f, Args &amp;&amp;...args) -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt; F &gt;(f), std::forward&lt; Args &gt;(args)...))</td></tr>
-<tr class="memdesc:a3478c7cb97f5030d943d5d99e50717a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append task.  <a href="#a3478c7cb97f5030d943d5d99e50717a3">More...</a><br /></td></tr>
-<tr class="separator:a3478c7cb97f5030d943d5d99e50717a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28ee9a80c039c6f37a69cf3d9c77fc51"><td class="memItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool.html#a28ee9a80c039c6f37a69cf3d9c77fc51">size</a> ()</td></tr>
-<tr class="memdesc:a28ee9a80c039c6f37a69cf3d9c77fc51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size.  <a href="#a28ee9a80c039c6f37a69cf3d9c77fc51">More...</a><br /></td></tr>
-<tr class="separator:a28ee9a80c039c6f37a69cf3d9c77fc51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6fe0d62525f87aa4267f41df5601167c"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool.html#a6fe0d62525f87aa4267f41df5601167c">resize</a> (unsigned new_size)</td></tr>
-<tr class="memdesc:a6fe0d62525f87aa4267f41df5601167c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pool resize.  <a href="#a6fe0d62525f87aa4267f41df5601167c">More...</a><br /></td></tr>
-<tr class="separator:a6fe0d62525f87aa4267f41df5601167c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac147eecbc994f3968b77a58178dc4b26"><td class="memTemplParams" colspan="2">template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </td></tr>
-<tr class="memitem:ac147eecbc994f3968b77a58178dc4b26"><td class="memTemplItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool.html#ac147eecbc994f3968b77a58178dc4b26">use_threads</a> (const Int &amp;work_size, const Int &amp;min_work_per_thread)</td></tr>
-<tr class="memdesc:ac147eecbc994f3968b77a58178dc4b26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute number of threads to use.  <a href="#ac147eecbc994f3968b77a58178dc4b26">More...</a><br /></td></tr>
-<tr class="separator:ac147eecbc994f3968b77a58178dc4b26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace98a230b3be7e60053190ee1abe4fb8"><td class="memTemplParams" colspan="2">template&lt;typename F , typename... Args&gt; </td></tr>
+<tr class="memitem:ace98a230b3be7e60053190ee1abe4fb8"><td class="memTemplItemLeft" align="right" valign="top">static auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8">enqueue</a> (unsigned n, F &amp;&amp;f, Args &amp;&amp;...args) -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt; F &gt;(f), std::forward&lt; Args &gt;(args)...))</td></tr>
+<tr class="memdesc:ace98a230b3be7e60053190ee1abe4fb8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append task.  <a href="#ace98a230b3be7e60053190ee1abe4fb8">More...</a><br /></td></tr>
+<tr class="separator:ace98a230b3be7e60053190ee1abe4fb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a2a1765622d427968dba7e49ffa5da0"><td class="memItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">size</a> ()</td></tr>
+<tr class="memdesc:a4a2a1765622d427968dba7e49ffa5da0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size.  <a href="#a4a2a1765622d427968dba7e49ffa5da0">More...</a><br /></td></tr>
+<tr class="separator:a4a2a1765622d427968dba7e49ffa5da0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a103d3b72ea9564dc55566f3ab303189e"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e">resize</a> (unsigned new_size)</td></tr>
+<tr class="memdesc:a103d3b72ea9564dc55566f3ab303189e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pool resize.  <a href="#a103d3b72ea9564dc55566f3ab303189e">More...</a><br /></td></tr>
+<tr class="separator:a103d3b72ea9564dc55566f3ab303189e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="memTemplParams" colspan="2">template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="memTemplItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b">use_threads</a> (const Int &amp;work_size, const Int &amp;min_work_per_thread)</td></tr>
+<tr class="memdesc:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute number of threads to use.  <a href="#a03d28eff2b4c7636f8219c656cdd2f4b">More...</a><br /></td></tr>
+<tr class="separator:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Static thread pool. </p>
-<p>This class manages, via a set of static methods, a pool of threads created at program startup. The number of threads created initially is equal to <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>, and, if possible, each thread is bound to a different processor. If the hardware concurrency cannot be determined, the size of the thread pool will be one.</p>
-<p>This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool and resize the pool. All methods, unless otherwise specified, are thread-safe, and they provide the strong exception safety guarantee.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd><p class="startdd">work around MSVC bug in destruction of statically allocated threads (if needed once we support MSVC), as per: <a href="http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc">http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc</a> detach() and wait as a workaround? </p>
-<p class="enddd">try to understand if we can suppress the future list class below in favour of STL-like algorithms. </p>
-</dd></dl>
+<div class="textblock"><h3>template&lt;typename = void&gt;<br />
+class piranha::thread_pool_&lt; typename &gt;</h3>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00205">205</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Static thread pool. </p>
+<dl class="section note"><dt>Note</dt><dd>The template parameter in this class is unused: its only purpose is to prevent the instantiation of the class' methods if they are not explicitly used. Client code should always employ the <a class="el" href="namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6" title="Alias for piranha::thread_pool_. ">piranha::thread_pool</a> alias.</dd></dl>
+<p>This class manages, via a set of static methods, a pool of threads created at program startup. The number of threads created initially is equal to <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>, and, if possible, each thread is bound to a different processor. If the hardware concurrency cannot be determined, the size of the thread pool will be one.</p>
+<p>This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool and resize the pool. All methods, unless otherwise specified, are thread-safe, and they provide the strong exception safety guarantee. </p>
+
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00210">210</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a3478c7cb97f5030d943d5d99e50717a3"></a>
+<a class="anchor" id="ace98a230b3be7e60053190ee1abe4fb8"></a>
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename  = void&gt; </div>
 <div class="memtemplate">
 template&lt;typename F , typename... Args&gt; </div>
 <table class="mlabels">
@@ -141,7 +144,7 @@ template&lt;typename F , typename... Args&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static auto piranha::thread_pool::enqueue </td>
+          <td class="memname">static auto <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::enqueue </td>
           <td>(</td>
           <td class="paramtype">unsigned&#160;</td>
           <td class="paramname"><em>n</em>, </td>
@@ -197,19 +200,21 @@ template&lt;typename F , typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00235">235</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00240">240</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a6fe0d62525f87aa4267f41df5601167c"></a>
+<a class="anchor" id="a103d3b72ea9564dc55566f3ab303189e"></a>
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename  = void&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static void piranha::thread_pool::resize </td>
+          <td class="memname">static void <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::resize </td>
           <td>(</td>
           <td class="paramtype">unsigned&#160;</td>
           <td class="paramname"><em>new_size</em></td><td>)</td>
@@ -243,19 +248,21 @@ template&lt;typename F , typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00271">271</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00276">276</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a28ee9a80c039c6f37a69cf3d9c77fc51"></a>
+<a class="anchor" id="a4a2a1765622d427968dba7e49ffa5da0"></a>
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename  = void&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static unsigned piranha::thread_pool::size </td>
+          <td class="memname">static unsigned <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::size </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -277,13 +284,15 @@ template&lt;typename F , typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00251">251</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00256">256</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ac147eecbc994f3968b77a58178dc4b26"></a>
+<a class="anchor" id="a03d28eff2b4c7636f8219c656cdd2f4b"></a>
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename  = void&gt; </div>
 <div class="memtemplate">
 template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
 <table class="mlabels">
@@ -291,7 +300,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static unsigned piranha::thread_pool::use_threads </td>
+          <td class="memname">static unsigned <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::use_threads </td>
           <td>(</td>
           <td class="paramtype">const Int &amp;&#160;</td>
           <td class="paramname"><em>work_size</em>, </td>
@@ -335,7 +344,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00314">314</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00319">319</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -345,7 +354,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:28 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:56 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

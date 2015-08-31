@@ -217,7 +217,7 @@ Public Member Functions</h2></td></tr>
 class piranha::cache_aligning_allocator&lt; T &gt;</h3>
 
 <p>Allocator that tries to align memory to the cache line size. </p>
-<p>This allocator will try to allocate memory aligned to the cache line size (as reported by <a class="el" href="classpiranha_1_1settings.html" title="Global settings. ">piranha::settings</a>).</p>
+<p>This allocator will try to allocate memory aligned to the cache line size (as reported by <a class="el" href="namespacepiranha.html#a2b3bd7640a743985bcb412ed5918068d" title="Alias for piranha::settings_. ">piranha::settings</a>).</p>
 <p>Exception safety and move semantics are equivalent to <a class="el" href="classpiranha_1_1dynamic__aligning__allocator.html" title="Memory allocator with runtime alignment support. ">piranha::dynamic_aligning_allocator</a>.</p>
 <dl class="section author"><dt>Author</dt><dd>Francesco Biscani (<a href="#" onclick="location.href='mai'+'lto:'+'blu'+'es'+'car'+'ni'+'@gm'+'ai'+'l.c'+'om'; return false;">blues<span style="display: none;">.nosp@m.</span>carn<span style="display: none;">.nosp@m.</span>i@gma<span style="display: none;">.nosp@m.</span>il.c<span style="display: none;">.nosp@m.</span>om</a>) </dd></dl>
 
@@ -304,7 +304,7 @@ template&lt;typename T&gt; </div>
 <p>Default constructor. </p>
 <p>Will invoke the base constructor with an alignment value determined as follows:</p><ul>
 <li>if no memory alignment primitives are available on the host platform, the value will be zero;</li>
-<li>if the cache line size reported by <a class="el" href="classpiranha_1_1settings.html#aca733b2477d3ae023a147c476dd685ff" title="Get the cache line size. ">piranha::settings::get_cache_line_size()</a> passes the checks performed by <a class="el" href="namespacepiranha.html#aa0527373a9c22b44e00c1c7531b21b65" title="Alignment checks. ">piranha::alignment_check()</a> of <code>T</code>, it will be used as construction value;</li>
+<li>if the cache line size reported by <a class="el" href="classpiranha_1_1settings__.html#a7416d94ce5d919f7f1bd1c80e95a24fe" title="Get the cache line size. ">piranha::settings::get_cache_line_size()</a> passes the checks performed by <a class="el" href="namespacepiranha.html#aa0527373a9c22b44e00c1c7531b21b65" title="Alignment checks. ">piranha::alignment_check()</a> of <code>T</code>, it will be used as construction value;</li>
 <li>otherwise, zero will be used. </li>
 </ul>
 
@@ -714,7 +714,7 @@ template&lt;typename T&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun May 31 2015 21:23:27 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Aug 31 2015 17:25:55 for piranha by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
