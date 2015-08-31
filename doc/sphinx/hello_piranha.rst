@@ -29,6 +29,14 @@ In Unix-like environments, you can compile this simple program with GCC via the 
 
    $ g++ -std=c++11 hello_piranha.cpp -lmpfr -lgmp
 
+Note however that, since Piranha is a multi-threaded library, it will be likely necessary to link to
+additional platform-specific threading libraries and/or enable threading-related compiler switches for
+the compilation to be successful. For instance, on a modern GNU/Linux distribution, the correct switches are:
+
+.. code-block:: console
+
+   $ g++ -std=c++11 hello_piranha.cpp -lmpfr -lgmp -lpthread -pthread
+
 A couple of things to note:
 
 * we pass the ``-std=c++11`` flag to specify that we want to use the C++11 version of the C++ standard for the compilation.
@@ -39,22 +47,30 @@ A couple of things to note:
   library is necessary;
 * Piranha itself is header-only, so there is no ``-lpiranha`` to link to.
 
-.. note:: The development version of Piranha adds serialization capabilities, and requires the Boost Serialization
-   library to be linked in with ``-lboost_serialization`` if such capablities are used.
+It must be noted that recent versions of Piranha support serialization, which require linking to the Boost Serialization
+library in order to work. If you are not using Piranha's serialization capabilities, you can ignore this additional requirement.
+
+We also need to point out that for non-debug builds, the ``NDEBUG`` macro should be defined:
+
+.. code-block:: console
+
+   $ g++ -O2 -DNDEBUG -std=c++11 hello_piranha.cpp -lmpfr -lgmp -lpthread -pthread
+
+If ``NDEBUG`` is not defined, a noticeable runtime overhead due to Piranha's self-checking mechanism will be introduced.
 
 If you installed Piranha in a custom ``PREFIX``, you will need to specify on the command line where
 the Piranha headers are located via the ``-I`` switch. E.g.,
 
 .. code-block:: console
 
-   $ g++ -I/home/username/.local/include -std=c++11 hello_piranha.cpp -lmpfr -lgmp
+   $ g++ -I/home/username/.local/include -std=c++11 hello_piranha.cpp -lmpfr -lgmp -lpthread -pthread
 
 If the GMP and/or MPFR libraries are not installed in a standard path, you can use the ``-L`` switch to tell GCC
 where to look for them:
 
 .. code-block:: console
 
-   $ g++ -std=c++11 hello_piranha.cpp -L/custom/library/path -lmpfr -lgmp
+   $ g++ -std=c++11 hello_piranha.cpp -L/custom/library/path -lmpfr -lgmp -lpthread -pthread
 
 After a successful compilation, the executable ``a.out`` can be run:
 
