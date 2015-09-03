@@ -31,6 +31,7 @@
 #include "../src/invert.hpp"
 #include "../src/monomial.hpp"
 #include "../src/serialization.hpp"
+#include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 
 using namespace piranha;
@@ -79,6 +80,14 @@ class g_series_type: public series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>
 		g_series_type &operator=(g_series_type &&) = default;
 		PIRANHA_FORWARDING_CTOR(g_series_type,base)
 		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type,base)
+		explicit g_series_type(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_symbol_set.add(name);
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
+		}
 };
 
 // Copy ctor of base called explicitly: if the generic ctor is invoked, this should give a linker error
@@ -245,4 +254,28 @@ BOOST_AUTO_TEST_CASE(series_invert_test)
 	BOOST_CHECK(is_invertible<st2>::value);
 	BOOST_CHECK((std::is_same<decltype(math::invert(st2{1})),st2>::value));
 	BOOST_CHECK_EQUAL(math::invert(st2{1.23}),math::invert(1.23));
+}
+
+BOOST_AUTO_TEST_CASE(series_extend_symbol_set_test)
+{
+	using st0 = g_series_type<double,int>;
+	st0 x{"x"}, y{"y"};
+	BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"x"}}),std::invalid_argument);
+	BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"z"}}),std::invalid_argument);
+	BOOST_CHECK((x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"}}).get_symbol_set() == symbol_set{symbol{"y"},symbol{"x"}}));
+	BOOST_CHECK((x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}}).get_symbol_set() ==
+		symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}}));
+	auto foo = x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}});
+	BOOST_CHECK_EQUAL(foo._container().begin()->m_key.size(),3u);
+	auto bar = x + y;
+	foo = bar.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}});
+	BOOST_CHECK(foo.size() == 2u);
+	auto it = foo._container().begin();
+	BOOST_CHECK_EQUAL(it->m_key.size(),3u);
+	++it;
+	BOOST_CHECK_EQUAL(it->m_key.size(),3u);
+	st0 null;
+	foo = null.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}});
+	BOOST_CHECK(foo.size() == 0u);
+	BOOST_CHECK((symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}} == foo.get_symbol_set()));
 }
