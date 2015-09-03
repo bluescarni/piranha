@@ -357,6 +357,15 @@ class polynomial_test_case(_ut.TestCase):
 		self.assertEqual(integrate(x,'y'),x*y)
 		self.assertEqual(integrate(x,'z'),x*z)
 		self.assertEqual(integrate(x+y*z,'x'),x*x/2+x*y*z)
+		# Some tests for find_cf().
+		self.assertEqual(x.find_cf([0]),0)
+		self.assertEqual(x.find_cf([1]),1)
+		self.assertEqual((3*x).find_cf([1]),3)
+		self.assertEqual((3*x+(4*y**2)/3).find_cf([0,2]),Fraction(4,3))
+		self.assertRaises(ValueError,lambda : x.find_cf([1,2]))
+		self.assertRaises(TypeError,lambda : x.find_cf([1.]))
+		self.assertRaises(TypeError,lambda : x.find_cf([1,'a']))
+		self.assertRaises(TypeError,lambda : x.find_cf(1))
 
 class divisor_series_test_case(_ut.TestCase):
 	""":mod:`divisor_series` module test case.

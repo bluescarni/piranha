@@ -51,12 +51,6 @@ ADD_LIBRARY(_core SHARED
 # Initial definition of extra compile flags.
 set(PYRANHA_EXTRA_COMPILE_FLAGS "")
 
-# There is a bug in GCC < 5.1 when compiling poisson_series_1.cpp with debug
-# info enabled to level 2 (the default).
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_COMPILER_IS_GNUCXX)
-	set(PYRANHA_EXTRA_COMPILE_FLAGS "${PYRANHA_EXTRA_COMPILE_FLAGS} -g1")
-endif()
-
 # Prefix and suffix setup.
 SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "")
 IF(PYDEXTENSION)

@@ -45,6 +45,7 @@
 #include "../src/environment.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/safe_cast.hpp"
 #include "../src/serialization.hpp"
 
 // NOTE: in these tests we are assuming a few things:
@@ -670,6 +671,20 @@ struct time_bomb2
 	static unsigned s_counter;
 };
 
+namespace piranha
+{
+
+template <>
+struct safe_cast_impl<time_bomb2,int,void>
+{
+	time_bomb2 operator()(int n) const
+	{
+		return time_bomb2(n);
+	}
+};
+
+}
+
 unsigned time_bomb2::s_counter = 0u;
 
 struct init_list_tester
@@ -695,7 +710,7 @@ struct init_list_tester
 			BOOST_CHECK((!std::is_constructible<v_type,std::initializer_list<time_bomb2>>::value));
 			using v_type2 = small_vector<time_bomb2,U>;
 			time_bomb2::s_counter = 0u;
-			BOOST_CHECK_THROW(v_type2({1,2,3,4,5,6,7}),std::runtime_error);
+			BOOST_CHECK_THROW(v_type2({1,2,3,4,5,6,7}),std::invalid_argument);
 		}
 	};
 	template <typename T>

@@ -117,6 +117,14 @@ struct poly_custom_hook
 	template <typename S, typename T = Descriptor, typename std::enable_if<!has_typedef_degree_truncation_types<T>::value,int>::type = 0>
 	static void expose_degree_auto_truncation_set(bp::class_<S> &)
 	{}
+	// find_cf() exposition.
+	template <typename S>
+	static typename S::term_type::cf_type find_cf_wrapper(const S &s, bp::list l)
+	{
+		using expo_type = typename S::term_type::key_type::value_type;
+		bp::stl_input_iterator<expo_type> begin(l), end;
+		return s.find_cf(std::vector<expo_type>(begin,end));
+	}
 	template <typename T>
 	void operator()(bp::class_<T> &series_class) const
 	{
@@ -124,6 +132,8 @@ struct poly_custom_hook
 		// type requirements.
 		expose_degree_auto_truncation_get_unset(series_class);
 		expose_degree_auto_truncation_set(series_class);
+		// find_cf().
+		series_class.def("find_cf",find_cf_wrapper<T>);
 	}
 };
 

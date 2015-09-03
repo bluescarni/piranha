@@ -153,7 +153,6 @@
  * \todo the replace_symbol() method for series. Or maybe rename_symbol().
  * \todo truncation tests based on the email discussion with ondrej.
  * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of checking the shutdown flag.
- * \todo get rid of tracing.
  * \todo consider the use of the upcoming std::shared_lock/mutex for multiple readers/single writer situations (e.g., in the custom derivative
  * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
  * \todo it looks like in many cases we can hide excess default template parameters used in TMP by adding an extra layer of indirection. This has only cosmetic
@@ -171,6 +170,9 @@
  * if the exception safety is weaker). If we do this, we need to check all usages of is_ignorable()/is_compatible(), re-evaluate the exception handling
  * where they are used and update the docs for exception specifications.
  * \todo hash_set needs more testing.
+ * \todo maybe we should rename is_container_element to is_regular_type.
+ * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
+ * in generic algorithms - subs, ipow_subs, etc.?
  */
 namespace piranha
 {
@@ -235,7 +237,6 @@ inline namespace literals {}
 #include "thread_barrier.hpp"
 #include "thread_management.hpp"
 #include "thread_pool.hpp"
-#include "tracing.hpp"
 #include "trigonometric_series.hpp"
 #include "tuning.hpp"
 #include "type_traits.hpp"

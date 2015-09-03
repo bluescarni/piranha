@@ -27,6 +27,7 @@
 #include <complex>
 #include <cstddef>
 #include <functional>
+#include <initializer_list>
 #include <ios>
 #include <iostream>
 #include <iterator>
@@ -2014,4 +2015,82 @@ BOOST_AUTO_TEST_CASE(type_traits_safe_abs_sint_test)
 	BOOST_CHECK(sai<int>::value > 1);
 	BOOST_CHECK(sai<long>::value > 1);
 	BOOST_CHECK(sai<long long>::value > 1);
+}
+
+struct good_begin_end_mut
+{
+	int *begin();
+	int *end();
+};
+
+struct good_begin_end_const
+{
+	const int *begin() const;
+	const int *end() const;
+};
+
+// Missing end.
+struct bad_begin_end_00
+{
+	int *begin();
+};
+
+// Missing begin.
+struct bad_begin_end_01
+{
+	int *end();
+};
+
+// Bad iters.
+struct bad_begin_end_02
+{
+	int begin();
+	int end();
+};
+
+// Mismatched iters.
+struct bad_begin_end_03
+{
+	int *begin();
+	double *end();
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_has_begin_end_test)
+{
+	BOOST_CHECK(has_begin_end<std::vector<int>>::value);
+	BOOST_CHECK(has_begin_end<std::vector<double>>::value);
+	BOOST_CHECK(has_begin_end<std::initializer_list<int>>::value);
+	BOOST_CHECK(has_begin_end<std::initializer_list<long>>::value);
+	BOOST_CHECK(has_begin_end<std::vector<int> &>::value);
+	BOOST_CHECK(has_begin_end<std::vector<double> &>::value);
+	BOOST_CHECK(has_begin_end<std::initializer_list<int> &>::value);
+	BOOST_CHECK(has_begin_end<std::initializer_list<long> &>::value);
+	BOOST_CHECK(has_begin_end<const std::vector<int>>::value);
+	BOOST_CHECK(has_begin_end<const std::vector<double>>::value);
+	BOOST_CHECK(has_begin_end<const std::initializer_list<int>>::value);
+	BOOST_CHECK(has_begin_end<const std::initializer_list<long>>::value);
+	BOOST_CHECK(has_begin_end<const std::vector<int> &>::value);
+	BOOST_CHECK(has_begin_end<const std::vector<double> &>::value);
+	BOOST_CHECK(has_begin_end<const std::initializer_list<int> &>::value);
+	BOOST_CHECK(has_begin_end<const std::initializer_list<long> &>::value);
+	BOOST_CHECK(has_begin_end<good_begin_end_mut>::value);
+	// No const version.
+	BOOST_CHECK(!has_begin_end<const good_begin_end_mut>::value);
+	BOOST_CHECK(has_begin_end<good_begin_end_const>::value);
+	BOOST_CHECK(has_begin_end<const good_begin_end_const>::value);
+	BOOST_CHECK(!has_begin_end<bad_begin_end_00>::value);
+	BOOST_CHECK(!has_begin_end<const bad_begin_end_00>::value);
+	BOOST_CHECK(!has_begin_end<bad_begin_end_01>::value);
+	BOOST_CHECK(!has_begin_end<const bad_begin_end_01>::value);
+	BOOST_CHECK(!has_begin_end<bad_begin_end_02>::value);
+	BOOST_CHECK(!has_begin_end<const bad_begin_end_02>::value);
+	BOOST_CHECK(!has_begin_end<bad_begin_end_03>::value);
+	BOOST_CHECK(!has_begin_end<const bad_begin_end_03>::value);
+	// Some tests with other containers.
+	BOOST_CHECK(has_begin_end<std::list<int>>::value);
+	BOOST_CHECK(has_begin_end<const std::list<double>>::value);
+	BOOST_CHECK(has_begin_end<std::set<int>>::value);
+	BOOST_CHECK(has_begin_end<const std::set<long>>::value);
+	// C array.
+	BOOST_CHECK(has_begin_end<int[3]>::value);
 }

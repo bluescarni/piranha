@@ -27,6 +27,7 @@
 #include <functional>
 #include <initializer_list>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
@@ -227,6 +228,10 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		};
 		template <typename U>
 		using ipow_subs_type = typename ipow_subs_type_<U>::type;
+		// Enabler for ctor from range.
+		template <typename Iterator>
+		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
+			has_safe_cast<T,typename std::iterator_traits<Iterator>::value_type>::value,int>::type;
 	public:
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
@@ -238,12 +243,44 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		monomial(monomial &&) = default;
 		/// Constructor from initializer list.
 		/**
+		 * \note
+		 * This constructor is enabled only if the corresponding constructor in piranha::array_key is enabled.
+		 *
 		 * @param[in] list initializer list.
 		 *
 		 * @see piranha::array_key's constructor from initializer list.
 		 */
 		template <typename U, init_list_enabler<U> = 0>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
+		/// Constructor from range and symbol set.
+		/**
+		 * \note
+		 * This constructor is enabled only if \p Iterator is an input iterator whose value type
+		 * can be cast safely to \p T.
+		 *
+		 * This constructor will copy the elements from the range defined by \p begin and \p end into \p this,
+		 * using piranha::safe_cast() for any necessary type conversion. If the final size of \p this is different
+		 * from the size of \p s, a runtime error will be produced. This constructor is used by piranha::polynomial::find_cf().
+		 *
+		 * @param[in] begin beginning of the range.
+		 * @param[in] end end of the range.
+		 * @param[in] s reference symbol set.
+		 *
+		 * @throws std::invalid_argument if the final size of \p this and the size of \p s differ.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::safe_cast(),
+		 * - push_back().
+		 */
+		template <typename Iterator, it_ctor_enabler<Iterator> = 0>
+		explicit monomial(Iterator begin, Iterator end, const symbol_set &s)
+		{
+			for (; begin != end; ++begin) {
+				this->push_back(safe_cast<T>(*begin));
+			}
+			if (unlikely(this->size() != s.size())) {
+				piranha_throw(std::invalid_argument,"invalid monomial");
+			}
+		}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
 		~monomial()

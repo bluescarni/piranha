@@ -37,6 +37,7 @@
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
 #include "memory.hpp"
+#include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "static_vector.hpp"
 #include "type_traits.hpp"
@@ -593,7 +594,7 @@ class small_vector
 		PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 		// Enabler for ctor from init list.
 		template <typename U>
-		using init_list_enabler = typename std::enable_if<std::is_constructible<T,U const &>::value,int>::type;
+		using init_list_enabler = typename std::enable_if<has_safe_cast<T,U>::value,int>::type;
 		// Enabler for equality operator.
 		template <typename U>
 		using equality_enabler = typename std::enable_if<is_equality_comparable<U>::value,int>::type;
@@ -659,20 +660,21 @@ class small_vector
 		/// Constructor from initializer list.
 		/**
 		 * \note
-		 * This constructor is enabled only if \p T is constructible from \p U.
+		 * This constructor is enabled only if \p U is safely convertible to \p T.
 		 *
-		 * The elements of \p l will be added to a default-constructed object.
+		 * The elements of \p l will be added to a default-constructed object, after conversion
+		 * to \p T via piranha::safe_cast().
 		 *
 		 * @param[in] l list that will be used for initialisation.
 		 *
-		 * @throws unspecified any exception thrown by push_back().
+		 * @throws unspecified any exception thrown by push_back() or by piranha::safe_cast().
 		 */
 		template <typename U, init_list_enabler<U> = 0>
 		explicit small_vector(std::initializer_list<U> l)
 		{
 			// NOTE: push_back has strong exception safety.
 			for (const U &x : l) {
-				push_back(T(x));
+				push_back(safe_cast<T>(x));
 			}
 		}
 		/// Constructor from size and value.

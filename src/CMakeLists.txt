@@ -5,7 +5,6 @@ SET(HEADERS_LIST
 	poisson_series.hpp
 	settings.hpp
 	exceptions.hpp
-	tracing.hpp
 	term.hpp
 	thread_barrier.hpp
 	polynomial.hpp

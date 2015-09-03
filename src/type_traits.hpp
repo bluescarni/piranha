@@ -1029,6 +1029,36 @@ const bool has_auto_truncate<T>::value;
 
 }
 
+/// Detect the availability of <tt>std::begin()</tt> and <tt>std::end()</tt>.
+/**
+ * This type trait will be \p true if all the following conditions are fulfilled:
+ *
+ * - <tt>std::begin()</tt> and <tt>std::end()</tt> can be called on instances of \p T, yielding the type \p It,
+ * - \p It is an input iterator.
+ *
+ * Any reference qualification in \p T is ignored by this type trait.
+ */
+template <typename T>
+class has_begin_end: detail::sfinae_types
+{
+		using Td = typename std::remove_reference<T>::type;
+		template <typename T1>
+		static auto test1(T1 &t) -> decltype(std::begin(t));
+		static no test1(...);
+		template <typename T1>
+		static auto test2(T1 &t) -> decltype(std::end(t));
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = is_input_iterator<decltype(test1(std::declval<Td &>()))>::value &&
+			is_input_iterator<decltype(test2(std::declval<Td &>()))>::value &&
+			std::is_same<decltype(test1(std::declval<Td &>())),decltype(test2(std::declval<Td &>()))>::value;
+
+};
+
+template <typename T>
+const bool has_begin_end<T>::value;
+
 }
 
 #endif

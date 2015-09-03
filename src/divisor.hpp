@@ -480,7 +480,7 @@ class divisor
 			p_type_hasher hasher;
 			const auto it_f = m_container.end();
 			for (auto it = m_container.begin(); it != it_f; ++it) {
-				retval += hasher(*it);
+				retval = static_cast<std::size_t>(retval + hasher(*it));
 			}
 			return retval;
 		}

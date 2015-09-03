@@ -30,6 +30,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <limits>
+#include <list>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -81,6 +82,24 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(k3.get_int(),0);
 		k_type k4({10});
 		BOOST_CHECK_EQUAL(k4.get_int(),10);
+		// Ctor from container.
+		k1 = k_type(std::vector<int>{});
+		BOOST_CHECK_EQUAL(k1.get_int(),0);
+		k1 = k_type(std::vector<int>{12});
+		BOOST_CHECK_EQUAL(k1.get_int(),12);
+		k1 = k_type(std::vector<int>{-1,2});
+		ka::decode(v2,k1.get_int());
+		BOOST_CHECK_EQUAL(v2[0],-1);
+		BOOST_CHECK_EQUAL(v2[1],2);
+		k1 = k_type(std::list<int>{});
+		BOOST_CHECK_EQUAL(k1.get_int(),0);
+		k1 = k_type(std::list<int>{12});
+		BOOST_CHECK_EQUAL(k1.get_int(),12);
+		k1 = k_type(std::list<int>{-1,2});
+		ka::decode(v2,k1.get_int());
+		BOOST_CHECK_EQUAL(v2[0],-1);
+		BOOST_CHECK_EQUAL(v2[1],2);
+		// Ctor from symbol set.
 		k_type k5(symbol_set({}));
 		BOOST_CHECK_EQUAL(k5.get_int(),0);
 		k_type k6(symbol_set({symbol("a")}));
@@ -116,6 +135,34 @@ struct constructor_tester
 		BOOST_CHECK(v[0u] == 1);
 		BOOST_CHECK(v[1u] == -2);
 		BOOST_CHECK((std::is_constructible<k_type,T *, T *>::value));
+		// Ctor from range and symbol set.
+		v2 = {};
+		k1 = k_type(v2.begin(),v2.end(),symbol_set{});
+		BOOST_CHECK_EQUAL(k1.get_int(),0);
+		v2 = {-3};
+		k1 = k_type(v2.begin(),v2.end(),symbol_set{symbol{"x"}});
+		BOOST_CHECK_EQUAL(k1.get_int(),-3);
+		BOOST_CHECK_THROW(k1 = k_type(v2.begin(),v2.end(),symbol_set{}),std::invalid_argument);
+		v2 = {-1,0};
+		k1 = k_type(v2.begin(),v2.end(),symbol_set{symbol{"x"},symbol{"y"}});
+		ka::decode(v2,k1.get_int());
+		BOOST_CHECK_EQUAL(v2[0],-1);
+		BOOST_CHECK_EQUAL(v2[1],0);
+		std::list<int> l2;
+		k1 = k_type(l2.begin(),l2.end(),symbol_set{});
+		BOOST_CHECK_EQUAL(k1.get_int(),0);
+		l2 = {-3};
+		k1 = k_type(l2.begin(),l2.end(),symbol_set{symbol{"x"}});
+		BOOST_CHECK_EQUAL(k1.get_int(),-3);
+		BOOST_CHECK_THROW(k1 = k_type(l2.begin(),l2.end(),symbol_set{}),std::invalid_argument);
+		l2 = {-1,0};
+		k1 = k_type(l2.begin(),l2.end(),symbol_set{symbol{"x"},symbol{"y"}});
+		ka::decode(v2,k1.get_int());
+		BOOST_CHECK_EQUAL(v2[0],-1);
+		BOOST_CHECK_EQUAL(v2[1],0);
+		struct foo {};
+		BOOST_CHECK((std::is_constructible<k_type,int *,int *,symbol_set>::value));
+		BOOST_CHECK((!std::is_constructible<k_type,foo *,foo *,symbol_set>::value));
 		// Iterators have to be of homogeneous type.
 		BOOST_CHECK((!std::is_constructible<k_type,T *, T const *>::value));
 		BOOST_CHECK((std::is_constructible<k_type,typename std::vector<T>::iterator,typename std::vector<T>::iterator>::value));
