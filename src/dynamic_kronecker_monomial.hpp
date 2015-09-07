@@ -55,6 +55,25 @@ namespace piranha
 // The major difference is that here we know exactly how many values are packed in a big int. As a
 // consequence, we don't need the reference symbol set as much as in kronecker_monomial, and we generally
 // use it only as a consistency check (similarly to monomial.hpp).
+
+/// Dynamic Kronecker monomial class.
+/**
+ * This class represents a sequence of signed integral values as a vector of packed integers. That is, each
+ * element of the vector represents a set of signed integral values encoded via piranha::kronecker_array. The
+ * \p NBits template parameter establishes approximately how many bits of the signed integral type are devoted
+ * to each packed element (including sign bit), and, consequently, how many values can be packed inside a single
+ * signed integer.
+ *
+ * For instance, on a common 64 bit architecture, when \p NBits is 8 then 64 / 8 = 8 values are packed inside each
+ * signed integer.
+ *
+ * ## Type requirements ##
+ *
+ * - \p SignedInt must be usable as first template parameter in piranha::kronecker_array.
+ * - \p NBits must satisfy the following requirements:
+ *   - it must be less than an implementation-defined maximum,
+ *   - it must be greater than zero and less than the bit width of \p SignedInt (including sign bit).
+ */
 template <typename SignedInt = std::make_signed<std::size_t>::type, int NBits = 8>
 class dynamic_kronecker_monomial
 {
