@@ -35,7 +35,7 @@ using namespace piranha;
 // A performance test for truncated polynomial multiplication, in the spirit of automatic differentiation.
 // Compute:
 // (1+x1+x2+x3+x4+x5+x6+x7+x8+x9+x10)**10 * (1-x1-x2-x3-x4-x5-x6-x7-x8-x9-x10)**10
-// teuncated to the total degree of 10.
+// truncated to the total degree of 10.
 
 BOOST_AUTO_TEST_CASE(audi_test)
 {
