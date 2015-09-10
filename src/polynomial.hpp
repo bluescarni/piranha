@@ -1065,6 +1065,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Partial degree truncation.
 			return partial_truncated_multiplication(std::get<1u>(t),std::get<2u>(t));
 		}
+		// NOTE: total and partial can be compressed in a single function with variadic arguments.
+		// Unfortunately, GCC 4.8 does not support capturing variadic args in lambdas so we have to hold this off
+		// for the moment. Consider maybe using std::bind as a replacement.
 		template <typename T>
 		Series total_truncated_multiplication(const T &max_degree) const
 		{
