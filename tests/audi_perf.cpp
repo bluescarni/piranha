@@ -54,5 +54,5 @@ BOOST_AUTO_TEST_CASE(audi_test)
 	boost::timer::auto_cpu_timer r;
 	h = f*g;
 	}
-	BOOST_CHECK_EQUAL(h.size,122464u);
+	BOOST_CHECK_EQUAL(h.size(),122464u);
 }
