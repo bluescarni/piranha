@@ -1183,7 +1183,8 @@ struct is_mp_integer_interoperable_type
  * - when converting to/from Python we can speed up operations by trying casting around to hardware integers, if range is enough.
  * - use a unified shortcut for the possible optimisation when the two limb type coincide (e.g., same_limbs_type = true constexpr).
  * - the conversion operator to C++ integral types could use the same optimisation as the constructor from integral types (e.g,
- *   attempt direct conversion if we have only 1 limb).
+ *   attempt direct conversion if we have only 1 limb) -> this is now done. We should consider piggybacking on the GMP functions
+ *   when possible, and use our generic implementation only as last resort.
  * - more in general, for conversions to/from other types we should consider operating directly with limbs instead of bit-by-bit
  *   for increased performance.
  * - there is some out-of-range conversion handling which is not hit by the test cases, need to proper test it.
@@ -1390,12 +1391,67 @@ class mp_integer
 				piranha_throw(std::overflow_error,"overflow in conversion to integral type");
 			}
 		}
+		// Conversion of 1-limb statics. Can fail depending on T. The flag param is initially
+		// false and set to true only if the operation succeeds.
+		template <typename T, typename std::enable_if<std::is_unsigned<T>::value,int>::type = 0>
+		void attempt_fast_1_limb_conversion(T &retval, bool &flag) const
+		{
+			// Attempt something only if there's only 1 limb and the number is positive.
+			// NOTE: the zero case is handled in the upper function.
+			if (m_int.g_st()._mp_size == 1) {
+				try {
+					retval = boost::numeric_cast<T>(m_int.g_st().m_limbs[0u]);
+					flag = true;
+				} catch (...) {
+					piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+				}
+			}
+		}
+		template <typename T, typename std::enable_if<std::is_signed<T>::value,int>::type = 0>
+		void attempt_fast_1_limb_conversion(T &retval, bool &flag) const
+		{
+			// Like above for the 1 positive limb case.
+			if (m_int.g_st()._mp_size == 1) {
+				try {
+					retval = boost::numeric_cast<T>(m_int.g_st().m_limbs[0u]);
+					flag = true;
+				} catch (...) {
+					piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+				}
+			}
+			// 1 negative limb case.
+			if (m_int.g_st()._mp_size == -1) {
+				try {
+					// This will first be the negative of the final value, if computable.
+					retval = boost::numeric_cast<T>(m_int.g_st().m_limbs[0u]);
+					piranha_assert(retval > 0);
+					// Now check if we can negate it.
+					if (retval <= detail::safe_abs_sint<T>::value) {
+						retval = static_cast<T>(-retval);
+						flag = true;
+					}
+				} catch (...) {
+					// In this case we don't want to do anything as the conversion might still
+					// be possible in principle, and we go through the general case.
+				}
+			}
+		}
 		template <typename T>
 		T convert_to_impl(typename std::enable_if<std::is_integral<T>::value && !std::is_same<T,bool>::value>::type * = nullptr) const
 		{
+			// Special case for zero first.
 			const int s = sign();
 			if (s == 0) {
 				return T(0);
+			}
+			// Next try the fast static variant.
+			if (m_int.is_static()) {
+				bool flag = false;
+				T retval(0);
+				attempt_fast_1_limb_conversion(retval,flag);
+				if (flag) {
+					return retval;
+				}
 			}
 			const bool negative = s < 0;
 			// We cannot convert to unsigned type if this is negative.
