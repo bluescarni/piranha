@@ -126,6 +126,7 @@ struct key_has_linarg: detail::sfinae_types
  * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
  * 
  * This class satisfies the piranha::is_series type trait.
+ *
  * ## Type requirements ##
  * 
  * \p Cf must be suitable for use in piranha::series as first template argument,
