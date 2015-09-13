@@ -49,6 +49,7 @@ namespace piranha
 
 // TODOs:
 // - check homomorphic property of hash
+// - check the statement about strong exception safety.
 
 // TODO: document that here NBits includes the sign bit as well.
 // NOTE: this class kind of looks like kronecker_monomial, but in many ways it is a different beast.
@@ -73,6 +74,18 @@ namespace piranha
  * - \p NBits must satisfy the following requirements:
  *   - it must be less than an implementation-defined maximum,
  *   - it must be greater than zero and less than the bit width of \p SignedInt (including sign bit).
+ *
+ * ## Exception safety guarantee ##
+ *
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
+ *
+ * ## Move semantics ##
+ *
+ * Move semantics is equivalent to the move semantics of piranha::small_vector.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
  */
 template <typename SignedInt = std::make_signed<std::size_t>::type, int NBits = 8>
 class dynamic_kronecker_monomial
@@ -108,6 +121,8 @@ class dynamic_kronecker_monomial
 		// will be this divided by ksize). It is a multiple of ksize.
 		static const std::size_t max_size =
 			static_cast<std::size_t>((ksize < 255u ? 255u / ksize : 1u) * ksize);
+		// Max packed size: the number of packed ints stored in the small vector.
+		static const std::size_t max_p_size = static_cast<std::size_t>(max_size / ksize);
 		// Implementation of construction from iterators.
 		template <typename It>
 		void construct_from_iterators(It begin, It end)
@@ -129,20 +144,20 @@ class dynamic_kronecker_monomial
 				m_vec.push_back(ka::encode(tmp));
 			}
 			// Now we need to check if we pushed too many elements.
-			if (unlikely(m_vec.size() > max_size / ksize)) {
+			if (unlikely(m_vec.size() > max_p_size)) {
 				piranha_throw(std::invalid_argument,"too many elements in the construction "
 					"of a dynamic_kronecker_monomial");
 			}
 		}
 		// Utilities for hashing.
 		// This is an array of randomly selected primes in the range provided by size_t.
-		static const std::array<std::size_t,static_cast<std::size_t>(max_size/ksize)> hash_mixer;
+		static const std::array<std::size_t,max_p_size> hash_mixer;
 		// This is the function used to build the above array at program startup.
-		static std::array<std::size_t,static_cast<std::size_t>(max_size/ksize)> get_hash_mixer()
+		static std::array<std::size_t,max_p_size> get_hash_mixer()
 		{
 			std::mt19937 rng;
 			std::uniform_int_distribution<std::size_t> dist;
-			std::array<std::size_t,static_cast<std::size_t>(max_size/ksize)> retval;
+			std::array<std::size_t,max_p_size> retval;
 			for (auto it = retval.begin(); it != retval.end();) {
 				// NOTE: the idea here is: pick a random number, get the next prime and
 				// try to downcast it back to size_t. If this overflows, just try again.
@@ -181,7 +196,7 @@ class dynamic_kronecker_monomial
 		~dynamic_kronecker_monomial()
 		{
 			// Check that we never went past the size limit in m_vec.
-			piranha_assert(m_vec.size() <= max_size / ksize);
+			piranha_assert(m_vec.size() <= max_p_size);
 		}
 		dynamic_kronecker_monomial &operator=(const dynamic_kronecker_monomial &) = default;
 		dynamic_kronecker_monomial &operator=(dynamic_kronecker_monomial &&) = default;
@@ -212,7 +227,7 @@ class dynamic_kronecker_monomial
 			}
 			piranha_assert(retval.size() >= args.size());
 			// Last, we check that all elements not corresponding to any argument are zero.
-			if (unlikely(!std::all_of(retval.begin() + args.size(),retval.end(),[](const value_type &n) {return n == 0;}))) {
+			if (unlikely(!std::all_of(retval.begin() + args.size(),retval.end(),[](const value_type &n) {return n == value_type(0);}))) {
 				piranha_throw(std::invalid_argument,"incompatible symbol set");
 			}
 			return retval;
@@ -282,8 +297,7 @@ const std::size_t dynamic_kronecker_monomial<SignedInt,NBits>::ksize;
 
 // Static initialisation of the hash mixer.
 template <typename SignedInt, int NBits>
-const std::array<std::size_t,static_cast<std::size_t>(dynamic_kronecker_monomial<SignedInt,NBits>::max_size /
-	dynamic_kronecker_monomial<SignedInt,NBits>::ksize)> dynamic_kronecker_monomial<SignedInt,NBits>::hash_mixer =
+const std::array<std::size_t,dynamic_kronecker_monomial<SignedInt,NBits>::max_p_size> dynamic_kronecker_monomial<SignedInt,NBits>::hash_mixer =
 	dynamic_kronecker_monomial<SignedInt,NBits>::get_hash_mixer();
 
 using dk_monomial = dynamic_kronecker_monomial<>;
