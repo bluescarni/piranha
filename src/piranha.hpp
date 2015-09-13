@@ -173,6 +173,18 @@
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
  * in generic algorithms - subs, ipow_subs, etc.?
+ * \todo the general multiplier performance is non-deterministic at the moment: the estimation of the final size depends on the order in which
+ * terms appear in the hash table, which in turn might depend upon previous multiplications performed by the general multiplier. In order to solve this
+ * we could establish a deterministic order in the terms belonging to the same bucket *before* shuffling. This means calling a lot of std::sort
+ * on small ranges, so we should first make the estimation parallel in order to pre-empt and scale properly performance penalties. In order to avoid
+ * forcing keys to have an operator<() maybe we can do this improvement only on keys which support sorting.
+ * \todo connected to the above, we need to parallelize all the serial parts in the multiplication algorithm. This is especially important for
+ * truncated multiplication. This also means that we probably need to think about moving the n_threads calculation in the ctor of series_multiplier,
+ * so the number is already available at all stages. We already have a m_n_threads member which needs probably to be reworked.
+ * \todo probably we should think of a general scheme to provide all the following options for keys:
+ * - general key (e.g., monomial, trigonometric_monomial - but does not make sense probably for divisor),
+ * - Kronecker key (k_monomial, rtk_monomial, k_divisor),
+ * - dynamic Kronecker key (dk_monomial, rtdk_monomial, dk_divisor).
  */
 namespace piranha
 {
