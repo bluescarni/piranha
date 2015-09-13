@@ -209,7 +209,7 @@ class dynamic_storage
 			}
 			// Start by allocating the new storage. New capacity is at least one at this point.
 			pointer new_storage = allocate(new_capacity);
-			assert(new_storage != nullptr);
+			piranha_assert(new_storage != nullptr);
 			// Move in existing elements. Consistency checks ensure
 			// that m_size is not greater than m_capacity and, by extension, new_capacity.
 			for (size_type i = 0u; i < m_size; ++i) {
