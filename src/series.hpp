@@ -2912,8 +2912,8 @@ namespace math
 
 /// Specialisation of the piranha::math::invert() functor for piranha::series.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::series and:
- * - either the series type provides a const <tt>%invert()</tt> method, or
+ * This specialisation is activated when \p Series is an instance of piranha::series and either
+ * - the series type provides a const <tt>%invert()</tt> method, or
  * - the series' coefficient type \p Cf supports math::invert() yielding a type \p T and either
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */

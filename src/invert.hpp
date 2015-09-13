@@ -32,9 +32,21 @@ namespace piranha
 namespace math
 {
 
+/// Default implementation of piranha::math::invert().
 template <typename T, typename = void>
 struct invert_impl
 {
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled only if the expression <tt>%math::pow(x,-1)</tt> is well-formed.
+	 *
+	 * @param[in] x argument for the inversion.
+	 *
+	 * @return <tt>%math::pow(x,-1)</tt>
+	 *
+	 * @throws unspecified any exception thrown by math::pow().
+	 */
 	template <typename U>
 	auto operator()(const U &x) const -> decltype(math::pow(x,-1))
 	{
