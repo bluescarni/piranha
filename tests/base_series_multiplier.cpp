@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
 	pt e1, e2;
 	BOOST_CHECK_NO_THROW((m_checker<pt>{e1,e2}));
 	m_checker<pt> mc{e1,e2};
-	BOOST_CHECK_EQUAL(mc.get_n_threads(),0u);
+	BOOST_CHECK(mc.get_n_threads() != 0u);
 	}
 	{
 	using pt = p_type<rational>;
@@ -607,6 +607,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 	}
 	{
 	// Check with multiple threads.
+	settings::set_min_work_per_thread(1u);
 	using pt = p_type<rational>;
 	using mt = m_checker<pt>;
 	for (unsigned nt = 1u; nt <= 4u; ++nt) {
@@ -617,15 +618,15 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 		// First let's try with an empty retval.
 		pt r;
 		r.set_symbol_set(symbol_set({symbol{"x"},symbol{"y"}}));
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,0);
 		// Put in one term.
 		r += pt{"x"};
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,pt{"x"}/36);
 		// Put in another term.
 		r += 12*pt{"y"};
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,pt{"x"}/36 + pt{"y"}/3);
 	}
 	}
@@ -641,17 +642,19 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 		// First let's try with an empty retval.
 		pt r;
 		r.set_symbol_set(symbol_set({symbol{"x"},symbol{"y"}}));
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,0);
 		// Put in one term.
 		r += pt{"x"};
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,pt{"x"}/36);
 		// Put in another term.
 		r += 12*pt{"y"};
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,pt{"x"}/36 + pt{"y"}/3);
 	}
 	}
+	// Reset.
 	settings::reset_n_threads();
+	settings::reset_min_work_per_thread();
 }

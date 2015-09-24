@@ -191,7 +191,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		}
 		// Implementation of finalise().
 		template <typename T, typename std::enable_if<detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
-		void finalise_impl(T &s, unsigned n_threads) const
+		void finalise_impl(T &s) const
 		{
 			// Nothing to do if the lcm is unitary.
 			if (math::is_unitary(this->m_lcm)) {
@@ -202,7 +202,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			const auto l2 = this->m_lcm * this->m_lcm;
 			auto &container = s._container();
 			// Single thread implementation.
-			if (n_threads == 1u) {
+			if (m_n_threads == 1u) {
 				for (const auto &t: container) {
 					t.m_cf._set_den(l2);
 					t.m_cf.canonicalise();
@@ -211,11 +211,11 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			}
 			// Multi-thread implementation.
 			// Buckets per thread.
-			const bucket_size_type bpt = static_cast<bucket_size_type>(container.bucket_count() / n_threads);
-			auto thread_func = [l2,&container,n_threads,bpt](unsigned t_idx) {
+			const bucket_size_type bpt = static_cast<bucket_size_type>(container.bucket_count() / m_n_threads);
+			auto thread_func = [l2,&container,this,bpt](unsigned t_idx) {
 				bucket_size_type start_idx = static_cast<bucket_size_type>(t_idx * bpt);
 				// Special handling for the last thread.
-				const bucket_size_type end_idx = t_idx == (n_threads - 1u) ? container.bucket_count() :
+				const bucket_size_type end_idx = t_idx == (this->m_n_threads - 1u) ? container.bucket_count() :
 					static_cast<bucket_size_type>((t_idx + 1u) * bpt);
 				for (; start_idx != end_idx; ++start_idx) {
 					auto &list = container._get_bucket_list(start_idx);
@@ -228,7 +228,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Go with the threads.
 			future_list<decltype(thread_pool::enqueue(0u,thread_func,0u))> ff_list;
 			try {
-				for (unsigned i = 0u; i < n_threads; ++i) {
+				for (unsigned i = 0u; i < m_n_threads; ++i) {
 					ff_list.push_back(thread_pool::enqueue(i,thread_func,i));
 				}
 				// First let's wait for everything to finish.
@@ -241,7 +241,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			}
 		}
 		template <typename T, typename std::enable_if<!detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
-		void finalise_impl(T &, unsigned) const
+		void finalise_impl(T &) const
 		{}
 	public:
 		/// Constructor.
@@ -260,10 +260,15 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * @param[in] s2 second series.
 		 *
 		 * @throws std::invalid_argument if the symbol sets of \p s1 and \p s2 differ.
-		 * @throws unspecified any exception thrown by memory allocation errors in standard containers or by the construction
-		 * of the term type of \p Series.
+		 * @throws unspecified any exception thrown by:
+		 * - thread_pool::use_threads(),
+		 * - memory allocation errors in standard containers,
+		 * - the construction of the term type of \p Series.
 		 */
-		explicit base_series_multiplier(const Series &s1, const Series &s2):m_ss(s1.get_symbol_set()),m_n_threads(0u)
+		explicit base_series_multiplier(const Series &s1, const Series &s2):m_ss(s1.get_symbol_set()),
+			m_n_threads((s1.size() && s2.size()) ?
+			thread_pool::use_threads(integer(s1.size()) * s2.size(),integer(settings::get_min_work_per_thread())) :
+			1u)
 		{
 			if (unlikely(s1.get_symbol_set() != s2.get_symbol_set())) {
 				piranha_throw(std::invalid_argument,"incompatible arguments sets");
@@ -813,19 +818,14 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			constexpr std::size_t m_arity = key_type::multiply_arity;
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_v1.empty() || m_v2.empty())) {
-				m_n_threads = 1u;
 				// NOTE: requirement is ok, a series must be def-ctible.
 				return Series{};
 			}
 			const size_type size1 = m_v1.size(), size2 = m_v2.size();
 			piranha_assert(size1 && size2);
-			// Establish the number of threads to use.
-			size_type n_threads = safe_cast<size_type>(thread_pool::use_threads(
-				integer(size1) * size2,integer(settings::get_min_work_per_thread())
-			));
+			// Convert n_threads to size_type for convenience.
+			const size_type n_threads = safe_cast<size_type>(m_n_threads);
 			piranha_assert(n_threads);
-			// Store the number of threads.
-			m_n_threads = static_cast<unsigned>(n_threads);
 			// Common setup for st/mt.
 			Series retval;
 			retval.set_symbol_set(m_ss);
@@ -847,7 +847,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					// Single-thread case.
 					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2,sf);
 					sanitise_series(retval,static_cast<unsigned>(n_threads));
-					finalise_series(retval,static_cast<unsigned>(n_threads));
+					finalise_series(retval);
 					return retval;
 				} catch (...) {
 					retval._container().clear();
@@ -902,7 +902,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				f_list.wait_all();
 				f_list.get_all();
 				sanitise_series(retval,static_cast<unsigned>(n_threads));
-				finalise_series(retval,static_cast<unsigned>(n_threads));
+				finalise_series(retval);
 			} catch (...) {
 				f_list.wait_all();
 				// Clean up retval as it might be in an inconsistent state.
@@ -919,15 +919,14 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * constructor of piranha::base_series_multiplier.
 		 *
 		 * @param[in,out] s the \p Series to be finalised.
-		 * @param[in] n_threads the number of threads to use.
 		 *
 		 * @throws unspecified any exception thrown by:
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back().
 		 */
-		void finalise_series(Series &s, unsigned n_threads) const
+		void finalise_series(Series &s) const
 		{
-			finalise_impl(s,n_threads);
+			finalise_impl(s);
 		}
 	protected:
 		/// Vector of const pointers to the terms in the larger series.
@@ -936,12 +935,13 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		mutable v_ptr		m_v2;
 		/// The symbol set of the series used during construction.
 		const symbol_set	m_ss;
-		/// The number of threads used by base_series_multiplier::plain_multiplication().
+		/// Number of threads.
 		/**
-		 * This value will be set to zero upon construction, and it will be modified after calling
-		 * base_series_multiplier::plain_multiplication().
+		 * This value will be set by the constructor, and it represents the number of threads
+		 * that will be used by the multiplier. The value is always at least 1 and it is calculated
+		 * via thread_pool::use_threads().
 		 */
-		mutable unsigned	m_n_threads;
+		const unsigned		m_n_threads;
 };
 
 }

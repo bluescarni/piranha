@@ -1160,25 +1160,21 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// First, let's get the estimation on the size of the final series.
 			Series retval;
 			retval.set_symbol_set(this->m_ss);
-			// Get the number of threads to use.
-			const unsigned n_threads = thread_pool::use_threads(
-				integer(size1) * size2,integer(settings::get_min_work_per_thread())
-			);
 			// Rehash the retun value's container accordingly. Check the tuning flag to see if we want to use
 			// multiple threads for initing the return value.
 			// NOTE: it is important here that we use the same n_threads for multiplication and memset as
 			// we tie together pinned threads with potentially different NUMA regions.
-			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
+			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? this->m_n_threads : 1u;
 			// Use the plain functor in normal mode for the estimation.
 			const auto estimate = this->template estimate_final_series_size<1u>(retval,typename base::template plain_multiplier<false>{this->m_v1,this->m_v2,retval});
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
 				retval._container().max_load_factor())),n_threads_rehash);
 			piranha_assert(retval._container().bucket_count());
-			sparse_kronecker_multiplication(retval,n_threads);
+			sparse_kronecker_multiplication(retval);
 			return retval;
 		}
-		void sparse_kronecker_multiplication(Series &retval,const unsigned &n_threads) const
+		void sparse_kronecker_multiplication(Series &retval) const
 		{
 			using bucket_size_type = typename base::bucket_size_type;
 			using size_type = typename base::size_type;
@@ -1271,7 +1267,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					}
 				}
 			};
-			if (n_threads == 1u) {
+			if (this->m_n_threads == 1u) {
 				try {
 					// Single threaded case.
 					// Create the vector of tasks.
@@ -1286,8 +1282,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					for (const auto &t: tasks) {
 						task_consume(t,tmp_term);
 					}
-					this->sanitise_series(retval,n_threads);
-					this->finalise_series(retval,n_threads);
+					this->sanitise_series(retval,this->m_n_threads);
+					this->finalise_series(retval);
 				} catch (...) {
 					retval._container().clear();
 					throw;
@@ -1300,7 +1296,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// a multiple of the number of threads.
 			// NOTE: zm is a tuning parameter.
 			const unsigned zm = 10u;
-			const bucket_size_type n_zones = static_cast<bucket_size_type>(integer(n_threads) * zm);
+			const bucket_size_type n_zones = static_cast<bucket_size_type>(integer(this->m_n_threads) * zm);
 			// Number of buckets per zone (can be zero).
 			const bucket_size_type bpz = static_cast<bucket_size_type>(bucket_count / n_zones);
 			// For each zone, we need to define a vector of tasks that will write only into that zone.
@@ -1337,13 +1333,13 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				return first;
 			};
 			// Fill the task table.
-			auto table_filler = [&task_table,bpz,zm,n_threads,bucket_count,size1,size2,&l_bound,&task_split,&task_cmp] (const unsigned &thread_idx) {
+			auto table_filler = [&task_table,bpz,zm,this,bucket_count,size1,size2,&l_bound,&task_split,&task_cmp] (const unsigned &thread_idx) {
 				for (unsigned n = 0u; n < zm; ++n) {
 					std::vector<task_type> cur_tasks;
 					// [a,b[ is the container zone.
 					bucket_size_type a = static_cast<bucket_size_type>(thread_idx * bpz * zm + n * bpz);
 					bucket_size_type b;
-					if (n == zm - 1u && thread_idx == n_threads - 1u) {
+					if (n == zm - 1u && thread_idx == this->m_n_threads - 1u) {
 						// Special casing if this is the last zone in the container.
 						b = bucket_count;
 					} else {
@@ -1379,7 +1375,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Go with the threads to fill the task table.
 			future_list<decltype(thread_pool::enqueue(0u,table_filler,0u))> ff_list;
 			try {
-				for (unsigned i = 0u; i < n_threads; ++i) {
+				for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 					ff_list.push_back(thread_pool::enqueue(i,table_filler,i));
 				}
 				// First let's wait for everything to finish.
@@ -1458,7 +1454,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Go with the multiplication threads.
 			future_list<decltype(thread_pool::enqueue(0u,thread_functor,0u))> ft_list;
 			try {
-				for (unsigned i = 0u; i < n_threads; ++i) {
+				for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 					ft_list.push_back(thread_pool::enqueue(i,thread_functor,i));
 				}
 				// First let's wait for everything to finish.
@@ -1466,8 +1462,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				// Then, let's handle the exceptions.
 				ft_list.get_all();
 				// Finally, fix and finalise the series.
-				this->sanitise_series(retval,n_threads);
-				this->finalise_series(retval,n_threads);
+				this->sanitise_series(retval,this->m_n_threads);
+				this->finalise_series(retval);
 			} catch (...) {
 				ft_list.wait_all();
 				// Clean up and re-throw.
