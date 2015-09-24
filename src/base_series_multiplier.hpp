@@ -596,12 +596,12 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				/**
 				 * The constructor will store references to the input arguments internally.
 				 *
-				 * @param[in] v1 a const reference to a vector of term pointers to the first series.
-				 * @param[in] v2 a const reference to a vector of term pointers to the second series.
+				 * @param[in] bsm a const reference to an instance of piranha::base_series_multiplier, from which
+				 * the vectors of term pointers will be extracted.
 				 * @param[in] retval the \p Series instance into which terms resulting from multiplications will be inserted.
 				 */
-				explicit plain_multiplier(const std::vector<term_type const *>	&v1, const std::vector<term_type const *> &v2,
-					Series &retval):m_v1(v1),m_v2(v2),m_retval(retval),m_c_end(retval._container().end())
+				explicit plain_multiplier(const base_series_multiplier &bsm, Series &retval):
+					m_v1(bsm.m_v1),m_v2(bsm.m_v2),m_retval(retval),m_c_end(retval._container().end())
 				{}
 				/// Deleted copy constructor.
 				plain_multiplier(const plain_multiplier &) = delete;
@@ -830,7 +830,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			Series retval;
 			retval.set_symbol_set(m_ss);
 			// Estimate and rehash.
-			const auto est = estimate_final_series_size<m_arity>(retval,plain_multiplier<false>(m_v1,m_v2,retval),ff);
+			const auto est = estimate_final_series_size<m_arity>(retval,plain_multiplier<false>(*this,retval),ff);
 			// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
 			// and in this case the behaviour of numeric_cast is appropriate.
 			const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
@@ -845,7 +845,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			if (n_threads == 1u) {
 				try {
 					// Single-thread case.
-					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2,sf);
+					blocked_multiplication(plain_multiplier<true>(*this,retval),0u,size1,0u,size2,sf);
 					sanitise_series(retval,static_cast<unsigned>(n_threads));
 					finalise_series(retval);
 					return retval;

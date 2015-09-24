@@ -1166,7 +1166,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// we tie together pinned threads with potentially different NUMA regions.
 			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? this->m_n_threads : 1u;
 			// Use the plain functor in normal mode for the estimation.
-			const auto estimate = this->template estimate_final_series_size<1u>(retval,typename base::template plain_multiplier<false>{this->m_v1,this->m_v2,retval});
+			const auto estimate = this->template estimate_final_series_size<1u>(retval,typename base::template plain_multiplier<false>{*this,retval});
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
 				retval._container().max_load_factor())),n_threads_rehash);
