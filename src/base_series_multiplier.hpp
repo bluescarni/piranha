@@ -26,6 +26,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <future>
 #include <iterator>
 #include <limits>
@@ -164,17 +165,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			{
 				return 0u;
 			}
-		};
-		// RAII struct to force the clearing of the series used during estimation
-		// in face of exceptions.
-		struct series_clearer
-		{
-			explicit series_clearer(Series &s):m_s(s) {}
-			~series_clearer()
-			{
-				m_s._container().clear();
-			}
-			Series &m_s;
 		};
 		// The purpose of this helper is to move in a coefficient series during insertion. For series,
 		// we know that moves leave the series in a valid state, and series multiplications do not benefit
@@ -448,15 +438,13 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - the conversion operator of piranha::integer.
 		 */
 		template <std::size_t MultArity, typename MultFunctor, typename FilterFunctor = no_filter>
-		bucket_size_type estimate_final_series_size(Series &tmp, const MultFunctor &mf, const FilterFunctor &ff = no_filter{}) const
+		bucket_size_type estimate_final_series_size(const FilterFunctor &ff = no_filter{}) const
 		{
+			// Static checks.
 			static_assert(MultArity != 0u,"Invalid multiplication arity in base_series_multiplier.");
 			PIRANHA_TT_CHECK(is_function_object,MultFunctor,void,const size_type &, const size_type &);
+			PIRANHA_TT_CHECK(std::is_constructible,MultFunctor,const base_series_multiplier &, Series &);
 			PIRANHA_TT_CHECK(is_function_object,FilterFunctor,unsigned,const size_type &, const size_type &);
-			// Clear the input series.
-			tmp._container().clear();
-			// Make sure tmp is cleared in any case on exit.
-			series_clearer sc(tmp);
 			// Local shortcut.
 			constexpr std::size_t result_size = MultArity;
 			// Cache these.
@@ -472,100 +460,149 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// NOTE: Hard-coded number of trials = 10.
 			// NOTE: here consider that in case of extremely sparse series with few terms this will incur in noticeable
 			// overhead, since we will need many term-by-term before encountering the first duplicate.
-			const auto ntrials = 10u;
+			const unsigned n_trials = 10u;
 			// NOTE: Hard-coded value for the estimation multiplier.
 			// NOTE: This value should be tuned for performance/memory usage tradeoffs.
-			const auto multiplier = 2u;
-			// Vectors of indices into m_v1/m_v2.
-			std::vector<size_type> v_idx1, v_idx2;
-			// Try to reserve space in advance.
-			v_idx1.reserve(static_cast<typename std::vector<size_type>::size_type>(size1));
-			v_idx2.reserve(static_cast<typename std::vector<size_type>::size_type>(size2));
-			for (size_type i = 0u; i < size1; ++i) {
-				v_idx1.push_back(i);
-			}
-			for (size_type i = 0u; i < size2; ++i) {
-				v_idx2.push_back(i);
-			}
-			// Maximum number of random multiplications before which a duplicate term must be generated.
-			const size_type max_M = static_cast<size_type>(((integer(size1) * size2) / multiplier).sqrt());
-			// Random number engine.
-			std::mt19937 engine;
-			// Init total and filter counters.
-			integer total(0), tot_filtered(0);
-			// Go with the trials.
-			// NOTE: This could be easily parallelised, but not sure if it is worth it.
-			for (auto n = 0u; n < ntrials; ++n) {
-				// Randomise.
-				std::shuffle(v_idx1.begin(),v_idx1.end(),engine);
-				std::shuffle(v_idx2.begin(),v_idx2.end(),engine);
-				size_type count = 0u, filtered = 0u;
-				auto it1 = v_idx1.begin(), it2 = v_idx2.begin();
-				while (count < max_M) {
-					if (it1 == v_idx1.end()) {
-						// Each time we wrap around the first series,
-						// wrap around also the second one and rotate it.
-						// NOTE: the code here cannot ever be executed as it stands, since:
-						// - the first series is guaranteed to be equal to or larger than the second;
-						// - the limit max_M is computed in a way such that it is always less than
-						//   the size of the first series.
-						// This code was here since the previous version of the multiplier, just keep it
-						// around in case something changes.
-						it1 = v_idx1.begin();
-						auto middle = v_idx2.end();
-						--middle;
-						std::rotate(v_idx2.begin(),middle,v_idx2.end());
-						it2 = v_idx2.begin();
-					}
-					if (it2 == v_idx2.end()) {
-						it2 = v_idx2.begin();
-					}
-					// Perform term multiplication.
-					mf(*it1,*it2);
-					// Count the filtered terms.
-					const unsigned filter_count = ff(*it1,*it2);
-					// Sanity check.
-					if (unlikely(filter_count > result_size)) {
-						piranha_throw(std::invalid_argument,
-							"the number of filtered terms cannot be larger than result_size");
-					}
-					// Check for unlikely overflows when increasing counts.
-					if (unlikely(result_size > std::numeric_limits<size_type>::max() ||
-						count > std::numeric_limits<size_type>::max() - result_size))
-					{
-						piranha_throw(std::overflow_error,"overflow error");
-					}
-					if (unlikely(filter_count > std::numeric_limits<size_type>::max() ||
-						filtered > std::numeric_limits<size_type>::max() - filter_count))
-					{
-						piranha_throw(std::overflow_error,"overflow error");
-					}
-					if (tmp.size() != count + result_size) {
-						break;
-					}
-					// Increase cycle variables.
-					count = static_cast<size_type>(count + result_size);
-					filtered = static_cast<size_type>(filtered + filter_count);
-					++it1;
-					++it2;
+			const unsigned multiplier = 2u;
+			// Number of threads to use. If there are more threads than trials, then reduce
+			// the number of actual threads to use.
+			const unsigned n_threads = (n_trials >= m_n_threads) ? m_n_threads : n_trials;
+			piranha_assert(n_threads > 0u);
+			// Trials per thread. This will always be at least 1.
+			const unsigned tpt = n_trials / n_threads;
+			piranha_assert(tpt >= 1u);
+			// The cumulative estimate.
+			integer c_estimate(0);
+			// Sync mutex.
+			std::mutex mut;
+			// The estimation functor.
+			auto estimator = [size1,size2,n_threads,multiplier,tpt,n_trials,this,&ff,result_size,&c_estimate,&mut](unsigned thread_idx) {
+				piranha_assert(thread_idx < n_threads);
+				// Vectors of indices into m_v1/m_v2.
+				std::vector<size_type> v_idx1, v_idx2;
+				// Try to reserve space in advance.
+				v_idx1.reserve(static_cast<typename std::vector<size_type>::size_type>(size1));
+				v_idx2.reserve(static_cast<typename std::vector<size_type>::size_type>(size2));
+				for (size_type i = 0u; i < size1; ++i) {
+					v_idx1.push_back(i);
 				}
-				total += count;
-				tot_filtered += filtered;
-				// Reset tmp.
-				tmp._container().clear();
-			}
-			piranha_assert(total >= tot_filtered);
-			// NOTE: the reasoning here is: with no filtering the estimation will be (total/ntrials)**2*multiplier.
-			// The number of terms to be discarded in the output series will be proportional to the ratio between
-			// filtered terms and total terms, that is, (total - filtered)/total. Hence in case of filtering the estimation
-			// will be (total/ntrials)**2*multiplier * (total - filtered)/total, hence the formula below.
-			const auto retval = (total * (total - tot_filtered) * multiplier) / (integer(ntrials) * ntrials);
-			// Return always at least one.
-			if (retval.sign() == 0) {
-				return 1u;
+				for (size_type i = 0u; i < size2; ++i) {
+					v_idx2.push_back(i);
+				}
+				// Maximum number of random multiplications before which a duplicate term must be generated.
+				const size_type max_M = static_cast<size_type>(((integer(size1) * size2) / multiplier).sqrt());
+				// Random number engine. Initialise with the thread idx as seed, if multithreading, otherwise
+				// use the default seed (it eases the comparison with the old implementation).
+				std::mt19937 engine(n_threads == 1u ? std::mt19937::default_seed : static_cast<std::uint_fast32_t>(thread_idx));
+				// Init total and filter counters.
+				integer total(0), tot_filtered(0);
+				// Number of trials for this thread - usual special casing for the last thread.
+				const unsigned cur_trials = (thread_idx == n_threads - 1u) ? (n_trials - thread_idx * tpt) : tpt;
+				// Create and setup the temp series.
+				Series tmp;
+				tmp.set_symbol_set(this->m_ss);
+				// Create the multiplier.
+				MultFunctor mf(*this,tmp);
+				// Go with the trials.
+				for (auto n = 0u; n < cur_trials; ++n) {
+					// Randomise.
+					std::shuffle(v_idx1.begin(),v_idx1.end(),engine);
+					std::shuffle(v_idx2.begin(),v_idx2.end(),engine);
+					size_type count = 0u, filtered = 0u;
+					auto it1 = v_idx1.begin(), it2 = v_idx2.begin();
+					while (count < max_M) {
+						if (it1 == v_idx1.end()) {
+							// Each time we wrap around the first series,
+							// wrap around also the second one and rotate it.
+							// NOTE: the code here cannot ever be executed as it stands, since:
+							// - the first series is guaranteed to be equal to or larger than the second;
+							// - the limit max_M is computed in a way such that it is always less than
+							//   the size of the first series.
+							// This code was here since the previous version of the multiplier, just keep it
+							// around in case something changes.
+							it1 = v_idx1.begin();
+							auto middle = v_idx2.end();
+							--middle;
+							std::rotate(v_idx2.begin(),middle,v_idx2.end());
+							it2 = v_idx2.begin();
+						}
+						if (it2 == v_idx2.end()) {
+							it2 = v_idx2.begin();
+						}
+						// Perform term multiplication.
+						mf(*it1,*it2);
+						// Count the filtered terms.
+						const unsigned filter_count = ff(*it1,*it2);
+						// Sanity check.
+						if (unlikely(filter_count > result_size)) {
+							piranha_throw(std::invalid_argument,
+								"the number of filtered terms cannot be larger than result_size");
+						}
+						// Check for unlikely overflows when increasing counts.
+						if (unlikely(result_size > std::numeric_limits<size_type>::max() ||
+							count > std::numeric_limits<size_type>::max() - result_size))
+						{
+							piranha_throw(std::overflow_error,"overflow error");
+						}
+						if (unlikely(filter_count > std::numeric_limits<size_type>::max() ||
+							filtered > std::numeric_limits<size_type>::max() - filter_count))
+						{
+							piranha_throw(std::overflow_error,"overflow error");
+						}
+						if (tmp.size() != count + result_size) {
+							break;
+						}
+						// Increase cycle variables.
+						count = static_cast<size_type>(count + result_size);
+						filtered = static_cast<size_type>(filtered + filter_count);
+						++it1;
+						++it2;
+					}
+					total += count;
+					tot_filtered += filtered;
+					// Reset tmp.
+					tmp._container().clear();
+				}
+				piranha_assert(total >= tot_filtered);
+				// NOTE: the reasoning here is: with no filtering the estimation will be (total/cur_trials)**2*multiplier.
+				// The number of terms to be discarded in the output series will be proportional to the ratio between
+				// filtered terms and total terms, that is, (total - filtered)/total. Hence in case of filtering the estimation
+				// will be (total/cur_trials)**2*multiplier * (total - filtered)/total, hence the formula below.
+				auto retval = (total * (total - tot_filtered) * multiplier) / (integer(cur_trials) * cur_trials);
+				// Fix if zero.
+				if (retval.sign() == 0) {
+					retval = 1;
+				}
+				// Accumulate in the shared variable.
+				if (n_threads == 1u) {
+					// No locking needed.
+					c_estimate += retval;
+				} else {
+					std::lock_guard<std::mutex> lock(mut);
+					c_estimate += retval;
+				}
+			};
+			// Run the estimation functor.
+			if (n_threads == 1u) {
+				estimator(0u);
 			} else {
-				return static_cast<bucket_size_type>(retval);
+				future_list<std::future<void>> f_list;
+				try {
+					for (unsigned i = 0u; i < n_threads; ++i) {
+						f_list.push_back(thread_pool::enqueue(i,estimator,i));
+					}
+					// First let's wait for everything to finish.
+					f_list.wait_all();
+					// Then, let's handle the exceptions.
+					f_list.get_all();
+				} catch (...) {
+					f_list.wait_all();
+					throw;
+				}
 			}
+			piranha_assert(c_estimate >= n_threads);
+			// Return the mean.
+			return static_cast<bucket_size_type>(c_estimate / n_threads);
 		}
 		/// A plain multiplier functor.
 		/**
@@ -830,7 +867,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			Series retval;
 			retval.set_symbol_set(m_ss);
 			// Estimate and rehash.
-			const auto est = estimate_final_series_size<m_arity>(retval,plain_multiplier<false>(*this,retval),ff);
+			const auto est = estimate_final_series_size<m_arity,plain_multiplier<false>>(ff);
 			// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
 			// and in this case the behaviour of numeric_cast is appropriate.
 			const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
