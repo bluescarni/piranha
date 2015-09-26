@@ -333,71 +333,65 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_estimate_final_series_size_test)
 {
-	using pt = p_type<integer>;
-	// Start with empty series.
-	pt e1, e2;
-	{
-	m_checker<pt> m0(e1,e2);
-	BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),1u);
+	settings::set_min_work_per_thread(1u);
+	for (auto nt = 1u; nt < 4u; ++nt) {
+		using pt = p_type<integer>;
+		settings::set_n_threads(nt);
+		// Start with empty series.
+		pt e1, e2;
+		{
+		m_checker<pt> m0(e1,e2);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),1u);
+		}
+		{
+		// Check with series with only one term.
+		e1 = 1;
+		e2 = 2;
+		m_checker<pt> m0(e1,e2);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),1u);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<2u,m_functor_0>()),2u);
+		}
+		{
+		// 1 by n terms.
+		e1 = 1 + pt{"x"} - pt{"x"};
+		e2 = 2;
+		e2 += pt{"x"};
+		m_checker<pt> m0(e1,e2);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),2u);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<2u,m_functor_0>()),4u);
+		}
+		{
+		// Check with bogus filter.
+		using b_size_type = pt::size_type;
+		auto ff = [] (const b_size_type &, const b_size_type &) {return 2u;};
+		e1 += pt{"x"};
+		m_checker<pt> m0(e1,e2);
+		BOOST_CHECK_THROW((m0.estimate_final_series_size<1u,m_functor_0>(ff)),std::invalid_argument);
+		}
+		// Just a couple of simple tests using polynomials, we can't really know what to expect as the method
+		// works in a statistical fashion.
+		{
+		pt x{"x"}, y{"y"};
+		auto a = (x + 2*y + 4), b = (x*x-2*y*x-3-4*y);
+		m_checker<pt> m0(a,b);
+		// Here the multiplier functor does nothing, the estimation will exit immediately yielding 1.
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),1u);
+		}
+		// A reduced fateman1 benchmark, just to test a bit more.
+		{
+		pt x("x"), y("y"), z("z"), t("t");
+		auto f = x + y + z + t + 1;
+		auto tmp2(f);
+		for (auto i = 1; i < 10; ++i) {
+			f *= tmp2;
+		}
+		auto b = f + 1;
+		auto retval = f * b;
+		std::cout << "Bucket count vs actual size: " << retval.table_bucket_count() << ',' << retval.size() << '\n';
+		}
 	}
-	{
-	// Check with series with only one term.
-	e1 = 1;
-	e2 = 2;
-	m_checker<pt> m0(e1,e2);
-	BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),1u);
-	BOOST_CHECK_EQUAL((m0.estimate_final_series_size<2u,m_functor_0>()),2u);
-	}
-#if 0
-	{
-	// 1 by n terms.
-	e1 = 1 + pt{"x"} - pt{"x"};
-	e2 = 2;
-	e2 += pt{"x"};
-	tmp += 1;
-	m_checker<pt> m0(e1,e2);
-	m_functor_0 mf0;
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),2u);
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<2u>(tmp,mf0),4u);
-	BOOST_CHECK_EQUAL(tmp,0);
-	}
-	{
-	// Check with bogus filter.
-	using b_size_type = pt::size_type;
-	auto ff = [] (const b_size_type &, const b_size_type &) {return 2u;};
-	e1 += pt{"x"};
-	tmp += 1;
-	m_checker<pt> m0(e1,e2);
-	m_functor_0 mf0;
-	BOOST_CHECK_THROW(m0.estimate_final_series_size<1u>(tmp,mf0,ff),std::invalid_argument);
-	BOOST_CHECK_EQUAL(tmp,0);
-	}
-	// Just a couple of simple tests using polynomials, we can't really know what to expect as the method
-	// works in a statistical fashion.
-	{
-	pt x{"x"}, y{"y"};
-	auto a = (x + 2*y + 4), b = (x*x-2*y*x-3-4*y);
-	auto tmp2 = a * b;
-	m_checker<pt> m0(a,b);
-	m_functor_0 mf0;
-	// Here the multiplier does nothing, tmp2 is cleared in input and thus the loop in the estimation
-	// will exit immediately, yielding a final result of 1.
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp2,mf0),1u);
-	BOOST_CHECK_EQUAL(tmp2,0);
-	}
-	// A reduced fateman1 benchmark, just to test a bit more.
-	{
-	pt x("x"), y("y"), z("z"), t("t");
-	auto f = x + y + z + t + 1;
-	auto tmp2(f);
-	for (auto i = 1; i < 10; ++i) {
-		f *= tmp2;
-	}
-	auto b = f + 1;
-	auto retval = f * b;
-	std::cout << "Bucket count vs actual size: " << retval.table_bucket_count() << ',' << retval.size() << '\n';
-	}
-#endif
+	settings::reset_min_work_per_thread();
+	settings::reset_n_threads();
 }
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitise_series_test)
