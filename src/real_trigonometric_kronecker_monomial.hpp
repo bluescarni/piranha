@@ -41,6 +41,7 @@
 #include "detail/cf_mult_impl.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"
+#include "detail/safe_integral_adder.hpp"
 #include "exceptions.hpp"
 #include "is_cf.hpp"
 #include "is_key.hpp"
@@ -695,13 +696,13 @@ class real_trigonometric_kronecker_monomial
 			v_type result_plus, result_minus;
 			for (typename v_type::size_type i = 0u; i < size; ++i) {
 				result_plus.push_back(tmp1[i]);
-				detail::km_safe_adder(result_plus[i],tmp2[i]);
+				detail::safe_integral_adder(result_plus[i],tmp2[i]);
 				// NOTE: it is safe here to take the negative because in kronecker_array we are guaranteed
 				// that the range of each element is symmetric, so if tmp2[i] is representable also -tmp2[i] is.
 				// NOTE: the static cast here is because if value_type is narrower than int, the unary minus will promote
 				// to int and safe_adder won't work as it expects identical types.
 				result_minus.push_back(tmp1[i]);
-				detail::km_safe_adder(result_minus[i],static_cast<value_type>(-tmp2[i]));
+				detail::safe_integral_adder(result_minus[i],static_cast<value_type>(-tmp2[i]));
 			}
 			// Handle sign changes.
 			sign_plus = canonicalise_impl(result_plus);

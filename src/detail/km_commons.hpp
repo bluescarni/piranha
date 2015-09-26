@@ -22,7 +22,6 @@
 #define PIRANHA_DETAIL_KM_COMMONS_HPP
 
 #include <algorithm>
-#include <limits>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -81,21 +80,6 @@ inline T km_merge_args(const symbol_set &orig_args, const symbol_set &new_args, 
 	piranha_assert(new_vector.size() == new_args.size());
 	// Return new encoded value.
 	return KaType::encode(new_vector);
-}
-
-template <typename T>
-inline void km_safe_adder(T &a, const T &b)
-{
-	if (b >= T(0)) {
-		if (unlikely(a > std::numeric_limits<T>::max() - b)) {
-			piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
-		}
-	} else {
-		if (unlikely(a < std::numeric_limits<T>::min() - b)) {
-			piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
-		}
-	}
-	a = static_cast<T>(a + b);
 }
 
 template <typename VType, typename KaType, typename T>
