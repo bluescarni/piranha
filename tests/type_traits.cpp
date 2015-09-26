@@ -718,6 +718,7 @@ struct hash<unhashable9>
 template <>
 struct hash<unhashable10>
 {
+	hash(const hash &) = default;
 	std::size_t operator()(const unhashable10 &) const;
 	~hash() noexcept(false) {}
 };
@@ -767,7 +768,6 @@ template <>
 struct hash<hashable4>
 {
 	std::size_t operator()(const hashable4 &) const;
-	~hash() {}
 };
 
 }
@@ -937,6 +937,7 @@ struct hfo3
 struct hfo4
 {
 	hfo4() noexcept;
+	hfo4(const hfo4 &) = default;
 	std::size_t operator()(int) const;
 	~hfo4() noexcept(false);
 };
@@ -1022,6 +1023,7 @@ struct efo3
 
 struct efo4
 {
+	efo4(const efo4 &) = default;
 	bool operator()(int,int) const;
 	~efo4() noexcept(false);
 };
