@@ -369,8 +369,11 @@ struct degree_tester
 			typedef monomial<T,U> key_type;
 			key_type k0;
 			symbol_set v;
-			if (std::is_integral<T>::value || std::is_same<T,integer>::value) {
-				BOOST_CHECK((std::is_same<integer,decltype(k0.degree(v))>::value));
+			// Check the promotion of short signed ints.
+			if (std::is_same<T,signed char>::value || std::is_same<T,short>::value) {
+				BOOST_CHECK((std::is_same<int,decltype(k0.degree(v))>::value));
+			} else if (std::is_integral<T>::value) {
+				BOOST_CHECK((std::is_same<T,decltype(k0.degree(v))>::value));
 			}
 			BOOST_CHECK(key_has_degree<key_type>::value);
 			BOOST_CHECK(key_has_ldegree<key_type>::value);
@@ -451,6 +454,23 @@ struct degree_tester
 BOOST_AUTO_TEST_CASE(monomial_degree_test)
 {
 	boost::mpl::for_each<expo_types>(degree_tester());
+	// Test the overflowing.
+	using k_type = monomial<int>;
+	k_type m{std::numeric_limits<int>::max(),1};
+	symbol_set vs{symbol{"x"},symbol{"y"}};
+	BOOST_CHECK_THROW(m.degree(vs),std::overflow_error);
+	m = k_type{std::numeric_limits<int>::min(),-1};
+	BOOST_CHECK_THROW(m.degree(vs),std::overflow_error);
+	m = k_type{std::numeric_limits<int>::min(),1};
+	BOOST_CHECK_EQUAL(m.degree(vs),std::numeric_limits<int>::min() + 1);
+	// Also for partial degree.
+	vs = symbol_set{symbol{"x"},symbol{"y"},symbol{"z"}};
+	m = k_type{std::numeric_limits<int>::max(),1,0};
+	BOOST_CHECK_EQUAL(m.degree(symbol_set::positions(vs,symbol_set{symbol{"x"},symbol{"z"}}),vs),std::numeric_limits<int>::max());
+	BOOST_CHECK_THROW(m.degree(symbol_set::positions(vs,symbol_set{symbol{"x"},symbol{"y"}}),vs),std::overflow_error);
+	m = k_type{std::numeric_limits<int>::min(),0,-1};
+	BOOST_CHECK_EQUAL(m.degree(symbol_set::positions(vs,symbol_set{symbol{"x"},symbol{"y"}}),vs),std::numeric_limits<int>::min());
+	BOOST_CHECK_THROW(m.degree(symbol_set::positions(vs,symbol_set{symbol{"x"},symbol{"z"}}),vs),std::overflow_error);
 }
 
 struct multiply_tester

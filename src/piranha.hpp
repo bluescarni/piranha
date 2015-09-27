@@ -172,7 +172,7 @@
  * \todo hash_set needs more testing.
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
- * in generic algorithms - subs, ipow_subs, etc.?
+ * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements.
  */
 namespace piranha
 {

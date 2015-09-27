@@ -40,6 +40,7 @@
 #include "config.hpp"
 #include "detail/cf_mult_impl.hpp"
 #include "detail/prepare_for_print.hpp"
+#include "detail/safe_integral_adder.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
 #include "is_cf.hpp"
@@ -135,26 +136,23 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		using pow_enabler = typename std::enable_if<has_safe_cast<T,
 			decltype(std::declval<pow_type>() * std::declval<const U &>())>::value,int>::type;
 		// Machinery to determine the degree type.
+		// NOTE: add_type<U> will be promoted to a int/unsigned in case U is a short int.
 		template <typename U>
 		using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
-		// No type defined in here, will sfinae out.
-		template <typename U, typename = void>
-		struct degree_type_
-		{};
 		template <typename U>
-		struct degree_type_<U,typename std::enable_if<std::is_integral<U>::value>::type>
+		using degree_type = typename std::enable_if<std::is_constructible<add_type<U>,int>::value &&
+			is_addable_in_place<add_type<U>,U>::value,add_type<U>>::type;
+		// Helpers to add exponents in the degree computation.
+		template <typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
+		static void expo_add(degree_type<U> &retval, const U &n)
 		{
-			using type = integer;
-		};
-		template <typename U>
-		struct degree_type_<U,typename std::enable_if<!std::is_integral<U>::value && std::is_constructible<add_type<U>,int>::value &&
-			is_addable_in_place<add_type<U>,U>::value>::type>
+			detail::safe_integral_adder(retval,static_cast<degree_type<U>>(n));
+		}
+		template <typename U, typename std::enable_if<!std::is_integral<U>::value,int>::type = 0>
+		static void expo_add(degree_type<U> &retval, const U &x)
 		{
-			using type = add_type<U>;
-		};
-		// The final alias.
-		template <typename U>
-		using degree_type = typename degree_type_<U>::type;
+			retval += x;
+		}
 		// Integrate utils.
 		// In-place increment by one, checked for integral types.
 		template <typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
@@ -343,14 +341,15 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * and monomial::value_type can be added in-place to it.
 		 *
 		 * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
-		 * If \p T is a C++ integral type, then the type of the degree will be piranha::integer. Otherwise, the type of the degree
-		 * is the type resulting from the addition of the exponents.
+		 * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
 		 *
 		 * @param[in] args reference set of piranha::symbol.
 		 *
 		 * @return the degree of the monomial.
 		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
+		 * of the degree overflows.
 		 * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
 		 */
 		template <typename U = T>
@@ -362,7 +361,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			degree_type<U> retval(0);
 			for (const auto &x: *this) {
-				retval += x;
+				expo_add(retval,x);
 			}
 			return retval;
 		}
@@ -373,8 +372,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * and monomial::value_type can be added in-place to it.
 		 *
 		 * This method will return the partial degree of the monomial, computed via the summation of the exponents of the monomial.
-		 * If \p T is a C++ integral type, then the type of the degree will be piranha::integer. Otherwise, the type of the degree
-		 * is the type resulting from the addition of the exponents.
+		 * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
 		 *
 		 * The \p p argument is used to indicate which exponents are to be taken into account when computing the partial degree.
 		 * Exponents not in \p p will be discarded during the computation of the partial degree.
@@ -386,6 +384,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if \p p is
 		 * not compatible with the monomial.
+		 * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
+		 * of the degree overflows.
 		 * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
 		 */
 		template <typename U = T>
@@ -397,7 +397,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			auto cit = this->begin();
 			degree_type<U> retval(0);
 			for (const auto &i: p) {
-				retval += cit[i];
+				expo_add(retval,cit[i]);
 			}
 			return retval;
 		}
