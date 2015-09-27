@@ -238,6 +238,10 @@ class real_trigonometric_kronecker_monomial
 		template <typename Cf>
 		using multiply_enabler = typename std::enable_if<is_divisible_in_place<Cf,int>::value && has_negate<Cf>::value &&
 			detail::true_tt<detail::cf_mult_enabler<Cf>>::value,int>::type;
+		// Degree utils.
+		using degree_type = decltype(std::declval<const T &>() + std::declval<const T &>());
+		// Order utils.
+		using order_type = decltype(math::abs(std::declval<const T &>()) + math::abs(std::declval<const T &>()));
 #endif
 	public:
 		/// Default constructor.
@@ -516,26 +520,29 @@ class real_trigonometric_kronecker_monomial
 		}
 		/// Trigonometric degree.
 		/**
+		 * The type returned by this method is the type resulting from the addition of two instances
+		 * of \p T.
+		 *
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return trigonometric degree of the monomial.
 		 * 
-		 * @throws unspecified any exception thrown by unpack() or by the in-place addition operator
-		 * of piranha::integer.
+		 * @throws std::overflow_error if the computation of the degree overflows.
+		 * @throws unspecified any exception thrown by unpack().
 		 */
-		integer t_degree(const symbol_set &args) const
+		degree_type t_degree(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			// NOTE: this should be guaranteed by the unpack function.
 			piranha_assert(tmp.size() == args.size());
-			integer retval(0);
+			degree_type retval(0);
 			for (const auto &x: tmp) {
-				retval += x;
+				detail::safe_integral_adder(retval,static_cast<degree_type>(x));
 			}
 			return retval;
 		}
 		/// Low trigonometric degree (equivalent to the trigonometric degree).
-		integer t_ldegree(const symbol_set &args) const
+		degree_type t_ldegree(const symbol_set &args) const
 		{
 			return t_degree(args);
 		}
@@ -543,6 +550,9 @@ class real_trigonometric_kronecker_monomial
 		/**
 		 * Partial trigonometric degree of the monomial. The \p p argument is used to indicate which multipliers are to be taken into account when
 		 * computing the partial degree. Multipliers not in \p p will be discarded during the computation of the partial degree.
+		 *
+		 * The type returned by this method is the type resulting from the addition of two instances
+		 * of \p T.
 		 * 
 		 * @param[in] p positions of the symbols to be considered.
 		 * @param[in] args reference set of piranha::symbol.
@@ -550,10 +560,11 @@ class real_trigonometric_kronecker_monomial
 		 * @return the summation of all the multipliers of the monomial corresponding to the symbols at the positions in
 		 * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
 		 * 
-		 * @throws unspecified any exception thrown by unpack() or by the in-place addition operator
-		 * of piranha::integer.
+		 * @throws std::invalid_argument if \p p is not compatible with \p args.
+		 * @throws std::overflow_error if the computation of the degree overflows.
+		 * @throws unspecified any exception thrown by unpack().
 		 */
-		integer t_degree(const symbol_set::positions &p, const symbol_set &args) const
+		degree_type t_degree(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			piranha_assert(tmp.size() == args.size());
@@ -561,49 +572,43 @@ class real_trigonometric_kronecker_monomial
 				piranha_throw(std::invalid_argument,"invalid positions");
 			}
 			auto cit = tmp.begin();
-			integer retval(0);
+			degree_type retval(0);
 			for (const auto &i: p) {
-				retval += cit[i];
+				detail::safe_integral_adder(retval,static_cast<degree_type>(cit[i]));
 			}
 			return retval;
 		}
 		/// Partial low trigonometric degree (equivalent to the partial trigonometric degree).
-		integer t_ldegree(const symbol_set::positions &p, const symbol_set &args) const
+		degree_type t_ldegree(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			return t_degree(p,args);
 		}
 		/// Trigonometric order.
 		/**
+		 * The type returned by this method is the type resulting from the addition of the absolute
+		 * values of two instances of \p T.
+		 *
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return trigonometric order of the monomial.
 		 * 
-		 * @throws unspecified any exception thrown by unpack() or by the in-place addition operator
-		 * of piranha::integer.
+		 * @throws std::overflow_error if the computation of the degree overflows.
+		 * @throws unspecified any exception thrown by unpack().
 		 */
-		integer t_order(const symbol_set &args) const
+		order_type t_order(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			piranha_assert(tmp.size() == args.size());
-			integer retval(0);
+			order_type retval(0);
 			for (const auto &x: tmp) {
 				// NOTE: here the k codification is symmetric, we can always take the negative
 				// safely.
-				retval += math::abs(x);
+				detail::safe_integral_adder(retval,static_cast<order_type>(math::abs(x)));
 			}
 			return retval;
 		}
-		/// Low trigonometric order.
-		/**
-		 * Equivalent to the trigonometric order.
-		 * 
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return low trigonometric order of the monomial.
-		 * 
-		 * @throws unspecified any exception thrown by t_order().
-		 */
-		integer t_lorder(const symbol_set &args) const
+		/// Low trigonometric order (equivalent to the trigonometric order).
+		order_type t_lorder(const symbol_set &args) const
 		{
 			return t_order(args);
 		}
@@ -612,16 +617,20 @@ class real_trigonometric_kronecker_monomial
 		 * Partial trigonometric order of the monomial. The \p p argument is used to indicate which multipliers are to be taken into account when
 		 * computing the partial order. Multipliers not in \p p will be discarded during the computation of the partial order.
 		 * 
+		 * The type returned by this method is the type resulting from the addition of the absolute
+		 * values of two instances of \p T.
+		 *
 		 * @param[in] p positions of the symbols to be considered.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return the summation of the absolute values of all the multipliers of the monomial corresponding to the symbols at the positions in
 		 * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
 		 * 
-		 * @throws unspecified any exception thrown by unpack() or by the in-place addition operator
-		 * of piranha::integer.
+		 * @throws std::invalid_argument if \p p is not compatible with \p args.
+		 * @throws std::overflow_error if the computation of the degree overflows.
+		 * @throws unspecified any exception thrown by unpack().
 		 */
-		integer t_order(const symbol_set::positions &p, const symbol_set &args) const
+		order_type t_order(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			piranha_assert(tmp.size() == args.size());
@@ -629,14 +638,14 @@ class real_trigonometric_kronecker_monomial
 				piranha_throw(std::invalid_argument,"invalid positions");
 			}
 			auto cit = tmp.begin();
-			integer retval(0);
+			order_type retval(0);
 			for (const auto &i: p) {
-				retval += math::abs(cit[i]);
+				detail::safe_integral_adder(retval,static_cast<order_type>(math::abs(cit[i])));
 			}
 			return retval;
 		}
 		/// Partial low trigonometric order (equivalent to the partial trigonometric order).
-		integer t_lorder(const symbol_set::positions &p, const symbol_set &args) const
+		order_type t_lorder(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			return t_order(p,args);
 		}

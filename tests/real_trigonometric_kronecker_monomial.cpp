@@ -351,10 +351,17 @@ struct t_degree_tester
 		};
 		k_type k1;
 		symbol_set vs1;
-		BOOST_CHECK((std::is_same<decltype(k1.t_degree(vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_degree(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
+		if (std::is_same<signed char,T>::value) {
+			BOOST_CHECK((std::is_same<decltype(k1.t_degree(vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_degree(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+		} else {
+			BOOST_CHECK((std::is_same<decltype(k1.t_degree(vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_degree(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+		}
 		BOOST_CHECK(k1.t_degree(vs1) == 0);
 		BOOST_CHECK(k1.t_ldegree(vs1) == 0);
 		k_type k2({0});
@@ -417,10 +424,17 @@ struct t_order_tester
 		};
 		k_type k1;
 		symbol_set vs1;
-		BOOST_CHECK((std::is_same<decltype(k1.t_order(vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_lorder(vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_order(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_lorder(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
+		if (std::is_same<T,signed char>::value) {
+			BOOST_CHECK((std::is_same<decltype(k1.t_order(vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_lorder(vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_order(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_lorder(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+		} else {
+			BOOST_CHECK((std::is_same<decltype(k1.t_order(vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_lorder(vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_order(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_lorder(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+		}
 		BOOST_CHECK(k1.t_order(vs1) == 0);
 		BOOST_CHECK(k1.t_lorder(vs1) == 0);
 		k_type k2({0});
