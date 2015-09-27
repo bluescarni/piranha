@@ -298,6 +298,11 @@ struct degree_tester
 		typedef kronecker_monomial<T> k_type;
 		k_type k1;
 		symbol_set vs1;
+		if (std::is_same<T,signed char>::value) {
+			BOOST_CHECK((std::is_same<decltype(k1.degree(vs1)),int>::value));
+		} else {
+			BOOST_CHECK((std::is_same<decltype(k1.degree(vs1)),T>::value));
+		}
 		BOOST_CHECK(k1.degree(vs1) == 0);
 		BOOST_CHECK(k1.ldegree(vs1) == 0);
 		k_type k2({0});
@@ -321,6 +326,11 @@ struct degree_tester
 			}
 			return positions(v,tmp);
 		};
+		if (std::is_same<T,signed char>::value) {
+			BOOST_CHECK((std::is_same<decltype(k5.degree(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+		} else {
+			BOOST_CHECK((std::is_same<decltype(k5.degree(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+		}
 		BOOST_CHECK(k5.degree(ss_to_pos(vs1,{"a"}),vs1) == -1);
 		// NOTE: here it seems the compilation error arising when only {} is used (as opposed
 		// to std::set<std::string>{}) is a bug in libc++. See:
