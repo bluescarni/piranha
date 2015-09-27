@@ -403,6 +403,11 @@ struct degree_tester
 				}
 				return positions(vs,tmp);
 			};
+			if (std::is_same<T,signed char>::value || std::is_same<T,short>::value) {
+				BOOST_CHECK((std::is_same<int,decltype(k2.degree(ss_to_pos(v,std::set<std::string>{}),v))>::value));
+			} else if (std::is_integral<T>::value) {
+				BOOST_CHECK((std::is_same<T,decltype(k2.degree(ss_to_pos(v,std::set<std::string>{}),v))>::value));
+			}
 			BOOST_CHECK(k2.degree(ss_to_pos(v,std::set<std::string>{}),v) == T(0));
 			BOOST_CHECK(k2.degree(ss_to_pos(v,{"a"}),v) == T(2));
 			BOOST_CHECK(k2.degree(ss_to_pos(v,{"A"}),v) == T(0));
