@@ -25,6 +25,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
@@ -1060,34 +1061,60 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Truncation is active.
 			if (std::get<0u>(t) == 1) {
 				// Total degree truncation.
-				return total_truncated_multiplication(std::get<1u>(t));
+				return truncated_multiplication(std::get<1u>(t));
 			}
 			piranha_assert(std::get<0u>(t) == 2);
 			// Partial degree truncation.
-			return partial_truncated_multiplication(std::get<1u>(t),std::get<2u>(t));
+			const symbol_set::positions pos(this->m_ss,symbol_set(std::get<2u>(t).begin(),std::get<2u>(t).end()));
+			return truncated_multiplication(std::get<1u>(t),std::get<2u>(t),pos);
 		}
-		// NOTE: total and partial can be compressed in a single function with variadic arguments.
-		// Unfortunately, GCC 4.8 does not support capturing variadic args in lambdas so we have to hold this off
-		// for the moment. Consider maybe using std::bind as a replacement.
-		template <typename T>
-		Series total_truncated_multiplication(const T &max_degree) const
+		// NOTE: the existence of these functors is because GCC 4.8 has troubles capturing variadic arguments in lambdas
+		// in truncated_multiplication, and we need to use std::bind instead. Once we switch to 4.9, we can revert
+		// to lambdas and drop the <functional> header.
+		struct term_degree_sorter
+		{
+			using term_type = typename Series::term_type;
+			template <typename ... Args>
+			bool operator()(term_type const *p1, term_type const *p2, const symbol_set &ss, const Args & ... args) const
+			{
+				return detail::ps_get_degree(*p1,args...,ss) < detail::ps_get_degree(*p2,args...,ss);
+			}
+		};
+		struct term_degree_getter1
+		{
+			using term_type = typename Series::term_type;
+			template <typename ... Args>
+			auto operator()(term_type const *p, const symbol_set &ss, const Args & ... args) const -> decltype(detail::ps_get_degree(*p,args...,ss))
+			{
+				return detail::ps_get_degree(*p,args...,ss);
+			}
+		};
+		struct term_degree_getter2
+		{
+			using term_type = typename Series::term_type;
+			template <typename T, typename ... Args>
+			auto operator()(term_type const *p, const symbol_set &ss, const T &max_degree, const Args & ... args) const ->
+				decltype(max_degree - detail::ps_get_degree(*p,args...,ss))
+			{
+				return max_degree - detail::ps_get_degree(*p,args...,ss);
+			}
+		};
+		template <typename T, typename ... Args>
+		Series truncated_multiplication(const T &max_degree, const Args & ... args) const
 		{
 			using term_type = typename Series::term_type;
 			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));
 			using size_type = typename base::size_type;
+			using namespace std::placeholders;
 			// First let's order the terms in the second series according to the degree.
-			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),[this](term_type const *p1, term_type const *p2) {
-				return detail::ps_get_degree(*p1,this->m_ss) < detail::ps_get_degree(*p2,this->m_ss);
-			});
+			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),std::bind(term_degree_sorter{},_1,_2,std::cref(this->m_ss),std::cref(args)...));
 			// Next we create two vectors with the degrees of the terms in the two series. In the second series,
 			// we negate and add the max degree in order to avoid adding in the skipping functor.
 			std::vector<degree_type> v_d1, v_d2;
-			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(v_d1),[this](term_type const *p) {
-				return detail::ps_get_degree(*p,this->m_ss);
-			});
-			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(v_d2),[this,&max_degree](term_type const *p) {
-				return max_degree - detail::ps_get_degree(*p,this->m_ss);
-			});
+			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(v_d1),std::bind(term_degree_getter1{},_1,
+				std::cref(this->m_ss),std::cref(args)...));
+			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(v_d2),std::bind(term_degree_getter2{},_1,
+				std::cref(this->m_ss),std::cref(max_degree),std::cref(args)...));
 			// The skipping functor.
 			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
 				using d_size_type = decltype(v_d1.size());
@@ -1095,32 +1122,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			};
 			// The filter functor: will return 1 if the degree of the term resulting from the multiplication of i and j
 			// is greater than the max degree, zero otherwise.
-			auto ff = [&sf](const size_type &i, const size_type &j) {
-				return static_cast<unsigned>(sf(i,j));
-			};
-			return this->plain_multiplication(sf,ff);
-		}
-		template <typename T>
-		Series partial_truncated_multiplication(const T &max_degree, const std::vector<std::string> &names) const
-		{
-			using term_type = typename Series::term_type;
-			const symbol_set::positions pos(this->m_ss,symbol_set(names.begin(),names.end()));
-			using degree_type = decltype(detail::ps_get_degree(term_type{},names,pos,this->m_ss));
-			using size_type = typename base::size_type;
-			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),[this,&names,&pos](term_type const *p1, term_type const *p2) {
-				return detail::ps_get_degree(*p1,names,pos,this->m_ss) < detail::ps_get_degree(*p2,names,pos,this->m_ss);
-			});
-			std::vector<degree_type> v_d1, v_d2;
-			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(v_d1),[this,&names,&pos](term_type const *p) {
-				return detail::ps_get_degree(*p,names,pos,this->m_ss);
-			});
-			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(v_d2),[this,&names,&pos,&max_degree](term_type const *p) {
-				return max_degree - detail::ps_get_degree(*p,names,pos,this->m_ss);
-			});
-			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
-				using d_size_type = decltype(v_d1.size());
-				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
-			};
 			auto ff = [&sf](const size_type &i, const size_type &j) {
 				return static_cast<unsigned>(sf(i,j));
 			};
