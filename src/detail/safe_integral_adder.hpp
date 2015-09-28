@@ -61,6 +61,30 @@ inline void safe_integral_adder(T &a, const T &b)
 	a = static_cast<T>(a + b);
 }
 
+template <typename T, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value,int>::type = 0>
+inline void safe_integral_subber(T &a, const T &b)
+{
+	if (b <= T(0)) {
+		if (unlikely(a > std::numeric_limits<T>::max() + b)) {
+			piranha_throw(std::overflow_error,"overflow in the subtraction of two signed integrals");
+		}
+	} else {
+		if (unlikely(a < std::numeric_limits<T>::min() + b)) {
+			piranha_throw(std::overflow_error,"overflow in the subtraction of two signed integrals");
+		}
+	}
+	a = static_cast<T>(a - b);
+}
+
+template <typename T, typename std::enable_if<std::is_integral<T>::value && !std::is_signed<T>::value,int>::type = 0>
+inline void safe_integral_subber(T &a, const T &b)
+{
+	if (unlikely(a < b)) {
+		piranha_throw(std::overflow_error,"overflow in the subtraction of two unsigned integrals");
+	}
+	a = static_cast<T>(a - b);
+}
+
 }
 
 }
