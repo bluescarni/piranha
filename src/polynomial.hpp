@@ -47,6 +47,7 @@
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
+#include "detail/safe_integral_adder.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
@@ -1005,9 +1006,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * the key type of \p Series, the implementation will use either base_series_multiplier::plain_multiplication()
 		 * with base_series_multiplier::plain_multiplier or a different algorithm.
 		 *
+		 * If a polynomial truncation threshold is defined and the degree type of the polynomial is a C++ integral type,
+		 * the integral arithmetic operations involved in the truncation logic will be checked for overflow.
+		 *
 		 * @return the result of the multiplication of the input series operands.
 		 * 
-		 * @throws std::overflow_error in case of (unlikely) overflow errors.
+		 * @throws std::overflow_error in case of overflow errors.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::base_series_multiplier::plain_multiplication(),
 		 * - piranha::base_series_multiplier::estimate_final_series_size(),
@@ -1091,12 +1095,25 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		};
 		struct term_degree_getter2
 		{
+			// NOTE: here we are guaranteed that T supports subtraction and T - T is still T.
 			using term_type = typename Series::term_type;
+			template <typename T, typename std::enable_if<!std::is_integral<T>::value,int>::type = 0>
+			static T sub(const T &a, const T &b)
+			{
+				return a - b;
+			}
+			template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+			static T sub(const T &a, const T &b)
+			{
+				T retval(a);
+				detail::safe_integral_subber(retval,b);
+				return retval;
+			}
 			template <typename T, typename ... Args>
 			auto operator()(term_type const *p, const symbol_set &ss, const T &max_degree, const Args & ... args) const ->
 				decltype(max_degree - detail::ps_get_degree(*p,args...,ss))
 			{
-				return max_degree - detail::ps_get_degree(*p,args...,ss);
+				return sub(max_degree,detail::ps_get_degree(*p,args...,ss));
 			}
 		};
 		template <typename T, typename ... Args>

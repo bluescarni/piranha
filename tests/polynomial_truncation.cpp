@@ -30,6 +30,7 @@
 #include <tuple>
 #include <type_traits>
 
+#include "../src/detail/safe_integral_adder.hpp"
 #include "../src/environment.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
@@ -103,6 +104,22 @@ struct main_tester
 					BOOST_CHECK_EQUAL((x+y+1)*(x+y+1),2*x+2*y+1);
 				} else {
 					BOOST_CHECK_THROW(pt::set_auto_truncate_degree(1/2_q),std::invalid_argument);
+				}
+				// Special checks when the degree is a C++ integral.
+				if (std::is_same<monomial<int>,Key>::value) {
+					BOOST_CHECK((std::is_same<decltype(x.degree()),int>::value));
+					// NOTE: this is invalid_argument because the failure is in safe_cast.
+					BOOST_CHECK_THROW(pt::set_auto_truncate_degree(integer(std::numeric_limits<long long>::max())+1),std::invalid_argument);
+					// Check overflow in term ordering.
+					constexpr auto max = std::numeric_limits<int>::max();
+					pt::set_auto_truncate_degree(max);
+					BOOST_CHECK_THROW((1 + x) * x.pow(-1),std::overflow_error);
+					// This should not overflow, contrary to what it would seem like.
+					BOOST_CHECK_NO_THROW((x.pow(max/2)*y.pow(max/2)+1)*(x.pow(max/2)*y.pow(2)));
+					// This is what would happen if we used d1 + d2 <= M instead of d1 <= M - d2 in
+					// the truncation logic.
+					auto check = max/2 + max/2;
+					BOOST_CHECK_THROW(detail::safe_integral_adder(check,max/2+2),std::overflow_error);
 				}
 				// Now partial degree.
 				pt::set_auto_truncate_degree(1,{"x"});
