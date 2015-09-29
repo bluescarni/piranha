@@ -934,10 +934,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				auto start = vp->data() + t_idx * block_size;
 				const auto end = vp->data() + ((t_idx == this->m_n_threads - 1u) ?
 					vp->size() : ((t_idx + 1u) * block_size));
+				// We need to make sure we have at least 1 element to process. This is guaranteed
+				// in the single-threaded implementation but not in multithreading.
 				if (start == end) {
 					piranha_assert(this->m_n_threads > 1u);
-					// We need to make sure we have at least 1 element to process. This is guaranteed
-					// in the single-threaded implementation but not in multithreading.
 					return;
 				}
 				// Local vector that will hold the minmax values for this thread.
@@ -1057,7 +1057,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * @param[in] s2 second series operand.
 		 * 
 		 * @throws std::overflow_error if a bounds check, as described above, fails.
-		 * @throws unspecified any exception thrown by the base constructor.
+		 * @throws unspecified any exception thrown by:
+		 * - the base constructor,
+		 * - standard threading primitives,
+		 * - memory errors in standard containers,
+		 * - thread_pool::enqueue(),
+		 * - future_list::push_back().
 		 */
 		explicit series_multiplier(const Series &s1, const Series &s2):base(s1,s2)
 		{
