@@ -925,8 +925,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// overflow the size of the limits, as the check for compatibility in Kronecker monomial
 			// would kick in.
 			piranha_assert(this->m_ss.size() < ka::get_limits().size());
+			// Sync mutex, actually used only in mt mode.
 			std::mutex mut;
-			// The function used to determine minmaxs for the two series.
+			// The function used to determine minmaxs for the two series. This is used both in
+			// single-thread and multi-thread mode.
 			auto thread_func = [&mut,this](unsigned t_idx, const v_ptr *vp, mm_vec *mmv) {
 				piranha_assert(t_idx < this->m_n_threads);
 				// Establish the block size.
@@ -946,7 +948,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				// NOTE: we need to check that the exponents of the monomials in the result do not
 				// go outside the bounds of the Kronecker codification. We need to unpack all monomials
 				// in the operands and examine them, we cannot operate on the codes for this.
-				// NOTE: we can use these as we are sure both the series has at least one element.
+				// NOTE: we can use this as we are sure the series has at least one element (start != end).
 				auto tmp_vec = (*start)->m_key.unpack(this->m_ss);
 				// Init the mimnax.
 				std::transform(tmp_vec.begin(),tmp_vec.end(),std::back_inserter(minmax_values),[](const value_type &v) {
