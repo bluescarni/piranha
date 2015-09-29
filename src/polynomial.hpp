@@ -45,6 +45,7 @@
 #include "detail/atomic_utils.hpp"
 #include "detail/cf_mult_impl.hpp"
 #include "detail/divisor_series_fwd.hpp"
+#include "detail/parallel_vector_transform.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
 #include "detail/safe_integral_adder.hpp"
@@ -1120,18 +1121,38 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		Series truncated_multiplication(const T &max_degree, const Args & ... args) const
 		{
 			using term_type = typename Series::term_type;
+			// NOTE: degree type is the same in total and partial.
 			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));
 			using size_type = typename base::size_type;
 			using namespace std::placeholders;
-			// First let's order the terms in the second series according to the degree.
-			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),std::bind(term_degree_sorter{},_1,_2,std::cref(this->m_ss),std::cref(args)...));
-			// Next we create two vectors with the degrees of the terms in the two series. In the second series,
+			// First let's create two vectors with the degrees of the terms in the two series. In the second series,
 			// we negate and add the max degree in order to avoid adding in the skipping functor.
-			std::vector<degree_type> v_d1, v_d2;
-			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(v_d1),std::bind(term_degree_getter1{},_1,
+			using d_size_type = typename std::vector<degree_type>::size_type;
+			std::vector<degree_type> v_d1(safe_cast<d_size_type>(this->m_v1.size())), v_d2(safe_cast<d_size_type>(this->m_v2.size()));
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v1,v_d1,std::bind(term_degree_getter1{},_1,
 				std::cref(this->m_ss),std::cref(args)...));
-			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(v_d2),std::bind(term_degree_getter2{},_1,
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v2,v_d2,std::bind(term_degree_getter2{},_1,
 				std::cref(this->m_ss),std::cref(max_degree),std::cref(args)...));
+			// Next we need to order the terms in the second series, and also the corresponding degree vector.
+			// First we create a vector of indices and we fill it.
+			std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
+			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
+			// Second, we sort the vector of indices according to the degrees in the second series.
+			std::stable_sort(idx_vector.begin(),idx_vector.end(),[&v_d2](const size_type &i1, const size_type &i2) {
+				// NOTE: here it is ">" rather than "<" because we already subtracted the max degree in v_d2.
+				return v_d2[static_cast<d_size_type>(i1)] > v_d2[static_cast<d_size_type>(i2)];
+			});
+			// Finally, we apply the permutation to v_d2 and m_v2.
+			decltype(this->m_v2) v2_copy(this->m_v2.size());
+			decltype(v_d2) v_d2_copy(v_d2.size());
+			std::transform(idx_vector.begin(),idx_vector.end(),v2_copy.begin(),[this](const size_type &i) {
+				return this->m_v2[i];
+			});
+			std::transform(idx_vector.begin(),idx_vector.end(),v_d2_copy.begin(),[&v_d2](const size_type &i) {
+				return v_d2[static_cast<d_size_type>(i)];
+			});
+			this->m_v2 = std::move(v2_copy);
+			v_d2 = std::move(v_d2_copy);
 			// The skipping functor.
 			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
 				using d_size_type = decltype(v_d1.size());
