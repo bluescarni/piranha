@@ -860,39 +860,74 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		{
 			using expo_type = typename key_t<T>::value_type;
 			using term_type = typename Series::term_type;
+			using mm_vec = std::vector<std::pair<expo_type,expo_type>>;
+			using v_ptr = typename base::v_ptr;
 			// NOTE: we know that the input series are not null.
 			piranha_assert(this->m_v1.size() != 0u && this->m_v2.size() != 0u);
-			// Initialise minmax values.
-			std::vector<std::pair<expo_type,expo_type>> minmax_values1;
-			std::vector<std::pair<expo_type,expo_type>> minmax_values2;
-			auto it1 = this->m_v1.begin();
-			auto it2 = this->m_v2.begin();
+			// Sync mutex, actually used only in mt mode.
+			std::mutex mut;
 			// Checker for monomial sizes in debug mode.
 			auto monomial_checker = [this](const term_type &t) {
 				return t.m_key.size() == this->m_ss.size();
 			};
 			(void)monomial_checker;
-			piranha_assert(monomial_checker(**it1));
-			piranha_assert(monomial_checker(**it2));
-			std::transform((*it1)->m_key.begin(),(*it1)->m_key.end(),std::back_inserter(minmax_values1),[](const expo_type &v) {
-				return std::make_pair(v,v);
-			});
-			std::transform((*it2)->m_key.begin(),(*it2)->m_key.end(),std::back_inserter(minmax_values2),[](const expo_type &v) {
-				return std::make_pair(v,v);
-			});
-			// Find the minmaxs.
-			for (; it1 != this->m_v1.end(); ++it1) {
-				piranha_assert(monomial_checker(**it1));
-				// NOTE: std::transform is allowed to do transformations in-place - i.e., here the output range is the
-				// same as the first input range:
-				// http://stackoverflow.com/questions/19200528/is-it-safe-for-the-input-iterator-and-output-iterator-in-stdtransform-to-be-fr
-				// The important part is that the functor *itself* must not mutate the elements.
-				std::transform(minmax_values1.begin(),minmax_values1.end(),(*it1)->m_key.begin(),minmax_values1.begin(),update_minmax{});
-			}
-			for (; it2 != this->m_v2.end(); ++it2) {
-				piranha_assert(monomial_checker(**it2));
-				std::transform(minmax_values2.begin(),minmax_values2.end(),(*it2)->m_key.begin(),minmax_values2.begin(),update_minmax{});
-			}
+			// The function used to determine minmaxs for the two series. This is used both in
+			// single-thread and multi-thread mode.
+			auto thread_func = [&mut,this,&monomial_checker](unsigned t_idx, const v_ptr *vp, mm_vec *mmv) {
+				piranha_assert(t_idx < this->m_n_threads);
+				// Establish the block size.
+				const auto block_size = vp->size() / this->m_n_threads;
+				auto start = vp->data() + t_idx * block_size;
+				const auto end = vp->data() + ((t_idx == this->m_n_threads - 1u) ?
+					vp->size() : ((t_idx + 1u) * block_size));
+				// We need to make sure we have at least 1 element to process. This is guaranteed
+				// in the single-threaded implementation but not in multithreading.
+				if (start == end) {
+					piranha_assert(this->m_n_threads > 1u);
+					return;
+				}
+				piranha_assert(monomial_checker(**start));
+				// Local vector that will hold the minmax values for this thread.
+				mm_vec minmax_values;
+				// Init the mimnax.
+				// NOTE: we can use this as we are sure the series has at least one element (start != end).
+				std::transform((*start)->m_key.begin(),(*start)->m_key.end(),std::back_inserter(minmax_values),[](const expo_type &v) {
+					return std::make_pair(v,v);
+				});
+				// Move to the next element and go with the loop.
+				++start;
+				for (; start != end; ++start) {
+					piranha_assert(monomial_checker(**start));
+					// NOTE: std::transform is allowed to do transformations in-place - i.e., here the output range is the
+					// same as the first or second input range:
+					// http://stackoverflow.com/questions/19200528/is-it-safe-for-the-input-iterator-and-output-iterator-in-stdtransform-to-be-fr
+					// The important part is that the functor *itself* must not mutate the elements.
+					std::transform(minmax_values.begin(),minmax_values.end(),(*start)->m_key.begin(),minmax_values.begin(),update_minmax{});
+				}
+				if (this->m_n_threads == 1u) {
+					// In single thread the output mmv should be written only once, after being def-inited.
+					piranha_assert(mmv->empty());
+					// Just move in the local minmax values in single-threaded mode.
+					*mmv = std::move(minmax_values);
+				} else {
+					std::lock_guard<std::mutex> lock(mut);
+					if (mmv->empty()) {
+						// If mmv has not been inited yet, just move in the current values.
+						*mmv = std::move(minmax_values);
+					} else {
+						piranha_assert(minmax_values.size() == mmv->size());
+						// Otherwise, update the minmaxs.
+						auto updater = [](const std::pair<expo_type,expo_type> &p1, const std::pair<expo_type,expo_type> &p2) {
+							return std::make_pair(p1.first < p2.first ? p1.first : p2.first,
+								p1.second > p2.second ? p1.second : p2.second);
+						};
+						std::transform(minmax_values.begin(),minmax_values.end(),mmv->begin(),mmv->begin(),updater);
+					}
+				}
+			};
+			// minmax vectors for the two series.
+			mm_vec minmax_values1, minmax_values2;
+			check_bounds_impl(minmax_values1,minmax_values2,thread_func);
 			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow (this is a simple interval addition).
 			std::vector<std::pair<integer,integer>> minmax_values;
 			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
@@ -917,62 +952,48 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		{
 			using value_type = typename key_t<Series>::value_type;
 			using ka = kronecker_array<value_type>;
-			using size_type = typename base::size_type;
 			using v_ptr = typename base::v_ptr;
-			// The minmax vector type.
 			using mm_vec = std::vector<std::pair<value_type,value_type>>;
+			piranha_assert(this->m_v1.size() != 0u && this->m_v2.size() != 0u);
 			// NOTE: here we are sure about this since the symbol set in a series should never
 			// overflow the size of the limits, as the check for compatibility in Kronecker monomial
 			// would kick in.
 			piranha_assert(this->m_ss.size() < ka::get_limits().size());
-			// Sync mutex, actually used only in mt mode.
 			std::mutex mut;
-			// The function used to determine minmaxs for the two series. This is used both in
-			// single-thread and multi-thread mode.
 			auto thread_func = [&mut,this](unsigned t_idx, const v_ptr *vp, mm_vec *mmv) {
 				piranha_assert(t_idx < this->m_n_threads);
-				// Establish the block size.
-				const auto block_size = static_cast<size_type>(vp->size() / this->m_n_threads);
+				const auto block_size = vp->size() / this->m_n_threads;
 				auto start = vp->data() + t_idx * block_size;
 				const auto end = vp->data() + ((t_idx == this->m_n_threads - 1u) ?
 					vp->size() : ((t_idx + 1u) * block_size));
-				// We need to make sure we have at least 1 element to process. This is guaranteed
-				// in the single-threaded implementation but not in multithreading.
 				if (start == end) {
 					piranha_assert(this->m_n_threads > 1u);
 					return;
 				}
-				// Local vector that will hold the minmax values for this thread.
 				mm_vec minmax_values;
 				// Tmp vector for unpacking, inited with the first element in the range.
 				// NOTE: we need to check that the exponents of the monomials in the result do not
 				// go outside the bounds of the Kronecker codification. We need to unpack all monomials
 				// in the operands and examine them, we cannot operate on the codes for this.
-				// NOTE: we can use this as we are sure the series has at least one element (start != end).
 				auto tmp_vec = (*start)->m_key.unpack(this->m_ss);
 				// Init the mimnax.
 				std::transform(tmp_vec.begin(),tmp_vec.end(),std::back_inserter(minmax_values),[](const value_type &v) {
 					return std::make_pair(v,v);
 				});
-				// Move to the next element and go with the loop.
 				++start;
 				for (; start != end; ++start) {
 					tmp_vec = (*start)->m_key.unpack(this->m_ss);
 					std::transform(minmax_values.begin(),minmax_values.end(),tmp_vec.begin(),minmax_values.begin(),update_minmax{});
 				}
 				if (this->m_n_threads == 1u) {
-					// In single thread the output mmv should be written only once, after being def-inited.
 					piranha_assert(mmv->empty());
-					// Just move in the local minmax values in single-threaded mode.
 					*mmv = std::move(minmax_values);
 				} else {
 					std::lock_guard<std::mutex> lock(mut);
 					if (mmv->empty()) {
-						// If mmv has not been inited yet, just move in the current values.
 						*mmv = std::move(minmax_values);
 					} else {
 						piranha_assert(minmax_values.size() == mmv->size());
-						// Otherwise, update the minmaxs.
 						auto updater = [](const std::pair<value_type,value_type> &p1, const std::pair<value_type,value_type> &p2) {
 							return std::make_pair(p1.first < p2.first ? p1.first : p2.first,
 								p1.second > p2.second ? p1.second : p2.second);
@@ -981,9 +1002,29 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					}
 				}
 			};
-			// minmax vectors for the two series.
 			mm_vec minmax_values1, minmax_values2;
-			// Find the minmaxs.
+			check_bounds_impl(minmax_values1,minmax_values2,thread_func);
+			std::vector<std::pair<integer,integer>> minmax_values;
+			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
+				std::back_inserter(minmax_values),[](const std::pair<value_type,value_type> &p1,
+				const std::pair<value_type,value_type> &p2) {
+					return std::make_pair(integer(p1.first) + integer(p2.first),integer(p1.second) + integer(p2.second));
+			});
+			// Bounds of the Kronecker representation for each component.
+			const auto &minmax_vec = std::get<0u>(ka::get_limits()[static_cast<decltype(ka::get_limits().size())>(this->m_ss.size())]);
+			piranha_assert(minmax_values.size() == minmax_vec.size());
+			piranha_assert(minmax_values.size() == minmax_values1.size());
+			piranha_assert(minmax_values.size() == minmax_values2.size());
+			for (decltype(minmax_values.size()) i = 0u; i < minmax_values.size(); ++i) {
+				if (unlikely(minmax_values[i].first < -minmax_vec[i] || minmax_values[i].second > minmax_vec[i])) {
+					piranha_throw(std::overflow_error,"Kronecker monomial components are out of bounds");
+				}
+			}
+		}
+		// Implementation detail of the bound checking logic. This is common enough to be shared.
+		template <typename MmVec, typename Func>
+		void check_bounds_impl(MmVec &minmax_values1, MmVec &minmax_values2, Func &thread_func) const
+		{
 			if (this->m_n_threads == 1u) {
 				thread_func(0u,&(this->m_v1),&minmax_values1);
 				thread_func(0u,&(this->m_v2),&minmax_values2);
@@ -1019,24 +1060,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					ff_list.wait_all();
 					throw;
 				}
-				}
-			}
-			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow.
-			std::vector<std::pair<integer,integer>> minmax_values;
-			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
-				std::back_inserter(minmax_values),[](const std::pair<value_type,value_type> &p1,
-				const std::pair<value_type,value_type> &p2) {
-					return std::make_pair(integer(p1.first) + integer(p2.first),integer(p1.second) + integer(p2.second));
-			});
-			// Bounds of the Kronecker representation for each component.
-			const auto &minmax_vec = std::get<0u>(ka::get_limits()[static_cast<decltype(ka::get_limits().size())>(this->m_ss.size())]);
-			piranha_assert(minmax_values.size() == minmax_vec.size());
-			piranha_assert(minmax_values.size() == minmax_values1.size());
-			piranha_assert(minmax_values.size() == minmax_values2.size());
-			// Now do the checking.
-			for (decltype(minmax_values.size()) i = 0u; i < minmax_values.size(); ++i) {
-				if (unlikely(minmax_values[i].first < -minmax_vec[i] || minmax_values[i].second > minmax_vec[i])) {
-					piranha_throw(std::overflow_error,"Kronecker monomial components are out of bounds");
 				}
 			}
 		}
