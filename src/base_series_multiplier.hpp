@@ -462,7 +462,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			if (size1 == 1u || size2 == 1u) {
 				return static_cast<bucket_size_type>(integer(size1) * size2 * result_size);
 			}
-			// NOTE: Hard-coded number of trials = 10.
+			// NOTE: Hard-coded number of trials.
 			// NOTE: here consider that in case of extremely sparse series with few terms this will incur in noticeable
 			// overhead, since we will need many term-by-term before encountering the first duplicate.
 			const unsigned n_trials = 20u;
@@ -499,10 +499,12 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				// Random number engine. Initialise with the thread idx as seed, if multithreading, otherwise
 				// use the default seed (it eases the comparison with the old implementation).
 				std::mt19937 engine(n_threads == 1u ? std::mt19937::default_seed : static_cast<std::uint_fast32_t>(thread_idx));
-				// Init total and filter counters.
-				integer total(0), tot_filtered(0);
+				// Init the accumulated estimation for averaging later.
+				integer acc(0);
 				// Number of trials for this thread - usual special casing for the last thread.
 				const unsigned cur_trials = (thread_idx == n_threads - 1u) ? (n_trials - thread_idx * tpt) : tpt;
+				// This should always be guaranteed because tpt is never 0.
+				piranha_assert(cur_trials > 0u);
 				// Create and setup the temp series.
 				Series tmp;
 				tmp.set_symbol_set(this->m_ss);
@@ -563,17 +565,17 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 						++it1;
 						++it2;
 					}
-					total += count;
-					tot_filtered += filtered;
+					piranha_assert(count >= filtered);
+					// NOTE: the reasoning here is: with no filtering the estimation will be multiplier*count**2.
+					// The number of terms to be discarded in the output series will be proportional to the ratio between
+					// filtered terms and total terms, that is, (count - filtered)/count. Hence in case of filtering the estimation
+					// will be count**2*multiplier * (count - filtered)/count, hence the formula below.
+					acc += (integer(multiplier) * count) * (count - filtered);
 					// Reset tmp.
 					tmp._container().clear();
 				}
-				piranha_assert(total >= tot_filtered);
-				// NOTE: the reasoning here is: with no filtering the estimation will be (total/cur_trials)**2*multiplier.
-				// The number of terms to be discarded in the output series will be proportional to the ratio between
-				// filtered terms and total terms, that is, (total - filtered)/total. Hence in case of filtering the estimation
-				// will be (total/cur_trials)**2*multiplier * (total - filtered)/total, hence the formula below.
-				auto retval = (total * (total - tot_filtered) * multiplier) / (integer(cur_trials) * cur_trials);
+				// Average over the number of trials.
+				auto retval = acc / cur_trials;
 				// Fix if zero.
 				if (retval.sign() == 0) {
 					retval = 1;
