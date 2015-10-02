@@ -1240,7 +1240,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
 			// Second, we sort the vector of indices according to the degrees in the second series.
 			std::stable_sort(idx_vector.begin(),idx_vector.end(),[&v_d2](const size_type &i1, const size_type &i2) {
-				// NOTE: here it is ">" rather than "<" because we already subtracted the max degree in v_d2.
+				// NOTE: here it is ">" rather than "<" because we negated (and added the max degree) in v_d2.
 				return v_d2[static_cast<d_size_type>(i1)] > v_d2[static_cast<d_size_type>(i2)];
 			});
 			// Finally, we apply the permutation to v_d2 and m_v2.
