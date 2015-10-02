@@ -26,7 +26,6 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <future>
 #include <iterator>
 #include <limits>
@@ -494,11 +493,13 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				for (size_type i = 0u; i < size2; ++i) {
 					v_idx2.push_back(i);
 				}
+				// Create a copy for re-init inside the loop.
+				const auto v_idx1_copy = v_idx1;
+				const auto v_idx2_copy = v_idx2;
 				// Maximum number of random multiplications before which a duplicate term must be generated.
 				const size_type max_M = static_cast<size_type>(((integer(size1) * size2) / multiplier).sqrt());
-				// Random number engine. Initialise with the thread idx as seed, if multithreading, otherwise
-				// use the default seed (it eases the comparison with the old implementation).
-				std::mt19937 engine(n_threads == 1u ? std::mt19937::default_seed : static_cast<std::uint_fast32_t>(thread_idx));
+				// Random number engine.
+				std::mt19937 engine;
 				// Init the accumulated estimation for averaging later.
 				integer acc(0);
 				// Number of trials for this thread - usual special casing for the last thread.
@@ -512,7 +513,11 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				MultFunctor mf(*this,tmp);
 				// Go with the trials.
 				for (auto n = 0u; n < cur_trials; ++n) {
-					// Randomise.
+					// Seed the engine.
+					engine.seed(static_cast<std::mt19937::result_type>(tpt * thread_idx + n));
+					// Reset and randomise.
+					v_idx1 = v_idx1_copy;
+					v_idx2 = v_idx2_copy;
 					std::shuffle(v_idx1.begin(),v_idx1.end(),engine);
 					std::shuffle(v_idx2.begin(),v_idx2.end(),engine);
 					size_type count = 0u, filtered = 0u;
@@ -574,19 +579,17 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					// Reset tmp.
 					tmp._container().clear();
 				}
-				// Average over the number of trials.
-				auto retval = acc / cur_trials;
 				// Fix if zero.
-				if (retval.sign() == 0) {
-					retval = 1;
+				if (acc.sign() == 0) {
+					acc = 1;
 				}
 				// Accumulate in the shared variable.
 				if (n_threads == 1u) {
 					// No locking needed.
-					c_estimate += retval;
+					c_estimate += acc;
 				} else {
 					std::lock_guard<std::mutex> lock(mut);
-					c_estimate += retval;
+					c_estimate += acc;
 				}
 			};
 			// Run the estimation functor.
@@ -609,7 +612,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			}
 			piranha_assert(c_estimate >= n_threads);
 			// Return the mean.
-			return static_cast<bucket_size_type>(c_estimate / n_threads);
+			return static_cast<bucket_size_type>(c_estimate / (n_trials));
 		}
 		/// A plain multiplier functor.
 		/**
