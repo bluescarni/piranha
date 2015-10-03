@@ -32,6 +32,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -230,6 +231,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		template <typename Iterator>
 		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
 			has_safe_cast<T,typename std::iterator_traits<Iterator>::value_type>::value,int>::type;
+		// Less-than operator.
+		template <typename U>
+		using comparison_enabler = typename std::enable_if<is_less_than_comparable<U>::value,int>::type;
 	public:
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
@@ -882,6 +886,31 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			detail::cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
 			// Now deal with the key.
 			t1.m_key.vector_add(t.m_key,t2.m_key);
+		}
+		/// Comparison operator.
+		/**
+		 * \note
+		 * This template operator is enabled only if \p T satisfies piranha::is_less_than_comparable.
+		 *
+		 * The two monomials will be compared lexicographically.
+		 *
+		 * @param[in] other comparison argument.
+		 *
+		 * @return \p true if \p this is lexicographically less than \p other, \p false otherwise.
+		 *
+		 * @throws std::invalid_argument if the sizes of \p this and \p other differ.
+		 * @throws unspecified any exception thrown by <tt>std::lexicographical_compare()</tt>.
+		 */
+		template <typename U = T, comparison_enabler<U> = 0>
+		bool operator<(const monomial &other) const
+		{
+			const auto sbe1 = this->size_begin_end();
+			const auto sbe2 = other->size_begin_end();
+			if (unlikely(std::get<0u>(sbe1) != std::get<0u>(sbe2))) {
+				piranha_throw(std::invalid_argument,"mismatched sizes in monomial comparison");
+			}
+			return std::lexicographical_compare(std::get<1u>(sbe1),std::get<2u>(sbe1),
+				std::get<1u>(sbe2),std::get<2u>(sbe2));
 		}
 };
 

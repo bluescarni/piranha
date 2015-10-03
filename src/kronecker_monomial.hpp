@@ -984,6 +984,17 @@ class kronecker_monomial
 		{
 			return kronecker_monomial(detail::km_trim<v_type,ka>(trim_args,orig_args,m_value));
 		}
+		/// Comparison operator.
+		/**
+		 * @param[in] other comparison argument.
+		 *
+		 * @return \p true if the internal integral value of \p this is less than the internal
+		 * integral value of \p other, \p false otherwise.
+		 */
+		bool operator<(const kronecker_monomial &other) const
+		{
+			return m_value < other.m_value;
+		}
 	private:
 		value_type m_value;
 };
