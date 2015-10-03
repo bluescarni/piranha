@@ -57,21 +57,91 @@ namespace piranha
 namespace detail
 {
 
-template <typename Series, typename = void>
+template <typename Series, typename Derived, typename = void>
 struct base_series_multiplier_impl
 {
 	using term_type = typename Series::term_type;
 	using container_type = typename std::decay<decltype(std::declval<Series>()._container())>::type;
+	using c_size_type = typename container_type::size_type;
+	using v_size_type = typename std::vector<term_type const *>::size_type;
+	template <typename Term, typename std::enable_if<!is_less_than_comparable<typename Term::key_type>::value,int>::type = 0>
 	void fill_term_pointers(const container_type &c1, const container_type &c2,
-		std::vector<term_type const *> &v1, std::vector<term_type const *> &v2)
+		std::vector<Term const *> &v1, std::vector<Term const *> &v2)
 	{
+		// If the key is not less-than comparable, we can only copy over the pointers as they are.
 		std::transform(c1.begin(),c1.end(),std::back_inserter(v1),[](const term_type &t) {return &t;});
 		std::transform(c2.begin(),c2.end(),std::back_inserter(v2),[](const term_type &t) {return &t;});
 	}
+	template <typename Term, typename std::enable_if<is_less_than_comparable<typename Term::key_type>::value,int>::type = 0>
+	void fill_term_pointers(const container_type &c1, const container_type &c2,
+		std::vector<Term const *> &v1, std::vector<Term const *> &v2)
+	{
+		// Fetch the number of threads from the derived class.
+		const unsigned n_threads = static_cast<Derived *>(this)->m_n_threads;
+		piranha_assert(n_threads > 0u);
+		// Threading functor.
+		auto thread_func = [n_threads](unsigned thread_idx, const container_type *c, std::vector<term_type const *> *v) {
+			piranha_assert(thread_idx < n_threads);
+			// Total bucket count.
+			const auto b_count = c->bucket_count();
+			// Buckets per thread.
+			const auto bpt = b_count / n_threads;
+			// End index.
+			const auto end = static_cast<c_size_type>((thread_idx == n_threads - 1u) ? b_count :
+				(bpt * (thread_idx + 1u)));
+			// Sorter.
+			auto sorter = [](term_type const *p1, term_type const *p2) {
+				return p1->m_key < p2->m_key;
+			};
+			v_size_type j = 0u;
+			for (auto start = static_cast<c_size_type>(bpt * thread_idx); start < end; ++start) {
+				const auto &b = c->_get_bucket_list(start);
+				v_size_type tmp = 0u;
+				for (const auto &t: b) {
+					v->push_back(&t);
+					++tmp;
+				}
+				std::stable_sort(v->data() + j, v->data() + j + tmp, sorter);
+				j += tmp;
+			}
+		};
+		if (n_threads == 1u) {
+			thread_func(0u,&c1,&v1);
+			thread_func(0u,&c2,&v2);
+			return;
+		}
+		auto thread_wrapper = [&thread_func,n_threads](const container_type *c, std::vector<term_type const *> *v) {
+			// In the multi-threaded case, each thread needs to work on a separate vector.
+			// We will merge the vectors later.
+			using vv_t = std::vector<std::vector<Term const *>>;
+			using vv_size_t = typename vv_t::size_type;
+			vv_t vv(safe_cast<vv_size_t>(n_threads));
+			// Go with the threads.
+			future_list<std::future<void>> ff_list;
+			try {
+				for (unsigned i = 0u; i < n_threads; ++i) {
+					ff_list.push_back(thread_pool::enqueue(i,thread_func,i,c,&(vv[static_cast<vv_size_t>(i)])));
+				}
+				// First let's wait for everything to finish.
+				ff_list.wait_all();
+				// Then, let's handle the exceptions.
+				ff_list.get_all();
+			} catch (...) {
+				ff_list.wait_all();
+				throw;
+			}
+			// Last, we need to merge everything into v.
+			for (const auto &vi: vv) {
+				v->insert(v->end(),vi.begin(),vi.end());
+			}
+		};
+		thread_wrapper(&c1,&v1);
+		thread_wrapper(&c2,&v2);
+	}
 };
 
-template <typename Series>
-struct base_series_multiplier_impl<Series,typename std::enable_if<is_mp_rational<typename Series::term_type::cf_type>::value>::type>
+template <typename Series, typename Derived>
+struct base_series_multiplier_impl<Series,Derived,typename std::enable_if<is_mp_rational<typename Series::term_type::cf_type>::value>::type>
 {
 	// Useful shortcuts.
 	using term_type = typename Series::term_type;
@@ -139,9 +209,11 @@ struct base_series_multiplier_impl<Series,typename std::enable_if<is_mp_rational
 // - optimisation for coefficient series that merges all args, similar to the rational optimisation;
 // - optimisation for load balancing similar to the poly multiplier.
 template <typename Series>
-class base_series_multiplier: private detail::base_series_multiplier_impl<Series>
+class base_series_multiplier: private detail::base_series_multiplier_impl<Series,base_series_multiplier<Series>>
 {
 		PIRANHA_TT_CHECK(is_series,Series);
+		// Make friends with the base, so it can access protected/private members of this.
+		friend class detail::base_series_multiplier_impl<Series,base_series_multiplier<Series>>;
 	public:
 		/// Alias for a vector of const pointers to series terms.
 		using v_ptr = std::vector<typename Series::term_type const *>;
