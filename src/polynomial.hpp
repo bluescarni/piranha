@@ -26,6 +26,7 @@
 #include <cmath> // For std::ceil.
 #include <cstddef>
 #include <functional>
+#include <future>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
