@@ -905,7 +905,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		bool operator<(const monomial &other) const
 		{
 			const auto sbe1 = this->size_begin_end();
-			const auto sbe2 = other->size_begin_end();
+			const auto sbe2 = other.size_begin_end();
 			if (unlikely(std::get<0u>(sbe1) != std::get<0u>(sbe2))) {
 				piranha_throw(std::invalid_argument,"mismatched sizes in monomial comparison");
 			}
