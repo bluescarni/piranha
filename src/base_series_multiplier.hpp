@@ -647,13 +647,14 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					// The number of terms to be discarded in the output series will be proportional to the ratio between
 					// filtered terms and total terms, that is, (count - filtered)/count. Hence in case of filtering the estimation
 					// will be count**2*multiplier * (count - filtered)/count, hence the formula below.
-					acc += (integer(multiplier) * count) * (count - filtered);
+					auto add = (integer(multiplier) * count) * (count - filtered);
+					// Fix if zero.
+					if (add.sign() == 0) {
+						add = 1;
+					}
+					acc += add;
 					// Reset tmp.
 					tmp._container().clear();
-				}
-				// Fix if zero.
-				if (acc.sign() == 0) {
-					acc = 1;
 				}
 				// Accumulate in the shared variable.
 				if (n_threads == 1u) {
@@ -682,9 +683,9 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					throw;
 				}
 			}
-			piranha_assert(c_estimate >= n_threads);
+			piranha_assert(c_estimate >= n_trials);
 			// Return the mean.
-			return static_cast<bucket_size_type>(c_estimate / (n_trials));
+			return static_cast<bucket_size_type>(c_estimate / n_trials);
 		}
 		/// A plain multiplier functor.
 		/**
