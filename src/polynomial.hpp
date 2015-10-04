@@ -1128,13 +1128,88 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * - math::multiply_accumulate(),
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back(),
-		 * - polynomial::get_auto_truncate_degree(), arithmetic and comparison operations on the
+		 * - polynomial::get_auto_truncate_degree(), arithmetic and other operations on the
 		 *   degree of terms, if truncation is active.
 		 */
 		template <typename T = Series, call_enabler<T> = 0>
 		Series operator()() const
 		{
 			return execute();
+		}
+		/// Truncated multiplication.
+		/**
+		 * \note
+		 * This method can be used only if the following conditions apply:
+		 * - the conditions for truncated multiplication outlined in piranha::polynomial are satisfied,
+		 * - the type \p T is the same as the degree type of the polynomial,
+		 * - the number and types of \p Args is as specified below.
+		 * If these conditions are not satisfied, a compile-time error will be issued.
+		 *
+		 * This method will perform the truncated multiplication of the series operands passed to the constructor.
+		 * The truncation degree is set to \p max degree, and it is either the total maximum degree (if the number
+		 * of \p Args is zero) or the partial degree (if \p Args is a single symbol_set::positions parameter
+		 * representing the positions of the arguments to be considered for the computation of the degree).
+		 *
+		 * @param[in] max_degree the maximum degree of the result of the multiplication.
+		 * @param[in] args either an empty argument, or a single symbol_set::positions argument.
+		 *
+		 * @return the result of the truncated multiplication of the operands used for construction.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - memory errors in standard containers,
+		 * - piranha::safe_cast(),
+		 * - arithmetic and other operations on the degree type,
+		 * - base_series_multiplier::plain_multiplication().
+		 */
+		template <typename T, typename ... Args>
+		Series truncated_multiplication(const T &max_degree, const Args & ... args) const
+		{
+			using term_type = typename Series::term_type;
+			// NOTE: degree type is the same in total and partial.
+			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));
+			using size_type = typename base::size_type;
+			using namespace std::placeholders;
+			static_assert(std::is_same<T,degree_type>::value,"Invalid degree type");
+			static_assert(detail::has_get_auto_truncate_degree<Series>::value,"Invalid series type");
+			// First let's create two vectors with the degrees of the terms in the two series. In the second series,
+			// we negate and add the max degree in order to avoid adding in the skipping functor.
+			using d_size_type = typename std::vector<degree_type>::size_type;
+			std::vector<degree_type> v_d1(safe_cast<d_size_type>(this->m_v1.size())), v_d2(safe_cast<d_size_type>(this->m_v2.size()));
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v1,v_d1,std::bind(term_degree_getter1{},_1,
+				std::cref(this->m_ss),std::cref(args)...));
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v2,v_d2,std::bind(term_degree_getter2{},_1,
+				std::cref(this->m_ss),std::cref(max_degree),std::cref(args)...));
+			// Next we need to order the terms in the second series, and also the corresponding degree vector.
+			// First we create a vector of indices and we fill it.
+			std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
+			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
+			// Second, we sort the vector of indices according to the degrees in the second series.
+			std::stable_sort(idx_vector.begin(),idx_vector.end(),[&v_d2](const size_type &i1, const size_type &i2) {
+				// NOTE: here it is ">" rather than "<" because we negated (and added the max degree) in v_d2.
+				return v_d2[static_cast<d_size_type>(i1)] > v_d2[static_cast<d_size_type>(i2)];
+			});
+			// Finally, we apply the permutation to v_d2 and m_v2.
+			decltype(this->m_v2) v2_copy(this->m_v2.size());
+			decltype(v_d2) v_d2_copy(v_d2.size());
+			std::transform(idx_vector.begin(),idx_vector.end(),v2_copy.begin(),[this](const size_type &i) {
+				return this->m_v2[i];
+			});
+			std::transform(idx_vector.begin(),idx_vector.end(),v_d2_copy.begin(),[&v_d2](const size_type &i) {
+				return v_d2[static_cast<d_size_type>(i)];
+			});
+			this->m_v2 = std::move(v2_copy);
+			v_d2 = std::move(v_d2_copy);
+			// The skipping functor.
+			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
+				using d_size_type = decltype(v_d1.size());
+				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
+			};
+			// The filter functor: will return 1 if the degree of the term resulting from the multiplication of i and j
+			// is greater than the max degree, zero otherwise.
+			auto ff = [&sf](const size_type &i, const size_type &j) {
+				return static_cast<unsigned>(sf(i,j));
+			};
+			return this->plain_multiplication(sf,ff);
 		}
 	private:
 		// NOTE: wrapper to multadd that treats specially rational coefficients. We need to decide in the future
@@ -1219,54 +1294,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				return sub(max_degree,detail::ps_get_degree(*p,args...,ss));
 			}
 		};
-		template <typename T, typename ... Args>
-		Series truncated_multiplication(const T &max_degree, const Args & ... args) const
-		{
-			using term_type = typename Series::term_type;
-			// NOTE: degree type is the same in total and partial.
-			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));
-			using size_type = typename base::size_type;
-			using namespace std::placeholders;
-			// First let's create two vectors with the degrees of the terms in the two series. In the second series,
-			// we negate and add the max degree in order to avoid adding in the skipping functor.
-			using d_size_type = typename std::vector<degree_type>::size_type;
-			std::vector<degree_type> v_d1(safe_cast<d_size_type>(this->m_v1.size())), v_d2(safe_cast<d_size_type>(this->m_v2.size()));
-			detail::parallel_vector_transform(this->m_n_threads,this->m_v1,v_d1,std::bind(term_degree_getter1{},_1,
-				std::cref(this->m_ss),std::cref(args)...));
-			detail::parallel_vector_transform(this->m_n_threads,this->m_v2,v_d2,std::bind(term_degree_getter2{},_1,
-				std::cref(this->m_ss),std::cref(max_degree),std::cref(args)...));
-			// Next we need to order the terms in the second series, and also the corresponding degree vector.
-			// First we create a vector of indices and we fill it.
-			std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
-			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
-			// Second, we sort the vector of indices according to the degrees in the second series.
-			std::stable_sort(idx_vector.begin(),idx_vector.end(),[&v_d2](const size_type &i1, const size_type &i2) {
-				// NOTE: here it is ">" rather than "<" because we negated (and added the max degree) in v_d2.
-				return v_d2[static_cast<d_size_type>(i1)] > v_d2[static_cast<d_size_type>(i2)];
-			});
-			// Finally, we apply the permutation to v_d2 and m_v2.
-			decltype(this->m_v2) v2_copy(this->m_v2.size());
-			decltype(v_d2) v_d2_copy(v_d2.size());
-			std::transform(idx_vector.begin(),idx_vector.end(),v2_copy.begin(),[this](const size_type &i) {
-				return this->m_v2[i];
-			});
-			std::transform(idx_vector.begin(),idx_vector.end(),v_d2_copy.begin(),[&v_d2](const size_type &i) {
-				return v_d2[static_cast<d_size_type>(i)];
-			});
-			this->m_v2 = std::move(v2_copy);
-			v_d2 = std::move(v_d2_copy);
-			// The skipping functor.
-			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
-				using d_size_type = decltype(v_d1.size());
-				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
-			};
-			// The filter functor: will return 1 if the degree of the term resulting from the multiplication of i and j
-			// is greater than the max degree, zero otherwise.
-			auto ff = [&sf](const size_type &i, const size_type &j) {
-				return static_cast<unsigned>(sf(i,j));
-			};
-			return this->plain_multiplication(sf,ff);
-		}
 		// execute() is the top level dispatch for the actual multiplication.
 		// Case 1: not a Kronecker monomial, do the plain mult.
 		template <typename T = Series, typename std::enable_if<!detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
