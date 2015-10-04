@@ -1293,14 +1293,15 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			if (check_truncation()) {
 				return plain_multiplication_wrapper();
 			}
+			// Setup the return value.
+			Series retval;
+			retval.set_symbol_set(this->m_ss);
+			// Cache the sizes.
 			const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {
-				return Series{};
+				return retval;
 			}
-			// First, let's get the estimation on the size of the final series.
-			Series retval;
-			retval.set_symbol_set(this->m_ss);
 			// Rehash the retun value's container accordingly. Check the tuning flag to see if we want to use
 			// multiple threads for initing the return value.
 			// NOTE: it is important here that we use the same n_threads for multiplication and memset as

@@ -935,19 +935,18 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			PIRANHA_TT_CHECK(is_function_object,SkipFunctor,bool,const size_type &, const size_type &);
 			PIRANHA_TT_CHECK(is_function_object,FilterFunctor,unsigned,const size_type &, const size_type &);
 			constexpr std::size_t m_arity = key_type::multiply_arity;
+			// Setup the return value with the merged symbol set.
+			Series retval;
+			retval.set_symbol_set(m_ss);
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_v1.empty() || m_v2.empty())) {
-				// NOTE: requirement is ok, a series must be def-ctible.
-				return Series{};
+				return retval;
 			}
 			const size_type size1 = m_v1.size(), size2 = m_v2.size();
 			piranha_assert(size1 && size2);
 			// Convert n_threads to size_type for convenience.
 			const size_type n_threads = safe_cast<size_type>(m_n_threads);
 			piranha_assert(n_threads);
-			// Common setup for st/mt.
-			Series retval;
-			retval.set_symbol_set(m_ss);
 			// Estimate and rehash.
 			const auto est = estimate_final_series_size<m_arity,plain_multiplier<false>>(ff);
 			// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
