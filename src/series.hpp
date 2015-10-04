@@ -2639,14 +2639,14 @@ class series: detail::series_tag, series_operators
 		 * <tt>merge_args()</tt> method. That is, the new keys will be compatible with the
 		 * new extended symbol set \p new_ss.
 		 *
-		 * \p new_ss must have a size greater than the size of the current symbol set of \p this,
+		 * \p new_ss must have a size equal to or greater than the size of the current symbol set of \p this,
 		 * and all the symbols in the current symbol set must be present in \p new_ss.
 		 *
 		 * @param[in] new_ss the new set of symbols.
 		 *
 		 * @return a copy of \p this with \p new_ss as symbol set.
 		 *
-		 * @throws std::invalid_argument if \p new_ss is not larger than the current symbol set or if
+		 * @throws std::invalid_argument if \p new_ss is smaller than the current symbol set or if
 		 * it does not include all the symbols of the current symbol set.
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of coefficients, terms and keys,
@@ -2655,6 +2655,10 @@ class series: detail::series_tag, series_operators
 		 */
 		Derived extend_symbol_set(const symbol_set &new_ss) const
 		{
+			// If the symbols are identical, just return a copy.
+			if (new_ss == m_symbol_set) {
+				return *static_cast<Derived const *>(this);
+			}
 			if (unlikely(!(new_ss.size() > m_symbol_set.size()) ||
 				!std::includes(new_ss.begin(),new_ss.end(),m_symbol_set.begin(),m_symbol_set.end())))
 			{
