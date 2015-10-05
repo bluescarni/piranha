@@ -1168,16 +1168,16 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// NOTE: degree type is the same in total and partial.
 			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));
 			using size_type = typename base::size_type;
-			using namespace std::placeholders;
+			namespace sph = std::placeholders;
 			static_assert(std::is_same<T,degree_type>::value,"Invalid degree type");
 			static_assert(detail::has_get_auto_truncate_degree<Series>::value,"Invalid series type");
 			// First let's create two vectors with the degrees of the terms in the two series. In the second series,
 			// we negate and add the max degree in order to avoid adding in the skipping functor.
 			using d_size_type = typename std::vector<degree_type>::size_type;
 			std::vector<degree_type> v_d1(safe_cast<d_size_type>(this->m_v1.size())), v_d2(safe_cast<d_size_type>(this->m_v2.size()));
-			detail::parallel_vector_transform(this->m_n_threads,this->m_v1,v_d1,std::bind(term_degree_getter1{},_1,
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v1,v_d1,std::bind(term_degree_getter1{},sph::_1,
 				std::cref(this->m_ss),std::cref(args)...));
-			detail::parallel_vector_transform(this->m_n_threads,this->m_v2,v_d2,std::bind(term_degree_getter2{},_1,
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v2,v_d2,std::bind(term_degree_getter2{},sph::_1,
 				std::cref(this->m_ss),std::cref(max_degree),std::cref(args)...));
 			// Next we need to order the terms in the second series, and also the corresponding degree vector.
 			// First we create a vector of indices and we fill it.
