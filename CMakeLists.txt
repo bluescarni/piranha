@@ -56,14 +56,14 @@ IF(BUILD_PYRANHA)
 ENDIF(BUILD_PYRANHA)
 
 # Boost libraries setup.
-SET(REQUIRED_BOOST_LIBS serialization)
+SET(REQUIRED_BOOST_LIBS serialization iostreams)
 # Look for test and timer only if we are building unit tests.
 IF(BUILD_TESTS)
 	MESSAGE(STATUS "Linking unit tests to Boost.Test.")
-	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework)
+	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework filesystem system)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Release")
 		MESSAGE(STATUS "Linking performance tests to Boost Timer and Boost.Chrono.")
-		SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} timer chrono system)
+		SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} timer chrono)
 	ENDIF()
 ENDIF()
 IF(BUILD_PYRANHA)
@@ -79,7 +79,7 @@ MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 # Set the mandatory Boost libraries. NOTE: here we do not include the test and timer libraries
 # since they will only be useful when compiling tests.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY})
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_IOSTREAMS_LIBRARY})
 
 # GMP setup.
 FIND_PACKAGE(GMP REQUIRED)
@@ -104,6 +104,14 @@ INCLUDE_DIRECTORIES(${MPFR_INCLUDE_DIR})
 
 # NOTE: MPFR should be linked in before GMP, that's why we link GMP here.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+
+# bzip2 setup.
+find_package(BZip2 REQUIRED)
+message(STATUS "bzip2 library found.")
+message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
+message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
+include_directories(${BZIP2_INCLUDE_DIR})
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
 
 # TCMalloc setup.
 IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")

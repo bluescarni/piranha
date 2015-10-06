@@ -23,13 +23,18 @@
 
 #include <algorithm>
 #include <boost/any.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/bzip2.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
 #include <functional>
+#include <fstream>
 #include <memory>
+#include <ios>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -37,6 +42,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -2661,6 +2667,109 @@ class series: detail::series_tag, series_operators
 				piranha_throw(std::invalid_argument,"invalid symbol set passed to extend_symbol_set()");
 			}
 			return merge_arguments(new_ss);
+		}
+		static std::tuple<int,int> parse_options(const std::unordered_map<std::string,std::string> &o)
+		{
+			// Handle the format first. Default is text, numerical value 0.
+			int format = 0;
+			auto it = o.find("format");
+			if (it != o.end()) {
+				if (it->second == "text") {
+					// Nothing to do here.
+				} else if (it->second == "binary") {
+					format = 1;
+				} else {
+					piranha_throw(std::invalid_argument,std::string("unsupported format: '") + it->second + "'");
+				}
+			}
+			// Compression. Default is false.
+			int compression = 0;
+			it = o.find("compression");
+			if (it != o.end()) {
+				if (it->second == "n") {
+					// Nothing to do here.
+				} else if (it->second == "y") {
+					compression = 1;
+				} else {
+					piranha_throw(std::invalid_argument,std::string("unsupported compression flag: '") + it->second + "'");
+				}
+			}
+			return std::make_tuple(format,compression);
+		}
+		static void save(const Derived &s, const std::string &filename, std::unordered_map<std::string,std::string> options = {})
+		{
+			auto opt = parse_options(options);
+			std::ofstream ofile(filename, std::get<1u>(opt) ? (std::ios::out | std::ios::binary | std::ios::trunc) :
+				(std::ios::out | std::ios::trunc));
+			if (unlikely(!ofile.good())) {
+				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
+			}
+			if (std::get<1u>(opt)) {
+				// Compression is enabled. First write to a stringstream, then compress and write to file.
+				// NOTE: here we are following this tutorial:
+				// https://code.google.com/p/cloudobserver/wiki/TutorialsBoostIOstreams
+				// In case of binary archives, we can write directly to file,
+				// as binary_oarchive can be cted from a filtering_streambuf
+				// (while text_oarchive cannot). See here:
+				// http://stackoverflow.com/questions/1753469/how-to-hook-up-boost-serialization-iostreams-to-serialize-gzip-an-object-to
+				namespace bi = boost::iostreams;
+				std::stringstream oss;
+				if (std::get<1u>(opt)) {
+					boost::archive::binary_oarchive oa(oss);
+					oa << s;
+				} else {
+					boost::archive::text_oarchive oa(oss);
+					oa << s;
+				}
+				bi::filtering_streambuf<bi::input> in;
+				in.push(bi::bzip2_compressor());
+				in.push(oss);
+				bi::copy(in,ofile);
+			} else {
+				if (std::get<0u>(opt)) {
+					boost::archive::binary_oarchive oa(ofile);
+					oa << s;
+				} else {
+					boost::archive::text_oarchive oa(ofile);
+					oa << s;
+				}
+			}
+		}
+		static Derived load(const std::string &filename, std::unordered_map<std::string,std::string> options = {})
+		{
+			auto opt = parse_options(options);
+			std::ifstream ifile(filename, std::get<1u>(opt) ? (std::ios::in | std::ios::binary) :
+				std::ios::in);
+			if (unlikely(!ifile.good())) {
+				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
+			}
+			// The return value.
+			Derived retval;
+			if (std::get<1u>(opt)) {
+				// NOTE: probably the same considerations as above apply.
+				namespace bi = boost::iostreams;
+				std::stringstream ss;
+				bi::filtering_streambuf<bi::output> out;
+				out.push(bi::bzip2_decompressor());
+				out.push(ss);
+				bi::copy(ifile,out);
+				if (std::get<1u>(opt)) {
+					boost::archive::binary_iarchive ia(ss);
+					ia >> retval;
+				} else {
+					boost::archive::text_iarchive ia(ss);
+					ia >> retval;
+				}
+			} else {
+				if (std::get<0u>(opt)) {
+					boost::archive::binary_iarchive ia(ifile);
+					ia >> retval;
+				} else {
+					boost::archive::text_iarchive ia(ifile);
+					ia >> retval;
+				}
+			}
+			return retval;
 		}
 		/** @name Low-level interface
 		 * Low-level methods.
