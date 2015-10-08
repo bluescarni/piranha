@@ -42,7 +42,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -1118,6 +1117,44 @@ class series_operators
 		{
 			return !dispatch_equality(x,y);
 		}
+};
+
+/// File formats.
+/**
+ * These are the available formats for piranha::series::save() and piranha::series::load().
+ */
+enum class file_format
+{
+	/// Text.
+	/**
+	 * Portable text format.
+	 */
+	text,
+	/// Binary.
+	/**
+	 * Non-portable binary format.
+	 */
+	binary
+};
+
+/// File compression options.
+/**
+ * These are the available compression options for piranha::series::save() and piranha::series::load().
+ */
+enum class file_compression
+{
+	/// No compression.
+	/**
+	 * The file will not be compressed.
+	 */
+	disabled,
+	/// Bzip2 compression.
+	/**
+	 * The file will be compressed with the bzip2 library.
+	 *
+	 * @see http://bzip.org/
+	 */
+	bzip2
 };
 
 /// Series class.
@@ -2668,65 +2705,54 @@ class series: detail::series_tag, series_operators
 			}
 			return merge_arguments(new_ss);
 		}
-		static std::tuple<int,int> parse_options(const std::unordered_map<std::string,std::string> &o)
+		/// Save series to file.
+		/**
+		 * This static method will save the input series \p s to the file named \p filename, using the file format \p f
+		 * and the compression method \p c. The possible values for \p f are listed in piranha::file_format, the possible
+		 * values for \p c in piranha::file_compression. The output file \p filename, if existing, will be overwritten.
+		 *
+		 * @param[in] s the series to be saved.
+		 * @param[in] filename the name of the file.
+		 * @param[in] f the save format.
+		 * @param[in] c the compression method.
+		 *
+		 * @throws std::runtime_error if the output file cannot be opened.
+		 * @throws unspecified any exception thrown by the serialization and/or compression of \p s.
+		 */
+		static void save(const Derived &s, const std::string &filename, file_format f, file_compression c)
 		{
-			// Handle the format first. Default is text, numerical value 0.
-			int format = 0;
-			auto it = o.find("format");
-			if (it != o.end()) {
-				if (it->second == "text") {
-					// Nothing to do here.
-				} else if (it->second == "binary") {
-					format = 1;
-				} else {
-					piranha_throw(std::invalid_argument,std::string("unsupported format: '") + it->second + "'");
-				}
-			}
-			// Compression. Default is false.
-			int compression = 0;
-			it = o.find("compression");
-			if (it != o.end()) {
-				if (it->second == "n") {
-					// Nothing to do here.
-				} else if (it->second == "y") {
-					compression = 1;
-				} else {
-					piranha_throw(std::invalid_argument,std::string("unsupported compression flag: '") + it->second + "'");
-				}
-			}
-			return std::make_tuple(format,compression);
-		}
-		static void save(const Derived &s, const std::string &filename, std::unordered_map<std::string,std::string> options = {})
-		{
-			auto opt = parse_options(options);
-			std::ofstream ofile(filename, std::get<1u>(opt) ? (std::ios::out | std::ios::binary | std::ios::trunc) :
+			std::ofstream ofile(filename, (f == file_format::binary) ? (std::ios::out | std::ios::binary | std::ios::trunc) :
 				(std::ios::out | std::ios::trunc));
 			if (unlikely(!ofile.good())) {
 				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
 			}
-			if (std::get<1u>(opt)) {
-				// Compression is enabled. First write to a stringstream, then compress and write to file.
-				// NOTE: here we are following this tutorial:
-				// https://code.google.com/p/cloudobserver/wiki/TutorialsBoostIOstreams
-				// In case of binary archives, we can write directly to file,
-				// as binary_oarchive can be cted from a filtering_streambuf
-				// (while text_oarchive cannot). See here:
-				// http://stackoverflow.com/questions/1753469/how-to-hook-up-boost-serialization-iostreams-to-serialize-gzip-an-object-to
+			if (c == file_compression::bzip2) {
+				// bzip2 compression is enabled.
 				namespace bi = boost::iostreams;
-				std::stringstream oss;
-				if (std::get<1u>(opt)) {
-					boost::archive::binary_oarchive oa(oss);
+				if (f == file_format::binary) {
+					// In case of binary archives, we can write directly to file,
+					// as binary_oarchive can be cted from a filtering_streambuf
+					// (while text_oarchive cannot). See here:
+					// http://stackoverflow.com/questions/1753469/how-to-hook-up-boost-serialization-iostreams-to-serialize-gzip-an-object-to
+					bi::filtering_streambuf<bi::output> out;
+					out.push(bi::bzip2_compressor());
+					out.push(ofile);
+					boost::archive::binary_oarchive oa(out);
 					oa << s;
 				} else {
+					// NOTE: here we are following this tutorial:
+					// https://code.google.com/p/cloudobserver/wiki/TutorialsBoostIOstreams
+					// First write to a stringstream, then compress and write to file.
+					std::stringstream oss;
 					boost::archive::text_oarchive oa(oss);
 					oa << s;
+					bi::filtering_streambuf<bi::input> in;
+					in.push(bi::bzip2_compressor());
+					in.push(oss);
+					bi::copy(in,ofile);
 				}
-				bi::filtering_streambuf<bi::input> in;
-				in.push(bi::bzip2_compressor());
-				in.push(oss);
-				bi::copy(in,ofile);
 			} else {
-				if (std::get<0u>(opt)) {
+				if (f == file_format::binary) {
 					boost::archive::binary_oarchive oa(ofile);
 					oa << s;
 				} else {
@@ -2735,33 +2761,65 @@ class series: detail::series_tag, series_operators
 				}
 			}
 		}
-		static Derived load(const std::string &filename, std::unordered_map<std::string,std::string> options = {})
+		/// Save series to file (text format, no compression).
+		static void save(const Derived &s, const std::string &filename)
 		{
-			auto opt = parse_options(options);
-			std::ifstream ifile(filename, std::get<1u>(opt) ? (std::ios::in | std::ios::binary) :
+			save(s,filename,file_format::text,file_compression::disabled);
+		}
+		/// Save series to file (no compression, choose format).
+		static void save(const Derived &s, const std::string &filename, file_format f)
+		{
+			save(s,filename,f,file_compression::disabled);
+		}
+		/// Save series to file (text format, choose compression).
+		static void save(const Derived &s, const std::string &filename, file_compression c)
+		{
+			save(s,filename,file_format::text,c);
+		}
+		/// Load series from file.
+		/**
+		 * This static method will load the series contained in the file named \p filename, using the file format \p f
+		 * and the compression method \p c. The possible values for \p f are listed in piranha::file_format, the possible
+		 * values for \p c in piranha::file_compression.
+		 *
+		 * @param[in] filename the name of the file.
+		 * @param[in] f the save format.
+		 * @param[in] c the compression method.
+		 *
+		 * @return the series stored in the file named \p filename.
+		 *
+		 * @throws std::runtime_error if the output file cannot be opened.
+		 * @throws unspecified any exception thrown by the deserialization and/or decompression of the series stored in \p filename.
+		 */
+		static Derived load(const std::string &filename, file_format f, file_compression c)
+		{
+			std::ifstream ifile(filename, (f == file_format::binary) ? (std::ios::in | std::ios::binary) :
 				std::ios::in);
 			if (unlikely(!ifile.good())) {
 				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
 			}
 			// The return value.
 			Derived retval;
-			if (std::get<1u>(opt)) {
-				// NOTE: probably the same considerations as above apply.
+			if (c == file_compression::bzip2) {
+				// NOTE: the same considerations as above apply.
 				namespace bi = boost::iostreams;
-				std::stringstream ss;
-				bi::filtering_streambuf<bi::output> out;
-				out.push(bi::bzip2_decompressor());
-				out.push(ss);
-				bi::copy(ifile,out);
-				if (std::get<1u>(opt)) {
-					boost::archive::binary_iarchive ia(ss);
+				if (f == file_format::binary) {
+					bi::filtering_streambuf<bi::input> in;
+					in.push(bi::bzip2_decompressor());
+					in.push(ifile);
+					boost::archive::binary_iarchive ia(in);
 					ia >> retval;
 				} else {
+					std::stringstream ss;
+					bi::filtering_streambuf<bi::output> out;
+					out.push(bi::bzip2_decompressor());
+					out.push(ss);
+					bi::copy(ifile,out);
 					boost::archive::text_iarchive ia(ss);
 					ia >> retval;
 				}
 			} else {
-				if (std::get<0u>(opt)) {
+				if (f == file_format::binary) {
 					boost::archive::binary_iarchive ia(ifile);
 					ia >> retval;
 				} else {
@@ -2770,6 +2828,21 @@ class series: detail::series_tag, series_operators
 				}
 			}
 			return retval;
+		}
+		/// Load series from file (text format, no compression).
+		static Derived load(const std::string &filename)
+		{
+			return load(filename,file_format::text,file_compression::disabled);
+		}
+		/// Load series from file (no compression, choose format).
+		static Derived load(const std::string &filename, file_format f)
+		{
+			return load(filename,f,file_compression::disabled);
+		}
+		/// Load series from file (text format, choose compression).
+		static Derived load(const std::string &filename, file_compression c)
+		{
+			return load(filename,file_format::text,c);
 		}
 		/** @name Low-level interface
 		 * Low-level methods.

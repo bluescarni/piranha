@@ -27,7 +27,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
@@ -306,50 +305,34 @@ BOOST_AUTO_TEST_CASE(series_extend_symbol_set_test)
 	BOOST_CHECK((symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}} == foo.get_symbol_set()));
 }
 
+template <typename T, typename ... Args>
+inline void checker(const T &s, Args ... args)
+{
+	tmp_file f;
+	T::save(s,f.name(),args...);
+	BOOST_CHECK_EQUAL(T::load(f.name(),args...),s);
+}
+
 BOOST_AUTO_TEST_CASE(series_save_load_test)
 {
 	using st0 = g_series_type<double,int>;
 	st0 x{"x"}, y{"y"};
-	std::unordered_map<std::string,std::string> opts;
-	auto checker = [&opts](const st0 &s) {
-		tmp_file f;
-		st0::save(s,f.name(),opts);
-		BOOST_CHECK_EQUAL(st0::load(f.name(),opts),s);
-	};
 	checker(x);
 	checker(y);
-	opts["compression"] = "n";
-	checker(x);
-	checker(y);
-	opts["compression"] = "y";
-	checker(x);
-	checker(y);
-	opts.erase("compression");
-	opts["format"] = "text";
-	checker(x);
-	checker(y);
-	opts["compression"] = "n";
-	checker(x);
-	checker(y);
-	opts["compression"] = "y";
-	checker(x);
-	checker(y);
-	// Check the throwing.
-	opts["compression"] = "m";
-	BOOST_CHECK_THROW(checker(x),std::invalid_argument);
-	opts.erase("compression");
-	opts["format"] = "texti";
-	BOOST_CHECK_THROW(checker(x),std::invalid_argument);
-	opts.clear();
+	checker(x,file_compression::bzip2);
+	checker(y,file_compression::bzip2);
+	checker(x,file_format::binary);
+	checker(y,file_format::binary);
+	checker(x,file_format::binary,file_compression::bzip2);
+	checker(y,file_format::binary,file_compression::bzip2);
 	// Try with non-existing file.
 	BOOST_CHECK_THROW(st0::load("123456.hhhh"),std::runtime_error);
 	// Try with a somewhat larger example.
 	{
 	using p_type = polynomial<rational,k_monomial>;
-	opts["compression"] = "y";
 	tmp_file f;
 	auto s = (p_type{"x"}+p_type{"y"}).pow(10);
-	p_type::save(s,f.name(),opts);
-	BOOST_CHECK_EQUAL(p_type::load(f.name(),opts),s);
+	p_type::save(s,f.name(),file_compression::bzip2);
+	BOOST_CHECK_EQUAL(p_type::load(f.name(),file_compression::bzip2),s);
 	}
 }
