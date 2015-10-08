@@ -222,20 +222,16 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		/// The size type of \p Series.
 		using bucket_size_type = typename Series::size_type;
 	private:
-		// Default skip and filter functors.
-		struct no_skip
+		// The default limit functor: it will include all terms in the second series.
+		struct default_limit_functor
 		{
-			bool operator()(const size_type &, const size_type &) const
+			default_limit_functor(const base_series_multiplier &m):m_size2(m.m_v2.size())
+			{}
+			size_type operator()(const size_type &) const
 			{
-				return false;
+				return m_size2;
 			}
-		};
-		struct no_filter
-		{
-			unsigned operator()(const size_type &, const size_type &) const
-			{
-				return 0u;
-			}
+			const size_type m_size2;
 		};
 		// The purpose of this helper is to move in a coefficient series during insertion. For series,
 		// we know that moves leave the series in a valid state, and series multiplications do not benefit
@@ -359,113 +355,93 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		/// Blocked multiplication.
 		/**
 		 * \note
-		 * If \p MultFunctor or \p SkipFunctor do not satisfy the requirements outlined below,
+		 * If \p MultFunctor or \p LimitFunctor do not satisfy the requirements outlined below,
 		 * a compile-time error will be produced.
 		 *
 		 * This method is logically equivalent to the following double loop:
 		 *
 		 * @code
 		 * for (size_type i = start1; i < end1; ++i) {
-		 *	for (size_type j = start2; j < end2; ++j) {
-		 *		if (sf(i,j)) {
-		 *			break;
-		 *		}
+		 *      const size_type limit = std::min(lf(i),m_v2.size());
+		 *	for (size_type j = 0; j < limit; ++j) {
 		 *		mf(i,j);
 		 *	}
 		 * }
 		 * @endcode
 		 *
-		 * \p mf and \p sf must be two function objects with a call operator accepting two instances of
-		 * base_series_multiplier::size_type. The call operator of \p mf must return \p void, the call operator of \p sf
-		 * must return \p bool. The default type for \p sf exposes a call operator that always
-		 * returns \p false unconditionally.
+		 * \p mf must be a function object with a call operator accepting two instances of
+		 * base_series_multiplier::size_type and returning \p void. \p lf must be a function object
+		 * with a call operator accepting and returning a base_series_multiplier::size_type.
 		 *
 		 * Internally, the double loops is decomposed in blocks of size tuning::get_multiplication_block_size() in an attempt
 		 * to optimise cache memory access patterns.
 		 *
 		 * This method is meant to be used for series multiplication. \p mf is intended to be a function object that multiplies
-		 * the <tt>i</tt>-th term of the first series by the <tt>j</tt>-th term of the second series. \p sf is intended to be
-		 * a functor that detects when all subsequent multiplications in the inner loop can be skipped (e.g., if some
-		 * truncation criterion is active).
+		 * the <tt>i</tt>-th term of the first series by the <tt>j</tt>-th term of the second series. \p lf is intended to be
+		 * a functor that establishes how many terms in the second series have to be multiplied by the <tt>i</tt>-th term
+		 * of the first series.
 		 *
 		 * @param[in] mf the multiplication functor.
 		 * @param[in] start1 start index in the first series.
 		 * @param[in] end1 end index in the first series.
-		 * @param[in] start2 start index in the second series.
-		 * @param[in] end2 end index in the second series.
-		 * @param[in] sf the skipping functor.
+		 * @param[in] lf the limit functor.
 		 *
 		 * @throws std::invalid_argument if \p start1 is greater than \p end1 or greater than the size of
-		 * base_series_multiplier::m_v1, or if \p end1 is greater than the size of base_series_multiplier::m_v1
-		 * (the same holds for the quantities relating to the second series).
+		 * base_series_multiplier::m_v1, or if \p end1 is greater than the size of base_series_multiplier::m_v1.
 		 * @throws unspecified any exception thrown by the call operator of \p mf or \p sf, or piranha::safe_cast.
 		 */
-		template <typename MultFunctor, typename SkipFunctor = no_skip>
-		void blocked_multiplication(const MultFunctor &mf,
-			const size_type &start1, const size_type &end1,
-			const size_type &start2, const size_type &end2,
-			const SkipFunctor &sf = no_skip{}) const
+		template <typename MultFunctor, typename LimitFunctor>
+		void blocked_multiplication(const MultFunctor &mf, const size_type &start1, const size_type &end1,
+			const LimitFunctor &lf) const
 		{
 			PIRANHA_TT_CHECK(is_function_object,MultFunctor,void,const size_type &, const size_type &);
-			PIRANHA_TT_CHECK(is_function_object,SkipFunctor,bool,const size_type &, const size_type &);
 			if (unlikely(start1 > end1 || start1 > m_v1.size() || end1 > m_v1.size())) {
-				piranha_throw(std::invalid_argument,"invalid bounds in blocked_multiplication");
-			}
-			if (unlikely(start2 > end2 || start2 > m_v2.size() || end2 > m_v2.size())) {
 				piranha_throw(std::invalid_argument,"invalid bounds in blocked_multiplication");
 			}
 			// Block size and number of regular blocks.
 			const size_type bsize = safe_cast<size_type>(tuning::get_multiplication_block_size()),
 				nblocks1 = static_cast<size_type>((end1 - start1) / bsize),
-				nblocks2 = static_cast<size_type>((end2 - start2) / bsize);
+				nblocks2 = static_cast<size_type>(m_v2.size() / bsize);
 			// Start and end of last (possibly irregular) blocks.
 			const size_type i_ir_start = static_cast<size_type>(nblocks1 * bsize + start1), i_ir_end = end1;
-			const size_type j_ir_start = static_cast<size_type>(nblocks2 * bsize + start2), j_ir_end = end2;
+			const size_type j_ir_start = static_cast<size_type>(nblocks2 * bsize), j_ir_end = m_v2.size();
 			for (size_type n1 = 0u; n1 < nblocks1; ++n1) {
 				const size_type i_start = static_cast<size_type>(n1 * bsize + start1),
 					i_end = static_cast<size_type>(i_start + bsize);
 				// regulars1 * regulars2
 				for (size_type n2 = 0u; n2 < nblocks2; ++n2) {
-					const size_type j_start = static_cast<size_type>(n2 * bsize + start2),
+					const size_type j_start = static_cast<size_type>(n2 * bsize),
 						j_end = static_cast<size_type>(j_start + bsize);
 					for (size_type i = i_start; i < i_end; ++i) {
-						for (size_type j = j_start; j < j_end; ++j) {
-							if (sf(i,j)) {
-								break;
-							}
+						const size_type limit = std::min<size_type>(lf(i),j_end);
+						for (size_type j = j_start; j < limit; ++j) {
 							mf(i,j);
 						}
 					}
 				}
 				// regulars1 * rem2
 				for (size_type i = i_start; i < i_end; ++i) {
-					for (size_type j = j_ir_start; j < j_ir_end; ++j) {
-						if (sf(i,j)) {
-							break;
-						}
+					const size_type limit = std::min<size_type>(lf(i),j_ir_end);
+					for (size_type j = j_ir_start; j < limit; ++j) {
 						mf(i,j);
 					}
 				}
 			}
 			// rem1 * regulars2
 			for (size_type n2 = 0u; n2 < nblocks2; ++n2) {
-				const size_type j_start = static_cast<size_type>(n2 * bsize + start2),
+				const size_type j_start = static_cast<size_type>(n2 * bsize),
 					j_end = static_cast<size_type>(j_start + bsize);
 				for (size_type i = i_ir_start; i < i_ir_end; ++i) {
-					for (size_type j = j_start; j < j_end; ++j) {
-						if (sf(i,j)) {
-							break;
-						}
+					const size_type limit = std::min<size_type>(lf(i),j_end);
+					for (size_type j = j_start; j < limit; ++j) {
 						mf(i,j);
 					}
 				}
 			}
 			// rem1 * rem2.
 			for (size_type i = i_ir_start; i < i_ir_end; ++i) {
-				for (size_type j = j_ir_start; j < j_ir_end; ++j) {
-					if (sf(i,j)) {
-						break;
-					}
+				const size_type limit = std::min<size_type>(lf(i),j_ir_end);
+				for (size_type j = j_ir_start; j < limit; ++j) {
 					mf(i,j);
 				}
 			}
@@ -473,7 +449,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		/// Estimate size of series multiplication.
 		/**
 		 * \note
-		 * If \p MultArity, \p MultFunctor or \p FilterFunctor do not satisfy the requirements outlined below,
+		 * If \p MultArity, \p MultFunctor or \p LimitFunctor do not satisfy the requirements outlined below,
 		 * a compile-time error will be produced.
 		 *
 		 * This method expects a \p MultFunctor type exposing the same inteface as explained in blocked_multiplication().
@@ -490,48 +466,42 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * The \p MultArity parameter represents the arity of term multiplications - that is, the number of terms generated by a single
 		 * term-by-term multiplication. It must be strictly positive.
 		 *
-		 * The \p ff parameter must be a function object with a call operator accepting two instances of
-		 * base_series_multiplier::size_type as input and returning an \p unsigned value not greater than \p MultArity. It represents the number of terms that need to be
-		 * discarded in the result of the multiplication of the <tt>i</tt>-th term of the first series by the <tt>j</tt>-th term of the second series
-		 * (e.g., because of some truncation criterion). The call operator of the default \p FilterFunctor will always return 0 unconditionally.
+		 * The \p lf parameter must be a function object exposing the same inteface as explained in blocked_multiplication().
+		 * This functor establishes how many terms in the second series must be multiplied by the <tt>i</tt>-th term of the first series.
 		 *
 		 * The number returned by this function is always at least 1. Multiple threads might be used by this method: in such a case, different
-		 * instances of \p MultFunctor are constructed in different threads, but \p ff is shared among all threads.
+		 * instances of \p MultFunctor are constructed in different threads, but \p lf is shared among all threads.
 		 *
-		 * @param[in] ff the filtering functor.
+		 * @param[in] lf the limit functor.
 		 *
 		 * @return the estimated size of the multiplication of the first series by the second, always at least 1.
 		 *
 		 * @throws std::overflow_error in case of (unlikely) overflows in integral arithmetics.
-		 * @throws std::invalid_argument if a call to \p ff returns a value larger than \p MultArity.
 		 * @throws unspecified any exception thrown by:
 		 * - overflow errors in the conversion of piranha::integer to integral types,
-		 * - the call operator of \p mf or \p ff, and the constructor of \p mf,
+		 * - the call operator of \p mf or \p lf, and the constructor of \p mf,
 		 * - memory errors in standard containers,
 		 * - the conversion operator of piranha::integer,
 		 * - standard threading primitives,
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back().
 		 */
-		template <std::size_t MultArity, typename MultFunctor, typename FilterFunctor = no_filter>
-		bucket_size_type estimate_final_series_size(const FilterFunctor &ff = no_filter{}) const
+		template <std::size_t MultArity, typename MultFunctor, typename LimitFunctor>
+		bucket_size_type estimate_final_series_size(const LimitFunctor &lf) const
 		{
-			// Static checks.
-			static_assert(MultArity != 0u,"Invalid multiplication arity in base_series_multiplier.");
 			PIRANHA_TT_CHECK(is_function_object,MultFunctor,void,const size_type &, const size_type &);
 			PIRANHA_TT_CHECK(std::is_constructible,MultFunctor,const base_series_multiplier &, Series &);
-			PIRANHA_TT_CHECK(is_function_object,FilterFunctor,unsigned,const size_type &, const size_type &);
-			// Local shortcut.
-			constexpr std::size_t result_size = MultArity;
+			PIRANHA_TT_CHECK(is_function_object,LimitFunctor,size_type,const size_type &);
 			// Cache these.
 			const size_type size1 = m_v1.size(), size2 = m_v2.size();
+			constexpr std::size_t result_size = MultArity;
 			// If one of the two series is empty, just return 0.
 			if (unlikely(!size1 || !size2)) {
 				return 1u;
 			}
-			// If either series has a size of 1, just return size1 * size2 * result_size.
+			// If either series has a size of 1, just return size1 * size2.
 			if (size1 == 1u || size2 == 1u) {
-				return static_cast<bucket_size_type>(integer(size1) * size2 * result_size);
+				return static_cast<bucket_size_type>(integer(size1) * size2);
 			}
 			// NOTE: Hard-coded number of trials.
 			// NOTE: here consider that in case of extremely sparse series with few terms this will incur in noticeable
@@ -542,6 +512,9 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			const unsigned multiplier = 2u;
 			// Number of threads to use. If there are more threads than trials, then reduce
 			// the number of actual threads to use.
+			// NOTE: this is a bit different from usual, where we do not care if the workload per thread is zero.
+			// We do like this because n_trials is a small number and there still seems to be benefit in running
+			// just 1 trial per thread.
 			const unsigned n_threads = (n_trials >= m_n_threads) ? m_n_threads : n_trials;
 			piranha_assert(n_threads > 0u);
 			// Trials per thread. This will always be at least 1.
@@ -552,26 +525,18 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Sync mutex - actually used only in multithreading.
 			std::mutex mut;
 			// The estimation functor.
-			auto estimator = [size1,size2,n_threads,multiplier,tpt,n_trials,this,&ff,result_size,&c_estimate,&mut](unsigned thread_idx) {
+			auto estimator = [&lf,size1,n_threads,multiplier,tpt,n_trials,this,&c_estimate,&mut,result_size](unsigned thread_idx) {
 				piranha_assert(thread_idx < n_threads);
-				// Vectors of indices into m_v1/m_v2.
-				std::vector<size_type> v_idx1, v_idx2;
-				// Try to reserve space in advance.
-				v_idx1.reserve(static_cast<typename std::vector<size_type>::size_type>(size1));
-				v_idx2.reserve(static_cast<typename std::vector<size_type>::size_type>(size2));
-				for (size_type i = 0u; i < size1; ++i) {
-					v_idx1.push_back(i);
-				}
-				for (size_type i = 0u; i < size2; ++i) {
-					v_idx2.push_back(i);
-				}
-				// Create a copy for re-init inside the loop.
+				// Vectors of indices into m_v1.
+				std::vector<size_type> v_idx1(safe_cast<typename std::vector<size_type>::size_type>(size1));
+				std::iota(v_idx1.begin(),v_idx1.end(),size_type(0));
+				// Copy in order to reset to initial state later.
 				const auto v_idx1_copy = v_idx1;
-				const auto v_idx2_copy = v_idx2;
-				// Maximum number of random multiplications before which a duplicate term must be generated.
-				const size_type max_M = static_cast<size_type>(((integer(size1) * size2) / multiplier).sqrt());
 				// Random number engine.
 				std::mt19937 engine;
+				// Uniform int distribution.
+				using dist_type = std::uniform_int_distribution<size_type>;
+				dist_type dist;
 				// Init the accumulated estimation for averaging later.
 				integer acc(0);
 				// Number of trials for this thread - usual special casing for the last thread.
@@ -580,56 +545,43 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				piranha_assert(cur_trials > 0u);
 				// Create and setup the temp series.
 				Series tmp;
-				tmp.set_symbol_set(this->m_ss);
+				tmp.set_symbol_set(m_ss);
 				// Create the multiplier.
 				MultFunctor mf(*this,tmp);
 				// Go with the trials.
 				for (auto n = 0u; n < cur_trials; ++n) {
-					// Seed the engine.
+					// Seed the engine. The seed should be the global trial number, accounting for multiple
+					// threads. This way the estimation will not depend on the number of threads.
 					engine.seed(static_cast<std::mt19937::result_type>(tpt * thread_idx + n));
-					// Reset and randomise.
+					// Reset the indices vector and re-randomise it.
+					// NOTE: we need to do this as every run inside this for loop must be completely independent
+					// of any previous run, we cannot keep any state.
 					v_idx1 = v_idx1_copy;
-					v_idx2 = v_idx2_copy;
 					std::shuffle(v_idx1.begin(),v_idx1.end(),engine);
-					std::shuffle(v_idx2.begin(),v_idx2.end(),engine);
-					size_type count = 0u, filtered = 0u;
-					auto it1 = v_idx1.begin(), it2 = v_idx2.begin();
-					while (count < max_M) {
-						if (it1 == v_idx1.end()) {
-							// Each time we wrap around the first series,
-							// wrap around also the second one and rotate it.
-							// NOTE: the code here cannot ever be executed as it stands, since:
-							// - the first series is guaranteed to be equal to or larger than the second;
-							// - the limit max_M is computed in a way such that it is always less than
-							//   the size of the first series.
-							// This code was here since the previous version of the multiplier, just keep it
-							// around in case something changes.
-							it1 = v_idx1.begin();
-							auto middle = v_idx2.end();
-							--middle;
-							std::rotate(v_idx2.begin(),middle,v_idx2.end());
-							it2 = v_idx2.begin();
+					// The counter. This will be increased each time a term-by-term multiplication
+					// does not generate a duplicate term.
+					size_type count = 0u;
+					// This will be used to determine the average number of terms in s2
+					// that participate in the multiplication.
+					integer acc_s2(0);
+					auto it1 = v_idx1.begin();
+					for (; it1 != v_idx1.end(); ++it1) {
+						// Get the limit idx in s2.
+						const size_type limit = lf(*it1);
+						// This is the upper limit of an open ended interval, so it needs
+						// to be decreased by one in order to be used in dist. If zero, it means
+						// there are no terms in v2 that can be multiplied by the current term in t1.
+						if (limit == 0u) {
+							continue;
 						}
-						if (it2 == v_idx2.end()) {
-							it2 = v_idx2.begin();
-						}
+						acc_s2 += limit;
+						// Pick a random index in m_v2 within the limit.
+						const size_type idx2 = dist(engine,typename dist_type::param_type(size_type(0u),size_type(limit - 1u)));
 						// Perform term multiplication.
-						mf(*it1,*it2);
-						// Count the filtered terms.
-						const unsigned filter_count = ff(*it1,*it2);
-						// Sanity check.
-						if (unlikely(filter_count > result_size)) {
-							piranha_throw(std::invalid_argument,
-								"the number of filtered terms cannot be larger than result_size");
-						}
-						// Check for unlikely overflows when increasing counts.
+						mf(*it1,idx2);
+						// Check for unlikely overflows when increasing count.
 						if (unlikely(result_size > std::numeric_limits<size_type>::max() ||
 							count > std::numeric_limits<size_type>::max() - result_size))
-						{
-							piranha_throw(std::overflow_error,"overflow error");
-						}
-						if (unlikely(filter_count > std::numeric_limits<size_type>::max() ||
-							filtered > std::numeric_limits<size_type>::max() - filter_count))
 						{
 							piranha_throw(std::overflow_error,"overflow error");
 						}
@@ -638,17 +590,19 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 						}
 						// Increase cycle variables.
 						count = static_cast<size_type>(count + result_size);
-						filtered = static_cast<size_type>(filtered + filter_count);
-						++it1;
-						++it2;
 					}
-					piranha_assert(count >= filtered);
-					// NOTE: the reasoning here is: with no filtering the estimation will be multiplier*count**2.
-					// The number of terms to be discarded in the output series will be proportional to the ratio between
-					// filtered terms and total terms, that is, (count - filtered)/count. Hence in case of filtering the estimation
-					// will be count**2*multiplier * (count - filtered)/count, hence the formula below.
-					auto add = (integer(multiplier) * count) * (count - filtered);
-					// Fix if zero.
+					integer add;
+					if (it1 == v_idx1.end()) {
+						// We never found a duplicate. count is now the number of terms in s1
+						// which actually participate in the multiplication, while acc_s2 / count
+						// is the average number of terms in s2 that participate in the multiplication.
+						// The result will be then count * acc_s2 / count = acc_s2.
+						add = acc_s2;
+					} else {
+						// If we found a duplicate, we use the heuristic.
+						add = integer(multiplier) * count * count;
+					}
+					// Fix if zero, so that the average later never results in zero.
 					if (add.sign() == 0) {
 						add = 1;
 					}
@@ -686,6 +640,18 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			piranha_assert(c_estimate >= n_trials);
 			// Return the mean.
 			return static_cast<bucket_size_type>(c_estimate / n_trials);
+		}
+		/// Estimate size of series multiplication (convenience overload)
+		/**
+		 * @return the output of the other overload of estimate_final_series_size(), with a limit
+		 * functor whose call operator will always return the size of the second series unconditionally.
+		 *
+		 * @throws unspecified any exception thrown by the other overload of estimate_final_series_size().
+		 */
+		template <std::size_t MultArity, typename MultFunctor>
+		bucket_size_type estimate_final_series_size() const
+		{
+			return estimate_final_series_size<MultArity,MultFunctor>(default_limit_functor{*this});
 		}
 		/// A plain multiplier functor.
 		/**
@@ -894,21 +860,19 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		/// A plain series multiplication routine.
 		/**
 		 * \note
-		 * If the key and coefficient types of \p Series do not satisfy piranha::key_is_multipliable, or \p SkipFunctor does
-		 * not satisfy the requirements outlined in base_series_multiplier::blocked_multiplication(), or \p FilterFunctor does
-		 * not satisfy the requirements outlined in base_series_multiplier::estimate_final_series_size(), a compile-time error will
+		 * If the key and coefficient types of \p Series do not satisfy piranha::key_is_multipliable, or \p LimitFunctor does
+		 * not satisfy the requirements outlined in base_series_multiplier::blocked_multiplication(), a compile-time error will
 		 * be produced.
 		 *
 		 * This method implements a generic series multiplication routine suitable for key types that satisfy piranha::key_is_multipliable.
 		 * The implementation is either single-threaded or multi-threaded, depending on the sizes of the input series, and it will use
 		 * either base_series_multiplier::plain_multiplier or a similar thread-safe multiplier for the term-by-term multiplications.
-		 * The functors \p sf and \p ff will be forwarded as skipping and filter functors respectively to base_series_multiplier::blocked_multiplication()
+		 * The \p lf functor will be forwarded as limit functor to base_series_multiplier::blocked_multiplication()
 		 * and base_series_multiplier::estimate_final_series_size().
 		 *
-		 * Note that, in multithreaded mode, \p sf will be shared among (and called concurrently from) all the threads.
+		 * Note that, in multithreaded mode, \p lf will be shared among (and called concurrently from) all the threads.
 		 *
-		 * @param[in] sf the skipping functor (see base_series_multiplier::blocked_multiplication()).
-		 * @param[in] ff the filter functor (base_series_multiplier::estimate_final_series_size()).
+		 * @param[in] lf the limit functor (see base_series_multiplier::blocked_multiplication()).
 		 *
 		 * @return the series resulting from the multiplication of the two series used to construct \p this.
 		 *
@@ -925,16 +889,14 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - the construction of terms,
 		 * - in-place addition of coefficients.
 		 */
-		template <typename SkipFunctor = no_skip, typename FilterFunctor = no_filter>
-		Series plain_multiplication(const SkipFunctor &sf = no_skip{}, const FilterFunctor &ff = no_filter{}) const
+		template <typename LimitFunctor>
+		Series plain_multiplication(const LimitFunctor &lf) const
 		{
 			// Shortcuts.
 			using term_type = typename Series::term_type;
 			using cf_type = typename term_type::cf_type;
 			using key_type = typename term_type::key_type;
 			PIRANHA_TT_CHECK(key_is_multipliable,cf_type,key_type);
-			PIRANHA_TT_CHECK(is_function_object,SkipFunctor,bool,const size_type &, const size_type &);
-			PIRANHA_TT_CHECK(is_function_object,FilterFunctor,unsigned,const size_type &, const size_type &);
 			constexpr std::size_t m_arity = key_type::multiply_arity;
 			// Setup the return value with the merged symbol set.
 			Series retval;
@@ -949,7 +911,8 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			const size_type n_threads = safe_cast<size_type>(m_n_threads);
 			piranha_assert(n_threads);
 			// Estimate and rehash.
-			const auto est = estimate_final_series_size<m_arity,plain_multiplier<false>>(ff);
+			const auto est = estimate_final_series_size<m_arity,plain_multiplier<false>>(lf);
+std::cout << "Estimate: " << est << '\n';
 			// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
 			// and in this case the behaviour of numeric_cast is appropriate.
 			const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
@@ -964,7 +927,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			if (n_threads == 1u) {
 				try {
 					// Single-thread case.
-					blocked_multiplication(plain_multiplier<true>(*this,retval),0u,size1,0u,size2,sf);
+					blocked_multiplication(plain_multiplier<true>(*this,retval),0u,size1,lf);
 					sanitise_series(retval,static_cast<unsigned>(n_threads));
 					finalise_series(retval);
 					return retval;
@@ -983,7 +946,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			try {
 				for (size_type idx = 0u; idx < n_threads; ++idx) {
 					// Thread functor.
-					auto tf = [idx,this,block_size,n_threads,&sl_array,&retval,&sf]()
+					auto tf = [idx,this,block_size,n_threads,&sl_array,&retval,&lf]()
 					{
 						// Used to store the result of term multiplication.
 						std::array<term_type,key_type::multiply_arity> tmp_t;
@@ -1014,7 +977,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 						// Thread block limit.
 						const auto e1 = (idx == n_threads - 1u) ? this->m_v1.size() :
 							static_cast<size_type>((idx + 1u) * block_size);
-						this->blocked_multiplication(f,static_cast<size_type>(idx * block_size),e1,0u,this->m_v2.size(),sf);
+						this->blocked_multiplication(f,static_cast<size_type>(idx * block_size),e1,lf);
 					};
 					f_list.push_back(thread_pool::enqueue(static_cast<unsigned>(idx),tf));
 				}
@@ -1029,6 +992,17 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				throw;
 			}
 			return retval;
+		}
+		/// A plain series multiplication routine (convenience overload).
+		/**
+		 * @return the output of the other overload of plain_multiplication(), with a limit
+		 * functor whose call operator will always return the size of the second series unconditionally.
+		 *
+		 * @throws unspecified any exception thrown by the other overload of plain_multiplication().
+		 */
+		Series plain_multiplication() const
+		{
+			return plain_multiplication(default_limit_functor{*this});
 		}
 		/// Finalise series.
 		/**

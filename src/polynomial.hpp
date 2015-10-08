@@ -1171,22 +1171,20 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			namespace sph = std::placeholders;
 			static_assert(std::is_same<T,degree_type>::value,"Invalid degree type");
 			static_assert(detail::has_get_auto_truncate_degree<Series>::value,"Invalid series type");
-			// First let's create two vectors with the degrees of the terms in the two series. In the second series,
-			// we negate and add the max degree in order to avoid adding in the skipping functor.
+			// First let's create two vectors with the degrees of the terms in the two series.
 			using d_size_type = typename std::vector<degree_type>::size_type;
 			std::vector<degree_type> v_d1(safe_cast<d_size_type>(this->m_v1.size())), v_d2(safe_cast<d_size_type>(this->m_v2.size()));
-			detail::parallel_vector_transform(this->m_n_threads,this->m_v1,v_d1,std::bind(term_degree_getter1{},sph::_1,
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v1,v_d1,std::bind(term_degree_getter{},sph::_1,
 				std::cref(this->m_ss),std::cref(args)...));
-			detail::parallel_vector_transform(this->m_n_threads,this->m_v2,v_d2,std::bind(term_degree_getter2{},sph::_1,
-				std::cref(this->m_ss),std::cref(max_degree),std::cref(args)...));
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v2,v_d2,std::bind(term_degree_getter{},sph::_1,
+				std::cref(this->m_ss),std::cref(args)...));
 			// Next we need to order the terms in the second series, and also the corresponding degree vector.
 			// First we create a vector of indices and we fill it.
 			std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
 			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
 			// Second, we sort the vector of indices according to the degrees in the second series.
 			std::stable_sort(idx_vector.begin(),idx_vector.end(),[&v_d2](const size_type &i1, const size_type &i2) {
-				// NOTE: here it is ">" rather than "<" because we negated (and added the max degree) in v_d2.
-				return v_d2[static_cast<d_size_type>(i1)] > v_d2[static_cast<d_size_type>(i2)];
+				return v_d2[static_cast<d_size_type>(i1)] < v_d2[static_cast<d_size_type>(i2)];
 			});
 			// Finally, we apply the permutation to v_d2 and m_v2.
 			decltype(this->m_v2) v2_copy(this->m_v2.size());
@@ -1199,17 +1197,43 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			});
 			this->m_v2 = std::move(v2_copy);
 			v_d2 = std::move(v_d2_copy);
-			// The skipping functor.
-			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
-				using d_size_type = decltype(v_d1.size());
-				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
+			// Now get the skip limits and we build the limits functor.
+			const auto sl = get_skip_limits(v_d1,v_d2,max_degree);
+			auto lf = [&sl](const size_type &idx1) {
+				return sl[static_cast<typename std::vector<size_type>::size_type>(idx1)];
 			};
-			// The filter functor: will return 1 if the degree of the term resulting from the multiplication of i and j
-			// is greater than the max degree, zero otherwise.
-			auto ff = [&sf](const size_type &i, const size_type &j) {
-				return static_cast<unsigned>(sf(i,j));
-			};
-			return this->plain_multiplication(sf,ff);
+			return this->plain_multiplication(lf);
+		}
+		template <typename V, typename T>
+		std::vector<typename base::size_type> get_skip_limits(const V &v_d1, const V &v_d2, const T &max_degree) const
+		{
+boost::timer::auto_cpu_timer t;
+			// TODO parallelise.
+			using size_type = typename base::size_type;
+			using d_size_type = typename V::size_type;
+			// A vector of indices into the second series.
+			std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
+			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
+			// The return value.
+			std::vector<size_type> retval;
+			for (const auto &d1: v_d1) {
+				// Here we will find the index of the first term t2 in the second series such that
+				// the degree d2 of t2 is > max_degree - d1, that is, d1 + d2 > max_degree.
+				// NOTE: we need to use upper_bound, instead of lower_bound, because we need to find an
+				// element which is *strictly* greater than the max degree, as upper bound of a half closed
+				// interval.
+				// NOTE: the functor of lower_bound works inversely wrt upper_bound. See the notes on the type
+				// requirements for the functor here:
+				// http://en.cppreference.com/w/cpp/algorithm/upper_bound
+				// TODO check.
+				const T comp = max_degree - d1;
+				const auto it = std::upper_bound(idx_vector.begin(),idx_vector.end(),comp,[&v_d2](const T &c, const size_type &idx) {
+					return c < v_d2[static_cast<d_size_type>(idx)];
+				});
+				retval.push_back(it == idx_vector.end() ? static_cast<size_type>(idx_vector.size()) : *it);
+			}
+			// TODO write a checker.
+			return retval;
 		}
 	private:
 		// NOTE: wrapper to multadd that treats specially rational coefficients. We need to decide in the future
@@ -1262,36 +1286,13 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				return detail::ps_get_degree(*p1,args...,ss) < detail::ps_get_degree(*p2,args...,ss);
 			}
 		};
-		struct term_degree_getter1
+		struct term_degree_getter
 		{
 			using term_type = typename Series::term_type;
 			template <typename ... Args>
 			auto operator()(term_type const *p, const symbol_set &ss, const Args & ... args) const -> decltype(detail::ps_get_degree(*p,args...,ss))
 			{
 				return detail::ps_get_degree(*p,args...,ss);
-			}
-		};
-		struct term_degree_getter2
-		{
-			// NOTE: here we are guaranteed that T supports subtraction and T - T is still T.
-			using term_type = typename Series::term_type;
-			template <typename T, typename std::enable_if<!std::is_integral<T>::value,int>::type = 0>
-			static T sub(const T &a, const T &b)
-			{
-				return a - b;
-			}
-			template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
-			static T sub(const T &a, const T &b)
-			{
-				T retval(a);
-				detail::safe_integral_subber(retval,b);
-				return retval;
-			}
-			template <typename T, typename ... Args>
-			auto operator()(term_type const *p, const symbol_set &ss, const T &max_degree, const Args & ... args) const ->
-				decltype(max_degree - detail::ps_get_degree(*p,args...,ss))
-			{
-				return sub(max_degree,detail::ps_get_degree(*p,args...,ss));
 			}
 		};
 		// execute() is the top level dispatch for the actual multiplication.
