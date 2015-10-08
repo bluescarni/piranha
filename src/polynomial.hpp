@@ -1219,7 +1219,7 @@ boost::timer::auto_cpu_timer t;
 			for (const auto &d1: v_d1) {
 				// Here we will find the index of the first term t2 in the second series such that
 				// the degree d2 of t2 is > max_degree - d1, that is, d1 + d2 > max_degree.
-				// NOTE: we need to use upper_bound, instead of lower_bound, because we need to find an
+				// NOTE: we need to use upper_bound, instead of lower_bound, because we need to find the first
 				// element which is *strictly* greater than the max degree, as upper bound of a half closed
 				// interval.
 				// NOTE: the functor of lower_bound works inversely wrt upper_bound. See the notes on the type
