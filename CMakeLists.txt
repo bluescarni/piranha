@@ -57,8 +57,8 @@ ENDIF(BUILD_PYRANHA)
 
 # Boost libraries setup.
 SET(REQUIRED_BOOST_LIBS serialization iostreams)
-# Look for test and timer only if we are building unit tests.
 IF(BUILD_TESTS)
+	# These libraries are needed only if building tests.
 	MESSAGE(STATUS "Linking unit tests to Boost.Test, Boost.Filesystem and Boost System")
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework filesystem system)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -77,8 +77,8 @@ MESSAGE(STATUS "Detected Boost version: ${Boost_VERSION}")
 MESSAGE(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-# Set the mandatory Boost libraries. NOTE: here we do not include the test and timer libraries
-# since they will only be useful when compiling tests.
+# Set the mandatory Boost libraries. NOTE: here we do not include the libraries
+# pulled in by the tests, only those which are needed by Piranha's core.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_IOSTREAMS_LIBRARY})
 
 # GMP setup.
