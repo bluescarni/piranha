@@ -1121,7 +1121,8 @@ class series_operators
 
 /// File formats.
 /**
- * These are the available formats for piranha::series::save() and piranha::series::load().
+ * These are the available formats for piranha::series::save(const Derived &, const std::string &, file_format, file_compression) and
+ * piranha::series::load(const std::string &, file_format, file_compression).
  */
 enum class file_format
 {
@@ -1139,7 +1140,8 @@ enum class file_format
 
 /// File compression options.
 /**
- * These are the available compression options for piranha::series::save() and piranha::series::load().
+ * These are the available compression options for piranha::series::save(const Derived &, const std::string &, file_format, file_compression) and
+ * piranha::series::load(const std::string &, file_format, file_compression).
  */
 enum class file_compression
 {
