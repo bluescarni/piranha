@@ -54,7 +54,8 @@
  * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
  * work in a more generic fashion.
  * \todo pyranha: enable math for numpy's floating point type, and arrays. Also, think about enabling conversion from the numpy float
- * in the from-python converters?
+ * in the from-python converters? -> if we do this last bit, we must make sure that our custom converter does not override any other
+ * converter that might be registered in boost python. We need to query the registry and check at runtime.
  * \todo: pyranha tests should test the *exposition* and/or wrapping, not the functionality of the library. For poly/poisson series, add
  * tests for degree/order, plus add in math.py the degree/order methods in order to mirror math.hpp.
  * \todo in the rework of the substitution methods with toolboxes, remember to switch the interface of the key's subs to use string
@@ -107,8 +108,6 @@
  * e.g. when printing rational exponents with non-unitary denominator.
  * \todo probably we should change the pow() implementation for integer to error out if the power is negative and the base
  * is not unitary.
- * \todo think about providing default implementations of cos/sin/pow/... that use ADL -> we actually already use ADL in expr.
- * sfinae when using operators such as +,-,<<, etc.
  * \todo http://keepachangelog.com/CHANGELOG.md
  * \todo in pyranha, it would be nice to have a reverse lookup from the name of the exposed types to their representation
  * in the type system. Plus, maybe when printing the series they should have a header displaying their name in the type
@@ -122,11 +121,6 @@
  * operations as noexcept so we don't really need to require std members to be noexcept (if they throw an exception - unlikely
  * - the program will terminate anyway). We should also probably check the uses of std::move in order to make sure we do not use
  * exception guarantees throughout the code.
- * \todo At the moment we do not check the range of the deserialized integral values in kronecker keys.
- * \todo related to the above, we probably want to serialise all vector-like objects in the same way - so that different series
- * types can be deserialized from the same archive (e.g., k_monomial vs monomial).
- * \todo take a look at this as well: http://www.boost.org/doc/libs/1_48_0/libs/serialization/doc/traits.html#level to cope
- * with the problem of mutating toolbox inheritance for the future.
  * \todo do the noexcept methods in keys really need to be noexcept? Maybe it is better to offer a weaker exception guarantee
  * and be done with them instead.
  * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such as key_is_*,
@@ -149,7 +143,6 @@
  * user-configurable limit. Also, it might be useful to give the user the ability to query the cache, see how many items are stored, etc.
  * \todo we should really add some perf tests based on the work by alex perminov. Also, based on this, which operations in his use cases could
  * benefit from parallelisation?
- * \todo on-the-fly compression of series archives?
  * \todo the replace_symbol() method for series. Or maybe rename_symbol().
  * \todo truncation tests based on the email discussion with ondrej.
  * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of checking the shutdown flag.
