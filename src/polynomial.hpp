@@ -1068,6 +1068,20 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		template <typename T>
 		using call_enabler = typename std::enable_if<key_is_multipliable<cf_t<T>,key_t<T>>::value &&
 			is_multipliable_in_place<cf_t<T>>::value && has_multiply_accumulate<cf_t<T>>::value,int>::type;
+		// Utility helpers for the subtraction of degree types in the truncation routines. The specialisation
+		// for integral types will check the operation for overflow.
+		template <typename T, typename std::enable_if<!std::is_integral<T>::value,int>::type = 0>
+		static T degree_sub(const T &a, const T &b)
+		{
+			return a - b;
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		static T degree_sub(const T &a, const T &b)
+		{
+			T retval(a);
+			detail::safe_integral_subber(retval,b);
+			return retval;
+		}
 	public:
 		/// Constructor.
 		/**
@@ -1204,13 +1218,41 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			};
 			return this->plain_multiplication(lf);
 		}
-		template <typename V, typename T>
-		std::vector<typename base::size_type> get_skip_limits(const V &v_d1, const V &v_d2, const T &max_degree) const
+		/// Establish skip limits for truncated multiplication.
+		/**
+		 * This method assumes that \p v_d1 and \p v_d2 are vectors containing the degrees of each term in the first and second series
+		 * respectively, and that \p v_d2 is sorted in ascending order.
+		 * It will return a vector \p v of indices in the second series such that, given an index \p i in the first series,
+		 * the term of index <tt>v[i]</tt> in the second series is the first term such that the term-by-term multiplication with
+		 * the <tt>i</tt>-th term in the first series produces a term of degree greater than \p max_degree. That is, terms of index
+		 * equal to or greater than <tt>v[i]</tt> in the second series will produce terms with degree greater than \p max_degree
+		 * when multiplied by the <tt>i</tt>-th term in the first series.
+		 *
+		 * This method can be called only if \p Series supports truncated multiplication (as explained in piranha::polynomial) and
+		 * \p T is the same type as the degree type.
+		 *
+		 * @param[in] v_d1 a vector containing the degrees of the terms in the first series.
+		 * @param[in] v_d2 a sorted vector containing the degrees of the terms in the second series.
+		 * @param[in] max_degree the truncation degree.
+		 *
+		 * @return the vector of skip limits, as explained above.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - memory errors in standard containers,
+		 * - piranha::safe_cast(),
+		 * - operations on the degree type.
+		 */
+		template <typename T>
+		std::vector<typename base::size_type> get_skip_limits(const std::vector<T> &v_d1, const std::vector<T> &v_d2, const T &max_degree) const
 		{
-boost::timer::auto_cpu_timer t;
-			// TODO parallelise.
+			// NOTE: this can be parallelised, but we need to check the heuristic
+			// for selecting the number of threads as it is pretty fast wrt the multiplication.
+			// Check that we are allowed to call this method.
+			PIRANHA_TT_CHECK(detail::has_get_auto_truncate_degree,Series);
+			PIRANHA_TT_CHECK(std::is_same,T,decltype(math::degree(Series{})));
 			using size_type = typename base::size_type;
-			using d_size_type = typename V::size_type;
+			using d_size_type = typename std::vector<T>::size_type;
+			piranha_assert(std::is_sorted(v_d2.begin(),v_d2.end()));
 			// A vector of indices into the second series.
 			std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
 			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
@@ -1225,14 +1267,29 @@ boost::timer::auto_cpu_timer t;
 				// NOTE: the functor of lower_bound works inversely wrt upper_bound. See the notes on the type
 				// requirements for the functor here:
 				// http://en.cppreference.com/w/cpp/algorithm/upper_bound
-				// TODO check.
-				const T comp = max_degree - d1;
+				const T comp = degree_sub(max_degree,d1);
 				const auto it = std::upper_bound(idx_vector.begin(),idx_vector.end(),comp,[&v_d2](const T &c, const size_type &idx) {
 					return c < v_d2[static_cast<d_size_type>(idx)];
 				});
 				retval.push_back(it == idx_vector.end() ? static_cast<size_type>(idx_vector.size()) : *it);
 			}
-			// TODO write a checker.
+			// Check the consistency of the result in debug mode.
+			auto retval_checker = [&retval,&v_d1,&v_d2,&max_degree,this]() -> bool {
+				for (decltype(retval.size()) i = 0u; i < retval.size(); ++i) {
+					if (retval[i] >= v_d2.size()) {
+						return false;
+					}
+					if (!(v_d2[static_cast<d_size_type>(retval[i])] <
+						this->degree_sub(max_degree,v_d1[static_cast<d_size_type>(i)])))
+					{
+						return false;
+					}
+				}
+				return true;
+			};
+			(void)retval_checker;
+			piranha_assert(retval.size() == this->m_v1.size());
+			piranha_assert(retval_checker());
 			return retval;
 		}
 	private:
