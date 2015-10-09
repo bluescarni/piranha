@@ -43,12 +43,9 @@ A couple of things to note:
   Piranha is written in C++11, and this flag is necessary as long as GCC does not default to C++11 mode;
 * we specify via the ``-lmpfr -lgmp`` flags that the executable needs to be linked to the GMP and MPFR libraries (if
   you do not do this, the program will still compile but the final linking will fail due to undefined references);
-* at the present time, all the Boost libraries used within Piranha are header-only and thus no linking to any Boost
-  library is necessary;
+* for this simple example, it is not necessary to link to any other library. If, however, Piranha's serialization capabilities
+  are used, then it will be necessary to link the executable to the Boost Serialization library and to the bzip2 library;
 * Piranha itself is header-only, so there is no ``-lpiranha`` to link to.
-
-It must be noted that recent versions of Piranha support serialization, which require linking to the Boost Serialization
-library in order to work. If you are not using Piranha's serialization capabilities, you can ignore this additional requirement.
 
 We also need to point out that for non-debug builds, the ``NDEBUG`` macro should be defined:
 

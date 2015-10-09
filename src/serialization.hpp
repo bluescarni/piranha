@@ -22,6 +22,8 @@
 #define PIRANHA_SERIALIZATION_HPP
 
 // Common headers for serialization.
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/config/suffix.hpp>

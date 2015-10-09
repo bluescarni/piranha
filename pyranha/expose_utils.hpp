@@ -38,10 +38,8 @@
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <cstddef>
-#include <fstream>
 #include <limits>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -821,35 +819,30 @@ class series_exposer
 			}
 			return retval;
 		}
-		// C++ text serialization: support for writing to / reading from Boost.Serialization text archives
-		// stored in files from Python.
+		// File load/save.
 		template <typename S>
-		static void cpp_save_text(const S &s, const std::string &filename)
+		static void expose_save_load(bp::class_<S> &series_class)
 		{
-			std::ofstream fs(filename);
-			if (unlikely(!fs.good())) {
-				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
-			}
-			boost::archive::text_oarchive oa(fs);
-			oa << s;
-		}
-		template <typename S>
-		static S cpp_load_text(const std::string &filename)
-		{
-			S retval;
-			std::ifstream fs(filename);
-			if (unlikely(!fs.good())) {
-				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
-			}
-			boost::archive::text_iarchive ia(fs);
-			ia >> retval;
-			return retval;
-		}
-		template <typename S>
-		static void expose_cpp_text_serialization(bp::class_<S> &series_class)
-		{
-			series_class.def("cpp_save_text",cpp_save_text<S>).staticmethod("cpp_save_text");
-			series_class.def("cpp_load_text",cpp_load_text<S>).staticmethod("cpp_load_text");
+			// Save.
+			typedef void (*s1)(const S &, const std::string &, piranha::file_format, piranha::file_compression);
+			typedef void (*s2)(const S &, const std::string &);
+			typedef void (*s3)(const S &, const std::string &, piranha::file_compression);
+			typedef void (*s4)(const S &, const std::string &, piranha::file_format);
+			series_class.def("save",static_cast<s1>(&S::save));
+			series_class.def("save",static_cast<s2>(&S::save));
+			series_class.def("save",static_cast<s3>(&S::save));
+			series_class.def("save",static_cast<s4>(&S::save));
+			series_class.staticmethod("save");
+			// Load.
+			typedef S (*l1)(const std::string &, piranha::file_format, piranha::file_compression);
+			typedef S (*l2)(const std::string &);
+			typedef S (*l3)(const std::string &, piranha::file_compression);
+			typedef S (*l4)(const std::string &, piranha::file_format);
+			series_class.def("load",static_cast<l1>(&S::load));
+			series_class.def("load",static_cast<l2>(&S::load));
+			series_class.def("load",static_cast<l3>(&S::load));
+			series_class.def("load",static_cast<l4>(&S::load));
+			series_class.staticmethod("load");
 		}
 		// invert().
 		template <typename S>
@@ -943,8 +936,8 @@ class series_exposer
 				series_class.add_property("symbol_set",symbol_set_wrapper<s_type>);
 				// Pickle support.
 				series_class.def_pickle(series_pickle_suite<s_type>());
-				// Serialization to/from C++ text archives.
-				expose_cpp_text_serialization(series_class);
+				// Save and load.
+				expose_save_load(series_class);
 				// Expose invert(), if present.
 				expose_invert(series_class);
 				// Run the custom hook.
