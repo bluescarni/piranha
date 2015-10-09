@@ -46,7 +46,6 @@
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
-#include "../src/real.hpp"
 #include "../src/series.hpp"
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
