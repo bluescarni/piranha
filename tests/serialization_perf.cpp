@@ -21,31 +21,159 @@
 #define BOOST_TEST_MODULE serialization_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/filesystem.hpp>
 #include <boost/timer/timer.hpp>
 #include <sstream>
+#include <string>
 
 #include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
 #include "../src/serialization.hpp"
 #include "pearce1.hpp"
 
+namespace bfs = boost::filesystem;
+
+// Small raii class for creating a tmp file.
+struct tmp_file
+{
+	tmp_file()
+	{
+		m_path = bfs::temp_directory_path();
+		// Concatenate with a unique filename.
+		m_path /= bfs::unique_path();
+	}
+	~tmp_file()
+	{
+		bfs::remove(m_path);
+	}
+	std::string name() const
+	{
+		return m_path.native();
+	}
+	bfs::path m_path;
+};
+
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(pearce1_test)
+BOOST_AUTO_TEST_CASE(serialization_test_00)
 {
 	environment env;
 	std::stringstream ss;
-	std::cout << "Timing multiplication:\n";
-	auto ret1 = pearce1<integer,kronecker_monomial<>>();
+	std::cout << "Timing double multiplication:\n";
+	auto ret1 = pearce1<double,k_monomial>();
+	auto ret2(ret1);
 	{
 	boost::archive::text_oarchive oa(ss);
-	std::cout << "Timing serialization:\n";
 	boost::timer::auto_cpu_timer t;
 	oa << ret1;
+	std::cout << "Raw text serialization: ";
 	}
 	{
 	boost::archive::text_iarchive ia(ss);
-	std::cout << "Timing deserialization:\n";
 	boost::timer::auto_cpu_timer t;
 	ia >> ret1;
+	std::cout << "Raw text deserialization: ";
 	}
+	BOOST_CHECK(ret1 == ret2);
+	std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(serialization_test_01)
+{
+	std::cout << "Timing double multiplication:\n";
+	using pt = polynomial<double,k_monomial>;
+	auto ret1 = pearce1<double,k_monomial>();
+	auto ret2(ret1);
+	{
+	tmp_file f;
+	std::cout << "Filename: " << f.name() << '\n';
+	{
+	boost::timer::auto_cpu_timer t;
+	pt::save(ret1,f.name(),file_format::binary);
+	std::cout << "Raw binary file save: ";
+	}
+	{
+	boost::timer::auto_cpu_timer t;
+	ret1 = pt::load(f.name(),file_format::binary);
+	std::cout << "Raw binary file load: ";
+	}
+	std::cout << "File size: " << bfs::file_size(f.m_path) / 1024. / 1024. << '\n';
+	}
+	BOOST_CHECK(ret1 == ret2);
+	std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(serialization_test_02)
+{
+	std::cout << "Timing double multiplication:\n";
+	using pt = polynomial<double,k_monomial>;
+	auto ret1 = pearce1<double,k_monomial>();
+	auto ret2(ret1);
+	{
+	tmp_file f;
+	std::cout << "Filename: " << f.name() << '\n';
+	{
+	boost::timer::auto_cpu_timer t;
+	pt::save(ret1,f.name(),file_format::binary,file_compression::bzip2);
+	std::cout << "Compressed binary file save: ";
+	}
+	{
+	boost::timer::auto_cpu_timer t;
+	ret1 = pt::load(f.name(),file_format::binary,file_compression::bzip2);
+	std::cout << "Compressed binary file load: ";
+	}
+	std::cout << "File size: " << bfs::file_size(f.m_path) / 1024. / 1024. << '\n';
+	}
+	BOOST_CHECK(ret1 == ret2);
+	std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(serialization_test_03)
+{
+	std::cout << "Timing double multiplication:\n";
+	using pt = polynomial<double,k_monomial>;
+	auto ret1 = pearce1<double,k_monomial>();
+	auto ret2(ret1);
+	{
+	tmp_file f;
+	std::cout << "Filename: " << f.name() << '\n';
+	{
+	boost::timer::auto_cpu_timer t;
+	pt::save(ret1,f.name());
+	std::cout << "Raw text file save: ";
+	}
+	{
+	boost::timer::auto_cpu_timer t;
+	ret1 = pt::load(f.name());
+	std::cout << "Raw text file load: ";
+	}
+	std::cout << "File size: " << bfs::file_size(f.m_path) / 1024. / 1024. << '\n';
+	}
+	BOOST_CHECK(ret1 == ret2);
+	std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(serialization_test_04)
+{
+	std::cout << "Timing double multiplication:\n";
+	using pt = polynomial<double,k_monomial>;
+	auto ret1 = pearce1<double,k_monomial>();
+	auto ret2(ret1);
+	{
+	tmp_file f;
+	std::cout << "Filename: " << f.name() << '\n';
+	{
+	boost::timer::auto_cpu_timer t;
+	pt::save(ret1,f.name(),file_compression::bzip2);
+	std::cout << "Compressed text file save: ";
+	}
+	{
+	boost::timer::auto_cpu_timer t;
+	ret1 = pt::load(f.name(),file_compression::bzip2);
+	std::cout << "Compressed text file load: ";
+	}
+	std::cout << "File size: " << bfs::file_size(f.m_path) / 1024. / 1024. << '\n';
+	}
+	BOOST_CHECK(ret1 == ret2);
+	std::cout << "\n\n";
 }

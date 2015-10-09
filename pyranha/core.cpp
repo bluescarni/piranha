@@ -24,6 +24,7 @@
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/docstring_options.hpp>
+#include <boost/python/enum.hpp>
 #include <boost/python/errors.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/handle.hpp>
@@ -40,12 +41,12 @@
 #include "../src/exceptions.hpp"
 #include "../src/invert.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/math.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
+#include "../src/series.hpp"
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
@@ -145,6 +146,13 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
 	// Series list.
 	bp::def("_get_series_list",pyranha::get_series_list);
+	// The enums for save/load.
+	bp::enum_<piranha::file_format>("file_format")
+		.value("text",piranha::file_format::text)
+		.value("binary",piranha::file_format::binary);
+	bp::enum_<piranha::file_compression>("file_compression")
+		.value("disabled",piranha::file_compression::disabled)
+		.value("bzip2",piranha::file_compression::bzip2);
 	// Expose polynomials.
 	pyranha::expose_polynomials_0();
 	pyranha::expose_polynomials_1();
