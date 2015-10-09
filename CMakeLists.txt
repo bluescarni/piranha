@@ -59,7 +59,7 @@ ENDIF(BUILD_PYRANHA)
 SET(REQUIRED_BOOST_LIBS serialization iostreams)
 # Look for test and timer only if we are building unit tests.
 IF(BUILD_TESTS)
-	MESSAGE(STATUS "Linking unit tests to Boost.Test.")
+	MESSAGE(STATUS "Linking unit tests to Boost.Test, Boost.Filesystem and Boost System")
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework filesystem system)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Release")
 		MESSAGE(STATUS "Linking performance tests to Boost Timer and Boost.Chrono.")
