@@ -13,9 +13,9 @@ compilers are routinely used to develop and test the library:
 * `Clang <http://clang.llvm.org/>`__ 3.5 (earlier versions up to 3.1 should work as well),
 * `Intel C++ compiler <https://software.intel.com/en-us/c-compilers>`__ 15 (beta support).
 
-The main platform used for the development of Piranha is 64-bit GNU/Linux. Some level of support
-for OSX, Windows (using `MinGW <http://mingw-w64.sourceforge.net/>`__) and BSD flavours exists,
-but the library is compiled and tested on these platforms only occasionally.
+The main platform used for the development of Piranha is 64-bit GNU/Linux.
+OSX, Windows (using `MinGW <http://mingw-w64.sourceforge.net/>`__) and BSD flavours are also supported,
+although the library is compiled and tested on these platforms somewhat less frequently.
 
 Piranha aims to be standard-compliant and any portability issue in the source code
 should be reported as a bug.
@@ -27,7 +27,8 @@ Piranha has a few mandatory dependencies:
 
 * the `Boost <http://www.boost.org/>`__ C++ libraries,
 * the `GMP <http://www.gmplib.org>`__ multiprecision library (the `MPIR <http://mpir.org/>`__ fork should work as well),
-* the `GNU MPFR <http://www.mpfr.org>`__ multiprecision floating-point library.
+* the `GNU MPFR <http://www.mpfr.org>`__ multiprecision floating-point library,
+* the `bzip2 <http://www.bzip.org/>`__ compression library.
 
 The optional Python bindings, Pyranha, need the `Python <http://www.python.org/>`__ programming language (Python
 2.6 and later versions, including Python 3.x, are supported). `CMake <http://www.cmake.org/>`__ is the build system
