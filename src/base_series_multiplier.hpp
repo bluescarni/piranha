@@ -912,7 +912,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			piranha_assert(n_threads);
 			// Estimate and rehash.
 			const auto est = estimate_final_series_size<m_arity,plain_multiplier<false>>(lf);
-std::cout << "Estimate: " << est << '\n';
 			// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
 			// and in this case the behaviour of numeric_cast is appropriate.
 			const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
