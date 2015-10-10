@@ -1276,10 +1276,14 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Check the consistency of the result in debug mode.
 			auto retval_checker = [&retval,&v_d1,&v_d2,&max_degree,this]() -> bool {
 				for (decltype(retval.size()) i = 0u; i < retval.size(); ++i) {
-					if (retval[i] >= v_d2.size()) {
+					// NOTE: this just means that all terms in s2 are within the limit.
+					if (retval[i] == v_d2.size()) {
+						continue;
+					}
+					if (retval[i] > v_d2.size()) {
 						return false;
 					}
-					if (!(v_d2[static_cast<d_size_type>(retval[i])] <
+					if (!(v_d2[static_cast<d_size_type>(retval[i])] >
 						this->degree_sub(max_degree,v_d1[static_cast<d_size_type>(i)])))
 					{
 						return false;
