@@ -446,6 +446,22 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				}
 			}
 		}
+		/// Blocked multiplication (convenience overload).
+		/**
+		 * This method is equivalent to the other overload with a limit functor that will unconditionally
+		 * always return the size of the second series.
+		 *
+		 * @param[in] mf the multiplication functor.
+		 * @param[in] start1 start index in the first series.
+		 * @param[in] end1 end index in the first series.
+		 *
+		 * @throws unspecified any exception thrown by the other overload.
+		 */
+		template <typename MultFunctor>
+		void blocked_multiplication(const MultFunctor &mf, const size_type &start1, const size_type &end1) const
+		{
+			blocked_multiplication(mf,start1,end1,default_limit_functor{*this});
+		}
 		/// Estimate size of series multiplication.
 		/**
 		 * \note
@@ -499,9 +515,9 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			if (unlikely(!size1 || !size2)) {
 				return 1u;
 			}
-			// If either series has a size of 1, just return size1 * size2.
+			// If either series has a size of 1, just return size1 * size2 * result_size.
 			if (size1 == 1u || size2 == 1u) {
-				return static_cast<bucket_size_type>(integer(size1) * size2);
+				return static_cast<bucket_size_type>(integer(size1) * size2 * result_size);
 			}
 			// NOTE: Hard-coded number of trials.
 			// NOTE: here consider that in case of extremely sparse series with few terms this will incur in noticeable
@@ -576,7 +592,8 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 						}
 						acc_s2 += limit;
 						// Pick a random index in m_v2 within the limit.
-						const size_type idx2 = dist(engine,typename dist_type::param_type(size_type(0u),size_type(limit - 1u)));
+						const size_type idx2 = dist(engine,typename dist_type::param_type(static_cast<size_type>(0u),
+							static_cast<size_type>(limit - 1u)));
 						// Perform term multiplication.
 						mf(*it1,idx2);
 						// Check for unlikely overflows when increasing count.
