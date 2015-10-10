@@ -23,11 +23,14 @@
 #define BOOST_TEST_MODULE estimation_test
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 #include <cstddef>
 #include <iostream>
+#include <iterator>
 #include <utility>
+#include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/kronecker_monomial.hpp"
@@ -60,16 +63,40 @@ struct multiplier: base_series_multiplier<p_type>
 		using m_base = base::plain_multiplier<false>;
 		using m_base::m_base;
 	};
-	struct ff
+	struct lf
 	{
 		using size_type = base::size_type;
-		ff(const multiplier *m, int limit):m_m(m),m_limit(limit) {}
-		unsigned operator()(const size_type &i, const size_type &j) const
+		using d_type = decltype(p_type{}.degree());
+		using term_type = p_type::term_type;
+		lf(const multiplier *m, int limit):m_m(m),m_limit(limit)
 		{
-			return detail::ps_get_degree(*m_m->m_v1[i],m_m->m_ss) + detail::ps_get_degree(*m_m->m_v2[j],m_m->m_ss) > m_limit;
+			// Sort the term pointers in the second series according to the degree.
+			std::sort(m_m->m_v2.begin(),m_m->m_v2.end(),[m](const term_type *t1, const term_type *t2) {
+				return detail::ps_get_degree(*t1,m->m_ss) < detail::ps_get_degree(*t2,m->m_ss);
+			});
+			// Create the degree vectors.
+			std::transform(m_m->m_v1.begin(),m_m->m_v1.end(),std::back_inserter(m_v_d1),[m](const term_type *t) {return detail::ps_get_degree(*t,m->m_ss);});
+			std::transform(m_m->m_v2.begin(),m_m->m_v2.end(),std::back_inserter(m_v_d2),[m](const term_type *t) {return detail::ps_get_degree(*t,m->m_ss);});
+			// Create the index vector into d2.
+			m_idx_vector.resize(m->m_v2.size());
+			std::iota(m_idx_vector.begin(),m_idx_vector.end(),size_type(0));
+		}
+		size_type operator()(const size_type &i) const
+		{
+			const d_type comp = m_limit - m_v_d1[i];
+			const auto it = std::upper_bound(m_idx_vector.begin(),m_idx_vector.end(),comp,[this](const d_type &c, const size_type &idx) {
+				return c < this->m_v_d2[idx];
+			});
+			if (it == m_idx_vector.end()) {
+				return m_idx_vector.size();
+			}
+			return *it;
 		}
 		const multiplier	*m_m;
 		const int		m_limit;
+		std::vector<d_type>	m_v_d1;
+		std::vector<d_type>	m_v_d2;
+		std::vector<size_type>	m_idx_vector;
 	};
 	template <std::size_t MultArity, typename MultFunctor, typename ... Args>
 	p_type::size_type estimate_final_series_size(Args && ... args) const
@@ -120,8 +147,8 @@ BOOST_AUTO_TEST_CASE(fateman1_truncated_test)
 	for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
 		settings::set_n_threads(nt);
 		multiplier m(f,g);
-		multiplier::ff ff(&m,30);
-		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(ff) << '\n';
+		multiplier::lf lf(&m,30);
+		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(lf) << '\n';
 	}
 	std::cout << "\n\n";
 }
@@ -161,8 +188,8 @@ BOOST_AUTO_TEST_CASE(fateman2_truncated_test)
 	for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
 		settings::set_n_threads(nt);
 		multiplier m(f,g);
-		multiplier::ff ff(&m,30);
-		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(ff) << '\n';
+		multiplier::lf lf(&m,30);
+		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(lf) << '\n';
 	}
 	std::cout << "\n\n";
 }
@@ -206,8 +233,8 @@ BOOST_AUTO_TEST_CASE(pearce1_truncated_test)
 	for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
 		settings::set_n_threads(nt);
 		multiplier m(f,g);
-		multiplier::ff ff(&m,60);
-		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(ff) << '\n';
+		multiplier::lf lf(&m,60);
+		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(lf) << '\n';
 		p_type::set_auto_truncate_degree(60);
 	}
 	std::cout << "\n\n";
@@ -252,8 +279,8 @@ BOOST_AUTO_TEST_CASE(pearce2_truncated_test)
 	for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
 		settings::set_n_threads(nt);
 		multiplier m(f,g);
-		multiplier::ff ff(&m,85);
-		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(ff) << '\n';
+		multiplier::lf lf(&m,85);
+		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(lf) << '\n';
 	}
 	std::cout << "\n\n";
 }
@@ -331,8 +358,8 @@ BOOST_AUTO_TEST_CASE(audi_truncated_test)
 	for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
 		settings::set_n_threads(nt);
 		multiplier m(f,g);
-		multiplier::ff ff(&m,10);
-		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(ff) << '\n';
+		multiplier::lf lf(&m,10);
+		std::cout << real_size / m.estimate_final_series_size<1u,multiplier::p_mult>(lf) << '\n';
 	}
 	std::cout << "\n\n";
 }

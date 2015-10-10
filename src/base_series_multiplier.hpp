@@ -522,7 +522,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// NOTE: Hard-coded number of trials.
 			// NOTE: here consider that in case of extremely sparse series with few terms this will incur in noticeable
 			// overhead, since we will need many term-by-term before encountering the first duplicate.
-			const unsigned n_trials = 20u;
+			const unsigned n_trials = 30u;
 			// NOTE: Hard-coded value for the estimation multiplier.
 			// NOTE: This value should be tuned for performance/memory usage tradeoffs.
 			const unsigned multiplier = 2u;
