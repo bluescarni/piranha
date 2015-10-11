@@ -40,6 +40,8 @@
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
 #include "../src/settings.hpp"
+#include "../src/symbol.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
@@ -177,8 +179,8 @@ struct multiplication_tester
 			pt x{"x"};
 			BOOST_CHECK_EQUAL(e1 * x,0);
 			BOOST_CHECK_EQUAL(x * e1,0);
-			BOOST_CHECK_EQUAL((x * e1).get_symbol_set().size(),0u);
-			BOOST_CHECK_EQUAL((e1 * x).get_symbol_set().size(),0u);
+			BOOST_CHECK((x * e1).get_symbol_set() == symbol_set{symbol{"x"}});
+			BOOST_CHECK((e1 * x).get_symbol_set() == symbol_set{symbol{"x"}});
 			// A reduced fateman benchmark.
 			pt y{"y"}, z{"z"}, t{"t"};
 			auto f = 1 + x + y + z + t;

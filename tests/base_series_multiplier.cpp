@@ -570,6 +570,10 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
 	using pt1 = p_type<double>;
 	using pt2 = p_type<integer>;
 	pt1 p1{"x"}, p2{"x"};
+	// Check that the merged symbol set is returned when one of the series is empty.
+	BOOST_CHECK(e1 * p1 == 0);
+	BOOST_CHECK((e1 * p1).get_symbol_set() == symbol_set{symbol{"x"}});
+	BOOST_CHECK((p1 * e1).get_symbol_set() == symbol_set{symbol{"x"}});
 	p1._container().begin()->m_cf *= 2;
 	p2._container().begin()->m_cf *= 3;
 	auto retval = p1 * p2;
