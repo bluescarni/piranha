@@ -285,7 +285,9 @@ BOOST_AUTO_TEST_CASE(series_extend_symbol_set_test)
 {
 	using st0 = g_series_type<double,int>;
 	st0 x{"x"}, y{"y"};
-	BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"x"}}),std::invalid_argument);
+	// Check with identical symbol first.
+	BOOST_CHECK(x.extend_symbol_set(symbol_set{symbol{"x"}}).is_identical(x));
+	BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"y"}}),std::invalid_argument);
 	BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"z"}}),std::invalid_argument);
 	BOOST_CHECK((x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"}}).get_symbol_set() == symbol_set{symbol{"y"},symbol{"x"}}));
 	BOOST_CHECK((x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}}).get_symbol_set() ==
