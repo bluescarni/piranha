@@ -110,10 +110,10 @@ struct main_tester
 					BOOST_CHECK((std::is_same<decltype(x.degree()),int>::value));
 					// NOTE: this is invalid_argument because the failure is in safe_cast.
 					BOOST_CHECK_THROW(pt::set_auto_truncate_degree(integer(std::numeric_limits<long long>::max())+1),std::invalid_argument);
-					// Check overflow in term ordering.
+					// Check overflow in the limits logic.
 					constexpr auto max = std::numeric_limits<int>::max();
 					pt::set_auto_truncate_degree(max);
-					BOOST_CHECK_THROW((1 + x) * x.pow(-1),std::overflow_error);
+					BOOST_CHECK_THROW((1 + x.pow(-1)) * x,std::overflow_error);
 					// This should not overflow, contrary to what it would seem like.
 					BOOST_CHECK_NO_THROW((x.pow(max/2)*y.pow(max/2)+1)*(x.pow(max/2)*y.pow(2)));
 					// This is what would happen if we used d1 + d2 <= M instead of d1 <= M - d2 in
