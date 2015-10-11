@@ -1179,6 +1179,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		template <typename T, typename ... Args>
 		Series truncated_multiplication(const T &max_degree, const Args & ... args) const
 		{
+			// NOTE: a possible optimisation here is the following: if the sum degrees of the arguments is less than
+			// or equal to the max truncation degree, just do the normal multiplication - which can also then take advantage
+			// of faster Kronecker multiplication, if the series are suitable.
 			using term_type = typename Series::term_type;
 			// NOTE: degree type is the same in total and partial.
 			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));

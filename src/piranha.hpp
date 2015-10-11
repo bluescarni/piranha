@@ -144,7 +144,6 @@
  * \todo we should really add some perf tests based on the work by alex perminov. Also, based on this, which operations in his use cases could
  * benefit from parallelisation?
  * \todo the replace_symbol() method for series. Or maybe rename_symbol().
- * \todo truncation tests based on the email discussion with ondrej.
  * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of checking the shutdown flag.
  * \todo consider the use of the upcoming std::shared_lock/mutex for multiple readers/single writer situations (e.g., in the custom derivative
  * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
@@ -166,6 +165,10 @@
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
  * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements.
+ * \todo the following items still remain to be finished up after the truncation rework:
+ *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
+ *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
+ *   - the fill_term_pointers parallelisation + deterministic ordering has not been done yet for rational coefficients.
  */
 namespace piranha
 {
