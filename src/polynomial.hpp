@@ -1142,8 +1142,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * - math::multiply_accumulate(),
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back(),
-		 * - polynomial::get_auto_truncate_degree(), arithmetic and other operations on the
-		 *   degree of terms, if truncation is active.
+		 * - truncated_multiplication(),
+		 * - polynomial::get_auto_truncate_degree().
 		 */
 		template <typename T = Series, call_enabler<T> = 0>
 		Series operator()() const
@@ -1173,7 +1173,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * - memory errors in standard containers,
 		 * - piranha::safe_cast(),
 		 * - arithmetic and other operations on the degree type,
-		 * - base_series_multiplier::plain_multiplication().
+		 * - base_series_multiplier::plain_multiplication(),
+		 * - get_skip_limits().
 		 */
 		template <typename T, typename ... Args>
 		Series truncated_multiplication(const T &max_degree, const Args & ... args) const
