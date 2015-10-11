@@ -1700,3 +1700,27 @@ BOOST_AUTO_TEST_CASE(rtkm_kic_test)
 	BOOST_CHECK((!key_is_convertible<rtk_monomial,monomial<int>>::value));
 	BOOST_CHECK((!key_is_convertible<monomial<int>,rtk_monomial>::value));
 }
+
+struct comparison_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using k_type = real_trigonometric_kronecker_monomial<T>;
+		BOOST_CHECK(is_less_than_comparable<k_type>::value);
+		BOOST_CHECK(!(k_type{} < k_type{}));
+		BOOST_CHECK(!(k_type{0,true} < k_type{0,true}));
+		BOOST_CHECK((k_type{0,false} < k_type{0,true}));
+		BOOST_CHECK(!(k_type{0,true} < k_type{0,false}));
+		BOOST_CHECK((k_type{1,true} < k_type{2,true}));
+		BOOST_CHECK(!(k_type{2,true} < k_type{1,true}));
+		BOOST_CHECK((k_type{1,false} < k_type{2,false}));
+		BOOST_CHECK(!(k_type{2,false} < k_type{1,false}));
+		BOOST_CHECK(!(k_type{2,false} < k_type{1,true}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_comparison_test)
+{
+	boost::mpl::for_each<int_types>(comparison_tester());
+}

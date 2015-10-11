@@ -1219,6 +1219,25 @@ class real_trigonometric_kronecker_monomial
 		{
 			return real_trigonometric_kronecker_monomial(detail::km_trim<v_type,ka>(trim_args,orig_args,m_value),m_flavour);
 		}
+		/// Comparison operator.
+		/**
+		 * The values of the internal integral instances are used for comparison. If the values are the same,
+		 * the flavours of the monomials are compared to break the tie.
+		 *
+		 * @param[in] other comparison argument.
+		 *
+		 * @return \p true if \p this is less than \p other, \p false otherwise.
+		 */
+		bool operator<(const real_trigonometric_kronecker_monomial &other) const
+		{
+			if (m_value < other.m_value) {
+				return true;
+			}
+			if (other.m_value < m_value) {
+				return false;
+			}
+			return m_flavour < other.m_flavour;
+		}
 	private:
 		value_type	m_value;
 		bool		m_flavour;
