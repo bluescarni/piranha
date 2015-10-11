@@ -1164,3 +1164,12 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_kic_test)
 	BOOST_CHECK((!key_is_convertible<k_monomial,monomial<int>>::value));
 	BOOST_CHECK((!key_is_convertible<monomial<int>,k_monomial>::value));
 }
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_comparison_test)
+{
+	BOOST_CHECK((is_less_than_comparable<k_monomial>::value));
+	BOOST_CHECK(!(k_monomial{} < k_monomial{}));
+	BOOST_CHECK(!(k_monomial{1} < k_monomial{1}));
+	BOOST_CHECK(!(k_monomial{2} < k_monomial{1}));
+	BOOST_CHECK(k_monomial{1} < k_monomial{2});
+}
