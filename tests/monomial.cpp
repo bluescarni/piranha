@@ -1337,3 +1337,19 @@ BOOST_AUTO_TEST_CASE(monomial_kic_test)
 	BOOST_CHECK((!key_is_convertible<k_type_00,k_monomial>::value));
 	BOOST_CHECK((!key_is_convertible<k_monomial,k_type_00>::value));
 }
+
+BOOST_AUTO_TEST_CASE(monomial_comparison_test)
+{
+	using k_type_00 = monomial<int>;
+	BOOST_CHECK(is_less_than_comparable<k_type_00>::value);
+	BOOST_CHECK(!(k_type_00{} < k_type_00{}));
+	BOOST_CHECK(!(k_type_00{3} < k_type_00{2}));
+	BOOST_CHECK(!(k_type_00{3} < k_type_00{3}));
+	BOOST_CHECK(k_type_00{2} < k_type_00{3});
+	BOOST_CHECK((k_type_00{2,3} < k_type_00{2,4}));
+	BOOST_CHECK(!(k_type_00{2,2} < k_type_00{2,2}));
+	BOOST_CHECK((k_type_00{1,3} < k_type_00{2,1}));
+	BOOST_CHECK(!(k_type_00{1,2,3,4} < k_type_00{1,2,3,4}));
+	BOOST_CHECK_THROW(k_type_00{} < k_type_00{1},std::invalid_argument);
+	BOOST_CHECK_THROW(k_type_00{1} < k_type_00{},std::invalid_argument);
+}
