@@ -54,7 +54,8 @@
  * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
  * work in a more generic fashion.
  * \todo pyranha: enable math for numpy's floating point type, and arrays. Also, think about enabling conversion from the numpy float
- * in the from-python converters?
+ * in the from-python converters? -> if we do this last bit, we must make sure that our custom converter does not override any other
+ * converter that might be registered in boost python. We need to query the registry and check at runtime.
  * \todo: pyranha tests should test the *exposition* and/or wrapping, not the functionality of the library. For poly/poisson series, add
  * tests for degree/order, plus add in math.py the degree/order methods in order to mirror math.hpp.
  * \todo in the rework of the substitution methods with toolboxes, remember to switch the interface of the key's subs to use string
@@ -107,8 +108,6 @@
  * e.g. when printing rational exponents with non-unitary denominator.
  * \todo probably we should change the pow() implementation for integer to error out if the power is negative and the base
  * is not unitary.
- * \todo think about providing default implementations of cos/sin/pow/... that use ADL -> we actually already use ADL in expr.
- * sfinae when using operators such as +,-,<<, etc.
  * \todo http://keepachangelog.com/CHANGELOG.md
  * \todo in pyranha, it would be nice to have a reverse lookup from the name of the exposed types to their representation
  * in the type system. Plus, maybe when printing the series they should have a header displaying their name in the type
@@ -122,11 +121,6 @@
  * operations as noexcept so we don't really need to require std members to be noexcept (if they throw an exception - unlikely
  * - the program will terminate anyway). We should also probably check the uses of std::move in order to make sure we do not use
  * exception guarantees throughout the code.
- * \todo At the moment we do not check the range of the deserialized integral values in kronecker keys.
- * \todo related to the above, we probably want to serialise all vector-like objects in the same way - so that different series
- * types can be deserialized from the same archive (e.g., k_monomial vs monomial).
- * \todo take a look at this as well: http://www.boost.org/doc/libs/1_48_0/libs/serialization/doc/traits.html#level to cope
- * with the problem of mutating toolbox inheritance for the future.
  * \todo do the noexcept methods in keys really need to be noexcept? Maybe it is better to offer a weaker exception guarantee
  * and be done with them instead.
  * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such as key_is_*,
@@ -149,9 +143,7 @@
  * user-configurable limit. Also, it might be useful to give the user the ability to query the cache, see how many items are stored, etc.
  * \todo we should really add some perf tests based on the work by alex perminov. Also, based on this, which operations in his use cases could
  * benefit from parallelisation?
- * \todo on-the-fly compression of series archives?
  * \todo the replace_symbol() method for series. Or maybe rename_symbol().
- * \todo truncation tests based on the email discussion with ondrej.
  * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of checking the shutdown flag.
  * \todo consider the use of the upcoming std::shared_lock/mutex for multiple readers/single writer situations (e.g., in the custom derivative
  * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
@@ -172,19 +164,15 @@
  * \todo hash_set needs more testing.
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
- * in generic algorithms - subs, ipow_subs, etc.?
- * \todo the general multiplier performance is non-deterministic at the moment: the estimation of the final size depends on the order in which
- * terms appear in the hash table, which in turn might depend upon previous multiplications performed by the general multiplier. In order to solve this
- * we could establish a deterministic order in the terms belonging to the same bucket *before* shuffling. This means calling a lot of std::sort
- * on small ranges, so we should first make the estimation parallel in order to pre-empt and scale properly performance penalties. In order to avoid
- * forcing keys to have an operator<() maybe we can do this improvement only on keys which support sorting.
- * \todo connected to the above, we need to parallelize all the serial parts in the multiplication algorithm. This is especially important for
- * truncated multiplication. This also means that we probably need to think about moving the n_threads calculation in the ctor of series_multiplier,
- * so the number is already available at all stages. We already have a m_n_threads member which needs probably to be reworked.
+ * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements.
  * \todo probably we should think of a general scheme to provide all the following options for keys:
  * - general key (e.g., monomial, trigonometric_monomial - but does not make sense probably for divisor),
  * - Kronecker key (k_monomial, rtk_monomial, k_divisor),
  * - dynamic Kronecker key (dk_monomial, rtdk_monomial, dk_divisor).
+ * \todo the following items still remain to be finished up after the truncation rework:
+ *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
+ *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
+ *   - the fill_term_pointers parallelisation + deterministic ordering has not been done yet for rational coefficients.
  */
 namespace piranha
 {

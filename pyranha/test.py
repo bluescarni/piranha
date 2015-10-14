@@ -559,6 +559,7 @@ class serialization_test_case(_ut.TestCase):
 		import pickle, random, tempfile, os
 		from .types import polynomial, short, rational, poisson_series, monomial
 		from .math import sin, cos
+		from . import file_format, file_compression
 		# Set the seed for deterministic output.
 		random.seed(0)
 		rand = lambda: random.randint(-10,10)
@@ -576,12 +577,18 @@ class serialization_test_case(_ut.TestCase):
 				res += tmp
 			str_rep = pickle.dumps(res)
 			self.assertEqual(res,pickle.loads(str_rep))
-			# Check the cpp text serialization as well.
+			# Check load/save methods..
 			f = tempfile.NamedTemporaryFile(delete=False)
 			f.close()
 			try:
-				pt.cpp_save_text(res,f.name)
-				self.assertEqual(pt.cpp_load_text(f.name),res)
+				pt.save(res,f.name)
+				self.assertEqual(pt.load(f.name),res)
+				pt.save(res,f.name,file_format.binary)
+				self.assertEqual(pt.load(f.name,file_format.binary),res)
+				pt.save(res,f.name,file_compression.bzip2)
+				self.assertEqual(pt.load(f.name,file_compression.bzip2),res)
+				pt.save(res,f.name,file_format.binary,file_compression.bzip2)
+				self.assertEqual(pt.load(f.name,file_format.binary,file_compression.bzip2),res)
 			finally:
 				# Remove the temp file in any case.
 				os.remove(f.name)
@@ -603,12 +610,17 @@ class serialization_test_case(_ut.TestCase):
 				res += tmp
 			str_rep = pickle.dumps(res)
 			self.assertEqual(res,pickle.loads(str_rep))
-			# cpp serialization.
 			f = tempfile.NamedTemporaryFile(delete=False)
 			f.close()
 			try:
-				pt.cpp_save_text(res,f.name)
-				self.assertEqual(pt.cpp_load_text(f.name),res)
+				pt.save(res,f.name)
+				self.assertEqual(pt.load(f.name),res)
+				pt.save(res,f.name,file_format.binary)
+				self.assertEqual(pt.load(f.name,file_format.binary),res)
+				pt.save(res,f.name,file_compression.bzip2)
+				self.assertEqual(pt.load(f.name,file_compression.bzip2),res)
+				pt.save(res,f.name,file_format.binary,file_compression.bzip2)
+				self.assertEqual(pt.load(f.name,file_format.binary,file_compression.bzip2),res)
 			finally:
 				os.remove(f.name)
 
@@ -662,6 +674,8 @@ class truncate_degree_test_case(_ut.TestCase):
 		# Check multiplication.
 		self.assertEqual((x*x*y).degree(),3)
 		self.assertEqual((x*x*y*y),0)
+		# Check we cannot use float for auto truncation.
+		self.assertRaises(TypeError,lambda: pt.set_auto_truncate_degree(1.23))
 		# Reset before finishing.
 		pt.unset_auto_truncate_degree()
 		pt.clear_pow_cache()

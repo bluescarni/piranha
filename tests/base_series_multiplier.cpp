@@ -23,14 +23,17 @@
 #define BOOST_TEST_MODULE base_series_multiplier_test
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <array>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <iterator>
 #include <limits>
 #include <set>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -67,13 +70,15 @@ struct m_checker: public base_series_multiplier<Series>
 		const T &s2 = s1_.size() < s2_.size() ? s1_ : s2_;
 		BOOST_CHECK(s1.size() == this->m_v1.size());
 		BOOST_CHECK(s2.size() == this->m_v2.size());
-		auto it = s1._container().begin();
-		for (size_type i = 0u; i != s1.size(); ++i, ++it) {
-			BOOST_CHECK(this->m_v1[i] == &*it);
+		// Create hash sets with the term pointers from the vectors.
+		std::unordered_set<const typename T::term_type *> h1, h2;
+		std::copy(this->m_v1.begin(),this->m_v1.end(),std::inserter(h1,h1.begin()));
+		std::copy(this->m_v2.begin(),this->m_v2.end(),std::inserter(h2,h2.begin()));
+		for (const auto &t: s1._container()) {
+			BOOST_CHECK(h1.find(&t) != h1.end());
 		}
-		it = s2._container().begin();
-		for (size_type i = 0u; i != s2.size(); ++i, ++it) {
-			BOOST_CHECK(this->m_v2[i] == &*it);
+		for (const auto &t: s2._container()) {
+			BOOST_CHECK(h2.find(&t) != h2.end());
 		}
 	}
 	template <typename T, typename std::enable_if<std::is_same<typename T::term_type::cf_type,rational>::value,int>::type = 0>
@@ -83,16 +88,21 @@ struct m_checker: public base_series_multiplier<Series>
 		const T &s2 = s1_.size() < s2_.size() ? s1_ : s2_;
 		BOOST_CHECK(s1.size() == this->m_v1.size());
 		BOOST_CHECK(s2.size() == this->m_v2.size());
-		auto it = s1._container().begin();
-		for (size_type i = 0u; i != s1.size(); ++i, ++it) {
-			BOOST_CHECK(this->m_v1[i] != &*it);
+		std::unordered_set<const typename T::term_type *> h1, h2;
+		std::transform(s1._container().begin(),s1._container().end(),std::inserter(h1,h1.begin()),[](const typename T::term_type &t){return &t;});
+		std::transform(s2._container().begin(),s2._container().end(),std::inserter(h2,h2.begin()),[](const typename T::term_type &t){return &t;});
+		for (size_type i = 0u; i != s1.size(); ++i) {
+			BOOST_CHECK(h1.find(this->m_v1[i]) == h1.end());
 			BOOST_CHECK(this->m_v1[i]->m_cf.den() == 1);
+			auto it = s1._container().find(*this->m_v1[i]);
+			BOOST_CHECK(it != s1._container().end());
 			BOOST_CHECK(this->m_v1[i]->m_cf.num() % it->m_cf.num() == 0);
 		}
-		it = s2._container().begin();
-		for (size_type i = 0u; i != s2.size(); ++i, ++it) {
-			BOOST_CHECK(this->m_v2[i] != &*it);
+		for (size_type i = 0u; i != s2.size(); ++i) {
+			BOOST_CHECK(h2.find(this->m_v2[i]) == h2.end());
 			BOOST_CHECK(this->m_v2[i]->m_cf.den() == 1);
+			auto it = s2._container().find(*this->m_v2[i]);
+			BOOST_CHECK(it != s2._container().end());
 			BOOST_CHECK(this->m_v2[i]->m_cf.num() % it->m_cf.num() == 0);
 		}
 	}
@@ -102,10 +112,10 @@ struct m_checker: public base_series_multiplier<Series>
 	{
 		base::blocked_multiplication(std::forward<Args>(args)...);
 	}
-	template <std::size_t N, typename ... Args>
+	template <std::size_t N, typename MultFunctor, typename ... Args>
 	typename Series::size_type estimate_final_series_size(Args && ... args) const
 	{
-		return base::template estimate_final_series_size<N>(std::forward<Args>(args)...);
+		return base::template estimate_final_series_size<N,MultFunctor>(std::forward<Args>(args)...);
 	}
 	template <typename ... Args>
 	static void sanitise_series(Args && ... args)
@@ -137,7 +147,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
 	pt e1, e2;
 	BOOST_CHECK_NO_THROW((m_checker<pt>{e1,e2}));
 	m_checker<pt> mc{e1,e2};
-	BOOST_CHECK_EQUAL(mc.get_n_threads(),0u);
+	BOOST_CHECK(mc.get_n_threads() != 0u);
 	}
 	{
 	using pt = p_type<rational>;
@@ -165,6 +175,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
 	}
 }
 
+// The sorting function for the definition of the set in the mult functor below.
 struct p_sorter
 {
 	bool operator()(const std::pair<unsigned,unsigned> &p1, const std::pair<unsigned,unsigned> &p2) const
@@ -181,6 +192,9 @@ struct p_sorter
 
 struct m_functor_0
 {
+	m_functor_0() = default;
+	template <typename Series>
+	explicit m_functor_0(const base_series_multiplier<Series> &, Series &) {}
 	template <typename T>
 	void operator()(const T &i, const T &j) const
 	{
@@ -189,18 +203,14 @@ struct m_functor_0
 	mutable std::set<std::pair<unsigned,unsigned>,p_sorter> m_set;
 };
 
-// A skipping functor that will skip all multiplications apart from those by the first n terms of
-// of the second series.
-struct s_functor_0
+// A limit functor that will always return the construction parameter.
+struct l_functor_0
 {
-	s_functor_0(unsigned n):m_n(n) {}
+	l_functor_0(unsigned n):m_n(n) {}
 	template <typename T>
-	bool operator()(const T &, const T &j) const
+	T operator()(const T &) const
 	{
-		if (j <= m_n) {
-			return false;
-		}
-		return true;
+		return T(m_n);
 	}
 	const unsigned m_n;
 };
@@ -215,7 +225,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	m_checker<pt> m0(s1,s1);
 	tuning::set_multiplication_block_size(16u);
 	m_functor_0 mf0;
-	m0.blocked_multiplication(mf0,0u,100u,0u,100u);
+	m0.blocked_multiplication(mf0,0u,100u);
 	BOOST_CHECK(mf0.m_set.size() == 100u * 100u);
 	for (unsigned i = 0u; i < 100u; ++i) {
 		for (unsigned j = 0u; j < 100u; ++j) {
@@ -225,7 +235,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	// Try with commensurable block size.
 	tuning::set_multiplication_block_size(25u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,0u,100u,0u,100u);
+	m0.blocked_multiplication(mf0,0u,100u);
 	BOOST_CHECK(mf0.m_set.size() == 100u * 100u);
 	for (unsigned i = 0u; i < 100u; ++i) {
 		for (unsigned j = 0u; j < 100u; ++j) {
@@ -235,7 +245,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	// Block size same as series size.
 	tuning::set_multiplication_block_size(100u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,0u,100u,0u,100u);
+	m0.blocked_multiplication(mf0,0u,100u);
 	BOOST_CHECK(mf0.m_set.size() == 100u * 100u);
 	for (unsigned i = 0u; i < 100u; ++i) {
 		for (unsigned j = 0u; j < 100u; ++j) {
@@ -245,7 +255,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	// Larger size than series size.
 	tuning::set_multiplication_block_size(200u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,0u,100u,0u,100u);
+	m0.blocked_multiplication(mf0,0u,100u);
 	BOOST_CHECK(mf0.m_set.size() == 100u * 100u);
 	for (unsigned i = 0u; i < 100u; ++i) {
 		for (unsigned j = 0u; j < 100u; ++j) {
@@ -255,27 +265,32 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	// Only parts of the series.
 	tuning::set_multiplication_block_size(23u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,20u,87u,1u,89u);
-	BOOST_CHECK(mf0.m_set.size() == (87u - 20u) * (89u - 1u));
+	m0.blocked_multiplication(mf0,20u,87u);
+	BOOST_CHECK(mf0.m_set.size() == (87u - 20u) * 100u);
 	for (unsigned i = 20u; i < 87u; ++i) {
-		for (unsigned j = 1u; j < 89u; ++j) {
+		for (unsigned j = 0u; j < 100u; ++j) {
 			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
 		}
 	}
-	// Now with skipping.
+	// Now with limits.
 	tuning::set_multiplication_block_size(16u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,0u,100u,0u,100u,s_functor_0{0u});
+	m0.blocked_multiplication(mf0,0u,100u,l_functor_0{1u});
 	BOOST_CHECK(mf0.m_set.size() == 100u);
 	for (unsigned i = 0u; i < 100u; ++i) {
 		for (unsigned j = 0u; j < 1u; ++j) {
 			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
 		}
 	}
+	// No mults done.
+	tuning::set_multiplication_block_size(16u);
+	mf0.m_set.clear();
+	m0.blocked_multiplication(mf0,0u,100u,l_functor_0{0u});
+	BOOST_CHECK(mf0.m_set.size() == 0u);
 	// Try with commensurable block size.
 	tuning::set_multiplication_block_size(25u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,0u,100u,0u,100u,s_functor_0{1u});
+	m0.blocked_multiplication(mf0,0u,100u,l_functor_0{2u});
 	BOOST_CHECK(mf0.m_set.size() == 100u * 2u);
 	for (unsigned i = 0u; i < 100u; ++i) {
 		for (unsigned j = 0u; j < 2u; ++j) {
@@ -285,7 +300,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	// Block size same as series size.
 	tuning::set_multiplication_block_size(100u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,0u,100u,0u,100u,s_functor_0{1u});
+	m0.blocked_multiplication(mf0,0u,100u,l_functor_0{2u});
 	BOOST_CHECK(mf0.m_set.size() == 100u * 2u);
 	for (unsigned i = 0u; i < 100u; ++i) {
 		for (unsigned j = 0u; j < 2u; ++j) {
@@ -295,7 +310,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	// Larger size than series size.
 	tuning::set_multiplication_block_size(200u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,0u,100u,0u,100u,s_functor_0{1u});
+	m0.blocked_multiplication(mf0,0u,100u,l_functor_0{2u});
 	BOOST_CHECK(mf0.m_set.size() == 100u * 2u);
 	for (unsigned i = 0u; i < 100u; ++i) {
 		for (unsigned j = 0u; j < 2u; ++j) {
@@ -305,101 +320,85 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	// Only parts of the series.
 	tuning::set_multiplication_block_size(23u);
 	mf0.m_set.clear();
-	m0.blocked_multiplication(mf0,20u,87u,1u,89u,s_functor_0{1u});
-	BOOST_CHECK(mf0.m_set.size() == (87u - 20u));
+	m0.blocked_multiplication(mf0,20u,87u,l_functor_0{2u});
+	BOOST_CHECK(mf0.m_set.size() == (87u - 20u) * 2u);
 	for (unsigned i = 20u; i < 87u; ++i) {
 		for (unsigned j = 1u; j < 2u; ++j) {
 			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
 		}
 	}
 	// Test error throwing.
-	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,3u,2u,1u,2u),std::invalid_argument);
-	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,101u,102u,1u,2u),std::invalid_argument);
-	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,102u,1u,2u),std::invalid_argument);
-	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,3u,2u),std::invalid_argument);
-	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,101u,102u),std::invalid_argument);
-	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,1u,102u),std::invalid_argument);
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,3u,2u),std::invalid_argument);
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,101u,102u),std::invalid_argument);
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,102u),std::invalid_argument);
 	// Try also with empty series, just to make sure.
 	pt e1, e2;
 	m_checker<pt> m1(e1,e2);
 	m_functor_0 mf1;
-	BOOST_CHECK_NO_THROW(m1.blocked_multiplication(mf1,0u,0u,0u,0u));
+	BOOST_CHECK_NO_THROW(m1.blocked_multiplication(mf1,0u,0u));
 	// Final reset of the mult block size.
 	tuning::reset_multiplication_block_size();
 }
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_estimate_final_series_size_test)
 {
-	using pt = p_type<integer>;
-	// Start with empty series.
-	pt e1, e2, tmp;
-	tmp += 1;
-	{
-	m_checker<pt> m0(e1,e2);
-	m_functor_0 mf0;
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),1u);
-	// Check tmp is cleared on exit.
-	BOOST_CHECK_EQUAL(tmp,0);
+	settings::set_min_work_per_thread(1u);
+	for (auto nt = 1u; nt < 4u; ++nt) {
+		using pt = p_type<integer>;
+		settings::set_n_threads(nt);
+		// Start with empty series.
+		pt e1, e2;
+		{
+		m_checker<pt> m0(e1,e2);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),1u);
+		}
+		{
+		// Check with series with only one term.
+		e1 = 1;
+		e2 = 2;
+		m_checker<pt> m0(e1,e2);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),1u);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<2u,m_functor_0>()),2u);
+		}
+		{
+		// 1 by n terms.
+		e1 = 1 + pt{"x"} - pt{"x"};
+		e2 = 2;
+		e2 += pt{"x"};
+		m_checker<pt> m0(e1,e2);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),2u);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<2u,m_functor_0>()),4u);
+		}
+		{
+		// Check with total truncation.
+		e1 += pt{"x"};
+		m_checker<pt> m0(e1,e2);
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>(l_functor_0{0u})),1u);
+		}
+		// Just a couple of simple tests using polynomials, we can't really know what to expect as the method
+		// works in a statistical fashion.
+		{
+		pt x{"x"}, y{"y"};
+		auto a = (x + 2*y + 4), b = (x*x-2*y*x-3-4*y);
+		m_checker<pt> m0(a,b);
+		// Here the multiplier functor does nothing, the estimation will exit immediately yielding 1.
+		BOOST_CHECK_EQUAL((m0.estimate_final_series_size<1u,m_functor_0>()),1u);
+		}
+		// A reduced fateman1 benchmark, just to test a bit more.
+		{
+		pt x("x"), y("y"), z("z"), t("t");
+		auto f = x + y + z + t + 1;
+		auto tmp2(f);
+		for (auto i = 1; i < 10; ++i) {
+			f *= tmp2;
+		}
+		auto b = f + 1;
+		auto retval = f * b;
+		std::cout << "Bucket count vs actual size: " << retval.table_bucket_count() << ',' << retval.size() << '\n';
+		}
 	}
-	{
-	// Check with series with only one term.
-	e1 = 1;
-	e2 = 2;
-	tmp += 1;
-	m_checker<pt> m0(e1,e2);
-	m_functor_0 mf0;
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),1u);
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<2u>(tmp,mf0),2u);
-	BOOST_CHECK_EQUAL(tmp,0);
-	}
-	{
-	// 1 by n terms.
-	e1 = 1 + pt{"x"} - pt{"x"};
-	e2 = 2;
-	e2 += pt{"x"};
-	tmp += 1;
-	m_checker<pt> m0(e1,e2);
-	m_functor_0 mf0;
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),2u);
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<2u>(tmp,mf0),4u);
-	BOOST_CHECK_EQUAL(tmp,0);
-	}
-	{
-	// Check with bogus filter.
-	using b_size_type = pt::size_type;
-	auto ff = [] (const b_size_type &, const b_size_type &) {return 2u;};
-	e1 += pt{"x"};
-	tmp += 1;
-	m_checker<pt> m0(e1,e2);
-	m_functor_0 mf0;
-	BOOST_CHECK_THROW(m0.estimate_final_series_size<1u>(tmp,mf0,ff),std::invalid_argument);
-	BOOST_CHECK_EQUAL(tmp,0);
-	}
-	// Just a couple of simple tests using polynomials, we can't really know what to expect as the method
-	// works in a statistical fashion.
-	{
-	pt x{"x"}, y{"y"};
-	auto a = (x + 2*y + 4), b = (x*x-2*y*x-3-4*y);
-	auto tmp2 = a * b;
-	m_checker<pt> m0(a,b);
-	m_functor_0 mf0;
-	// Here the multiplier does nothing, tmp2 is cleared in input and thus the loop in the estimation
-	// will exit immediately, yielding a final result of 1.
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp2,mf0),1u);
-	BOOST_CHECK_EQUAL(tmp2,0);
-	}
-	// A reduced fateman1 benchmark, just to test a bit more.
-	{
-	pt x("x"), y("y"), z("z"), t("t");
-	auto f = x + y + z + t + 1;
-	auto tmp2(f);
-	for (auto i = 1; i < 10; ++i) {
-		f *= tmp2;
-	}
-	auto b = f + 1;
-	auto retval = f * b;
-	std::cout << "Bucket count vs actual size: " << retval.table_bucket_count() << ',' << retval.size() << '\n';
-	}
+	settings::reset_min_work_per_thread();
+	settings::reset_n_threads();
 }
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitise_series_test)
@@ -571,6 +570,10 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
 	using pt1 = p_type<double>;
 	using pt2 = p_type<integer>;
 	pt1 p1{"x"}, p2{"x"};
+	// Check that the merged symbol set is returned when one of the series is empty.
+	BOOST_CHECK(e1 * p1 == 0);
+	BOOST_CHECK((e1 * p1).get_symbol_set() == symbol_set{symbol{"x"}});
+	BOOST_CHECK((p1 * e1).get_symbol_set() == symbol_set{symbol{"x"}});
 	p1._container().begin()->m_cf *= 2;
 	p2._container().begin()->m_cf *= 3;
 	auto retval = p1 * p2;
@@ -607,6 +610,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 	}
 	{
 	// Check with multiple threads.
+	settings::set_min_work_per_thread(1u);
 	using pt = p_type<rational>;
 	using mt = m_checker<pt>;
 	for (unsigned nt = 1u; nt <= 4u; ++nt) {
@@ -617,15 +621,15 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 		// First let's try with an empty retval.
 		pt r;
 		r.set_symbol_set(symbol_set({symbol{"x"},symbol{"y"}}));
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,0);
 		// Put in one term.
 		r += pt{"x"};
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,pt{"x"}/36);
 		// Put in another term.
 		r += 12*pt{"y"};
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,pt{"x"}/36 + pt{"y"}/3);
 	}
 	}
@@ -641,17 +645,19 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 		// First let's try with an empty retval.
 		pt r;
 		r.set_symbol_set(symbol_set({symbol{"x"},symbol{"y"}}));
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,0);
 		// Put in one term.
 		r += pt{"x"};
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,pt{"x"}/36);
 		// Put in another term.
 		r += 12*pt{"y"};
-		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r));
 		BOOST_CHECK_EQUAL(r,pt{"x"}/36 + pt{"y"}/3);
 	}
 	}
+	// Reset.
 	settings::reset_n_threads();
+	settings::reset_min_work_per_thread();
 }

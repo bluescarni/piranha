@@ -30,6 +30,7 @@
 #include <initializer_list>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 
 #include "../src/debug_access.hpp"
@@ -695,4 +696,35 @@ BOOST_AUTO_TEST_CASE(array_key_serialization_test)
 {
 
 	boost::mpl::for_each<size_types>(serialization_tester());
+}
+
+struct sbe_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef g_key_type<int,T> key_type;
+		key_type tmp;
+		auto sbe1 = tmp.size_begin_end();
+		BOOST_CHECK((std::is_same<decltype(sbe1),std::tuple<typename key_type::size_type,int *, int *>>::value));
+		BOOST_CHECK_EQUAL(std::get<0>(sbe1),0u);
+		BOOST_CHECK(std::get<1>(sbe1) == std::get<2>(sbe1));
+		auto sbe2 = static_cast<const key_type &>(tmp).size_begin_end();
+		BOOST_CHECK((std::is_same<decltype(sbe2),std::tuple<typename key_type::size_type,int const *, int const *>>::value));
+		BOOST_CHECK_EQUAL(std::get<0>(sbe2),0u);
+		BOOST_CHECK(std::get<1>(sbe2) == std::get<2>(sbe2));
+		key_type k0({1,2,3,4,5});
+		auto sbe3 = k0.size_begin_end();
+		BOOST_CHECK_EQUAL(std::get<0>(sbe3),5u);
+		BOOST_CHECK(std::get<1>(sbe3) + 5 == std::get<2>(sbe3));
+		auto sbe4 = static_cast<const key_type &>(k0).size_begin_end();
+		BOOST_CHECK_EQUAL(std::get<0>(sbe4),5u);
+		BOOST_CHECK(std::get<1>(sbe4) + 5 == std::get<2>(sbe4));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_key_sbe_test)
+{
+
+	boost::mpl::for_each<size_types>(sbe_tester());
 }

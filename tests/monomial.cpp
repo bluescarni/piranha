@@ -369,8 +369,11 @@ struct degree_tester
 			typedef monomial<T,U> key_type;
 			key_type k0;
 			symbol_set v;
-			if (std::is_integral<T>::value || std::is_same<T,integer>::value) {
-				BOOST_CHECK((std::is_same<integer,decltype(k0.degree(v))>::value));
+			// Check the promotion of short signed ints.
+			if (std::is_same<T,signed char>::value || std::is_same<T,short>::value) {
+				BOOST_CHECK((std::is_same<int,decltype(k0.degree(v))>::value));
+			} else if (std::is_integral<T>::value) {
+				BOOST_CHECK((std::is_same<T,decltype(k0.degree(v))>::value));
 			}
 			BOOST_CHECK(key_has_degree<key_type>::value);
 			BOOST_CHECK(key_has_ldegree<key_type>::value);
@@ -400,6 +403,11 @@ struct degree_tester
 				}
 				return positions(vs,tmp);
 			};
+			if (std::is_same<T,signed char>::value || std::is_same<T,short>::value) {
+				BOOST_CHECK((std::is_same<int,decltype(k2.degree(ss_to_pos(v,std::set<std::string>{}),v))>::value));
+			} else if (std::is_integral<T>::value) {
+				BOOST_CHECK((std::is_same<T,decltype(k2.degree(ss_to_pos(v,std::set<std::string>{}),v))>::value));
+			}
 			BOOST_CHECK(k2.degree(ss_to_pos(v,std::set<std::string>{}),v) == T(0));
 			BOOST_CHECK(k2.degree(ss_to_pos(v,{"a"}),v) == T(2));
 			BOOST_CHECK(k2.degree(ss_to_pos(v,{"A"}),v) == T(0));
@@ -451,6 +459,23 @@ struct degree_tester
 BOOST_AUTO_TEST_CASE(monomial_degree_test)
 {
 	boost::mpl::for_each<expo_types>(degree_tester());
+	// Test the overflowing.
+	using k_type = monomial<int>;
+	k_type m{std::numeric_limits<int>::max(),1};
+	symbol_set vs{symbol{"x"},symbol{"y"}};
+	BOOST_CHECK_THROW(m.degree(vs),std::overflow_error);
+	m = k_type{std::numeric_limits<int>::min(),-1};
+	BOOST_CHECK_THROW(m.degree(vs),std::overflow_error);
+	m = k_type{std::numeric_limits<int>::min(),1};
+	BOOST_CHECK_EQUAL(m.degree(vs),std::numeric_limits<int>::min() + 1);
+	// Also for partial degree.
+	vs = symbol_set{symbol{"x"},symbol{"y"},symbol{"z"}};
+	m = k_type{std::numeric_limits<int>::max(),1,0};
+	BOOST_CHECK_EQUAL(m.degree(symbol_set::positions(vs,symbol_set{symbol{"x"},symbol{"z"}}),vs),std::numeric_limits<int>::max());
+	BOOST_CHECK_THROW(m.degree(symbol_set::positions(vs,symbol_set{symbol{"x"},symbol{"y"}}),vs),std::overflow_error);
+	m = k_type{std::numeric_limits<int>::min(),0,-1};
+	BOOST_CHECK_EQUAL(m.degree(symbol_set::positions(vs,symbol_set{symbol{"x"},symbol{"y"}}),vs),std::numeric_limits<int>::min());
+	BOOST_CHECK_THROW(m.degree(symbol_set::positions(vs,symbol_set{symbol{"x"},symbol{"z"}}),vs),std::overflow_error);
 }
 
 struct multiply_tester
@@ -1311,4 +1336,20 @@ BOOST_AUTO_TEST_CASE(monomial_kic_test)
 	BOOST_CHECK((key_is_convertible<k_type_02,k_type_01>::value));
 	BOOST_CHECK((!key_is_convertible<k_type_00,k_monomial>::value));
 	BOOST_CHECK((!key_is_convertible<k_monomial,k_type_00>::value));
+}
+
+BOOST_AUTO_TEST_CASE(monomial_comparison_test)
+{
+	using k_type_00 = monomial<int>;
+	BOOST_CHECK(is_less_than_comparable<k_type_00>::value);
+	BOOST_CHECK(!(k_type_00{} < k_type_00{}));
+	BOOST_CHECK(!(k_type_00{3} < k_type_00{2}));
+	BOOST_CHECK(!(k_type_00{3} < k_type_00{3}));
+	BOOST_CHECK(k_type_00{2} < k_type_00{3});
+	BOOST_CHECK((k_type_00{2,3} < k_type_00{2,4}));
+	BOOST_CHECK(!(k_type_00{2,2} < k_type_00{2,2}));
+	BOOST_CHECK((k_type_00{1,3} < k_type_00{2,1}));
+	BOOST_CHECK(!(k_type_00{1,2,3,4} < k_type_00{1,2,3,4}));
+	BOOST_CHECK_THROW(k_type_00{} < k_type_00{1},std::invalid_argument);
+	BOOST_CHECK_THROW(k_type_00{1} < k_type_00{},std::invalid_argument);
 }

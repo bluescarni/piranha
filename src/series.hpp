@@ -23,13 +23,18 @@
 
 #include <algorithm>
 #include <boost/any.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/bzip2.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
 #include <functional>
+#include <fstream>
 #include <memory>
+#include <ios>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -1112,6 +1117,46 @@ class series_operators
 		{
 			return !dispatch_equality(x,y);
 		}
+};
+
+/// File formats.
+/**
+ * These are the available formats for piranha::series::save(const Derived &, const std::string &, file_format, file_compression) and
+ * piranha::series::load(const std::string &, file_format, file_compression).
+ */
+enum class file_format
+{
+	/// Text.
+	/**
+	 * Portable text format.
+	 */
+	text,
+	/// Binary.
+	/**
+	 * Non-portable binary format.
+	 */
+	binary
+};
+
+/// File compression options.
+/**
+ * These are the available compression options for piranha::series::save(const Derived &, const std::string &, file_format, file_compression) and
+ * piranha::series::load(const std::string &, file_format, file_compression).
+ */
+enum class file_compression
+{
+	/// No compression.
+	/**
+	 * The file will not be compressed.
+	 */
+	disabled,
+	/// Bzip2 compression.
+	/**
+	 * The file will be compressed with the bzip2 library.
+	 *
+	 * @see http://bzip.org/
+	 */
+	bzip2
 };
 
 /// Series class.
@@ -2639,14 +2684,14 @@ class series: detail::series_tag, series_operators
 		 * <tt>merge_args()</tt> method. That is, the new keys will be compatible with the
 		 * new extended symbol set \p new_ss.
 		 *
-		 * \p new_ss must have a size greater than the size of the current symbol set of \p this,
+		 * \p new_ss must have a size equal to or greater than the size of the current symbol set of \p this,
 		 * and all the symbols in the current symbol set must be present in \p new_ss.
 		 *
 		 * @param[in] new_ss the new set of symbols.
 		 *
 		 * @return a copy of \p this with \p new_ss as symbol set.
 		 *
-		 * @throws std::invalid_argument if \p new_ss is not larger than the current symbol set or if
+		 * @throws std::invalid_argument if \p new_ss is smaller than the current symbol set or if
 		 * it does not include all the symbols of the current symbol set.
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of coefficients, terms and keys,
@@ -2655,12 +2700,155 @@ class series: detail::series_tag, series_operators
 		 */
 		Derived extend_symbol_set(const symbol_set &new_ss) const
 		{
+			// If the symbols are identical, just return a copy.
+			if (new_ss == m_symbol_set) {
+				return *static_cast<Derived const *>(this);
+			}
 			if (unlikely(!(new_ss.size() > m_symbol_set.size()) ||
 				!std::includes(new_ss.begin(),new_ss.end(),m_symbol_set.begin(),m_symbol_set.end())))
 			{
 				piranha_throw(std::invalid_argument,"invalid symbol set passed to extend_symbol_set()");
 			}
 			return merge_arguments(new_ss);
+		}
+		/// Save series to file.
+		/**
+		 * This static method will save the input series \p s to the file named \p filename, using the file format \p f
+		 * and the compression method \p c. The possible values for \p f are listed in piranha::file_format, the possible
+		 * values for \p c in piranha::file_compression. The output file \p filename, if existing, will be overwritten.
+		 *
+		 * @param[in] s the series to be saved.
+		 * @param[in] filename the name of the file.
+		 * @param[in] f the save format.
+		 * @param[in] c the compression method.
+		 *
+		 * @throws std::runtime_error if the output file cannot be opened.
+		 * @throws unspecified any exception thrown by the serialization and/or compression of \p s.
+		 */
+		static void save(const Derived &s, const std::string &filename, file_format f, file_compression c)
+		{
+			std::ofstream ofile(filename, (f == file_format::binary) ? (std::ios::out | std::ios::binary | std::ios::trunc) :
+				(std::ios::out | std::ios::trunc));
+			if (unlikely(!ofile.good())) {
+				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
+			}
+			if (c == file_compression::bzip2) {
+				// bzip2 compression is enabled.
+				namespace bi = boost::iostreams;
+				if (f == file_format::binary) {
+					// In case of binary archives, we can write directly to file,
+					// as binary_oarchive can be cted from a filtering_streambuf
+					// (while text_oarchive cannot). See here:
+					// http://stackoverflow.com/questions/1753469/how-to-hook-up-boost-serialization-iostreams-to-serialize-gzip-an-object-to
+					bi::filtering_streambuf<bi::output> out;
+					out.push(bi::bzip2_compressor());
+					out.push(ofile);
+					boost::archive::binary_oarchive oa(out);
+					oa << s;
+				} else {
+					// NOTE: here we are following this tutorial:
+					// https://code.google.com/p/cloudobserver/wiki/TutorialsBoostIOstreams
+					// First write to a stringstream, then compress and write to file.
+					std::stringstream oss;
+					boost::archive::text_oarchive oa(oss);
+					oa << s;
+					bi::filtering_streambuf<bi::input> in;
+					in.push(bi::bzip2_compressor());
+					in.push(oss);
+					bi::copy(in,ofile);
+				}
+			} else {
+				if (f == file_format::binary) {
+					boost::archive::binary_oarchive oa(ofile);
+					oa << s;
+				} else {
+					boost::archive::text_oarchive oa(ofile);
+					oa << s;
+				}
+			}
+		}
+		/// Save series to file (text format, no compression).
+		static void save(const Derived &s, const std::string &filename)
+		{
+			save(s,filename,file_format::text,file_compression::disabled);
+		}
+		/// Save series to file (no compression, choose format).
+		static void save(const Derived &s, const std::string &filename, file_format f)
+		{
+			save(s,filename,f,file_compression::disabled);
+		}
+		/// Save series to file (text format, choose compression).
+		static void save(const Derived &s, const std::string &filename, file_compression c)
+		{
+			save(s,filename,file_format::text,c);
+		}
+		/// Load series from file.
+		/**
+		 * This static method will load the series contained in the file named \p filename, using the file format \p f
+		 * and the compression method \p c. The possible values for \p f are listed in piranha::file_format, the possible
+		 * values for \p c in piranha::file_compression.
+		 *
+		 * @param[in] filename the name of the file.
+		 * @param[in] f the save format.
+		 * @param[in] c the compression method.
+		 *
+		 * @return the series stored in the file named \p filename.
+		 *
+		 * @throws std::runtime_error if the output file cannot be opened.
+		 * @throws unspecified any exception thrown by the deserialization and/or decompression of the series stored in \p filename.
+		 */
+		static Derived load(const std::string &filename, file_format f, file_compression c)
+		{
+			std::ifstream ifile(filename, (f == file_format::binary) ? (std::ios::in | std::ios::binary) :
+				std::ios::in);
+			if (unlikely(!ifile.good())) {
+				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
+			}
+			// The return value.
+			Derived retval;
+			if (c == file_compression::bzip2) {
+				// NOTE: the same considerations as above apply.
+				namespace bi = boost::iostreams;
+				if (f == file_format::binary) {
+					bi::filtering_streambuf<bi::input> in;
+					in.push(bi::bzip2_decompressor());
+					in.push(ifile);
+					boost::archive::binary_iarchive ia(in);
+					ia >> retval;
+				} else {
+					std::stringstream ss;
+					bi::filtering_streambuf<bi::output> out;
+					out.push(bi::bzip2_decompressor());
+					out.push(ss);
+					bi::copy(ifile,out);
+					boost::archive::text_iarchive ia(ss);
+					ia >> retval;
+				}
+			} else {
+				if (f == file_format::binary) {
+					boost::archive::binary_iarchive ia(ifile);
+					ia >> retval;
+				} else {
+					boost::archive::text_iarchive ia(ifile);
+					ia >> retval;
+				}
+			}
+			return retval;
+		}
+		/// Load series from file (text format, no compression).
+		static Derived load(const std::string &filename)
+		{
+			return load(filename,file_format::text,file_compression::disabled);
+		}
+		/// Load series from file (no compression, choose format).
+		static Derived load(const std::string &filename, file_format f)
+		{
+			return load(filename,f,file_compression::disabled);
+		}
+		/// Load series from file (text format, choose compression).
+		static Derived load(const std::string &filename, file_compression c)
+		{
+			return load(filename,file_format::text,c);
 		}
 		/** @name Low-level interface
 		 * Low-level methods.

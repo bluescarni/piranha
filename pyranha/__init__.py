@@ -24,6 +24,7 @@ __all__ = ['celmec', 'math', 'test', 'types']
 
 import threading as _thr
 from ._common import _cpp_type_catcher, _monkey_patching, _cleanup
+from ._core import file_format, file_compression
 
 # Run the monkey patching.
 _monkey_patching()

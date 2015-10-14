@@ -351,10 +351,17 @@ struct t_degree_tester
 		};
 		k_type k1;
 		symbol_set vs1;
-		BOOST_CHECK((std::is_same<decltype(k1.t_degree(vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_degree(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
+		if (std::is_same<signed char,T>::value) {
+			BOOST_CHECK((std::is_same<decltype(k1.t_degree(vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_degree(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+		} else {
+			BOOST_CHECK((std::is_same<decltype(k1.t_degree(vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_degree(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+		}
 		BOOST_CHECK(k1.t_degree(vs1) == 0);
 		BOOST_CHECK(k1.t_ldegree(vs1) == 0);
 		k_type k2({0});
@@ -417,10 +424,17 @@ struct t_order_tester
 		};
 		k_type k1;
 		symbol_set vs1;
-		BOOST_CHECK((std::is_same<decltype(k1.t_order(vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_lorder(vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_order(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
-		BOOST_CHECK((std::is_same<decltype(k1.t_lorder(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
+		if (std::is_same<T,signed char>::value) {
+			BOOST_CHECK((std::is_same<decltype(k1.t_order(vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_lorder(vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_order(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_lorder(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+		} else {
+			BOOST_CHECK((std::is_same<decltype(k1.t_order(vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_lorder(vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_order(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+			BOOST_CHECK((std::is_same<decltype(k1.t_lorder(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+		}
 		BOOST_CHECK(k1.t_order(vs1) == 0);
 		BOOST_CHECK(k1.t_lorder(vs1) == 0);
 		k_type k2({0});
@@ -1685,4 +1699,28 @@ BOOST_AUTO_TEST_CASE(rtkm_kic_test)
 	BOOST_CHECK((key_is_convertible<rtk_monomial,rtk_monomial>::value));
 	BOOST_CHECK((!key_is_convertible<rtk_monomial,monomial<int>>::value));
 	BOOST_CHECK((!key_is_convertible<monomial<int>,rtk_monomial>::value));
+}
+
+struct comparison_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using k_type = real_trigonometric_kronecker_monomial<T>;
+		BOOST_CHECK(is_less_than_comparable<k_type>::value);
+		BOOST_CHECK(!(k_type{} < k_type{}));
+		BOOST_CHECK(!(k_type{0,true} < k_type{0,true}));
+		BOOST_CHECK((k_type{0,false} < k_type{0,true}));
+		BOOST_CHECK(!(k_type{0,true} < k_type{0,false}));
+		BOOST_CHECK((k_type{1,true} < k_type{2,true}));
+		BOOST_CHECK(!(k_type{2,true} < k_type{1,true}));
+		BOOST_CHECK((k_type{1,false} < k_type{2,false}));
+		BOOST_CHECK(!(k_type{2,false} < k_type{1,false}));
+		BOOST_CHECK(!(k_type{2,false} < k_type{1,true}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_comparison_test)
+{
+	boost::mpl::for_each<int_types>(comparison_tester());
 }

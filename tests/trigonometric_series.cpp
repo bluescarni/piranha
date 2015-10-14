@@ -27,6 +27,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -174,14 +175,15 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL(math::t_order(p_type2{math::cos(p_type1{"x"}-p_type1{"y"})}),2);
 	BOOST_CHECK_EQUAL(math::t_lorder(p_type2{math::cos(p_type1{"x"}-p_type1{"y"}) + math::cos(p_type1{"x"}+p_type1{"y"})}),2);
 	// Type traits checks.
-	BOOST_CHECK((std::is_same<integer,decltype(math::t_degree(p_type1{}))>::value));
-	BOOST_CHECK((std::is_same<integer,decltype(math::t_degree(p_type1{},std::vector<std::string>{}))>::value));
-	BOOST_CHECK((std::is_same<integer,decltype(math::t_ldegree(p_type1{}))>::value));
-	BOOST_CHECK((std::is_same<integer,decltype(math::t_ldegree(p_type1{},std::vector<std::string>{}))>::value));
-	BOOST_CHECK((std::is_same<integer,decltype(math::t_order(p_type1{}))>::value));
-	BOOST_CHECK((std::is_same<integer,decltype(math::t_order(p_type1{},std::vector<std::string>{}))>::value));
-	BOOST_CHECK((std::is_same<integer,decltype(math::t_lorder(p_type1{}))>::value));
-	BOOST_CHECK((std::is_same<integer,decltype(math::t_lorder(p_type1{},std::vector<std::string>{}))>::value));
+	using t_deg_type = decltype(std::make_signed<std::size_t>::type(0) + std::make_signed<std::size_t>::type(0));
+	BOOST_CHECK((std::is_same<t_deg_type,decltype(math::t_degree(p_type1{}))>::value));
+	BOOST_CHECK((std::is_same<t_deg_type,decltype(math::t_degree(p_type1{},std::vector<std::string>{}))>::value));
+	BOOST_CHECK((std::is_same<t_deg_type,decltype(math::t_ldegree(p_type1{}))>::value));
+	BOOST_CHECK((std::is_same<t_deg_type,decltype(math::t_ldegree(p_type1{},std::vector<std::string>{}))>::value));
+	BOOST_CHECK((std::is_same<t_deg_type,decltype(math::t_order(p_type1{}))>::value));
+	BOOST_CHECK((std::is_same<t_deg_type,decltype(math::t_order(p_type1{},std::vector<std::string>{}))>::value));
+	BOOST_CHECK((std::is_same<t_deg_type,decltype(math::t_lorder(p_type1{}))>::value));
+	BOOST_CHECK((std::is_same<t_deg_type,decltype(math::t_lorder(p_type1{},std::vector<std::string>{}))>::value));
 }
 
 struct key02

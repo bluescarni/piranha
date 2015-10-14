@@ -25,6 +25,8 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
 #include <cstddef>
+#include <functional>
+#include <future>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
@@ -44,8 +46,10 @@
 #include "detail/atomic_utils.hpp"
 #include "detail/cf_mult_impl.hpp"
 #include "detail/divisor_series_fwd.hpp"
+#include "detail/parallel_vector_transform.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
+#include "detail/safe_integral_adder.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
@@ -857,37 +861,74 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		{
 			using expo_type = typename key_t<T>::value_type;
 			using term_type = typename Series::term_type;
+			using mm_vec = std::vector<std::pair<expo_type,expo_type>>;
+			using v_ptr = typename base::v_ptr;
 			// NOTE: we know that the input series are not null.
 			piranha_assert(this->m_v1.size() != 0u && this->m_v2.size() != 0u);
-			// Initialise minmax values.
-			std::vector<std::pair<expo_type,expo_type>> minmax_values1;
-			std::vector<std::pair<expo_type,expo_type>> minmax_values2;
-			auto it1 = this->m_v1.begin();
-			auto it2 = this->m_v2.begin();
+			// Sync mutex, actually used only in mt mode.
+			std::mutex mut;
 			// Checker for monomial sizes in debug mode.
 			auto monomial_checker = [this](const term_type &t) {
 				return t.m_key.size() == this->m_ss.size();
 			};
 			(void)monomial_checker;
-			piranha_assert(monomial_checker(**it1));
-			piranha_assert(monomial_checker(**it2));
-			std::transform((*it1)->m_key.begin(),(*it1)->m_key.end(),std::back_inserter(minmax_values1),[](const expo_type &v) {
-				return std::make_pair(v,v);
-			});
-			std::transform((*it2)->m_key.begin(),(*it2)->m_key.end(),std::back_inserter(minmax_values2),[](const expo_type &v) {
-				return std::make_pair(v,v);
-			});
-			// Find the minmaxs.
-			for (; it1 != this->m_v1.end(); ++it1) {
-				piranha_assert(monomial_checker(**it1));
-				// NOTE: std::transform is allowed to do transformations in-place - i.e., here the output range is the
-				// same as the first input range.
-				std::transform(minmax_values1.begin(),minmax_values1.end(),(*it1)->m_key.begin(),minmax_values1.begin(),update_minmax{});
-			}
-			for (; it2 != this->m_v2.end(); ++it2) {
-				piranha_assert(monomial_checker(**it2));
-				std::transform(minmax_values2.begin(),minmax_values2.end(),(*it2)->m_key.begin(),minmax_values2.begin(),update_minmax{});
-			}
+			// The function used to determine minmaxs for the two series. This is used both in
+			// single-thread and multi-thread mode.
+			auto thread_func = [&mut,this,&monomial_checker](unsigned t_idx, const v_ptr *vp, mm_vec *mmv) {
+				piranha_assert(t_idx < this->m_n_threads);
+				// Establish the block size.
+				const auto block_size = vp->size() / this->m_n_threads;
+				auto start = vp->data() + t_idx * block_size;
+				const auto end = vp->data() + ((t_idx == this->m_n_threads - 1u) ?
+					vp->size() : ((t_idx + 1u) * block_size));
+				// We need to make sure we have at least 1 element to process. This is guaranteed
+				// in the single-threaded implementation but not in multithreading.
+				if (start == end) {
+					piranha_assert(this->m_n_threads > 1u);
+					return;
+				}
+				piranha_assert(monomial_checker(**start));
+				// Local vector that will hold the minmax values for this thread.
+				mm_vec minmax_values;
+				// Init the mimnax.
+				// NOTE: we can use this as we are sure the series has at least one element (start != end).
+				std::transform((*start)->m_key.begin(),(*start)->m_key.end(),std::back_inserter(minmax_values),[](const expo_type &v) {
+					return std::make_pair(v,v);
+				});
+				// Move to the next element and go with the loop.
+				++start;
+				for (; start != end; ++start) {
+					piranha_assert(monomial_checker(**start));
+					// NOTE: std::transform is allowed to do transformations in-place - i.e., here the output range is the
+					// same as the first or second input range:
+					// http://stackoverflow.com/questions/19200528/is-it-safe-for-the-input-iterator-and-output-iterator-in-stdtransform-to-be-fr
+					// The important part is that the functor *itself* must not mutate the elements.
+					std::transform(minmax_values.begin(),minmax_values.end(),(*start)->m_key.begin(),minmax_values.begin(),update_minmax{});
+				}
+				if (this->m_n_threads == 1u) {
+					// In single thread the output mmv should be written only once, after being def-inited.
+					piranha_assert(mmv->empty());
+					// Just move in the local minmax values in single-threaded mode.
+					*mmv = std::move(minmax_values);
+				} else {
+					std::lock_guard<std::mutex> lock(mut);
+					if (mmv->empty()) {
+						// If mmv has not been inited yet, just move in the current values.
+						*mmv = std::move(minmax_values);
+					} else {
+						piranha_assert(minmax_values.size() == mmv->size());
+						// Otherwise, update the minmaxs.
+						auto updater = [](const std::pair<expo_type,expo_type> &p1, const std::pair<expo_type,expo_type> &p2) {
+							return std::make_pair(p1.first < p2.first ? p1.first : p2.first,
+								p1.second > p2.second ? p1.second : p2.second);
+						};
+						std::transform(minmax_values.begin(),minmax_values.end(),mmv->begin(),mmv->begin(),updater);
+					}
+				}
+			};
+			// minmax vectors for the two series.
+			mm_vec minmax_values1, minmax_values2;
+			check_bounds_impl(minmax_values1,minmax_values2,thread_func);
 			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow (this is a simple interval addition).
 			std::vector<std::pair<integer,integer>> minmax_values;
 			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
@@ -912,55 +953,114 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		{
 			using value_type = typename key_t<Series>::value_type;
 			using ka = kronecker_array<value_type>;
+			using v_ptr = typename base::v_ptr;
+			using mm_vec = std::vector<std::pair<value_type,value_type>>;
+			piranha_assert(this->m_v1.size() != 0u && this->m_v2.size() != 0u);
 			// NOTE: here we are sure about this since the symbol set in a series should never
 			// overflow the size of the limits, as the check for compatibility in Kronecker monomial
 			// would kick in.
 			piranha_assert(this->m_ss.size() < ka::get_limits().size());
-			const auto &limits = ka::get_limits()[static_cast<decltype(ka::get_limits().size())>(this->m_ss.size())];
-			// NOTE: we need to check that the exponents of the monomials in the result do not
-			// go outside the bounds of the Kronecker codification. We need to unpack all monomials
-			// in the operands and examine them, we cannot operate on the codes for this.
-			// NOTE: we can use these as we are sure both series have at least one element.
-			auto it1 = this->m_v1.begin();
-			auto it2 = this->m_v2.begin();
-			// Initialise minmax values.
-			std::vector<std::pair<value_type,value_type>> minmax_values1;
-			std::vector<std::pair<value_type,value_type>> minmax_values2;
-			auto tmp_vec1 = (*it1)->m_key.unpack(this->m_ss);
-			auto tmp_vec2 = (*it2)->m_key.unpack(this->m_ss);
-			// Bounds of the Kronecker representation for each component.
-			const auto &minmax_vec = std::get<0u>(limits);
-			std::transform(tmp_vec1.begin(),tmp_vec1.end(),std::back_inserter(minmax_values1),[](const value_type &v) {
-				return std::make_pair(v,v);
-			});
-			std::transform(tmp_vec2.begin(),tmp_vec2.end(),std::back_inserter(minmax_values2),[](const value_type &v) {
-				return std::make_pair(v,v);
-			});
-			// Find the minmaxs.
-			for (; it1 != this->m_v1.end(); ++it1) {
-				tmp_vec1 = (*it1)->m_key.unpack(this->m_ss);
-				piranha_assert(tmp_vec1.size() == minmax_values1.size());
-				std::transform(minmax_values1.begin(),minmax_values1.end(),tmp_vec1.begin(),minmax_values1.begin(),update_minmax{});
-			}
-			for (; it2 != this->m_v2.end(); ++it2) {
-				tmp_vec2 = (*it2)->m_key.unpack(this->m_ss);
-				piranha_assert(tmp_vec2.size() == minmax_values2.size());
-				std::transform(minmax_values2.begin(),minmax_values2.end(),tmp_vec2.begin(),minmax_values2.begin(),update_minmax{});
-			}
-			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow.
+			std::mutex mut;
+			auto thread_func = [&mut,this](unsigned t_idx, const v_ptr *vp, mm_vec *mmv) {
+				piranha_assert(t_idx < this->m_n_threads);
+				const auto block_size = vp->size() / this->m_n_threads;
+				auto start = vp->data() + t_idx * block_size;
+				const auto end = vp->data() + ((t_idx == this->m_n_threads - 1u) ?
+					vp->size() : ((t_idx + 1u) * block_size));
+				if (start == end) {
+					piranha_assert(this->m_n_threads > 1u);
+					return;
+				}
+				mm_vec minmax_values;
+				// Tmp vector for unpacking, inited with the first element in the range.
+				// NOTE: we need to check that the exponents of the monomials in the result do not
+				// go outside the bounds of the Kronecker codification. We need to unpack all monomials
+				// in the operands and examine them, we cannot operate on the codes for this.
+				auto tmp_vec = (*start)->m_key.unpack(this->m_ss);
+				// Init the mimnax.
+				std::transform(tmp_vec.begin(),tmp_vec.end(),std::back_inserter(minmax_values),[](const value_type &v) {
+					return std::make_pair(v,v);
+				});
+				++start;
+				for (; start != end; ++start) {
+					tmp_vec = (*start)->m_key.unpack(this->m_ss);
+					std::transform(minmax_values.begin(),minmax_values.end(),tmp_vec.begin(),minmax_values.begin(),update_minmax{});
+				}
+				if (this->m_n_threads == 1u) {
+					piranha_assert(mmv->empty());
+					*mmv = std::move(minmax_values);
+				} else {
+					std::lock_guard<std::mutex> lock(mut);
+					if (mmv->empty()) {
+						*mmv = std::move(minmax_values);
+					} else {
+						piranha_assert(minmax_values.size() == mmv->size());
+						auto updater = [](const std::pair<value_type,value_type> &p1, const std::pair<value_type,value_type> &p2) {
+							return std::make_pair(p1.first < p2.first ? p1.first : p2.first,
+								p1.second > p2.second ? p1.second : p2.second);
+						};
+						std::transform(minmax_values.begin(),minmax_values.end(),mmv->begin(),mmv->begin(),updater);
+					}
+				}
+			};
+			mm_vec minmax_values1, minmax_values2;
+			check_bounds_impl(minmax_values1,minmax_values2,thread_func);
 			std::vector<std::pair<integer,integer>> minmax_values;
 			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
 				std::back_inserter(minmax_values),[](const std::pair<value_type,value_type> &p1,
 				const std::pair<value_type,value_type> &p2) {
 					return std::make_pair(integer(p1.first) + integer(p2.first),integer(p1.second) + integer(p2.second));
 			});
+			// Bounds of the Kronecker representation for each component.
+			const auto &minmax_vec = std::get<0u>(ka::get_limits()[static_cast<decltype(ka::get_limits().size())>(this->m_ss.size())]);
 			piranha_assert(minmax_values.size() == minmax_vec.size());
 			piranha_assert(minmax_values.size() == minmax_values1.size());
 			piranha_assert(minmax_values.size() == minmax_values2.size());
-			// Now do the checking.
 			for (decltype(minmax_values.size()) i = 0u; i < minmax_values.size(); ++i) {
 				if (unlikely(minmax_values[i].first < -minmax_vec[i] || minmax_values[i].second > minmax_vec[i])) {
 					piranha_throw(std::overflow_error,"Kronecker monomial components are out of bounds");
+				}
+			}
+		}
+		// Implementation detail of the bound checking logic. This is common enough to be shared.
+		template <typename MmVec, typename Func>
+		void check_bounds_impl(MmVec &minmax_values1, MmVec &minmax_values2, Func &thread_func) const
+		{
+			if (this->m_n_threads == 1u) {
+				thread_func(0u,&(this->m_v1),&minmax_values1);
+				thread_func(0u,&(this->m_v2),&minmax_values2);
+			} else {
+				// Series 1.
+				{
+				future_list<std::future<void>> ff_list;
+				try {
+					for (unsigned i = 0u; i < this->m_n_threads; ++i) {
+						ff_list.push_back(thread_pool::enqueue(i,thread_func,i,&(this->m_v1),&minmax_values1));
+					}
+					// First let's wait for everything to finish.
+					ff_list.wait_all();
+					// Then, let's handle the exceptions.
+					ff_list.get_all();
+				} catch (...) {
+					ff_list.wait_all();
+					throw;
+				}
+				}
+				// Series 2.
+				{
+				future_list<std::future<void>> ff_list;
+				try {
+					for (unsigned i = 0u; i < this->m_n_threads; ++i) {
+						ff_list.push_back(thread_pool::enqueue(i,thread_func,i,&(this->m_v2),&minmax_values2));
+					}
+					// First let's wait for everything to finish.
+					ff_list.wait_all();
+					// Then, let's handle the exceptions.
+					ff_list.get_all();
+				} catch (...) {
+					ff_list.wait_all();
+					throw;
+				}
 				}
 			}
 		}
@@ -968,6 +1068,20 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		template <typename T>
 		using call_enabler = typename std::enable_if<key_is_multipliable<cf_t<T>,key_t<T>>::value &&
 			is_multipliable_in_place<cf_t<T>>::value && has_multiply_accumulate<cf_t<T>>::value,int>::type;
+		// Utility helpers for the subtraction of degree types in the truncation routines. The specialisation
+		// for integral types will check the operation for overflow.
+		template <typename T, typename std::enable_if<!std::is_integral<T>::value,int>::type = 0>
+		static T degree_sub(const T &a, const T &b)
+		{
+			return a - b;
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		static T degree_sub(const T &a, const T &b)
+		{
+			T retval(a);
+			detail::safe_integral_subber(retval,b);
+			return retval;
+		}
 	public:
 		/// Constructor.
 		/**
@@ -983,12 +1097,17 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * @param[in] s2 second series operand.
 		 *
 		 * @throws std::overflow_error if a bounds check, as described above, fails.
-		 * @throws unspecified any exception thrown by the base constructor.
+		 * @throws unspecified any exception thrown by:
+		 * - the base constructor,
+		 * - standard threading primitives,
+		 * - memory errors in standard containers,
+		 * - thread_pool::enqueue(),
+		 * - future_list::push_back().
 		 */
 		explicit series_multiplier(const Series &s1, const Series &s2):base(s1,s2)
 		{
-			// Nothing to do if the series are null.
-			if (unlikely(this->m_v1.empty() || this->m_v2.empty())) {
+			// Nothing to do if the series are null or the merged symbol set is empty.
+			if (unlikely(this->m_v1.empty() || this->m_v2.empty() || this->m_ss.size() == 0u)) {
 				return;
 			}
 			check_bounds();
@@ -1004,9 +1123,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * the key type of \p Series, the implementation will use either base_series_multiplier::plain_multiplication()
 		 * with base_series_multiplier::plain_multiplier or a different algorithm.
 		 *
-		 * @return the result of the multiplication of the input series operands.
+		 * If a polynomial truncation threshold is defined and the degree type of the polynomial is a C++ integral type,
+		 * the integral arithmetic operations involved in the truncation logic will be checked for overflow.
 		 *
-		 * @throws std::overflow_error in case of (unlikely) overflow errors.
+		 * @return the result of the multiplication of the input series operands.
+		 * 
+		 * @throws std::overflow_error in case of overflow errors.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::base_series_multiplier::plain_multiplication(),
 		 * - piranha::base_series_multiplier::estimate_final_series_size(),
@@ -1020,13 +1142,163 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * - math::multiply_accumulate(),
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back(),
-		 * - polynomial::get_auto_truncate_degree(), arithmetic and logical operations on the
-		 *   degree of terms, if truncation is active.
+		 * - truncated_multiplication(),
+		 * - polynomial::get_auto_truncate_degree().
 		 */
 		template <typename T = Series, call_enabler<T> = 0>
 		Series operator()() const
 		{
 			return execute();
+		}
+		/// Truncated multiplication.
+		/**
+		 * \note
+		 * This method can be used only if the following conditions apply:
+		 * - the conditions for truncated multiplication outlined in piranha::polynomial are satisfied,
+		 * - the type \p T is the same as the degree type of the polynomial,
+		 * - the number and types of \p Args is as specified below.
+		 * If these conditions are not satisfied, a compile-time error will be issued.
+		 *
+		 * This method will perform the truncated multiplication of the series operands passed to the constructor.
+		 * The truncation degree is set to \p max degree, and it is either the total maximum degree (if the number
+		 * of \p Args is zero) or the partial degree (if \p Args is a single symbol_set::positions parameter
+		 * representing the positions of the arguments to be considered for the computation of the degree).
+		 *
+		 * @param[in] max_degree the maximum degree of the result of the multiplication.
+		 * @param[in] args either an empty argument, or a single symbol_set::positions argument.
+		 *
+		 * @return the result of the truncated multiplication of the operands used for construction.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - memory errors in standard containers,
+		 * - piranha::safe_cast(),
+		 * - arithmetic and other operations on the degree type,
+		 * - base_series_multiplier::plain_multiplication(),
+		 * - get_skip_limits().
+		 */
+		template <typename T, typename ... Args>
+		Series truncated_multiplication(const T &max_degree, const Args & ... args) const
+		{
+			// NOTE: a possible optimisation here is the following: if the sum degrees of the arguments is less than
+			// or equal to the max truncation degree, just do the normal multiplication - which can also then take advantage
+			// of faster Kronecker multiplication, if the series are suitable.
+			using term_type = typename Series::term_type;
+			// NOTE: degree type is the same in total and partial.
+			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));
+			using size_type = typename base::size_type;
+			namespace sph = std::placeholders;
+			static_assert(std::is_same<T,degree_type>::value,"Invalid degree type");
+			static_assert(detail::has_get_auto_truncate_degree<Series>::value,"Invalid series type");
+			// First let's create two vectors with the degrees of the terms in the two series.
+			using d_size_type = typename std::vector<degree_type>::size_type;
+			std::vector<degree_type> v_d1(safe_cast<d_size_type>(this->m_v1.size())), v_d2(safe_cast<d_size_type>(this->m_v2.size()));
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v1,v_d1,std::bind(term_degree_getter{},sph::_1,
+				std::cref(this->m_ss),std::cref(args)...));
+			detail::parallel_vector_transform(this->m_n_threads,this->m_v2,v_d2,std::bind(term_degree_getter{},sph::_1,
+				std::cref(this->m_ss),std::cref(args)...));
+			// Next we need to order the terms in the second series, and also the corresponding degree vector.
+			// First we create a vector of indices and we fill it.
+			std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
+			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
+			// Second, we sort the vector of indices according to the degrees in the second series.
+			std::stable_sort(idx_vector.begin(),idx_vector.end(),[&v_d2](const size_type &i1, const size_type &i2) {
+				return v_d2[static_cast<d_size_type>(i1)] < v_d2[static_cast<d_size_type>(i2)];
+			});
+			// Finally, we apply the permutation to v_d2 and m_v2.
+			decltype(this->m_v2) v2_copy(this->m_v2.size());
+			decltype(v_d2) v_d2_copy(v_d2.size());
+			std::transform(idx_vector.begin(),idx_vector.end(),v2_copy.begin(),[this](const size_type &i) {
+				return this->m_v2[i];
+			});
+			std::transform(idx_vector.begin(),idx_vector.end(),v_d2_copy.begin(),[&v_d2](const size_type &i) {
+				return v_d2[static_cast<d_size_type>(i)];
+			});
+			this->m_v2 = std::move(v2_copy);
+			v_d2 = std::move(v_d2_copy);
+			// Now get the skip limits and we build the limits functor.
+			const auto sl = get_skip_limits(v_d1,v_d2,max_degree);
+			auto lf = [&sl](const size_type &idx1) {
+				return sl[static_cast<typename std::vector<size_type>::size_type>(idx1)];
+			};
+			return this->plain_multiplication(lf);
+		}
+		/// Establish skip limits for truncated multiplication.
+		/**
+		 * This method assumes that \p v_d1 and \p v_d2 are vectors containing the degrees of each term in the first and second series
+		 * respectively, and that \p v_d2 is sorted in ascending order.
+		 * It will return a vector \p v of indices in the second series such that, given an index \p i in the first series,
+		 * the term of index <tt>v[i]</tt> in the second series is the first term such that the term-by-term multiplication with
+		 * the <tt>i</tt>-th term in the first series produces a term of degree greater than \p max_degree. That is, terms of index
+		 * equal to or greater than <tt>v[i]</tt> in the second series will produce terms with degree greater than \p max_degree
+		 * when multiplied by the <tt>i</tt>-th term in the first series.
+		 *
+		 * This method can be called only if \p Series supports truncated multiplication (as explained in piranha::polynomial) and
+		 * \p T is the same type as the degree type.
+		 *
+		 * @param[in] v_d1 a vector containing the degrees of the terms in the first series.
+		 * @param[in] v_d2 a sorted vector containing the degrees of the terms in the second series.
+		 * @param[in] max_degree the truncation degree.
+		 *
+		 * @return the vector of skip limits, as explained above.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - memory errors in standard containers,
+		 * - piranha::safe_cast(),
+		 * - operations on the degree type.
+		 */
+		template <typename T>
+		std::vector<typename base::size_type> get_skip_limits(const std::vector<T> &v_d1, const std::vector<T> &v_d2, const T &max_degree) const
+		{
+			// NOTE: this can be parallelised, but we need to check the heuristic
+			// for selecting the number of threads as it is pretty fast wrt the multiplication.
+			// Check that we are allowed to call this method.
+			PIRANHA_TT_CHECK(detail::has_get_auto_truncate_degree,Series);
+			PIRANHA_TT_CHECK(std::is_same,T,decltype(math::degree(Series{})));
+			using size_type = typename base::size_type;
+			using d_size_type = typename std::vector<T>::size_type;
+			piranha_assert(std::is_sorted(v_d2.begin(),v_d2.end()));
+			// A vector of indices into the second series.
+			std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
+			std::iota(idx_vector.begin(),idx_vector.end(),size_type(0u));
+			// The return value.
+			std::vector<size_type> retval;
+			for (const auto &d1: v_d1) {
+				// Here we will find the index of the first term t2 in the second series such that
+				// the degree d2 of t2 is > max_degree - d1, that is, d1 + d2 > max_degree.
+				// NOTE: we need to use upper_bound, instead of lower_bound, because we need to find the first
+				// element which is *strictly* greater than the max degree, as upper bound of a half closed
+				// interval.
+				// NOTE: the functor of lower_bound works inversely wrt upper_bound. See the notes on the type
+				// requirements for the functor here:
+				// http://en.cppreference.com/w/cpp/algorithm/upper_bound
+				const T comp = degree_sub(max_degree,d1);
+				const auto it = std::upper_bound(idx_vector.begin(),idx_vector.end(),comp,[&v_d2](const T &c, const size_type &idx) {
+					return c < v_d2[static_cast<d_size_type>(idx)];
+				});
+				retval.push_back(it == idx_vector.end() ? static_cast<size_type>(idx_vector.size()) : *it);
+			}
+			// Check the consistency of the result in debug mode.
+			auto retval_checker = [&retval,&v_d1,&v_d2,&max_degree,this]() -> bool {
+				for (decltype(retval.size()) i = 0u; i < retval.size(); ++i) {
+					// NOTE: this just means that all terms in s2 are within the limit.
+					if (retval[i] == v_d2.size()) {
+						continue;
+					}
+					if (retval[i] > v_d2.size()) {
+						return false;
+					}
+					if (!(v_d2[static_cast<d_size_type>(retval[i])] >
+						this->degree_sub(max_degree,v_d1[static_cast<d_size_type>(i)])))
+					{
+						return false;
+					}
+				}
+				return true;
+			};
+			(void)retval_checker;
+			piranha_assert(retval.size() == this->m_v1.size());
+			piranha_assert(retval_checker());
+			return retval;
 		}
 	private:
 		// NOTE: wrapper to multadd that treats specially rational coefficients. We need to decide in the future
@@ -1060,72 +1332,34 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Truncation is active.
 			if (std::get<0u>(t) == 1) {
 				// Total degree truncation.
-				return total_truncated_multiplication(std::get<1u>(t));
+				return truncated_multiplication(std::get<1u>(t));
 			}
 			piranha_assert(std::get<0u>(t) == 2);
 			// Partial degree truncation.
-			return partial_truncated_multiplication(std::get<1u>(t),std::get<2u>(t));
+			const symbol_set::positions pos(this->m_ss,symbol_set(std::get<2u>(t).begin(),std::get<2u>(t).end()));
+			return truncated_multiplication(std::get<1u>(t),std::get<2u>(t),pos);
 		}
-		// NOTE: total and partial can be compressed in a single function with variadic arguments.
-		// Unfortunately, GCC 4.8 does not support capturing variadic args in lambdas so we have to hold this off
-		// for the moment. Consider maybe using std::bind as a replacement.
-		template <typename T>
-		Series total_truncated_multiplication(const T &max_degree) const
+		// NOTE: the existence of these functors is because GCC 4.8 has troubles capturing variadic arguments in lambdas
+		// in truncated_multiplication, and we need to use std::bind instead. Once we switch to 4.9, we can revert
+		// to lambdas and drop the <functional> header.
+		struct term_degree_sorter
 		{
 			using term_type = typename Series::term_type;
-			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));
-			using size_type = typename base::size_type;
-			// First let's order the terms in the second series according to the degree.
-			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),[this](term_type const *p1, term_type const *p2) {
-				return detail::ps_get_degree(*p1,this->m_ss) < detail::ps_get_degree(*p2,this->m_ss);
-			});
-			// Next we create two vectors with the degrees of the terms in the two series. In the second series,
-			// we negate and add the max degree in order to avoid adding in the skipping functor.
-			std::vector<degree_type> v_d1, v_d2;
-			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(v_d1),[this](term_type const *p) {
-				return detail::ps_get_degree(*p,this->m_ss);
-			});
-			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(v_d2),[this,&max_degree](term_type const *p) {
-				return max_degree - detail::ps_get_degree(*p,this->m_ss);
-			});
-			// The skipping functor.
-			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
-				using d_size_type = decltype(v_d1.size());
-				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
-			};
-			// The filter functor: will return 1 if the degree of the term resulting from the multiplication of i and j
-			// is greater than the max degree, zero otherwise.
-			auto ff = [&sf](const size_type &i, const size_type &j) {
-				return static_cast<unsigned>(sf(i,j));
-			};
-			return this->plain_multiplication(sf,ff);
-		}
-		template <typename T>
-		Series partial_truncated_multiplication(const T &max_degree, const std::vector<std::string> &names) const
+			template <typename ... Args>
+			bool operator()(term_type const *p1, term_type const *p2, const symbol_set &ss, const Args & ... args) const
+			{
+				return detail::ps_get_degree(*p1,args...,ss) < detail::ps_get_degree(*p2,args...,ss);
+			}
+		};
+		struct term_degree_getter
 		{
 			using term_type = typename Series::term_type;
-			const symbol_set::positions pos(this->m_ss,symbol_set(names.begin(),names.end()));
-			using degree_type = decltype(detail::ps_get_degree(term_type{},names,pos,this->m_ss));
-			using size_type = typename base::size_type;
-			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),[this,&names,&pos](term_type const *p1, term_type const *p2) {
-				return detail::ps_get_degree(*p1,names,pos,this->m_ss) < detail::ps_get_degree(*p2,names,pos,this->m_ss);
-			});
-			std::vector<degree_type> v_d1, v_d2;
-			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(v_d1),[this,&names,&pos](term_type const *p) {
-				return detail::ps_get_degree(*p,names,pos,this->m_ss);
-			});
-			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(v_d2),[this,&names,&pos,&max_degree](term_type const *p) {
-				return max_degree - detail::ps_get_degree(*p,names,pos,this->m_ss);
-			});
-			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
-				using d_size_type = decltype(v_d1.size());
-				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
-			};
-			auto ff = [&sf](const size_type &i, const size_type &j) {
-				return static_cast<unsigned>(sf(i,j));
-			};
-			return this->plain_multiplication(sf,ff);
-		}
+			template <typename ... Args>
+			auto operator()(term_type const *p, const symbol_set &ss, const Args & ... args) const -> decltype(detail::ps_get_degree(*p,args...,ss))
+			{
+				return detail::ps_get_degree(*p,args...,ss);
+			}
+		};
 		// execute() is the top level dispatch for the actual multiplication.
 		// Case 1: not a Kronecker monomial, do the plain mult.
 		template <typename T = Series, typename std::enable_if<!detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
@@ -1152,33 +1386,30 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			if (check_truncation()) {
 				return plain_multiplication_wrapper();
 			}
+			// Setup the return value.
+			Series retval;
+			retval.set_symbol_set(this->m_ss);
+			// Cache the sizes.
 			const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {
-				return Series{};
+				return retval;
 			}
-			// First, let's get the estimation on the size of the final series.
-			Series retval;
-			retval.set_symbol_set(this->m_ss);
-			// Get the number of threads to use.
-			const unsigned n_threads = thread_pool::use_threads(
-				integer(size1) * size2,integer(settings::get_min_work_per_thread())
-			);
 			// Rehash the retun value's container accordingly. Check the tuning flag to see if we want to use
 			// multiple threads for initing the return value.
 			// NOTE: it is important here that we use the same n_threads for multiplication and memset as
 			// we tie together pinned threads with potentially different NUMA regions.
-			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
+			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? this->m_n_threads : 1u;
 			// Use the plain functor in normal mode for the estimation.
-			const auto estimate = this->template estimate_final_series_size<1u>(retval,typename base::template plain_multiplier<false>{this->m_v1,this->m_v2,retval});
+			const auto estimate = this->template estimate_final_series_size<1u,typename base::template plain_multiplier<false>>();
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
 				retval._container().max_load_factor())),n_threads_rehash);
 			piranha_assert(retval._container().bucket_count());
-			sparse_kronecker_multiplication(retval,n_threads);
+			sparse_kronecker_multiplication(retval);
 			return retval;
 		}
-		void sparse_kronecker_multiplication(Series &retval,const unsigned &n_threads) const
+		void sparse_kronecker_multiplication(Series &retval) const
 		{
 			using bucket_size_type = typename base::bucket_size_type;
 			using size_type = typename base::size_type;
@@ -1271,7 +1502,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					}
 				}
 			};
-			if (n_threads == 1u) {
+			if (this->m_n_threads == 1u) {
 				try {
 					// Single threaded case.
 					// Create the vector of tasks.
@@ -1286,8 +1517,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					for (const auto &t: tasks) {
 						task_consume(t,tmp_term);
 					}
-					this->sanitise_series(retval,n_threads);
-					this->finalise_series(retval,n_threads);
+					this->sanitise_series(retval,this->m_n_threads);
+					this->finalise_series(retval);
 				} catch (...) {
 					retval._container().clear();
 					throw;
@@ -1300,7 +1531,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// a multiple of the number of threads.
 			// NOTE: zm is a tuning parameter.
 			const unsigned zm = 10u;
-			const bucket_size_type n_zones = static_cast<bucket_size_type>(integer(n_threads) * zm);
+			const bucket_size_type n_zones = static_cast<bucket_size_type>(integer(this->m_n_threads) * zm);
 			// Number of buckets per zone (can be zero).
 			const bucket_size_type bpz = static_cast<bucket_size_type>(bucket_count / n_zones);
 			// For each zone, we need to define a vector of tasks that will write only into that zone.
@@ -1337,13 +1568,13 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				return first;
 			};
 			// Fill the task table.
-			auto table_filler = [&task_table,bpz,zm,n_threads,bucket_count,size1,size2,&l_bound,&task_split,&task_cmp] (const unsigned &thread_idx) {
+			auto table_filler = [&task_table,bpz,zm,this,bucket_count,size1,size2,&l_bound,&task_split,&task_cmp] (const unsigned &thread_idx) {
 				for (unsigned n = 0u; n < zm; ++n) {
 					std::vector<task_type> cur_tasks;
 					// [a,b[ is the container zone.
 					bucket_size_type a = static_cast<bucket_size_type>(thread_idx * bpz * zm + n * bpz);
 					bucket_size_type b;
-					if (n == zm - 1u && thread_idx == n_threads - 1u) {
+					if (n == zm - 1u && thread_idx == this->m_n_threads - 1u) {
 						// Special casing if this is the last zone in the container.
 						b = bucket_count;
 					} else {
@@ -1379,7 +1610,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Go with the threads to fill the task table.
 			future_list<decltype(thread_pool::enqueue(0u,table_filler,0u))> ff_list;
 			try {
-				for (unsigned i = 0u; i < n_threads; ++i) {
+				for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 					ff_list.push_back(thread_pool::enqueue(i,table_filler,i));
 				}
 				// First let's wait for everything to finish.
@@ -1458,7 +1689,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Go with the multiplication threads.
 			future_list<decltype(thread_pool::enqueue(0u,thread_functor,0u))> ft_list;
 			try {
-				for (unsigned i = 0u; i < n_threads; ++i) {
+				for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 					ft_list.push_back(thread_pool::enqueue(i,thread_functor,i));
 				}
 				// First let's wait for everything to finish.
@@ -1466,8 +1697,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				// Then, let's handle the exceptions.
 				ft_list.get_all();
 				// Finally, fix and finalise the series.
-				this->sanitise_series(retval,n_threads);
-				this->finalise_series(retval,n_threads);
+				this->sanitise_series(retval,this->m_n_threads);
+				this->finalise_series(retval);
 			} catch (...) {
 				ft_list.wait_all();
 				// Clean up and re-throw.

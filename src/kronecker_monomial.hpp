@@ -41,6 +41,7 @@
 #include "detail/cf_mult_impl.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"
+#include "detail/safe_integral_adder.hpp"
 #include "exceptions.hpp"
 #include "is_cf.hpp"
 #include "is_key.hpp"
@@ -190,6 +191,8 @@ class kronecker_monomial
 			m_value = ka::encode(tmp);
 			return tmp.size();
 		}
+		// Degree utils.
+		using degree_type = decltype(std::declval<const T &>() + std::declval<const T &>());
 #endif
 	public:
 		/// Arity of the multiply() method.
@@ -448,32 +451,39 @@ class kronecker_monomial
 		}
 		/// Degree.
 		/**
+		 * The type returned by this method is the type resulting from the addition of two instances
+		 * of \p T.
+		 *
 		 * @param[in] args reference set of symbols.
 		 *
 		 * @return degree of the monomial.
 		 *
-		 * @throws unspecified any exception thrown by unpack() or by the in-place addition
-		 * operator of piranha::integer.
+		 * @throws std::overflow_error if the computation of the degree overflows.
+		 * @throws unspecified any exception thrown by unpack().
 		 */
-		integer degree(const symbol_set &args) const
+		degree_type degree(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			// NOTE: this should be guaranteed by the unpack function.
 			piranha_assert(tmp.size() == args.size());
-			integer retval(0);
+			degree_type retval(0);
 			for (const auto &x: tmp) {
-				retval += x;
+				// NOTE: here it might be possible to demonstrate that overflow can
+				// never occur, and that we can use a normal integral addition.
+				detail::safe_integral_adder(retval,static_cast<degree_type>(x));
 			}
 			return retval;
 		}
 		/// Low degree (equivalent to the degree).
-		integer ldegree(const symbol_set &args) const
+		degree_type ldegree(const symbol_set &args) const
 		{
 			return degree(args);
 		}
 		/// Partial degree.
 		/**
 		 * Partial degree of the monomial: only the symbols at the positions specified by \p p are considered.
+		 * The type returned by this method is the type resulting from the addition of two instances
+		 * of \p T.
 		 *
 		 * @param[in] p positions of the symbols to be considered in the calculation of the degree.
 		 * @param[in] args reference set of piranha::symbol.
@@ -481,10 +491,10 @@ class kronecker_monomial
 		 * @return the summation of the exponents of the monomial at the positions specified by \p p.
 		 *
 		 * @throws std::invalid_argument if \p p is not compatible with \p args.
-		 * @throws unspecified any exception thrown by unpack() or by the in-place addition
-		 * operator of piranha::integer.
+		 * @throws std::overflow_error if the computation of the degree overflows.
+		 * @throws unspecified any exception thrown by unpack().
 		 */
-		integer degree(const symbol_set::positions &p, const symbol_set &args) const
+		degree_type degree(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			piranha_assert(tmp.size() == args.size());
@@ -492,14 +502,14 @@ class kronecker_monomial
 				piranha_throw(std::invalid_argument,"invalid positions");
 			}
 			auto cit = tmp.begin();
-			integer retval(0);
+			degree_type retval(0);
 			for (const auto &i: p) {
-				retval += cit[i];
+				detail::safe_integral_adder(retval,static_cast<degree_type>(cit[i]));
 			}
 			return retval;
 		}
 		/// Partial low degree (equivalent to the partial degree).
-		integer ldegree(const symbol_set::positions &p, const symbol_set &args) const
+		degree_type ldegree(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			return degree(p,args);
 		}
@@ -975,6 +985,17 @@ class kronecker_monomial
 		kronecker_monomial trim(const symbol_set &trim_args, const symbol_set &orig_args) const
 		{
 			return kronecker_monomial(detail::km_trim<v_type,ka>(trim_args,orig_args,m_value));
+		}
+		/// Comparison operator.
+		/**
+		 * @param[in] other comparison argument.
+		 *
+		 * @return \p true if the internal integral value of \p this is less than the internal
+		 * integral value of \p other, \p false otherwise.
+		 */
+		bool operator<(const kronecker_monomial &other) const
+		{
+			return m_value < other.m_value;
 		}
 	private:
 		value_type m_value;

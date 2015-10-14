@@ -435,6 +435,25 @@ class array_key
 	private:
 		// Internal container.
 		container_type m_container;
+	public:
+		/// Get size, begin and end iterator (const version).
+		/**
+		 * @return the output of the piranha::small_vector::size_begin_end() method called
+		 * by the internal piranha::small_vector container.
+		 */
+		auto size_begin_end() const -> decltype(m_container.size_begin_end())
+		{
+			return m_container.size_begin_end();
+		}
+		/// Get size, begin and end iterator.
+		/**
+		 * @return the output of the piranha::small_vector::size_begin_end() method called
+		 * by the internal piranha::small_vector container.
+		 */
+		auto size_begin_end() -> decltype(m_container.size_begin_end())
+		{
+			return m_container.size_begin_end();
+		}
 };
 
 }

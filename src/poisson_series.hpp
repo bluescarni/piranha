@@ -660,8 +660,7 @@ class series_multiplier<Series,detail::ps_series_multiplier_enabler<Series>> : p
 			// NOTE: if we ever implement multi-threaded series division we most likely need
 			// to revisit this.
 			piranha_assert(this->m_n_threads > 0u);
-			const auto n_threads = this->m_n_threads;
-			if (n_threads == 1u) {
+			if (this->m_n_threads == 1u) {
 				// This is possible, as the requirements of series divisibility and trig key
 				// multipliability overlap.
 				s /= 2;
@@ -694,14 +693,14 @@ class series_multiplier<Series,detail::ps_series_multiplier_enabler<Series>> : p
 					total_erase_count += erase_count;
 				};
 				// Buckets per thread.
-				const auto bpt = static_cast<bucket_size_type>(container.bucket_count() / n_threads);
+				const auto bpt = static_cast<bucket_size_type>(container.bucket_count() / this->m_n_threads);
 				// Go with the threads.
 				future_list<decltype(thread_pool::enqueue(0u,divider,0u,0u))> ff_list;
 				try {
-					for (unsigned i = 0u; i < n_threads; ++i) {
+					for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 						const auto start_idx = static_cast<bucket_size_type>(bpt * i);
 						// Special casing for the last thread.
-						const auto end_idx = (i == n_threads - 1u) ? container.bucket_count() :
+						const auto end_idx = (i == this->m_n_threads - 1u) ? container.bucket_count() :
 							static_cast<bucket_size_type>(bpt * (i + 1u));
 						ff_list.push_back(thread_pool::enqueue(i,divider,start_idx,end_idx));
 					}

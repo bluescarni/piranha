@@ -32,6 +32,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -40,6 +41,7 @@
 #include "config.hpp"
 #include "detail/cf_mult_impl.hpp"
 #include "detail/prepare_for_print.hpp"
+#include "detail/safe_integral_adder.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
 #include "is_cf.hpp"
@@ -135,26 +137,23 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		using pow_enabler = typename std::enable_if<has_safe_cast<T,
 			decltype(std::declval<pow_type>() * std::declval<const U &>())>::value,int>::type;
 		// Machinery to determine the degree type.
+		// NOTE: add_type<U> will be promoted to a int/unsigned in case U is a short int.
 		template <typename U>
 		using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
-		// No type defined in here, will sfinae out.
-		template <typename U, typename = void>
-		struct degree_type_
-		{};
 		template <typename U>
-		struct degree_type_<U,typename std::enable_if<std::is_integral<U>::value>::type>
+		using degree_type = typename std::enable_if<std::is_constructible<add_type<U>,int>::value &&
+			is_addable_in_place<add_type<U>,U>::value,add_type<U>>::type;
+		// Helpers to add exponents in the degree computation.
+		template <typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
+		static void expo_add(degree_type<U> &retval, const U &n)
 		{
-			using type = integer;
-		};
-		template <typename U>
-		struct degree_type_<U,typename std::enable_if<!std::is_integral<U>::value && std::is_constructible<add_type<U>,int>::value &&
-			is_addable_in_place<add_type<U>,U>::value>::type>
+			detail::safe_integral_adder(retval,static_cast<degree_type<U>>(n));
+		}
+		template <typename U, typename std::enable_if<!std::is_integral<U>::value,int>::type = 0>
+		static void expo_add(degree_type<U> &retval, const U &x)
 		{
-			using type = add_type<U>;
-		};
-		// The final alias.
-		template <typename U>
-		using degree_type = typename degree_type_<U>::type;
+			retval += x;
+		}
 		// Integrate utils.
 		// In-place increment by one, checked for integral types.
 		template <typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
@@ -232,6 +231,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		template <typename Iterator>
 		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
 			has_safe_cast<T,typename std::iterator_traits<Iterator>::value_type>::value,int>::type;
+		// Less-than operator.
+		template <typename U>
+		using comparison_enabler = typename std::enable_if<is_less_than_comparable<U>::value,int>::type;
 	public:
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
@@ -343,14 +345,15 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * and monomial::value_type can be added in-place to it.
 		 *
 		 * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
-		 * If \p T is a C++ integral type, then the type of the degree will be piranha::integer. Otherwise, the type of the degree
-		 * is the type resulting from the addition of the exponents.
+		 * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
 		 *
 		 * @param[in] args reference set of piranha::symbol.
 		 *
 		 * @return the degree of the monomial.
 		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
+		 * of the degree overflows.
 		 * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
 		 */
 		template <typename U = T>
@@ -362,7 +365,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			degree_type<U> retval(0);
 			for (const auto &x: *this) {
-				retval += x;
+				expo_add(retval,x);
 			}
 			return retval;
 		}
@@ -373,8 +376,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * and monomial::value_type can be added in-place to it.
 		 *
 		 * This method will return the partial degree of the monomial, computed via the summation of the exponents of the monomial.
-		 * If \p T is a C++ integral type, then the type of the degree will be piranha::integer. Otherwise, the type of the degree
-		 * is the type resulting from the addition of the exponents.
+		 * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
 		 *
 		 * The \p p argument is used to indicate which exponents are to be taken into account when computing the partial degree.
 		 * Exponents not in \p p will be discarded during the computation of the partial degree.
@@ -386,6 +388,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if \p p is
 		 * not compatible with the monomial.
+		 * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
+		 * of the degree overflows.
 		 * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
 		 */
 		template <typename U = T>
@@ -397,7 +401,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			auto cit = this->begin();
 			degree_type<U> retval(0);
 			for (const auto &i: p) {
-				retval += cit[i];
+				expo_add(retval,cit[i]);
 			}
 			return retval;
 		}
@@ -882,6 +886,31 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			detail::cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
 			// Now deal with the key.
 			t1.m_key.vector_add(t.m_key,t2.m_key);
+		}
+		/// Comparison operator.
+		/**
+		 * \note
+		 * This template operator is enabled only if \p T satisfies piranha::is_less_than_comparable.
+		 *
+		 * The two monomials will be compared lexicographically.
+		 *
+		 * @param[in] other comparison argument.
+		 *
+		 * @return \p true if \p this is lexicographically less than \p other, \p false otherwise.
+		 *
+		 * @throws std::invalid_argument if the sizes of \p this and \p other differ.
+		 * @throws unspecified any exception thrown by <tt>std::lexicographical_compare()</tt>.
+		 */
+		template <typename U = T, comparison_enabler<U> = 0>
+		bool operator<(const monomial &other) const
+		{
+			const auto sbe1 = this->size_begin_end();
+			const auto sbe2 = other.size_begin_end();
+			if (unlikely(std::get<0u>(sbe1) != std::get<0u>(sbe2))) {
+				piranha_throw(std::invalid_argument,"mismatched sizes in monomial comparison");
+			}
+			return std::lexicographical_compare(std::get<1u>(sbe1),std::get<2u>(sbe1),
+				std::get<1u>(sbe2),std::get<2u>(sbe2));
 		}
 };
 

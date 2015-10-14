@@ -28,7 +28,9 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -93,10 +95,11 @@ struct degree_tester
 		{
 			typedef polynomial<Cf,monomial<Expo>> p_type1;
 			typedef polynomial<polynomial<Cf,monomial<Expo>>,monomial<Expo>> p_type11;
-			BOOST_CHECK((std::is_same<integer,decltype(math::degree(p_type1{}))>::value));
-			BOOST_CHECK((std::is_same<integer,decltype(math::degree(p_type1{},std::vector<std::string>{}))>::value));
-			BOOST_CHECK((std::is_same<integer,decltype(math::ldegree(p_type1{}))>::value));
-			BOOST_CHECK((std::is_same<integer,decltype(math::ldegree(p_type1{},std::vector<std::string>{}))>::value));
+			using deg_type = typename std::conditional<std::is_same<Expo,int>::value,int,integer>::type;
+			BOOST_CHECK((std::is_same<deg_type,decltype(math::degree(p_type1{}))>::value));
+			BOOST_CHECK((std::is_same<deg_type,decltype(math::degree(p_type1{},std::vector<std::string>{}))>::value));
+			BOOST_CHECK((std::is_same<deg_type,decltype(math::ldegree(p_type1{}))>::value));
+			BOOST_CHECK((std::is_same<deg_type,decltype(math::ldegree(p_type1{},std::vector<std::string>{}))>::value));
 			BOOST_CHECK(math::degree(p_type1{}) == 0);
 			BOOST_CHECK(math::degree(p_type1{},std::vector<std::string>{}) == 0);
 			BOOST_CHECK(math::ldegree(p_type1{}) == 0);
@@ -134,10 +137,10 @@ struct degree_tester
 			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + 2 * p_type1{"x"},{"x"}) == 1);
 			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + 2 * p_type1{"x"},{"y"}) == 0);
 			std::vector<std::string> empty_set;
-			BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<const p_type11 &>())),integer>::value));
-			BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<const p_type11 &>(),empty_set)),integer>::value));
-			BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<const p_type11 &>())),integer>::value));
-			BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<const p_type11 &>(),empty_set)),integer>::value));
+			BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<const p_type11 &>())),deg_type>::value));
+			BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<const p_type11 &>(),empty_set)),deg_type>::value));
+			BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<const p_type11 &>())),deg_type>::value));
+			BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<const p_type11 &>(),empty_set)),deg_type>::value));
 			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"}) == 2);
 			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"x"}) == 1);
 			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"x"}) == 1);
@@ -170,10 +173,10 @@ struct degree_tester
 			typedef poisson_series<Cf> pstype2;
 			BOOST_CHECK(!has_degree<pstype2>::value);
 			BOOST_CHECK(!has_ldegree<pstype2>::value);
-			BOOST_CHECK((std::is_same<integer,decltype(math::degree(pstype1{}))>::value));
-			BOOST_CHECK((std::is_same<integer,decltype(math::degree(pstype1{},std::vector<std::string>{}))>::value));
-			BOOST_CHECK((std::is_same<integer,decltype(math::ldegree(pstype1{}))>::value));
-			BOOST_CHECK((std::is_same<integer,decltype(math::ldegree(pstype1{},std::vector<std::string>{}))>::value));
+			BOOST_CHECK((std::is_same<deg_type,decltype(math::degree(pstype1{}))>::value));
+			BOOST_CHECK((std::is_same<deg_type,decltype(math::degree(pstype1{},std::vector<std::string>{}))>::value));
+			BOOST_CHECK((std::is_same<deg_type,decltype(math::ldegree(pstype1{}))>::value));
+			BOOST_CHECK((std::is_same<deg_type,decltype(math::ldegree(pstype1{},std::vector<std::string>{}))>::value));
 			// As usual, operations on Poisson series with (polynomial) integer coefficients are not gonna give
 			// meaningful mathematical results.
 			if (std::is_same<Cf,integer>::value) {
@@ -275,17 +278,17 @@ BOOST_AUTO_TEST_CASE(power_series_test_02)
 	typedef g_series_type<double,int> stype1;
 	BOOST_CHECK((has_degree<stype1>::value));
 	BOOST_CHECK((has_ldegree<stype1>::value));
-	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype1>())),integer>::value));
-	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype1>())),integer>::value));
-	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype1>(),std::vector<std::string>{})),integer>::value));
-	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype1>(),std::vector<std::string>{})),integer>::value));
+	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype1>())),int>::value));
+	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype1>())),int>::value));
+	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype1>(),std::vector<std::string>{})),int>::value));
+	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype1>(),std::vector<std::string>{})),int>::value));
 	typedef g_series_type<stype1,long> stype2;
 	BOOST_CHECK((has_degree<stype2>::value));
 	BOOST_CHECK((has_ldegree<stype2>::value));
-	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype2>())),integer>::value));
-	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype2>())),integer>::value));
-	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype2>(),std::vector<std::string>{})),integer>::value));
-	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype2>(),std::vector<std::string>{})),integer>::value));
+	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype2>())),long>::value));
+	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype2>())),long>::value));
+	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype2>(),std::vector<std::string>{})),long>::value));
+	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype2>(),std::vector<std::string>{})),long>::value));
 	typedef g_series_type2<double> stype3;
 	BOOST_CHECK((!has_degree<stype3>::value));
 	BOOST_CHECK((!has_ldegree<stype3>::value));
@@ -462,4 +465,34 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	// Test with non-existing variable.
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,0_z,{"foo","bar"}),s0);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(power_series_degree_overflow_test)
+{
+	using p_type = polynomial<integer,monomial<int>>;
+	using pp_type = polynomial<p_type,monomial<int>>;
+	p_type x{"x"};
+	pp_type y{"y"};
+	BOOST_CHECK_THROW((x*y.pow(std::numeric_limits<int>::max())).degree(),std::overflow_error);
+	BOOST_CHECK_THROW((x.pow(-1)*y.pow(std::numeric_limits<int>::min())).degree(),std::overflow_error);
+	BOOST_CHECK_EQUAL((x*y.pow(std::numeric_limits<int>::min())).degree(),std::numeric_limits<int>::min()+1);
+}
+
+BOOST_AUTO_TEST_CASE(power_series_mixed_degree_test)
+{
+	using p_type = polynomial<integer,monomial<int>>;
+	using pp_type = polynomial<p_type,monomial<integer>>;
+	using pp_type2 = polynomial<p_type,monomial<long>>;
+	using pp_type3 = polynomial<p_type,monomial<int>>;
+	using pp_type4 = polynomial<polynomial<rational,monomial<rational>>,monomial<long long>>;
+	p_type x{"x"};
+	pp_type y{"y"};
+	pp_type2 z{"z"};
+	pp_type3 a{"a"};
+	pp_type4 b{"b"};
+	BOOST_CHECK((std::is_same<decltype(x.degree()),int>::value));
+	BOOST_CHECK((std::is_same<decltype(y.degree()),integer>::value));
+	BOOST_CHECK((std::is_same<decltype(z.degree()),long>::value));
+	BOOST_CHECK((std::is_same<decltype(a.degree()),int>::value));
+	BOOST_CHECK((std::is_same<decltype(b.degree()),rational>::value));
 }

@@ -298,6 +298,11 @@ struct degree_tester
 		typedef kronecker_monomial<T> k_type;
 		k_type k1;
 		symbol_set vs1;
+		if (std::is_same<T,signed char>::value) {
+			BOOST_CHECK((std::is_same<decltype(k1.degree(vs1)),int>::value));
+		} else {
+			BOOST_CHECK((std::is_same<decltype(k1.degree(vs1)),T>::value));
+		}
 		BOOST_CHECK(k1.degree(vs1) == 0);
 		BOOST_CHECK(k1.ldegree(vs1) == 0);
 		k_type k2({0});
@@ -321,6 +326,11 @@ struct degree_tester
 			}
 			return positions(v,tmp);
 		};
+		if (std::is_same<T,signed char>::value) {
+			BOOST_CHECK((std::is_same<decltype(k5.degree(ss_to_pos(vs1,{"a"}),vs1)),int>::value));
+		} else {
+			BOOST_CHECK((std::is_same<decltype(k5.degree(ss_to_pos(vs1,{"a"}),vs1)),T>::value));
+		}
 		BOOST_CHECK(k5.degree(ss_to_pos(vs1,{"a"}),vs1) == -1);
 		// NOTE: here it seems the compilation error arising when only {} is used (as opposed
 		// to std::set<std::string>{}) is a bug in libc++. See:
@@ -1153,4 +1163,13 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_kic_test)
 	BOOST_CHECK((!key_is_convertible<kronecker_monomial<int>,kronecker_monomial<long>>::value));
 	BOOST_CHECK((!key_is_convertible<k_monomial,monomial<int>>::value));
 	BOOST_CHECK((!key_is_convertible<monomial<int>,k_monomial>::value));
+}
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_comparison_test)
+{
+	BOOST_CHECK((is_less_than_comparable<k_monomial>::value));
+	BOOST_CHECK(!(k_monomial{} < k_monomial{}));
+	BOOST_CHECK(!(k_monomial{1} < k_monomial{1}));
+	BOOST_CHECK(!(k_monomial{2} < k_monomial{1}));
+	BOOST_CHECK(k_monomial{1} < k_monomial{2});
 }

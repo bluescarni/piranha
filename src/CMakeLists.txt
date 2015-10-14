@@ -80,6 +80,8 @@ SET(DETAIL_HEADERS_LIST
 	detail/vector_merge_args.hpp
 	detail/divisor_series_fwd.hpp
 	detail/cf_mult_impl.hpp
+	detail/safe_integral_adder.hpp
+	detail/parallel_vector_transform.hpp
 )
 
 # NOTE: this dummy cpp file is here with the sole purpose of getting the headers

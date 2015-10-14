@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 
+#include "detail/safe_integral_adder.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "serialization.hpp"
@@ -71,7 +72,19 @@ inline auto ps_get_##property(const Term &t, const symbol_set &s) -> decltype(t.
 { \
 	return t.m_key.property(s); \
 } \
-template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0> \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u && \
+	std::is_integral<decltype(math::property(std::declval<const Term &>().m_cf))>::value && \
+	std::is_integral<decltype(std::declval<const Term &>().m_key.property(std::declval<const symbol_set &>()))>::value,int>::type = 0> \
+inline auto ps_get_##property(const Term &t, const symbol_set &s) -> decltype(math::property(t.m_cf) + t.m_key.property(s)) \
+{ \
+	using ret_type = decltype(math::property(t.m_cf) + t.m_key.property(s)); \
+	ret_type retval(math::property(t.m_cf)); \
+	detail::safe_integral_adder(retval,static_cast<ret_type>(t.m_key.property(s))); \
+	return retval; \
+} \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u && \
+	(!std::is_integral<decltype(math::property(std::declval<const Term &>().m_cf))>::value || \
+	!std::is_integral<decltype(std::declval<const Term &>().m_key.property(std::declval<const symbol_set &>()))>::value),int>::type = 0> \
 inline auto ps_get_##property(const Term &t, const symbol_set &s) -> decltype(math::property(t.m_cf) + t.m_key.property(s)) \
 { \
 	return math::property(t.m_cf) + t.m_key.property(s); \
@@ -98,7 +111,20 @@ inline auto ps_get_##property(const Term &t, const std::vector<std::string> &, \
 { \
 	return t.m_key.property(p,s); \
 } \
-template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0> \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u && \
+	std::is_integral<decltype(math::property(std::declval<const Term &>().m_cf,std::declval<const std::vector<std::string> &>()))>::value && \
+	std::is_integral<decltype(std::declval<const Term &>().m_key.property(std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()))>::value,int>::type = 0> \
+inline auto ps_get_##property(const Term &t, const std::vector<std::string> &names, \
+	const symbol_set::positions &p, const symbol_set &s) -> decltype(math::property(t.m_cf,names) + t.m_key.property(p,s)) \
+{ \
+	using ret_type = decltype(math::property(t.m_cf,names) + t.m_key.property(p,s)); \
+	ret_type retval(math::property(t.m_cf,names)); \
+	detail::safe_integral_adder(retval,static_cast<ret_type>(t.m_key.property(p,s))); \
+	return retval; \
+} \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u && \
+	(!std::is_integral<decltype(math::property(std::declval<const Term &>().m_cf,std::declval<const std::vector<std::string> &>()))>::value || \
+	!std::is_integral<decltype(std::declval<const Term &>().m_key.property(std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()))>::value),int>::type = 0> \
 inline auto ps_get_##property(const Term &t, const std::vector<std::string> &names, \
 	const symbol_set::positions &p, const symbol_set &s) -> decltype(math::property(t.m_cf,names) + t.m_key.property(p,s)) \
 { \
@@ -124,7 +150,8 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  * their degree properties (as established by the piranha::has_degree, piranha::key_has_degree and similar type traits), and if the necessary
  * arithmetic operations are supported by the involved types.
  * As an additional requirement, the types returned when querying the degree must be constructible from \p int,
- * less-than comparable and they must satisfy piranha::is_container_element.
+ * less-than comparable and they must satisfy piranha::is_container_element. If the computation of the degree of a single term involves
+ * only C++ integral types, then the computation will be checked for overflow.
  *
  * This toolbox provides also support for truncation based on the total or partial degree. In addition to the requirements
  * of the degree-querying methods, the truncation methods also require the supplied degree limit to be comparable to the type
@@ -275,6 +302,7 @@ class power_series: public Series
 		 *
 		 * @return the total degree of the series.
 		 *
+		 * @throws std::overflow_error if the computation results in an overflow.
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type,
 		 * - the calculation of the degree of each term,
@@ -298,6 +326,7 @@ class power_series: public Series
 		 *
 		 * @return the total low degree of the series.
 		 *
+		 * @throws std::overflow_error if the computation results in an overflow.
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type,
 		 * - the calculation of the low degree of each term,
@@ -323,6 +352,7 @@ class power_series: public Series
 		 *
 		 * @return the partial degree of the series.
 		 *
+		 * @throws std::overflow_error if the computation results in an overflow.
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type,
 		 * - the calculation of the degree of each term,
@@ -349,6 +379,7 @@ class power_series: public Series
 		 *
 		 * @return the partial low degree of the series.
 		 *
+		 * @throws std::overflow_error if the computation results in an overflow.
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type,
 		 * - the calculation of the low degree of each term,
