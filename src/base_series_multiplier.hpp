@@ -213,7 +213,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 {
 		PIRANHA_TT_CHECK(is_series,Series);
 		// Make friends with the base, so it can access protected/private members of this.
-		friend class detail::base_series_multiplier_impl<Series,base_series_multiplier<Series>>;
+		friend struct detail::base_series_multiplier_impl<Series,base_series_multiplier<Series>>;
 	public:
 		/// Alias for a vector of const pointers to series terms.
 		using v_ptr = std::vector<typename Series::term_type const *>;
