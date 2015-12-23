@@ -2739,7 +2739,7 @@ struct get_mpz_ptr_tester
 		typedef mp_integer<T::value> int_type;
 		int_type n0;
 		{
-		auto v0 = n0.get_mpz_ptr();
+		auto v0 = n0._get_mpz_ptr();
 		BOOST_CHECK_EQUAL(mpz_sgn(v0),0);
 		mpz_add_ui(v0,v0,2);
 		BOOST_CHECK_EQUAL(mpz_cmp_si(v0,2),0);
@@ -2749,7 +2749,7 @@ struct get_mpz_ptr_tester
 		std::uniform_int_distribution<int> ud(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		for (int i = 0; i < ntries; ++i) {
 			auto tmp = ud(rng);
-			auto v1 = n0.get_mpz_ptr();
+			auto v1 = n0._get_mpz_ptr();
 			::mpz_set_si(v1,static_cast<long>(tmp));
 			int_type n1(tmp);
 			BOOST_CHECK_EQUAL(::mpz_cmp(v1,n1.get_mpz_view()),0);
