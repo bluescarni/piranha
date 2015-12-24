@@ -1,104 +1,15 @@
-# CMake
-CMakeCache.txt
-CMakeFiles
-Makefile
-cmake_install.cmake
-install_manifest.txt
-CTestTestfile.cmake
-
-# Compiled Object Files, Static/Dynamic Libraries
-*.so
-*.a
-*.o
-*.out
+# Build dirs.
+build*
 
 # Documentation
-doc/_build
-doc/doxyxml
-doc/html
+doc/doxygen/Doxyfile.bak
+doc/doxygen/html/
+doc/doxygen/latex/
+doc/doxygen/xml/
+doc/sphinx/_build/
 
 # Config Files
 src/config.hpp
 
-# Python build files
-build*
-*__pycache__*
-*.pyc
-
 # Temp files
 *~
-
-# Test executables
-tests/array_key
-tests/cache_aligning_allocator
-tests/convert_to
-tests/divisor
-tests/divisor_series
-tests/dynamic_aligning_allocator
-tests/environment
-tests/evaluate_perf
-tests/exceptions
-tests/fateman1_dynamic_perf
-tests/fateman1_perf
-tests/fateman1_unpacked_perf
-tests/fateman2_perf
-tests/gastineau1_perf
-tests/gastineau2_perf
-tests/gastineau3_perf
-tests/gastineau4_perf
-tests/gcd
-tests/hash_set
-tests/invert
-tests/ipow_substitutable_series
-tests/key_is_convertible
-tests/key_is_multipliable
-tests/kronecker_array
-tests/kronecker_monomial
-tests/kronecker_polynomial
-tests/math
-tests/memory
-tests/memory_perf
-tests/monagan1_perf
-tests/monagan2_perf
-tests/monagan3_perf
-tests/monagan4_perf
-tests/monagan5_perf
-tests/monomial
-tests/mp_integer_01
-tests/mp_integer_02
-tests/mp_rational
-tests/pearce1_perf
-tests/pearce1_unpacked_perf
-tests/pearce2_perf
-tests/poisson_series
-tests/polynomial
-tests/power_series
-tests/power_series_perf
-tests/print_coefficient
-tests/print_tex_coefficient
-tests/real
-tests/real_trigonometric_kronecker_monomial
-tests/rectangular_perf
-tests/runtime_info
-tests/safe_cast
-tests/serialization_perf
-tests/series_01
-tests/series_02
-tests/series_03
-tests/series_multiplier
-tests/settings
-tests/small_vector
-tests/static_vector
-tests/substitutable_series
-tests/symbol
-tests/symbol_set
-tests/t_substitutable_series
-tests/term
-tests/thread_barrier
-tests/thread_management
-tests/thread_pool
-tests/tracing
-tests/trigonometric_series
-tests/tuning
-tests/type_traits
-tests/symengine_expand2b_perf
