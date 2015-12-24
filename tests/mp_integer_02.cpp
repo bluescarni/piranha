@@ -2730,3 +2730,39 @@ BOOST_AUTO_TEST_CASE(mp_integer_mpz_t_ctor_test)
 {
 	boost::mpl::for_each<size_types>(mpz_t_ctor_tester());
 }
+
+struct get_mpz_ptr_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n0;
+		{
+		auto v0 = n0._get_mpz_ptr();
+		BOOST_CHECK_EQUAL(mpz_sgn(v0),0);
+		mpz_add_ui(v0,v0,2);
+		BOOST_CHECK_EQUAL(mpz_cmp_si(v0,2),0);
+		BOOST_CHECK_EQUAL(n0,2);
+		}
+		// Random tests.
+		std::uniform_int_distribution<int> ud(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			auto v1 = n0._get_mpz_ptr();
+			::mpz_set_si(v1,static_cast<long>(tmp));
+			int_type n1(tmp);
+			BOOST_CHECK_EQUAL(::mpz_cmp(v1,n1.get_mpz_view()),0);
+			BOOST_CHECK_EQUAL(n0,n1);
+			n1 = n1*2;
+			::mpz_mul_si(v1,v1,2);
+			BOOST_CHECK_EQUAL(::mpz_cmp(v1,n1.get_mpz_view()),0);
+			BOOST_CHECK_EQUAL(n0,n1);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_get_mpz_ptr_test)
+{
+	boost::mpl::for_each<size_types>(get_mpz_ptr_tester());
+}
