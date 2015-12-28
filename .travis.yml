@@ -22,13 +22,7 @@ matrix:
     - compiler: clang
       env: BUILD_TYPE="Release"
     - compiler: clang
-      env: BUILD_TYPE="Release" CXXFLAGS="-stdlib=libc++"
-    - compiler: clang
       env: BUILD_TYPE="Debug"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" CXXFLAGS="-fsanitize=address"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" CXXFLAGS="-fsanitize=thread"
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
@@ -43,7 +37,7 @@ script:
     - if [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E gastineau --output-on-failure;
       elif [[ "${BUILD_TYPE}" == "Debug"  ]]; then
-          ctest -E polynomial;
+          ctest -E polynomial --output-on-failure;
       fi
 notifications:
   email: false
