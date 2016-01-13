@@ -32,9 +32,23 @@ namespace piranha
 namespace math
 {
 
+/// Default functor for the implementation of piranha::math::invert().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. The call operator
+ * will call piranha::math::pow() with an exponent of <tt>-1</tt>, and it is enabled only
+ * if integral exponentiation is supported by the argument type.
+ */
 template <typename T, typename = void>
 struct invert_impl
 {
+	/// Call operator.
+	/**
+	 * @param[in] x argument for the inversion,
+	 *
+	 * @return piranha::math::pow(x,-1).
+	 *
+	 * @throws unspecified any exception thrown by piranha::math::pow().
+	 */
 	template <typename U>
 	auto operator()(const U &x) const -> decltype(math::pow(x,-1))
 	{
