@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "detail/mp_rational_fwd.hpp"
 #include "detail/real_fwd.hpp"
 #include "detail/sfinae_types.hpp"
+#include "detail/ulshift.hpp"
 #include "exceptions.hpp"
 #include "is_key.hpp"
 #include "math.hpp"
@@ -71,7 +72,7 @@ inline UInt clear_top_bits(UInt input, unsigned n)
 {
 	static_assert(std::is_integral<UInt>::value && std::is_unsigned<UInt>::value,"Invalid type.");
 	piranha_assert(n < unsigned(std::numeric_limits<UInt>::digits));
-	return static_cast<UInt>(static_cast<UInt>(input << n) >> n);
+	return static_cast<UInt>(ulshift(input,n) >> n);
 }
 
 // Determine if the condition for using the optimised version
