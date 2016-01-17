@@ -725,6 +725,18 @@ class t_integrate_test_case(_ut.TestCase):
 		st = s.t_integrate()
 		self.assertEqual(type(st.list[0][0]),divisor_series(polynomial(rational,monomial(short)),divisor(short))())
 		self.assertEqual(str(st),'-1/6*z*1/[(2*\\nu_{x}-\\nu_{y})]*cos(4*x-2*y)')
+		st = s.t_integrate(['a','b'])
+		self.assertEqual(type(st.list[0][0]),divisor_series(polynomial(rational,monomial(short)),divisor(short))())
+		self.assertEqual(str(st),'-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
+		self.assertRaises(ValueError,lambda : s.t_integrate([]))
+		self.assertRaises(ValueError,lambda : s.t_integrate(['a','b','c']))
+		self.assertRaises(ValueError,lambda : s.t_integrate(['b','a']))
+		st = s.t_integrate(['a','b','b'])
+		self.assertEqual(str(st),'-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
+		st = s.t_integrate(['a','a','b','b'])
+		self.assertEqual(str(st),'-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
+		st = s.t_integrate(['a','a','b'])
+		self.assertEqual(str(st),'-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
 
 class doctests_test_case(_ut.TestCase):
 	"""Test case that will run all the doctests.

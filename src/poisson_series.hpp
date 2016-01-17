@@ -377,6 +377,91 @@ class poisson_series:
 			std::is_base_of<detail::divisor_series_tag,typename T::term_type::cf_type>::value,ti_type_<T>>::type;
 		// Serialization.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+		// Implementation of time integration.
+		template <typename T = poisson_series>
+		ti_type<T> t_integrate_impl(const std::vector<std::string> &names) const
+		{
+			using return_type = ti_type<T>;
+			// Calling series types.
+			using term_type = typename base::term_type;
+			// The value type of the trigonometric key.
+			using k_value_type = typename base::term_type::key_type::value_type;
+			// Divisor series types.
+			using d_series_type = typename base::term_type::cf_type;
+			using d_term_type = typename d_series_type::term_type;
+			using d_cf_type = typename d_term_type::cf_type;
+			using d_key_type = typename d_term_type::key_type;
+			// Initialise the return value.
+			return_type retval(0);
+			// Setup of the symbol set.
+			piranha_assert(names.size() == this->m_symbol_set.size());
+			symbol_set div_symbols;
+			for (const auto &name: names) {
+				div_symbols.add(name);
+			}
+			// A temp vector of integers used to normalise the divisors coming
+			// out of the integration operation from the trig keys.
+			std::vector<integer> tmp_int;
+			// Build the return value.
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				// Clear the tmp integer vector.
+				tmp_int.clear();
+				// Get the vector of trigonometric multipliers.
+				const auto trig_vector = it->m_key.unpack(this->m_symbol_set);
+				// Copy it over to the tmp_int as integer values.
+				std::transform(trig_vector.begin(),trig_vector.end(),std::back_inserter(tmp_int),
+					[](const k_value_type &n) {return integer(n);});
+				// Determine the common divisor.
+				// NOTE: both the divisor and the trigonometric key share the canonical form in which the
+				// first nonzero multiplier is positive, so we don't need to account for sign flips when
+				// constructing a divisor from the trigonometric part. We just need to take care
+				// of the common divisor.
+				integer cd(0);
+				bool first_nonzero_found = false;
+				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
+					// NOTE: gcd is safe, operating on integers.
+					cd = detail::gcd(cd,*it2);
+					if (!first_nonzero_found && !math::is_zero(*it2)) {
+						piranha_assert(*it2 > 0);
+						first_nonzero_found = true;
+					}
+				}
+				if (unlikely(math::is_zero(cd))) {
+					piranha_throw(std::invalid_argument,"an invalid trigonometric term was encountered while "
+						"attempting a time integration");
+				}
+				// Take the abs of the cd.
+				cd = cd.abs();
+				// Divide the vector by the common divisor.
+				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
+					*it2 /= cd;
+				}
+				// Build the temporary divisor series from the trigonometric arguments.
+				d_series_type div_series;
+				div_series.set_symbol_set(div_symbols);
+				// Build the divisor key.
+				typename d_key_type::value_type exponent(1);
+				d_key_type div_key;
+				div_key.insert(tmp_int.begin(),tmp_int.end(),exponent);
+				// Finish building the temporary divisor series.
+				div_series.insert(d_term_type(d_cf_type(1),std::move(div_key)));
+				// Temporary Poisson series from the current term, with the trig flavour flipped.
+				poisson_series tmp_ps;
+				tmp_ps.set_symbol_set(this->m_symbol_set);
+				auto tmp_key = it->m_key;
+				tmp_key.set_flavour(!tmp_key.get_flavour());
+				tmp_ps.insert(term_type(it->m_cf,std::move(tmp_key)));
+				// Update the return value.
+				auto tmp = (std::move(tmp_ps) * std::move(div_series)) / cd;
+				// It also needs a negation, if the original trig key is a sine.
+				if (!it->m_key.get_flavour()) {
+					math::negate(tmp);
+				}
+				retval += std::move(tmp);
+			}
+			return retval;
+		}
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -556,85 +641,44 @@ class poisson_series:
 		template <typename T = poisson_series>
 		ti_type<T> t_integrate() const
 		{
-			using return_type = ti_type<T>;
-			// Calling series types.
-			using term_type = typename base::term_type;
-			// The value type of the trigonometric key.
-			using k_value_type = typename base::term_type::key_type::value_type;
-			// Divisor series types.
-			using d_series_type = typename base::term_type::cf_type;
-			using d_term_type = typename d_series_type::term_type;
-			using d_cf_type = typename d_term_type::cf_type;
-			using d_key_type = typename d_term_type::key_type;
-			// Initialise the return value.
-			return_type retval(0);
-			// The symbol set for the divisor series coming out of the trigonometric arguments.
-			symbol_set div_symbols;
+			std::vector<std::string> names;
 			for (auto it = this->m_symbol_set.begin(); it != this->m_symbol_set.end(); ++it) {
-				div_symbols.add(std::string("\\nu_{") + it->get_name() + "}");
+				names.push_back(std::string("\\nu_{") + it->get_name() + "}");
 			}
-			// A temp vector of integers used to normalise the divisors coming
-			// out of the integration operation from the trig keys.
-			std::vector<integer> tmp_int;
-			// Build the return value.
-			const auto it_f = this->m_container.end();
-			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				// Clear the tmp integer vector.
-				tmp_int.clear();
-				// Get the vector of trigonometric multipliers.
-				const auto trig_vector = it->m_key.unpack(this->m_symbol_set);
-				// Copy it over to the tmp_int as integer values.
-				std::transform(trig_vector.begin(),trig_vector.end(),std::back_inserter(tmp_int),
-					[](const k_value_type &n) {return integer(n);});
-				// Determine the common divisor.
-				// NOTE: both the divisor and the trigonometric key share the canonical form in which the
-				// first nonzero multiplier is positive, so we don't need to account for sign flips when
-				// constructing a divisor from the trigonometric part. We just need to take care
-				// of the common divisor.
-				integer cd(0);
-				bool first_nonzero_found = false;
-				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
-					// NOTE: gcd is safe, operating on integers.
-					cd = detail::gcd(cd,*it2);
-					if (!first_nonzero_found && !math::is_zero(*it2)) {
-						piranha_assert(*it2 > 0);
-						first_nonzero_found = true;
-					}
-				}
-				if (unlikely(math::is_zero(cd))) {
-					piranha_throw(std::invalid_argument,"an invalid trigonometric term was encountered while "
-						"attempting a time integration");
-				}
-				// Take the abs of the cd.
-				cd = cd.abs();
-				// Divide the vector by the common divisor.
-				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
-					*it2 /= cd;
-				}
-				// Build the temporary divisor series from the trigonometric arguments.
-				d_series_type div_series;
-				div_series.set_symbol_set(div_symbols);
-				// Build the divisor key.
-				typename d_key_type::value_type exponent(1);
-				d_key_type div_key;
-				div_key.insert(tmp_int.begin(),tmp_int.end(),exponent);
-				// Finish building the temporary divisor series.
-				div_series.insert(d_term_type(d_cf_type(1),std::move(div_key)));
-				// Temporary Poisson series from the current term, with the trig flavour flipped.
-				poisson_series tmp_ps;
-				tmp_ps.set_symbol_set(this->m_symbol_set);
-				auto tmp_key = it->m_key;
-				tmp_key.set_flavour(!tmp_key.get_flavour());
-				tmp_ps.insert(term_type(it->m_cf,std::move(tmp_key)));
-				// Update the return value.
-				auto tmp = (std::move(tmp_ps) * std::move(div_series)) / cd;
-				// It also needs a negation, if the original trig key is a sine.
-				if (!it->m_key.get_flavour()) {
-					math::negate(tmp);
-				}
-				retval += std::move(tmp);
+			return t_integrate_impl(names);
+		}
+		/// Time integration (alternative overload).
+		/**
+		 * \note
+		 * This method is enabled only if the other overload of piranha::poisson_series::t_integrate() is enabled.
+		 *
+		 * This method operates exactly like the other overload of piranha::poisson_series::t_integrate(), with the difference
+		 * that the names of the symbols used to represent the frequencies are passed as the \p names argument, rather
+		 * than automatically deduced. The \p names argument must be sorted lexicographically, otherwise an error
+		 * will be produced. Duplicate entries in \p names will be removed.
+		 *
+		 * @param[in] names the names of the symbols used to represent the frequencies.
+		 *
+		 * @return the result of the time integration.
+		 *
+		 * @throws std::invalid_argument if the size of \p names is not equal to the size of the symbol set of \p this
+		 * (after the removal of duplicate entries), or if \p names is not sorted lexicographically.
+		 * @throws unspecified any exception thrown by the other overload.
+		 */
+		template <typename T = poisson_series>
+		ti_type<T> t_integrate(std::vector<std::string> names) const
+		{
+			if (unlikely(!std::is_sorted(names.begin(),names.end()))) {
+				piranha_throw(std::invalid_argument,"the list of symbol names must be ordered lexicographically");
 			}
-			return retval;
+			// Remove duplicates.
+			auto new_end = std::unique(names.begin(),names.end());
+			names.erase(new_end,names.end());
+			if (unlikely(names.size() != this->m_symbol_set.size())) {
+				piranha_throw(std::invalid_argument,"the number of symbols passed in input must be equal to the "
+					"number of symbols of the Poisson series");
+			}
+			return t_integrate_impl(names);
 		}
 };
 

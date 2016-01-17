@@ -22,8 +22,12 @@
 #define PYRANHA_EXPOSE_POISSON_SERIES_HPP
 
 #include <boost/python/class.hpp>
+#include <boost/python/list.hpp>
+#include <boost/python/stl_iterator.hpp>
+#include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "../src/detail/sfinae_types.hpp"
 
@@ -49,10 +53,18 @@ struct ps_custom_hook
 	{
 		return s.t_integrate();
 	}
+	// NOTE: here the return type is the same as returned by the other overload of t_integrate().
+	template <typename S>
+	static auto t_integrate_names_wrapper(const S &s, bp::list l) -> decltype(s.t_integrate())
+	{
+		bp::stl_input_iterator<std::string> begin_p(l), end_p;
+		return s.t_integrate(std::vector<std::string>(begin_p,end_p));
+	}
 	template <typename S, typename std::enable_if<has_t_integrate<S>::value,int>::type = 0>
 	static void expose_t_integrate(bp::class_<S> &series_class)
 	{
 		series_class.def("t_integrate",t_integrate_wrapper<S>);
+		series_class.def("t_integrate",t_integrate_names_wrapper<S>);
 	}
 	template <typename S, typename std::enable_if<!has_t_integrate<S>::value,int>::type = 0>
 	static void expose_t_integrate(bp::class_<S> &)
