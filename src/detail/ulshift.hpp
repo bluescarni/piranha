@@ -32,6 +32,8 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <type_traits>
 
+#include "../config.hpp"
+
 namespace piranha { namespace detail {
 
 // Wrapper for left shifting of unsigned integrals.
@@ -45,6 +47,7 @@ template <typename Uint, typename std::enable_if<std::numeric_limits<Uint>::max(
 inline Uint ulshift(Uint n, unsigned s)
 {
 	static_assert(std::is_integral<Uint>::value && std::is_unsigned<Uint>::value,"Invalid type.");
+	piranha_assert(s < unsigned(std::numeric_limits<Uint>::digits));
 	return static_cast<Uint>(static_cast<unsigned>(n) << s);
 }
 
@@ -53,6 +56,7 @@ template <typename Uint, typename std::enable_if<(std::numeric_limits<Uint>::max
 inline Uint ulshift(Uint n, unsigned s)
 {
 	static_assert(std::is_integral<Uint>::value && std::is_unsigned<Uint>::value,"Invalid type.");
+	piranha_assert(s < unsigned(std::numeric_limits<Uint>::digits));
 	return n << s;
 }
 
