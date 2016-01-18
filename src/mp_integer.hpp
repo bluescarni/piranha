@@ -877,48 +877,29 @@ struct static_integer
 	// lshift by n bits.
 	int lshift(unsigned long n)
 	{
-		using size_type = typename limbs_type::size_type;
-		if (n < limb_bits) {
-			if (m_limbs[1u] >= (limb_t(1) << (limb_bits - n))) {
-				return 1;
+		limb_t hi;
+		limb_t lo;
+		if (n == 0u) return 0;
+		if (m_limbs[0u] == 0u && m_limbs[1u] == 0u) return 0;
+		if (n >= 2u * limb_bits) return 1;
+		if (n >= limb_bits) {
+			if (m_limbs[1u] != 0u) return 1;
+			hi = m_limbs[0u];
+			lo = 0u;
+			if (n == limb_bits) {
+				m_limbs[0u] = hi;
+				m_limbs[1u] = lo;
+				return 0;
 			}
-			// Shift both limbs.
-			const limb_t lo = m_limbs[0u] << n;
-			const limb_t hi = (m_limbs[1u] << n) + (m_limbs[0u] >> limb_bits - n);
-			m_limbs[0u] = lo;
-			m_limbs[1u] = hi;
-			mpz_size_t asize = _mp_size;
-			bool sign = true;
-			if (asize < 0) {
-				asize = -asize;
-				sign = false;
-			}
-			if (asize < 2) {
-				asize = static_cast<mpz_size_t>(asize + (m_limbs[static_cast<size_type>(asize)] != 0u));
-				_mp_size = static_cast<mpz_size_t>(sign ? asize : -asize);
-			}
-			clear_extra_bits();
-		} else if (n < 2 * limb_bits) {
-			if (m_limbs[1u] != 0u) {
-				return 1;
-			} else if (m_limbs[0u] >= (limb_t(1) << (2 * limb_bits - n))) {
-				return 1;
-			}
-			limb_t hi = m_limbs[0u] << (n - limb_bits);
-			m_limbs[0u] = 0u;
-			m_limbs[1u] = hi;
-			_mp_size = static_cast<mpz_size_t>(hi == 0u ? 0u : 2u * _mp_size);
-			clear_extra_bits();
+			n -= limb_bits;
 		} else {
-			if (m_limbs[0u] != 0u || m_limbs[1u] != 0u) {
-				return 1;
-			}
-			m_limbs[0u] = 0u;
-			m_limbs[1u] = 0u;
-			_mp_size = 0u;
-			clear_extra_bits();
+			hi = m_limbs[1u];
+			lo = m_limbs[0u];
 		}
-		return 0;
+
+		if (hi >= (limb_t(1) << (limb_bits - n))) return 1;
+		hi = ulshift(hi, n) + (lo >> limb_bits - n);
+		lo = ulshift(lo, n);
 	}
 	// Division.
 	static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
