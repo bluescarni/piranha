@@ -1,22 +1,30 @@
-/***************************************************************************
- *   Copyright (C) 2009-2011 by Francesco Biscani                          *
- *   bluescarni@gmail.com                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+
+This file is part of the Piranha library.
+
+The Piranha library is free software; you can redistribute it and/or modify
+it under the terms of either:
+
+  * the GNU Lesser General Public License as published by the Free
+    Software Foundation; either version 3 of the License, or (at your
+    option) any later version.
+
+or
+
+  * the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any
+    later version.
+
+or both in parallel, as here.
+
+The Piranha library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received copies of the GNU General Public License and the
+GNU Lesser General Public License along with the Piranha library.  If not,
+see https://www.gnu.org/licenses/. */
 
 #include "../src/poisson_series.hpp"
 
@@ -762,35 +770,68 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 	using ts0 = poisson_series<dtype0>;
 	ts0 x{"x"}, y{"y"}, z{"z"};
 	ts0 nu_x{"\\nu_{x}"}, nu_y{"\\nu_{y}"}, nu_z{"\\nu_{z}"};
+	ts0 a{"a"}, b{"b"};
 	auto tmp0 = (1/5_q * z * math::sin(x + y)).t_integrate();
 	BOOST_CHECK((std::is_same<decltype(tmp0),ts0>::value));
 	BOOST_CHECK_EQUAL(tmp0,-1/5_q*z*math::cos(x + y)*invert(nu_x+nu_y));
+	BOOST_CHECK_THROW((1/5_q * z * math::sin(x + y)).t_integrate({}),std::invalid_argument);
+	tmp0 = (1/5_q * z * math::sin(x + y)).t_integrate({"a","b"});
+	BOOST_CHECK_EQUAL(tmp0,-1/5_q*z*math::cos(x + y)*invert(a+b));
+	tmp0 = (1/5_q * z * math::sin(x + y)).t_integrate({"a","a","b"});
+	BOOST_CHECK_EQUAL(tmp0,-1/5_q*z*math::cos(x + y)*invert(a+b));
+	tmp0 = (1/5_q * z * math::sin(x + y)).t_integrate({"a","b","b"});
+	BOOST_CHECK_EQUAL(tmp0,-1/5_q*z*math::cos(x + y)*invert(a+b));
+	tmp0 = (1/5_q * z * math::sin(x + y)).t_integrate({"a","a","b","b"});
+	BOOST_CHECK_EQUAL(tmp0,-1/5_q*z*math::cos(x + y)*invert(a+b));
+	BOOST_CHECK_THROW((1/5_q * z * math::sin(x + y)).t_integrate({"a","b","c"}),std::invalid_argument);
+	BOOST_CHECK_THROW((1/5_q * z * math::sin(x + y)).t_integrate({"a","b","b","c"}),std::invalid_argument);
+	BOOST_CHECK_THROW((1/5_q * z * math::sin(x + y)).t_integrate({"a","b","b","c","c"}),std::invalid_argument);
+	BOOST_CHECK_THROW((1/5_q * z * math::sin(x + y)).t_integrate({"b","a"}),std::invalid_argument);
 	tmp0 = (1/5_q * z * math::cos(x + y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(x + y)*invert(nu_x+nu_y));
+	tmp0 = (1/5_q * z * math::cos(x + y)).t_integrate({"a","b"});
+	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(x + y)*invert(a+b));
 	tmp0 = (1/5_q * z * math::cos(3*x + y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(3*x + y)*invert((3*nu_x+nu_y)));
+	tmp0 = (1/5_q * z * math::cos(3*x + y)).t_integrate({"a","b"});
+	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(3*x + y)*invert((3*a+b)));
 	// Check with a common divisor.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0,1/15_q*z*math::sin(3*x + 6*y)*invert(nu_x+2*nu_y));
+	tmp0 = (1/5_q * z * math::cos(3*x + 6*y)).t_integrate({"a","b"});
+	BOOST_CHECK_EQUAL(tmp0,1/15_q*z*math::sin(3*x + 6*y)*invert(a+2*b));
 	// Check with a leading zero.
 	// NOTE: this complication is to produce cos(6y) while avoiding x being trimmed by the linear argument
 	// deduction.
 	tmp0 = (1/5_q * z * (math::cos(x + 6*y) * math::cos(x) - math::cos(2*x + 6*y)/2)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0,1/60_q*z*math::sin(6*y)*invert(nu_y));
+	tmp0 = (1/5_q * z * (math::cos(x + 6*y) * math::cos(x) - math::cos(2*x + 6*y)/2)).t_integrate({"a","b"});
+	BOOST_CHECK_EQUAL(tmp0,1/60_q*z*math::sin(6*y)*invert(b));
 	// Test throwing.
 	BOOST_CHECK_THROW(z.t_integrate(),std::invalid_argument);
+	BOOST_CHECK_THROW(z.t_integrate({}),std::invalid_argument);
 	// An example with more terms.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0,1/15_q * z * math::sin(3*x + 6*y)  * invert(nu_x+2*nu_y) +
 		2/3_q * z * math::cos(12*x - 9*y) * invert(4*nu_x-3*nu_y));
+	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate({"a","b"});
+	BOOST_CHECK_EQUAL(tmp0,1/15_q * z * math::sin(3*x + 6*y)  * invert(a+2*b) +
+		2/3_q * z * math::cos(12*x - 9*y) * invert(4*a-3*b));
 	// Test with existing divisors.
 	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+2*nu_y);
 	BOOST_CHECK_EQUAL(tmp0.t_integrate(),1/15_q * z * sin(3*x + 6*y) * pow(invert(nu_x+2*nu_y),2));
+	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+2*nu_y);
+	BOOST_CHECK_EQUAL(tmp0.t_integrate({"a","b"}),1/15_q * z * sin(3*x + 6*y) * invert(nu_x+2*nu_y) * invert(a+2*b));
 	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+nu_y);
 	BOOST_CHECK_EQUAL(tmp0.t_integrate(),1/15_q * z * sin(3*x + 6*y) * invert(nu_x+nu_y) * invert(nu_x+2*nu_y));
+	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+nu_y);
+	BOOST_CHECK_EQUAL(tmp0.t_integrate({"a","b"}),1/15_q * z * sin(3*x + 6*y) * invert(nu_x+nu_y) * invert(a+2*b));
 	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+2*nu_y) + 1/3_q * z*z * sin(2*x + 6*y) * invert(nu_y);
 	BOOST_CHECK_EQUAL(tmp0.t_integrate(),1/15_q * z * sin(3*x + 6*y) * pow(invert(nu_x+2*nu_y),2) +
 		-1/6_q*z*z*cos(2*x+6*y) * invert(nu_y) * invert(nu_x+3*nu_y));
+	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+2*nu_y) + 1/3_q * z*z * sin(2*x + 6*y) * invert(nu_y);
+	BOOST_CHECK_EQUAL(tmp0.t_integrate({"a","b"}),1/15_q * z * sin(3*x + 6*y) * invert(nu_x+2*nu_y) * invert(a+2*b) +
+		-1/6_q*z*z*cos(2*x+6*y) * invert(nu_y) * invert(a+3*b));
 	// Test derivative.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0.partial("z"),tmp0 * invert(ptype0{"z"}));

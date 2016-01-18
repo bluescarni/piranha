@@ -1,22 +1,30 @@
-/***************************************************************************
- *   Copyright (C) 2009-2011 by Francesco Biscani                          *
- *   bluescarni@gmail.com                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+
+This file is part of the Piranha library.
+
+The Piranha library is free software; you can redistribute it and/or modify
+it under the terms of either:
+
+  * the GNU Lesser General Public License as published by the Free
+    Software Foundation; either version 3 of the License, or (at your
+    option) any later version.
+
+or
+
+  * the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any
+    later version.
+
+or both in parallel, as here.
+
+The Piranha library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received copies of the GNU General Public License and the
+GNU Lesser General Public License along with the Piranha library.  If not,
+see https://www.gnu.org/licenses/. */
 
 #ifndef PIRANHA_MP_INTEGER_HPP
 #define PIRANHA_MP_INTEGER_HPP
@@ -47,6 +55,7 @@
 #include "detail/mp_rational_fwd.hpp"
 #include "detail/real_fwd.hpp"
 #include "detail/sfinae_types.hpp"
+#include "detail/ulshift.hpp"
 #include "exceptions.hpp"
 #include "is_key.hpp"
 #include "math.hpp"
@@ -63,7 +72,7 @@ inline UInt clear_top_bits(UInt input, unsigned n)
 {
 	static_assert(std::is_integral<UInt>::value && std::is_unsigned<UInt>::value,"Invalid type.");
 	piranha_assert(n < unsigned(std::numeric_limits<UInt>::digits));
-	return static_cast<UInt>(static_cast<UInt>(input << n) >> n);
+	return static_cast<UInt>(ulshift(input,n) >> n);
 }
 
 // Determine if the condition for using the optimised version

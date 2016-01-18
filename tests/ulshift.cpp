@@ -26,32 +26,38 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "pearce1.hpp"
+#include "../src/detail/ulshift.hpp"
 
-#define BOOST_TEST_MODULE pearce1_unpacked_test
+#define BOOST_TEST_MODULE ulshift_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/lexical_cast.hpp>
+#include <limits>
+#include <type_traits>
 
-#include "../src/environment.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/settings.hpp"
+using namespace piranha::detail;
 
-using namespace piranha;
-
-// Pearce's polynomial multiplication test number 1. Calculate:
-// f * g
-// where
-// f = (1 + x + y + 2*z**2 + 3*t**3 + 5*u**5)**12
-// g = (1 + u + t + 2*z**2 + 3*y**3 + 5*x**5)**12
-// The monomial is in unpacked form.
-
-BOOST_AUTO_TEST_CASE(pearce1_test)
+BOOST_AUTO_TEST_CASE(ulshift_test_00)
 {
-	environment env;
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
-	}
-	BOOST_CHECK_EQUAL((pearce1<integer,monomial<signed char>>().size()),5821335u);
+	using utype = unsigned short;
+	constexpr unsigned nbits = std::numeric_limits<utype>::digits;
+	utype n0(1);
+	n0 = static_cast<utype>(n0 << (nbits - 1u));
+	BOOST_CHECK((std::is_same<decltype(ulshift(n0,1u)),utype>::value));
+	BOOST_CHECK_EQUAL(ulshift(n0,1u),0u);
+	BOOST_CHECK_EQUAL(ulshift(n0,2u),0u);
+	BOOST_CHECK_EQUAL(ulshift(n0,3u),0u);
+	BOOST_CHECK_EQUAL(ulshift(utype(2),nbits - 1u),0u);
+}
+
+BOOST_AUTO_TEST_CASE(ulshift_test_10)
+{
+	using utype = unsigned;
+	constexpr unsigned nbits = std::numeric_limits<utype>::digits;
+	utype n0(1);
+	n0 = static_cast<utype>(n0 << (nbits - 1u));
+	BOOST_CHECK((std::is_same<decltype(ulshift(n0,1u)),utype>::value));
+	BOOST_CHECK_EQUAL(ulshift(n0,1u),0u);
+	BOOST_CHECK_EQUAL(ulshift(n0,2u),0u);
+	BOOST_CHECK_EQUAL(ulshift(n0,3u),0u);
+	BOOST_CHECK_EQUAL(ulshift(utype(2),nbits - 1u),0u);
 }

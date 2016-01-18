@@ -1,21 +1,31 @@
 # -*- coding: iso-8859-1 -*-
-# Copyright (C) 2009-2011 by Francesco Biscani
-# bluescarni@gmail.com
+# Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
+# This file is part of the Piranha library.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# The Piranha library is free software; you can redistribute it and/or modify
+# it under the terms of either:
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the
-# Free Software Foundation, Inc.,
-# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#  * the GNU Lesser General Public License as published by the Free
+#    Software Foundation; either version 3 of the License, or (at your
+#    option) any later version.
+#
+# or
+#
+#  * the GNU General Public License as published by the Free Software
+#    Foundation; either version 3 of the License, or (at your option) any
+#    later version.
+#
+# or both in parallel, as here.
+#
+# The Piranha library is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received copies of the GNU General Public License and the
+# GNU Lesser General Public License along with the Piranha library.  If not,
+# see https://www.gnu.org/licenses/.
 
 from __future__ import absolute_import as _ai
 
@@ -725,6 +735,18 @@ class t_integrate_test_case(_ut.TestCase):
 		st = s.t_integrate()
 		self.assertEqual(type(st.list[0][0]),divisor_series(polynomial(rational,monomial(short)),divisor(short))())
 		self.assertEqual(str(st),'-1/6*z*1/[(2*\\nu_{x}-\\nu_{y})]*cos(4*x-2*y)')
+		st = s.t_integrate(['a','b'])
+		self.assertEqual(type(st.list[0][0]),divisor_series(polynomial(rational,monomial(short)),divisor(short))())
+		self.assertEqual(str(st),'-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
+		self.assertRaises(ValueError,lambda : s.t_integrate([]))
+		self.assertRaises(ValueError,lambda : s.t_integrate(['a','b','c']))
+		self.assertRaises(ValueError,lambda : s.t_integrate(['b','a']))
+		st = s.t_integrate(['a','b','b'])
+		self.assertEqual(str(st),'-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
+		st = s.t_integrate(['a','a','b','b'])
+		self.assertEqual(str(st),'-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
+		st = s.t_integrate(['a','a','b'])
+		self.assertEqual(str(st),'-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
 
 class doctests_test_case(_ut.TestCase):
 	"""Test case that will run all the doctests.
