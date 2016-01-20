@@ -856,11 +856,16 @@ struct static_integer
 	{
 		limb_t hi;
 		limb_t lo;
-		if (n == 0u) return 0;
-		if (m_limbs[0u] == 0u && m_limbs[1u] == 0u) return 0;
-		if (n >= 2u * limb_bits) return 1;
+		if (n == 0u || _mp_size == 0) {
+			return 0;
+		}
+		if (n >= 2u * limb_bits) {
+			return 1;
+		}
 		if (n >= limb_bits) {
-			if (m_limbs[1u] != 0u) return 1;
+			if (m_limbs[1u] != 0u) {
+				return 1;
+			}
 			hi = m_limbs[0u];
 			lo = 0u;
 			if (n == limb_bits) {
@@ -874,20 +879,20 @@ struct static_integer
 			lo = m_limbs[0u];
 		}
 
-		if (hi >= (limb_t(1) << (limb_bits - n))) return 1;
-		hi = ulshift(hi, n) + (lo >> limb_bits - n);
+		if (hi >= (limb_t(1) << (limb_bits - n))) {
+			return 1;
+		}
+		hi = static_cast<limb_t>(ulshift(hi, n) + (lo >> limb_bits - n));
 		lo = ulshift(lo, n);
-		mpz_size_t asize;
 		bool sign = true;
 		if (_mp_size < 0) {
 			sign = false;
 		}
-		asize = static_cast<mpz_size_t>(m_limbs[1u] != 0u);
-		if (asize == 1) {
-			asize += static_cast<mpz_size_t>(m_limbs[0u] != 0u);
-		}
+		mpz_size_t asize = 1;
+		asize += static_cast<mpz_size_t>(m_limbs[1u] != 0u);
 		_mp_size = static_cast<mpz_size_t>(sign ? asize : -asize);
 		clear_extra_bits();
+		return 0;
 	}
 	// Division.
 	static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
