@@ -33,8 +33,8 @@ see https://www.gnu.org/licenses/. */
 	#error Minimum Intel compiler version supported is 15.
 #endif
 
-#define likely(x) __builtin_expect((x),1)
-#define unlikely(x) __builtin_expect((x),0)
+#define likely(x) __builtin_expect(!!(x),1)
+#define unlikely(x) __builtin_expect(!!(x),0)
 
 #define PIRANHA_COMPILER_IS_INTEL
 

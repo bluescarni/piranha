@@ -33,8 +33,8 @@ see https://www.gnu.org/licenses/. */
 	#error Minimum GCC version supported is 4.8.0.
 #endif
 
-#define likely(x) __builtin_expect((x),1)
-#define unlikely(x) __builtin_expect((x),0)
+#define likely(x) __builtin_expect(!!(x),1)
+#define unlikely(x) __builtin_expect(!!(x),0)
 
 #define PIRANHA_COMPILER_IS_GCC
 
