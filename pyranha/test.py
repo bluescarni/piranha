@@ -425,16 +425,8 @@ class poisson_series_test_case(_ut.TestCase):
 	
 	"""
 	def runTest(self):
-		from .types import poisson_series, rational, double, real, monomial, short, divisor_series, divisor, polynomial
-		from fractions import Fraction
+		from .types import poisson_series, rational, monomial, short, divisor_series, divisor, polynomial
 		from .math import partial, integrate, sin, cos, invert
-		self.assertEqual(type(poisson_series(rational)()(1).list[0][0]),Fraction)
-		self.assertEqual(type(poisson_series(double)()(1).list[0][0]),float)
-		try:
-			from mpmath import mpf
-			self.assertEqual(type(poisson_series(real)()(1).list[0][0]),mpf)
-		except ImportError:
-			pass
 		# A couple of tests with eps.
 		eps = poisson_series(divisor_series(polynomial(rational,monomial(short)),divisor(short)))()
 		x,y,z = [eps(_) for _ in ['x','y','z']]

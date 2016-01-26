@@ -52,10 +52,6 @@ DECLARE_TT_NAMER(piranha::poisson_series,"poisson_series")
 struct poisson_series_descriptor
 {
 	using params = std::tuple<
-		// Numerical coefficients.
-		std::tuple<double>,
-		std::tuple<piranha::rational>,
-		std::tuple<piranha::real>,
 		// Polynomials with double coefficients.
 		std::tuple<piranha::polynomial<double,piranha::monomial<piranha::rational>>>,
 		std::tuple<piranha::polynomial<double,piranha::monomial<short>>>,
@@ -71,7 +67,11 @@ struct poisson_series_descriptor
 		// Divisor series for the rational polynomial coefficients.
 		std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational,piranha::monomial<piranha::rational>>,piranha::divisor<short>>>,
 		std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational,piranha::monomial<short>>,piranha::divisor<short>>>,
-		std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational,piranha::kronecker_monomial<>>,piranha::divisor<short>>>
+		std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational,piranha::kronecker_monomial<>>,piranha::divisor<short>>>,
+		// Divisor series for the double polynomial coefficients.
+		std::tuple<piranha::divisor_series<piranha::polynomial<double,piranha::monomial<piranha::rational>>,piranha::divisor<short>>>,
+		std::tuple<piranha::divisor_series<piranha::polynomial<double,piranha::monomial<short>>,piranha::divisor<short>>>,
+		std::tuple<piranha::divisor_series<piranha::polynomial<double,piranha::kronecker_monomial<>>,piranha::divisor<short>>>
 	>;
 	using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
 	using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
