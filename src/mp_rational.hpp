@@ -238,10 +238,16 @@ class mp_rational
 		{
 			// NOTE: all this should never throw because we only operate on mp_integer objects,
 			// no conversions involved, etc.
-			if (m_den.is_unitary() && other.m_den.is_unitary()) {
-				// Both are integers, we can just add without canonicalising.
-				// NOTE: this is safe is this and other are the same thing.
-				m_num += other.m_num;
+			if (m_den.is_unitary()) {
+				if (other.m_den.is_unitary()) {
+					// Both are integers, we can just add without canonicalising.
+					m_num += other.m_num;
+				} else {
+					m_num = m_num*other.m_den + other.m_num;
+					m_den = other.m_den;
+				}
+			} else if (other.m_den.is_unitary()) {
+				math::multiply_accumulate(m_num,m_den,other.m_num);
 			} else if (m_den == other.m_den) {
 				// Denominators are the same, add numerators and canonicalise.
 				// NOTE: safe if this and other coincide.
