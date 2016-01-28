@@ -238,15 +238,19 @@ class mp_rational
 		{
 			// NOTE: all this should never throw because we only operate on mp_integer objects,
 			// no conversions involved, etc.
-			if (m_den.is_unitary()) {
-				if (other.m_den.is_unitary()) {
-					// Both are integers, we can just add without canonicalising.
-					m_num += other.m_num;
-				} else {
-					m_num = m_num*other.m_den + other.m_num;
-					m_den = other.m_den;
-				}
-			} else if (other.m_den.is_unitary()) {
+			const bool u1 = m_den.is_unitary(), u2 = other.m_den.is_unitary();
+			if (u1 && u2) {
+				// Both are integers, just add without canonicalising. This is safe if
+				// this and other are the same object.
+				m_num += other.m_num;
+			} else if (u1) {
+				// Only this is an integer.
+				// NOTE: figure out a way here to use multiply_accumulate(). Most likely we need
+				// a tmp copy, so better profile it first.
+				m_num = m_num*other.m_den + other.m_num;
+				m_den = other.m_den;
+			} else if (u2) {
+				// Only other is an integer.
 				math::multiply_accumulate(m_num,m_den,other.m_num);
 			} else if (m_den == other.m_den) {
 				// Denominators are the same, add numerators and canonicalise.
@@ -267,11 +271,10 @@ class mp_rational
 		mp_rational &in_place_add(const int_type &other)
 		{
 			if (m_den.is_unitary()) {
-				// If den is unitary, no need to multiply or canonicalise.
+				// If den is unitary, no need to multiply.
 				m_num += other;
 			} else {
 				math::multiply_accumulate(m_num,m_den,other);
-				canonicalise();
 			}
 			return *this;
 		}
@@ -320,8 +323,17 @@ class mp_rational
 		// In-place sub.
 		mp_rational &in_place_sub(const mp_rational &other)
 		{
-			if (m_den.is_unitary() && other.m_den.is_unitary()) {
+			// NOTE: optimisations are possible here if we implement multiply_sub
+			// or do some trickery with in-place negation + multiply_accumulate().
+			// Keep it in mind for future optimisations.
+			const bool u1 = m_den.is_unitary(), u2 = other.m_den.is_unitary();
+			if (u1 && u2) {
 				m_num -= other.m_num;
+			} else if (u1) {
+				m_num = m_num*other.m_den - other.m_num;
+				m_den = other.m_den;
+			} else if (u2) {
+				m_num = m_num - m_den*other.m_num;
 			} else if (m_den == other.m_den) {
 				m_num -= other.m_num;
 				canonicalise();
@@ -345,7 +357,6 @@ class mp_rational
 				m_den.negate();
 				math::multiply_accumulate(m_num,m_den,other);
 				m_den.negate();
-				canonicalise();
 			}
 			return *this;
 		}
