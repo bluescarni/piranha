@@ -949,20 +949,6 @@ struct static_integer
 		}
 		return retval;
 	}
-	std::size_t approx_nbits() const
-	{
-		const auto asize = abs_size();
-		if (asize == 0) {
-			return 0u;
-		}
-		if (asize == 1) {
-			return limb_bits;
-		}
-		if (unlikely(unsigned(asize) > std::numeric_limits<std::size_t>::max() / 2u)) {
-			piranha_throw(std::overflow_error,"overflow error in the computation of the number of bits");
-		}
-		return static_cast<std::size_t>(limb_bits * 2u);
-	}
 	mpz_alloc_t	_mp_alloc;
 	mpz_size_t	_mp_size;
 	limbs_type	m_limbs;
@@ -3236,18 +3222,6 @@ class mp_integer
 			retval.promote();
 			::mpz_fac_ui(&retval.m_int.g_dy(),static_cast<unsigned long>(*this));
 			return retval;
-		}
-		std::size_t approx_nbits() const
-		{
-			if (is_static()) {
-				return m_int.g_st().approx_nbits();
-			} else {
-				const auto l_size = ::mpz_size(&m_int.g_dy());
-				if (unlikely(l_size > std::numeric_limits<std::size_t>::max() / std::size_t(GMP_NUMB_BITS))) {
-					piranha_throw(std::overflow_error,"overflow error in the computation of the number of bits");
-				}
-				return static_cast<std::size_t>(std::size_t(GMP_NUMB_BITS) * l_size);
-			}
 		}
 	private:
 		template <typename T>
