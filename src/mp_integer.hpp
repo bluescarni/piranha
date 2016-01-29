@@ -961,8 +961,6 @@ struct static_integer
 		if (unlikely(unsigned(asize) > std::numeric_limits<std::size_t>::max() / 2u)) {
 			piranha_throw(std::overflow_error,"overflow error in the computation of the number of bits");
 		}
-std::cout << "limb bits is: " << limb_bits << '\n';
-std::cout << "limb bits 2: " << (limb_bits * 2u) << '\n';
 		return static_cast<std::size_t>(limb_bits * 2u);
 	}
 	mpz_alloc_t	_mp_alloc;

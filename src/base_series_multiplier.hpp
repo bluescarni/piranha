@@ -148,49 +148,49 @@ struct base_series_multiplier_impl
 	}
 };
 
-//template <typename Series, typename Derived>
-//struct base_series_multiplier_impl<Series,Derived,typename std::enable_if<is_mp_rational<typename Series::term_type::cf_type>::value>::type>
-//{
-//	// Useful shortcuts.
-//	using term_type = typename Series::term_type;
-//	using rat_type = typename term_type::cf_type;
-//	using int_type = typename std::decay<decltype(std::declval<rat_type>().num())>::type;
-//	using container_type = typename std::decay<decltype(std::declval<Series>()._container())>::type;
-//	void fill_term_pointers(const container_type &c1, const container_type &c2,
-//		std::vector<term_type const *> &v1, std::vector<term_type const *> &v2)
-//	{
-//		// Compute the least common multiplier.
-//		m_lcm = 1;
-//		auto it_f = c1.end();
-//		for (auto it = c1.begin(); it != it_f; ++it) {
-//			m_lcm = (m_lcm * it->m_cf.den()) / gcd(m_lcm,it->m_cf.den());
-//		}
-//		it_f = c2.end();
-//		for (auto it = c2.begin(); it != it_f; ++it) {
-//			m_lcm = (m_lcm * it->m_cf.den()) / gcd(m_lcm,it->m_cf.den());
-//		}
-//		// All these computations involve only positive numbers,
-//		// the GCD must always be positive.
-//		piranha_assert(m_lcm.sign() == 1);
-//		// Copy over the terms and renormalise to lcm.
-//		it_f = c1.end();
-//		for (auto it = c1.begin(); it != it_f; ++it) {
-//			m_terms1.push_back(term_type(rat_type(m_lcm / it->m_cf.den() * it->m_cf.num(),int_type(1)),it->m_key));
-//		}
-//		it_f = c2.end();
-//		for (auto it = c2.begin(); it != it_f; ++it) {
-//			m_terms2.push_back(term_type(rat_type(m_lcm / it->m_cf.den() * it->m_cf.num(),int_type(1)),it->m_key));
-//		}
-//		// Copy over the pointers.
-//		std::transform(m_terms1.begin(),m_terms1.end(),std::back_inserter(v1),[](const term_type &t) {return &t;});
-//		std::transform(m_terms2.begin(),m_terms2.end(),std::back_inserter(v2),[](const term_type &t) {return &t;});
-//		piranha_assert(v1.size() == c1.size());
-//		piranha_assert(v2.size() == c2.size());
-//	}
-//	std::vector<term_type>	m_terms1;
-//	std::vector<term_type>	m_terms2;
-//	int_type		m_lcm;
-//};
+template <typename Series, typename Derived>
+struct base_series_multiplier_impl<Series,Derived,typename std::enable_if<is_mp_rational<typename Series::term_type::cf_type>::value>::type>
+{
+	// Useful shortcuts.
+	using term_type = typename Series::term_type;
+	using rat_type = typename term_type::cf_type;
+	using int_type = typename std::decay<decltype(std::declval<rat_type>().num())>::type;
+	using container_type = typename std::decay<decltype(std::declval<Series>()._container())>::type;
+	void fill_term_pointers(const container_type &c1, const container_type &c2,
+		std::vector<term_type const *> &v1, std::vector<term_type const *> &v2)
+	{
+		// Compute the least common multiplier.
+		m_lcm = 1;
+		auto it_f = c1.end();
+		for (auto it = c1.begin(); it != it_f; ++it) {
+			m_lcm = (m_lcm * it->m_cf.den()) / gcd(m_lcm,it->m_cf.den());
+		}
+		it_f = c2.end();
+		for (auto it = c2.begin(); it != it_f; ++it) {
+			m_lcm = (m_lcm * it->m_cf.den()) / gcd(m_lcm,it->m_cf.den());
+		}
+		// All these computations involve only positive numbers,
+		// the GCD must always be positive.
+		piranha_assert(m_lcm.sign() == 1);
+		// Copy over the terms and renormalise to lcm.
+		it_f = c1.end();
+		for (auto it = c1.begin(); it != it_f; ++it) {
+			m_terms1.push_back(term_type(rat_type(m_lcm / it->m_cf.den() * it->m_cf.num(),int_type(1)),it->m_key));
+		}
+		it_f = c2.end();
+		for (auto it = c2.begin(); it != it_f; ++it) {
+			m_terms2.push_back(term_type(rat_type(m_lcm / it->m_cf.den() * it->m_cf.num(),int_type(1)),it->m_key));
+		}
+		// Copy over the pointers.
+		std::transform(m_terms1.begin(),m_terms1.end(),std::back_inserter(v1),[](const term_type &t) {return &t;});
+		std::transform(m_terms2.begin(),m_terms2.end(),std::back_inserter(v2),[](const term_type &t) {return &t;});
+		piranha_assert(v1.size() == c1.size());
+		piranha_assert(v2.size() == c2.size());
+	}
+	std::vector<term_type>	m_terms1;
+	std::vector<term_type>	m_terms2;
+	int_type		m_lcm;
+};
 
 }
 
@@ -255,57 +255,57 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			return Term{std::move(t.m_cf),t.m_key};
 		}
 		// Implementation of finalise().
-//		template <typename T, typename std::enable_if<detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
-//		void finalise_impl(T &s) const
-//		{
-//			// Nothing to do if the lcm is unitary.
-//			if (math::is_unitary(this->m_lcm)) {
-//				return;
-//			}
-//			// NOTE: this has to be the square of the lcm, as in addition to uniformising
-//			// the denominators in each series we are also multiplying the two series.
-//			const auto l2 = this->m_lcm * this->m_lcm;
-//			auto &container = s._container();
-//			// Single thread implementation.
-//			if (m_n_threads == 1u) {
-//				for (const auto &t: container) {
-//					t.m_cf._set_den(l2);
-//					t.m_cf.canonicalise();
-//				}
-//				return;
-//			}
-//			// Multi-thread implementation.
-//			// Buckets per thread.
-//			const bucket_size_type bpt = static_cast<bucket_size_type>(container.bucket_count() / m_n_threads);
-//			auto thread_func = [l2,&container,this,bpt](unsigned t_idx) {
-//				bucket_size_type start_idx = static_cast<bucket_size_type>(t_idx * bpt);
-//				// Special handling for the last thread.
-//				const bucket_size_type end_idx = t_idx == (this->m_n_threads - 1u) ? container.bucket_count() :
-//					static_cast<bucket_size_type>((t_idx + 1u) * bpt);
-//				for (; start_idx != end_idx; ++start_idx) {
-//					auto &list = container._get_bucket_list(start_idx);
-//					for (const auto &t: list) {
-//						t.m_cf._set_den(l2);
-//						t.m_cf.canonicalise();
-//					}
-//				}
-//			};
-//			// Go with the threads.
-//			future_list<decltype(thread_pool::enqueue(0u,thread_func,0u))> ff_list;
-//			try {
-//				for (unsigned i = 0u; i < m_n_threads; ++i) {
-//					ff_list.push_back(thread_pool::enqueue(i,thread_func,i));
-//				}
-//				// First let's wait for everything to finish.
-//				ff_list.wait_all();
-//				// Then, let's handle the exceptions.
-//				ff_list.get_all();
-//			} catch (...) {
-//				ff_list.wait_all();
-//				throw;
-//			}
-//		}
-		template <typename T/*, typename std::enable_if<!detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0*/>
+		template <typename T, typename std::enable_if<detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
+		void finalise_impl(T &s) const
+		{
+			// Nothing to do if the lcm is unitary.
+			if (math::is_unitary(this->m_lcm)) {
+				return;
+			}
+			// NOTE: this has to be the square of the lcm, as in addition to uniformising
+			// the denominators in each series we are also multiplying the two series.
+			const auto l2 = this->m_lcm * this->m_lcm;
+			auto &container = s._container();
+			// Single thread implementation.
+			if (m_n_threads == 1u) {
+				for (const auto &t: container) {
+					t.m_cf._set_den(l2);
+					t.m_cf.canonicalise();
+				}
+				return;
+			}
+			// Multi-thread implementation.
+			// Buckets per thread.
+			const bucket_size_type bpt = static_cast<bucket_size_type>(container.bucket_count() / m_n_threads);
+			auto thread_func = [l2,&container,this,bpt](unsigned t_idx) {
+				bucket_size_type start_idx = static_cast<bucket_size_type>(t_idx * bpt);
+				// Special handling for the last thread.
+				const bucket_size_type end_idx = t_idx == (this->m_n_threads - 1u) ? container.bucket_count() :
+					static_cast<bucket_size_type>((t_idx + 1u) * bpt);
+				for (; start_idx != end_idx; ++start_idx) {
+					auto &list = container._get_bucket_list(start_idx);
+					for (const auto &t: list) {
+						t.m_cf._set_den(l2);
+						t.m_cf.canonicalise();
+					}
+				}
+			};
+			// Go with the threads.
+			future_list<decltype(thread_pool::enqueue(0u,thread_func,0u))> ff_list;
+			try {
+				for (unsigned i = 0u; i < m_n_threads; ++i) {
+					ff_list.push_back(thread_pool::enqueue(i,thread_func,i));
+				}
+				// First let's wait for everything to finish.
+				ff_list.wait_all();
+				// Then, let's handle the exceptions.
+				ff_list.get_all();
+			} catch (...) {
+				ff_list.wait_all();
+				throw;
+			}
+		}
+		template <typename T, typename std::enable_if<!detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
 		void finalise_impl(T &) const
 		{}
 	public:
