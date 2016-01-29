@@ -41,7 +41,7 @@ script:
     - if [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E gastineau --output-on-failure;
       elif [[ "${BUILD_TYPE}" == "Debug"  ]]; then
-          ctest -E polynomial --output-on-failure;
+          ctest -V;
       fi
 notifications:
   email: false
