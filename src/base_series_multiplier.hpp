@@ -935,24 +935,25 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Convert n_threads to size_type for convenience.
 			const size_type n_threads = safe_cast<size_type>(m_n_threads);
 			piranha_assert(n_threads);
-			// Estimate and rehash.
-			const auto est = estimate_final_series_size<m_arity,plain_multiplier<false>>(lf);
-			// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
-			// and in this case the behaviour of numeric_cast is appropriate.
-			const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
-					/ retval._container().max_load_factor()));
-			piranha_assert(n_buckets > 0u);
-			// Check if we want to use the parallel memory set.
-			// NOTE: it is important here that we use the same n_threads for multiplication and memset as
-			// we tie together pinned threads with potentially different NUMA regions.
-			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ?
-				static_cast<unsigned>(n_threads) : 1u;
-			retval._container().rehash(n_buckets,n_threads_rehash);
+			if (n_threads > 1u) {
+				// Estimate and rehash.
+				const auto est = estimate_final_series_size<m_arity,plain_multiplier<false>>(lf);
+				// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
+				// and in this case the behaviour of numeric_cast is appropriate.
+				const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
+						/ retval._container().max_load_factor()));
+				piranha_assert(n_buckets > 0u);
+				// Check if we want to use the parallel memory set.
+				// NOTE: it is important here that we use the same n_threads for multiplication and memset as
+				// we tie together pinned threads with potentially different NUMA regions.
+				const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ?
+					static_cast<unsigned>(n_threads) : 1u;
+				retval._container().rehash(n_buckets,n_threads_rehash);
+			}
 			if (n_threads == 1u) {
 				try {
 					// Single-thread case.
-					blocked_multiplication(plain_multiplier<true>(*this,retval),0u,size1,lf);
-					sanitise_series(retval,static_cast<unsigned>(n_threads));
+					blocked_multiplication(plain_multiplier<false>(*this,retval),0u,size1,lf);
 					finalise_series(retval);
 					return retval;
 				} catch (...) {

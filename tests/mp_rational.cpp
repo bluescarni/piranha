@@ -54,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/binomial.hpp"
 #include "../src/config.hpp"
+#include "../src/detail/gcd.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
@@ -456,6 +457,7 @@ struct plus_tester
 	template <typename T>
 	void operator()(const T &)
 	{
+		using detail::gcd;
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
 		// Identity operator.
@@ -572,9 +574,25 @@ struct plus_tester
 			qa += qa.num();
 			BOOST_CHECK_EQUAL(qa,4 * (int_type{a} + int_type{c}));
 			BOOST_CHECK_EQUAL(qa.den(),1);
+			BOOST_CHECK_EQUAL(gcd(qa.num(),qa.den()).abs(),1);
 			qa += qa.den();
 			BOOST_CHECK_EQUAL(qa,4 * (int_type{a} + int_type{c}) + 1);
 			BOOST_CHECK_EQUAL(qa.den(),1);
+			BOOST_CHECK_EQUAL(gcd(qa.num(),qa.den()).abs(),1);
+			// Unitary den on the left.
+			qa = a;
+			qc = q_type{c,d};
+			qa += qc;
+			BOOST_CHECK_EQUAL(qa.num(),int_type{a}*qc.den()+qc.num());
+			BOOST_CHECK_EQUAL(qa.den(),qc.den());
+			BOOST_CHECK_EQUAL(gcd(qa.num(),qa.den()).abs(),1);
+			// Unitary den on the right.
+			qa = a;
+			auto old_qc(qc);
+			qc += qa;
+			BOOST_CHECK_EQUAL(qc.num(),int_type{a}*old_qc.den()+old_qc.num());
+			BOOST_CHECK_EQUAL(qc.den(),old_qc.den());
+			BOOST_CHECK_EQUAL(gcd(qc.num(),qc.den()).abs(),1);
 			// Now with generic dens.
 			q_type q0{a,b}, q1{c,d};
 			q0 += q1;
@@ -672,6 +690,7 @@ struct minus_tester
 	template <typename T>
 	void operator()(const T &)
 	{
+		using detail::gcd;
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
 		// Negation.
@@ -801,6 +820,21 @@ struct minus_tester
 			qa -= qa.den();
 			BOOST_CHECK_EQUAL(qa,-1);
 			BOOST_CHECK_EQUAL(qa.den(),1);
+			// Unitary den on the left.
+			qa = a;
+			qc = q_type{c,d};
+			qa -= qc;
+			BOOST_CHECK_EQUAL(qa.num(),int_type{a}*qc.den()-qc.num());
+			BOOST_CHECK_EQUAL(qa.den(),qc.den());
+			BOOST_CHECK_EQUAL(gcd(qa.num(),qa.den()).abs(),1);
+			// Unitary den on the right.
+			qa = a;
+			auto old_qc(qc);
+			qc -= qa;
+			BOOST_CHECK_EQUAL(qc.num(),-int_type{a}*old_qc.den()+old_qc.num());
+			BOOST_CHECK_EQUAL(qc.den(),old_qc.den());
+			BOOST_CHECK_EQUAL(gcd(qc.num(),qc.den()).abs(),1);
+			// Now generic dens.
 			q_type q0{a,b}, q1{c,d};
 			q0 -= q1;
 			::mpq_sub(&m0.m_mpq,&m0.m_mpq,&m1.m_mpq);

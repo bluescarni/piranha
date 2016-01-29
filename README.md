@@ -1,5 +1,6 @@
 # Piranha
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/bluescarni/piranha?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/bluescarni/piranha.svg?branch=master)](https://travis-ci.org/bluescarni/piranha)
 
 Piranha is a C++11-based computer algebra library for the manipulation of
 algebraic objects, such as polynomials and Poisson series, commonly encountered
