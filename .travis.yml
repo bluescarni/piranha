@@ -5,6 +5,7 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     - boost-latest
+    - llvm-toolchain-precise
     packages:
     - libgmp-dev
     - libmpfr-dev
@@ -14,6 +15,7 @@ addons:
     - libboost-chrono1.55-dev
     - libboost-timer1.55-dev
     - g++-4.8
+    - clang-3.8
 
 matrix:
   include:
@@ -30,6 +32,8 @@ install:
           export CXX=g++-4.8;
       elif [[ "${CC}" == "clang" ]]; then
           export CXXFLAGS="${CXXFLAGS} -Wno-mismatched-tags";
+          export CC=clang-3.8;
+          export CXX=clang++-3.8;
       fi
 script:
     - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} .
