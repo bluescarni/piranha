@@ -35,13 +35,14 @@ install:
           export CC=clang-3.8;
           export CXX=clang++-3.8;
       fi
+    - export BOOST_TEST_LOG_LEVEL="all"
 script:
     - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} .
     - make
     - if [[ "${BUILD_TYPE}" == "Release" ]]; then
-          ctest -E gastineau --output-on-failure;
+          ctest -E "gastineau|perminov" -V;
       elif [[ "${BUILD_TYPE}" == "Debug"  ]]; then
-          ctest -V;
+          travis_wait ctest -E "thread" -V;
       fi
 notifications:
   email: false
