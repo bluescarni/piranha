@@ -2773,3 +2773,26 @@ BOOST_AUTO_TEST_CASE(mp_integer_get_mpz_ptr_test)
 {
 	boost::mpl::for_each<size_types>(get_mpz_ptr_tester());
 }
+
+struct approx_nbits_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		const auto limb_bits = detail::static_integer<T::value>::limb_bits;
+std::cout << limb_bits << '\n';
+		int_type n0;
+		BOOST_CHECK_EQUAL(n0.approx_nbits(),0u);
+		n0 += 1;
+		BOOST_CHECK_EQUAL(n0.approx_nbits(),limb_bits);
+		n0 *= int_type(2).pow(limb_bits);
+		std::cout << n0 << '\n';
+		BOOST_CHECK_EQUAL(n0.approx_nbits(),limb_bits * 2u);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_approx_nbits_test)
+{
+	boost::mpl::for_each<size_types>(approx_nbits_tester());
+}
