@@ -1,0 +1,48 @@
+language: cpp
+sudo: false
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - boost-latest
+    - llvm-toolchain-precise
+    packages:
+    - libgmp-dev
+    - libmpfr-dev
+    - libboost1.55-all-dev
+    - libboost-serialization1.55-dev
+    - libboost-system1.55-dev
+    - libboost-chrono1.55-dev
+    - libboost-timer1.55-dev
+    - g++-4.8
+    - clang-3.8
+
+matrix:
+  include:
+    - compiler: gcc
+      env: BUILD_TYPE="Release"
+    - compiler: clang
+      env: BUILD_TYPE="Release"
+    - compiler: clang
+      env: BUILD_TYPE="Debug"
+
+install:
+    - if [[ "${CC}" == "gcc" ]]; then
+          export CC=gcc-4.8;
+          export CXX=g++-4.8;
+      elif [[ "${CC}" == "clang" ]]; then
+          export CXXFLAGS="${CXXFLAGS} -Wno-mismatched-tags";
+          export CC=clang-3.8;
+          export CXX=clang++-3.8;
+      fi
+    - export BOOST_TEST_LOG_LEVEL="all"
+script:
+    - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} .
+    - make
+    - if [[ "${BUILD_TYPE}" == "Release" ]]; then
+          ctest -E "gastineau|perminov" -V;
+      elif [[ "${BUILD_TYPE}" == "Debug"  ]]; then
+          travis_wait ctest -E "thread" -V;
+      fi
+notifications:
+  email: false
