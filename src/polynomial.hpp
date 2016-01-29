@@ -1394,6 +1394,13 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			if (check_truncation()) {
 				return plain_multiplication_wrapper();
 			}
+			// NOTE: here we are equating 1 thread with small series, for which it is not
+			// worth to perform the estimation below. The two concepts are orthogonal
+			// and we should have a separate heuristic for when it's not worth it to
+			// estimate the series size, but for now we use the threading heuristic.
+			if (this->m_n_threads == 1u) {
+				return this->plain_multiplication();
+			}
 			// Setup the return value.
 			Series retval;
 			retval.set_symbol_set(this->m_ss);
