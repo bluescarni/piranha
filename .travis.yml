@@ -42,7 +42,7 @@ script:
     - if [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;
       elif [[ "${BUILD_TYPE}" == "Debug"  ]]; then
-          travis_wait ctest -E "thread" -V;
+          ctest -E "thread" -V;
       fi
 notifications:
   email: false
