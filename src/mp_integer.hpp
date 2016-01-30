@@ -64,6 +64,47 @@ see https://www.gnu.org/licenses/. */
 
 namespace piranha { namespace detail {
 
+// Fwd declaration of is_mp_integer.
+template <typename>
+struct is_mp_integer;
+
+// GCD utils.
+template <typename T, typename std::enable_if<is_mp_integer<T>::value,int>::type = 0>
+inline void gcd_mod(T &a, const T &b)
+{
+	a %= b;
+}
+
+template <typename T, typename std::enable_if<!is_mp_integer<T>::value,int>::type = 0>
+inline void gcd_mod(T &a, const T &b)
+{
+	a = static_cast<T>(a % b);
+}
+
+// Greatest common divisor using the euclidean algorithm.
+// NOTE: this can yield negative values, depending on the signs
+// of a and b. Supports C++ integrals and mp_integer.
+// NOTE: using this with C++ integrals unchecked on ranges can result in undefined
+// behaviour.
+template <typename T>
+inline T gcd_euclidean(T a, T b)
+{
+	while (true) {
+		if (math::is_zero(a)) {
+			return b;
+		}
+		// NOTE: the difference in implementation here is because
+		// we want to prevent compiler warnings when T is a short int,
+		// hence the static cast. For mp_integer, the in-place version
+		// might be faster.
+		gcd_mod(b,a);
+		if (math::is_zero(b)) {
+			return a;
+		}
+		gcd_mod(a,b);
+	}
+}
+
 // Small utility function to clear the upper n bits of an unsigned type.
 // The static_casts are needed to work around integer promotions when
 // operating on types smaller than unsigned int.
@@ -3079,6 +3120,31 @@ class mp_integer
 				}
 			} else {
 				::mpz_abs(&retval.m_int.g_dy(),&retval.m_int.g_dy());
+			}
+			return retval;
+		}
+		/// GCD.
+		/**
+		 * @param[in] a first argument
+		 * @param[in] b second argument.
+		 *
+		 * @return a greatest common divisor of \p a and \p b.
+		 */
+		static mp_integer gcd(const mp_integer &a, const mp_integer &b)
+		{
+			const bool s1 = a.is_static(), s2 = b.is_static();
+			mp_integer retval;
+			if (s1 && s2) {
+				retval = detail::gcd_euclidean(a,b);
+			} else if (s1) {
+				retval.promote();
+				::mpz_gcd(&retval.m_int.g_dy(),a.get_mpz_view(),&b.m_int.g_dy());
+			} else if (s2) {
+				retval.promote();
+				::mpz_gcd(&retval.m_int.g_dy(),&a.m_int.g_dy(),b.get_mpz_view());
+			} else {
+				retval.promote();
+				::mpz_gcd(&retval.m_int.g_dy(),&a.m_int.g_dy(),&b.m_int.g_dy());
 			}
 			return retval;
 		}

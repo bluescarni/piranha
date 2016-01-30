@@ -2773,3 +2773,60 @@ BOOST_AUTO_TEST_CASE(mp_integer_get_mpz_ptr_test)
 {
 	boost::mpl::for_each<size_types>(get_mpz_ptr_tester());
 }
+
+struct gcd_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type a, b;
+		// Check with two zeroes.
+		BOOST_CHECK_EQUAL(int_type::gcd(a,b),0);
+		a.promote();
+		BOOST_CHECK_EQUAL(int_type::gcd(a,b),0);
+		BOOST_CHECK_EQUAL(int_type::gcd(b,a),0);
+		b.promote();
+		a = 0;
+		BOOST_CHECK_EQUAL(int_type::gcd(a,b),0);
+		BOOST_CHECK_EQUAL(int_type::gcd(b,a),0);
+		a.promote();
+		BOOST_CHECK_EQUAL(int_type::gcd(a,b),0);
+		BOOST_CHECK_EQUAL(int_type::gcd(b,a),0);
+		// Only one zero.
+		a = 0;
+		b = 1;
+		BOOST_CHECK_EQUAL(int_type::gcd(a,b),1);
+		a.promote();
+		BOOST_CHECK_EQUAL(int_type::gcd(a,b),1);
+		BOOST_CHECK_EQUAL(int_type::gcd(b,a),1);
+		b.promote();
+		a = 0;
+		BOOST_CHECK_EQUAL(int_type::gcd(a,b),1);
+		BOOST_CHECK_EQUAL(int_type::gcd(b,a),1);
+		a.promote();
+		BOOST_CHECK_EQUAL(int_type::gcd(a,b),1);
+		BOOST_CHECK_EQUAL(int_type::gcd(b,a),1);
+		// Randomised testing.
+		std::uniform_int_distribution<int> pdist(0,1);
+		std::uniform_int_distribution<int> ndist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		for (int i = 0; i < ntries; ++i) {
+			a = int_type(ndist(rng));
+			b = int_type(ndist(rng));
+			if (pdist(rng) && a.is_static()) {
+				a.promote();
+			}
+			if (pdist(rng) && b.is_static()) {
+				b.promote();
+			}
+			auto gcd = int_type::gcd(a,b).abs();
+			BOOST_CHECK_EQUAL(a % gcd,0);
+			BOOST_CHECK_EQUAL(b % gcd,0);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_gcd_test)
+{
+	boost::mpl::for_each<size_types>(gcd_tester());
+}

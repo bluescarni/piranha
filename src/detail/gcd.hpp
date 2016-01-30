@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <type_traits>
 
-#include "../math.hpp"
 #include "../mp_integer.hpp"
 
 namespace piranha
@@ -40,40 +39,16 @@ namespace piranha
 namespace detail
 {
 
-template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
-inline void gcd_mod(T &a, const T &b)
+template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+inline T gcd(const T &a, const T &b)
 {
-	a %= b;
+	return gcd_euclidean(a,b);
 }
 
-template <typename T, typename std::enable_if<!detail::is_mp_integer<T>::value,int>::type = 0>
-inline void gcd_mod(T &a, const T &b)
+template <typename T, typename std::enable_if<is_mp_integer<T>::value,int>::type = 0>
+inline T gcd(const T &a, const T &b)
 {
-	a = static_cast<T>(a % b);
-}
-
-// Greatest common divisor using the euclidean algorithm.
-// NOTE: this can yield negative values, depending on the signs
-// of a and b. Supports C++ integrals and mp_integer.
-// NOTE: using this with C++ integrals unchecked on ranges can result in undefined
-// behaviour.
-template <typename T>
-inline T gcd(T a, T b)
-{
-	while (true) {
-		if (math::is_zero(a)) {
-			return b;
-		}
-		// NOTE: the difference in implementation here is because
-		// we want to prevent compiler warnings when T is a short int,
-		// hence the static cast. For mp_integer, the in-place version
-		// might be faster.
-		gcd_mod(b,a);
-		if (math::is_zero(b)) {
-			return a;
-		}
-		gcd_mod(a,b);
-	}
+	return T::gcd(a,b);
 }
 
 }
