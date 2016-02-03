@@ -1900,8 +1900,8 @@ struct static_hash_tester
 					int tmp = udist(rng);
 					a.m_limbs[0u] = static_cast<lt1>(a.m_limbs[0u] + lt1(tmp));
 					b.m_limbs[0u] = static_cast<lt2>(b.m_limbs[0u] + lt2(tmp));
-					a.lshift1();
-					b.lshift1();
+					a.lshift(1u);
+					b.lshift(1u);
 				}
 				if (udist(rng)) {
 					a.negate();
