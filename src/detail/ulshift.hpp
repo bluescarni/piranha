@@ -43,19 +43,21 @@ namespace piranha { namespace detail {
 // if the range of Uint is not greater than the range of unsigned (which means that Uint *might* be a short integral type), perform the shift
 // which is now guaranteed to involve only unsigned types, and finally cast back the result to Uint (which is also always a well-defined operation
 // on unsigned types). All this should be well optimised by the compiler.
-template <typename Uint, typename std::enable_if<std::numeric_limits<Uint>::max() <= std::numeric_limits<unsigned>::max(),int>::type = 0>
-inline Uint ulshift(Uint n, unsigned s)
+template <typename Uint, typename Uint2, typename std::enable_if<std::numeric_limits<Uint>::max() <= std::numeric_limits<unsigned>::max(),int>::type = 0>
+inline Uint ulshift(Uint n, Uint2 s)
 {
 	static_assert(std::is_integral<Uint>::value && std::is_unsigned<Uint>::value,"Invalid type.");
+	static_assert(std::is_integral<Uint2>::value && std::is_unsigned<Uint2>::value,"Invalid type.");
 	piranha_assert(s < unsigned(std::numeric_limits<Uint>::digits));
 	return static_cast<Uint>(static_cast<unsigned>(n) << s);
 }
 
 // If the range of Uint is greater than the range of unsigned, it cannot possibly be a short integral type.
-template <typename Uint, typename std::enable_if<(std::numeric_limits<Uint>::max() > std::numeric_limits<unsigned>::max()),int>::type = 0>
-inline Uint ulshift(Uint n, unsigned s)
+template <typename Uint, typename Uint2, typename std::enable_if<(std::numeric_limits<Uint>::max() > std::numeric_limits<unsigned>::max()),int>::type = 0>
+inline Uint ulshift(Uint n, Uint2 s)
 {
 	static_assert(std::is_integral<Uint>::value && std::is_unsigned<Uint>::value,"Invalid type.");
+	static_assert(std::is_integral<Uint2>::value && std::is_unsigned<Uint2>::value,"Invalid type.");
 	piranha_assert(s < unsigned(std::numeric_limits<Uint>::digits));
 	return n << s;
 }
