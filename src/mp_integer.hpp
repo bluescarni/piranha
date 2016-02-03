@@ -3013,7 +3013,7 @@ class mp_integer
 		 * @return reference to \p this.
 		 *
 		 * @throws unspecified any exception thrown by the generic constructor, if used.
-		 * @throws piranha::invalid_argument if <tt>n</tt> is negative or does not fit an <tt>::mp_bitcnt_t</tt>.
+		 * @throws piranha::invalid_argument if <tt>n</tt> is negative or it does not fit in an <tt>mp_bitcnt_t</tt>.
 		 */
 		template <typename T>
 		auto operator<<=(const T &n) -> decltype(this->in_place_lshift(n))
