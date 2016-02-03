@@ -25,6 +25,7 @@ for more details.
 You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
+
 #include "../src/mp_integer.hpp"
 
 #define BOOST_TEST_MODULE mp_integer_02_test
