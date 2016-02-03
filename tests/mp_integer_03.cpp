@@ -208,7 +208,8 @@ struct lshift_tester
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		std::uniform_int_distribution<limb_t> sdist(limb_t(0u),limb_t(limb_bits * 2u));
 		for (int i = 0; i < ntries; ++i) {
-			int_type n(int_dist(rng));
+			const auto int_n = int_dist(rng);
+			int_type n(int_n);
 			auto s = sdist(rng);
 			auto ns = n << s;
 			BOOST_CHECK_EQUAL(ns,n * int_type(2).pow(s));
@@ -216,6 +217,7 @@ struct lshift_tester
 			BOOST_CHECK_EQUAL(ns2,ns);
 			n <<= s;
 			BOOST_CHECK_EQUAL(ns,n);
+			BOOST_CHECK_EQUAL(int_n << int_type(s),ns);
 		}
 		// Throwing conditions.
 		BOOST_CHECK_THROW(int_type{1} << (int_type(std::numeric_limits< ::mp_bitcnt_t>::max()) + 1),std::invalid_argument);

@@ -3005,7 +3005,8 @@ class mp_integer
 		 * \note
 		 * This template operator is enabled only if \p T is piranha::mp_integer or an integral type.
 		 *
-		 * Sets \p this to <tt>this << n</tt>.
+		 * Sets \p this to <tt>this << n</tt>. The left shift operation is equivalent to a multiplication
+		 * by 2 to the power of \p n.
 		 *
 		 * @param[in] n argument for the left shift operation.
 		 *
@@ -3025,7 +3026,8 @@ class mp_integer
 		 * This operator is enabled only if \p T is a non-const integral interoperable type.
 		 *
 		 * Compute the left shift with respect to a piranha::mp_integer in-place. This method will first compute <tt>x << n</tt>,
-		 * cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * cast it back to \p T via \p static_cast and finally assign the result to \p x. The left shift operation is equivalent to a multiplication
+		 * by 2 to the power of \p n.
 		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] n second argument.
