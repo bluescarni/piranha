@@ -400,6 +400,9 @@ struct rshift_tester
 			n >>= s;
 			BOOST_CHECK_EQUAL(ns,n);
 			BOOST_CHECK_EQUAL(int_n >> int_type(s),ns);
+			// Check that left shift followed by right shift preserves the value.
+			s = sdist(rng);
+			BOOST_CHECK_EQUAL((n << s) >> s,n);
 		}
 		// Throwing conditions.
 		BOOST_CHECK_THROW(int_type{1} >> (int_type(std::numeric_limits< ::mp_bitcnt_t>::max()) + 1),std::invalid_argument);
