@@ -352,22 +352,18 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(q11.den(),1);
 		BOOST_CHECK(q11.is_canonical());
 		// Constructor from GMP mpq.
+		BOOST_CHECK((std::is_constructible<q_type,::mpq_t>::value));
 		mpq_raii gmp_q;
 		::mpq_set_si(&m.m_mpq,1,2);
 		BOOST_CHECK_EQUAL((q_type{&m.m_mpq}),(q_type{1,2}));
 		::mpq_set_si(&m.m_mpq,-3,7);
 		BOOST_CHECK_EQUAL((q_type{&m.m_mpq}),(q_type{-3,7}));
+		::mpq_set_si(&m.m_mpq,-3,2);
+		BOOST_CHECK_EQUAL((q_type{&m.m_mpq}),(q_type{-3,2}));
 		::mpq_set_si(&m.m_mpq,0,1);
 		BOOST_CHECK_EQUAL((q_type{&m.m_mpq}),0);
-		::mpq_set_si(&m.m_mpq,0,10);
-		BOOST_CHECK_EQUAL((q_type{&m.m_mpq}),0);
-		::mpq_set_si(&m.m_mpq,6,4);
-		::mpz_set_si(mpq_denref(&m.m_mpq),-4);
-		BOOST_CHECK_EQUAL((q_type{&m.m_mpq}),(q_type{-3,2}));
 		::mpq_set_si(&m.m_mpq,1,0);
 		BOOST_CHECK_THROW(q_type{&m.m_mpq},zero_division_error);
-		::mpq_set_si(&m.m_mpq,2,3);
-		BOOST_CHECK_EQUAL((q_type{&m.m_mpq,true}),(q_type{2,3}));
 	}
 };
 

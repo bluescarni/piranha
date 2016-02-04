@@ -722,24 +722,18 @@ class mp_rational
 		/// Constructor from \p mpq_t.
 		/**
 		 * This constructor will construct the numerator from the numerator of \p q,
-		 * the denominator from the denominator of \p q. If the boolean flag
-		 * \p is_canonical is set to \p false, then after construction \p this will be canonicalised.
-		 * If \p is_canonical is set to \p true, no canonicalisation will take place, but it will be
-		 * up to the caller to ensure that the input \p q is already in canonical form. If that is
+		 * the denominator from the denominator of \p q. This constructor assumes
+		 * that \p q is already in canonical form. If that is
 		 * not the case, the behaviour will be undefined.
 		 *
 		 * @param[in] q input GMP rational.
-		 * @param[in] is_canonical flag to indicate whether \p q is already in canonical form or not.
 		 *
 		 * @throws piranha::zero_division_error if the denominator is zero.
 		 */
-		explicit mp_rational(const ::mpq_t q, bool is_canonical = false):m_num(mpq_numref(q)),m_den(mpq_denref(q))
+		explicit mp_rational(const ::mpq_t q):m_num(mpq_numref(q)),m_den(mpq_denref(q))
 		{
 			if (unlikely(m_den.sign() == 0)) {
 				piranha_throw(zero_division_error,"zero denominator");
-			}
-			if (!is_canonical) {
-				canonicalise();
 			}
 		}
 		/// Generic constructor.
