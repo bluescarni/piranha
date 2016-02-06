@@ -47,7 +47,7 @@ build_script:
 - cmake --build . --target install
 
 test_script:
-- if [%BUILD_TYPE%]==[Release] ctest -E "gastineau|perminov" -V;
+- if [%BUILD_TYPE%]==[Release] ctest -E "gastineau|perminov|serialization" -V;
 - if [%BUILD_TYPE%]==[Debug] ctest -E "thread" -V;
 
 # Enable this to be able to login to the build worker. You can use the
