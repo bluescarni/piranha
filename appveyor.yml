@@ -20,14 +20,14 @@ install:
 - 7z x -aoa -oC:\ pyx64.7z > NUL
 # Download Bzip2 binary
 - call tools\appveyor-download.cmd "http://downloads.sourceforge.net/project/gnuwin32/bzip2/1.0.5/bzip2-1.0.5-bin.zip?r=http%3A%2F%2Fgnuwin32.sourceforge.net%2Fpackages%2Fbzip2.htm&ts=1454729175&use_mirror=ncu" -FileName bzip2.zip
-- 7z x -aoa -oC:\GnuWin32 bzip2.zip > NUL
+- 7z x -aoa -oC:\mingw64 bzip2.zip > NUL
 # Download Boost soure
 - call tools\appveyor-download.cmd "http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.7z?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.60.0%2F&ts=1454729351&use_mirror=ncu" -FileName boost.7z
 - 7z x -aoa -oC:\projects\ boost.7z > NUL
 # Build boost
 - cd C:\projects\boost_1_60_0
 - .\bootstrap > NUL
-- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\projects\boost > NUL
+- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\projects\boost -sNO_BZIP2=0 > NUL
 
 
 build_script:
@@ -35,8 +35,7 @@ build_script:
 - mkdir build
 - cd build
 
-- cmake -G "MinGW Makefiles" -DBOOST_LIBRARYDIR=..\boost\lib -DBoost_USE_MULTITHREADED=yes -DBoost_COMPILER=-mgw49 -DBoost_USE_STATIC_LIBS=yes -DBoost_INCLUDE_DIR=..\boost\include\boost-1_60\ -DCMAKE_PREFIX_PATH="C:\GnuWin32" ..
-
+- cmake -G "MinGW Makefiles" -DBOOST_LIBRARYDIR=..\boost\lib -DBoost_USE_MULTITHREADED=yes -DBoost_COMPILER=-mgw49 -DBoost_USE_STATIC_LIBS=yes -DBoost_INCLUDE_DIR=..\boost\include\boost-1_60\ ..
 - cmake --build . --target install
 
 test_script:
@@ -45,5 +44,5 @@ test_script:
 # Enable this to be able to login to the build worker. You can use the
 # `remmina` program in Ubuntu, use the login information that the line below
 # prints into the log.
-#on_finish:
-#- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+on_finish:
+- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
