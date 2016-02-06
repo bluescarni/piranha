@@ -19,15 +19,15 @@ install:
 - call tools\appveyor-download.cmd "https://raw.githubusercontent.com/symengine/dependencies/5cff7d1736877336cf9fb58267111beea4fa152f/python-x86_64-w64-mingw32.7z" -FileName pyx64.7z
 - 7z x -aoa -oC:\ pyx64.7z > NUL
 # Download Bzip2 binary
-- call tools\appveyor-download.cmd "http://downloads.sourceforge.net/project/gnuwin32/bzip2/1.0.5/bzip2-1.0.5-bin.zip?r=http%3A%2F%2Fgnuwin32.sourceforge.net%2Fpackages%2Fbzip2.htm&ts=1454729175&use_mirror=ncu" -FileName bzip2.zip
-- 7z x -aoa -oC:\mingw64 bzip2.zip > NUL
-# Download Boost soure
+- call tools\appveyor-download.cmd "https://github.com/philr/bzip2-windows/releases/download/v1.0.6/bzip2-dev-1.0.6-win-x64.zip" -FileName bzip2.zip
+- 7z x -aoa -oC:\bzip2 bzip2.zip > NUL
+# Download Boost source
 - call tools\appveyor-download.cmd "http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.7z?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.60.0%2F&ts=1454729351&use_mirror=ncu" -FileName boost.7z
 - 7z x -aoa -oC:\projects\ boost.7z > NUL
 # Build boost
 - cd C:\projects\boost_1_60_0
 - .\bootstrap > NUL
-- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\projects\boost -sNO_BZIP2=0 > NUL
+- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\projects\boost -sNO_BZIP2=0 -sBZIP2_BINARY=libbz2 -sBZIP2_INCLUDE=C:\bzip2 -sBZIP2_LIBPATH=C:\bzip2 > NUL
 
 
 build_script:
@@ -35,7 +35,7 @@ build_script:
 - mkdir build
 - cd build
 
-- cmake -G "MinGW Makefiles" -DBOOST_LIBRARYDIR=..\boost\lib -DBoost_USE_MULTITHREADED=yes -DBoost_COMPILER=-mgw49 -DBoost_USE_STATIC_LIBS=yes -DBoost_INCLUDE_DIR=..\boost\include\boost-1_60\ ..
+- cmake -G "MinGW Makefiles" -DBOOST_LIBRARYDIR=..\boost\lib -DBoost_USE_MULTITHREADED=yes -DBoost_COMPILER=-mgw49 -DBoost_USE_STATIC_LIBS=yes -DBoost_INCLUDE_DIR=..\boost\include\boost-1_60\ -DCMAKE_PREFIX_PATH=C:\bzip2 ..
 - cmake --build . --target install
 
 test_script:
