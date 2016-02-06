@@ -29,22 +29,18 @@ install:
 - .\bootstrap > NUL
 - .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\projects\boost > NUL
 
-- cd C:\projects\piranha
-- cmake -G "MinGW Makefiles" -DBOOST_LIBRARY_DIR=..\boost\lib -DBoost_USE_MULTITHREADED=yes -DBoost_COMPILER=-mgw49 -DBoost_USE_STATIC_LIBS=yes -DBoost_INCLUDE_DIR=..\boost\include\boost-1_60\ -DCMAKE_PREFIX_PATH="C:\GnuWin32" .
-
-
-- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 build_script:
+- cd C:\projects\piranha
 - mkdir build
 - cd build
 
-- if cmake -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH=C:\mingw64 -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
+- cmake -G "MinGW Makefiles" -DBOOST_LIBRARYDIR=..\boost\lib -DBoost_USE_MULTITHREADED=yes -DBoost_COMPILER=-mgw49 -DBoost_USE_STATIC_LIBS=yes -DBoost_INCLUDE_DIR=..\boost\include\boost-1_60\ -DCMAKE_PREFIX_PATH="C:\GnuWin32" ..
 
 - cmake --build . --target install
 
 test_script:
-- ctest --output-on-failure
+- ctest -V
 
 # Enable this to be able to login to the build worker. You can use the
 # `remmina` program in Ubuntu, use the login information that the line below
