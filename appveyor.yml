@@ -26,6 +26,9 @@ install:
 # Download Bzip2 binary
 - call tools\appveyor-download.cmd "https://github.com/philr/bzip2-windows/releases/download/v1.0.6/bzip2-dev-1.0.6-win-x64.zip" -FileName bzip2.zip
 - 7z x -aoa -oC:\bzip2 bzip2.zip > NUL
+- call tools\appveyor-download.cmd "https://github.com/philr/bzip2-windows/releases/download/v1.0.6/bzip2-dll-1.0.6-win-x64.zip" -FileName bzip2-dll.zip
+- 7z x -aoa -oC:\bzip2 bzip2-dll.zip > NUL
+- set PATH=C:\bzip2;%PATH%
 # Download Boost source
 - call tools\appveyor-download.cmd "http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.7z?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.60.0%2F&ts=1454729351&use_mirror=ncu" -FileName boost.7z
 - 7z x -aoa -oC:\projects\ boost.7z > NUL
@@ -50,5 +53,6 @@ test_script:
 # Enable this to be able to login to the build worker. You can use the
 # `remmina` program in Ubuntu, use the login information that the line below
 # prints into the log.
-on_finish:
-- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#on_finish:
+#- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
