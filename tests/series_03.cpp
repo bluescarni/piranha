@@ -62,7 +62,7 @@ struct tmp_file
 	}
 	std::string name() const
 	{
-		return m_path.native();
+		return m_path.string();
 	}
 	bfs::path m_path;
 };
