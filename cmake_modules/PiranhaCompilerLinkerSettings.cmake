@@ -80,7 +80,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	# For now let's just enable the big object flag.
 	# The -mthreads flag is apparently needed for thread-safe exception handling.
 	if(MINGW)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -Wa,-mbig-obj")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads")
 		#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -finline-functions -Wa,-mbig-obj")
 		#set(CMAKE_CXX_FLAGS_DEBUG "-g0")
 		#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions")
