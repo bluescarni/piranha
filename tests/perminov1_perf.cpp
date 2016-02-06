@@ -65,7 +65,7 @@ static inline bool check_limits()
 {
 	using int_type = std::make_signed<std::size_t>::type;
 	// First load the archived limits.txt file.
-	std::ifstream in((root_path / "data" / "limits.txt").native());
+	std::ifstream in((root_path / "data" / "limits.txt").string());
 	boost::archive::text_iarchive ia(in);
 	std::vector<std::vector<int_type>> lims;
 	ia >> lims;
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(perminov1_test)
 	using pt = polynomial<rational,monomial<rational>>;
 	using epst = poisson_series<divisor_series<pt,divisor<short>>>;
 
-	auto f = epst::load((root_path / "data" / "sin(2_l1).epst.bz2").native(),file_compression::bzip2);
-	auto g = epst::load((root_path / "data" / "sin(l1-l3).epst.bz2").native(),file_compression::bzip2);
+	auto f = epst::load((root_path / "data" / "sin(2_l1).epst.bz2").string(),file_compression::bzip2);
+	auto g = epst::load((root_path / "data" / "sin(l1-l3).epst.bz2").string(),file_compression::bzip2);
 
 	pt::set_auto_truncate_degree(2,{"x1","x2","x3","y1","y2","y3","u1","u2","u3","v1","v2","v3"});
 
