@@ -26,8 +26,8 @@ install:
 - 7z x -aoa -oC:\projects\ boost.7z > NUL
 # Build boost
 - cd C:\projects\boost_1_60_0
-- .\bootstrap
-- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\projects\boost
+- .\bootstrap > NUL
+- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\projects\boost > NUL
 
 - cd C:\projects\piranha
 - cmake -G "MinGW Makefiles" -DBOOST_LIBRARY_DIR=..\boost\lib -DBoost_USE_MULTITHREADED=yes -DBoost_COMPILER=-mgw49 -DBoost_USE_STATIC_LIBS=yes -DBoost_INCLUDE_DIR=..\boost\include\boost-1_60\ -DCMAKE_PREFIX_PATH="C:\GnuWin32" .
