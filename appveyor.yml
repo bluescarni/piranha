@@ -13,7 +13,7 @@ install:
 - call tools\appveyor-download.cmd "https://raw.githubusercontent.com/symengine/dependencies/5cff7d1736877336cf9fb58267111beea4fa152f/gmp-6.0.0-x86_64-w64-mingw32.7z" -FileName gmp.7z
 - 7z x -oC:\mingw64 gmp.7z > NUL
 # Download pre-compiled mpfr binary
-- call tools]appveyor-download.cmd "https://raw.githubusercontent.com/isuruf/symengine-dependencies/557083e291fb5d4e8f6df2d920d6adb98ccd0748/mpfr-3.1.3-x86_64-w64-mingw32.7z" -FileName mpfr.7z
+- call tools\appveyor-download.cmd "https://raw.githubusercontent.com/isuruf/symengine-dependencies/557083e291fb5d4e8f6df2d920d6adb98ccd0748/mpfr-3.1.3-x86_64-w64-mingw32.7z" -FileName mpfr.7z
 - 7z x -oC:\mingw64 mpfr.7z > NUL
 # Download patched libpythonXX.a
 - call tools\appveyor-download.cmd "https://raw.githubusercontent.com/symengine/dependencies/5cff7d1736877336cf9fb58267111beea4fa152f/python-x86_64-w64-mingw32.7z" -FileName pyx64.7z
