@@ -2708,29 +2708,6 @@ struct mpz_t_ctor_tester
 			BOOST_CHECK_EQUAL(d,((a * tmp_int2) * tmp_int3) * tmp_int4);
 		}
 		}
-		{
-		// Testing with long long
-		std::uniform_int_distribution<long long> int_dist;
-		for (int i = 0; i < ntries; ++i) {
-			// Test with up to 4 long long limbs.
-			long long tmp_int = int_dist(rng);
-			::mpz_set_si(&m.m_mpz,tmp_int);
-			int_type a{&m.m_mpz};
-			BOOST_CHECK_EQUAL(a,tmp_int);
-			long long tmp_int2 = int_dist(rng);
-			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int2);
-			int_type b{&m.m_mpz};
-			BOOST_CHECK_EQUAL(b,a * tmp_int2);
-			long long tmp_int3 = int_dist(rng);
-			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int3);
-			int_type c{&m.m_mpz};
-			BOOST_CHECK_EQUAL(c,(a * tmp_int2) * tmp_int3);
-			long long tmp_int4 = int_dist(rng);
-			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int4);
-			int_type d{&m.m_mpz};
-			BOOST_CHECK_EQUAL(d,((a * tmp_int2) * tmp_int3) * tmp_int4);
-		}
-		}
 	}
 };
 
