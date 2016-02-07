@@ -35,7 +35,7 @@ install:
 # Build boost
 - cd C:\projects\boost_1_60_0
 - .\bootstrap > NUL
-- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\boost -sNO_BZIP2=0 -sBZIP2_BINARY=libbz2 -sBZIP2_INCLUDE=C:\bzip2 -sBZIP2_LIBPATH=C:\bzip2 > NUL
+- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\mingw64 -sNO_BZIP2=0 -sBZIP2_BINARY=libbz2 -sBZIP2_INCLUDE=C:\bzip2 -sBZIP2_LIBPATH=C:\bzip2 > NUL
 
 
 build_script:
@@ -43,7 +43,7 @@ build_script:
 - mkdir build
 - cd build
 
-- cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DBoost_ADDITIONAL_VERSIONS=1.60.0;1.60 -DBoost_USE_MULTITHREADED=yes -DBoost_COMPILER=-mgw53 -DBoost_USE_STATIC_LIBS=yes -DCMAKE_PREFIX_PATH=C:\bzip2;C:\boost ..
+- cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DBoost_ADDITIONAL_VERSIONS=1.60.0;1.60 -DBoost_USE_MULTITHREADED=yes -DBoost_USE_STATIC_LIBS=yes -DCMAKE_PREFIX_PATH=C:\bzip2; ..
 - cmake --build . --target install
 
 test_script:
@@ -53,6 +53,6 @@ test_script:
 # Enable this to be able to login to the build worker. You can use the
 # `remmina` program in Ubuntu, use the login information that the line below
 # prints into the log.
-on_finish:
-- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#on_finish:
+#- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
