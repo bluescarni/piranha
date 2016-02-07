@@ -63,8 +63,14 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	MESSAGE(STATUS "GCC version is ok.")
 	# The trouble here is that -g (which implies -g2) results in ICE in some tests and in
 	# some pyranha exposition cases. We just append -g1 here, which overrides the default -g.
-	message(STATUS "Forcing the debug flag to -g1 for GCC.")
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g0")
+	# For MinGW, we disable debug info altogether.
+	if (MINGW)
+		message(STATUS "Forcing the debug flag to -g0 for GCC.")
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g0")
+	else()
+		message(STATUS "Forcing the debug flag to -g1 for GCC.")
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g1")
+	endif()
 	# Set the standard flag.
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 	# Enable libstdc++ pedantic debug mode in debug builds.
@@ -80,10 +86,9 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	# The -mthreads flag is apparently needed for thread-safe exception handling.
 	if(MINGW)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -Wa,-mbig-obj")
-		#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -finline-functions -Wa,-mbig-obj")
 		# The debug build can run into a "file is too large" error. Work around by
 		# compiling for small size.
-		set(CMAKE_CXX_FLAGS_DEBUG "-finline-functions")
+		set(CMAKE_CXX_FLAGS_DEBUG "-Os")
 		#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions")
 	endif()
 	PIRANHA_CHECK_UINT128_T()
