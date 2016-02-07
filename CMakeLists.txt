@@ -76,7 +76,7 @@ MESSAGE(STATUS "Detected Boost version: ${Boost_VERSION}")
 # Include system Boost headers.
 MESSAGE(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
 # Set the mandatory Boost libraries. NOTE: here we do not include the libraries
 # pulled in by the tests, only those which are needed by Piranha's core.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_IOSTREAMS_LIBRARY})
