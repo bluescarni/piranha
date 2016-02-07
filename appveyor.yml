@@ -24,18 +24,16 @@ install:
 - call tools\appveyor-download.cmd "https://raw.githubusercontent.com/symengine/dependencies/5cff7d1736877336cf9fb58267111beea4fa152f/python-x86_64-w64-mingw32.7z" -FileName pyx64.7z
 - 7z x -aoa -oC:\ pyx64.7z > NUL
 # Download Bzip2 binary
-- call tools\appveyor-download.cmd "https://github.com/philr/bzip2-windows/releases/download/v1.0.6/bzip2-dev-1.0.6-win-x64.zip" -FileName bzip2.zip
-- 7z x -aoa -oC:\bzip2 bzip2.zip > NUL
-- call tools\appveyor-download.cmd "https://github.com/philr/bzip2-windows/releases/download/v1.0.6/bzip2-dll-1.0.6-win-x64.zip" -FileName bzip2-dll.zip
-- 7z x -aoa -oC:\bzip2 bzip2-dll.zip > NUL
-- set PATH=C:\bzip2;%PATH%
+- call tools\appveyor-download.cmd "https://raw.githubusercontent.com/isuruf/symengine-dependencies/ee82c8ec4421e3762b974363bb44adac3e4e1f08/bzip2-dev-1.0.6-win-x64.7z" -FileName bzip2.7z
+- 7z x -aoa -oC:\bzip2\ bzip2.7z > NUL
+- set PATH=C:\bzip2\bin;%PATH%
 # Download Boost source
 - call tools\appveyor-download.cmd "http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.7z?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.60.0%2F&ts=1454729351&use_mirror=ncu" -FileName boost.7z
 - 7z x -aoa -oC:\projects\ boost.7z > NUL
 # Build boost
 - cd C:\projects\boost_1_60_0
 - .\bootstrap > NUL
-- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\mingw64 -sNO_BZIP2=0 -sBZIP2_BINARY=libbz2 -sBZIP2_INCLUDE=C:\bzip2 -sBZIP2_LIBPATH=C:\bzip2 > NUL
+- .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\mingw64 -sNO_BZIP2=0 -sBZIP2_BINARY=libbz2 -sBZIP2_INCLUDE=C:\bzip2\include -sBZIP2_LIBPATH=C:\bzip2\lib > NUL
 
 
 build_script:
@@ -43,7 +41,7 @@ build_script:
 - mkdir build
 - cd build
 
-- cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DBoost_ADDITIONAL_VERSIONS=1.60.0;1.60 -DBoost_USE_MULTITHREADED=yes -DBoost_USE_STATIC_LIBS=yes -DCMAKE_PREFIX_PATH=C:\bzip2; ..
+- cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DBoost_ADDITIONAL_VERSIONS=1.60.0;1.60 -DBoost_USE_MULTITHREADED=yes -DBoost_USE_STATIC_LIBS=yes -DCMAKE_PREFIX_PATH=C:\bzip2 ..
 - cmake --build . --target install
 
 test_script:
