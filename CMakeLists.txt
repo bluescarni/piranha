@@ -76,6 +76,7 @@ MESSAGE(STATUS "Detected Boost version: ${Boost_VERSION}")
 # Include system Boost headers.
 MESSAGE(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
+# NOTE: mark as system headers to avoid excessive warnings in debug mode.
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
 # Set the mandatory Boost libraries. NOTE: here we do not include the libraries
 # pulled in by the tests, only those which are needed by Piranha's core.
@@ -86,7 +87,8 @@ FIND_PACKAGE(GMP REQUIRED)
 MESSAGE(STATUS "GMP library found.")
 MESSAGE(STATUS "GMP include dir is: ${GMP_INCLUDE_DIR}")
 MESSAGE(STATUS "GMP library is: ${GMP_LIBRARIES}")
-INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR})
+# Same as Boost, mark as a system header.
+INCLUDE_DIRECTORIES(SYSTEM ${GMP_INCLUDE_DIR})
 
 # MPFR setup.
 FIND_PACKAGE(MPFR REQUIRED)
@@ -100,7 +102,7 @@ IF(NOT MPFR_VERSION_CHECK)
 	MESSAGE(FATAL_ERROR "Unsupported MPFR version, please upgrade.")
 ENDIF(NOT MPFR_VERSION_CHECK)
 MESSAGE(STATUS "MPFR version is ok.")
-INCLUDE_DIRECTORIES(${MPFR_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(SYSTEM ${MPFR_INCLUDE_DIR})
 
 # NOTE: MPFR should be linked in before GMP, that's why we link GMP here.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
@@ -110,7 +112,7 @@ find_package(BZip2 REQUIRED)
 message(STATUS "bzip2 library found.")
 message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
 message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
-include_directories(${BZIP2_INCLUDE_DIR})
+include_directories(SYSTEM ${BZIP2_INCLUDE_DIR})
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
 
 # TCMalloc setup.
