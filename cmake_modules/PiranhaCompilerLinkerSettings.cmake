@@ -77,12 +77,13 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	# A problem with MinGW is that we run into a "too many sections" quite often. Recently, MinGW
 	# added a -mbig-obj for the assembler that solves this, but this is available only in recent versions.
 	# Other tentative workarounds include disabling debug information, enabling global inlining, use -Os and others.
-	# For now let's just enable the big object flag.
 	# The -mthreads flag is apparently needed for thread-safe exception handling.
 	if(MINGW)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -Wa,-mbig-obj")
 		#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -finline-functions -Wa,-mbig-obj")
-		#set(CMAKE_CXX_FLAGS_DEBUG "-g0")
+		# The debug build can run into a "file is too large" error. Work around by
+		# compiling for small size.
+		set(CMAKE_CXX_FLAGS_DEBUG "-Os")
 		#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions")
 	endif()
 	PIRANHA_CHECK_UINT128_T()
