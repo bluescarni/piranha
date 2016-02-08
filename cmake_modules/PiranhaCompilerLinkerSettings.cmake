@@ -88,7 +88,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -Wa,-mbig-obj")
 		# The debug build can run into a "file is too large" error. Work around by
 		# compiling for small size.
-		set(CMAKE_CXX_FLAGS_DEBUG "-O2")
+		set(CMAKE_CXX_FLAGS_DEBUG "-Os")
 		#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions")
 	endif()
 	PIRANHA_CHECK_UINT128_T()
