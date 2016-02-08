@@ -12,18 +12,19 @@ endif()
 # Pass the current source dir as a definition, so we can load data for tests from the source dir.
 add_definitions(-DPIRANHA_TESTS_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}")
 
+# Setup for the split compilation of tests.
 SET(TEST_NUM "0")
-SET(PIRANHA_TEST_SPLIT no CACHE Bool "Split compilation of piranha test cases for CI")
+SET(PIRANHA_TEST_SPLIT no CACHE INTERNAL "Split compilation of piranha test cases for CI")
 
 MACRO(ADD_PIRANHA_TESTCASE arg1)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        math(EXPR TEST_NUM "(${TEST_NUM} + 1) % 3")
-        IF((NOT PIRANHA_TEST_SPLIT) OR ("${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${TEST_NUM}"))
-		    ADD_EXECUTABLE(${arg1} ${arg1}.cpp)
-		    TARGET_LINK_LIBRARIES(${arg1} ${MANDATORY_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
-		    ADD_TEST(${arg1} ${arg1})
-        ENDIF((NOT PIRANHA_TEST_SPLIT) OR ("${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${TEST_NUM}"))
-	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		math(EXPR TEST_NUM "(${TEST_NUM} + 1) % 3")
+		IF((NOT PIRANHA_TEST_SPLIT) OR ("${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${TEST_NUM}"))
+			ADD_EXECUTABLE(${arg1} ${arg1}.cpp)
+			TARGET_LINK_LIBRARIES(${arg1} ${MANDATORY_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
+			ADD_TEST(${arg1} ${arg1})
+	        ENDIF()
+	ENDIF()
 ENDMACRO(ADD_PIRANHA_TESTCASE)
 
 MACRO(ADD_PIRANHA_PERFORMANCE_TESTCASE arg1)
