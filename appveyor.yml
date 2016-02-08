@@ -52,7 +52,8 @@ build_script:
 
 test_script:
 - if [%BUILD_TYPE%]==[Release] ctest -E "gastineau|perminov|serialization" -V;
-- if [%BUILD_TYPE%]==[Debug] ctest -E "thread" -V;
+#- if [%BUILD_TYPE%]==[Debug] ctest -E "thread" -V;
+- if [%BUILD_TYPE%]==[Debug] ctest -R "base_series_multiplier" -V;
 
 # Enable this to be able to login to the build worker. You can use the
 # `remmina` program in Ubuntu, use the login information that the line below
