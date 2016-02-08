@@ -57,6 +57,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "../src/safe_cast.hpp"
 
 using integral_types = boost::mpl::vector<char,
 	signed char,short,int,long,long long,
@@ -1524,8 +1525,8 @@ struct static_mul_tester
 		b = int_type();
 		c = b;
 		for (typename int_type::limb_t i = 0u; i < limb_bits - 1u; ++i) {
-			::mpz_setbit(&mb.m_mpz,i);
-			::mpz_setbit(&mc.m_mpz,i);
+			::mpz_setbit(&mb.m_mpz,safe_cast< ::mp_bitcnt_t>(i));
+			::mpz_setbit(&mc.m_mpz,safe_cast< ::mp_bitcnt_t>(i));
 			b.set_bit(i);
 			c.set_bit(i);
 		}
