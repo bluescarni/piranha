@@ -60,7 +60,10 @@ struct atomic_flag_array
 		for (std::size_t i = 0u; i < m_size; ++i) {
 			// NOTE: atomic_flag should support aggregate init syntax:
 			// http://en.cppreference.com/w/cpp/atomic/atomic
-			::new (static_cast<void *>(m_ptr + i)) value_type{ATOMIC_FLAG_INIT};
+			// But it results in warnings, let's avoid initialisation
+			// via ctor and just set the flag to false later.
+			::new (static_cast<void *>(m_ptr + i)) value_type;
+			(m_ptr + i)->clear();
 		}
 	}
 	~atomic_flag_array()
