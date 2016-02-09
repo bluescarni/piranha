@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitise_series_test)
 	using term_type = typename pt::term_type;
 	std::array<unsigned,4u> nt = {{1u,2u,3u,4u}};
 	// Make sure the thread pool has 4 slots for testing
-	// below with various number of threads.
+	// below with various numbers of threads.
 	settings::set_n_threads(4u);
 	for (const auto &n: nt) {
 		// First test with an empty series.
