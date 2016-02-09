@@ -58,14 +58,19 @@ struct atomic_flag_array
 		// NOTE: this throws if allocation fails, after this line everything is noexcept.
 		m_ptr = static_cast<value_type *>(aligned_palloc(0u,size * sizeof(value_type)));
 		for (std::size_t i = 0u; i < m_size; ++i) {
-			::new (static_cast<void *>(m_ptr + i)) value_type(ATOMIC_FLAG_INIT);
+			// NOTE: atomic_flag should support aggregate init syntax:
+			// http://en.cppreference.com/w/cpp/atomic/atomic
+			// But it results in warnings, let's avoid initialisation
+			// via ctor and just set the flag to false later.
+			::new (static_cast<void *>(m_ptr + i)) value_type;
+			(m_ptr + i)->clear();
 		}
 	}
 	~atomic_flag_array()
 	{
-		for (std::size_t i = 0u; i < m_size; ++i) {
-			(m_ptr + i)->~value_type();
-		}
+		// atomic_flag is guaranteed to have a trivial dtor,
+		// so we can just free the storage:
+		// http://en.cppreference.com/w/cpp/atomic/atomic
 		aligned_pfree(0u,static_cast<void *>(m_ptr));
 	}
 	// Delete explicitly all other ctors/assignment operators.

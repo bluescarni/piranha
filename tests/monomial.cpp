@@ -1135,7 +1135,7 @@ struct integrate_tester
 		auto ret = k1.integrate(symbol("a"),vs);
 		BOOST_CHECK_EQUAL(ret.first,T(2));
 		BOOST_CHECK((ret.second == k_type{T(2),std::numeric_limits<T>::max()}));
-		BOOST_CHECK_THROW(k1.integrate(symbol("b"),vs),std::invalid_argument)
+		BOOST_CHECK_THROW(k1.integrate(symbol("b"),vs),std::invalid_argument);
 	}
 	template <typename U, typename std::enable_if<!std::is_integral<typename U::value_type>::value,int>::type = 0>
 	static void overflow_check(const U &)

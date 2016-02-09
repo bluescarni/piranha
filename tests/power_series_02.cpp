@@ -40,9 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 #include "../src/environment.hpp"
@@ -56,7 +54,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/real_trigonometric_kronecker_monomial.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
-#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -93,154 +90,6 @@ class g_series_type2: public power_series<series<Cf,rtk_monomial,g_series_type2<
 		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type2,base)
 };
 
-struct degree_tester
-{
-	template <typename Cf>
-	struct runner
-	{
-		template <typename Expo>
-		void operator()(const Expo &)
-		{
-			typedef polynomial<Cf,monomial<Expo>> p_type1;
-			typedef polynomial<polynomial<Cf,monomial<Expo>>,monomial<Expo>> p_type11;
-			using deg_type = typename std::conditional<std::is_same<Expo,int>::value,int,integer>::type;
-			BOOST_CHECK((std::is_same<deg_type,decltype(math::degree(p_type1{}))>::value));
-			BOOST_CHECK((std::is_same<deg_type,decltype(math::degree(p_type1{},std::vector<std::string>{}))>::value));
-			BOOST_CHECK((std::is_same<deg_type,decltype(math::ldegree(p_type1{}))>::value));
-			BOOST_CHECK((std::is_same<deg_type,decltype(math::ldegree(p_type1{},std::vector<std::string>{}))>::value));
-			BOOST_CHECK(math::degree(p_type1{}) == 0);
-			BOOST_CHECK(math::degree(p_type1{},std::vector<std::string>{}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{},std::vector<std::string>{}) == 0);
-			BOOST_CHECK(math::degree(p_type1{"x"}) == 1);
-			BOOST_CHECK(math::degree(p_type1{"x"},{"x"}) == 1);
-			BOOST_CHECK(math::degree(p_type1{"x"},{"y"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type1{"x"},{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type1{"x"},{"y"}) == 0);
-			BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"x"}) == 2);
-			BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"x"},{"x"}) == 2);
-			BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"},{"y"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"x"}) == 2);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"x"},{"x"}) == 2);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"},{"y"}) == 1);
-			BOOST_CHECK(math::degree(p_type1{"x"} + p_type1{"y"} + p_type1{1}) == 1);
-			BOOST_CHECK(math::degree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"x"}) == 1);
-			BOOST_CHECK(math::degree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"x"}) == 1);
-			BOOST_CHECK(math::degree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"y"}) == 1);
-			BOOST_CHECK(math::degree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"y"}) == 1);
-			BOOST_CHECK(math::degree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"z"}) == 0);
-			BOOST_CHECK(math::degree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"z"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} + p_type1{"y"} + p_type1{1}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"y"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"y"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"z"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} + p_type1{"y"} + p_type1{1},{"z"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"x"} + p_type1{"y"} + p_type1{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"x"} + p_type1{"y"} + p_type1{"x"},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"x"} + p_type1{"y"} + p_type1{"x"},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"x"} + 2 * p_type1{"x"},{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + 2 * p_type1{"x"},{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + 2 * p_type1{"x"},{"y"}) == 0);
-			std::vector<std::string> empty_set;
-			BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<const p_type11 &>())),deg_type>::value));
-			BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<const p_type11 &>(),empty_set)),deg_type>::value));
-			BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<const p_type11 &>())),deg_type>::value));
-			BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<const p_type11 &>(),empty_set)),deg_type>::value));
-			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"}) == 2);
-			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"x"}) == 1);
-			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"x"}) == 1);
-			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"y"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"y"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"y"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"z"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"},{"z"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"} + 1) == 0);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"} + 1,{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"} + 1,{"y"}) == 0);
-			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"} + 1) == 3);
-			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"} + 1,{"x"}) == 1);
-			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"} + 1,{"y"}) == 2);
-			BOOST_CHECK(math::degree(p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"} + 1,{"y"}) == 2);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"} + 1) == 0);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"},{"y"}) == 1);
-			BOOST_CHECK(math::ldegree(p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"},{"y"}) == 1);
-			// Test the type traits.
-			BOOST_CHECK(has_degree<p_type1>::value);
-			BOOST_CHECK(has_degree<p_type11>::value);
-			BOOST_CHECK(has_ldegree<p_type1>::value);
-			BOOST_CHECK(has_ldegree<p_type11>::value);
-			// Poisson series tests.
-			typedef poisson_series<p_type1> pstype1;
-			BOOST_CHECK(has_degree<pstype1>::value);
-			BOOST_CHECK(has_ldegree<pstype1>::value);
-			typedef poisson_series<Cf> pstype2;
-			BOOST_CHECK(!has_degree<pstype2>::value);
-			BOOST_CHECK(!has_ldegree<pstype2>::value);
-			BOOST_CHECK((std::is_same<deg_type,decltype(math::degree(pstype1{}))>::value));
-			BOOST_CHECK((std::is_same<deg_type,decltype(math::degree(pstype1{},std::vector<std::string>{}))>::value));
-			BOOST_CHECK((std::is_same<deg_type,decltype(math::ldegree(pstype1{}))>::value));
-			BOOST_CHECK((std::is_same<deg_type,decltype(math::ldegree(pstype1{},std::vector<std::string>{}))>::value));
-			// As usual, operations on Poisson series with (polynomial) integer coefficients are not gonna give
-			// meaningful mathematical results.
-			if (std::is_same<Cf,integer>::value) {
-				return;
-			}
-			BOOST_CHECK(math::degree(pstype1{}) == 0);
-			BOOST_CHECK(math::degree(pstype1{},std::vector<std::string>{}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{},std::vector<std::string>{}) == 0);
-			BOOST_CHECK(math::degree(pstype1{"x"}) == 1);
-			BOOST_CHECK(math::degree(pstype1{"x"},{"x"}) == 1);
-			BOOST_CHECK(math::degree(pstype1{"x"},{"y"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(pstype1{"x"},{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(pstype1{"x"},{"y"}) == 0);
-			BOOST_CHECK(math::degree(pstype1{"x"} * pstype1{"x"}) == 2);
-			BOOST_CHECK(math::degree(pstype1{"x"} * pstype1{"x"},{"x"}) == 2);
-			BOOST_CHECK(math::degree(pstype1{"x"} * pstype1{"y"},{"y"}) == 1);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"x"}) == 2);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"x"},{"x"}) == 2);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"y"},{"y"}) == 1);
-			BOOST_CHECK(math::degree(pstype1{"x"} + pstype1{"y"} + pstype1{1}) == 1);
-			BOOST_CHECK(math::degree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"x"}) == 1);
-			BOOST_CHECK(math::degree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"x"}) == 1);
-			BOOST_CHECK(math::degree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"y"}) == 1);
-			BOOST_CHECK(math::degree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"y"}) == 1);
-			BOOST_CHECK(math::degree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"z"}) == 0);
-			BOOST_CHECK(math::degree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"z"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} + pstype1{"y"} + pstype1{1}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"y"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"y"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"z"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} + pstype1{"y"} + pstype1{1},{"z"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"x"} + pstype1{"y"} + pstype1{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"x"} + pstype1{"y"} + pstype1{"x"},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"x"} + pstype1{"y"} + pstype1{"x"},{"x"}) == 0);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"x"} + 2 * pstype1{"x"},{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"y"} + 2 * pstype1{"x"},{"x"}) == 1);
-			BOOST_CHECK(math::ldegree(pstype1{"x"} * pstype1{"y"} + 2 * pstype1{"x"},{"y"}) == 0);
-		}
-	};
-	template <typename Cf>
-	void operator()(const Cf &)
-	{
-		boost::mpl::for_each<expo_types>(runner<Cf>());
-	}
-};
-
-BOOST_AUTO_TEST_CASE(power_series_test_01)
-{
-	environment env;
-	boost::mpl::for_each<cf_types>(degree_tester());
-}
-
 struct fake_int
 {
 	fake_int();
@@ -275,6 +124,7 @@ struct hash<fake_int>
 
 BOOST_AUTO_TEST_CASE(power_series_test_02)
 {
+	environment env;
 	// Check the rational degree.
 	typedef g_series_type<double,rational> stype0;
 	BOOST_CHECK((has_degree<stype0>::value));
