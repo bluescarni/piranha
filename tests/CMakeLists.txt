@@ -1,7 +1,5 @@
 # Add the unit test library.
-if (NOT Boost_USE_STATIC_LIBS)
-    ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
-endif()
+ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 
 # Add a special definition for the unit tests when the run-on-Valgrind
 # option is selected.
