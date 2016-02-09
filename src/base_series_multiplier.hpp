@@ -776,6 +776,10 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * and the total count of terms in the series will be set to the number of non-ignorable terms. Ignorable terms will
 		 * be erased.
 		 *
+		 * Note that in case of exceptions \p retval will likely be left in an inconsistent state which violates internal invariants.
+		 * Calls to this function should always be wrapped in a try/catch block that makes sure that \p retval is cleared before
+		 * re-throwing.
+		 *
 		 * @param[in] retval the series to be sanitised.
 		 * @param[in] n_threads the number of threads to be used.
 		 *
