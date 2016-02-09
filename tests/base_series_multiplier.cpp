@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/kronecker_monomial.hpp"
@@ -145,6 +146,7 @@ struct m_checker: public base_series_multiplier<Series>
 	}
 };
 
+#if 0
 BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
 {
 	environment env;
@@ -600,7 +602,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
 	using p_types = boost::mpl::vector<pt1,pt2,p_type<rational>>;
 	boost::mpl::for_each<p_types>(multiplication_tester());
 }
-
+#endif
 BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 {
 	{
