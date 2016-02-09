@@ -411,9 +411,6 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_estimate_final_series_size_test)
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitise_series_test)
 {
-settings::reset_n_threads();
-std::cout << "the current number of threads is " << settings::get_n_threads() << ", setting to 2 manually\n";
-settings::set_n_threads(2);
 	using pt = p_type<integer>;
 	using mt = m_checker<pt>;
 	using term_type = typename pt::term_type;
