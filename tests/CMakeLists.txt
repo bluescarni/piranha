@@ -1,4 +1,6 @@
 # Add the unit test library.
+# NOTE: probably we should have a check in the build system to determine
+# whether Boost libraries are static or dynamic.
 if (NOT Boost_USE_STATIC_LIBS)
     ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 endif()
