@@ -19,18 +19,18 @@ addons:
 
 matrix:
   include:
-    - compiler: gcc
-      env: BUILD_TYPE="Release"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Release"
     - compiler: gcc
       env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
     - compiler: gcc
       env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
     - compiler: gcc
       env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      env: BUILD_TYPE="Debug"
+    #- compiler: clang
+      #env: BUILD_TYPE="Release"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug"
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
@@ -42,11 +42,17 @@ install:
       fi
     # - export BOOST_TEST_LOG_LEVEL="all"
 script:
-    - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} .
+    - mkdir build
+    - cd build
+    - if [[ "${BUILD_TYPE}" == "Debug" && "${CC}" == "gcc" ]]; then
+          cmake -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM}  ../
+      else
+          cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ../
+      fi
     - make
     - if [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;
-      elif [[ "${BUILD_TYPE}" == "Debug"  ]]; then
+      elif [[ "${BUILD_TYPE}" == "Debug" ]]; then
           ctest -E "thread" -V;
       fi
 notifications:
