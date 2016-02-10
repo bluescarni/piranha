@@ -44,7 +44,7 @@ install:
 script:
     - mkdir build
     - cd build
-    - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ../;
+    - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ../
     - make
     - if [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;
