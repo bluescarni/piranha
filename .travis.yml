@@ -21,6 +21,12 @@ matrix:
   include:
     - compiler: gcc
       env: BUILD_TYPE="Release"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
     - compiler: clang
       env: BUILD_TYPE="Release"
     - compiler: clang
@@ -31,7 +37,6 @@ install:
           export CC=gcc-4.8;
           export CXX=g++-4.8;
       elif [[ "${CC}" == "clang" ]]; then
-          export CXXFLAGS="${CXXFLAGS} -Wno-mismatched-tags";
           export CC=clang-3.8;
           export CXX=clang++-3.8;
       fi
