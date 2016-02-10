@@ -48,6 +48,7 @@ script:
           echo "ffffffff";
           cmake -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
       else
+          echo "ggggggg";
           cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ../;
       fi
     - make
