@@ -57,7 +57,7 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,rational,real> cf_types;
+typedef boost::mpl::vector<double,integer,real> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
 template <typename Cf, typename Expo>
