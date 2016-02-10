@@ -415,6 +415,9 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitise_series_test)
 	using mt = m_checker<pt>;
 	using term_type = typename pt::term_type;
 	std::array<unsigned,4u> nt = {{1u,2u,3u,4u}};
+	// Make sure the thread pool has 4 slots for testing
+	// below with various numbers of threads.
+	settings::set_n_threads(4u);
 	for (const auto &n: nt) {
 		// First test with an empty series.
 		pt e;
@@ -471,6 +474,8 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitise_series_test)
 		BOOST_CHECK_THROW(mt::sanitise_series(e,n),std::invalid_argument);
 		e._container().clear();
 	}
+	// Reset to the default setup.
+	settings::reset_n_threads();
 }
 
 struct multiplication_tester
