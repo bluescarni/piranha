@@ -959,7 +959,7 @@ struct static_integer
 			return;
 		}
 		if (n >= limb_bits) {
-			// NOTE: this is ok of n == limb_bits, no special casing needed.
+			// NOTE: this is ok if n == limb_bits, no special casing needed.
 			m_limbs[0u] = static_cast<limb_t>(m_limbs[1u] >> (n - limb_bits));
 			m_limbs[1u] = 0u;
 			// The size could be zero or +-1, depending
