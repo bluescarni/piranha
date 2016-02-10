@@ -40,10 +40,12 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -204,6 +206,23 @@ struct lshift_tester
 		using int_type = mp_integer<T::value>;
 		using limb_t = typename detail::static_integer<T::value>::limb_t;
 		constexpr auto limb_bits = detail::static_integer<T::value>::limb_bits;
+		// Test the type traits.
+		BOOST_CHECK((has_left_shift<int_type>::value));
+		BOOST_CHECK((has_left_shift<int_type,int>::value));
+		BOOST_CHECK((has_left_shift<int_type,short>::value));
+		BOOST_CHECK((has_left_shift<long,int_type>::value));
+		BOOST_CHECK((has_left_shift<short,int_type>::value));
+		BOOST_CHECK((!has_left_shift<int_type,std::string>::value));
+		BOOST_CHECK((!has_left_shift<int_type,double>::value));
+		BOOST_CHECK((!has_left_shift<double,int>::value));
+		BOOST_CHECK((has_left_shift_in_place<int_type>::value));
+		BOOST_CHECK((has_left_shift_in_place<int_type,int>::value));
+		BOOST_CHECK((has_left_shift_in_place<int_type,short>::value));
+		BOOST_CHECK((has_left_shift_in_place<long,int_type>::value));
+		BOOST_CHECK((has_left_shift_in_place<short,int_type>::value));
+		BOOST_CHECK((!has_left_shift_in_place<double,int_type>::value));
+		BOOST_CHECK((!has_left_shift_in_place<const short,int_type>::value));
+		BOOST_CHECK((!has_left_shift_in_place<std::string,int_type>::value));
 		// Random testing.
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		std::uniform_int_distribution<limb_t> sdist(limb_t(0u),limb_t(limb_bits * 2u));
@@ -237,4 +256,204 @@ struct lshift_tester
 BOOST_AUTO_TEST_CASE(mp_integer_lshift_test)
 {
 	boost::mpl::for_each<size_types>(lshift_tester());
+}
+
+struct static_rshift_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = detail::static_integer<T::value>;
+		using limb_t = typename int_type::limb_t;
+		constexpr auto limb_bits = int_type::limb_bits;
+		int_type n(0);
+		n.rshift(1u);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n.rshift(2u * limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n.rshift(2u * limb_bits + 1u);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(1);
+		n.rshift(0u);
+		BOOST_CHECK_EQUAL(n,int_type(1));
+		n = int_type(-1);
+		n.rshift(0u);
+		BOOST_CHECK_EQUAL(n,int_type(-1));
+		n.rshift(2u * limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(-1);
+		n.rshift(2u * limb_bits + 1u);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(1);
+		n.rshift(1u);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(-1);
+		n.rshift(1u);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		// Testing with limb_bits and higher shifting.
+		n = int_type(1);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(-1);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(1);
+		n.rshift(limb_bits + 1u);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(-1);
+		n.rshift(limb_bits + 1u);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(1);
+		n.lshift(limb_bits - 1u);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(-1);
+		n.lshift(limb_bits - 1u);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(0));
+		n = int_type(1);
+		n.lshift(limb_bits);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(1));
+		n = int_type(-1);
+		n.lshift(limb_bits);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(-1));
+		n = int_type(1);
+		n.lshift(limb_bits + 1u);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(2));
+		n = int_type(-1);
+		n.lshift(limb_bits + 1u);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(-2));
+		n = int_type(1);
+		n.lshift(limb_bits + 2u);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(4));
+		n = int_type(-1);
+		n.lshift(limb_bits + 2u);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(-4));
+		n = int_type(1);
+		n.lshift(limb_bits + 2u);
+		n.m_limbs[0u] = limb_t(1u);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(4));
+		n = int_type(-1);
+		n.lshift(limb_bits + 2u);
+		n.m_limbs[0u] = limb_t(1u);
+		n.rshift(limb_bits);
+		BOOST_CHECK_EQUAL(n,int_type(-4));
+		// Testing with shift in ]0,limb_bits[.
+		n = int_type(1);
+		n.lshift(limb_bits);
+		n.m_limbs[0u] = limb_t(1u);
+		n.rshift(1u);
+		BOOST_CHECK_EQUAL(n,int_type(limb_t(1u) << (limb_bits - 1u)));
+		n = int_type(-1);
+		n.lshift(limb_bits);
+		n.m_limbs[0u] = limb_t(1u);
+		n.rshift(1u);
+		BOOST_CHECK_EQUAL(n,-int_type(limb_t(1u) << (limb_bits - 1u)));
+		n = int_type(1);
+		n.lshift(limb_bits + 1u);
+		n.m_limbs[0u] = limb_t(2u);
+		n.rshift(1u);
+		BOOST_CHECK_EQUAL(n.m_limbs[0u],1u);
+		BOOST_CHECK_EQUAL(n.m_limbs[1u],1u);
+		n = int_type(-1);
+		n.lshift(limb_bits + 1u);
+		n.m_limbs[0u] = limb_t(2u);
+		n.rshift(1u);
+		BOOST_CHECK_EQUAL(n.m_limbs[0u],1u);
+		BOOST_CHECK_EQUAL(n.m_limbs[1u],1u);
+		n = int_type(1);
+		n.lshift(limb_bits + 1u);
+		n.m_limbs[0u] = limb_t(4u);
+		n.rshift(3u);
+		BOOST_CHECK_EQUAL(n.m_limbs[0u],limb_t(1u) << (limb_bits - 2u));
+		BOOST_CHECK_EQUAL(n.m_limbs[1u],0u);
+		n = int_type(1);
+		n.lshift(limb_bits + 1u);
+		n.m_limbs[0u] = limb_t(8u);
+		n.rshift(3u);
+		BOOST_CHECK_EQUAL(n.m_limbs[0u],(limb_t(1u) << (limb_bits - 2u)) + 1u);
+		BOOST_CHECK_EQUAL(n.m_limbs[1u],0u);
+		n = int_type(1);
+		n.lshift(limb_bits + 1u);
+		n.m_limbs[0u] = limb_t(8u);
+		n.m_limbs[1u] = limb_t(n.m_limbs[1u] + 8u);
+		n.rshift(3u);
+		BOOST_CHECK_EQUAL(n.m_limbs[0u],(limb_t(1u) << (limb_bits - 2u)) + 1u);
+		BOOST_CHECK_EQUAL(n.m_limbs[1u],1u);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_static_integer_rshift_test)
+{
+	boost::mpl::for_each<size_types>(static_rshift_tester());
+}
+
+struct rshift_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = mp_integer<T::value>;
+		using limb_t = typename detail::static_integer<T::value>::limb_t;
+		constexpr auto limb_bits = detail::static_integer<T::value>::limb_bits;
+		// Test the type traits.
+		BOOST_CHECK((has_right_shift<int_type>::value));
+		BOOST_CHECK((has_right_shift<int_type,int>::value));
+		BOOST_CHECK((has_right_shift<int_type,short>::value));
+		BOOST_CHECK((has_right_shift<long,int_type>::value));
+		BOOST_CHECK((has_right_shift<short,int_type>::value));
+		BOOST_CHECK((!has_right_shift<int_type,double>::value));
+		BOOST_CHECK((!has_right_shift<int_type,std::string>::value));
+		BOOST_CHECK((!has_right_shift<double,int>::value));
+		BOOST_CHECK((has_right_shift_in_place<int_type>::value));
+		BOOST_CHECK((has_right_shift_in_place<int_type,int>::value));
+		BOOST_CHECK((has_right_shift_in_place<int_type,short>::value));
+		BOOST_CHECK((has_right_shift_in_place<long,int_type>::value));
+		BOOST_CHECK((has_right_shift_in_place<short,int_type>::value));
+		BOOST_CHECK((!has_right_shift_in_place<double,int_type>::value));
+		BOOST_CHECK((!has_right_shift_in_place<const short,int_type>::value));
+		BOOST_CHECK((!has_right_shift_in_place<std::string,int_type>::value));
+		// Random testing.
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<limb_t> sdist(limb_t(0u),limb_t(limb_bits * 2u));
+		for (int i = 0; i < ntries; ++i) {
+			const auto int_n = int_dist(rng);
+			int_type n(int_n);
+			auto s = sdist(rng);
+			auto ns = n >> s;
+			BOOST_CHECK_EQUAL(ns,n / int_type(2).pow(s));
+			auto ns2 = n >> int_type(s);
+			BOOST_CHECK_EQUAL(ns2,ns);
+			n >>= s;
+			BOOST_CHECK_EQUAL(ns,n);
+			BOOST_CHECK_EQUAL(int_n >> int_type(s),ns);
+			// Check that left shift followed by right shift preserves the value.
+			s = sdist(rng);
+			BOOST_CHECK_EQUAL((n << s) >> s,n);
+		}
+		// Throwing conditions.
+		BOOST_CHECK_THROW(int_type{1} >> (int_type(std::numeric_limits< ::mp_bitcnt_t>::max()) + 1),std::invalid_argument);
+		BOOST_CHECK_THROW(int_type{1} >> int_type(-1),std::invalid_argument);
+		BOOST_CHECK_THROW(int_type{1} >> -1,std::invalid_argument);
+		// A couple of tests with C++ integral on the left.
+		BOOST_CHECK_EQUAL(2 >> int_type(1),1);
+		BOOST_CHECK_THROW(1 >> int_type(-1),std::invalid_argument);
+		unsigned n = 1;
+		n >>= int_type(1);
+		BOOST_CHECK_EQUAL(n,0u);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_rshift_test)
+{
+	boost::mpl::for_each<size_types>(rshift_tester());
 }

@@ -2104,3 +2104,45 @@ BOOST_AUTO_TEST_CASE(type_traits_has_begin_end_test)
 	// C array.
 	BOOST_CHECK(has_begin_end<int[3]>::value);
 }
+
+
+BOOST_AUTO_TEST_CASE(type_traits_shift_test)
+{
+	BOOST_CHECK(has_left_shift<int>::value);
+	BOOST_CHECK((has_left_shift<int,long>::value));
+	BOOST_CHECK((has_left_shift<int &,char &&>::value));
+	BOOST_CHECK((has_left_shift<int &,const short &>::value));
+	BOOST_CHECK(!has_left_shift<double>::value);
+	BOOST_CHECK((!has_left_shift<double,long>::value));
+	BOOST_CHECK((!has_left_shift<long,double>::value));
+	BOOST_CHECK((!has_left_shift<long,std::string>::value));
+	BOOST_CHECK((!has_left_shift<std::string,long>::value));
+	// lshift operator for ostream has incompatible signature, as
+	// the first argument is passed as mutable reference.
+	BOOST_CHECK((!has_left_shift<std::ostream,long>::value));
+	BOOST_CHECK(has_left_shift_in_place<int>::value);
+	BOOST_CHECK((has_left_shift_in_place<int,long>::value));
+	BOOST_CHECK((has_left_shift_in_place<int &,long const>::value));
+	BOOST_CHECK((!has_left_shift_in_place<const int,long>::value));
+	BOOST_CHECK((!has_left_shift_in_place<float,long>::value));
+	BOOST_CHECK((!has_left_shift_in_place<long,float>::value));
+	BOOST_CHECK((!has_left_shift_in_place<long,std::string>::value));
+	// Right shift.
+	BOOST_CHECK(has_right_shift<int>::value);
+	BOOST_CHECK((has_right_shift<int,long>::value));
+	BOOST_CHECK((has_right_shift<int &,char &&>::value));
+	BOOST_CHECK((has_right_shift<int &,const short &>::value));
+	BOOST_CHECK(!has_right_shift<double>::value);
+	BOOST_CHECK((!has_right_shift<double,long>::value));
+	BOOST_CHECK((!has_right_shift<long,double>::value));
+	BOOST_CHECK((!has_right_shift<long,std::string>::value));
+	BOOST_CHECK((!has_right_shift<std::string,long>::value));
+	BOOST_CHECK((!has_right_shift<std::istream,long>::value));
+	BOOST_CHECK(has_right_shift_in_place<int>::value);
+	BOOST_CHECK((has_right_shift_in_place<int,long>::value));
+	BOOST_CHECK((has_right_shift_in_place<int &,long const>::value));
+	BOOST_CHECK((!has_right_shift_in_place<const int,long>::value));
+	BOOST_CHECK((!has_right_shift_in_place<float,long>::value));
+	BOOST_CHECK((!has_right_shift_in_place<long,float>::value));
+	BOOST_CHECK((!has_right_shift_in_place<long,std::string>::value));
+}

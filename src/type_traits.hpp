@@ -1052,6 +1052,122 @@ class has_begin_end: detail::sfinae_types
 template <typename T>
 const bool has_begin_end<T>::value;
 
+/// Left-shift type trait.
+/**
+ * Will be \p true if objects of type \p T can be left-shifted by objects of type \p U.
+ * 
+ * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
+ @code
+ operator<<(const Td &, const Ud &)
+ @endcode
+ * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
+ @code
+ has_left_shift<int>::value == true;
+ has_left_shift<int,std::string>::value == false;
+ @endcode
+ */
+template <typename T, typename U = T>
+class has_left_shift: detail::sfinae_types
+{
+		friend class detail::arith_tt_helper<T,U,has_left_shift<T,U>>;
+		template <typename T1, typename U1>
+		static auto test(const T1 &t, const U1 &u) -> decltype(t << u,void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::arith_tt_helper<T,U,has_left_shift>::value;
+};
+
+template <typename T, typename U>
+const bool has_left_shift<T,U>::value;
+
+/// Right-shift type trait.
+/**
+ * Will be \p true if objects of type \p T can be right-shifted by objects of type \p U.
+ * 
+ * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
+ @code
+ operator>>(const Td &, const Ud &)
+ @endcode
+ * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
+ @code
+ has_right_shift<int>::value == true;
+ has_right_shift<int,std::string>::value == false;
+ @endcode
+ */
+template <typename T, typename U = T>
+class has_right_shift: detail::sfinae_types
+{
+		friend class detail::arith_tt_helper<T,U,has_right_shift<T,U>>;
+		template <typename T1, typename U1>
+		static auto test(const T1 &t, const U1 &u) -> decltype(t >> u,void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::arith_tt_helper<T,U,has_right_shift>::value;
+};
+
+template <typename T, typename U>
+const bool has_right_shift<T,U>::value;
+
+/// In-place left-shift type trait.
+/**
+ * Will be \p true if objects of type \p T can be left-shifted in-place by objects of type \p U.
+ * 
+ * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
+ @code
+ operator<<=(Td &, const Ud &)
+ @endcode
+ * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
+ @code
+ has_left_shift_in_place<int>::value == true;
+ has_left_shift_in_place<int,std::string>::value == false;
+ @endcode
+ */
+template <typename T, typename U = T>
+class has_left_shift_in_place: detail::sfinae_types
+{
+		friend class detail::arith_tt_helper<T,U,has_left_shift_in_place<T,U>>;
+		template <typename T1, typename U1>
+		static auto test(T1 &t, const U1 &u) -> decltype(t <<= u,void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::arith_tt_helper<T,U,has_left_shift_in_place>::value;
+};
+
+template <typename T, typename U>
+const bool has_left_shift_in_place<T,U>::value;
+
+/// In-place right-shift type trait.
+/**
+ * Will be \p true if objects of type \p T can be right-shifted in-place by objects of type \p U.
+ * 
+ * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
+ @code
+ operator<<=(Td &, const Ud &)
+ @endcode
+ * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
+ @code
+ has_right_shift_in_place<int>::value == true;
+ has_right_shift_in_place<int,std::string>::value == false;
+ @endcode
+ */
+template <typename T, typename U = T>
+class has_right_shift_in_place: detail::sfinae_types
+{
+		friend class detail::arith_tt_helper<T,U,has_right_shift_in_place<T,U>>;
+		template <typename T1, typename U1>
+		static auto test(T1 &t, const U1 &u) -> decltype(t >>= u,void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::arith_tt_helper<T,U,has_right_shift_in_place>::value;
+};
+
+template <typename T, typename U>
+const bool has_right_shift_in_place<T,U>::value;
+
 }
 
 #endif

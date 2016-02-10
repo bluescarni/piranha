@@ -225,10 +225,13 @@ static_assert(sizeof(expected_mpz_struct_t) == sizeof(mpz_struct_t) &&
 	std::is_same<mpz_alloc_t,decltype(std::declval<mpz_struct_t>()._mp_alloc)>::value &&
 	std::is_same<mpz_size_t,decltype(std::declval<mpz_struct_t>()._mp_size)>::value &&
 	std::is_same< ::mp_limb_t *,decltype(std::declval<mpz_struct_t>()._mp_d)>::value &&
+	// mp_bitcnt_t is used in shift operators, so we double-check it is unsigned. If it is not
+	// we might end up shifting by negative values, which is UB.
+	std::is_unsigned< ::mp_bitcnt_t>::value &&
 	// Sanity check on GMP_LIMB_BITS. We use both GMP_LIMB_BITS and numeric_limits interchangeably,
 	// e.g., when using read_uint.
 	std::numeric_limits< ::mp_limb_t>::digits == unsigned(GMP_LIMB_BITS),
-	"Invalid mpz_t struct layout.");
+	"Invalid mpz_t struct layout and/or GMP types.");
 
 // Metaprogramming to select the limb/dlimb types.
 template <int NBits>
@@ -941,6 +944,44 @@ struct static_integer
 		clear_extra_bits();
 		return 0;
 	}
+	// rshift by n bits.
+	void rshift(::mp_bitcnt_t n)
+	{
+		// Shift by zero or on a zero value has no effect.
+		if (n == 0u || _mp_size == 0) {
+			return;
+		}
+		// Shift by 2 * limb_bits or greater will produce zero.
+		if (n >= 2u * limb_bits) {
+			_mp_size = 0;
+			m_limbs[0u] = 0u;
+			m_limbs[1u] = 0u;
+			return;
+		}
+		if (n >= limb_bits) {
+			// NOTE: this is ok if n == limb_bits, no special casing needed.
+			m_limbs[0u] = static_cast<limb_t>(m_limbs[1u] >> (n - limb_bits));
+			m_limbs[1u] = 0u;
+			// The size could be zero or +-1, depending
+			// on the new content of m_limbs[0] and the previous
+			// sign of _mp_size.
+			_mp_size = (m_limbs[0u] == 0u) ? mpz_size_t(0) :
+				static_cast<mpz_size_t>((_mp_size > 0) ? 1 : -1);
+			return;
+		}
+		// Here we know that 0 < n < limb_bits.
+		piranha_assert(n > 0u && n < limb_bits);
+		// This represents the bits in hi that will be shifted down into lo.
+		// We move them up so we can add tmp to the new lo to account for them.
+		// NOTE: here we could have excess bits if limb_bits != total_bits, we will
+		// clean up below with clear_extra_bits().
+		const limb_t tmp(ulshift(m_limbs[1u],limb_bits - n));
+		m_limbs[0u] = static_cast<limb_t>((m_limbs[0u] >> n) + tmp);
+		m_limbs[1u] = static_cast<limb_t>(m_limbs[1u] >> n);
+		clear_extra_bits();
+		const auto new_asize = calculate_n_limbs();
+		_mp_size = static_cast<mpz_size_t>((_mp_size > 0) ? new_asize : -new_asize);
+	}
 	// Division.
 	static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
 	{
@@ -1316,9 +1357,9 @@ class mp_integer
 		template <typename T>
 		using generic_in_place_mod_enabler = typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value &&
 			std::is_integral<T>::value,int>::type;
-		// Enabler for in-place shift with interop on the left.
+		// Enabler for in-place shifts with interop on the left.
 		template <typename T>
-		using generic_in_place_lshift_enabler = typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value &&
+		using generic_in_place_shift_enabler = typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value &&
 			std::is_integral<T>::value,int>::type;
 		template <typename Float>
 		void construct_from_interoperable(const Float &x, typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
@@ -2062,6 +2103,57 @@ class mp_integer
 		{
 			mp_integer retval(n1);
 			retval <<= n2;
+			return retval;
+		}
+		// Right-Shift
+		mp_integer &in_place_rshift_mp_bitcnt_t(::mp_bitcnt_t other)
+		{
+			if (is_static()) {
+				m_int.g_st().rshift(other);
+			} else {
+				::mpz_tdiv_q_2exp(&m_int.g_dy(),&m_int.g_dy(),other);
+			}
+			return *this;
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		mp_integer &in_place_rshift(const T &other)
+		{
+			try {
+				return in_place_rshift_mp_bitcnt_t(boost::numeric_cast< ::mp_bitcnt_t>(other));
+			} catch (const boost::numeric::bad_numeric_cast &) {
+				piranha_throw(std::invalid_argument,"invalid argument for right bit shifting");
+			}
+		}
+		mp_integer &in_place_rshift(const mp_integer &other)
+		{
+			try {
+				return in_place_rshift_mp_bitcnt_t(static_cast< ::mp_bitcnt_t>(other));
+			} catch (const std::overflow_error &) {
+				piranha_throw(std::invalid_argument,"invalid argument for right bit shifting");
+			}
+		}
+		template <typename T, typename U>
+		static mp_integer binary_rshift(const T &n1, const U &n2, typename std::enable_if<
+				std::is_same<T,mp_integer>::value && std::is_same<U,mp_integer>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval >>= n2;
+			return retval;
+		}
+		template <typename T, typename U>
+		static mp_integer binary_rshift(const T &n1, const U &n2, typename std::enable_if<
+				std::is_same<T,mp_integer>::value && std::is_integral<U>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval >>= n2;
+			return retval;
+		}
+		template <typename T, typename U>
+		static mp_integer binary_rshift(const T &n1, const U &n2, typename std::enable_if<
+				std::is_same<U,mp_integer>::value && std::is_integral<T>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval >>= n2;
 			return retval;
 		}
 		// Comparison.
@@ -3077,7 +3169,7 @@ class mp_integer
 		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
-		template <typename T, generic_in_place_lshift_enabler<T> = 0>
+		template <typename T, generic_in_place_shift_enabler<T> = 0>
 		friend T &operator<<=(T &x, const mp_integer &n)
 		{
 			x = static_cast<T>(x << n);
@@ -3104,6 +3196,70 @@ class mp_integer
 		friend auto operator<<(const T &x, const U &y) -> decltype(mp_integer::binary_lshift(x,y))
 		{
 			return binary_lshift(x,y);
+		}
+		/// In-place right shift operation.
+		/**
+		 * \note
+		 * This template operator is enabled only if \p T is piranha::mp_integer or an integral type.
+		 *
+		 * Sets \p this to <tt>this >> n</tt>. The right shift operation is equivalent to a truncated division
+		 * by 2 to the power of \p n.
+		 *
+		 * @param[in] n argument for the right shift operation.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by the generic constructor, if used.
+		 * @throws piranha::invalid_argument if <tt>n</tt> is negative or it does not fit in an <tt>mp_bitcnt_t</tt>.
+		 */
+		template <typename T>
+		auto operator>>=(const T &n) -> decltype(this->in_place_rshift(n))
+		{
+			return in_place_rshift(n);
+		}
+		/// Generic in-place right shift with piranha::mp_integer.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is a non-const integral interoperable type.
+		 *
+		 * Compute the right shift with respect to a piranha::mp_integer in-place. This method will first compute <tt>x >> n</tt>,
+		 * cast it back to \p T via \p static_cast and finally assign the result to \p x. The right shift operation is equivalent to a
+		 * truncated division by 2 to the power of \p n.
+		 *
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 *
+		 * @return reference to \p x.
+		 *
+		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
+		 */
+		template <typename T, generic_in_place_shift_enabler<T> = 0>
+		friend T &operator>>=(T &x, const mp_integer &n)
+		{
+			x = static_cast<T>(x >> n);
+			return x;
+		}
+		/// Generic binary right shift operation involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an integral interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an integral interoperable type,
+		 * - both \p T and \p U are piranha::mp_integer.
+		 *
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 *
+		 * @return <tt>x >> y</tt>.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor, if used.
+		 */
+		template <typename T, typename U>
+		friend auto operator>>(const T &x, const U &y) -> decltype(mp_integer::binary_rshift(x,y))
+		{
+			return binary_rshift(x,y);
 		}
 		/// Generic equality operator involving piranha::mp_integer.
 		/**

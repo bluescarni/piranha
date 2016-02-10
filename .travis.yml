@@ -21,6 +21,12 @@ matrix:
   include:
     - compiler: gcc
       env: BUILD_TYPE="Release"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
     - compiler: clang
       env: BUILD_TYPE="Release"
     - compiler: clang
@@ -31,17 +37,18 @@ install:
           export CC=gcc-4.8;
           export CXX=g++-4.8;
       elif [[ "${CC}" == "clang" ]]; then
-          export CXXFLAGS="${CXXFLAGS} -Wno-mismatched-tags";
           export CC=clang-3.8;
           export CXX=clang++-3.8;
       fi
     # - export BOOST_TEST_LOG_LEVEL="all"
 script:
-    - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} .
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ../
     - make
     - if [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;
-      elif [[ "${BUILD_TYPE}" == "Debug"  ]]; then
+      elif [[ "${BUILD_TYPE}" == "Debug" ]]; then
           ctest -E "thread" -V;
       fi
 notifications:
