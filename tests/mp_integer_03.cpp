@@ -212,7 +212,7 @@ struct lshift_tester
 		BOOST_CHECK((has_left_shift<int_type,short>::value));
 		BOOST_CHECK((has_left_shift<long,int_type>::value));
 		BOOST_CHECK((has_left_shift<short,int_type>::value));
-		BOOST_CHECK((!has_right_shift<int_type,std::string>::value));
+		BOOST_CHECK((!has_left_shift<int_type,std::string>::value));
 		BOOST_CHECK((!has_left_shift<int_type,double>::value));
 		BOOST_CHECK((!has_left_shift<double,int>::value));
 		BOOST_CHECK((has_left_shift_in_place<int_type>::value));
@@ -419,7 +419,7 @@ struct rshift_tester
 		BOOST_CHECK((has_right_shift_in_place<int_type,short>::value));
 		BOOST_CHECK((has_right_shift_in_place<long,int_type>::value));
 		BOOST_CHECK((has_right_shift_in_place<short,int_type>::value));
-		BOOST_CHECK((!has_left_shift_in_place<double,int_type>::value));
+		BOOST_CHECK((!has_right_shift_in_place<double,int_type>::value));
 		BOOST_CHECK((!has_right_shift_in_place<const short,int_type>::value));
 		BOOST_CHECK((!has_right_shift_in_place<std::string,int_type>::value));
 		// Random testing.
