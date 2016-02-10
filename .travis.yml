@@ -34,11 +34,9 @@ matrix:
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
-          export PIRANHA_COMPILER=gcc
           export CC=gcc-4.8;
           export CXX=g++-4.8;
       elif [[ "${CC}" == "clang" ]]; then
-          export PIRANHA_COMPILER=clang
           export CC=clang-3.8;
           export CXX=clang++-3.8;
       fi
