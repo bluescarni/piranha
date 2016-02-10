@@ -40,10 +40,12 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -204,6 +206,23 @@ struct lshift_tester
 		using int_type = mp_integer<T::value>;
 		using limb_t = typename detail::static_integer<T::value>::limb_t;
 		constexpr auto limb_bits = detail::static_integer<T::value>::limb_bits;
+		// Test the type traits.
+		BOOST_CHECK((has_left_shift<int_type>::value));
+		BOOST_CHECK((has_left_shift<int_type,int>::value));
+		BOOST_CHECK((has_left_shift<int_type,short>::value));
+		BOOST_CHECK((has_left_shift<long,int_type>::value));
+		BOOST_CHECK((has_left_shift<short,int_type>::value));
+		BOOST_CHECK((!has_right_shift<int_type,std::string>::value));
+		BOOST_CHECK((!has_left_shift<int_type,double>::value));
+		BOOST_CHECK((!has_left_shift<double,int>::value));
+		BOOST_CHECK((has_left_shift_in_place<int_type>::value));
+		BOOST_CHECK((has_left_shift_in_place<int_type,int>::value));
+		BOOST_CHECK((has_left_shift_in_place<int_type,short>::value));
+		BOOST_CHECK((has_left_shift_in_place<long,int_type>::value));
+		BOOST_CHECK((has_left_shift_in_place<short,int_type>::value));
+		BOOST_CHECK((!has_left_shift_in_place<double,int_type>::value));
+		BOOST_CHECK((!has_left_shift_in_place<const short,int_type>::value));
+		BOOST_CHECK((!has_left_shift_in_place<std::string,int_type>::value));
 		// Random testing.
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		std::uniform_int_distribution<limb_t> sdist(limb_t(0u),limb_t(limb_bits * 2u));
@@ -386,6 +405,23 @@ struct rshift_tester
 		using int_type = mp_integer<T::value>;
 		using limb_t = typename detail::static_integer<T::value>::limb_t;
 		constexpr auto limb_bits = detail::static_integer<T::value>::limb_bits;
+		// Test the type traits.
+		BOOST_CHECK((has_right_shift<int_type>::value));
+		BOOST_CHECK((has_right_shift<int_type,int>::value));
+		BOOST_CHECK((has_right_shift<int_type,short>::value));
+		BOOST_CHECK((has_right_shift<long,int_type>::value));
+		BOOST_CHECK((has_right_shift<short,int_type>::value));
+		BOOST_CHECK((!has_right_shift<int_type,double>::value));
+		BOOST_CHECK((!has_right_shift<int_type,std::string>::value));
+		BOOST_CHECK((!has_right_shift<double,int>::value));
+		BOOST_CHECK((has_right_shift_in_place<int_type>::value));
+		BOOST_CHECK((has_right_shift_in_place<int_type,int>::value));
+		BOOST_CHECK((has_right_shift_in_place<int_type,short>::value));
+		BOOST_CHECK((has_right_shift_in_place<long,int_type>::value));
+		BOOST_CHECK((has_right_shift_in_place<short,int_type>::value));
+		BOOST_CHECK((!has_left_shift_in_place<double,int_type>::value));
+		BOOST_CHECK((!has_right_shift_in_place<const short,int_type>::value));
+		BOOST_CHECK((!has_right_shift_in_place<std::string,int_type>::value));
 		// Random testing.
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		std::uniform_int_distribution<limb_t> sdist(limb_t(0u),limb_t(limb_bits * 2u));
