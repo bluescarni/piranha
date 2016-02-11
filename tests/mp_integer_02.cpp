@@ -136,6 +136,7 @@ struct addmul_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
+		{
 		BOOST_CHECK(has_multiply_accumulate<int_type>::value);
 		int_type a,b,c;
 		math::multiply_accumulate(a,b,c);
@@ -148,6 +149,7 @@ struct addmul_tester
 		c = 2;
 		math::multiply_accumulate(a,b,c);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-4");
+		}
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
@@ -245,6 +247,7 @@ struct in_place_mp_integer_div_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
+		{
 		BOOST_CHECK(is_divisible_in_place<int_type>::value);
 		BOOST_CHECK((!is_divisible_in_place<const int_type,int_type>::value));
 		int_type a, b;
@@ -276,6 +279,7 @@ struct in_place_mp_integer_div_tester
 		a /= b;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"5");
 		BOOST_CHECK(a.is_static());
+		}
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
@@ -467,6 +471,7 @@ struct binary_div_tester
 		{
 			typedef mp_integer<U::value> int_type;
 			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			{
 			BOOST_CHECK((is_divisible<int_type,T>::value));
 			BOOST_CHECK((is_divisible<T,int_type>::value));
 			int_type n(4);
@@ -475,6 +480,7 @@ struct binary_div_tester
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n / m),"2");
 			BOOST_CHECK_THROW(n / T(0),zero_division_error);
 			BOOST_CHECK_THROW(T(1) / int_type(0),zero_division_error);
+			}
 			// Random testing.
 			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
 			mpz_raii m1, m2, res;
@@ -503,6 +509,7 @@ struct binary_div_tester
 		void operator()(const T &)
 		{
 			typedef mp_integer<U::value> int_type;
+			{
 			BOOST_CHECK((is_divisible<int_type,T>::value));
 			BOOST_CHECK((is_divisible<T,int_type>::value));
 			int_type n;
@@ -510,6 +517,7 @@ struct binary_div_tester
 			BOOST_CHECK((std::is_same<decltype(n / m),T>::value));
 			BOOST_CHECK_THROW(int_type(1) / T(0),zero_division_error);
 			BOOST_CHECK_THROW(T(1) / int_type(0),zero_division_error);
+			}
 			// Random testing
 			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
 			for (int i = 0; i < ntries; ++i) {
@@ -587,6 +595,7 @@ struct in_place_mp_integer_mod_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
+		{
 		int_type a, b;
 		BOOST_CHECK((std::is_same<decltype(a %= b),int_type &>::value));
 		BOOST_CHECK_THROW(a %= b,zero_division_error);
@@ -616,6 +625,7 @@ struct in_place_mp_integer_mod_tester
 		a %= b;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
 		BOOST_CHECK(a.is_static());
+		}
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
@@ -726,12 +736,14 @@ struct binary_mod_tester
 		{
 			typedef mp_integer<U::value> int_type;
 			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			{
 			int_type n(4);
 			T m(2);
 			BOOST_CHECK((std::is_same<decltype(n % m),int_type>::value));
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n % m),"0");
 			BOOST_CHECK_THROW(n % T(0),zero_division_error);
 			BOOST_CHECK_THROW(T(1) % int_type(0),zero_division_error);
+			}
 			// Random testing.
 			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
 			mpz_raii m1, m2, res;
@@ -808,6 +820,7 @@ struct mp_integer_cmp_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
+		{
 		BOOST_CHECK(is_equality_comparable<int_type>::value);
 		BOOST_CHECK(is_less_than_comparable<int_type>::value);
 		int_type a, b;
@@ -839,6 +852,7 @@ struct mp_integer_cmp_tester
 		BOOST_CHECK(b >= a);
 		BOOST_CHECK(!(b < a));
 		BOOST_CHECK(!(a > b));
+		}
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
@@ -1231,6 +1245,7 @@ struct abs_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
+		{
 		int_type n;
 		BOOST_CHECK_EQUAL(n.abs(),0);
 		n = -5;
@@ -1247,6 +1262,7 @@ struct abs_tester
 		m2 = 50;
 		m2.promote();
 		BOOST_CHECK_EQUAL(math::abs(m2),50);
+		}
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1),
 			int_dist(std::numeric_limits<int>::lowest(),std::numeric_limits<int>::max());

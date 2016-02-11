@@ -363,9 +363,9 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
 		}
 		BOOST_CHECK_EQUAL(tmp,p);
 	}
+	{
 	// Test bad archives.
 	std::stringstream ss;
-	{
 	// This originally corresponded to:
 	// math::pow(x,2)/2 + math::pow(y,2)/3
 	// An extra exponent was added to the only term of math::pow(y,2)/3.
