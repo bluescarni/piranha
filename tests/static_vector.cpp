@@ -101,6 +101,7 @@ struct constructor_tester
 		void operator()(const U &)
 		{
 			typedef static_vector<T,U::value> vector_type;
+			{
 			// Default constructor.
 			vector_type v;
 			BOOST_CHECK_EQUAL(v.size(),0u);
@@ -129,6 +130,7 @@ struct constructor_tester
 			// Mutating accessor.
 			v[0] = boost::lexical_cast<T>(2);
 			BOOST_CHECK_EQUAL(v[0],boost::lexical_cast<T>(2));
+			}
 			if (U::value > 1u) {
 				// Move Assignment with different sizes.
 				vector_type v, u;
@@ -149,7 +151,7 @@ struct constructor_tester
 				BOOST_CHECK_EQUAL(u[1],boost::lexical_cast<T>(2));
 			}
 			// Constructor from copies.
-			v = vector_type(0u,boost::lexical_cast<T>(1));
+			vector_type v(0u,boost::lexical_cast<T>(1));
 			BOOST_CHECK_EQUAL(v.size(),0u);
 			v = vector_type(1u,boost::lexical_cast<T>(2));
 			BOOST_CHECK_EQUAL(v.size(),1u);

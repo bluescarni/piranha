@@ -219,6 +219,7 @@ struct constructor_tester
 		}
 		// Floating-point.
 		const unsigned dradix = static_cast<unsigned>(std::numeric_limits<double>::radix);
+		{
 		double tmp(1);
 		tmp /= dradix;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{tmp}),std::string("1/")+boost::lexical_cast<std::string>(dradix));
@@ -239,6 +240,7 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(q_type{-2.},-2);
 		BOOST_CHECK_EQUAL(q_type{1.},1);
 		BOOST_CHECK_EQUAL(q_type{2.},2);
+		}
 		// Random testing.
 		std::uniform_real_distribution<double> ddist(0,std::numeric_limits<double>::max());
 		for (int i = 0; i < ntries / 10; ++i) {
@@ -473,6 +475,7 @@ struct plus_tester
 		using detail::gcd;
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
+		{
 		// Identity operator.
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{3,11}),boost::lexical_cast<std::string>(+q_type{3,11}));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{-6,4}),boost::lexical_cast<std::string>(+q_type{6,-4}));
@@ -554,6 +557,18 @@ struct plus_tester
 		a = "3/4";
 		a += q_type{-7,4};
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-1");
+		// Floats.
+		if (std::numeric_limits<double>::has_infinity) {
+			const auto old_a(a);
+			BOOST_CHECK_THROW((a += std::numeric_limits<double>::infinity()),std::invalid_argument);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
+			double xx = std::numeric_limits<double>::infinity();
+			xx += a;
+			BOOST_CHECK_EQUAL(xx,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(xx + a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a + xx,std::numeric_limits<double>::infinity());
+		}
+		}
 		// Random testing with integral types.
 		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpq_raii m0, m1, m2;
@@ -668,17 +683,6 @@ struct plus_tester
 			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 + f));
 			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(f + q0));
 		}
-		// Floats.
-		if (std::numeric_limits<double>::has_infinity) {
-			const auto old_a(a);
-			BOOST_CHECK_THROW((a += std::numeric_limits<double>::infinity()),std::invalid_argument);
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
-			double x = std::numeric_limits<double>::infinity();
-			x += a;
-			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(x + a,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(a + x,std::numeric_limits<double>::infinity());
-		}
 		// Random testing.
 		std::uniform_real_distribution<double> ddist(-1.,1.);
 		for (int i = 0; i < ntries; ++i) {
@@ -706,6 +710,7 @@ struct minus_tester
 		using detail::gcd;
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
+		{
 		// Negation.
 		q_type tmp00{0};
 		BOOST_CHECK(has_negate<q_type>::value);
@@ -796,6 +801,18 @@ struct minus_tester
 		a = "3/4";
 		a -= q_type{9,4};
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-3/2");
+		// Floats.
+		if (std::numeric_limits<double>::has_infinity) {
+			const auto old_a(a);
+			BOOST_CHECK_THROW((a -= std::numeric_limits<double>::infinity()),std::invalid_argument);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
+			double xx = std::numeric_limits<double>::infinity();
+			xx -= a;
+			BOOST_CHECK_EQUAL(xx,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(xx - a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a - xx,-std::numeric_limits<double>::infinity());
+		}
+		}
 		// Random testing with integral types.
 		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpq_raii m0, m1, m2;
@@ -907,17 +924,6 @@ struct minus_tester
 			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 - f));
 			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(-(f - q0)));
 		}
-		// Floats.
-		if (std::numeric_limits<double>::has_infinity) {
-			const auto old_a(a);
-			BOOST_CHECK_THROW((a -= std::numeric_limits<double>::infinity()),std::invalid_argument);
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
-			double x = std::numeric_limits<double>::infinity();
-			x -= a;
-			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(x - a,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(a - x,-std::numeric_limits<double>::infinity());
-		}
 		// Random testing.
 		std::uniform_real_distribution<double> ddist(-1.,1.);
 		for (int i = 0; i < ntries; ++i) {
@@ -944,6 +950,7 @@ struct mult_tester
 	{
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
+		{
 		// Some simple checks.
 		q_type a{1,2};
 		a *= q_type{3,5};
@@ -1012,6 +1019,18 @@ struct mult_tester
 		a = "3/4";
 		a *= q_type{9,4};
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"27/16");
+		// Floats.
+		if (std::numeric_limits<double>::has_infinity) {
+			const auto old_a(a);
+			BOOST_CHECK_THROW((a *= std::numeric_limits<double>::infinity()),std::invalid_argument);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
+			double xx = std::numeric_limits<double>::infinity();
+			xx *= a;
+			BOOST_CHECK_EQUAL(xx,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(xx * a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a * xx,std::numeric_limits<double>::infinity());
+		}
+		}
 		// Random testing with integral types.
 		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpq_raii m0, m1, m2;
@@ -1108,17 +1127,6 @@ struct mult_tester
 			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 * f));
 			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(f * q0));
 		}
-		// Floats.
-		if (std::numeric_limits<double>::has_infinity) {
-			const auto old_a(a);
-			BOOST_CHECK_THROW((a *= std::numeric_limits<double>::infinity()),std::invalid_argument);
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
-			double x = std::numeric_limits<double>::infinity();
-			x *= a;
-			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(x * a,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(a * x,std::numeric_limits<double>::infinity());
-		}
 		// Random testing.
 		std::uniform_real_distribution<double> ddist(-1.,1.);
 		for (int i = 0; i < ntries; ++i) {
@@ -1145,6 +1153,7 @@ struct div_tester
 	{
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
+		{
 		// Some simple checks.
 		q_type a{1,2};
 		a /= q_type{3,5};
@@ -1226,6 +1235,17 @@ struct div_tester
 		a = "3/4";
 		a /= q_type{9,4};
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"1/3");
+		// Floats.
+		if (std::numeric_limits<double>::has_infinity) {
+			a /= std::numeric_limits<double>::infinity();
+			BOOST_CHECK(math::is_zero(a));
+			double xx = std::numeric_limits<double>::infinity();
+			xx /= a;
+			BOOST_CHECK_EQUAL(xx,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(xx / a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a / xx,0.);
+		}
+		}
 		// Random testing with integral types.
 		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpq_raii m0, m1, m2;
@@ -1315,16 +1335,6 @@ struct div_tester
 			::mpq_canonicalize(&m2.m_mpq);
 			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(f / q0));
 		}
-		// Floats.
-		if (std::numeric_limits<double>::has_infinity) {
-			a /= std::numeric_limits<double>::infinity();
-			BOOST_CHECK(math::is_zero(a));
-			double x = std::numeric_limits<double>::infinity();
-			x /= a;
-			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(x / a,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(a / x,0.);
-		}
 		// Random testing.
 		std::uniform_real_distribution<double> ddist(-1.,1.);
 		for (int i = 0; i < ntries; ++i) {
@@ -1395,6 +1405,7 @@ struct mpq_view_tester
 	void operator()(const T &)
 	{
 		using q_type = mp_rational<T::value>;
+		{
 		q_type q;
 		{
 		auto v = q.get_mpq_view();
@@ -1413,6 +1424,7 @@ struct mpq_view_tester
 		{
 		auto v = q.get_mpq_view();
 		BOOST_CHECK_EQUAL(mpq_cmp_si(v.get(),1,4u),0);
+		}
 		}
 		// Random testing.
 		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());

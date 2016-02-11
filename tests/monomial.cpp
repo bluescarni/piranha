@@ -1358,6 +1358,6 @@ BOOST_AUTO_TEST_CASE(monomial_comparison_test)
 	BOOST_CHECK(!(k_type_00{2,2} < k_type_00{2,2}));
 	BOOST_CHECK((k_type_00{1,3} < k_type_00{2,1}));
 	BOOST_CHECK(!(k_type_00{1,2,3,4} < k_type_00{1,2,3,4}));
-	BOOST_CHECK_THROW(k_type_00{} < k_type_00{1},std::invalid_argument);
-	BOOST_CHECK_THROW(k_type_00{1} < k_type_00{},std::invalid_argument);
+	BOOST_CHECK_THROW((void)(k_type_00{} < k_type_00{1}),std::invalid_argument);
+	BOOST_CHECK_THROW((void)(k_type_00{1} < k_type_00{}),std::invalid_argument);
 }

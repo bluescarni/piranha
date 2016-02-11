@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(sia_test_00)
 	BOOST_CHECK_THROW(detail::safe_integral_adder(a,std::numeric_limits<int_type>::max()),std::overflow_error);
 	a = std::numeric_limits<int_type>::max();
 	BOOST_CHECK_THROW(detail::safe_integral_adder(a,std::numeric_limits<int_type>::max()),std::overflow_error);
-	a = std::numeric_limits<int_type>::max() - 1u;
+	a = static_cast<int_type>(std::numeric_limits<int_type>::max() - 1u);
 	detail::safe_integral_adder(a,int_type(1));
 	BOOST_CHECK_EQUAL(a,std::numeric_limits<int_type>::max());
 	a = 1u;

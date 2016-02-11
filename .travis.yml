@@ -21,16 +21,20 @@ matrix:
   include:
     - compiler: gcc
       env: BUILD_TYPE="Release"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
     - compiler: clang
       env: BUILD_TYPE="Release"
     - compiler: clang
-      env: BUILD_TYPE="Debug"
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
@@ -44,7 +48,11 @@ install:
 script:
     - mkdir build
     - cd build
-    - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ../
+    - if [[ "${BUILD_TYPE}" == "Debug" ]]; then
+          cmake -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+      else
+          cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ../;
+      fi
     - make
     - if [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;

@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/power_series.hpp"
 
-#define BOOST_TEST_MODULE power_series_test
+#define BOOST_TEST_MODULE power_series_01_test
 #include <boost/test/unit_test.hpp>
 
 #include <boost/mpl/for_each.hpp>
@@ -51,7 +51,7 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,rational,real> cf_types;
+typedef boost::mpl::vector<double,integer,real> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
 template <typename Cf, typename Expo>

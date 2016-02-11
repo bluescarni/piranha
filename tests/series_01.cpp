@@ -942,10 +942,10 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 	BOOST_CHECK_THROW(p.pow(real{-3}),std::invalid_argument);
 	BOOST_CHECK_THROW(p.pow(real{"1.5"}),std::invalid_argument);
 	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
-		auto p = p_type1{"x"} + 1;
-		BOOST_CHECK_EQUAL(p.pow(3),p.pow(3.));
-		BOOST_CHECK_THROW(p.pow(-3.),std::invalid_argument);
-		BOOST_CHECK_THROW(p.pow(1.5),std::invalid_argument);
+		auto pp = p_type1{"x"} + 1;
+		BOOST_CHECK_EQUAL(pp.pow(3),pp.pow(3.));
+		BOOST_CHECK_THROW(pp.pow(-3.),std::invalid_argument);
+		BOOST_CHECK_THROW(pp.pow(1.5),std::invalid_argument);
 	}
 	BOOST_CHECK((is_exponentiable<p_type1,double>::value));
 	BOOST_CHECK((is_exponentiable<const p_type1,double>::value));
