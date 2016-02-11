@@ -609,10 +609,10 @@ struct static_mpz_view_tester
 		for (int i = 0; i < ntries; ++i) {
 			mpz_raii m;
 			int_type n;
-			for (typename int_type::limb_t i = 0u; i < 2u * limb_bits; ++i) {
+			for (typename int_type::limb_t j = 0u; j < 2u * limb_bits; ++j) {
 				if (dist(rng)) {
-					n.set_bit(i);
-					::mpz_setbit(&m.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+					n.set_bit(j);
+					::mpz_setbit(&m.m_mpz,static_cast< ::mp_bitcnt_t>(j));
 				}
 			}
 			if (dist(rng)) {
@@ -677,6 +677,7 @@ struct static_add_tester
 	{
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
+		{
 		int_type a, b, c;
 		int_type::add(a,b,c);
 		BOOST_CHECK_EQUAL(a,int_type{});
@@ -814,6 +815,7 @@ struct static_add_tester
 		c.negate();
 		BOOST_CHECK(int_type::add(a,c,b));
 		BOOST_CHECK_EQUAL(old_a,a);
+		}
 		// Random testing.
 		mpz_raii mc, ma, mb;
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
@@ -1032,13 +1034,15 @@ struct static_add_tester
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
+		{
 		// Test the operators.
-		a = int_type(1);
-		b = int_type(2);
+		int_type a(1);
+		int_type b(2);
 		BOOST_CHECK_EQUAL(a+b,int_type(3));
 		a += int_type(-5);
 		BOOST_CHECK_EQUAL(a,int_type(-4));
 		BOOST_CHECK_EQUAL(+a,int_type(-4));
+		}
 	}
 };
 
@@ -1054,6 +1058,7 @@ struct static_sub_tester
 	{
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
+		{
 		int_type a, b, c;
 		int_type::sub(a,b,c);
 		BOOST_CHECK_EQUAL(a,int_type{});
@@ -1244,6 +1249,7 @@ struct static_sub_tester
 		c.negate();
 		BOOST_CHECK(int_type::sub(a,b,c));
 		BOOST_CHECK_EQUAL(old_a,a);
+		}
 		// Random testing.
 		mpz_raii mc, ma, mb;
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
@@ -1462,13 +1468,15 @@ struct static_sub_tester
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
+		{
 		// Test the operators.
-		a = int_type(1);
-		b = int_type(2);
+		int_type a(1);
+		int_type b(2);
 		BOOST_CHECK_EQUAL(a-b,int_type(-1));
 		a -= int_type(5);
 		BOOST_CHECK_EQUAL(a,int_type(-4));
 		BOOST_CHECK_EQUAL(-a,int_type(4));
+		}
 	}
 };
 
@@ -1485,6 +1493,7 @@ struct static_mul_tester
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
 		mpz_raii mc, ma, mb;
+		{
 		int_type a, b, c;
 		int_type::mul(a,b,c);
 		BOOST_CHECK_EQUAL(a,int_type{});
@@ -1557,6 +1566,7 @@ struct static_mul_tester
 		BOOST_CHECK(int_type::mul(a,c,b));
 		BOOST_CHECK(int_type::mul(a,b,c));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
+		}
 		// Random testing.
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
 		for (int i = 0; i < ntries; ++i) {
@@ -1774,12 +1784,14 @@ struct static_mul_tester
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
+		{
 		// Operators.
-		b = int_type(4);
-		c = int_type(5);
+		int_type b(4);
+		int_type c(5);
 		BOOST_CHECK_EQUAL(b * c,int_type(20));
 		b *= -int_type(5);
 		BOOST_CHECK_EQUAL(b,int_type(-20));
+		}
 	}
 };
 
@@ -1796,6 +1808,7 @@ struct static_addmul_tester
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
 		mpz_raii mc, ma, mb;
+		{
 		int_type a, b, c;
 		a.multiply_accumulate(b,c);
 		BOOST_CHECK_EQUAL(a,int_type());
@@ -1956,20 +1969,21 @@ struct static_addmul_tester
 		BOOST_CHECK(a.multiply_accumulate(b,c));
 		BOOST_CHECK(a.multiply_accumulate(c,b));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
+		}
 		// Random tests.
 		std::uniform_int_distribution<int> int_dist(0,1);
 		// 1 limb for all three operands.
 		for (int i = 0; i < ntries; ++i) {
 			int_type a, b, c;
-			for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			for (typename int_type::limb_t j = 0u; j < limb_bits; ++j) {
 				if (int_dist(rng)) {
-					a.set_bit(i);
+					a.set_bit(j);
 				}
 				if (int_dist(rng)) {
-					b.set_bit(i);
+					b.set_bit(j);
 				}
 				if (int_dist(rng)) {
-					c.set_bit(i);
+					c.set_bit(j);
 				}
 			}
 			if (int_dist(rng)) {
@@ -1999,20 +2013,20 @@ struct static_addmul_tester
 		// 2-1-1 limbs.
 		for (int i = 0; i < ntries; ++i) {
 			int_type a, b, c;
-			for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			for (typename int_type::limb_t j = 0u; j < limb_bits; ++j) {
 				if (int_dist(rng)) {
-					a.set_bit(i);
+					a.set_bit(j);
 				}
 				if (int_dist(rng)) {
-					b.set_bit(i);
+					b.set_bit(j);
 				}
 				if (int_dist(rng)) {
-					c.set_bit(i);
+					c.set_bit(j);
 				}
 			}
-			for (typename int_type::limb_t i = limb_bits; i < 2u * limb_bits; ++i) {
+			for (typename int_type::limb_t j = limb_bits; j < 2u * limb_bits; ++j) {
 				if (int_dist(rng)) {
-					a.set_bit(i);
+					a.set_bit(j);
 				}
 			}
 			if (int_dist(rng)) {
@@ -2041,20 +2055,20 @@ struct static_addmul_tester
 		// 1-half-half limbs.
 		for (int i = 0; i < ntries; ++i) {
 			int_type a, b, c;
-			for (typename int_type::limb_t i = 0u; i < limb_bits / 2u; ++i) {
+			for (typename int_type::limb_t j = 0u; j < limb_bits / 2u; ++j) {
 				if (int_dist(rng)) {
-					a.set_bit(i);
+					a.set_bit(j);
 				}
 				if (int_dist(rng)) {
-					b.set_bit(i);
+					b.set_bit(j);
 				}
 				if (int_dist(rng)) {
-					c.set_bit(i);
+					c.set_bit(j);
 				}
 			}
-			for (typename int_type::limb_t i = limb_bits / 2u; i < limb_bits; ++i) {
+			for (typename int_type::limb_t j = limb_bits / 2u; j < limb_bits; ++j) {
 				if (int_dist(rng)) {
-					a.set_bit(i);
+					a.set_bit(j);
 				}
 			}
 			if (int_dist(rng)) {
@@ -2084,20 +2098,20 @@ struct static_addmul_tester
 		// 2-half-half limbs.
 		for (int i = 0; i < ntries; ++i) {
 			int_type a, b, c;
-			for (typename int_type::limb_t i = 0u; i < limb_bits / 2u; ++i) {
+			for (typename int_type::limb_t j = 0u; j < limb_bits / 2u; ++j) {
 				if (int_dist(rng)) {
-					a.set_bit(i);
+					a.set_bit(j);
 				}
 				if (int_dist(rng)) {
-					b.set_bit(i);
+					b.set_bit(j);
 				}
 				if (int_dist(rng)) {
-					c.set_bit(i);
+					c.set_bit(j);
 				}
 			}
-			for (typename int_type::limb_t i = limb_bits / 2u; i < 2u * limb_bits; ++i) {
+			for (typename int_type::limb_t j = limb_bits / 2u; j < 2u * limb_bits; ++j) {
 				if (int_dist(rng)) {
-					a.set_bit(i);
+					a.set_bit(j);
 				}
 			}
 			if (int_dist(rng)) {

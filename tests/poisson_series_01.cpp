@@ -310,6 +310,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
 	using math::sin;
 	using math::cos;
 	using math::pow;
+	{
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
 	BOOST_CHECK(has_degree<p_type1>::value);
 	BOOST_CHECK(has_ldegree<p_type1>::value);
@@ -338,6 +339,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
 	typedef poisson_series<rational> p_type2;
 	BOOST_CHECK(!has_degree<p_type2>::value);
 	BOOST_CHECK(!has_ldegree<p_type2>::value);
+	}
 	// Try also with eps.
 	{
 	using eps = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
@@ -459,6 +461,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	using math::cos;
 	using math::pow;
 	using math::subs;
+	{
 	typedef poisson_series<polynomial<real,monomial<short>>> p_type1;
 	BOOST_CHECK((has_subs<p_type1,rational>::value));
 	BOOST_CHECK((has_subs<p_type1,double>::value));
@@ -505,6 +508,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	BOOST_CHECK_EQUAL(math::subs(-3*math::pow(c,4),"J_2",0_z),-3*math::pow(c,4));
 	// Test substitution with integral after math::sin/cos additional overload.
 	BOOST_CHECK_EQUAL(math::subs(-3*math::pow(c,4),"J_2",0),-3*math::pow(c,4));
+	}
 	{
 	// Test with eps.
 	using eps = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
