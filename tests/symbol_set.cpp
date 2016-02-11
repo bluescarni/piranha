@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_map>
 #include <vector>
 
+#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
@@ -76,8 +77,11 @@ BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
 	// Self assignment.
 	ss4 = ss4;
 	BOOST_CHECK(ss4 == symbol_set({symbol("c"),symbol("b"),symbol("a")}));
+// Clang warnings complain about self move assignment.
+#if !defined(PIRANHA_COMPILER_IS_CLANG)
 	ss4 = std::move(ss4);
 	BOOST_CHECK(ss4 == symbol_set({symbol("c"),symbol("b"),symbol("a")}));
+#endif
 	BOOST_CHECK(std::is_nothrow_move_constructible<symbol_set>::value);
 	// Constructor from iterators.
 	std::vector<std::string> vs1 = {"a","b","c"};
@@ -356,7 +360,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_serialization_test)
 		// Create a randomly-size random symbol set.
 		const auto size = size_dist(rng);
 		symbol_set ss;
-		for (symbol_set::size_type i = 0u; i < size; ++i) {
+		for (symbol_set::size_type j = 0u; j < size; ++j) {
 			try {
 				ss.add(symbol(boost::lexical_cast<std::string>(int_dist(rng))));
 			} catch (...) {}

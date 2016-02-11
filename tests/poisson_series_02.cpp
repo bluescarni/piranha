@@ -83,6 +83,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 {
 	environment env;
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
+	{
 	BOOST_CHECK((has_ipow_subs<p_type1,p_type1>::value));
 	BOOST_CHECK((has_ipow_subs<p_type1,integer>::value));
 	BOOST_CHECK((has_ipow_subs<p_type1,typename p_type1::term_type::cf_type>::value));
@@ -114,6 +115,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-7),z),y + 2*z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(-4),z),(z * x.pow(-3)) * math::cos(x) + y + z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(4),z),x.pow(-7) * math::cos(x) + y + z);
+	}
 	// Try also with eps.
 	{
 	using eps = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
@@ -330,6 +332,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_truncation_test)
 {
 	using pt = polynomial<rational,monomial<short>>;
 	using ps = poisson_series<pt>;
+	{
 	ps x{"x"}, y{"y"}, z{"z"};
 	BOOST_CHECK((has_truncate_degree<ps,int>::value));
 	BOOST_CHECK_EQUAL(math::truncate_degree(x,1),x);
@@ -343,6 +346,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_truncation_test)
 	BOOST_CHECK((x*x*z).empty());
 	BOOST_CHECK(!(x*x*math::cos(x)).empty());
 	pt::unset_auto_truncate_degree();
+	}
 	{
 	using eps = poisson_series<divisor_series<pt,divisor<short>>>;
 	eps x{"x"}, y{"y"}, z{"z"};
