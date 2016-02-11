@@ -150,6 +150,7 @@ struct addmul_tester
 		math::multiply_accumulate(a,b,c);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-4");
 		}
+		{
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
@@ -173,6 +174,7 @@ struct addmul_tester
 			::mpz_addmul(&m_a.m_mpz,&m_b.m_mpz,&m_c.m_mpz);
 			math::multiply_accumulate(a,b,c);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+		}
 		}
 		// Trigger overflow with three static ints.
 		{

@@ -562,11 +562,11 @@ struct plus_tester
 			const auto old_a(a);
 			BOOST_CHECK_THROW((a += std::numeric_limits<double>::infinity()),std::invalid_argument);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
-			double x = std::numeric_limits<double>::infinity();
-			x += a;
-			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(x + a,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(a + x,std::numeric_limits<double>::infinity());
+			double xx = std::numeric_limits<double>::infinity();
+			xx += a;
+			BOOST_CHECK_EQUAL(xx,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(xx + a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a + xx,std::numeric_limits<double>::infinity());
 		}
 		}
 		// Random testing with integral types.
@@ -806,11 +806,11 @@ struct minus_tester
 			const auto old_a(a);
 			BOOST_CHECK_THROW((a -= std::numeric_limits<double>::infinity()),std::invalid_argument);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
-			double x = std::numeric_limits<double>::infinity();
-			x -= a;
-			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(x - a,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(a - x,-std::numeric_limits<double>::infinity());
+			double xx = std::numeric_limits<double>::infinity();
+			xx -= a;
+			BOOST_CHECK_EQUAL(xx,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(xx - a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a - xx,-std::numeric_limits<double>::infinity());
 		}
 		}
 		// Random testing with integral types.
@@ -1024,11 +1024,11 @@ struct mult_tester
 			const auto old_a(a);
 			BOOST_CHECK_THROW((a *= std::numeric_limits<double>::infinity()),std::invalid_argument);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
-			double x = std::numeric_limits<double>::infinity();
-			x *= a;
-			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(x * a,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(a * x,std::numeric_limits<double>::infinity());
+			double xx = std::numeric_limits<double>::infinity();
+			xx *= a;
+			BOOST_CHECK_EQUAL(xx,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(xx * a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a * xx,std::numeric_limits<double>::infinity());
 		}
 		}
 		// Random testing with integral types.
@@ -1239,11 +1239,11 @@ struct div_tester
 		if (std::numeric_limits<double>::has_infinity) {
 			a /= std::numeric_limits<double>::infinity();
 			BOOST_CHECK(math::is_zero(a));
-			double x = std::numeric_limits<double>::infinity();
-			x /= a;
-			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(x / a,std::numeric_limits<double>::infinity());
-			BOOST_CHECK_EQUAL(a / x,0.);
+			double xx = std::numeric_limits<double>::infinity();
+			xx /= a;
+			BOOST_CHECK_EQUAL(xx,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(xx / a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a / xx,0.);
 		}
 		}
 		// Random testing with integral types.

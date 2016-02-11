@@ -3805,11 +3805,13 @@ struct binary_sub_tester
 		void operator()(const T &)
 		{
 			typedef mp_integer<U::value> int_type;
+			{
 			BOOST_CHECK((is_subtractable<int_type,T>::value));
 			BOOST_CHECK((is_subtractable<T,int_type>::value));
 			int_type n;
 			T m;
 			BOOST_CHECK((std::is_same<decltype(n - m),T>::value));
+			}
 			// Random testing
 			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
 			for (int i = 0; i < ntries; ++i) {
