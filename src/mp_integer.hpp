@@ -1304,7 +1304,7 @@ struct is_mp_integer_interoperable_type
  * - consider if and how to implement demoting. It looks it could be useful in certain cases, for instance when we
  *   rely on GMP routines (we should demote back to static if possible in those cases). For the elementary operations,
  *   it is less clear: addition, subtraction and division could in principle be considered for demotion. But, OTOH
- *   GMP never scales back the allocated memeory and, for instance, also the std:: containers do not normally reduce
+ *   GMP never scales back the allocated memory and, for instance, also the std:: containers do not normally reduce
  *   their sizes. There might be some lesson in there;
  * - understand the performance implications of implementing the binary operator as += and copy. Might be that creating an
  *   empty retval and then filling it with mpz_add() or a similar free function is more efficient. See how it is done
