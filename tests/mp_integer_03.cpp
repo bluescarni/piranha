@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
+#include "../src/math.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -456,4 +457,190 @@ struct rshift_tester
 BOOST_AUTO_TEST_CASE(mp_integer_rshift_test)
 {
 	boost::mpl::for_each<size_types>(rshift_tester());
+}
+
+struct ternary_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = mp_integer<T::value>;
+		constexpr auto limb_bits = detail::static_integer<T::value>::limb_bits;
+		{
+		// Addition.
+		BOOST_CHECK(has_add3<int_type>::value);
+		int_type a, b, c;
+		a.add(b,c);
+		BOOST_CHECK_EQUAL(a,0);
+		BOOST_CHECK(a.is_static());
+		a = 1;
+		b = -4;
+		c = 2;
+		a.add(b,c);
+		BOOST_CHECK_EQUAL(a,-2);
+		BOOST_CHECK(a.is_static());
+		// Try with promotion trigger.
+		b = int_type(1) << (2u * limb_bits - 1u);
+		c = b;
+		a.add(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(1) << (2u * limb_bits));
+		BOOST_CHECK(!a.is_static());
+		// Same with overlapping operands.
+		a = int_type(1) << (2u * limb_bits - 1u);
+		BOOST_CHECK(a.is_static());
+		a.add(a,a);
+		BOOST_CHECK_EQUAL(a,int_type(1) << (2u * limb_bits));
+		BOOST_CHECK(!a.is_static());
+		// Random testing.
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> p_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			int_type n1(int_dist(rng)), n2(int_dist(rng)), out;
+			// Promote randomly.
+			if (p_dist(rng) && n1.is_static()) {
+				n1.promote();
+			}
+			if (p_dist(rng) && n2.is_static()) {
+				n2.promote();
+			}
+			if (p_dist(rng)) {
+				out.promote();
+			}
+			out.add(n1,n2);
+			BOOST_CHECK_EQUAL(out,n1 + n2);
+			// Try the math:: counterpart.
+			math::add3(out,n1,n2);
+			BOOST_CHECK_EQUAL(out,n1 + n2);
+			// Try with overlapping operands.
+			out = n1;
+			out.add(out,n2);
+			BOOST_CHECK_EQUAL(out,n1 + n2);
+			out = n2;
+			out.add(n1,out);
+			BOOST_CHECK_EQUAL(out,n1 + n2);
+			out = n1;
+			out.add(out,out);
+			BOOST_CHECK_EQUAL(out,n1 * 2);
+		}
+		}
+		{
+		// Subtraction.
+		BOOST_CHECK(has_sub3<int_type>::value);
+		int_type a, b, c;
+		a.sub(b,c);
+		BOOST_CHECK_EQUAL(a,0);
+		BOOST_CHECK(a.is_static());
+		a = 1;
+		b = -4;
+		c = 2;
+		a.sub(b,c);
+		BOOST_CHECK_EQUAL(a,-6);
+		BOOST_CHECK(a.is_static());
+		// Try with promotion trigger.
+		b = int_type(1) << (2u * limb_bits - 1u);
+		c = -b;
+		a.sub(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(1) << (2u * limb_bits));
+		BOOST_CHECK(!a.is_static());
+		// Same with overlapping operands.
+		a = int_type(1) << (2u * limb_bits - 1u);
+		BOOST_CHECK(a.is_static());
+		a.sub(a,-a);
+		BOOST_CHECK_EQUAL(a,int_type(1) << (2u * limb_bits));
+		BOOST_CHECK(!a.is_static());
+		// Random testing.
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> p_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			int_type n1(int_dist(rng)), n2(int_dist(rng)), out;
+			// Promote randomly.
+			if (p_dist(rng) && n1.is_static()) {
+				n1.promote();
+			}
+			if (p_dist(rng) && n2.is_static()) {
+				n2.promote();
+			}
+			if (p_dist(rng)) {
+				out.promote();
+			}
+			out.sub(n1,n2);
+			BOOST_CHECK_EQUAL(out,n1 - n2);
+			// Try the math:: counterpart.
+			math::sub3(out,n1,n2);
+			BOOST_CHECK_EQUAL(out,n1 - n2);
+			// Try with overlapping operands.
+			out = n1;
+			out.sub(out,n2);
+			BOOST_CHECK_EQUAL(out,n1 - n2);
+			out = n2;
+			out.sub(n1,out);
+			BOOST_CHECK_EQUAL(out,n1 - n2);
+			out = n1;
+			out.sub(out,out);
+			BOOST_CHECK_EQUAL(out,0);
+		}
+		}
+		{
+		// Multiplication.
+		BOOST_CHECK(has_mul3<int_type>::value);
+		int_type a, b, c;
+		a.mul(b,c);
+		BOOST_CHECK_EQUAL(a,0);
+		BOOST_CHECK(a.is_static());
+		a = 1;
+		b = -4;
+		c = 2;
+		a.mul(b,c);
+		BOOST_CHECK_EQUAL(a,-8);
+		BOOST_CHECK(a.is_static());
+		// Try with promotion trigger.
+		b = int_type(1) << (2u * limb_bits - 1u);
+		c = 2;
+		a.mul(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(1) << (2u * limb_bits));
+		BOOST_CHECK(!a.is_static());
+		// Same with overlapping operands.
+		a = int_type(1) << (2u * limb_bits - 1u);
+		BOOST_CHECK(a.is_static());
+		a.mul(a,int_type(2));
+		BOOST_CHECK_EQUAL(a,int_type(1) << (2u * limb_bits));
+		BOOST_CHECK(!a.is_static());
+		// Random testing.
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> p_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			int_type n1(int_dist(rng)), n2(int_dist(rng)), out;
+			// Promote randomly.
+			if (p_dist(rng) && n1.is_static()) {
+				n1.promote();
+			}
+			if (p_dist(rng) && n2.is_static()) {
+				n2.promote();
+			}
+			if (p_dist(rng)) {
+				out.promote();
+			}
+			out.mul(n1,n2);
+			BOOST_CHECK_EQUAL(out,n1 * n2);
+			// Try the math:: counterpart.
+			math::mul3(out,n1,n2);
+			BOOST_CHECK_EQUAL(out,n1 * n2);
+			// Try with overlapping operands.
+			out = n1;
+			out.mul(out,n2);
+			BOOST_CHECK_EQUAL(out,n1 * n2);
+			out = n2;
+			out.mul(n1,out);
+			BOOST_CHECK_EQUAL(out,n1 * n2);
+			out = n1;
+			out.mul(out,out);
+			BOOST_CHECK_EQUAL(out,n1 * n1);
+		}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_ternary_test)
+{
+	boost::mpl::for_each<size_types>(ternary_tester());
 }

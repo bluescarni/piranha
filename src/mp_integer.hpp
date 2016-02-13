@@ -2765,6 +2765,58 @@ class mp_integer
 			++(*this);
 			return retval;
 		}
+		/// Addition in ternary form.
+		/**
+		 * Sets \p this to <tt>n1 + n2</tt>. This form can be more efficient than the corresponding binary operator.
+		 *
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 *
+		 * @return reference to \p this.
+		 */
+		mp_integer &add(const mp_integer &n1, const mp_integer &n2)
+		{
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s0 && s1 && s2) {
+				if (likely(!detail::integer_union<NBits>::s_storage::add(m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st()))) {
+					return *this;
+				}
+			}
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// 2**2 possibilities.
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			switch (mask) {
+				case 0u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view(), v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_add(&m_int.g_dy(),v1,v2);
+					break;
+				}
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_add(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_add(&m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_add(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+			return *this;
+		}
 		/// In-place subtraction.
 		/**
 		 * \note
@@ -2864,6 +2916,58 @@ class mp_integer
 			const mp_integer retval(*this);
 			--(*this);
 			return retval;
+		}
+		/// Subtraction in ternary form.
+		/**
+		 * Sets \p this to <tt>n1 - n2</tt>. This form can be more efficient than the corresponding binary operator.
+		 *
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 *
+		 * @return reference to \p this.
+		 */
+		mp_integer &sub(const mp_integer &n1, const mp_integer &n2)
+		{
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s0 && s1 && s2) {
+				if (likely(!detail::integer_union<NBits>::s_storage::sub(m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st()))) {
+					return *this;
+				}
+			}
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// 2**2 possibilities.
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			switch (mask) {
+				case 0u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view(), v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_sub(&m_int.g_dy(),v1,v2);
+					break;
+				}
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_sub(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_sub(&m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_sub(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+			return *this;
 		}
 		/// In-place multiplication.
 		/**
@@ -2982,6 +3086,58 @@ class mp_integer
 				}
 				case 3u:
 					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+			return *this;
+		}
+		/// Multiplication in ternary form.
+		/**
+		 * Sets \p this to <tt>n1 * n2</tt>. This form can be more efficient than the corresponding binary operator.
+		 *
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 *
+		 * @return reference to \p this.
+		 */
+		mp_integer &mul(const mp_integer &n1, const mp_integer &n2)
+		{
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s0 && s1 && s2) {
+				if (likely(!detail::integer_union<NBits>::s_storage::mul(m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st()))) {
+					return *this;
+				}
+			}
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// 2**2 possibilities.
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			switch (mask) {
+				case 0u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view(), v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_mul(&m_int.g_dy(),v1,v2);
+					break;
+				}
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_mul(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_mul(&m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_mul(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
 			}
 			return *this;
 		}
@@ -3925,6 +4081,69 @@ inline auto ipow_subs(const T &x, const std::string &name, const integer &n, con
 {
 	return ipow_subs_impl<T,U>()(x,name,n,y);
 }
+
+/// Specialisation of the piranha::math::add3() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct add3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the output of piranha::mp_integer::add().
+	 */
+	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.add(a,b))
+	{
+		return out.add(a,b);
+	}
+};
+
+/// Specialisation of the piranha::math::sub3() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct sub3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the output of piranha::mp_integer::sub().
+	 */
+	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.sub(a,b))
+	{
+		return out.sub(a,b);
+	}
+};
+
+/// Specialisation of the piranha::math::mul3() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct mul3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the output of piranha::mp_integer::mul().
+	 */
+	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.mul(a,b))
+	{
+		return out.mul(a,b);
+	}
+};
 
 }
 
