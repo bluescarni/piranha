@@ -764,3 +764,67 @@ BOOST_AUTO_TEST_CASE(math_key_has_subs_test)
 	BOOST_CHECK((!key_has_subs<mock_key,integer>::value));
 	BOOST_CHECK((!key_has_subs<mock_key,rational>::value));
 }
+
+BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
+{
+	{
+	// Addition.
+	BOOST_CHECK(has_add3<int>::value);
+	int i1 = 0;
+	math::add3(i1,3,4);
+	BOOST_CHECK_EQUAL(i1,7);
+	BOOST_CHECK(has_add3<short>::value);
+	short s1 = 1;
+	math::add3(s1,short(3),short(-4));
+	BOOST_CHECK_EQUAL(s1,-1);
+	BOOST_CHECK(has_add3<float>::value);
+	BOOST_CHECK(has_add3<double>::value);
+	float f1 = 1.234f;
+	math::add3(f1,3.456f,8.145f);
+	BOOST_CHECK_EQUAL(f1,3.456f + 8.145f);
+	BOOST_CHECK(has_add3<std::string>::value);
+	std::string foo;
+	math::add3(foo,std::string("hello "),std::string("world"));
+	BOOST_CHECK_EQUAL(foo,"hello world");
+	BOOST_CHECK(!has_add3<std::vector<int>>::value);
+	BOOST_CHECK(!has_add3<char *>::value);
+	}
+	{
+	// Subtraction.
+	BOOST_CHECK(has_sub3<int>::value);
+	int i1 = 0;
+	math::sub3(i1,3,4);
+	BOOST_CHECK_EQUAL(i1,-1);
+	BOOST_CHECK(has_sub3<short>::value);
+	short s1 = 1;
+	math::sub3(s1,short(3),short(-4));
+	BOOST_CHECK_EQUAL(s1,7);
+	BOOST_CHECK(has_sub3<float>::value);
+	BOOST_CHECK(has_sub3<double>::value);
+	float f1 = 1.234f;
+	math::sub3(f1,3.456f,8.145f);
+	BOOST_CHECK_EQUAL(f1,3.456f - 8.145f);
+	BOOST_CHECK(!has_sub3<std::string>::value);
+	BOOST_CHECK(!has_sub3<std::vector<int>>::value);
+	BOOST_CHECK(!has_sub3<char *>::value);
+	}
+	{
+	// Multiplication.
+	BOOST_CHECK(has_mul3<int>::value);
+	int i1 = 0;
+	math::mul3(i1,3,4);
+	BOOST_CHECK_EQUAL(i1,12);
+	BOOST_CHECK(has_mul3<short>::value);
+	short s1 = 1;
+	math::mul3(s1,short(3),short(-4));
+	BOOST_CHECK_EQUAL(s1,-12);
+	BOOST_CHECK(has_mul3<float>::value);
+	BOOST_CHECK(has_mul3<double>::value);
+	float f1 = 1.234f;
+	math::mul3(f1,3.456f,8.145f);
+	BOOST_CHECK_EQUAL(f1,3.456f * 8.145f);
+	BOOST_CHECK(!has_mul3<std::string>::value);
+	BOOST_CHECK(!has_mul3<std::vector<int>>::value);
+	BOOST_CHECK(!has_mul3<char *>::value);
+	}
+}
