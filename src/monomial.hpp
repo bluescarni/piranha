@@ -860,8 +860,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * \note
 		 * This method is enabled only if the following conditions hold:
 		 * - piranha::array_key::vector_add() is enabled for \p t1,
-		 * - \p Cf satisfies piranha::is_cf, it is multipliable in-place, it is multipliable yielding a result
-		 *   of type \p Cf, and it is copy-assignable.
+		 * - \p Cf satisfies piranha::is_cf and piranha::has_mul3.
 		 *
 		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res. If \p Cf is an instance of piranha::mp_rational, then
 		 * only the numerators of the coefficients will be multiplied.
@@ -874,8 +873,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @param[in] args reference set of arguments.
 		 *
 		 * @throws std::invalid_argument if the size of \p t1 differs from the size of \p args.
-		 * @throws unspecified any exception thrown by piranha::array_key::vector_add(), or by the multiplication
-		 * of the coefficients.
+		 * @throws unspecified any exception thrown by piranha::array_key::vector_add(), or by piranha::math::mul3().
 		 */
 		// NOTE: important, here we are assuming that the element of res is distinct from t1 and t2. Maybe this should
 		// be explicitly stated somewhere, in the runtime requirements of multiplication.

@@ -522,8 +522,7 @@ class kronecker_monomial
 		/// Multiply terms with a Kronecker monomial key.
 		/**
 		 * \note
-		 * This method is enabled only if \p Cf satisfies piranha::is_cf, it is multipliable in-place, it is multipliable yielding a result
-		 * of type \p Cf, and it is copy-assignable.
+		 * This method is enabled only if \p Cf satisfies piranha::is_cf and piranha::has_mul3.
 		 *
 		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
 		 * offers the basic exception safety guarantee. If \p Cf is an instance of piranha::mp_rational, then
@@ -536,7 +535,7 @@ class kronecker_monomial
 		 * @param[in] t1 first argument.
 		 * @param[in] t2 second argument.
 		 *
-		 * @throws unspecified any exception thrown by the multiplication of the coefficients.
+		 * @throws unspecified any exception thrown by piranha::math::mul3().
 		 */
 		template <typename Cf, multiply_enabler<Cf> = 0>
 		static void multiply(std::array<term<Cf,kronecker_monomial>,multiply_arity> &res, const term<Cf,kronecker_monomial> &t1,

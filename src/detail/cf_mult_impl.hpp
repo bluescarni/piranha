@@ -33,9 +33,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "../is_cf.hpp"
+#include "../math.hpp"
 #include "../mp_rational.hpp"
-#include "../type_traits.hpp"
-#include "series_fwd.hpp"
 
 namespace piranha
 {
@@ -43,33 +42,23 @@ namespace piranha
 namespace detail
 {
 
-// Overload if the coefficient is a series.
-template <typename Cf, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
-inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
-{
-	out_cf = cf1 * cf2;
-}
-
 // Overload if the coefficient is a rational.
 template <typename Cf, typename std::enable_if<detail::is_mp_rational<Cf>::value,int>::type = 0>
 inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
 {
-	out_cf._num() = cf1.num();
-	out_cf._num() *= cf2.num();
+	math::mul3(out_cf._num(),cf1.num(),cf2.num());
 }
 
-// Overload if the coefficient is not a series and not a rational.
-template <typename Cf, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value && !detail::is_mp_rational<Cf>::value,int>::type = 0>
+// Overload if the coefficient is not a rational.
+template <typename Cf, typename std::enable_if<!detail::is_mp_rational<Cf>::value,int>::type = 0>
 inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
 {
-	out_cf = cf1;
-	out_cf *= cf2;
+	math::mul3(out_cf,cf1,cf2);
 }
 
 // Enabler for the functions above.
 template <typename Cf>
-using cf_mult_enabler = typename std::enable_if<std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
-	is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value>::type;
+using cf_mult_enabler = typename std::enable_if<is_cf<Cf>::value && has_mul3<Cf>::value>::type;
 
 }
 
