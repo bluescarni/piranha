@@ -1401,18 +1401,25 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			if (check_truncation()) {
 				return plain_multiplication_wrapper();
 			}
-			// NOTE: here we are equating 1 thread with small series, for which it is not
-			// worth to perform the estimation below. The two concepts are orthogonal
-			// and we should have a separate heuristic for when it's not worth it to
-			// estimate the series size, but for now we use the threading heuristic.
-			if (this->m_n_threads == 1u) {
+			// Cache the sizes.
+			const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
+			// Determine whether we want to estimate or not. We check the threshold, and
+			// we force the estimation in multithreaded mode.
+			bool estimate = true;
+			const auto e_thr = tuning::get_estimate_threshold();
+			if (integer(size1) * size2 < integer(e_thr) * e_thr && this->m_n_threads == 1u) {
+				estimate = false;
+			}
+			// If estimation is not worth it, we go with the plain multiplication.
+			// NOTE: this is probably not optimal, but we have to do like this as the sparse
+			// Kronecker multiplication below requires estimation. Maybe in the future we can
+			// have a version without estimation.
+			if (!estimate) {
 				return this->plain_multiplication();
 			}
 			// Setup the return value.
 			Series retval;
 			retval.set_symbol_set(this->m_ss);
-			// Cache the sizes.
-			const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {
 				return retval;
@@ -1423,9 +1430,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// we tie together pinned threads with potentially different NUMA regions.
 			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? this->m_n_threads : 1u;
 			// Use the plain functor in normal mode for the estimation.
-			const auto estimate = this->template estimate_final_series_size<1u,typename base::template plain_multiplier<false>>();
+			const auto est = this->template estimate_final_series_size<1u,typename base::template plain_multiplier<false>>();
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
-			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
+			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(est) /
 				retval._container().max_load_factor())),n_threads_rehash);
 			piranha_assert(retval._container().bucket_count());
 			sparse_kronecker_multiplication(retval);
