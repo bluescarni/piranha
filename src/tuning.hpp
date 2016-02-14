@@ -45,15 +45,19 @@ namespace detail
 template <typename = int>
 struct base_tuning
 {
-	static std::atomic<bool>	s_parallel_memory_set;
-	static std::atomic<unsigned>	s_mult_block_size;
+	static std::atomic<bool>		s_parallel_memory_set;
+	static std::atomic<unsigned long>	s_mult_block_size;
+	static std::atomic<unsigned long>	s_estimate_threshold;
 };
 
 template <typename T>
 std::atomic<bool> base_tuning<T>::s_parallel_memory_set(true);
 
 template <typename T>
-std::atomic<unsigned> base_tuning<T>::s_mult_block_size(256u);
+std::atomic<unsigned long> base_tuning<T>::s_mult_block_size(256u);
+
+template <typename T>
+std::atomic<unsigned long> base_tuning<T>::s_estimate_threshold(200u);
 
 }
 
@@ -112,7 +116,7 @@ class tuning: private detail::base_tuning<>
 		 * 
 		 * @return the block size used in some series multiplication routines.
 		 */
-		static unsigned get_multiplication_block_size()
+		static unsigned long get_multiplication_block_size()
 		{
 			return s_mult_block_size.load();
 		}
@@ -124,7 +128,7 @@ class tuning: private detail::base_tuning<>
 		 * 
 		 * @throws std::invalid_argument if \p size is outside an implementation-defined range.
 		 */
-		static void set_multiplication_block_size(unsigned size)
+		static void set_multiplication_block_size(unsigned long size)
 		{
 			if (unlikely(size < 16u || size > 4096u)) {
 				piranha_throw(std::invalid_argument,"invalid block size");
@@ -140,6 +144,43 @@ class tuning: private detail::base_tuning<>
 		 static void reset_multiplication_block_size()
 		 {
 			s_mult_block_size.store(256u);
+		 }
+		/// Get the series estimation threshold.
+		/**
+		 * In series multiplication it can be advantageous to employ a heuristic to estimate the final size
+		 * of the result before actually performing the multiplication. The cost of estimation is proportionally
+		 * larger for small operands, and it can result in noticeable overhead for small multiplications.
+		 * This flag establishes a threshold below which the estimation of the size of the product of a series
+		 * multiplication will not be performed.
+		 *
+		 * The precise way in which this value is used depends on the multiplication algorithm.
+		 * The default value of this flag is 200.
+		 *
+		 * @return the series estimation threshold.
+		 */
+		static unsigned long get_estimate_threshold()
+		{
+			return s_estimate_threshold.load();
+		}
+		/// Set the series estimation threshold.
+		/**
+		 * @see piranha::tuning::s_estimate_threshold() for an explanation of the meaning of this value.
+		 *
+		 * @param[in] size desired value for the series estimation threshold.
+		 */
+		static void set_estimate_threshold(unsigned long size)
+		{
+			s_estimate_threshold.store(size);
+		}
+		/// Reset the series estimation threshold.
+		/**
+		 * This method will reset the series estimation threshold to its default value.
+		 *
+		 * @see piranha::tuning::get_estimate_threshold() for an explanation of the meaning of this value.
+		 */
+		 static void reset_estimate_threshold()
+		 {
+			s_estimate_threshold.store(200u);
 		 }
 };
 
