@@ -1310,10 +1310,9 @@ struct is_mp_integer_interoperable_type
  *   empty retval and then filling it with mpz_add() or a similar free function is more efficient. See how it is done
  *   in Arbpp for instance. This should matter much more for mp_integer and not mp_rational, as there we always
  *   have the canonicalisation to do anyway.
+ *   Note that now we have the ternary arithmetic functions implemented, which could be used for this.
  * - apparently, the mpfr devs are considering adding an fma-like functions that computes ab +/- cd. It seems like this would
  *   be useful for both rational and complex numbers, maybe we could implement it here as well.
- * - test performance with 1 limb only, compare possibly to flint and try improving if necessary.
- * - in the long run we should consider optimising operations vs hardware integers.
  * - the speed of conversion to floating-point might matter in series evaluation. Consider what happens when evaluating
  *   cos(x) in which x an mp_integer (passed in from Python, for instance). If we overload cos() to produce a double for int argument,
  *   then we need to convert x to double and then compute cos(x). Note that for 1-limb numbers we actually could do directly
@@ -1324,7 +1323,7 @@ struct is_mp_integer_interoperable_type
  *   attempt direct conversion if we have only 1 limb) -> this is now done. We should consider piggybacking on the GMP functions
  *   when possible, and use our generic implementation only as last resort.
  * - more in general, for conversions to/from other types we should consider operating directly with limbs instead of bit-by-bit
- *   for increased performance.
+ *   for increased performance. We should be able to do this with the new shift operators.
  * - there is some out-of-range conversion handling which is not hit by the test cases, need to proper test it.
  * - fits_in_static() might be made obsolete by the new mpz_t ctor. fits_in_static() is more accurate, but potentially
  *   slower and prone to overflow. See if it makes sense to replace it.
