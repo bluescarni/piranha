@@ -939,7 +939,14 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Convert n_threads to size_type for convenience.
 			const size_type n_threads = safe_cast<size_type>(m_n_threads);
 			piranha_assert(n_threads);
-			if (n_threads > 1u) {
+			// Determine if we should estimate the size. We check the threshold, but we always
+			// need to estimate in multithreaded mode.
+			bool estimate = true;
+			const auto e_thr = tuning::get_estimate_threshold();
+			if (integer(m_v1.size()) * m_v2.size() < integer(e_thr) * e_thr && n_threads == 1u) {
+				estimate = false;
+			}
+			if (estimate) {
 				// Estimate and rehash.
 				const auto est = estimate_final_series_size<m_arity,plain_multiplier<false>>(lf);
 				// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
@@ -957,7 +964,13 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			if (n_threads == 1u) {
 				try {
 					// Single-thread case.
-					blocked_multiplication(plain_multiplier<false>(*this,retval),0u,size1,lf);
+					if (estimate) {
+						blocked_multiplication(plain_multiplier<true>(*this,retval),0u,size1,lf);
+						// If we estimated beforehand, we need to sanitise the series.
+						sanitise_series(retval,static_cast<unsigned>(n_threads));
+					} else {
+						blocked_multiplication(plain_multiplier<false>(*this,retval),0u,size1,lf);
+					}
 					finalise_series(retval);
 					return retval;
 				} catch (...) {
@@ -966,6 +979,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				}
 			}
 			// Multi-threaded case.
+			piranha_assert(estimate);
 			// Init the vector of spinlocks.
 			detail::atomic_flag_array sl_array(safe_cast<std::size_t>(retval._container().bucket_count()));
 			// Init the future list.

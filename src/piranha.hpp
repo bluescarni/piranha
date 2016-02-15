@@ -163,7 +163,7 @@ see https://www.gnu.org/licenses/. */
  * \todo related to the above: we should probably generalise the integral_combination() in polynomial to deal also with recursively-represented polys,
  * so that, e.g., we can use them as coefficients in poisson series. Also the polynomial's special pow() and integrate() method should be able to deal
  * with recursive polys in the same fashion. This should probably be a bullet point if we ever decide to support recrusive polynomials as first-class citizens.
- * \todo disable test building by default, update copyright headers and relicense.
+ * \todo disable test building by default.
  * \todo the tuning:: class should probably be rolled into settings.
  * \todo think about removing the noexcept requirements for ignorability and compatibility of terms. This makes sense logically as ignorability is anyway
  * gonna call is_zero(), which might throw (see bp_object for instance), we might end up simplifying the logic and we don't lose much (not a big deal
@@ -177,6 +177,9 @@ see https://www.gnu.org/licenses/. */
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
  *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
  *   - the fill_term_pointers parallelisation + deterministic ordering has not been done yet for rational coefficients.
+ * \todo in order to circumvent the problem of the lack of thread local storage on osx, we should probably just create a local variable ad-hoc.
+ * It will be suboptimal but at least it should work on osx.
+ * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
  */
 namespace piranha
 {

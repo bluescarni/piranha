@@ -2059,13 +2059,42 @@ BOOST_AUTO_TEST_CASE(series_is_identical_test)
 	BOOST_CHECK(x2.trim().is_identical(x));
 }
 
+// Mock cf with wrong specialisation of mul3.
+struct mock_cf3
+{
+	mock_cf3();
+	explicit mock_cf3(const int &);
+	mock_cf3(const mock_cf3 &);
+	mock_cf3(mock_cf3 &&) noexcept;
+	mock_cf3 &operator=(const mock_cf3 &);
+	mock_cf3 &operator=(mock_cf3 &&) noexcept;
+	friend std::ostream &operator<<(std::ostream &, const mock_cf3 &);
+	mock_cf3 operator-() const;
+	bool operator==(const mock_cf3 &) const;
+	bool operator!=(const mock_cf3 &) const;
+	mock_cf3 &operator+=(const mock_cf3 &);
+	mock_cf3 &operator-=(const mock_cf3 &);
+	mock_cf3 operator+(const mock_cf3 &) const;
+	mock_cf3 operator-(const mock_cf3 &) const;
+	mock_cf3 &operator*=(const mock_cf3 &);
+	mock_cf3 operator*(const mock_cf3 &) const;
+};
+
+namespace piranha { namespace math {
+
+template <typename T>
+struct mul3_impl<T,typename std::enable_if<std::is_same<T,mock_cf3>::value>::type>
+{};
+
+}}
+
 BOOST_AUTO_TEST_CASE(series_has_series_multiplier_test)
 {
 	typedef g_series_type<rational,int> p_type1;
 	BOOST_CHECK(series_has_multiplier<p_type1>::value);
 	BOOST_CHECK(series_has_multiplier<p_type1 &>::value);
 	BOOST_CHECK(series_has_multiplier<const p_type1 &>::value);
-	typedef g_series_type<short,int> p_type2;
+	typedef g_series_type<mock_cf3,int> p_type2;
 	BOOST_CHECK(!series_has_multiplier<p_type2>::value);
 	BOOST_CHECK(!series_has_multiplier<p_type2 const>::value);
 	BOOST_CHECK(!series_has_multiplier<p_type2 const &>::value);

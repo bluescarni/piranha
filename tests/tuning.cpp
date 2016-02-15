@@ -77,3 +77,21 @@ BOOST_AUTO_TEST_CASE(tuning_block_size_test)
 	tuning::reset_multiplication_block_size();
 	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),256u);
 }
+
+BOOST_AUTO_TEST_CASE(tuning_estimation_threshold_test)
+{
+	BOOST_CHECK_EQUAL(tuning::get_estimate_threshold(),200u);
+	tuning::set_estimate_threshold(512u);
+	BOOST_CHECK_EQUAL(tuning::get_estimate_threshold(),512u);
+	std::thread t1([](){
+		while (tuning::get_estimate_threshold() != 1024u) {}
+	});
+	std::thread t2([](){
+		tuning::set_estimate_threshold(1024u);
+	});
+	t1.join();
+	t2.join();
+	BOOST_CHECK_EQUAL(tuning::get_estimate_threshold(),1024u);
+	tuning::reset_estimate_threshold();
+	BOOST_CHECK_EQUAL(tuning::get_estimate_threshold(),200u);
+}

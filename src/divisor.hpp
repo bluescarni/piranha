@@ -743,8 +743,7 @@ class divisor
 		/// Multiply terms with a divisor key.
 		/**
 		 * \note
-		 * This method is enabled only if \p Cf satisfies piranha::is_cf, it is multipliable in-place, it is multipliable yielding a result
-		 * of type \p Cf, and it is copy-assignable.
+		 * This method is enabled only if \p Cf satisfies piranha::is_cf and piranha::has_mul3.
 		 *
 		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res.  If \p Cf is an instance of piranha::mp_rational, then
 		 * only the numerators of the coefficients will be multiplied.
@@ -761,7 +760,7 @@ class divisor
 		 * @throws std::overflow_error if the multiplication of the keys results in the container of the result key to be resized over
 		 * an implementation-defined limit.
 		 * @throws unspecified any exception thrown by:
-		 * - the multiplication of the coefficients,
+		 * - piranha::math::mul3(),
 		 * - the public interface of piranha::hash_set,
 		 * - arithmetic operations on the exponent.
 		 */

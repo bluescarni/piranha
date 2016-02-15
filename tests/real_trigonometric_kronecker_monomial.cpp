@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <cmath>
 #include <cstddef>
 #include <initializer_list>
+#include <iostream>
 #include <limits>
 #include <set>
 #include <sstream>
@@ -527,6 +528,35 @@ BOOST_AUTO_TEST_CASE(rtkm_t_order_test)
 	boost::mpl::for_each<int_types>(t_order_tester());
 }
 
+// Mock cf with wrong specialisation of mul3.
+struct mock_cf3
+{
+	mock_cf3();
+	explicit mock_cf3(const int &);
+	mock_cf3(const mock_cf3 &);
+	mock_cf3(mock_cf3 &&) noexcept;
+	mock_cf3 &operator=(const mock_cf3 &);
+	mock_cf3 &operator=(mock_cf3 &&) noexcept;
+	friend std::ostream &operator<<(std::ostream &, const mock_cf3 &);
+	mock_cf3 operator-() const;
+	bool operator==(const mock_cf3 &) const;
+	bool operator!=(const mock_cf3 &) const;
+	mock_cf3 &operator+=(const mock_cf3 &);
+	mock_cf3 &operator-=(const mock_cf3 &);
+	mock_cf3 operator+(const mock_cf3 &) const;
+	mock_cf3 operator-(const mock_cf3 &) const;
+	mock_cf3 &operator*=(const mock_cf3 &);
+	mock_cf3 operator*(const mock_cf3 &) const;
+};
+
+namespace piranha { namespace math {
+
+template <typename T>
+struct mul3_impl<T,typename std::enable_if<std::is_same<T,mock_cf3>::value>::type>
+{};
+
+}}
+
 struct multiply_tester
 {
 	template <typename T>
@@ -537,7 +567,7 @@ struct multiply_tester
 		// Check the type trait.
 		BOOST_CHECK((key_is_multipliable<int,key_type>::value));
 		BOOST_CHECK((key_is_multipliable<rational,key_type>::value));
-		BOOST_CHECK((!key_is_multipliable<short,key_type>::value));
+		BOOST_CHECK((!key_is_multipliable<mock_cf3,key_type>::value));
 		// Test handling of coefficients.
 		using term_type = term<rational,key_type>;
 		symbol_set ed;

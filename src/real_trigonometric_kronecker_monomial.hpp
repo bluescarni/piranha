@@ -245,7 +245,7 @@ class real_trigonometric_kronecker_monomial
 		// Enabler for multiplication.
 		template <typename Cf>
 		using multiply_enabler = typename std::enable_if<is_divisible_in_place<Cf,int>::value && has_negate<Cf>::value &&
-			detail::true_tt<detail::cf_mult_enabler<Cf>>::value,int>::type;
+			detail::true_tt<detail::cf_mult_enabler<Cf>>::value && std::is_copy_assignable<Cf>::value,int>::type;
 		// Degree utils.
 		using degree_type = decltype(std::declval<const T &>() + std::declval<const T &>());
 		// Order utils.
@@ -662,7 +662,8 @@ class real_trigonometric_kronecker_monomial
 		 * \note
 		 * This method is enabled only if the following conditions hold:
 		 * - \p Cf satisfies piranha::is_cf,
-		 * - \p Cf is multipliable, yielding \p Cf as a result, and divisible in-place by \p int,
+		 * - \p Cf satisfies piranha::has_mul3,
+		 * - \p Cf is divisible in-place by \p int,
 		 * - \p Cf is copy-assignable and it satisfies piranha::has_negate.
 		 * 
 		 * This method will compute the result of the multiplication of the two terms \p t1 and \p t2 with trigonometric key.
@@ -680,7 +681,8 @@ class real_trigonometric_kronecker_monomial
 		 * - piranha::kronecker_array::encode(),
 		 * - unpack(),
 		 * - piranha::static_vector::push_back(),
-		 * - arithmetic operations and copy-assignment on the coefficient type,
+		 * - piranha::math::mul3(),
+		 * - copy-assignment on the coefficient type,
 		 * - piranha::math::negate().
 		 */
 		template <typename Cf, multiply_enabler<Cf> = 0>

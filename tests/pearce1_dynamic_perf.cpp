@@ -26,40 +26,33 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_PEARCE1_HPP
-#define PIRANHA_PEARCE1_HPP
+#include "pearce1.hpp"
 
-#include <boost/timer/timer.hpp>
+#define BOOST_TEST_MODULE pearce1_test
+#include <boost/test/unit_test.hpp>
 
-#include "../src/polynomial.hpp"
+#include <boost/lexical_cast.hpp>
+#include <limits>
 
-namespace piranha
+#include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/settings.hpp"
+
+using namespace piranha;
+
+// Pearce's polynomial multiplication test number 1. Calculate:
+// f * g
+// where
+// f = (1 + x + y + 2*z**2 + 3*t**3 + 5*u**5)**12
+// g = (1 + u + t + 2*z**2 + 3*y**3 + 5*x**5)**12
+
+BOOST_AUTO_TEST_CASE(pearce1_test)
 {
-
-template <typename Cf,typename Key>
-inline polynomial<Cf,Key> pearce1(unsigned long long factor = 1u)
-{
-	typedef polynomial<Cf,Key> p_type;
-	p_type x("x"), y("y"), z("z"), t("t"), u("u");
-
-	auto f = (x + y + z*z*2 + t*t*t*3 + u*u*u*u*u*5 + 1);
-	auto tmp_f(f);
-	auto g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
-	auto tmp_g(g);
-	for (int i = 1; i < 12; ++i) {
-		f *= tmp_f;
-		g *= tmp_g;
+	environment env;
+	using limb_t = typename detail::integer_union<0>::s_storage::limb_t;
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	if (factor > 1u) {
-	    f *= factor;
-	    g *= factor;
-	}
-	{
-	boost::timer::auto_cpu_timer t;
-	return f * g;
-	}
+	BOOST_CHECK_EQUAL((pearce1<integer,kronecker_monomial<>>(static_cast<unsigned long long>(std::numeric_limits<limb_t>::max())).size()),5821335u);
 }
-
-}
-
-#endif

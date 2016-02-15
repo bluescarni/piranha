@@ -1304,16 +1304,15 @@ struct is_mp_integer_interoperable_type
  * - consider if and how to implement demoting. It looks it could be useful in certain cases, for instance when we
  *   rely on GMP routines (we should demote back to static if possible in those cases). For the elementary operations,
  *   it is less clear: addition, subtraction and division could in principle be considered for demotion. But, OTOH
- *   GMP never scales back the allocated memeory and, for instance, also the std:: containers do not normally reduce
+ *   GMP never scales back the allocated memory and, for instance, also the std:: containers do not normally reduce
  *   their sizes. There might be some lesson in there;
  * - understand the performance implications of implementing the binary operator as += and copy. Might be that creating an
  *   empty retval and then filling it with mpz_add() or a similar free function is more efficient. See how it is done
  *   in Arbpp for instance. This should matter much more for mp_integer and not mp_rational, as there we always
  *   have the canonicalisation to do anyway.
+ *   Note that now we have the ternary arithmetic functions implemented, which could be used for this.
  * - apparently, the mpfr devs are considering adding an fma-like functions that computes ab +/- cd. It seems like this would
  *   be useful for both rational and complex numbers, maybe we could implement it here as well.
- * - test performance with 1 limb only, compare possibly to flint and try improving if necessary.
- * - in the long run we should consider optimising operations vs hardware integers.
  * - the speed of conversion to floating-point might matter in series evaluation. Consider what happens when evaluating
  *   cos(x) in which x an mp_integer (passed in from Python, for instance). If we overload cos() to produce a double for int argument,
  *   then we need to convert x to double and then compute cos(x). Note that for 1-limb numbers we actually could do directly
@@ -1324,7 +1323,7 @@ struct is_mp_integer_interoperable_type
  *   attempt direct conversion if we have only 1 limb) -> this is now done. We should consider piggybacking on the GMP functions
  *   when possible, and use our generic implementation only as last resort.
  * - more in general, for conversions to/from other types we should consider operating directly with limbs instead of bit-by-bit
- *   for increased performance.
+ *   for increased performance. We should be able to do this with the new shift operators.
  * - there is some out-of-range conversion handling which is not hit by the test cases, need to proper test it.
  * - fits_in_static() might be made obsolete by the new mpz_t ctor. fits_in_static() is more accurate, but potentially
  *   slower and prone to overflow. See if it makes sense to replace it.
@@ -2765,6 +2764,58 @@ class mp_integer
 			++(*this);
 			return retval;
 		}
+		/// Addition in ternary form.
+		/**
+		 * Sets \p this to <tt>n1 + n2</tt>. This form can be more efficient than the corresponding binary operator.
+		 *
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 *
+		 * @return reference to \p this.
+		 */
+		mp_integer &add(const mp_integer &n1, const mp_integer &n2)
+		{
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s0 && s1 && s2) {
+				if (likely(!detail::integer_union<NBits>::s_storage::add(m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st()))) {
+					return *this;
+				}
+			}
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// 2**2 possibilities.
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			switch (mask) {
+				case 0u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view(), v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_add(&m_int.g_dy(),v1,v2);
+					break;
+				}
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_add(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_add(&m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_add(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+			return *this;
+		}
 		/// In-place subtraction.
 		/**
 		 * \note
@@ -2864,6 +2915,58 @@ class mp_integer
 			const mp_integer retval(*this);
 			--(*this);
 			return retval;
+		}
+		/// Subtraction in ternary form.
+		/**
+		 * Sets \p this to <tt>n1 - n2</tt>. This form can be more efficient than the corresponding binary operator.
+		 *
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 *
+		 * @return reference to \p this.
+		 */
+		mp_integer &sub(const mp_integer &n1, const mp_integer &n2)
+		{
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s0 && s1 && s2) {
+				if (likely(!detail::integer_union<NBits>::s_storage::sub(m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st()))) {
+					return *this;
+				}
+			}
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// 2**2 possibilities.
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			switch (mask) {
+				case 0u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view(), v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_sub(&m_int.g_dy(),v1,v2);
+					break;
+				}
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_sub(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_sub(&m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_sub(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+			return *this;
 		}
 		/// In-place multiplication.
 		/**
@@ -2982,6 +3085,58 @@ class mp_integer
 				}
 				case 3u:
 					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+			return *this;
+		}
+		/// Multiplication in ternary form.
+		/**
+		 * Sets \p this to <tt>n1 * n2</tt>. This form can be more efficient than the corresponding binary operator.
+		 *
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 *
+		 * @return reference to \p this.
+		 */
+		mp_integer &mul(const mp_integer &n1, const mp_integer &n2)
+		{
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s0 && s1 && s2) {
+				if (likely(!detail::integer_union<NBits>::s_storage::mul(m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st()))) {
+					return *this;
+				}
+			}
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// 2**2 possibilities.
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			switch (mask) {
+				case 0u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view(), v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_mul(&m_int.g_dy(),v1,v2);
+					break;
+				}
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_mul(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_mul(&m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_mul(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
 			}
 			return *this;
 		}
@@ -3925,6 +4080,69 @@ inline auto ipow_subs(const T &x, const std::string &name, const integer &n, con
 {
 	return ipow_subs_impl<T,U>()(x,name,n,y);
 }
+
+/// Specialisation of the piranha::math::add3() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct add3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the output of piranha::mp_integer::add().
+	 */
+	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.add(a,b))
+	{
+		return out.add(a,b);
+	}
+};
+
+/// Specialisation of the piranha::math::sub3() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct sub3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the output of piranha::mp_integer::sub().
+	 */
+	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.sub(a,b))
+	{
+		return out.sub(a,b);
+	}
+};
+
+/// Specialisation of the piranha::math::mul3() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct mul3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the output of piranha::mp_integer::mul().
+	 */
+	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.mul(a,b))
+	{
+		return out.mul(a,b);
+	}
+};
 
 }
 

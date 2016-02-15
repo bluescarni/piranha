@@ -819,7 +819,7 @@ using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::
 
 }
 
-/// Series multiplier specialisation for polynomials.
+/// Specialisation of piranha::series_multiplier for piranha::polynomial.
 /**
  * This specialisation of piranha::series_multiplier is enabled when \p Series is an instance of
  * piranha::polynomial.
@@ -1075,7 +1075,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		// Enabler for the call operator.
 		template <typename T>
 		using call_enabler = typename std::enable_if<key_is_multipliable<cf_t<T>,key_t<T>>::value &&
-			is_multipliable_in_place<cf_t<T>>::value && has_multiply_accumulate<cf_t<T>>::value,int>::type;
+			has_multiply_accumulate<cf_t<T>>::value &&
+			detail::true_tt<detail::cf_mult_enabler<cf_t<T>>>::value,int>::type;
 		// Utility helpers for the subtraction of degree types in the truncation routines. The specialisation
 		// for integral types will check the operation for overflow.
 		template <typename T, typename std::enable_if<!std::is_integral<T>::value,int>::type = 0>
@@ -1125,7 +1126,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * \note
 		 * This template operator is enabled only if:
 		 * - the coefficient and key type of \p Series satisfy piranha::key_is_multipliable,
-		 * - the coefficient type of \p Series is multipliable in-place and it supports math::multiply_accumulate().
+		 * - the coefficient type of \p Series supports piranha::math::mul3() and piranha::math::multiply_accumulate().
 		 *
 		 * This method will perform the multiplication of the series operands passed to the constructor. Depending on
 		 * the key type of \p Series, the implementation will use either base_series_multiplier::plain_multiplication()
@@ -1146,8 +1147,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * - the public interface of piranha::hash_set,
 		 * - piranha::safe_cast(),
 		 * - memory errors in standard containers,
-		 * - the in-place multiplication operator of the coefficient type of \p Series,
-		 * - math::multiply_accumulate(),
+		 * - piranha::math::mul3(),
+		 * - piranha::math::multiply_accumulate(),
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back(),
 		 * - truncated_multiplication(),
@@ -1158,14 +1159,18 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		{
 			return execute();
 		}
+		/** @name Low-level interface
+		 * Low-level methods, on top of which the call operator is implemented.
+		 */
+		//@{
 		/// Truncated multiplication.
 		/**
 		 * \note
 		 * This method can be used only if the following conditions apply:
 		 * - the conditions for truncated multiplication outlined in piranha::polynomial are satisfied,
 		 * - the type \p T is the same as the degree type of the polynomial,
-		 * - the number and types of \p Args is as specified below.
-		 * If these conditions are not satisfied, a compile-time error will be issued.
+		 * - the number and types of \p Args is as specified below,
+		 * - piranha::base_series_multiplier::plain_multiplication() and get_skip_limits() can be called.
 		 *
 		 * This method will perform the truncated multiplication of the series operands passed to the constructor.
 		 * The truncation degree is set to \p max degree, and it is either the total maximum degree (if the number
@@ -1232,6 +1237,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		}
 		/// Establish skip limits for truncated multiplication.
 		/**
+		 * \note
+		 * This method can be called only if \p Series supports truncated multiplication (as explained in piranha::polynomial) and
+		 * \p T is the same type as the degree type.
+		 *
 		 * This method assumes that \p v_d1 and \p v_d2 are vectors containing the degrees of each term in the first and second series
 		 * respectively, and that \p v_d2 is sorted in ascending order.
 		 * It will return a vector \p v of indices in the second series such that, given an index \p i in the first series,
@@ -1239,9 +1248,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * the <tt>i</tt>-th term in the first series produces a term of degree greater than \p max_degree. That is, terms of index
 		 * equal to or greater than <tt>v[i]</tt> in the second series will produce terms with degree greater than \p max_degree
 		 * when multiplied by the <tt>i</tt>-th term in the first series.
-		 *
-		 * This method can be called only if \p Series supports truncated multiplication (as explained in piranha::polynomial) and
-		 * \p T is the same type as the degree type.
 		 *
 		 * @param[in] v_d1 a vector containing the degrees of the terms in the first series.
 		 * @param[in] v_d2 a sorted vector containing the degrees of the terms in the second series.
@@ -1308,6 +1314,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			piranha_assert(retval_checker());
 			return retval;
 		}
+		//@}
 	private:
 		// NOTE: wrapper to multadd that treats specially rational coefficients. We need to decide in the future
 		// if this stays here or if it is better to generalise it.
@@ -1394,18 +1401,25 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			if (check_truncation()) {
 				return plain_multiplication_wrapper();
 			}
-			// NOTE: here we are equating 1 thread with small series, for which it is not
-			// worth to perform the estimation below. The two concepts are orthogonal
-			// and we should have a separate heuristic for when it's not worth it to
-			// estimate the series size, but for now we use the threading heuristic.
-			if (this->m_n_threads == 1u) {
+			// Cache the sizes.
+			const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
+			// Determine whether we want to estimate or not. We check the threshold, and
+			// we force the estimation in multithreaded mode.
+			bool estimate = true;
+			const auto e_thr = tuning::get_estimate_threshold();
+			if (integer(size1) * size2 < integer(e_thr) * e_thr && this->m_n_threads == 1u) {
+				estimate = false;
+			}
+			// If estimation is not worth it, we go with the plain multiplication.
+			// NOTE: this is probably not optimal, but we have to do like this as the sparse
+			// Kronecker multiplication below requires estimation. Maybe in the future we can
+			// have a version without estimation.
+			if (!estimate) {
 				return this->plain_multiplication();
 			}
 			// Setup the return value.
 			Series retval;
 			retval.set_symbol_set(this->m_ss);
-			// Cache the sizes.
-			const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {
 				return retval;
@@ -1416,9 +1430,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// we tie together pinned threads with potentially different NUMA regions.
 			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? this->m_n_threads : 1u;
 			// Use the plain functor in normal mode for the estimation.
-			const auto estimate = this->template estimate_final_series_size<1u,typename base::template plain_multiplier<false>>();
+			const auto est = this->template estimate_final_series_size<1u,typename base::template plain_multiplier<false>>();
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
-			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
+			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(est) /
 				retval._container().max_load_factor())),n_threads_rehash);
 			piranha_assert(retval._container().bucket_count());
 			sparse_kronecker_multiplication(retval);
@@ -1500,13 +1514,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					auto bucket_idx = container._bucket(tmp_term);
 					const auto it = container._find(tmp_term,bucket_idx);
 					if (it == it_end) {
-						// NOTE: optimize this in case of series and integer (?), now it is optimized for simple coefficients.
-						// Note that the best course of action here for integer multiplication would seem to resize tmp.m_cf appropriately
-						// and then use something like mpz_mul. On the other hand, it seems like in the insertion below we need to perform
-						// a copy anyway, so insertion with move seems ok after all? Mmmh...
-						// NOTE: other important thing: for coefficient series, we probably want to insert with move() below,
-						// as we are not going to re-use the allocated resources in tmp.m_cf -> in other words, optimize this
-						// as much as possible.
+						// NOTE: for coefficient series, we might want to insert with move() below,
+						// as we are not going to re-use the allocated resources in tmp.m_cf.
 						// Take care of multiplying the coefficient.
 						detail::cf_mult_impl(tmp_term.m_cf,cf1,cur.m_cf);
 						container._unique_insert(tmp_term,bucket_idx);

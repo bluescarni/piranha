@@ -1645,6 +1645,11 @@ class real: public detail::real_base<>
 			r = tmp_str;
 			return is;
 		}
+		/** @name Low-level interface
+		 * Low-level methods. These methods allow direct access to the internal
+		 * MPFR instance.
+		 */
+		//@{
 		/// Get a mutable reference to the internal <tt>mpfr_t</tt> instance.
 		std::remove_extent< ::mpfr_t>::type *get_mpfr_t()
 		{
@@ -1655,6 +1660,7 @@ class real: public detail::real_base<>
 		{
 			return &m_value[0u];
 		}
+		//@}
 	private:
 		::mpfr_t m_value;
 };
