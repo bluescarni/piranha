@@ -445,6 +445,51 @@ BOOST_AUTO_TEST_CASE(array_key_add_test)
 	boost::mpl::for_each<value_types>(add_tester());
 }
 
+struct sub_tag;
+
+namespace piranha
+{
+
+// NOTE: the debug access is not actually needed any more.
+template <>
+class debug_access<sub_tag>
+{
+	public:
+		template <typename T>
+		struct runner
+		{
+			template <typename U>
+			void operator()(const U &)
+			{
+				typedef g_key_type<T,U> key_type;
+				key_type k1, k2, retval;
+				k1.vector_sub(retval,k2);
+				BOOST_CHECK(!retval.size());
+				k1.resize(1);
+				k2.resize(1);
+				k1[0] = 2;
+				k2[0] = 1;
+				k1.vector_sub(retval,k2);
+				BOOST_CHECK(retval.size() == 1u);
+				BOOST_CHECK(retval[0] == T(1));
+			}
+		};
+		template <typename T>
+		void operator()(const T &)
+		{
+			boost::mpl::for_each<size_types>(runner<T>());
+		}
+};
+
+}
+
+typedef piranha::debug_access<sub_tag> sub_tester;
+
+BOOST_AUTO_TEST_CASE(array_key_sub_test)
+{
+	boost::mpl::for_each<value_types>(sub_tester());
+}
+
 struct trim_identify_tester
 {
 	template <typename T>

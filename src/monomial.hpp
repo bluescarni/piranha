@@ -875,10 +875,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws std::invalid_argument if the size of \p t1 differs from the size of \p args.
 		 * @throws unspecified any exception thrown by piranha::array_key::vector_add(), or by piranha::math::mul3().
 		 */
-		// NOTE: important, here we are assuming that the element of res is distinct from t1 and t2. Maybe this should
-		// be explicitly stated somewhere, in the runtime requirements of multiplication.
-		// NOTE: here we need the extra U param as otherwise in the enabler we are accessing a method of monomial when
-		// it is still an incomplete type.
+		// NOTE: it should be ok to use this method (and the one below) with overlapping arguments, as this is allowed
+		// in small_vector::add().
 		template <typename Cf, typename U = monomial, multiply_enabler<Cf,U> = 0>
 		static void multiply(std::array<term<Cf,monomial>,multiply_arity> &res, const term<Cf,monomial> &t1,
 			const term<Cf,monomial> &t2, const symbol_set &args)

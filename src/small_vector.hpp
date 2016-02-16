@@ -44,6 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include "detail/small_vector_fwd.hpp"
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
+#include "math.hpp"
 #include "memory.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
@@ -611,8 +612,10 @@ class small_vector
 		using hash_enabler = typename std::enable_if<is_hashable<U>::value,int>::type;
 		// Enabler for the addition.
 		template <typename U>
-		using add_enabler = typename std::enable_if<
-			std::is_assignable<U &,decltype(std::declval<U const &>() + std::declval<U const &>()) &&>::value,int>::type;
+		using add_enabler = typename std::enable_if<has_add3<U>::value,int>::type;
+		// Enabler for the subtraction.
+		template <typename U>
+		using sub_enabler = typename std::enable_if<has_sub3<U>::value,int>::type;
 		// Serialization support.
 		friend class boost::serialization::access;
 		template <class Archive>
@@ -948,13 +951,15 @@ class small_vector
 		/// Vector addition.
 		/**
 		 * \note
-		 * This method is enabled only if \p value_type is addable and if the result
-		 * of the addition is move-assignable to \p value_type.
+		 * This method is enabled only if \p value_type satisfies piranha::has_add3.
 		 *
-		 * Will compute the element-wise addition of \p this and \p other, storing the result in \p retval.
-		 * In face of exceptions during the addition of two elements, retval will be left in an unspecified
-		 * but valid state, provided that the addition operator of \p value_type offers the basic exception
+		 * Will compute the element-wise addition of \p this and \p other via piranha::math::add3(), storing the result in \p retval.
+		 * In face of exceptions during the addition of two elements, \p retval will be left in an unspecified
+		 * but valid state, provided that piranha::math::add3() offers the basic exception
 		 * safety guarantee.
+		 *
+		 * \p this, \p retval and/or \p other are allowed to be the same object, provided that piranha::math::add3()
+		 * also supports this type of usage.
 		 *
 		 * @param[out] retval result of the addition.
 		 * @param[in] other argument for the addition.
@@ -962,17 +967,57 @@ class small_vector
 		 * @throws std::invalid_argument if the sizes of \p this and \p other do not coincide.
 		 * @throws unspecified any exception thrown by:
 		 * - resize(),
-		 * - the addition and assignment operators of \p value_type.
+		 * - piranha::math::add3().
 		 */
 		template <typename U = value_type, add_enabler<U> = 0>
 		void add(small_vector &retval, const small_vector &other) const
 		{
-			const auto s = size();
-			if (unlikely(other.size() != s)) {
+			const auto sbe1 = size_begin_end(), sbe2 = other.size_begin_end();
+			if (unlikely(std::get<0u>(sbe1) != std::get<0u>(sbe2))) {
 				piranha_throw(std::invalid_argument,"vector size mismatch");
 			}
-			retval.resize(s);
-			std::transform(begin(),end(),other.begin(),retval.begin(),adder<value_type>());
+			// NOTE: if retval coincides with this and/or other, this will be a no-op as
+			// the resize methods don't do anything if the new size is the same as the old one.
+			// Thus, we are not risking of invalidating sbe1/sbe2 with this resize.
+			retval.resize(std::get<0u>(sbe1));
+			auto sbe_out = retval.size_begin_end();
+			for (size_type i = 0u; i < std::get<0u>(sbe1); ++i) {
+				math::add3(*(std::get<1u>(sbe_out) + i),*(std::get<1u>(sbe1) + i),*(std::get<1u>(sbe2) + i));
+			}
+		}
+		/// Vector subtraction.
+		/**
+		 * \note
+		 * This method is enabled only if \p value_type satisfies piranha::has_sub3.
+		 *
+		 * Will compute the element-wise subtraction of \p this and \p other via piranha::math::sub3(), storing the result in \p retval.
+		 * In face of exceptions during the subtraction of two elements, \p retval will be left in an unspecified
+		 * but valid state, provided that piranha::math::sub3() offers the basic exception
+		 * safety guarantee.
+		 *
+		 * \p this, \p retval and/or \p other are allowed to be the same object, provided that piranha::math::sub3()
+		 * also supports this type of usage.
+		 *
+		 * @param[out] retval result of the subtraction.
+		 * @param[in] other argument for the subtraction.
+		 *
+		 * @throws std::invalid_argument if the sizes of \p this and \p other do not coincide.
+		 * @throws unspecified any exception thrown by:
+		 * - resize(),
+		 * - piranha::math::sub3().
+		 */
+		template <typename U = value_type, sub_enabler<U> = 0>
+		void sub(small_vector &retval, const small_vector &other) const
+		{
+			const auto sbe1 = size_begin_end(), sbe2 = other.size_begin_end();
+			if (unlikely(std::get<0u>(sbe1) != std::get<0u>(sbe2))) {
+				piranha_throw(std::invalid_argument,"vector size mismatch");
+			}
+			retval.resize(std::get<0u>(sbe1));
+			auto sbe_out = retval.size_begin_end();
+			for (size_type i = 0u; i < std::get<0u>(sbe1); ++i) {
+				math::sub3(*(std::get<1u>(sbe_out) + i),*(std::get<1u>(sbe1) + i),*(std::get<1u>(sbe2) + i));
+			}
 		}
 		/// Erase element.
 		/**
@@ -1023,25 +1068,6 @@ class small_vector
 			}
 		}
 	private:
-		template <typename U, typename = void>
-		struct adder
-		{
-			auto operator()(const U &a, const U &b) -> decltype(a + b)
-			{
-				return a + b;
-			}
-		};
-		// NOTE: need this to silence warnings when operating on short ints: they will get
-		// promoted to int during addition, hence resulting in a warning when casting back down
-		// to short int on return.
-		template <typename U>
-		struct adder<U,typename std::enable_if<std::is_integral<U>::value>::type>
-		{
-			U operator()(const U &a, const U &b) const
-			{
-				return static_cast<U>(a + b);
-			}
-		};
 		template <typename U>
 		void push_back_impl(U &&x)
 		{
