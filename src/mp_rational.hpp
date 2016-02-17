@@ -1018,6 +1018,14 @@ class mp_rational
 		{
 			return m_num;
 		}
+		/// Mutable reference to the denominator.
+		/**
+		 * @return mutable reference to the denominator.
+		 */
+		int_type &_den()
+		{
+			return m_den;
+		}
 		/// Set denominator.
 	        /**
 	         * This method will set the denominator to \p den without canonicalising the rational.

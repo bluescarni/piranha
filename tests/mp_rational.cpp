@@ -389,6 +389,12 @@ struct ll_tester
 		q._num() = int_type{3};
 		BOOST_CHECK_EQUAL(q.num(),3);
 		BOOST_CHECK_EQUAL(q.den(),1);
+		q._den() = int_type{4};
+		BOOST_CHECK_EQUAL(q.den(),4);
+		BOOST_CHECK(q.is_canonical());
+		q._den() = int_type{6};
+		BOOST_CHECK_EQUAL(q.den(),6);
+		BOOST_CHECK(!q.is_canonical());
 		q._set_den(int_type{2});
 		BOOST_CHECK_EQUAL(q.den(),2);
 		q._num() = int_type{4};
