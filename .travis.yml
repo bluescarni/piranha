@@ -15,6 +15,7 @@ addons:
     - libboost-chrono1.55-dev
     - libboost-timer1.55-dev
     - libboost-python1.55-dev
+    - python-numpy
     - g++-4.8
     - clang-3.8
 
@@ -36,8 +37,8 @@ matrix:
       #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
     #- compiler: clang
       #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Python"
+    #- compiler: clang
+      #env: BUILD_TYPE="Python"
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
