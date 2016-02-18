@@ -14,32 +14,43 @@ addons:
     - libboost-system1.55-dev
     - libboost-chrono1.55-dev
     - libboost-timer1.55-dev
+    # This includes both Boost.Python 2 and 3.
     - libboost-python1.55-dev
-    - python-numpy
-    - python-pip
     - g++-4.8
     - clang-3.8
 
 matrix:
   include:
-    - compiler: gcc
-      env: BUILD_TYPE="Release"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Release"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Release"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Python2"
+      #addons:
+        #apt:
+          #packages:
+          #- python-numpy
+          #- python-pip
     - compiler: clang
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Python"
+      env: BUILD_TYPE="Python3"
+      addons:
+        apt:
+          packages:
+          - python3-numpy
+          #- python-pip
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
@@ -57,9 +68,12 @@ script:
           cmake -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
       elif [[ "${BUILD_TYPE}" == "Release" ]]; then
           cmake -DCMAKE_BUILD_TYPE=Release ../;
-      elif [[ "${BUILD_TYPE}" == "Python" ]]; then
+      elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
           pip install --user mpmath;
           cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
+          make install;
+      elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
+          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python3.so -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.2 -DPYTHON_LIBRARY=/usr/lib/libpython3.2mu.so ../;
           make install;
       fi
     - make
@@ -67,8 +81,10 @@ script:
           ctest -E "thread" -V;
       elif [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;
-      elif [[ "${BUILD_TYPE}" == "Python" ]]; then
+      elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
           python -c "import pyranha.test; pyranha.test.run_test_suite()";
+      elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
+          python3 -c "import pyranha.test; pyranha.test.run_test_suite()";
       fi
 notifications:
   email: false
