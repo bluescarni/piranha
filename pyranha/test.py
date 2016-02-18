@@ -773,7 +773,7 @@ class tutorial_test_case(_ut.TestCase):
 def run_test_suite():
 	"""Run the full test suite.
 	
-	This function will return 0 if all tests pass, 1 otherwise.
+	This function will raise an exception if at least one test fails.
 	
 	"""
 	retval = 0
@@ -814,4 +814,5 @@ def run_test_suite():
 		test_result = _ut.TextTestRunner(verbosity=2).run(suite)
 		if len(test_result.failures) > 0:
 			retval = 1
-	return retval
+	if retval != 0:
+		raise RuntimeError('One or more tests failed.')
