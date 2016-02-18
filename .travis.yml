@@ -16,7 +16,7 @@ addons:
     - libboost-timer1.55-dev
     - libboost-python1.55-dev
     - python-numpy
-    - python-mpmath
+    - python-pip
     - g++-4.8
     - clang-3.8
 
@@ -58,6 +58,7 @@ script:
       elif [[ "${BUILD_TYPE}" == "Release" ]]; then
           cmake -DCMAKE_BUILD_TYPE=Release ../;
       elif [[ "${BUILD_TYPE}" == "Python" ]]; then
+          pip install --user mpmath;
           cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
           make install;
       fi
