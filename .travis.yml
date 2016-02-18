@@ -16,6 +16,7 @@ addons:
     - libboost-timer1.55-dev
     # This includes both Boost.Python 2 and 3.
     - libboost-python1.55-dev
+    - python3-numpy
     - g++-4.8
     - clang-3.8
 
@@ -46,11 +47,6 @@ matrix:
           #- python-pip
     - compiler: clang
       env: BUILD_TYPE="Python3"
-      addons:
-        apt:
-          packages:
-          - python3-numpy
-          #- python-pip
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
