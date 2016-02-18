@@ -16,7 +16,10 @@ addons:
     - libboost-timer1.55-dev
     # This includes both Boost.Python 2 and 3.
     - libboost-python1.55-dev
+    - python3-dev
+    - python-numpy
     - python3-numpy
+    - python-pip
     - g++-4.8
     - clang-3.8
 
