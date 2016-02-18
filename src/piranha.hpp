@@ -163,7 +163,7 @@ see https://www.gnu.org/licenses/. */
  * \todo related to the above: we should probably generalise the integral_combination() in polynomial to deal also with recursively-represented polys,
  * so that, e.g., we can use them as coefficients in poisson series. Also the polynomial's special pow() and integrate() method should be able to deal
  * with recursive polys in the same fashion. This should probably be a bullet point if we ever decide to support recrusive polynomials as first-class citizens.
- * \todo disable test building by default.
+ * \todo disable test building by default. Remember to update CI for this.
  * \todo the tuning:: class should probably be rolled into settings.
  * \todo think about removing the noexcept requirements for ignorability and compatibility of terms. This makes sense logically as ignorability is anyway
  * gonna call is_zero(), which might throw (see bp_object for instance), we might end up simplifying the logic and we don't lose much (not a big deal

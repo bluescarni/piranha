@@ -57,7 +57,7 @@ script:
           cmake -DCMAKE_BUILD_TYPE=Release ../;
       elif [[ "${BUILD_TYPE}" == "Python" ]]; then
           cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
-          make install
+          make install;
       fi
     - make
     - if [[ "${BUILD_TYPE}" == "Debug" ]]; then
@@ -65,7 +65,7 @@ script:
       elif [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;
       elif [[ "${BUILD_TYPE}" == "Python" ]]; then
-          python -c "import pyranha; pyranha.test.run_test_suite()"
+          python -c "import pyranha; pyranha.test.run_test_suite()";
       fi
 notifications:
   email: false
