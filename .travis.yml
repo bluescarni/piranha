@@ -65,7 +65,7 @@ script:
       elif [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;
       elif [[ "${BUILD_TYPE}" == "Python" ]]; then
-          python -c "import pyranha; pyranha.test.run_test_suite()";
+          python -c "import pyranha.test; pyranha.test.run_test_suite()";
       fi
 notifications:
   email: false
