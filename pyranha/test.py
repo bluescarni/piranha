@@ -773,7 +773,10 @@ class tutorial_test_case(_ut.TestCase):
 def run_test_suite():
 	"""Run the full test suite.
 	
+	This function will return 0 if all tests pass, 1 otherwise.
+	
 	"""
+	retval = 0
 	suite = _ut.TestLoader().loadTestsFromTestCase(basic_test_case)
 	suite.addTest(mpmath_test_case())
 	suite.addTest(math_test_case())
@@ -786,7 +789,9 @@ def run_test_suite():
 	suite.addTest(t_integrate_test_case())
 	suite.addTest(truncate_degree_test_case())
 	suite.addTest(doctests_test_case())
-	_ut.TextTestRunner(verbosity=2).run(suite)
+	test_result = _ut.TextTestRunner(verbosity=2).run(suite)
+	if len(test_result.failures) > 0:
+		retval = 1
 	suite = _ut.TestLoader().loadTestsFromTestCase(tutorial_test_case)
 	# Context for the suppression of output while running the tutorials. Inspired by:
 	# http://stackoverflow.com/questions/8522689/how-to-temporary-hide-stdout-or-stderr-while-running-a-unittest-in-python
@@ -806,4 +811,7 @@ def run_test_suite():
 			import sys
 			sys.stdout = self._stdout
 	with suppress_stdout():
-		_ut.TextTestRunner(verbosity=2).run(suite)
+		test_result = _ut.TextTestRunner(verbosity=2).run(suite)
+		if len(test_result.failures) > 0:
+			retval = 1
+	return retval

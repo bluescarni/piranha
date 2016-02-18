@@ -16,6 +16,7 @@ addons:
     - libboost-timer1.55-dev
     - libboost-python1.55-dev
     - python-numpy
+    - python-mpmath
     - g++-4.8
     - clang-3.8
 
@@ -37,8 +38,8 @@ matrix:
       #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
     #- compiler: clang
       #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Python"
+    - compiler: clang
+      env: BUILD_TYPE="Python"
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
@@ -66,7 +67,7 @@ script:
       elif [[ "${BUILD_TYPE}" == "Release" ]]; then
           ctest -E "gastineau|perminov" -V;
       elif [[ "${BUILD_TYPE}" == "Python" ]]; then
-          python -c "import pyranha.test; pyranha.test.run_test_suite()";
+          python -c "import pyranha.test; if pyranha.test.run_test_suite() == 1: raise RuntimeError('One or more tests failed.')";
       fi
 notifications:
   email: false
