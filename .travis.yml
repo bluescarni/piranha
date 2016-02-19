@@ -25,24 +25,24 @@ addons:
 
 matrix:
   include:
-    #- compiler: gcc
-      #env: BUILD_TYPE="Release"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Release"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Python2"
+    - compiler: gcc
+      env: BUILD_TYPE="Release"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    - compiler: clang
+      env: BUILD_TYPE="Release"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    - compiler: clang
+      env: BUILD_TYPE="Python2"
     - compiler: clang
       env: BUILD_TYPE="Python3"
 
@@ -73,7 +73,7 @@ script:
           # Install mpmath.
           wget "http://mpmath.org/files/mpmath-0.19.tar.gz";
           tar xzf mpmath-0.19.tar.gz;
-          cd cd mpmath-0.19;
+          cd mpmath-0.19;
           python3 setup.py install --user;
       fi
     - make
