@@ -115,16 +115,11 @@ BOOST_PYTHON_MODULE(_core)
 		::PyErr_SetString(PyExc_RuntimeError,"error while creating the 'types' submodule");
 		bp::throw_error_already_set();
 	}
-	// NOTE: apparently there is a difference in behaviour here: Python2 returns a borrowed reference from PyImport_AddModule,
-	// Python3 a new one. Check:
-	// https://docs.python.org/3/c-api/import.html
-	// versus
-	// https://docs.python.org/2/c-api/import.html
-#if PY_MAJOR_VERSION < 3
+	// NOTE: I think at one point in the past there was a typo in the Python3 C API documentation
+	// which hinted at a difference in behaviour for PyImport_AddModule between 2 and 3 (new reference
+	// vs borrowed reference). Current documentation states that the reference is always
+	// borrowed, both in Python 2 and 3.
 	auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr)));
-#else
-	auto types_module = bp::object(bp::handle<>(types_module_ptr));
-#endif
 	bp::scope().attr("types") = types_module;
 	// Expose concrete instances of the type generator.
 	pyranha::expose_type_generator<signed char>("signed_char");
