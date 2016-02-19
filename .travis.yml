@@ -48,9 +48,11 @@ matrix:
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
+          export PIRANHA_COMPILER=gcc;
           export CC=gcc-4.8;
           export CXX=g++-4.8;
       elif [[ "${CC}" == "clang" ]]; then
+          export PIRANHA_COMPILER=clang;
           export CC=clang-3.8;
           export CXX=clang++-3.8;
       fi
@@ -59,7 +61,11 @@ script:
     - mkdir build
     - cd build
     - if [[ "${BUILD_TYPE}" == "Debug" ]]; then
-          cmake -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+          if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
+              cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=--coverage -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+          elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
+              cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+          fi
           make;
           ctest -E "thread" -V;
       elif [[ "${BUILD_TYPE}" == "Release" ]]; then
