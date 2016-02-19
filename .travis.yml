@@ -25,24 +25,24 @@ addons:
 
 matrix:
   include:
-    - compiler: gcc
-      env: BUILD_TYPE="Release"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Python2"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Release"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Release"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Python2"
     - compiler: clang
       env: BUILD_TYPE="Python3"
 
@@ -63,12 +63,18 @@ script:
       elif [[ "${BUILD_TYPE}" == "Release" ]]; then
           cmake -DCMAKE_BUILD_TYPE=Release ../;
       elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
-          pip install --user mpmath;
           cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
           make install;
+          # Install mpmath.
+          pip install --user mpmath;
       elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
           cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so.1.55.0 -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so.1.55.0 -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.2 -DPYTHON_LIBRARY=/usr/lib/libpython3.2mu.so ../;
           make install;
+          # Install mpmath.
+          wget "http://mpmath.org/files/mpmath-0.19.tar.gz";
+          tar xzf mpmath-0.19.tar.gz;
+          cd cd mpmath-0.19;
+          python3 setup.py install --user;
       fi
     - make
     - if [[ "${BUILD_TYPE}" == "Debug" ]]; then
