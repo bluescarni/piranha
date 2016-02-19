@@ -25,24 +25,24 @@ addons:
 
 matrix:
   include:
-    #- compiler: gcc
-      #env: BUILD_TYPE="Release"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Release"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Python2"
+    - compiler: gcc
+      env: BUILD_TYPE="Release"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    - compiler: clang
+      env: BUILD_TYPE="Release"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    - compiler: clang
+      env: BUILD_TYPE="Python2"
     - compiler: clang
       env: BUILD_TYPE="Python3"
 
@@ -67,9 +67,6 @@ script:
           cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
           make install;
       elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
-          wget "https://bootstrap.pypa.io/get-pip.py";
-          python3 get-pip.py --user;
-          /home/travis/.local/bin/pip install mpmath --user;
           cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so.1.55.0 -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so.1.55.0 -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.2 -DPYTHON_LIBRARY=/usr/lib/libpython3.2mu.so ../;
           make install;
       fi
