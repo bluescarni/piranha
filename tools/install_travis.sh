@@ -7,6 +7,7 @@ set -x
 
 if [[ "${BUILD_TYPE}" == "Debug" ]]; then
     if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
+        pip install --user cpp-coveralls;
         cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=--coverage -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
     elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
         cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
