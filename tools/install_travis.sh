@@ -12,7 +12,7 @@ if [[ "${BUILD_TYPE}" == "Debug" ]]; then
         ctest -E "thread|memory" -V;
     elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
         pip install --user cpp-coveralls;
-        cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage -Xclang -coverage-cfg-checksum -Xclang -coverage-no-function-names-in-data -Xclang -coverage-version='406*'" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage -Xclang -coverage-cfg-checksum -Xclang -coverage-no-function-names-in-data -Xclang -coverage-version=\"406*\"" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make install;
         ctest -E "thread" -V;
     fi
