@@ -37,10 +37,17 @@ elif [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
     cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes -DBUILD_TESTS=no ../;
     make;
     ctest -V;
-elif [[ "${BUILD_TYPE}" == "Doxygenl" ]]; then
+elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     cmake ../;
-    cd ../doc/doxygen;
-    if [[ $(doxygen > /dev/null) ]]; then
+    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.src.tar.gz";
+    tar xzf doxygen-1.8.11.src.tar.gz;
+    cd doxygen-1.8.11;
+    mkdir build;
+    cd build;
+    cmake ../ -DCMAKE_INSTALL_PREFIX=/home/travis/.local;
+    make install;
+    cd ../../../doc/doxygen;
+    if [[ $(/home/travis/.local/bin/doxygen > /dev/null) ]]; then
         echo "Doxygen produced some warnings/errors";
         return 1;
     fi

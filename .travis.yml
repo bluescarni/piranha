@@ -6,7 +6,6 @@ addons:
     - ubuntu-toolchain-r-test
     - boost-latest
     - llvm-toolchain-precise
-    - libreoffice
     packages:
     - libgmp-dev
     - libmpfr-dev
