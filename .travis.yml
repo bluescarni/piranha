@@ -6,7 +6,7 @@ addons:
     - ubuntu-toolchain-r-test
     - boost-latest
     - llvm-toolchain-precise
-    - kubuntu-backports
+    - george-edison55-precise-backports
     packages:
     - libgmp-dev
     - libmpfr-dev
@@ -27,6 +27,7 @@ addons:
     - graphviz
     - graphviz-dev
     - cmake
+    - cmake-data
     - texlive
 
 env:
