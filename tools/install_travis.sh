@@ -52,7 +52,9 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
     git rm -fr sphinx;
     mv /home/travis/sphinx .;
     git add sphinx;
-    git commit -m "Update Sphinx documentation [skip ci]."
+    # We assume here that a failure in commit means that there's nothing
+    # to commit.
+    git commit -m "Update Sphinx documentation [skip ci]." || exit 0
     PUSH_COUNTER=0
     until git push -q
     do
@@ -113,7 +115,9 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     git rm -fr doxygen;
     mv /home/travis/doxygen .;
     git add doxygen;
-    git commit -m "Update Doxygen documentation [skip ci]."
+    # We assume here that a failure in commit means that there's nothing
+    # to commit.
+    git commit -m "Update Doxygen documentation [skip ci]." || exit 0
     PUSH_COUNTER=0
     until git push -q
     do

@@ -56,8 +56,8 @@ matrix:
       env: BUILD_TYPE="Python2"
     - compiler: clang
       env: BUILD_TYPE="Python3"
-    #- compiler: clang
-      #env: BUILD_TYPE="Tutorial"
+    - compiler: clang
+      env: BUILD_TYPE="Tutorial"
     - compiler: gcc
       env: BUILD_TYPE="Doxygen"
 
