@@ -2,6 +2,7 @@ var searchData=
 [
   ['integrate_5fimpl',['integrate_impl',['../structpiranha_1_1math_1_1integrate__impl.html',1,'piranha::math']]],
   ['integrate_5fimpl_3c_20series_2c_20detail_3a_3aseries_5fintegrate_5fenabler_3c_20series_20_3e_20_3e',['integrate_impl&lt; Series, detail::series_integrate_enabler&lt; Series &gt; &gt;',['../structpiranha_1_1math_1_1integrate__impl_3_01_series_00_01detail_1_1series__integrate__enabler_3_01_series_01_4_01_4.html',1,'piranha::math']]],
+  ['invert_5fimpl',['invert_impl',['../structpiranha_1_1math_1_1invert__impl.html',1,'piranha::math']]],
   ['invert_5fimpl_3c_20series_2c_20detail_3a_3aseries_5finvert_5fenabler_3c_20series_20_3e_20_3e',['invert_impl&lt; Series, detail::series_invert_enabler&lt; Series &gt; &gt;',['../structpiranha_1_1math_1_1invert__impl_3_01_series_00_01detail_1_1series__invert__enabler_3_01_series_01_4_01_4.html',1,'piranha::math']]],
   ['ipow_5fsubs_5fimpl',['ipow_subs_impl',['../structpiranha_1_1math_1_1ipow__subs__impl.html',1,'piranha::math']]],
   ['ipow_5fsubs_5fimpl_3c_20series_2c_20t_2c_20detail_3a_3aipow_5fsubs_5fimpl_5fipow_5fsubs_5fseries_5fenabler_3c_20series_2c_20t_20_3e_20_3e',['ipow_subs_impl&lt; Series, T, detail::ipow_subs_impl_ipow_subs_series_enabler&lt; Series, T &gt; &gt;',['../structpiranha_1_1math_1_1ipow__subs__impl_3_01_series_00_01_t_00_01detail_1_1ipow__subs__impl__i05512f754a96e06f7f436d1e41d65424.html',1,'piranha::math']]],

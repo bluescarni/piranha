@@ -6,6 +6,7 @@ var searchData=
   ['rehash',['rehash',['../classpiranha_1_1hash__set.html#a19de666eb17d34c1a97725c04b6238fd',1,'piranha::hash_set']]],
   ['remove',['remove',['../classpiranha_1_1symbol__set.html#ad9713d112f97ddd466f8a84c4598f6f6',1,'piranha::symbol_set::remove(const symbol &amp;s)'],['../classpiranha_1_1symbol__set.html#a3957412a0cb81a857739b2b08a2ae6a7',1,'piranha::symbol_set::remove(const std::string &amp;name)']]],
   ['reset_5fcache_5fline_5fsize',['reset_cache_line_size',['../classpiranha_1_1settings__.html#a80ee027e6df1050f18e3862b34d83e26',1,'piranha::settings_']]],
+  ['reset_5festimate_5fthreshold',['reset_estimate_threshold',['../classpiranha_1_1tuning.html#a99e80fffbd11a0d5de392fd005356904',1,'piranha::tuning']]],
   ['reset_5fmax_5fterm_5foutput',['reset_max_term_output',['../classpiranha_1_1settings__.html#a49abab03ad431f53a040d3acc11819ac',1,'piranha::settings_']]],
   ['reset_5fmin_5fwork_5fper_5fthread',['reset_min_work_per_thread',['../classpiranha_1_1settings__.html#accae41ba22ddd3d931a2e05f7e31d488',1,'piranha::settings_']]],
   ['reset_5fmultiplication_5fblock_5fsize',['reset_multiplication_block_size',['../classpiranha_1_1tuning.html#a251f972a0b3afb218058878330471500',1,'piranha::tuning']]],

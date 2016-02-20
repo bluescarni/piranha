@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['has_5fadd3',['has_add3',['../classpiranha_1_1has__add3.html',1,'piranha']]],
   ['has_5fbegin_5fend',['has_begin_end',['../classpiranha_1_1has__begin__end.html',1,'piranha']]],
   ['has_5fbinomial',['has_binomial',['../classpiranha_1_1has__binomial.html',1,'piranha']]],
   ['has_5fconvert_5fto',['has_convert_to',['../classpiranha_1_1has__convert__to.html',1,'piranha']]],
@@ -9,13 +10,19 @@ var searchData=
   ['has_5fis_5funitary',['has_is_unitary',['../classpiranha_1_1has__is__unitary.html',1,'piranha']]],
   ['has_5fis_5fzero',['has_is_zero',['../classpiranha_1_1has__is__zero.html',1,'piranha']]],
   ['has_5fldegree',['has_ldegree',['../classpiranha_1_1has__ldegree.html',1,'piranha']]],
+  ['has_5fleft_5fshift',['has_left_shift',['../classpiranha_1_1has__left__shift.html',1,'piranha']]],
+  ['has_5fleft_5fshift_5fin_5fplace',['has_left_shift_in_place',['../classpiranha_1_1has__left__shift__in__place.html',1,'piranha']]],
+  ['has_5fmul3',['has_mul3',['../classpiranha_1_1has__mul3.html',1,'piranha']]],
   ['has_5fmultiply_5faccumulate',['has_multiply_accumulate',['../classpiranha_1_1has__multiply__accumulate.html',1,'piranha']]],
   ['has_5fnegate',['has_negate',['../classpiranha_1_1has__negate.html',1,'piranha']]],
   ['has_5fpbracket',['has_pbracket',['../classpiranha_1_1has__pbracket.html',1,'piranha']]],
   ['has_5fprint_5fcoefficient',['has_print_coefficient',['../classpiranha_1_1has__print__coefficient.html',1,'piranha']]],
   ['has_5fprint_5ftex_5fcoefficient',['has_print_tex_coefficient',['../classpiranha_1_1has__print__tex__coefficient.html',1,'piranha']]],
+  ['has_5fright_5fshift',['has_right_shift',['../classpiranha_1_1has__right__shift.html',1,'piranha']]],
+  ['has_5fright_5fshift_5fin_5fplace',['has_right_shift_in_place',['../classpiranha_1_1has__right__shift__in__place.html',1,'piranha']]],
   ['has_5fsafe_5fcast',['has_safe_cast',['../classpiranha_1_1has__safe__cast.html',1,'piranha']]],
   ['has_5fsine',['has_sine',['../classpiranha_1_1has__sine.html',1,'piranha']]],
+  ['has_5fsub3',['has_sub3',['../classpiranha_1_1has__sub3.html',1,'piranha']]],
   ['has_5fsubs',['has_subs',['../classpiranha_1_1has__subs.html',1,'piranha']]],
   ['has_5ft_5fdegree',['has_t_degree',['../classpiranha_1_1has__t__degree.html',1,'piranha']]],
   ['has_5ft_5fldegree',['has_t_ldegree',['../classpiranha_1_1has__t__ldegree.html',1,'piranha']]],
@@ -32,8 +39,8 @@ var searchData=
   ['hash_3c_20piranha_3a_3amp_5frational_3c_20nbits_20_3e_20_3e',['hash&lt; piranha::mp_rational&lt; NBits &gt; &gt;',['../structstd_1_1hash_3_01piranha_1_1mp__rational_3_01_n_bits_01_4_01_4.html',1,'std']]],
   ['hash_3c_20piranha_3a_3areal_5ftrigonometric_5fkronecker_5fmonomial_3c_20t_20_3e_20_3e',['hash&lt; piranha::real_trigonometric_kronecker_monomial&lt; T &gt; &gt;',['../structstd_1_1hash_3_01piranha_1_1real__trigonometric__kronecker__monomial_3_01_t_01_4_01_4.html',1,'std']]],
   ['hash_3c_20piranha_3a_3asymbol_20_3e',['hash&lt; piranha::symbol &gt;',['../structstd_1_1hash_3_01piranha_1_1symbol_01_4.html',1,'std']]],
-  ['hash_5fset',['hash_set',['../classpiranha_1_1hash__set.html',1,'piranha']]],
   ['hash_5fset',['hash_set',['../classpiranha_1_1hash__set.html#ad89393eef8085dfde8cce757bdea15bb',1,'piranha::hash_set::hash_set(const hasher &amp;h=hasher{}, const key_equal &amp;k=key_equal{})'],['../classpiranha_1_1hash__set.html#a09a51cb0135a7ce05b1d2126fd5526c6',1,'piranha::hash_set::hash_set(const size_type &amp;n_buckets, const hasher &amp;h=hasher{}, const key_equal &amp;k=key_equal{}, unsigned n_threads=1u)'],['../classpiranha_1_1hash__set.html#afb332b27894abd27db2f96a37fb65424',1,'piranha::hash_set::hash_set(const hash_set &amp;other)'],['../classpiranha_1_1hash__set.html#a23ef017f6b6d2e063440dbe46df7e51a',1,'piranha::hash_set::hash_set(hash_set &amp;&amp;other) noexcept'],['../classpiranha_1_1hash__set.html#a9962971d0ab8e247dc260bffb3eb0b2e',1,'piranha::hash_set::hash_set(const InputIterator &amp;begin, const InputIterator &amp;end, const size_type &amp;n_buckets=0u, const hasher &amp;h=hasher{}, const key_equal &amp;k=key_equal{})'],['../classpiranha_1_1hash__set.html#a6e70936b664aa2f5211cadd7b5c29397',1,'piranha::hash_set::hash_set(std::initializer_list&lt; U &gt; list)']]],
+  ['hash_5fset',['hash_set',['../classpiranha_1_1hash__set.html',1,'piranha']]],
   ['hash_5fset_3c_20p_5ftype_2c_20p_5ftype_5fhasher_20_3e',['hash_set&lt; p_type, p_type_hasher &gt;',['../classpiranha_1_1hash__set.html',1,'piranha']]],
   ['hasher',['hasher',['../classpiranha_1_1hash__set.html#a771b69cb94918ae60f5115f77111d969',1,'piranha::hash_set']]]
 ];

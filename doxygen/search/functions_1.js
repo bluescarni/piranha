@@ -1,7 +1,8 @@
 var searchData=
 [
   ['abs',['abs',['../classpiranha_1_1mp__integer.html#a75b21f4ee6f02788109a558031ce2b3e',1,'piranha::mp_integer::abs()'],['../classpiranha_1_1mp__rational.html#a6fdc43620594df3d255a5730267bb391',1,'piranha::mp_rational::abs()'],['../classpiranha_1_1real.html#af7f9403414dd930c7fd1ed4dbe0863d8',1,'piranha::real::abs()'],['../namespacepiranha_1_1math.html#a9fad3b6f8a6178867eeac66f69531397',1,'piranha::math::abs()']]],
-  ['add',['add',['../classpiranha_1_1small__vector.html#a17c231e646f43c8f74fd111a9aba7fe5',1,'piranha::small_vector::add()'],['../classpiranha_1_1symbol__set.html#a13101abf79be11e045539f82be6f120f',1,'piranha::symbol_set::add(const symbol &amp;s)'],['../classpiranha_1_1symbol__set.html#a0f4b9702296aa16288369a63aae5ab21',1,'piranha::symbol_set::add(const std::string &amp;name)']]],
+  ['add',['add',['../classpiranha_1_1mp__integer.html#aaa7862f0b2b6162780450ee414a0dc2d',1,'piranha::mp_integer::add()'],['../classpiranha_1_1small__vector.html#a17c231e646f43c8f74fd111a9aba7fe5',1,'piranha::small_vector::add()'],['../classpiranha_1_1symbol__set.html#a13101abf79be11e045539f82be6f120f',1,'piranha::symbol_set::add(const symbol &amp;s)'],['../classpiranha_1_1symbol__set.html#a0f4b9702296aa16288369a63aae5ab21',1,'piranha::symbol_set::add(const std::string &amp;name)']]],
+  ['add3',['add3',['../namespacepiranha_1_1math.html#ae11fd337327c260a957de8b40c2b8bfc',1,'piranha::math']]],
   ['aligned_5fpalloc',['aligned_palloc',['../namespacepiranha.html#a41914add70b267b6e4f3c686817c9d8a',1,'piranha']]],
   ['aligned_5fpfree',['aligned_pfree',['../namespacepiranha.html#a5626a367270e450d7d4563dfabe77035',1,'piranha']]],
   ['alignment',['alignment',['../classpiranha_1_1dynamic__aligning__allocator.html#a98dac755f525bec9b581e26f2ff0f2a6',1,'piranha::dynamic_aligning_allocator']]],
