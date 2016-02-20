@@ -38,7 +38,9 @@ elif [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
     make;
     ctest -V;
 elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
+    # Configure.
     cmake ../;
+    # Install recent version of Doxygen locally.
     wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.src.tar.gz";
     tar xzf doxygen-1.8.11.src.tar.gz;
     cd doxygen-1.8.11;
@@ -47,10 +49,22 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     cmake -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
     make;
     make install;
+    # Now run it.
     cd ../../../doc/doxygen;
-    if [[ $(/home/travis/.local/bin/doxygen 2>&1 |cat -| > /dev/null) ]]; then
-        echo "Doxygen produced some warnings/errors";
-        return 1;
-    fi
+    /home/travis/.local/bin/doxygen;
     echo "Doxygen ran successfully";
+    # Move out the resulting documentation.
+    mv html /home/travis/doxygen;
+    # Checkout a new copy of the repo, for pushing to gh-pages.
+    cd ../../../;
+    git clone https://${GH_TOKEN}@github.com/bluescarni/piranha.git piranha_gh_pages
+    cd piranha_gh_pages
+    git config user.name "Travis CI"
+    git config user.email "bluescarni@gmail.com"
+    git checkout -b gh-pages --track origin/gh-pages;
+    git rm -fr doxygen;
+    mv /home/travis/doxygen .;
+    git add doxygen;
+    git commit -m "Update Doxygen documentation [skip ci]."
+    git push
 fi
