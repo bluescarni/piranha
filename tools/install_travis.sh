@@ -113,5 +113,15 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     mv /home/travis/doxygen .;
     git add doxygen;
     git commit -m "Update Doxygen documentation [skip ci]."
-    git push -q
+    PUSH_COUNTER=0
+    #until git push -q
+    until ls sdsda
+    do
+        git pull -q
+        PUSH_COUNTER=$((PUSH_COUNTER + 1))
+        if [ "$PUSH_COUNTER" -gt 3 ]; then
+            echo "Push failed, aborting."
+            exit 1
+        fi
+    done
 fi
