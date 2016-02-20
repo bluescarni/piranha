@@ -51,8 +51,8 @@ matrix:
       #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
     #- compiler: clang
       #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Python2"
+    - compiler: clang
+      env: BUILD_TYPE="Python2"
     #- compiler: clang
       #env: BUILD_TYPE="Python3"
     #- compiler: clang

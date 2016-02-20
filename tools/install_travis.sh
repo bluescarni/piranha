@@ -114,8 +114,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     git add doxygen;
     git commit -m "Update Doxygen documentation [skip ci]."
     PUSH_COUNTER=0
-    #until git push -q
-    until ls sdsda
+    until git push -q
     do
         git pull -q
         PUSH_COUNTER=$((PUSH_COUNTER + 1))
