@@ -37,4 +37,11 @@ elif [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
     cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes -DBUILD_TESTS=no ../;
     make;
     ctest -V;
+elif [[ "${BUILD_TYPE}" == "Doxygenl" ]]; then
+    cmake ../;
+    cd ../doc/doxygen;
+    if [[ $(doxygen > /dev/null) ]]; then
+        echo "Doxygen produced some warnings/errors";
+        return 1;
+    fi
 fi
