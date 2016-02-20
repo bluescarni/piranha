@@ -11,8 +11,7 @@ if [[ "${BUILD_TYPE}" == "Debug" ]]; then
         make;
         ctest -E "thread|memory" -V;
     elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
-        pip install --user cpp-coveralls;
-        cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage -Xclang -coverage-cfg-checksum -Xclang -coverage-no-function-names-in-data -Xclang -coverage-version=406*" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make;
         ctest -E "thread" -V;
     fi
@@ -34,4 +33,8 @@ elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
     python3 setup.py install --user;
     cd ..;
     python3 -c "import pyranha.test; pyranha.test.run_test_suite()";
+elif [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
+    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes -DBUILD_TESTS=no ../;
+    make;
+    ctest -V;
 fi
