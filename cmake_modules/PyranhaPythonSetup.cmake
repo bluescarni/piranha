@@ -37,6 +37,7 @@ INCLUDE(FindPythonInterp)
 FIND_PACKAGE(PythonLibs REQUIRED)
 MESSAGE(STATUS "Python libraries: " "${PYTHON_LIBRARIES}")
 MESSAGE(STATUS "Python library: " "${PYTHON_LIBRARY}")
+MESSAGE(STATUS "Python include dirs: " "${PYTHON_INCLUDE_DIRS}")
 
 # These flags are used to signal the need to override the default extension of the Python modules
 # depending on the architecture. Under Windows, for instance, CMake produces shared objects as
