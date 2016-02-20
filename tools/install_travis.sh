@@ -61,7 +61,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     git config --global user.name "Travis CI"
     git config --global user.email "bluescarni@gmail.com"
     set +x
-    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages
+    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages 2>&1 |cat - | > /dev/null
     set -x
     cd piranha_gh_pages
     git checkout -b gh-pages --track origin/gh-pages;
@@ -69,7 +69,5 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     mv /home/travis/doxygen .;
     git add doxygen;
     git commit -m "Update Doxygen documentation [skip ci]."
-    set +x
-    git push
-    set -x
+    git push 2>&1 |cat - | > /dev/null
 fi
