@@ -25,8 +25,9 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
     # Install mpmath via pip.
     pip install --user mpmath;
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
-    # Install sphinx.
+    # Install sphinx and the rtd theme.
     pip install --user sphinx
+    pip install --user sphinx_rtd_theme
     export PATH=$PATH:/home/travis/.local/bin
     cd ../doc/sphinx;
     export SPHINX_OUTPUT=`make html 2>&1 >/dev/null`;
@@ -63,7 +64,7 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
         fi
     done
 elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
-    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.2mu -DPYTHON_LIBRARY=/usr/lib/libpython3.2mu.so ../;
+    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so -DPYTHON_EXECUTABLE=/usr/bin/python3 ../;
     make install;
     # Install mpmath manually.
     wget "http://mpmath.org/files/mpmath-0.19.tar.gz";
