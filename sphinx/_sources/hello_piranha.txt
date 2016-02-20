@@ -25,9 +25,17 @@ This program will just print to screen the rational number :math:`\frac{4}{3}`, 
 in Piranha by a class called (unsurprisingly) ``rational``.
 In Unix-like environments, you can compile this simple program with GCC via the command:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ g++ -std=c++11 hello_piranha.cpp -lmpfr -lgmp
+
+Note however that, since Piranha is a multi-threaded library, it will be likely necessary to link to
+additional platform-specific threading libraries and/or enable threading-related compiler switches for
+the compilation to be successful. For instance, on a modern GNU/Linux distribution, the correct switches are:
+
+.. code-block:: console
+
+   $ g++ -std=c++11 hello_piranha.cpp -lmpfr -lgmp -lpthread -pthread
 
 A couple of things to note:
 
@@ -35,30 +43,35 @@ A couple of things to note:
   Piranha is written in C++11, and this flag is necessary as long as GCC does not default to C++11 mode;
 * we specify via the ``-lmpfr -lgmp`` flags that the executable needs to be linked to the GMP and MPFR libraries (if
   you do not do this, the program will still compile but the final linking will fail due to undefined references);
-* at the present time, all the Boost libraries used within Piranha are header-only and thus no linking to any Boost
-  library is necessary;
+* for this simple example, it is not necessary to link to any other library. If, however, Piranha's serialization capabilities
+  are used, then it will be necessary to link the executable to the Boost Serialization library and to the bzip2 library;
 * Piranha itself is header-only, so there is no ``-lpiranha`` to link to.
 
-.. note:: The development version of Piranha adds serialization capabilities, and requires the Boost Serialization
-   library to be linked in with ``-lboost_serialization`` if such capablities are used.
+We also need to point out that for non-debug builds, the ``NDEBUG`` macro should be defined:
+
+.. code-block:: console
+
+   $ g++ -O2 -DNDEBUG -std=c++11 hello_piranha.cpp -lmpfr -lgmp -lpthread -pthread
+
+If ``NDEBUG`` is not defined, a noticeable runtime overhead due to Piranha's self-checking mechanism will be introduced.
 
 If you installed Piranha in a custom ``PREFIX``, you will need to specify on the command line where
 the Piranha headers are located via the ``-I`` switch. E.g.,
 
-.. code-block:: bash
+.. code-block:: console
 
-   $ g++ -I/home/username/.local/include -std=c++11 hello_piranha.cpp -lmpfr -lgmp
+   $ g++ -I/home/username/.local/include -std=c++11 hello_piranha.cpp -lmpfr -lgmp -lpthread -pthread
 
 If the GMP and/or MPFR libraries are not installed in a standard path, you can use the ``-L`` switch to tell GCC
 where to look for them:
 
-.. code-block:: bash
+.. code-block:: console
 
-   $ g++ -std=c++11 hello_piranha.cpp -L/custom/library/path -lmpfr -lgmp
+   $ g++ -std=c++11 hello_piranha.cpp -L/custom/library/path -lmpfr -lgmp -lpthread -pthread
 
 After a successful compilation, the executable ``a.out`` can be run:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ ./a.out
    4/3

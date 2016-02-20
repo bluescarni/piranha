@@ -46,17 +46,27 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
 
-        
-          <a href="index.html" class="icon icon-home"> Piranha
-        
+          
+            <a href="index.html" class="icon icon-home"> Piranha
+          
 
-        
-        </a>
+          
+          </a>
 
-        
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -65,45 +75,16 @@
   </form>
 </div>
 
-        
-      </div>
+          
+        </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-          
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#supported-platforms">Supported platforms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#download">Download</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-from-source">Installation from source</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="getting_started.html#configuration">Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="getting_started.html#building">Building</a></li>
-<li class="toctree-l3"><a class="reference internal" href="getting_started.html#installation">Installation</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="hello_piranha.html">Hello Piranha!</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hello_piranha.html#your-first-piranha-program">Your first Piranha program</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hello_piranha.html#the-environment-class">The <code class="docutils literal"><span class="pre">environment</span></code> class</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="hello_piranha.html#your-first-pyranha-program">Your first Pyranha program</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="fundamental_types.html">Fundamental numerical types in Piranha</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-integer-type">The <code class="docutils literal"><span class="pre">integer</span></code> type</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-rational-type">The <code class="docutils literal"><span class="pre">rational</span></code> type</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-real-type">The <code class="docutils literal"><span class="pre">real</span></code> type</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#potential-pitfalls">Potential pitfalls</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#tldr">TLDR</a></li>
-</ul>
-</li>
-</ul>
-</li>
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="reference.html">Complete reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="pyranha_reference.html">Python reference</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
@@ -117,10 +98,10 @@
 </li>
 </ul>
 
+            
           
-        
+        </div>
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -135,7 +116,13 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
@@ -154,7 +141,8 @@
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="pyranha">
 <span id="pyranha-root"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">pyranha</span></code><a class="headerlink" href="#pyranha" title="Permalink to this headline">¶</a></h1>
@@ -182,11 +170,11 @@ representation is disabled, IPython will fall back to the PNG-based representati
 leverages - if available - a local installation of TeX for increased performance via a static rendering
 of the TeX representation of the series to a PNG bitmap.</p>
 <p>By default, the TeX representation of series is enabled.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span>
 <span class="go">&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
 </pre></div>
@@ -207,7 +195,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
 <span class="go">20</span>
 </pre></div>
 </div>
@@ -217,7 +205,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 <dt id="pyranha.settings.get_min_work_per_thread">
 <em class="property">static </em><code class="descname">get_min_work_per_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_min_work_per_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_min_work_per_thread" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the minimum work per thread.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
 <span class="go">500000 # This will be an implementation-defined value.</span>
 </pre></div>
 </div>
@@ -236,7 +224,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span> 
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span> 
 <span class="go">16 # This will be a platform-dependent value.</span>
 </pre></div>
 </div>
@@ -254,7 +242,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
 <span class="go">10</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">reset_max_term_output</span><span class="p">()</span>
@@ -268,7 +256,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 <dt id="pyranha.settings.reset_min_work_per_thread">
 <em class="property">static </em><code class="descname">reset_min_work_per_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.reset_min_work_per_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.reset_min_work_per_thread" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset the minimum work per thread.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
 <span class="go">10</span>
@@ -291,7 +279,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
 <span class="go">10</span>
@@ -319,12 +307,12 @@ description of how the method is used.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
 <span class="go">False</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span> 
 <span class="gt">Traceback (most recent call last):</span>
   <span class="c">...</span>
@@ -332,7 +320,7 @@ description of how the method is used.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span>
 <span class="go">&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span> 
 <span class="gt">Traceback (most recent call last):</span>
   <span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">the &#39;flag&#39; parameter must be a bool</span>
@@ -354,14 +342,14 @@ description of how the method is used.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
 <span class="go">10</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> 
 <span class="gt">Traceback (most recent call last):</span>
   <span class="c">...</span>
 <span class="gr">OverflowError</span>: <span class="n">invalid value</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span> 
 <span class="gt">Traceback (most recent call last):</span>
   <span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">invalid type</span>
@@ -384,7 +372,7 @@ description of how the method is used.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
 <span class="go">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
@@ -414,7 +402,7 @@ description of how the method is used.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
 <span class="go">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
@@ -435,6 +423,7 @@ description of how the method is used.</p>
 </div>
 
 
+           </div>
           </div>
           <footer>
   
@@ -452,10 +441,11 @@ description of how the method is used.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2009-2015, Francesco Biscani.
+        &copy; Copyright 2009-2016, Francesco Biscani.
+
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 

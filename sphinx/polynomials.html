@@ -1,0 +1,282 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Piranha polynomials and series &mdash; Piranha 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Piranha 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Tutorial" href="tutorial.html"/>
+        <link rel="next" title="Complete reference" href="reference.html"/>
+        <link rel="prev" title="Fundamental numerical types in Piranha" href="fundamental_types.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Piranha
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="hello_piranha.html">Hello Piranha!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fundamental_types.html">Fundamental numerical types in Piranha</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Piranha polynomials and series</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#degree-truncation">Degree truncation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#performance">Performance</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Complete reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Piranha</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorial.html">Tutorial</a> &raquo;</li>
+      
+    <li>Piranha polynomials and series</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/polynomials.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="piranha-polynomials-and-series">
+<span id="polynomials"></span><h1>Piranha polynomials and series<a class="headerlink" href="#piranha-polynomials-and-series" title="Permalink to this headline">¶</a></h1>
+<p>In Piranha a <code class="docutils literal"><span class="pre">series</span></code> is a collection of terms where a sum operation is implied between terms. Each term, in turn, is a pair made of a coefficient and a key. The key uniquely identifies a term in a series, in the sense that no terms with equivalent key can exist inside the same series (e.g., the terms <code class="docutils literal"><span class="pre">7*x</span></code> and <code class="docutils literal"><span class="pre">6*x</span></code> would be compressed into the single term <code class="docutils literal"><span class="pre">13*x</span></code> in a <code class="docutils literal"><span class="pre">polynomial</span></code>).</p>
+<p>Piranha implements so far three different <strong>key</strong> types: <code class="docutils literal"><span class="pre">monomial</span></code> (here meaning a product of powers of symbolic variables, where the powers are not limited to being integral values), trigonometric monomials (e.g., objects of the type &#8220;cos(2*x-y)&#8221;) and <code class="docutils literal"><span class="pre">divisors</span></code> (e.g., objects of the type 1/[(x-y)**n*(x+2*y)**m]). A <strong>coefficient</strong> type can be any type that satisfies a few basic requirements (e.g., it must support basic arithmetic operations). Piranha provides some useful coefficient types such as arbitrary-precision integrals/rationals/reals:</p>
+<ul class="simple">
+<li><a class="reference internal" href="fundamental_types.html#fundamental-types"><span>Fundamental numerical types in Piranha</span></a></li>
+</ul>
+<p>Monomials are used to define polynomials, trigonometric monomials are used to define Poisson series, and divisors are used to define divisor series. I will talk a bit about polynomials because they are the simplest symbolic objects. So, in order to define a polynomial over ℤ in Piranha you could do something like this:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">p_type</span> <span class="o">=</span> <span class="n">polynomial</span><span class="o">&lt;</span><span class="n">integer</span><span class="p">,</span><span class="n">monomial</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Here we are selecting &#8220;integer&#8221; as coefficient type and <code class="docutils literal"><span class="pre">monomial&lt;int&gt;</span></code> as key type. <code class="docutils literal"><span class="pre">monomial&lt;int&gt;</span></code> represents monomial as arrays of type <code class="docutils literal"><span class="pre">int</span></code>. If you need more range for the exponents you could do:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">p_type</span> <span class="o">=</span> <span class="n">polynomial</span><span class="o">&lt;</span><span class="n">integer</span><span class="p">,</span><span class="n">monomial</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Or if you need unlimited exponents:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">p_type</span> <span class="o">=</span> <span class="n">polynomial</span><span class="o">&lt;</span><span class="n">integer</span><span class="p">,</span><span class="n">monomial</span><span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>If you want to define polynomials over ℚ you could do:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">p_type</span> <span class="o">=</span> <span class="n">polynomial</span><span class="o">&lt;</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Once you have defined your polynomial type, you can construct polynomials in a variety of ways. For example:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">p_type</span> <span class="n">p</span><span class="p">{</span><span class="mi">1</span><span class="p">};</span>
+</pre></div>
+</div>
+<p>will do the expected thing and create a polynomial with zero variables, and a single term with coefficient 1. If you do:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">p_type</span> <span class="n">x</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">x</span></code> will be a polynomial in 1 variable, &#8220;x&#8221;, with one term with coefficient 1 and monomial <code class="docutils literal"><span class="pre">x**1</span></code>. All series types support basic arithmetic:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">p_type</span> <span class="n">x</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">},</span> <span class="n">y</span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">x</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span>  <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// This will print &quot;x+2y&quot; or &quot;2y+x&quot;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="p">)</span>  <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// This will print &quot;x**2-y**2&quot; or &quot;y**2-x**2&quot;</span>
+</pre></div>
+</div>
+<p>Division is supported only wrt to scalar (that is, there is no true polynomial division algorithm implemented in Piranha at the moment).</p>
+<div class="section" id="degree-truncation">
+<h2>Degree truncation<a class="headerlink" href="#degree-truncation" title="Permalink to this headline">¶</a></h2>
+<p>For truncated power series, you might be interested in Piranha&#8217;s truncated multiplication:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">p_type</span> <span class="n">x</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">},</span> <span class="n">y</span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">};</span>
+<span class="n">p_type</span><span class="o">::</span><span class="n">set_auto_truncate_degree</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="c1">// This will print only x*y, the term x**3 has been discarded.</span>
+</pre></div>
+</div>
+<p>Polynomials have a static method <code class="docutils literal"><span class="pre">set_auto_truncate_degree()</span></code> that sets a global variable indicating the maximum total degree allowed during polynomial multiplication. All terms generated by a polynomial multiplication of degree higher than 2 will be discarded. The truncation degree can also be specified only for certain variables:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">p_type</span> <span class="n">x</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">},</span> <span class="n">y</span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">};</span>
+<span class="n">p_type</span><span class="o">::</span><span class="n">set_auto_truncate_degree</span><span class="p">(</span><span class="mi">2</span><span class="p">,{</span><span class="s">&quot;x&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="c1">// This will print only x*x*y, the term x**3 has been discarded.</span>
+</pre></div>
+</div>
+<p>That is, we want to discard all terms whose degree in <code class="docutils literal"><span class="pre">x</span></code> is higher than 2.</p>
+<p>Instead of automatically truncating, the <a class="reference external" href="https://github.com/darioizzo/audi">AuDI project</a> uses a dedicated  polynomial object which embeds the maximum degree allowed.</p>
+</div>
+<div class="section" id="performance">
+<h2>Performance<a class="headerlink" href="#performance" title="Permalink to this headline">¶</a></h2>
+<p>Piranha has also another format to represent monomials, called <code class="docutils literal"><span class="pre">k_monomial</span></code>, that compresses an array of integral values into a single integral (a bit like bit packing in low-level C programming):</p>
+<div class="highlight-c++"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">p_type</span> <span class="o">=</span> <span class="n">polynomial</span><span class="o">&lt;</span><span class="n">integer</span><span class="p">,</span><span class="n">k_monomial</span><span class="o">&gt;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This provides the best performance, but the exponents range and number of possible variables representable in a monomial are limited.</p>
+<p>Internally, Piranha stores the collection of terms using a hash table and it is thus optimised to deal with large sparse multivariate polynomials. That is, Piranha will probably be suboptimal with respect to a dense univariate representation if all you want to do is to represent the MacLaurin expansion of sin(x). Please see this page with recent benchmarks on Piranha&#8217;s performance when multiplying very large polynomials:</p>
+<p><a class="reference external" href="http://bluescarni.github.io/new-series-multipliers-in-piranha.html">http://bluescarni.github.io/new-series-multipliers-in-piranha.html</a></p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="reference.html" class="btn btn-neutral float-right" title="Complete reference" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="fundamental_types.html" class="btn btn-neutral" title="Fundamental numerical types in Piranha" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2009-2016, Francesco Biscani.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
