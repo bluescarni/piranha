@@ -44,7 +44,7 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
     git config --global user.name "Travis CI"
     git config --global user.email "bluescarni@gmail.com"
     set +x
-    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages 2>&1 |cat - | > /dev/null
+    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages -q
     set -x
     cd piranha_gh_pages
     git checkout -b gh-pages --track origin/gh-pages;
@@ -52,7 +52,16 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
     mv /home/travis/sphinx .;
     git add sphinx;
     git commit -m "Update Sphinx documentation [skip ci]."
-    git push 2>&1 |cat - | > /dev/null
+    PUSH_COUNTER=0
+    until git push -q
+    do
+        git pull -q
+        PUSH_COUNTER=$((PUSH_COUNTER + 1))
+        if [ "$PUSH_COUNTER" -gt 3 ]; then
+            echo "Push failed, aborting."
+            exit 1
+        fi
+    done
 elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
     cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DBUILD_TESTS=no -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.2 -DPYTHON_LIBRARY=/usr/lib/libpython3.2mu.so ../;
     make install;
@@ -96,7 +105,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     git config --global user.name "Travis CI"
     git config --global user.email "bluescarni@gmail.com"
     set +x
-    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages 2>&1 |cat - | > /dev/null
+    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages -q
     set -x
     cd piranha_gh_pages
     git checkout -b gh-pages --track origin/gh-pages;
