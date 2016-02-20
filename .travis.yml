@@ -23,6 +23,7 @@ addons:
     - g++-4.8
     - clang-3.8
     - doxygen
+    - dot
 
 matrix:
   include:

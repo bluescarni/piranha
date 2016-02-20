@@ -50,4 +50,5 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
         echo "Doxygen produced some warnings/errors";
         return 1;
     fi
+    echo "Doxygen ran successfully";
 fi
