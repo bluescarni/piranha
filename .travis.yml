@@ -36,22 +36,22 @@ env:
 
 matrix:
   include:
-    #- compiler: gcc
-      #env: BUILD_TYPE="Release"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Release"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    - compiler: gcc
+      env: BUILD_TYPE="Release"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    - compiler: clang
+      env: BUILD_TYPE="Release"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
     - compiler: clang
       env: BUILD_TYPE="Python2"
     - compiler: clang
