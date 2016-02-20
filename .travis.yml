@@ -29,32 +29,34 @@ addons:
     - cmake
     - texlive
 
-matrix:
-  include:
-    #- compiler: gcc
-      #env: BUILD_TYPE="Release"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: gcc
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Release"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    #- compiler: clang
-      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Python2"
-    #- compiler: clang
-      #env: BUILD_TYPE="Python3"
-    #- compiler: clang
-      #env: BUILD_TYPE="Tutorial"
-    - env: BUILD_TYPE="Doxygen"
-      secure: "l8Zz7Ga8e1AWz1xw6VeiqFon/dYeJEkpb/tVF8c3UhB9s56gYxcdov0BoMmbiP6+2BAotajdH0hc5l54Xc28IG1++rC53iTuGTH+MEiNrqsee79jf3t2sm2Y63lleZ7Ylc6WL1rdgCCyl92wmUCW4x3IdbkL3foEVnbM1BP1qYHHoSggwaSFiti0HrryrJf777Yp5sdiYAF2tNrbYUGCJ4pyC5CTijAywLU0SY74Vi+PZmaRp4tVFa/iPE5Pqxyr6n9c4Ty1R9m+MphwhwmvNzhcQIKNlHmTZBQxdNtLIxBwa0F9dqwWIf4a+peZsQJIVOxHWkzfK9TulnYnSozC9FbVoRDiHsd0hofGREb6zXQXeVIN/78TAOXCMlHuFGlnYhWlBe9fB7Rro+A0kyFzXWFBCxP7mtO6r3l+BnbsXdswDdN0Nmrh64eIAuYjLXaTAr9qAwzxubWix9/mKfjSHWKjvgBo7HknRTegwgxwLuEbV7I5Is13g7nKmN7zNrVYqgAMJLYIcjwFPcNAvE5UQoxgLLsc+Zi+3/mdTHStd42xUecKYaCF9sd6rK43eL/jxlnEma6g91hN7JCR6h3e0pkuvznHyTuJezCj/FJvB2IPrji/cKCsKkPBMRKW5LeQH7N8H0iZ8Jx5z8xw9s/J4VyCun+aEJSJ2hl1yuwFoNg="
+env:
+  global:
+    - secure: "l8Zz7Ga8e1AWz1xw6VeiqFon/dYeJEkpb/tVF8c3UhB9s56gYxcdov0BoMmbiP6+2BAotajdH0hc5l54Xc28IG1++rC53iTuGTH+MEiNrqsee79jf3t2sm2Y63lleZ7Ylc6WL1rdgCCyl92wmUCW4x3IdbkL3foEVnbM1BP1qYHHoSggwaSFiti0HrryrJf777Yp5sdiYAF2tNrbYUGCJ4pyC5CTijAywLU0SY74Vi+PZmaRp4tVFa/iPE5Pqxyr6n9c4Ty1R9m+MphwhwmvNzhcQIKNlHmTZBQxdNtLIxBwa0F9dqwWIf4a+peZsQJIVOxHWkzfK9TulnYnSozC9FbVoRDiHsd0hofGREb6zXQXeVIN/78TAOXCMlHuFGlnYhWlBe9fB7Rro+A0kyFzXWFBCxP7mtO6r3l+BnbsXdswDdN0Nmrh64eIAuYjLXaTAr9qAwzxubWix9/mKfjSHWKjvgBo7HknRTegwgxwLuEbV7I5Is13g7nKmN7zNrVYqgAMJLYIcjwFPcNAvE5UQoxgLLsc+Zi+3/mdTHStd42xUecKYaCF9sd6rK43eL/jxlnEma6g91hN7JCR6h3e0pkuvznHyTuJezCj/FJvB2IPrji/cKCsKkPBMRKW5LeQH7N8H0iZ8Jx5z8xw9s/J4VyCun+aEJSJ2hl1yuwFoNg="
+  matrix:
+    include:
+      #- compiler: gcc
+        #env: BUILD_TYPE="Release"
+      #- compiler: gcc
+        #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+      #- compiler: gcc
+        #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+      #- compiler: gcc
+        #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+      #- compiler: clang
+        #env: BUILD_TYPE="Release"
+      #- compiler: clang
+        #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+      #- compiler: clang
+        #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+      #- compiler: clang
+        #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+      #- compiler: clang
+        #env: BUILD_TYPE="Python2"
+      #- compiler: clang
+        #env: BUILD_TYPE="Python3"
+      #- compiler: clang
+        #env: BUILD_TYPE="Tutorial"
+      - env: BUILD_TYPE="Doxygen"
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then

@@ -57,10 +57,11 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     mv html /home/travis/doxygen;
     # Checkout a new copy of the repo, for pushing to gh-pages.
     cd ../../../;
-    git clone https://${GH_TOKEN}@github.com/bluescarni/piranha.git piranha_gh_pages
+    git config --global push.default simple
+    git config --global user.name "Travis CI"
+    git config --global user.email "bluescarni@gmail.com"
+    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages
     cd piranha_gh_pages
-    git config user.name "Travis CI"
-    git config user.email "bluescarni@gmail.com"
     git checkout -b gh-pages --track origin/gh-pages;
     git rm -fr doxygen;
     mv /home/travis/doxygen .;
