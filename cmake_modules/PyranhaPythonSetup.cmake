@@ -29,9 +29,8 @@
 # NOTE: if and when we decide to support OSX, recover some of the quirks in the PaGMO
 # version of this file. Let's keep it basic for the moment.
 
-INCLUDE(FindPythonLibs)
-# We need the Python interpreter to figure out Python's version in certain cases.
 INCLUDE(FindPythonInterp)
+INCLUDE(FindPythonLibs)
 
 # Find Python libraries
 FIND_PACKAGE(PythonLibs REQUIRED)
