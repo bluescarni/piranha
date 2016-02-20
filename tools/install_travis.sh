@@ -47,7 +47,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     cmake -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
     make;
     make install;
-    cd ../../doc/doxygen;
+    cd ../../../doc/doxygen;
     if [[ $(/home/travis/.local/bin/doxygen 2>&1 |cat -| > /dev/null) ]]; then
         echo "Doxygen produced some warnings/errors";
         return 1;
