@@ -10,4 +10,4 @@ in celestial mechanics.
 Piranha is free software and may be freely copied on the terms contained in the
 files COPYING*.
 
-The (work-in-progress) documentation is available [here](http://bluescarni.github.io/piranha/).
+The (work-in-progress) documentation is available [here](http://bluescarni.github.io/piranha/sphinx/).
