@@ -41,13 +41,13 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     # Configure.
     cmake ../;
     # Install recent version of Doxygen locally.
-    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.src.tar.gz";
-    tar xzf doxygen-1.8.11.src.tar.gz;
-    cd doxygen-1.8.11;
+    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.10.src.tar.gz";
+    tar xzf doxygen-1.8.10.src.tar.gz;
+    cd doxygen-1.8.10;
     mkdir build;
     cd build;
     cmake -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
-    make;
+    make -j2;
     make install;
     # Now run it.
     cd ../../../doc/doxygen;
