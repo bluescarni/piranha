@@ -41,9 +41,9 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     # Configure.
     cmake ../;
     # Install recent version of Doxygen locally.
-    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.10.src.tar.gz";
-    tar xzf doxygen-1.8.10.src.tar.gz;
-    cd doxygen-1.8.10;
+    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.src.tar.gz";
+    tar xzf doxygen-1.8.11.src.tar.gz;
+    cd doxygen-1.8.11;
     mkdir build;
     cd build;
     cmake -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
@@ -51,7 +51,12 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     make install;
     # Now run it.
     cd ../../../doc/doxygen;
-    /home/travis/.local/bin/doxygen;
+    export DOXYGEN_OUTPUT=`/home/travis/.local/bin/doxygen 2>&1 >/dev/null`;
+    if [[ "${DOXYGEN_OUTPUT}" != "" ]]; then
+        echo "Doxygen encountered some problem:";
+        echo "${DOXYGEN_OUTPUT}";
+        exit 1;
+    fi
     echo "Doxygen ran successfully";
     # Move out the resulting documentation.
     mv html /home/travis/doxygen;
