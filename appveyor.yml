@@ -48,7 +48,7 @@ build_script:
 
 - cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=%SPLIT_TEST_NUM% -DBoost_ADDITIONAL_VERSIONS=1.60.0;1.60 -DBoost_USE_MULTITHREADED=yes -DBoost_USE_STATIC_LIBS=yes -DCMAKE_PREFIX_PATH=C:\bzip2 ..
 #- cmake --build . --target install
-- mingw32-make -j2 install
+- mingw32-make install
 
 test_script:
 - if [%BUILD_TYPE%]==[Release] ctest -E "gastineau|perminov|serialization" -V;
