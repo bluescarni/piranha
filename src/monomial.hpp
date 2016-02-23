@@ -291,6 +291,22 @@ class monomial: public array_key<T,monomial<T,S>,S>
 				piranha_throw(std::invalid_argument,"invalid monomial");
 			}
 		}
+		/// Constructor from range.
+		/**
+		 * \note
+		 * This constructor is enabled only if \p Iterator is an input iterator whose value type
+		 * can be cast safely to \p T.
+		 *
+		 * This constructor will copy the elements from the range defined by \p begin and \p end into \p this,
+		 * using piranha::safe_cast() for any necessary type conversion.
+		 *
+		 * @param[in] begin beginning of the range.
+		 * @param[in] end end of the range.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::safe_cast(),
+		 * - push_back().
+		 */
 		template <typename Iterator, it_ctor_enabler<Iterator> = 0>
 		explicit monomial(Iterator begin, Iterator end)
 		{

@@ -132,6 +132,33 @@ struct constructor_tester
 			struct foo {};
 			BOOST_CHECK((!std::is_constructible<monomial_type,foo *, foo *,symbol_set>::value));
 			BOOST_CHECK((std::is_constructible<monomial_type,int *, int *,symbol_set>::value));
+			// From range and symbol set.
+			v1.clear();
+			m0 = monomial_type(v1.begin(),v1.end());
+			BOOST_CHECK_EQUAL(m0.size(),0u);
+			v1 = {-1};
+			m0 = monomial_type(v1.begin(),v1.end());
+			BOOST_CHECK_EQUAL(m0.size(),1u);
+			BOOST_CHECK_EQUAL(m0[0],-1);
+			v1 = {-1,2};
+			m0 = monomial_type(v1.begin(),v1.end());
+			BOOST_CHECK_EQUAL(m0.size(),2u);
+			BOOST_CHECK_EQUAL(m0[0],-1);
+			BOOST_CHECK_EQUAL(m0[1],2);
+			l1.clear();
+			m0 = monomial_type(l1.begin(),l1.end());
+			BOOST_CHECK_EQUAL(m0.size(),0u);
+			l1 = {-1};
+			m0 = monomial_type(l1.begin(),l1.end());
+			BOOST_CHECK_EQUAL(m0.size(),1u);
+			BOOST_CHECK_EQUAL(m0[0],-1);
+			l1 = {-1,2};
+			m0 = monomial_type(l1.begin(),l1.end());
+			BOOST_CHECK_EQUAL(m0.size(),2u);
+			BOOST_CHECK_EQUAL(m0[0],-1);
+			BOOST_CHECK_EQUAL(m0[1],2);
+			BOOST_CHECK((!std::is_constructible<monomial_type,foo *, foo *>::value));
+			BOOST_CHECK((std::is_constructible<monomial_type,int *, int *>::value));
 			// Constructor from arguments vector.
 			monomial_type m2 = monomial_type(symbol_set{});
 			BOOST_CHECK_EQUAL(m2.size(),unsigned(0));
