@@ -291,6 +291,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 				piranha_throw(std::invalid_argument,"invalid monomial");
 			}
 		}
+		template <typename Iterator, it_ctor_enabler<Iterator> = 0>
+		explicit monomial(Iterator begin, Iterator end)
+		{
+			for (; begin != end; ++begin) {
+				this->push_back(safe_cast<T>(*begin));
+			}
+		}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
 		~monomial()
