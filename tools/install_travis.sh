@@ -37,6 +37,14 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
         exit 1;
     fi
     echo "Sphinx ran successfully";
+    if [[ "${TRAVIS_PULL_REQUEST}" == "true" ]]; then
+        echo "Testing a pull request, the generated documentation will not be uploaded.";
+        exit 0;
+    fi
+    if [[ "${TRAVIS_BRANCH}" != "master" ]]; then
+        echo "Branch is not master, the generated documentation will not be uploaded.";
+        exit 0;
+    fi
     # Move out the resulting documentation.
     mv _build/html /home/travis/sphinx;
     # Checkout a new copy of the repo, for pushing to gh-pages.
@@ -100,6 +108,14 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
         exit 1;
     fi
     echo "Doxygen ran successfully";
+    if [[ "${TRAVIS_PULL_REQUEST}" == "true" ]]; then
+        echo "Testing a pull request, the generated documentation will not be uploaded.";
+        exit 0;
+    fi
+    if [[ "${TRAVIS_BRANCH}" != "master" ]]; then
+        echo "Branch is not master, the generated documentation will not be uploaded.";
+        exit 0;
+    fi
     # Move out the resulting documentation.
     mv html /home/travis/doxygen;
     # Checkout a new copy of the repo, for pushing to gh-pages.
