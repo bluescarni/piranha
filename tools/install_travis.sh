@@ -37,7 +37,7 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
         exit 1;
     fi
     echo "Sphinx ran successfully";
-    if [[ "${TRAVIS_PULL_REQUEST}" == "true" ]]; then
+    if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
         echo "Testing a pull request, the generated documentation will not be uploaded.";
         exit 0;
     fi
@@ -62,7 +62,7 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
     git add sphinx;
     # We assume here that a failure in commit means that there's nothing
     # to commit.
-    git commit -m "Update Sphinx documentation [skip ci]." || exit 0
+    git commit -m "Update Sphinx documentation, commit ${TRAVIS_COMMIT} [skip ci]." || exit 0
     PUSH_COUNTER=0
     until git push -q
     do
@@ -108,7 +108,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
         exit 1;
     fi
     echo "Doxygen ran successfully";
-    if [[ "${TRAVIS_PULL_REQUEST}" == "true" ]]; then
+    if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
         echo "Testing a pull request, the generated documentation will not be uploaded.";
         exit 0;
     fi
@@ -133,7 +133,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     git add doxygen;
     # We assume here that a failure in commit means that there's nothing
     # to commit.
-    git commit -m "Update Doxygen documentation [skip ci]." || exit 0
+    git commit -m "Update Doxygen documentation, commit ${TRAVIS_COMMIT} [skip ci]." || exit 0
     PUSH_COUNTER=0
     until git push -q
     do
