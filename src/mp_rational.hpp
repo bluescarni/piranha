@@ -960,8 +960,8 @@ class mp_rational
 			// Consider this as a possible optimisation in the future.
 			const int_type gcd = detail::gcd(m_num,m_den);
 			piranha_assert(!math::is_zero(gcd));
-			m_num /= gcd;
-			m_den /= gcd;
+			int_type::_divexact(m_num,m_num,gcd);
+			int_type::_divexact(m_den,m_den,gcd);
 			// Fix mismatch in signs.
 			if (m_den.sign() == -1) {
 				m_num.negate();

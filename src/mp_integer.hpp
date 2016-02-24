@@ -3845,6 +3845,71 @@ class mp_integer
 			// NOTE: this is actually a macro.
 			return mpz_cmp_ui(&m_int.g_dy(),1ul) == 0;
 		}
+		/** @name Low-level interface
+		 * Low-level methods.
+		 */
+		//@{
+		/// Exact division.
+		/**
+		 * This static method will set \p out to the quotient of \p n1 and \p n2. \p n2 must divide
+		 * \p n1 exactly, otherwise the behaviour will be undefined.
+		 *
+		 * @param[out] out the output value.
+		 * @param[in] n1 the numerator.
+		 * @param[in] n2 the denominator.
+		 *
+		 * @throws piranha::zero_division_error if \p n2 is zero.
+		 */
+		static void _divexact(mp_integer &out, const mp_integer &n1, const mp_integer &n2)
+		{
+			if (unlikely(math::is_zero(n2))) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			piranha_assert(math::is_zero(n1 % n2));
+			bool s0 = out.is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s1 && s2) {
+				if (!s0) {
+					// NOTE: this is safe, as out is not static while n1 and n2 are,
+					// and thus out cannot overlap with n1 or n2.
+					out = mp_integer{};
+				}
+				mp_integer r;
+				// NOTE: the static division routine here does both division and remainder, we
+				// need to check if there's performance to be gained by doing only the division.
+				out.m_int.g_st().div(out.m_int.g_st(),r.m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st());
+				return;
+			}
+			// out will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				out.m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			piranha_assert(mask > 0u);
+			switch (mask) {
+				// NOTE: case 0 here is not possible as it would mean that n1 and n2 are both static,
+				// but we handled the case above.
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_divexact(&out.m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_divexact(&out.m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_divexact(&out.m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+		}
+		//@}
 	private:
 		detail::integer_union<NBits> m_int;
 };
