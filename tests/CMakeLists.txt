@@ -16,8 +16,8 @@ add_definitions(-DPIRANHA_TESTS_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Setup for the split compilation of tests.
 SET(TEST_NUM "0")
-SET(TEST_NSPLIT "3")
-SET(PIRANHA_TEST_SPLIT no CACHE INTERNAL "Split compilation of piranha test cases for CI")
+SET(TEST_NSPLIT "3" CACHE INTERNAL "Number of test chunks.")
+SET(PIRANHA_TEST_SPLIT no CACHE INTERNAL "Split compilation of piranha test cases for CI.")
 
 MACRO(ADD_PIRANHA_TESTCASE arg1)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
