@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/math.hpp"
 #include "../src/type_traits.hpp"
 
@@ -643,4 +644,82 @@ struct ternary_tester
 BOOST_AUTO_TEST_CASE(mp_integer_ternary_test)
 {
 	boost::mpl::for_each<size_types>(ternary_tester());
+}
+struct divexact_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = mp_integer<T::value>;
+		// A few simple checks.
+		int_type out, n1{1}, n2{1};
+		int_type::_divexact(out,n1,n2);
+		BOOST_CHECK(out.is_static());
+		BOOST_CHECK_EQUAL(out,1);
+		n1 = 6;
+		n2 = -3;
+		int_type::_divexact(out,n1,n2);
+		BOOST_CHECK(out.is_static());
+		BOOST_CHECK_EQUAL(out,-2);
+		// Overlapping n1, n2.
+		int_type::_divexact(out,n1,n1);
+		BOOST_CHECK(out.is_static());
+		BOOST_CHECK_EQUAL(out,1);
+		// Overlapping out, n1.
+		int_type::_divexact(n1,n1,n2);
+		BOOST_CHECK(n1.is_static());
+		BOOST_CHECK_EQUAL(n1,-2);
+		// Overlapping out, n2.
+		n1 = 6;
+		int_type::_divexact(n2,n1,n2);
+		BOOST_CHECK(n2.is_static());
+		BOOST_CHECK_EQUAL(n2,-2);
+		// All overlap.
+		int_type::_divexact(n1,n1,n1);
+		BOOST_CHECK(n1.is_static());
+		BOOST_CHECK_EQUAL(n1,1);
+		// Random testing.
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> p_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			int_type n1(int_dist(rng)), n2(int_dist(rng)), out, n1n2(n1*n2);
+			if (math::is_zero(n1) || math::is_zero(n2)) {
+				continue;
+			}
+			// Promote randomly.
+			if (p_dist(rng) && n1.is_static()) {
+				n1.promote();
+			}
+			if (p_dist(rng) && n2.is_static()) {
+				n2.promote();
+			}
+			if (p_dist(rng) && n1n2.is_static()) {
+				n1n2.promote();
+			}
+			if (p_dist(rng)) {
+				out.promote();
+			}
+			int_type::_divexact(out,n1n2,n2);
+			BOOST_CHECK_EQUAL(out,n1);
+			// Try overlapping.
+			int_type::_divexact(out,n1,n1);
+			BOOST_CHECK_EQUAL(out,1);
+			int_type::_divexact(n1,n1n2,n1);
+			BOOST_CHECK_EQUAL(n1,n2);
+			int_type::_divexact(n1,-2*n1,n1);
+			BOOST_CHECK_EQUAL(n1,-2);
+			int_type::_divexact(n1,n1,n1);
+			BOOST_CHECK_EQUAL(n1,1);
+			// Try with zero.
+			int_type::_divexact(out,int_type{},n1n2);
+			BOOST_CHECK_EQUAL(out,0);
+		}
+		// Try the exception.
+		BOOST_CHECK_THROW(int_type::_divexact(n1,n1,int_type{}),zero_division_error);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_divexact_test)
+{
+	boost::mpl::for_each<size_types>(divexact_tester());
 }
