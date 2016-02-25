@@ -719,23 +719,6 @@ class mp_rational
 			}
 			canonicalise();
 		}
-		/// Constructor from \p mpq_t.
-		/**
-		 * This constructor will construct the numerator from the numerator of \p q,
-		 * the denominator from the denominator of \p q. This constructor assumes
-		 * that \p q is already in canonical form. If that is
-		 * not the case, the behaviour will be undefined.
-		 *
-		 * @param[in] q input GMP rational.
-		 *
-		 * @throws piranha::zero_division_error if the denominator is zero.
-		 */
-		explicit mp_rational(const ::mpq_t q):m_num(mpq_numref(q)),m_den(mpq_denref(q))
-		{
-			if (unlikely(m_den.sign() == 0)) {
-				piranha_throw(zero_division_error,"zero denominator");
-			}
-		}
 		/// Generic constructor.
 		/**
 		 * \note
@@ -1006,10 +989,27 @@ class mp_rational
 			return convert_to_impl<T>();
 		}
 		/** @name Low-level interface
-		 * Low-level methods. These methods allow direct mutable access to numerator and
+		 * Low-level methods. These methods allow construction from \p mpq_t and direct mutable access to numerator and
 		 * denominator, and they will not keep the rational in canonical form.
 		 */
 		//@{
+		/// Constructor from \p mpq_t.
+		/**
+		 * This constructor will construct the numerator from the numerator of \p q,
+		 * the denominator from the denominator of \p q. This constructor assumes
+		 * that \p q is already in canonical form. If that is
+		 * not the case, the behaviour will be undefined.
+		 *
+		 * @param[in] q input GMP rational.
+		 *
+		 * @throws piranha::zero_division_error if the denominator is zero.
+		 */
+		explicit mp_rational(const ::mpq_t q):m_num(mpq_numref(q)),m_den(mpq_denref(q))
+		{
+			if (unlikely(m_den.sign() == 0)) {
+				piranha_throw(zero_division_error,"zero denominator");
+			}
+		}
 		/// Mutable reference to the numerator.
 		/**
 		 * @return mutable reference to the numerator.
