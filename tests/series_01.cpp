@@ -66,7 +66,7 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,rational,real> cf_types;
+typedef boost::mpl::vector<double,integer,rational> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
 template <typename Cf, typename Expo>
@@ -686,8 +686,8 @@ struct stream_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
-			// Avoid the stream tests with floating-point and similar, because of messy output.
-			if (std::is_same<Cf,double>::value || std::is_same<Cf,real>::value) {
+			// Avoid the stream tests with floating-point, because of messy output.
+			if (std::is_same<Cf,double>::value) {
 				return;
 			}
 			typedef g_series_type<Cf,Expo> p_type1;
