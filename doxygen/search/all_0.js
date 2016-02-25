@@ -4,6 +4,7 @@ var searchData=
   ['_5fbucket_5ffrom_5fhash',['_bucket_from_hash',['../classpiranha_1_1hash__set.html#a6c3fb5556ef2c91a3d69bb90956b0bd2',1,'piranha::hash_set']]],
   ['_5fcontainer',['_container',['../classpiranha_1_1series.html#a2af49084d17c39794e0b6802bcc1b530',1,'piranha::series::_container()'],['../classpiranha_1_1series.html#ad2f73e5e72cb6dfa5e11076c902aff7a',1,'piranha::series::_container() const ']]],
   ['_5fden',['_den',['../classpiranha_1_1mp__rational.html#a64242d8c09513c73149325f39b7a4480',1,'piranha::mp_rational']]],
+  ['_5fdivexact',['_divexact',['../classpiranha_1_1mp__integer.html#a39a6558af0148493bb0c1599cf71c22b',1,'piranha::mp_integer']]],
   ['_5ferase',['_erase',['../classpiranha_1_1hash__set.html#a0f392934e0c83ee9b02e353970411d71',1,'piranha::hash_set']]],
   ['_5ffind',['_find',['../classpiranha_1_1hash__set.html#aa747b430fe16e4cf93455d89eb715eb1',1,'piranha::hash_set']]],
   ['_5fget_5fbucket_5flist',['_get_bucket_list',['../classpiranha_1_1hash__set.html#af6f8ebcae6d7453d73599fe92c37f43b',1,'piranha::hash_set']]],

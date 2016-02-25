@@ -268,6 +268,12 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ab16d4a27b888cfe0531d747ab646003e"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__integer.html#ab16d4a27b888cfe0531d747ab646003e">gcd</a> (const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;a, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;b)</td></tr>
 <tr class="memdesc:ab16d4a27b888cfe0531d747ab646003e"><td class="mdescLeft">&#160;</td><td class="mdescRight">GCD.  <a href="#ab16d4a27b888cfe0531d747ab646003e">More...</a><br /></td></tr>
 <tr class="separator:ab16d4a27b888cfe0531d747ab646003e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Low-level interface</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><p>Low-level methods. </p>
+</div></td></tr>
+<tr class="memitem:a39a6558af0148493bb0c1599cf71c22b"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__integer.html#a39a6558af0148493bb0c1599cf71c22b">_divexact</a> (<a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;out, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;n1, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;n2)</td></tr>
+<tr class="memdesc:a39a6558af0148493bb0c1599cf71c22b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exact division.  <a href="#a39a6558af0148493bb0c1599cf71c22b">More...</a><br /></td></tr>
+<tr class="separator:a39a6558af0148493bb0c1599cf71c22b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
@@ -580,6 +586,67 @@ template&lt;int NBits = 0&gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a39a6558af0148493bb0c1599cf71c22b"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int NBits = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void <a class="el" href="classpiranha_1_1mp__integer.html">piranha::mp_integer</a>&lt; NBits &gt;::_divexact </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>n1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>n2</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Exact division. </p>
+<p>This static method will set <code>out</code> to the quotient of <code>n1</code> and <code>n2</code>. <code>n2</code> must divide <code>n1</code> exactly, otherwise the behaviour will be undefined.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">out</td><td>the output value. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n1</td><td>the numerator. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n2</td><td>the denominator.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="structpiranha_1_1zero__division__error.html" title="Exception for signalling division by zero. ">piranha::zero_division_error</a></td><td>if <code>n2</code> is zero. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03863">3863</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="a88fb3b60aa00d3f9a416729384db07b7"></a>
 <div class="memitem">
 <div class="memproto">

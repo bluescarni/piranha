@@ -128,9 +128,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a6f248dee9ef50aa22ec830315addea6a"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__rational.html#a6f248dee9ef50aa22ec830315addea6a">mp_rational</a> (const I0 &amp;n, const I1 &amp;d)</td></tr>
 <tr class="memdesc:a6f248dee9ef50aa22ec830315addea6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from numerator/denominator pair.  <a href="#a6f248dee9ef50aa22ec830315addea6a">More...</a><br /></td></tr>
 <tr class="separator:a6f248dee9ef50aa22ec830315addea6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b87bedc5146b77da3bc9dd3a1fd160f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__rational.html#a8b87bedc5146b77da3bc9dd3a1fd160f">mp_rational</a> (const ::mpq_t q)</td></tr>
-<tr class="memdesc:a8b87bedc5146b77da3bc9dd3a1fd160f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from <code>mpq_t</code>.  <a href="#a8b87bedc5146b77da3bc9dd3a1fd160f">More...</a><br /></td></tr>
-<tr class="separator:a8b87bedc5146b77da3bc9dd3a1fd160f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0e34b5bb5edcc34a545a7bb2b9e5e71"><td class="memTemplParams" colspan="2">template&lt;typename T , generic_ctor_enabler&lt; T &gt;  = 0&gt; </td></tr>
 <tr class="memitem:ad0e34b5bb5edcc34a545a7bb2b9e5e71"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__rational.html#ad0e34b5bb5edcc34a545a7bb2b9e5e71">mp_rational</a> (const T &amp;x)</td></tr>
 <tr class="memdesc:ad0e34b5bb5edcc34a545a7bb2b9e5e71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic constructor.  <a href="#ad0e34b5bb5edcc34a545a7bb2b9e5e71">More...</a><br /></td></tr>
@@ -237,8 +234,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:ae5281e8bddf5e1fcf501b09d8f717df3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Binomial coefficient.  <a href="#ae5281e8bddf5e1fcf501b09d8f717df3">More...</a><br /></td></tr>
 <tr class="separator:ae5281e8bddf5e1fcf501b09d8f717df3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Low-level interface</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Low-level methods. These methods allow direct mutable access to numerator and denominator, and they will not keep the rational in canonical form. </p>
+<tr><td colspan="2"><div class="groupText"><p>Low-level methods. These methods allow construction from <code>mpq_t</code> and direct mutable access to numerator and denominator, and they will not keep the rational in canonical form. </p>
 </div></td></tr>
+<tr class="memitem:a8b87bedc5146b77da3bc9dd3a1fd160f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__rational.html#a8b87bedc5146b77da3bc9dd3a1fd160f">mp_rational</a> (const ::mpq_t q)</td></tr>
+<tr class="memdesc:a8b87bedc5146b77da3bc9dd3a1fd160f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from <code>mpq_t</code>.  <a href="#a8b87bedc5146b77da3bc9dd3a1fd160f">More...</a><br /></td></tr>
+<tr class="separator:a8b87bedc5146b77da3bc9dd3a1fd160f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a617ce9d7aa7fcec2b365f7ec32c964e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpiranha_1_1mp__rational.html#ac966f004ceb41b9e076abfd1ce286f4f">int_type</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__rational.html#a617ce9d7aa7fcec2b365f7ec32c964e5">_num</a> ()</td></tr>
 <tr class="memdesc:a617ce9d7aa7fcec2b365f7ec32c964e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mutable reference to the numerator.  <a href="#a617ce9d7aa7fcec2b365f7ec32c964e5">More...</a><br /></td></tr>
 <tr class="separator:a617ce9d7aa7fcec2b365f7ec32c964e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -420,49 +420,6 @@ template&lt;typename I0 , typename I1 , nd_ctor_enabler&lt; I0, I1 &gt;  = 0&gt;
 
 </div>
 </div>
-<a class="anchor" id="a8b87bedc5146b77da3bc9dd3a1fd160f"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int NBits = 0&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classpiranha_1_1mp__rational.html">piranha::mp_rational</a>&lt; NBits &gt;::<a class="el" href="classpiranha_1_1mp__rational.html">mp_rational</a> </td>
-          <td>(</td>
-          <td class="paramtype">const ::mpq_t&#160;</td>
-          <td class="paramname"><em>q</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Constructor from <code>mpq_t</code>. </p>
-<p>This constructor will construct the numerator from the numerator of <code>q</code>, the denominator from the denominator of <code>q</code>. This constructor assumes that <code>q</code> is already in canonical form. If that is not the case, the behaviour will be undefined.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">q</td><td>input GMP rational.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname"><a class="el" href="structpiranha_1_1zero__division__error.html" title="Exception for signalling division by zero. ">piranha::zero_division_error</a></td><td>if the denominator is zero. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00733">733</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="ad0e34b5bb5edcc34a545a7bb2b9e5e71"></a>
 <div class="memitem">
 <div class="memproto">
@@ -504,7 +461,7 @@ template&lt;typename T , generic_ctor_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00750">750</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00733">733</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -550,7 +507,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00768">768</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00751">751</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -593,7 +550,50 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00803">803</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00786">786</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a8b87bedc5146b77da3bc9dd3a1fd160f"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int NBits = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpiranha_1_1mp__rational.html">piranha::mp_rational</a>&lt; NBits &gt;::<a class="el" href="classpiranha_1_1mp__rational.html">mp_rational</a> </td>
+          <td>(</td>
+          <td class="paramtype">const ::mpq_t&#160;</td>
+          <td class="paramname"><em>q</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructor from <code>mpq_t</code>. </p>
+<p>This constructor will construct the numerator from the numerator of <code>q</code>, the denominator from the denominator of <code>q</code>. This constructor assumes that <code>q</code> is already in canonical form. If that is not the case, the behaviour will be undefined.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">q</td><td>input GMP rational.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="structpiranha_1_1zero__division__error.html" title="Exception for signalling division by zero. ">piranha::zero_division_error</a></td><td>if the denominator is zero. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l01007">1007</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -805,7 +805,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>This method will convert <code>this</code> to the canonical form, if needed.</p>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="classpiranha_1_1mp__rational.html#a3d27aae6bd4a658675d2d1844c4216bf" title="Canonicality check. ">piranha::mp_rational::is_canonical()</a>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00969">969</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00952">952</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -837,7 +837,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Note that the returned <code>mpq_view</code> instance can only be move-constructed (the other constructors and the assignment operators are disabled). Additionally, the returned object and the pointer might reference internal data belonging to <code>this</code>, and they can thus be used safely only during the lifetime of <code>this</code>. Any modification to <code>this</code> will also invalidate the view and the pointer.</p>
 <dl class="section return"><dt>Returns</dt><dd>an <code>mpq</code> view of <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00939">939</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00922">922</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -900,7 +900,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>If low-level methods are not used, this function will always return <code>true</code>.</p>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> if <code>this</code> is in canonical form, <code>false</code> otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00952">952</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00935">935</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -940,7 +940,7 @@ template&lt;typename T , cast_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l01004">1004</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00987">987</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -1406,7 +1406,7 @@ template&lt;typename T , generic_ctor_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00840">840</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00823">823</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -1450,7 +1450,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00855">855</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00838">838</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -1494,7 +1494,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00870">870</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00853">853</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -2244,7 +2244,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00887">887</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00870">870</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
@@ -2567,7 +2567,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00907">907</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__rational_8hpp_source.html#l00890">890</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>
