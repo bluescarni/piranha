@@ -129,6 +129,8 @@ struct is_real_interoperable_type
 // - For series evaluation, we need to be careful performance-wise with the possible conversions that might go
 //   on when mixing real with other types. E.g., pow(real,int) when evaluating polynomials. We need to make sure
 //   the conversions are as fast as possible.
+// - As it stands, this class is not sortable because moved-from reals cannot be compared. For use in std::sort,
+//   we should add special casing for moved-from objects.
 class real: public detail::real_base<>
 {
 		// Shortcut for interop type detector.
