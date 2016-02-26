@@ -651,6 +651,7 @@ struct divexact_tester
 	void operator()(const T &)
 	{
 		using int_type = mp_integer<T::value>;
+		{
 		// A few simple checks.
 		int_type out, n1{1}, n2{1};
 		int_type::_divexact(out,n1,n2);
@@ -678,6 +679,9 @@ struct divexact_tester
 		int_type::_divexact(n1,n1,n1);
 		BOOST_CHECK(n1.is_static());
 		BOOST_CHECK_EQUAL(n1,1);
+		// Try the exception.
+		BOOST_CHECK_THROW(int_type::_divexact(n1,n1,int_type{}),zero_division_error);
+		}
 		// Random testing.
 		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		std::uniform_int_distribution<int> p_dist(0,1);
@@ -714,8 +718,6 @@ struct divexact_tester
 			int_type::_divexact(out,int_type{},n1n2);
 			BOOST_CHECK_EQUAL(out,0);
 		}
-		// Try the exception.
-		BOOST_CHECK_THROW(int_type::_divexact(n1,n1,int_type{}),zero_division_error);
 	}
 };
 
