@@ -80,7 +80,7 @@ after_success:
     - if [[ "${BUILD_TYPE}" == "Debug" && "${PIRANHA_COMPILER}" == "clang" ]]; then
           pip install --user cpp-coveralls;
           cd tests;
-          coveralls --gcov llvm-cov --encoding iso-8859-1 || echo 'Coveralls upload failed.';
+          coveralls --gcov llvm-cov --gcov-options gcov || echo 'Coveralls upload failed.';
       fi
 notifications:
   email: false
