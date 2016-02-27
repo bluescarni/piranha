@@ -827,4 +827,23 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
 	BOOST_CHECK(!has_mul3<std::vector<int>>::value);
 	BOOST_CHECK(!has_mul3<char *>::value);
 	}
+	{
+	// Division.
+	BOOST_CHECK(has_div3<int>::value);
+	int i1 = 0;
+	math::div3(i1,6,3);
+	BOOST_CHECK_EQUAL(i1,2);
+	BOOST_CHECK(has_div3<short>::value);
+	short s1 = -8;
+	math::div3(s1,short(-8),short(2));
+	BOOST_CHECK_EQUAL(s1,-4);
+	BOOST_CHECK(has_div3<float>::value);
+	BOOST_CHECK(has_div3<double>::value);
+	float f1 = 1.234f;
+	math::div3(f1,3.456f,8.145f);
+	BOOST_CHECK_EQUAL(f1,3.456f / 8.145f);
+	BOOST_CHECK(!has_div3<std::string>::value);
+	BOOST_CHECK(!has_div3<std::vector<int>>::value);
+	BOOST_CHECK(!has_div3<char *>::value);
+	}
 }

@@ -638,6 +638,66 @@ struct ternary_tester
 			BOOST_CHECK_EQUAL(out,n1 * n1);
 		}
 		}
+		{
+		// Division.
+		BOOST_CHECK(has_div3<int_type>::value);
+		int_type a, b, c;
+		BOOST_CHECK_THROW(a.div(b,c),zero_division_error);
+		BOOST_CHECK_EQUAL(a,0);
+		BOOST_CHECK(a.is_static());
+		a = 1;
+		b = -4;
+		c = 2;
+		a.div(b,c);
+		BOOST_CHECK_EQUAL(a,-2);
+		BOOST_CHECK(a.is_static());
+		// Try with promotion.
+		b = int_type(1) << (2u * limb_bits);
+		c = 2;
+		a.div(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(1) << (2u * limb_bits - 1u));
+		BOOST_CHECK(!a.is_static());
+		// Same with overlapping operands.
+		a = int_type(1) << (2u * limb_bits);
+		BOOST_CHECK(!a.is_static());
+		a.div(a,int_type(2));
+		BOOST_CHECK_EQUAL(a,int_type(1) << (2u * limb_bits - 1u));
+		BOOST_CHECK(!a.is_static());
+		// Random testing.
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> p_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			int_type n1(int_dist(rng)), n2(int_dist(rng)), out;
+			if (n1 == 0 || n2 == 0) {
+				continue;
+			}
+			// Promote randomly.
+			if (p_dist(rng) && n1.is_static()) {
+				n1.promote();
+			}
+			if (p_dist(rng) && n2.is_static()) {
+				n2.promote();
+			}
+			if (p_dist(rng)) {
+				out.promote();
+			}
+			out.div(n1,n2);
+			BOOST_CHECK_EQUAL(out,n1 / n2);
+			// Try the math:: counterpart.
+			math::div3(out,n1,n2);
+			BOOST_CHECK_EQUAL(out,n1 / n2);
+			// Try with overlapping operands.
+			out = n1;
+			out.div(out,n2);
+			BOOST_CHECK_EQUAL(out,n1 / n2);
+			out = n2;
+			out.div(n1,out);
+			BOOST_CHECK_EQUAL(out,n1 / n2);
+			out = n1;
+			out.div(out,out);
+			BOOST_CHECK_EQUAL(out,n1 / n1);
+		}
+		}
 	}
 };
 
@@ -645,6 +705,7 @@ BOOST_AUTO_TEST_CASE(mp_integer_ternary_test)
 {
 	boost::mpl::for_each<size_types>(ternary_tester());
 }
+
 struct divexact_tester
 {
 	template <typename T>

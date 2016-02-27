@@ -2320,6 +2320,79 @@ inline auto mul3(T &a, const T &b, const T &c) -> decltype(mul3_impl<T>()(a,b,c)
 	return mul3_impl<T>()(a,b,c);
 }
 
+/// Default functor for the implementation of piranha::math::div3().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism.
+ */
+template <typename T, typename Enable = void>
+struct div3_impl
+{
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled only if the expression <tt>a = b / c</tt> is well-formed.
+	 *
+	 * This operator will return the result of the expression <tt>a = b / c</tt>.
+	 *
+	 * @param[out] a the return value.
+	 * @param[in] b the first operand.
+	 * @param[in] c the second operand.
+	 *
+	 * @return <tt>a = b / c</tt>.
+	 *
+	 * @throws unspecified any exception thrown by the invoked binary and/or assignment operators
+	 * of \p U.
+	 */
+	template <typename U>
+	auto operator()(U &a, const U &b, const U &c) const -> decltype(a = b / c)
+	{
+		return a = b / c;
+	}
+};
+
+/// Specialisation of the piranha::math::div3() functor for integral types.
+/**
+ * This specialisation is activated when \p T is an integral type.
+ */
+template <typename T>
+struct div3_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * This operator will return the expression <tt>a = static_cast<T>(b / c)</tt>, with <tt>b / c</tt>
+	 * forcibly cast back to \p T in order to avoid compiler warnings with short integral types.
+	 *
+	 * @param[out] a the return value.
+	 * @param[in] b the first operand.
+	 * @param[in] c the second operand.
+	 *
+	 * @return <tt>a = static_cast<T>(b / c)</tt>.
+	 */
+	T &operator()(T &a, const T &b, const T &c) const
+	{
+		return a = static_cast<T>(b / c);
+	}
+};
+
+/// Ternary division.
+/**
+ * This function will set \p a to <tt>b / c</tt>. The actual implementation of this function is in the piranha::math::div3_impl functor's
+ * call operator.
+ *
+ * @param[out] a the return value.
+ * @param[in] b the first operand.
+ * @param[in] c the second operand.
+ *
+ * @return the value returned by the call operator of piranha::math::div3_impl.
+ *
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::div3_impl functor.
+ */
+template <typename T>
+inline auto div3(T &a, const T &b, const T &c) -> decltype(div3_impl<T>()(a,b,c))
+{
+	return div3_impl<T>()(a,b,c);
+}
+
 }
 
 /// Detect piranha::math::add3().
@@ -2379,6 +2452,24 @@ class has_mul3: detail::sfinae_types
 template <typename T>
 const bool has_mul3<T>::value;
 
+/// Detect piranha::math::div3().
+/**
+ * The type trait will be \p true if piranha::math::div3() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_div3: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &) -> decltype(math::div3(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_div3<T>::value;
 
 }
 

@@ -3218,6 +3218,66 @@ class mp_integer
 			}
 			return binary_div(x,y);
 		}
+		/// Division in ternary form.
+		/**
+		 * Sets \p this to <tt>n1 / n2</tt>. This form can be more efficient than the corresponding binary operator.
+		 *
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 *
+		 * @throws piranha::zero_division_error if \p n2 is zero.
+		 *
+		 * @return reference to \p this.
+		 */
+		mp_integer &div(const mp_integer &n1, const mp_integer &n2)
+		{
+			if (unlikely(math::is_zero(n2))) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s1 && s2) {
+				if (!s0) {
+					// NOTE: this is safe, as this is not static while n1 and n2 are,
+					// and thus this cannot overlap with n1 or n2.
+					*this = mp_integer{};
+				}
+				mp_integer r;
+				// NOTE: the static division routine here does both division and remainder, we
+				// need to check if there's performance to be gained by doing only the division.
+				m_int.g_st().div(m_int.g_st(),r.m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st());
+				return *this;
+			}
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			piranha_assert(mask > 0u);
+			switch (mask) {
+				// NOTE: case 0 here is not possible as it would mean that n1 and n2 are both static,
+				// but we handled the case above.
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_tdiv_q(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_tdiv_q(&m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_tdiv_q(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+			return *this;
+		}
 		/// In-place modulo operation.
 		/**
 		 * \note
@@ -4206,6 +4266,27 @@ struct mul3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::typ
 	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.mul(a,b))
 	{
 		return out.mul(a,b);
+	}
+};
+
+/// Specialisation of the piranha::math::div3() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct div3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the output of piranha::mp_integer::div().
+	 */
+	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.div(a,b))
+	{
+		return out.div(a,b);
 	}
 };
 
