@@ -36,30 +36,30 @@ env:
 
 matrix:
   include:
-    - compiler: gcc
-      env: BUILD_TYPE="Release"
-    - compiler: gcc
+    #- compiler: gcc
+      #env: BUILD_TYPE="Release"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Release"
+    - compiler: clang
       env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Python2"
-    - compiler: clang
-      env: BUILD_TYPE="Python3"
-    - compiler: clang
-      env: BUILD_TYPE="Tutorial"
-    - compiler: gcc
-      env: BUILD_TYPE="Doxygen"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Python2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Python3"
+    #- compiler: clang
+      #env: BUILD_TYPE="Tutorial"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Doxygen"
 
 install:
     - if [[ "${CC}" == "gcc" ]]; then
@@ -76,10 +76,11 @@ script:
     - mkdir build
     - cd build
     - source ../tools/install_travis.sh
-#after_success:
-    #- if [[ "${BUILD_TYPE}" == "Debug" && "${PIRANHA_COMPILER}" == "clang" ]]; then
-          #cd tests;
-          #/home/travis/.local/bin/coveralls --gcov-options '\-lp';
-      #fi
+after_success:
+    - if [[ "${BUILD_TYPE}" == "Debug" && "${PIRANHA_COMPILER}" == "clang" ]]; then
+          pip install --user cpp-coveralls;
+          cd tests;
+          coveralls --gcov llvm-cov --encoding iso-8859-1 || echo 'Coveralls upload failed.';
+      fi
 notifications:
   email: false
