@@ -3666,6 +3666,8 @@ class mp_integer
 		}
 		/// GCD.
 		/**
+		 * The returned value is guaranteed to be non-negative if both arguments are non-negative.
+		 *
 		 * @param[in] a first argument
 		 * @param[in] b second argument.
 		 *
