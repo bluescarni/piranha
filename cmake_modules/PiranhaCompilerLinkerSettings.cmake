@@ -152,3 +152,10 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-ftemplate-backtrace-limit=0)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fstack-protector-all)
 endif()
+
+# Clang specific configuration.
+if(CMAKE_COMPILER_IS_CLANGXX)
+	# Clang is better at this flag than GCC, which emits a questionable warning when compiling
+	# the Python bindings.
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Werror)
+endif()
