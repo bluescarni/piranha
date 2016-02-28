@@ -54,7 +54,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/binomial.hpp"
 #include "../src/config.hpp"
-#include "../src/detail/gcd.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
@@ -478,7 +477,7 @@ struct plus_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		using detail::gcd;
+		using math::gcd;
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
 		{
@@ -713,7 +712,7 @@ struct minus_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		using detail::gcd;
+		using math::gcd;
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
 		{

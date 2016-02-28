@@ -45,7 +45,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "binomial.hpp"
 #include "config.hpp"
-#include "detail/gcd.hpp"
 #include "detail/mp_rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -939,7 +938,7 @@ class mp_rational
 			// not throw either.
 			// NOTE: there should be no way to set a negative denominator, so no check is performed.
 			// The condition is checked in the dtor.
-			const auto gcd = detail::gcd(m_num,m_den);
+			const auto gcd = math::gcd(m_num,m_den);
 			return (m_num.sign() != 0 && (gcd == 1 || gcd == -1)) ||
 				(m_num.sign() == 0 && m_den == 1);
 		}
@@ -958,7 +957,7 @@ class mp_rational
 			}
 			// NOTE: here we can avoid the further division by gcd if it is one or -one.
 			// Consider this as a possible optimisation in the future.
-			const int_type gcd = detail::gcd(m_num,m_den);
+			const int_type gcd = math::gcd(m_num,m_den);
 			piranha_assert(!math::is_zero(gcd));
 			int_type::_divexact(m_num,m_num,gcd);
 			int_type::_divexact(m_den,m_den,gcd);

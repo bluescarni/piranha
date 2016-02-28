@@ -786,3 +786,140 @@ BOOST_AUTO_TEST_CASE(mp_integer_divexact_test)
 {
 	boost::mpl::for_each<size_types>(divexact_tester());
 }
+
+struct gcd_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type a, b, out;
+		// Check with two zeroes.
+		int_type::gcd(out,a,b);
+		BOOST_CHECK_EQUAL(out,0);
+		BOOST_CHECK(out.is_static());
+		a.promote();
+		int_type::gcd(out,a,b);
+		BOOST_CHECK_EQUAL(out,0);
+		int_type::gcd(out,b,a);
+		BOOST_CHECK_EQUAL(out,0);
+		BOOST_CHECK(!out.is_static());
+		b.promote();
+		a = 0;
+		out = 2;
+		int_type::gcd(out,a,b);
+		BOOST_CHECK_EQUAL(out,0);
+		int_type::gcd(out,b,a);
+		BOOST_CHECK_EQUAL(out,0);
+		BOOST_CHECK(!out.is_static());
+		a.promote();
+		out = 1;
+		int_type::gcd(out,a,b);
+		BOOST_CHECK_EQUAL(out,0);
+		int_type::gcd(out,b,a);
+		BOOST_CHECK_EQUAL(out,0);
+		BOOST_CHECK(!out.is_static());
+		// Only one zero.
+		a = 0;
+		b = 1;
+		out = 2;
+		int_type::gcd(out,a,b);
+		BOOST_CHECK_EQUAL(out,1);
+		int_type::gcd(out,b,a);
+		BOOST_CHECK_EQUAL(out,1);
+		BOOST_CHECK(out.is_static());
+		a.promote();
+		int_type::gcd(out,a,b);
+		BOOST_CHECK_EQUAL(out,1);
+		int_type::gcd(out,b,a);
+		BOOST_CHECK_EQUAL(out,1);
+		BOOST_CHECK(!out.is_static());
+		b.promote();
+		a = 0;
+		out = 0;
+		int_type::gcd(out,a,b);
+		BOOST_CHECK_EQUAL(out,1);
+		int_type::gcd(out,b,a);
+		BOOST_CHECK_EQUAL(out,1);
+		BOOST_CHECK(!out.is_static());
+		a.promote();
+		out = 0;
+		int_type::gcd(out,a,b);
+		BOOST_CHECK_EQUAL(out,1);
+		int_type::gcd(out,b,a);
+		BOOST_CHECK_EQUAL(out,1);
+		BOOST_CHECK(!out.is_static());
+		// Randomised testing.
+		std::uniform_int_distribution<int> pdist(0,1);
+		std::uniform_int_distribution<int> ndist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto aint = ndist(rng);
+			auto bint = ndist(rng);
+			a = int_type(aint);
+			b = int_type(bint);
+			int_type out;
+			if (pdist(rng) && a.is_static()) {
+				a.promote();
+			}
+			if (pdist(rng) && b.is_static()) {
+				b.promote();
+			}
+			if (pdist(rng)) {
+				out.promote();
+			}
+			int_type::gcd(out,a,b);
+			if (out == 0) {
+				continue;
+			}
+			BOOST_CHECK_EQUAL(a % out.abs(),0);
+			BOOST_CHECK_EQUAL(b % out.abs(),0);
+			const auto out_copy(out);
+			int_type::gcd(out,b,a);
+			BOOST_CHECK_EQUAL(out,out_copy);
+			// Check the math overload.
+			math::gcd3(out,a,b);
+			BOOST_CHECK_EQUAL(out,out_copy);
+			math::gcd3(out,out,out);
+			BOOST_CHECK_EQUAL(out,out_copy);
+			// Some tests with overlapping arguments.
+			int_type old_a(a), old_b(b);
+			int_type::gcd(a,a,b);
+			BOOST_CHECK_EQUAL(a,out_copy);
+			a = old_a;
+			math::gcd3(a,a,b);
+			BOOST_CHECK_EQUAL(a,out_copy);
+			a = old_a;
+			int_type::gcd(b,a,b);
+			BOOST_CHECK_EQUAL(b,out_copy);
+			b = old_b;
+			math::gcd3(b,a,b);
+			BOOST_CHECK_EQUAL(b,out_copy);
+			b = old_b;
+			int_type::gcd(a,a,a);
+			BOOST_CHECK_EQUAL(a.abs(),old_a.abs());
+			a = old_a;
+			math::gcd3(a,a,a);
+			BOOST_CHECK_EQUAL(a.abs(),old_a.abs());
+			a = old_a;
+			// Check the math overloads.
+			BOOST_CHECK((std::is_same<int_type,decltype(math::gcd(a,b))>::value));
+			BOOST_CHECK((std::is_same<int_type,decltype(math::gcd(a,1))>::value));
+			BOOST_CHECK((std::is_same<int_type,decltype(math::gcd(1,a))>::value));
+			BOOST_CHECK_EQUAL(math::gcd(a,b).abs(),out.abs());
+			BOOST_CHECK_EQUAL(math::gcd(aint,b).abs(),out.abs());
+			BOOST_CHECK_EQUAL(math::gcd(a,bint).abs(),out.abs());
+		}
+		// Check the math type traits.
+		BOOST_CHECK((has_gcd<int_type>::value));
+		BOOST_CHECK((has_gcd<int_type,int>::value));
+		BOOST_CHECK((has_gcd<short &,int_type &&>::value));
+		BOOST_CHECK((!has_gcd<double,int_type>::value));
+		BOOST_CHECK((!has_gcd<int_type,double>::value));
+		BOOST_CHECK((has_gcd3<int_type>::value));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_gcd_test)
+{
+	boost::mpl::for_each<size_types>(gcd_tester());
+}
