@@ -793,6 +793,7 @@ struct gcd_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
+		{
 		int_type a, b, out;
 		// Check with two zeroes.
 		int_type::gcd(out,a,b);
@@ -849,14 +850,15 @@ struct gcd_tester
 		int_type::gcd(out,b,a);
 		BOOST_CHECK_EQUAL(out,1);
 		BOOST_CHECK(!out.is_static());
+		}
 		// Randomised testing.
 		std::uniform_int_distribution<int> pdist(0,1);
 		std::uniform_int_distribution<int> ndist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		for (int i = 0; i < ntries; ++i) {
 			auto aint = ndist(rng);
 			auto bint = ndist(rng);
-			a = int_type(aint);
-			b = int_type(bint);
+			int_type a(aint);
+			int_type b(bint);
 			int_type out;
 			if (pdist(rng) && a.is_static()) {
 				a.promote();
