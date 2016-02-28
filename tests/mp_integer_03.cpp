@@ -925,3 +925,111 @@ BOOST_AUTO_TEST_CASE(mp_integer_gcd_test)
 {
 	boost::mpl::for_each<size_types>(gcd_tester());
 }
+
+struct divrem_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		{
+		// Check throwing conditions
+		int_type q, r;
+		BOOST_CHECK_THROW(int_type::divrem(q,r,int_type(1),int_type(0)),zero_division_error);
+		BOOST_CHECK_THROW(int_type::divrem(q,q,int_type(1),int_type(1)),std::invalid_argument);
+		BOOST_CHECK_THROW(int_type::divrem(r,r,int_type(1),int_type(1)),std::invalid_argument);
+		}
+		// Randomised testing.
+		std::uniform_int_distribution<int> pdist(0,1);
+		std::uniform_int_distribution<int> ndist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		for (int i = 0; i < ntries; ++i) {
+			int_type a(ndist(rng)), b(ndist(rng));
+			int_type q, r;
+			if (b == 0) {
+				continue;
+			}
+			if (pdist(rng) && a.is_static()) {
+				a.promote();
+			}
+			if (pdist(rng) && b.is_static()) {
+				b.promote();
+			}
+			if (pdist(rng)) {
+				q.promote();
+			}
+			if (pdist(rng)) {
+				r.promote();
+			}
+			int_type::divrem(q,r,a,b);
+			BOOST_CHECK_EQUAL(q,a / b);
+			BOOST_CHECK_EQUAL(r,a % b);
+			BOOST_CHECK(r.sign() == a.sign() || r.sign() == 0);
+			int_type::divrem(q,r,a*b,b);
+			BOOST_CHECK_EQUAL(q,a);
+			BOOST_CHECK_EQUAL(r,0);
+			int_type::divrem(q,r,a*a*b,b);
+			BOOST_CHECK_EQUAL(q,a*a);
+			BOOST_CHECK_EQUAL(r,0);
+			int_type::divrem(q,r,a*b + 1,b);
+			BOOST_CHECK_EQUAL(q,(a*b + 1) / b);
+			BOOST_CHECK_EQUAL(r,(a*b + 1) % b);
+			BOOST_CHECK(r.sign() == (a*b + 1).sign() || r.sign() == 0);
+			int_type::divrem(q,r,a*a*b + 1,b);
+			BOOST_CHECK_EQUAL(q,(a*a*b + 1) / b);
+			BOOST_CHECK_EQUAL(r,(a*a*b + 1) % b);
+			BOOST_CHECK(r.sign() == (a*a*b + 1).sign() || r.sign() == 0);
+			int_type::divrem(q,r,a,int_type(1));
+			BOOST_CHECK_EQUAL(q,a);
+			BOOST_CHECK_EQUAL(r,0);
+			int_type::divrem(q,r,a,int_type(-1));
+			BOOST_CHECK_EQUAL(q,-a);
+			BOOST_CHECK_EQUAL(r,0);
+			// Tests with overlapping arguments.
+			auto old_a(a);
+			int_type::divrem(a,r,a,b);
+			BOOST_CHECK_EQUAL(a,old_a / b);
+			BOOST_CHECK_EQUAL(r,old_a % b);
+			a = old_a;
+			auto old_b(b);
+			int_type::divrem(b,r,a,b);
+			BOOST_CHECK_EQUAL(b,a / old_b);
+			BOOST_CHECK_EQUAL(r,a % old_b);
+			b = old_b;
+			old_a = a;
+			int_type::divrem(q,a,a,b);
+			BOOST_CHECK_EQUAL(q,old_a / b);
+			BOOST_CHECK_EQUAL(a,old_a % b);
+			a = old_a;
+			old_b = b;
+			int_type::divrem(q,b,a,b);
+			BOOST_CHECK_EQUAL(q,a / old_b);
+			BOOST_CHECK_EQUAL(b,a % old_b);
+			b = old_b;
+			old_a = a;
+			int_type::divrem(q,a,a,a);
+			BOOST_CHECK_EQUAL(q,1);
+			BOOST_CHECK_EQUAL(a,0);
+			a = old_a;
+			old_b = b;
+			int_type::divrem(q,b,b,b);
+			BOOST_CHECK_EQUAL(q,1);
+			BOOST_CHECK_EQUAL(b,0);
+			b = old_b;
+			old_a = a;
+			int_type::divrem(a,r,a,a);
+			BOOST_CHECK_EQUAL(a,1);
+			BOOST_CHECK_EQUAL(r,0);
+			a = old_a;
+			old_b = b;
+			int_type::divrem(b,r,b,b);
+			BOOST_CHECK_EQUAL(b,1);
+			BOOST_CHECK_EQUAL(r,0);
+			b = old_b;
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_divrem_test)
+{
+	boost::mpl::for_each<size_types>(divrem_tester());
+}

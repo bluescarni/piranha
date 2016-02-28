@@ -3237,6 +3237,78 @@ class mp_integer
 			}
 			return *this;
 		}
+		/// Division with remainder.
+		/**
+		 * This method will set \p q to the quotient and \p r to the remainder of <tt>n1 / n2</tt>.
+		 * The sign of the remainder will be the sign of the numerator \p n1.
+		 *
+		 * @param[out] q the quotient.
+		 * @param[out] r the remainder.
+		 * @param[in] n1 the numerator.
+		 * @param[in] n2 the denominator.
+		 *
+		 * @throws piranha::zero_division_error if \p n2 is zero.
+		 * @throws std::invalid_argument if \p q and \p r are the same object.
+		 */
+		static void divrem(mp_integer &q, mp_integer &r, const mp_integer &n1, const mp_integer &n2)
+		{
+			if (unlikely(math::is_zero(n2))) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			if (unlikely(&q == &r)) {
+				piranha_throw(std::invalid_argument,"quotient and remainder cannot be the same object");
+			}
+			// First we make sure that both q and r have the same storage.
+			bool s0 = q.is_static();
+			if (s0 != r.is_static()) {
+				if (s0) {
+					// q is static, r is dynamic. Promote q.
+					q.promote();
+					s0 = false;
+				} else {
+					// q is dynamic, r static. Promote r.
+					r.promote();
+				}
+			}
+			piranha_assert(s0 == q.is_static() || q.is_static() == r.is_static());
+			bool s1 = n1.is_static(), s2 = n2.is_static();
+			// If n1 and n2 are both statics, we can carry the computation completely in static storage.
+			if (s1 && s2) {
+				if (!s0) {
+					q = mp_integer{};
+					r = mp_integer{};
+				}
+				q.m_int.g_st().div(q.m_int.g_st(),r.m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st());
+				return;
+			}
+			// If either n1 or n2 are static, we need to promote the return values and re-check n1/n2.
+			if (s0) {
+				q.promote();
+				r.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			piranha_assert(mask > 0u);
+			switch (mask) {
+				// NOTE: case 0 here is not possible as it would mean that n1 and n2 are both static,
+				// but we handled the case above.
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_tdiv_qr(&q.m_int.g_dy(),&r.m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_tdiv_qr(&q.m_int.g_dy(),&r.m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_tdiv_qr(&q.m_int.g_dy(),&r.m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+		}
 		/// In-place modulo operation.
 		/**
 		 * \note
