@@ -3995,7 +3995,7 @@ class mp_integer
 				return;
 			}
 			// out will have to be mpz in any case, promote it if needed and re-check the
-			// static flags in case this coincides with n1 and/or n2.
+			// static flags in case out coincides with n1 and/or n2.
 			if (s0) {
 				out.m_int.promote();
 				s1 = n1.is_static();
