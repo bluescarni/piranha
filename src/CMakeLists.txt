@@ -75,7 +75,6 @@ SET(DETAIL_HEADERS_LIST
 	detail/is_digit.hpp
 	detail/config_intel.hpp
 	detail/type_in_tuple.hpp
-	detail/gcd.hpp
 	detail/vector_merge_args.hpp
 	detail/divisor_series_fwd.hpp
 	detail/cf_mult_impl.hpp

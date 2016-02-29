@@ -44,7 +44,6 @@ see https://www.gnu.org/licenses/. */
 #include "config.hpp"
 #include "detail/cf_mult_impl.hpp"
 #include "detail/divisor_series_fwd.hpp"
-#include "detail/gcd.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/vector_merge_args.hpp"
@@ -52,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include "hash_set.hpp"
 #include "is_cf.hpp"
 #include "is_key.hpp"
+#include "math.hpp"
 #include "mp_integer.hpp"
 #include "pow.hpp"
 #include "safe_cast.hpp"
@@ -162,7 +162,7 @@ class divisor
 					first_nonzero_found = true;
 				}
 				// NOTE: gcd(0,n) == n (or +-n, in our case) for all n, zero included.
-				cd = detail::gcd(cd,n);
+				math::gcd3(cd,cd,n);
 			}
 			if (cd != 1 && cd != -1) {
 				return false;

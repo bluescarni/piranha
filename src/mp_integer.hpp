@@ -64,47 +64,6 @@ see https://www.gnu.org/licenses/. */
 
 namespace piranha { namespace detail {
 
-// Fwd declaration of is_mp_integer.
-template <typename>
-struct is_mp_integer;
-
-// GCD utils.
-template <typename T, typename std::enable_if<is_mp_integer<T>::value,int>::type = 0>
-inline void gcd_mod(T &a, const T &b)
-{
-	a %= b;
-}
-
-template <typename T, typename std::enable_if<!is_mp_integer<T>::value,int>::type = 0>
-inline void gcd_mod(T &a, const T &b)
-{
-	a = static_cast<T>(a % b);
-}
-
-// Greatest common divisor using the euclidean algorithm.
-// NOTE: this can yield negative values, depending on the signs
-// of a and b. Supports C++ integrals and mp_integer.
-// NOTE: using this with C++ integrals unchecked on ranges can result in undefined
-// behaviour.
-template <typename T>
-inline T gcd_euclidean(T a, T b)
-{
-	while (true) {
-		if (math::is_zero(a)) {
-			return b;
-		}
-		// NOTE: the difference in implementation here is because
-		// we want to prevent compiler warnings when T is a short int,
-		// hence the static cast. For mp_integer, the in-place version
-		// might be faster.
-		gcd_mod(b,a);
-		if (math::is_zero(b)) {
-			return a;
-		}
-		gcd_mod(a,b);
-	}
-}
-
 // Small utility function to clear the upper n bits of an unsigned type.
 // The static_casts are needed to work around integer promotions when
 // operating on types smaller than unsigned int.
@@ -3218,6 +3177,138 @@ class mp_integer
 			}
 			return binary_div(x,y);
 		}
+		/// Division in ternary form.
+		/**
+		 * Sets \p this to <tt>n1 / n2</tt>. This form can be more efficient than the corresponding binary operator.
+		 *
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 *
+		 * @throws piranha::zero_division_error if \p n2 is zero.
+		 *
+		 * @return reference to \p this.
+		 */
+		mp_integer &div(const mp_integer &n1, const mp_integer &n2)
+		{
+			if (unlikely(math::is_zero(n2))) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s1 && s2) {
+				if (!s0) {
+					// NOTE: this is safe, as this is not static while n1 and n2 are,
+					// and thus this cannot overlap with n1 or n2.
+					*this = mp_integer{};
+				}
+				mp_integer r;
+				// NOTE: the static division routine here does both division and remainder, we
+				// need to check if there's performance to be gained by doing only the division.
+				m_int.g_st().div(m_int.g_st(),r.m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st());
+				return *this;
+			}
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			piranha_assert(mask > 0u);
+			switch (mask) {
+				// NOTE: case 0 here is not possible as it would mean that n1 and n2 are both static,
+				// but we handled the case above.
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_tdiv_q(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_tdiv_q(&m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_tdiv_q(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+			return *this;
+		}
+		/// Division with remainder.
+		/**
+		 * This method will set \p q to the quotient and \p r to the remainder of <tt>n1 / n2</tt>.
+		 * The sign of the remainder will be the sign of the numerator \p n1.
+		 *
+		 * @param[out] q the quotient.
+		 * @param[out] r the remainder.
+		 * @param[in] n1 the numerator.
+		 * @param[in] n2 the denominator.
+		 *
+		 * @throws piranha::zero_division_error if \p n2 is zero.
+		 * @throws std::invalid_argument if \p q and \p r are the same object.
+		 */
+		static void divrem(mp_integer &q, mp_integer &r, const mp_integer &n1, const mp_integer &n2)
+		{
+			if (unlikely(math::is_zero(n2))) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			if (unlikely(&q == &r)) {
+				piranha_throw(std::invalid_argument,"quotient and remainder cannot be the same object");
+			}
+			// First we make sure that both q and r have the same storage.
+			bool s0 = q.is_static();
+			if (s0 != r.is_static()) {
+				if (s0) {
+					// q is static, r is dynamic. Promote q.
+					q.promote();
+					s0 = false;
+				} else {
+					// q is dynamic, r static. Promote r.
+					r.promote();
+				}
+			}
+			piranha_assert(s0 == q.is_static() || q.is_static() == r.is_static());
+			bool s1 = n1.is_static(), s2 = n2.is_static();
+			// If n1 and n2 are both statics, we can carry the computation completely in static storage.
+			if (s1 && s2) {
+				if (!s0) {
+					q = mp_integer{};
+					r = mp_integer{};
+				}
+				q.m_int.g_st().div(q.m_int.g_st(),r.m_int.g_st(),n1.m_int.g_st(),n2.m_int.g_st());
+				return;
+			}
+			// If either n1 or n2 are static, we need to promote the return values and re-check n1/n2.
+			if (s0) {
+				q.promote();
+				r.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			piranha_assert(mask > 0u);
+			switch (mask) {
+				// NOTE: case 0 here is not possible as it would mean that n1 and n2 are both static,
+				// but we handled the case above.
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_tdiv_qr(&q.m_int.g_dy(),&r.m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_tdiv_qr(&q.m_int.g_dy(),&r.m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_tdiv_qr(&q.m_int.g_dy(),&r.m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
+		}
 		/// In-place modulo operation.
 		/**
 		 * \note
@@ -3606,28 +3697,52 @@ class mp_integer
 		}
 		/// GCD.
 		/**
-		 * @param[in] a first argument
-		 * @param[in] b second argument.
+		 * This method will write to \p out the GCD of \p n1 and \p n2.
+		 * The returned value is guaranteed to be non-negative if both arguments are non-negative.
 		 *
-		 * @return a greatest common divisor of \p a and \p b.
+		 * @param[out] out the output value.
+		 * @param[in] n1 first argument
+		 * @param[in] n2 second argument.
 		 */
-		static mp_integer gcd(const mp_integer &a, const mp_integer &b)
+		static void gcd(mp_integer &out, const mp_integer &n1, const mp_integer &n2)
 		{
-			const bool s1 = a.is_static(), s2 = b.is_static();
-			mp_integer retval;
+			// NOTE: this function would be a good candidate for demotion.
+			bool s0 = out.is_static(), s1 = n1.is_static(), s2 = n2.is_static();
 			if (s1 && s2) {
-				retval = detail::gcd_euclidean(a,b);
-			} else if (s1) {
-				retval.promote();
-				::mpz_gcd(&retval.m_int.g_dy(),a.get_mpz_view(),&b.m_int.g_dy());
-			} else if (s2) {
-				retval.promote();
-				::mpz_gcd(&retval.m_int.g_dy(),&a.m_int.g_dy(),b.get_mpz_view());
-			} else {
-				retval.promote();
-				::mpz_gcd(&retval.m_int.g_dy(),&a.m_int.g_dy(),&b.m_int.g_dy());
+				// Go with the euclidean computation if both are statics. This will result
+				// in a static out as well.
+				out = detail::gcd_euclidean(n1,n2);
+				return;
 			}
-			return retval;
+			// We will set out to mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				out.m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
+			// 1 means that it is dynamic already.
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
+			piranha_assert(mask > 0u);
+			switch (mask) {
+				// NOTE: case 0 here is not possible as it would mean that n1 and n2 are both static,
+				// but we handled the case above.
+				case 1u:
+				{
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_gcd(&out.m_int.g_dy(),&n1.m_int.g_dy(),v2);
+					break;
+				}
+				case 2u:
+				{
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_gcd(&out.m_int.g_dy(),v1,&n2.m_int.g_dy());
+					break;
+				}
+				case 3u:
+					::mpz_gcd(&out.m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
+			}
 		}
 	private:
 		struct hash_checks
@@ -3880,7 +3995,7 @@ class mp_integer
 				return;
 			}
 			// out will have to be mpz in any case, promote it if needed and re-check the
-			// static flags in case this coincides with n1 and/or n2.
+			// static flags in case out coincides with n1 and/or n2.
 			if (s0) {
 				out.m_int.promote();
 				s1 = n1.is_static();
@@ -4206,6 +4321,154 @@ struct mul3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::typ
 	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.mul(a,b))
 	{
 		return out.mul(a,b);
+	}
+};
+
+/// Specialisation of the piranha::math::div3() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct div3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the output of piranha::mp_integer::div().
+	 */
+	auto operator()(T &out, const T &a, const T &b) const -> decltype(out.div(a,b))
+	{
+		return out.div(a,b);
+	}
+};
+
+/// Implementation of piranha::math::divexact() for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct divexact_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The call operator will first determine quotient and remainder via piranha::mp_integer::divrem().
+	 * If the remainder is not null, an error will be thrown.
+	 *
+	 * @param[out] out return value.
+	 * @param[in] a first argument.
+	 * @param[in] b second argument.
+	 *
+	 * @return a reference to \p out.
+	 *
+	 * @throws std::invalid_argument if the division of \p a by \p b is not exact.
+	 * @throws unspecified any exception thrown by piranha::mp_integer::divrem().
+	 */
+	T &operator()(T &out, const T &a, const T &b) const
+	{
+		T r;
+		T::divrem(out,r,a,b);
+		if (!is_zero(r)) {
+			piranha_throw(std::invalid_argument,"integer division is not exact");
+		}
+		return out;
+	}
+};
+
+}
+
+namespace detail
+{
+
+// Enabler for the GCD specialisation.
+template <typename T, typename U>
+using mp_integer_gcd_enabler = typename std::enable_if<
+	(std::is_integral<T>::value && is_mp_integer<U>::value) ||
+	(std::is_integral<U>::value && is_mp_integer<T>::value) ||
+	(is_mp_integer<T>::value && is_mp_integer<U>::value)
+>::type;
+
+}
+
+namespace math
+{
+
+/// Implementation of piranha::math::gcd() for piranha::mp_integer.
+/**
+ * This specialisation is enabled when:
+ * - \p T and \p U are both instances of piranha::mp_integer,
+ * - \p T is an instance of piranha::mp_integer and \p U is an integral type,
+ * - \p U is an instance of piranha::mp_integer and \p T is an integral type.
+ *
+ * The result will be calculated via piranha::mp_integer::gcd(), after any necessary type conversion.
+ */
+template <typename T, typename U>
+struct gcd_impl<T,U,detail::mp_integer_gcd_enabler<T,U>>
+{
+	/// Call operator, piranha::mp_integer - piranha::mp_integer overload.
+	/**
+	 * @param[in] a first argument.
+	 * @param[in] b second argument.
+	 *
+	 * @return the GCD of \p a and \p b.
+	 */
+	template <int NBits>
+	mp_integer<NBits> operator()(const mp_integer<NBits> &a, const mp_integer<NBits> &b) const
+	{
+		mp_integer<NBits> retval;
+		mp_integer<NBits>::gcd(retval,a,b);
+		return retval;
+	}
+	/// Call operator, piranha::mp_integer - integral overload.
+	/**
+	 * @param[in] a first argument.
+	 * @param[in] b second argument.
+	 *
+	 * @return the GCD of \p a and \p b.
+	 */
+	template <int NBits, typename T1>
+	mp_integer<NBits> operator()(const mp_integer<NBits> &a, const T1 &b) const
+	{
+		return operator()(a,mp_integer<NBits>(b));
+	}
+	/// Call operator, integral - piranha::mp_integer overload.
+	/**
+	 * @param[in] a first argument.
+	 * @param[in] b second argument.
+	 *
+	 * @return the GCD of \p a and \p b.
+	 */
+	template <int NBits, typename T1>
+	mp_integer<NBits> operator()(const T1 &a, const mp_integer<NBits> &b) const
+	{
+		return operator()(b,a);
+	}
+};
+
+/// Implementation of piranha::math::gcd3() for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instances of piranha::mp_integer.
+ */
+template <typename T>
+struct gcd3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * This call operator will use internally piranha::mp_integer::gcd().
+	 *
+	 * @param[out] out return value.
+	 * @param[in] a first argument.
+	 * @param[in] b second argument.
+	 *
+	 * @return a reference to \p out.
+	 */
+	template <int NBits>
+	mp_integer<NBits> &operator()(mp_integer<NBits> &out, const mp_integer<NBits> &a, const mp_integer<NBits> &b) const
+	{
+		mp_integer<NBits>::gcd(out,a,b);
+		return out;
 	}
 };
 

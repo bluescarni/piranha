@@ -65,6 +65,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -827,4 +828,136 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
 	BOOST_CHECK(!has_mul3<std::vector<int>>::value);
 	BOOST_CHECK(!has_mul3<char *>::value);
 	}
+	{
+	// Division.
+	BOOST_CHECK(has_div3<int>::value);
+	int i1 = 0;
+	math::div3(i1,6,3);
+	BOOST_CHECK_EQUAL(i1,2);
+	BOOST_CHECK(has_div3<short>::value);
+	short s1 = -8;
+	math::div3(s1,short(-8),short(2));
+	BOOST_CHECK_EQUAL(s1,-4);
+	BOOST_CHECK(has_div3<float>::value);
+	BOOST_CHECK(has_div3<double>::value);
+	float f1 = 1.234f;
+	math::div3(f1,3.456f,8.145f);
+	BOOST_CHECK_EQUAL(f1,3.456f / 8.145f);
+	BOOST_CHECK(!has_div3<std::string>::value);
+	BOOST_CHECK(!has_div3<std::vector<int>>::value);
+	BOOST_CHECK(!has_div3<char *>::value);
+	}
+}
+
+// A fake GCD-enabled type.
+struct mock_type
+{};
+
+namespace piranha { namespace math {
+
+template <typename T>
+struct gcd_impl<T,T,typename std::enable_if<std::is_same<T,mock_type>::value>::type>
+{
+	mock_type operator()(const mock_type &, const mock_type &) const
+	{
+		return mock_type {};
+	}
+};
+
+}}
+
+BOOST_AUTO_TEST_CASE(math_gcd_test)
+{
+	using math::gcd;
+	using math::gcd3;
+	BOOST_CHECK_EQUAL(gcd(0,0),0);
+	BOOST_CHECK_EQUAL(gcd(0,12),12);
+	BOOST_CHECK_EQUAL(gcd(14,0),14);
+	BOOST_CHECK_EQUAL(gcd(4,3),1);
+	BOOST_CHECK_EQUAL(gcd(3,4),1);
+	BOOST_CHECK_EQUAL(gcd(4,6),2);
+	BOOST_CHECK_EQUAL(gcd(6,4),2);
+	BOOST_CHECK_EQUAL(gcd(4,25),1);
+	BOOST_CHECK_EQUAL(gcd(25,4),1);
+	BOOST_CHECK_EQUAL(gcd(27,54),27);
+	BOOST_CHECK_EQUAL(gcd(54,27),27);
+	BOOST_CHECK_EQUAL(gcd(1,54),1);
+	BOOST_CHECK_EQUAL(gcd(54,1),1);
+	BOOST_CHECK_EQUAL(gcd(36,24),12);
+	BOOST_CHECK_EQUAL(gcd(24,36),12);
+	// Check compiler warnings with short ints.
+	BOOST_CHECK((!std::is_same<decltype(gcd(short(54),short(27))),short>::value));
+	BOOST_CHECK((!std::is_same<decltype(gcd(short(54),char(27))),short>::value));
+	BOOST_CHECK_EQUAL(gcd(short(54),short(27)),short(27));
+	BOOST_CHECK_EQUAL(gcd(short(27),short(53)),short(1));
+	BOOST_CHECK(gcd(short(27),short(-54)) == short(27) || gcd(short(27),short(-54)) == short(-27));
+	BOOST_CHECK(gcd(short(-54),short(27)) == short(27) || gcd(short(-54),short(27)) == short(-27));
+	// Check with different signs.
+	BOOST_CHECK(gcd(27,-54) == 27 || gcd(27,-54) == -27);
+	BOOST_CHECK(gcd(-54,27) == 27 || gcd(-54,27) == -27);
+	BOOST_CHECK(gcd(4,-25) == 1 || gcd(4,-25) == -1);
+	BOOST_CHECK(gcd(-25,4) == 1 || gcd(-25,4) == -1);
+	BOOST_CHECK(gcd(-25,1) == -1 || gcd(-25,1) == 1);
+	BOOST_CHECK(gcd(25,-1) == -1 || gcd(25,-1) == 1);
+	BOOST_CHECK(gcd(-24,36) == -12 || gcd(-24,36) == 12);
+	BOOST_CHECK(gcd(24,-36) == -12 || gcd(24,-36) == 12);
+	// Check with zeroes.
+	BOOST_CHECK_EQUAL(gcd(54,0),54);
+	BOOST_CHECK_EQUAL(gcd(0,54),54);
+	BOOST_CHECK_EQUAL(gcd(0,0),0);
+	// The ternary form, check particularily with respect to short ints.
+	int out;
+	gcd3(out,12,9);
+	BOOST_CHECK_EQUAL(out,3);
+	short s_out;
+	gcd3(s_out,short(12),short(9));
+	char c_out;
+	gcd3(c_out,char(12),char(9));
+	// Random testing.
+	std::uniform_int_distribution<int> int_dist(-detail::safe_abs_sint<int>::value,detail::safe_abs_sint<int>::value);
+	for (int i = 0; i < ntries; ++i) {
+		int a(int_dist(rng)), b(int_dist(rng));
+		int c;
+		int g = gcd(a,b);
+		gcd3(c,a,b);
+		if (g == 0) {
+			continue;
+		}
+		BOOST_CHECK_EQUAL(c,g);
+		BOOST_CHECK_EQUAL(a % g,0);
+		BOOST_CHECK_EQUAL(b % g,0);
+	}
+	// Check the type traits.
+	BOOST_CHECK((has_gcd<int>::value));
+	BOOST_CHECK((has_gcd<int,long>::value));
+	BOOST_CHECK((has_gcd<int &,char &>::value));
+	BOOST_CHECK((!has_gcd<double>::value));
+	BOOST_CHECK((!has_gcd<double,int>::value));
+	BOOST_CHECK((!has_gcd<std::string>::value));
+	BOOST_CHECK((!has_gcd<int,std::string>::value));
+	BOOST_CHECK(has_gcd3<int>::value);
+	BOOST_CHECK(has_gcd3<char>::value);
+	BOOST_CHECK(has_gcd3<short>::value);
+	BOOST_CHECK(has_gcd3<long long>::value);
+	BOOST_CHECK(has_gcd3<long long &>::value);
+	BOOST_CHECK(has_gcd3<const long long &>::value);
+	BOOST_CHECK(!has_gcd3<double>::value);
+	BOOST_CHECK(!has_gcd3<double &&>::value);
+	BOOST_CHECK(!has_gcd3<std::string>::value);
+	// Try the mock type.
+	BOOST_CHECK(has_gcd<mock_type>::value);
+	BOOST_CHECK((!has_gcd<mock_type,int>::value));
+	BOOST_CHECK((!has_gcd<int,mock_type>::value));
+	BOOST_CHECK(has_gcd3<mock_type>::value);
+	BOOST_CHECK_NO_THROW(gcd(mock_type{},mock_type{}));
+	mock_type m0;
+	BOOST_CHECK_NO_THROW(gcd3(m0,mock_type{},mock_type{}));
+}
+
+BOOST_AUTO_TEST_CASE(math_divexact_test)
+{
+	BOOST_CHECK(!has_divexact<int>::value);
+	BOOST_CHECK(!has_divexact<double>::value);
+	BOOST_CHECK(!has_divexact<const short &>::value);
+	BOOST_CHECK(!has_divexact<char &&>::value);
 }

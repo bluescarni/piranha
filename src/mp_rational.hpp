@@ -45,7 +45,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "binomial.hpp"
 #include "config.hpp"
-#include "detail/gcd.hpp"
 #include "detail/mp_rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -939,7 +938,7 @@ class mp_rational
 			// not throw either.
 			// NOTE: there should be no way to set a negative denominator, so no check is performed.
 			// The condition is checked in the dtor.
-			const auto gcd = detail::gcd(m_num,m_den);
+			const auto gcd = math::gcd(m_num,m_den);
 			return (m_num.sign() != 0 && (gcd == 1 || gcd == -1)) ||
 				(m_num.sign() == 0 && m_den == 1);
 		}
@@ -958,7 +957,7 @@ class mp_rational
 			}
 			// NOTE: here we can avoid the further division by gcd if it is one or -one.
 			// Consider this as a possible optimisation in the future.
-			const int_type gcd = detail::gcd(m_num,m_den);
+			const int_type gcd = math::gcd(m_num,m_den);
 			piranha_assert(!math::is_zero(gcd));
 			int_type::_divexact(m_num,m_num,gcd);
 			int_type::_divexact(m_den,m_den,gcd);
@@ -2084,6 +2083,32 @@ struct binomial_impl<T,U,detail::rational_binomial_enabler<T,U>>
 	double operator()(const T2 &x, const mp_rational<NBits> &y) const
 	{
 		return math::binomial(static_cast<double>(x),static_cast<double>(y));
+	}
+};
+
+/// Implementation of piranha::math::divexact() for piranha::mp_rational.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_rational.
+ */
+template <typename T>
+struct divexact_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The call is equivalent to piranha::math::div3(). The exact result of the division
+	 * of \p q1 by \p q2 will be stored in \p out.
+	 *
+	 * @param[out] out the output value.
+	 * @param[in] q1 first argument.
+	 * @param[in] q2 second argument.
+	 *
+	 * @return the output of <tt>piranha::math::div3(out,q1,q2)</tt>.
+	 *
+	 * @throws unspecified any exception thrown by piranha::math::div3().
+	 */
+	auto operator()(T &out, const T &q1, const T &q2) const -> decltype(div3(out,q1,q2))
+	{
+		return div3(out,q1,q2);
 	}
 };
 

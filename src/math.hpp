@@ -2320,6 +2320,257 @@ inline auto mul3(T &a, const T &b, const T &c) -> decltype(mul3_impl<T>()(a,b,c)
 	return mul3_impl<T>()(a,b,c);
 }
 
+/// Default functor for the implementation of piranha::math::div3().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism.
+ */
+template <typename T, typename Enable = void>
+struct div3_impl
+{
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled only if the expression <tt>a = b / c</tt> is well-formed.
+	 *
+	 * This operator will return the result of the expression <tt>a = b / c</tt>.
+	 *
+	 * @param[out] a the return value.
+	 * @param[in] b the first operand.
+	 * @param[in] c the second operand.
+	 *
+	 * @return <tt>a = b / c</tt>.
+	 *
+	 * @throws unspecified any exception thrown by the invoked binary and/or assignment operators
+	 * of \p U.
+	 */
+	template <typename U>
+	auto operator()(U &a, const U &b, const U &c) const -> decltype(a = b / c)
+	{
+		return a = b / c;
+	}
+};
+
+/// Specialisation of the piranha::math::div3() functor for integral types.
+/**
+ * This specialisation is activated when \p T is an integral type.
+ */
+template <typename T>
+struct div3_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * This operator will return the expression <tt>a = static_cast<T>(b / c)</tt>, with <tt>b / c</tt>
+	 * forcibly cast back to \p T in order to avoid compiler warnings with short integral types.
+	 *
+	 * @param[out] a the return value.
+	 * @param[in] b the first operand.
+	 * @param[in] c the second operand.
+	 *
+	 * @return <tt>a = static_cast<T>(b / c)</tt>.
+	 */
+	T &operator()(T &a, const T &b, const T &c) const
+	{
+		return a = static_cast<T>(b / c);
+	}
+};
+
+/// Ternary division.
+/**
+ * This function will set \p a to <tt>b / c</tt>. The actual implementation of this function is in the piranha::math::div3_impl functor's
+ * call operator.
+ *
+ * @param[out] a the return value.
+ * @param[in] b the first operand.
+ * @param[in] c the second operand.
+ *
+ * @return the value returned by the call operator of piranha::math::div3_impl.
+ *
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::div3_impl functor.
+ */
+template <typename T>
+inline auto div3(T &a, const T &b, const T &c) -> decltype(div3_impl<T>()(a,b,c))
+{
+	return div3_impl<T>()(a,b,c);
+}
+
+/// Default functor for the implementation of piranha::math::divexact().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename = void>
+struct divexact_impl {};
+
+/// Exact division.
+/**
+ * This method will write into \p a the exact result of <tt>b / c</tt>. The actual implementation of this function is in the piranha::math::divexact_impl functor's
+ * call operator.
+ *
+ * @param[out] a the return value.
+ * @param[in] b the first operand.
+ * @param[in] c the second operand.
+ *
+ * @return the value returned by the call operator of piranha::math::divexact_impl.
+ *
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::divexact_impl functor.
+ */
+template <typename T>
+inline auto divexact(T &a, const T &b, const T &c) -> decltype(divexact_impl<T>()(a,b,c))
+{
+	return divexact_impl<T>()(a,b,c);
+}
+
+}
+
+namespace detail
+{
+
+// Greatest common divisor using the euclidean algorithm.
+// NOTE: this can yield negative values, depending on the signs
+// of a and b. Supports C++ integrals and mp_integer.
+// NOTE: using this with C++ integrals unchecked on ranges can result in undefined
+// behaviour.
+template <typename T>
+inline T gcd_euclidean(T a, T b)
+{
+	while (true) {
+		if (math::is_zero(a)) {
+			return b;
+		}
+		b %= a;
+		if (math::is_zero(b)) {
+			return a;
+		}
+		a %= b;
+	}
+}
+
+}
+
+namespace math
+{
+
+/// Default functor for the implementation of piranha::math::gcd().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename U, typename = void>
+struct gcd_impl {};
+
+/// Implementation of piranha::math::gcd() for integral types.
+/**
+ * This specialisation is enabled when \p T and \p U are C++ integral types.
+ */
+template <typename T, typename U>
+struct gcd_impl<T,U,typename std::enable_if<std::is_integral<T>::value && std::is_integral<U>::value>::type>
+{
+	/// The promoted type of T and U.
+	using p_type = decltype(std::declval<const T &>() + std::declval<const U &>());
+	/// Call operator.
+	/**
+	 * The GCD will be computed via the euclidean algorithm. No overflow check is performed during
+	 * the computation.
+	 *
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return the GCD of \p a and \p b.
+	 */
+	p_type operator()(const T &a, const U &b) const
+	{
+		return detail::gcd_euclidean(static_cast<p_type>(a),static_cast<p_type>(b));
+	}
+};
+
+/// GCD.
+/**
+ * This function will return the GCD of \p a and \p b. The actual implementation of this function is in the piranha::math::gcd_impl functor's
+ * call operator.
+ *
+ * @param[in] a the first operand.
+ * @param[in] b the second operand.
+ *
+ * @return the value returned by the call operator of piranha::math::gcd_impl.
+ *
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::gcd_impl functor.
+ */
+template <typename T, typename U>
+inline auto gcd(const T &a, const U &b) -> decltype(gcd_impl<T,U>()(a,b))
+{
+	return gcd_impl<T,U>()(a,b);
+}
+
+/// Default functor for the implementation of piranha::math::gcd3().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism.
+ */
+template <typename T, typename = void>
+struct gcd3_impl
+{
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled only if the expression <tt>out = math::gcd(a,b)</tt> is well-formed.
+	 *
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return <tt>out = math::gcd(a,b)</tt>.
+	 *
+	 * @throws unspecified any exception thrown by piranha::math::gcd() or the invoked
+	 * assignment operator.
+	 */
+	template <typename T1>
+	auto operator()(T1 &out, const T1 &a, const T1 &b) const -> decltype(out = math::gcd(a,b))
+	{
+		return out = math::gcd(a,b);
+	}
+};
+
+/// Specialisation of the piranha::math::gcd3() functor for integral types.
+/**
+ * This specialisation is enabled when \p T is a C++ integral type.
+ */
+template <typename T>
+struct gcd3_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * This call operator will forcibly cast back to \p T the result of piranha::math::gcd().
+	 *
+	 * @param[out] out the output value.
+	 * @param[in] a the first operand.
+	 * @param[in] b the second operand.
+	 *
+	 * @return <tt>out = static_cast<T>(math::gcd(a,b))</tt>.
+	 */
+	T &operator()(T &out, const T &a, const T &b) const
+	{
+		return out = static_cast<T>(math::gcd(a,b));
+	}
+};
+
+/// Ternary GCD.
+/**
+ * This function will write the GCD of \p a and \p b into \p out. The actual implementation of this function is in the piranha::math::gcd3_impl functor's
+ * call operator.
+ *
+ * @param[out] out the output value.
+ * @param[in] a the first operand.
+ * @param[in] b the second operand.
+ *
+ * @return the value returned by the call operator of piranha::math::gcd3_impl.
+ *
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::gcd3_impl functor.
+ */
+template <typename T>
+inline auto gcd3(T &out, const T &a, const T &b) -> decltype(gcd3_impl<T>()(out,a,b))
+{
+	return gcd3_impl<T>()(out,a,b);
+}
+
 }
 
 /// Detect piranha::math::add3().
@@ -2379,6 +2630,81 @@ class has_mul3: detail::sfinae_types
 template <typename T>
 const bool has_mul3<T>::value;
 
+/// Detect piranha::math::div3().
+/**
+ * The type trait will be \p true if piranha::math::div3() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_div3: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &) -> decltype(math::div3(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_div3<T>::value;
+
+/// Detect piranha::math::gcd().
+/**
+ * The type trait will be \p true if piranha::math::gcd() can be used on instances of type \p T and \p U,
+ * \p false otherwise.
+ */
+template <typename T, typename U = T>
+class has_gcd: detail::sfinae_types
+{
+		template <typename T1, typename U1>
+		static auto test(const T1 &a, const U1 &b) -> decltype(math::gcd(a,b),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>(),std::declval<U>())),yes>::value;
+};
+
+template <typename T, typename U>
+const bool has_gcd<T,U>::value;
+
+/// Detect piranha::math::gcd3().
+/**
+ * The type trait will be \p true if piranha::math::gcd3() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_gcd3: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &) -> decltype(math::gcd3(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_gcd3<T>::value;
+
+/// Detect piranha::math::divexact().
+/**
+ * The type trait will be \p true if piranha::math::divexact() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_divexact: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &) -> decltype(math::divexact(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_divexact<T>::value;
 
 }
 

@@ -40,7 +40,6 @@ see https://www.gnu.org/licenses/. */
 #include "config.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
-#include "detail/gcd.hpp"
 #include "divisor.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
@@ -319,7 +318,7 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 						}
 						// NOTE: gcd(0,n) == n (or +-n, in our case) for all n, zero included.
 						// NOTE: the gcd computation here is safe as we are operating on integers.
-						cd = detail::gcd(cd,n);
+						math::gcd3(cd,cd,n);
 					}
 					// Common denominator could be negative.
 					if (cd.sign() < 0) {

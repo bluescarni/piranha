@@ -46,9 +46,9 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "detail/atomic_utils.hpp"
-#include "detail/gcd.hpp"
 #include "exceptions.hpp"
 #include "key_is_multipliable.hpp"
+#include "math.hpp"
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "safe_cast.hpp"
@@ -162,12 +162,17 @@ struct base_series_multiplier_impl<Series,Derived,typename std::enable_if<is_mp_
 		// Compute the least common multiplier.
 		m_lcm = 1;
 		auto it_f = c1.end();
+		int_type g;
 		for (auto it = c1.begin(); it != it_f; ++it) {
-			m_lcm = (m_lcm * it->m_cf.den()) / gcd(m_lcm,it->m_cf.den());
+			math::gcd3(g,m_lcm,it->m_cf.den());
+			math::mul3(m_lcm,m_lcm,it->m_cf.den());
+			int_type::_divexact(m_lcm,m_lcm,g);
 		}
 		it_f = c2.end();
 		for (auto it = c2.begin(); it != it_f; ++it) {
-			m_lcm = (m_lcm * it->m_cf.den()) / gcd(m_lcm,it->m_cf.den());
+			math::gcd3(g,m_lcm,it->m_cf.den());
+			math::mul3(m_lcm,m_lcm,it->m_cf.den());
+			int_type::_divexact(m_lcm,m_lcm,g);
 		}
 		// All these computations involve only positive numbers,
 		// the GCD must always be positive.

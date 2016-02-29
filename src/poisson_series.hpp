@@ -40,7 +40,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "base_series_multiplier.hpp"
 #include "config.hpp"
-#include "detail/gcd.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
@@ -429,7 +428,7 @@ class poisson_series:
 				bool first_nonzero_found = false;
 				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
 					// NOTE: gcd is safe, operating on integers.
-					cd = detail::gcd(cd,*it2);
+					cd = math::gcd(cd,*it2);
 					if (!first_nonzero_found && !math::is_zero(*it2)) {
 						piranha_assert(*it2 > 0);
 						first_nonzero_found = true;
