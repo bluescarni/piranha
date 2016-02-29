@@ -2295,3 +2295,26 @@ BOOST_AUTO_TEST_CASE(mp_rational_is_unitary_test)
 {
 	boost::mpl::for_each<size_types>(is_unitary_tester());
 }
+
+struct divexact_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		BOOST_CHECK(has_divexact<q_type>::value);
+		q_type out;
+		math::divexact(out,q_type{3},q_type{-2});
+		BOOST_CHECK_EQUAL(out,q_type{3}/q_type{-2});
+		math::divexact(out,q_type{8},q_type{-2});
+		BOOST_CHECK_EQUAL(out,q_type{-4});
+		BOOST_CHECK_THROW(math::divexact(out,q_type{8},q_type{0}),zero_division_error);
+		math::divexact(out,q_type{0},q_type{-2});
+		BOOST_CHECK_EQUAL(out,0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_divexact_test)
+{
+	boost::mpl::for_each<size_types>(divexact_tester());
+}

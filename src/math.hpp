@@ -2393,6 +2393,33 @@ inline auto div3(T &a, const T &b, const T &c) -> decltype(div3_impl<T>()(a,b,c)
 	return div3_impl<T>()(a,b,c);
 }
 
+/// Default functor for the implementation of piranha::math::divexact().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename = void>
+struct divexact_impl {};
+
+/// Exact division.
+/**
+ * This method will write into \p a the exact result of <tt>b / c</tt>. The actual implementation of this function is in the piranha::math::divexact_impl functor's
+ * call operator.
+ *
+ * @param[out] a the return value.
+ * @param[in] b the first operand.
+ * @param[in] c the second operand.
+ *
+ * @return the value returned by the call operator of piranha::math::divexact_impl.
+ *
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::divexact_impl functor.
+ */
+template <typename T>
+inline auto divexact(T &a, const T &b, const T &c) -> decltype(divexact_impl<T>()(a,b,c))
+{
+	return divexact_impl<T>()(a,b,c);
+}
+
 }
 
 namespace detail
@@ -2659,6 +2686,25 @@ class has_gcd3: detail::sfinae_types
 
 template <typename T>
 const bool has_gcd3<T>::value;
+
+/// Detect piranha::math::divexact().
+/**
+ * The type trait will be \p true if piranha::math::divexact() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_divexact: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &) -> decltype(math::divexact(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_divexact<T>::value;
 
 }
 

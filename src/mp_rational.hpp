@@ -2086,6 +2086,32 @@ struct binomial_impl<T,U,detail::rational_binomial_enabler<T,U>>
 	}
 };
 
+/// Implementation of piranha::math::divexact() for piranha::mp_rational.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_rational.
+ */
+template <typename T>
+struct divexact_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The call is equivalent to piranha::math::div3(). The exact result of the division
+	 * of \p q1 by \p q2 will be stored in \p out.
+	 *
+	 * @param[out] out the output value.
+	 * @param[in] q1 first argument.
+	 * @param[in] q2 second argument.
+	 *
+	 * @return the output of <tt>piranha::math::div3(out,q1,q2)</tt>.
+	 *
+	 * @throws unspecified any exception thrown by piranha::math::div3().
+	 */
+	auto operator()(T &out, const T &q1, const T &q2) const -> decltype(div3(out,q1,q2))
+	{
+		return div3(out,q1,q2);
+	}
+};
+
 }
 
 namespace detail

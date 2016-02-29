@@ -4345,6 +4345,38 @@ struct div3_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::typ
 	}
 };
 
+/// Implementation of piranha::math::divexact() for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct divexact_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The call operator will first determine quotient and remainder via piranha::mp_integer::divrem().
+	 * If the remainder is not null, an error will be thrown.
+	 *
+	 * @param[out] out return value.
+	 * @param[in] a first argument.
+	 * @param[in] b second argument.
+	 *
+	 * @return a reference to \p out.
+	 *
+	 * @throws std::invalid_argument if the division of \p a by \p b is not exact.
+	 * @throws unspecified any exception thrown by piranha::mp_integer::divrem().
+	 */
+	T &operator()(T &out, const T &a, const T &b) const
+	{
+		T r;
+		T::divrem(out,r,a,b);
+		if (!is_zero(r)) {
+			piranha_throw(std::invalid_argument,"integer division is not exact");
+		}
+		return out;
+	}
+};
+
 }
 
 namespace detail

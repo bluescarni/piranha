@@ -1342,3 +1342,25 @@ BOOST_AUTO_TEST_CASE(mp_integer_sin_cos_test)
 {
 	boost::mpl::for_each<size_types>(sin_cos_tester());
 }
+
+struct math_divexact_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(has_divexact<int_type>::value);
+		int_type out;
+		math::divexact(out,int_type(4),int_type(-2));
+		BOOST_CHECK_EQUAL(out,-2);
+		math::divexact(out,int_type(0),int_type(-2));
+		BOOST_CHECK_EQUAL(out,0);
+		BOOST_CHECK_THROW(math::divexact(out,int_type(0),int_type(0)),zero_division_error);
+		BOOST_CHECK_THROW(math::divexact(out,int_type(3),int_type(2)),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_math_divexact_test)
+{
+	boost::mpl::for_each<size_types>(math_divexact_tester());
+}
