@@ -221,6 +221,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:aa1b65828fc2b24985e4d9b9da2f01b84"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__integer.html#aa1b65828fc2b24985e4d9b9da2f01b84">operator/=</a> (const T &amp;x) -&gt; decltype(this-&gt;in_place_div(x))</td></tr>
 <tr class="memdesc:aa1b65828fc2b24985e4d9b9da2f01b84"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place division.  <a href="#aa1b65828fc2b24985e4d9b9da2f01b84">More...</a><br /></td></tr>
 <tr class="separator:aa1b65828fc2b24985e4d9b9da2f01b84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a538c65a402e345bdc04f7006658034fd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__integer.html#a538c65a402e345bdc04f7006658034fd">div</a> (const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;n1, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;n2)</td></tr>
+<tr class="memdesc:a538c65a402e345bdc04f7006658034fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Division in ternary form.  <a href="#a538c65a402e345bdc04f7006658034fd">More...</a><br /></td></tr>
+<tr class="separator:a538c65a402e345bdc04f7006658034fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4ed9b1917778dcb34c464f9fa82a938"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:af4ed9b1917778dcb34c464f9fa82a938"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__integer.html#af4ed9b1917778dcb34c464f9fa82a938">operator%=</a> (const T &amp;n) -&gt; decltype(this-&gt;in_place_mod(n))</td></tr>
 <tr class="memdesc:af4ed9b1917778dcb34c464f9fa82a938"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place modulo operation.  <a href="#af4ed9b1917778dcb34c464f9fa82a938">More...</a><br /></td></tr>
@@ -265,9 +268,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ab16d4a27b888cfe0531d747ab646003e"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__integer.html#ab16d4a27b888cfe0531d747ab646003e">gcd</a> (const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;a, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;b)</td></tr>
-<tr class="memdesc:ab16d4a27b888cfe0531d747ab646003e"><td class="mdescLeft">&#160;</td><td class="mdescRight">GCD.  <a href="#ab16d4a27b888cfe0531d747ab646003e">More...</a><br /></td></tr>
-<tr class="separator:ab16d4a27b888cfe0531d747ab646003e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a100304ec1aee29e363a5db8f6356b835"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__integer.html#a100304ec1aee29e363a5db8f6356b835">divrem</a> (<a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;q, <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;r, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;n1, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;n2)</td></tr>
+<tr class="memdesc:a100304ec1aee29e363a5db8f6356b835"><td class="mdescLeft">&#160;</td><td class="mdescRight">Division with remainder.  <a href="#a100304ec1aee29e363a5db8f6356b835">More...</a><br /></td></tr>
+<tr class="separator:a100304ec1aee29e363a5db8f6356b835"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a131815a6d7d6a0127ed9da18e741aba7"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7">gcd</a> (<a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;out, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;n1, const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> &amp;n2)</td></tr>
+<tr class="memdesc:a131815a6d7d6a0127ed9da18e741aba7"><td class="mdescLeft">&#160;</td><td class="mdescRight">GCD.  <a href="#a131815a6d7d6a0127ed9da18e741aba7">More...</a><br /></td></tr>
+<tr class="separator:a131815a6d7d6a0127ed9da18e741aba7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Low-level interface</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p>Low-level methods. </p>
 </div></td></tr>
@@ -385,7 +391,7 @@ class piranha::mp_integer&lt; NBits &gt;</h3>
 <dl class="section see"><dt>See also</dt><dd><a href="http://gmplib.org/">http://gmplib.org/</a></dd></dl>
 <dl class="section author"><dt>Author</dt><dd>Francesco Biscani (<a href="#" onclick="location.href='mai'+'lto:'+'blu'+'es'+'car'+'ni'+'@gm'+'ai'+'l.c'+'om'; return false;">blues<span style="display: none;">.nosp@m.</span>carn<span style="display: none;">.nosp@m.</span>i@gma<span style="display: none;">.nosp@m.</span>il.c<span style="display: none;">.nosp@m.</span>om</a>) </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l01335">1335</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l01294">1294</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a38f821664bd4df99eb2987392e2acc0d"></a>
 <div class="memitem">
@@ -457,7 +463,7 @@ template&lt;typename T , generic_ctor_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02379">2379</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02338">2338</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -501,7 +507,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02395">2395</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02354">2354</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -544,7 +550,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02407">2407</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02366">2366</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -581,7 +587,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02417">2417</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02376">2376</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -643,7 +649,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03863">3863</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03978">3978</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -675,7 +681,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Note that <code>this</code> will remain stored in dynamic storage even if after operations on <code>this</code>, value of <code>this</code> can be stored in static storage.</p>
 <dl class="section return"><dt>Returns</dt><dd>an non-const <code>mpz_ptr</code> to dynamic storage of <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02554">2554</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02513">2513</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -705,7 +711,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Absolute value. </p>
 <dl class="section return"><dt>Returns</dt><dd>absolute value of <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03595">3595</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03686">3686</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -754,7 +760,7 @@ template&lt;int NBits = 0&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>reference to <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02776">2776</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02735">2735</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -801,7 +807,131 @@ template&lt;typename T , typename std::enable_if&lt; std::is_integral&lt; T &gt;
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03810">3810</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03925">3925</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a538c65a402e345bdc04f7006658034fd"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int NBits = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&amp; <a class="el" href="classpiranha_1_1mp__integer.html">piranha::mp_integer</a>&lt; NBits &gt;::div </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>n1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>n2</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Division in ternary form. </p>
+<p>Sets <code>this</code> to <code>n1 / n2</code>. This form can be more efficient than the corresponding binary operator.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n1</td><td>first argument. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n2</td><td>second argument.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="structpiranha_1_1zero__division__error.html" title="Exception for signalling division by zero. ">piranha::zero_division_error</a></td><td>if <code>n2</code> is zero.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>reference to <code>this</code>. </dd></dl>
+
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03191">3191</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a100304ec1aee29e363a5db8f6356b835"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;int NBits = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void <a class="el" href="classpiranha_1_1mp__integer.html">piranha::mp_integer</a>&lt; NBits &gt;::divrem </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>q</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>r</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>n1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>n2</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Division with remainder. </p>
+<p>This method will set <code>q</code> to the quotient and <code>r</code> to the remainder of <code>n1 / n2</code>. The sign of the remainder will be the sign of the numerator <code>n1</code>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">q</td><td>the quotient. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">r</td><td>the remainder. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n1</td><td>the numerator. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n2</td><td>the denominator.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname"><a class="el" href="structpiranha_1_1zero__division__error.html" title="Exception for signalling division by zero. ">piranha::zero_division_error</a></td><td>if <code>n2</code> is zero. </td></tr>
+    <tr><td class="paramname">std::invalid_argument</td><td>if <code>q</code> and <code>r</code> are the same object. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03253">3253</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -838,11 +968,11 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03762">3762</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03877">3877</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ab16d4a27b888cfe0531d747ab646003e"></a>
+<a class="anchor" id="a131815a6d7d6a0127ed9da18e741aba7"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -852,16 +982,22 @@ template&lt;int NBits = 0&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a> <a class="el" href="classpiranha_1_1mp__integer.html">piranha::mp_integer</a>&lt; NBits &gt;::gcd </td>
+          <td class="memname">static void <a class="el" href="classpiranha_1_1mp__integer.html">piranha::mp_integer</a>&lt; NBits &gt;::gcd </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
-          <td class="paramname"><em>a</em>, </td>
+          <td class="paramtype"><a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
-          <td class="paramname"><em>b</em>&#160;</td>
+          <td class="paramname"><em>n1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1mp__integer.html">mp_integer</a>&lt; NBits &gt; &amp;&#160;</td>
+          <td class="paramname"><em>n2</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -877,16 +1013,17 @@ template&lt;int NBits = 0&gt; </div>
 </div><div class="memdoc">
 
 <p>GCD. </p>
+<p>This method will write to <code>out</code> the GCD of <code>n1</code> and <code>n2</code>. The returned value is guaranteed to be non-negative if both arguments are non-negative.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">a</td><td>first argument </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>second argument.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out</td><td>the output value. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n1</td><td>first argument </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n2</td><td>second argument. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a greatest common divisor of <code>a</code> and <code>b</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03614">3614</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03707">3707</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -918,7 +1055,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Note that the returned <code>mpz_view</code> instance can only be move-constructed (the other constructors and the assignment operators are disabled). Additionally, the returned object and the pointer might reference internal data belonging to <code>this</code>, and they can thus be used safely only during the lifetime of <code>this</code>. Any modification to <code>this</code> will also invalidate the view and the pointer.</p>
 <dl class="section return"><dt>Returns</dt><dd>an <code>mpz</code> view of <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02540">2540</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02499">2499</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -949,7 +1086,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>The returned hash value does not depend on how the integer is stored (i.e., dynamic or static storage).</p>
 <dl class="section return"><dt>Returns</dt><dd>a hash value for <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03651">3651</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03766">3766</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -979,7 +1116,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Test storage status. </p>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> if <code>this</code> is currently stored in static storage, <code>false</code> otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02636">2636</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02595">2595</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1009,7 +1146,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Unitary check. </p>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> if <code>this</code> is equal to 1, <code>false</code> otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03840">3840</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03955">3955</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1058,7 +1195,7 @@ template&lt;int NBits = 0&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>reference to <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03100">3100</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03059">3059</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1107,7 +1244,7 @@ template&lt;int NBits = 0&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>reference to <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03048">3048</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03007">3007</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1144,7 +1281,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03701">3701</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03816">3816</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1184,7 +1321,7 @@ template&lt;typename T , cast_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02576">2576</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02535">2535</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1233,7 +1370,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03237">3237</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03328">3328</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1286,7 +1423,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02990">2990</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02949">2949</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1316,7 +1453,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Identity operation. </p>
 <dl class="section return"><dt>Returns</dt><dd>copy of <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02741">2741</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02700">2700</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1347,7 +1484,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Increment <code>this</code> by one.</p>
 <dl class="section return"><dt>Returns</dt><dd>reference to <code>this</code> after the increment. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02751">2751</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02710">2710</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1379,7 +1516,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Increment <code>this</code> by one and return a copy of <code>this</code> as it was before the increment.</p>
 <dl class="section return"><dt>Returns</dt><dd>copy of <code>this</code> before the increment. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02761">2761</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02720">2720</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1432,7 +1569,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02686">2686</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02645">2645</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1462,7 +1599,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Negated copy. </p>
 <dl class="section return"><dt>Returns</dt><dd>copy of <code>-this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02891">2891</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02850">2850</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1493,7 +1630,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Decrement <code>this</code> by one and return.</p>
 <dl class="section return"><dt>Returns</dt><dd>reference to <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02903">2903</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02862">2862</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1525,7 +1662,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Decrement <code>this</code> by one and return a copy of <code>this</code> as it was before the decrement.</p>
 <dl class="section return"><dt>Returns</dt><dd>copy of <code>this</code> before the decrement. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02913">2913</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02872">2872</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1578,7 +1715,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02838">2838</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02797">2797</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1632,7 +1769,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03165">3165</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03124">3124</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1681,7 +1818,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03307">3307</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03398">3398</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1728,7 +1865,7 @@ template&lt;typename T , generic_ctor_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02491">2491</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02450">2450</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1772,7 +1909,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02505">2505</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02464">2464</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1816,7 +1953,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02520">2520</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02479">2479</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1865,7 +2002,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03371">3371</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03462">3462</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1916,7 +2053,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03587">3587</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03678">3678</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1960,7 +2097,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03723">3723</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03838">3838</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1996,7 +2133,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02625">2625</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02584">2584</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2026,7 +2163,7 @@ template&lt;int NBits = 0&gt; </div>
 <p>Sign. </p>
 <dl class="section return"><dt>Returns</dt><dd>1 if <code>this &gt; 0</code>, 0 if <code>this == 0</code> and -1 if <code>this &lt; 0</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02653">2653</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02612">2612</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2062,7 +2199,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03740">3740</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03855">3855</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2111,7 +2248,7 @@ template&lt;int NBits = 0&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>reference to <code>this</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02928">2928</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02887">2887</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2176,7 +2313,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03462">3462</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03553">3553</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2244,7 +2381,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03284">3284</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03375">3375</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2302,7 +2439,7 @@ template&lt;typename T , generic_in_place_mod_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03260">3260</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03351">3351</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2370,7 +2507,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03035">3035</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02994">2994</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2428,7 +2565,7 @@ template&lt;typename T , generic_in_place_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03009">3009</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02968">2968</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2497,7 +2634,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02733">2733</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02692">2692</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2555,7 +2692,7 @@ template&lt;typename T , generic_in_place_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02705">2705</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02664">2664</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2623,7 +2760,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02883">2883</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02842">2842</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2681,7 +2818,7 @@ template&lt;typename T , generic_in_place_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02857">2857</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02816">2816</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2750,7 +2887,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03214">3214</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03173">3173</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2808,7 +2945,7 @@ template&lt;typename T , generic_in_place_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03187">3187</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03146">3146</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2873,7 +3010,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03487">3487</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03578">3578</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2929,7 +3066,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02592">2592</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02551">2551</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -2996,7 +3133,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03351">3351</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03442">3442</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -3054,7 +3191,7 @@ template&lt;typename T , generic_in_place_shift_enabler&lt; T &gt;  = 0&gt; </di
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03328">3328</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03419">3419</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -3119,7 +3256,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03512">3512</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03603">3603</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -3184,7 +3321,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03440">3440</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03531">3531</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -3249,7 +3386,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03537">3537</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03628">3628</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -3314,7 +3451,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03562">3562</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03653">3653</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -3369,7 +3506,7 @@ template&lt;int NBits = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02611">2611</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l02570">2570</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -3436,7 +3573,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03415">3415</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03506">3506</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -3494,7 +3631,7 @@ template&lt;typename T , generic_in_place_shift_enabler&lt; T &gt;  = 0&gt; </di
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03392">3392</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p>Definition at line <a class="el" href="mp__integer_8hpp_source.html#l03483">3483</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
