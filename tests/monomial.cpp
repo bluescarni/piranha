@@ -681,6 +681,11 @@ struct monomial_divide_tester
 	}
 };
 
+BOOST_AUTO_TEST_CASE(monomial_monomial_divide_test)
+{
+	boost::mpl::for_each<expo_types>(monomial_divide_tester());
+}
+
 struct print_tester
 {
 	template <typename T>
