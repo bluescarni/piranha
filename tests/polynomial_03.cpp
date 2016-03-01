@@ -152,3 +152,112 @@ BOOST_AUTO_TEST_CASE(polynomial_uldiv_test)
 {
 	boost::mpl::for_each<key_types>(uldiv_tester());
 }
+
+struct ugcd_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using namespace piranha::detail;
+		using piranha::math::pow;
+		using p_type = polynomial<integer,Key>;
+		using pq_type = polynomial<rational,Key>;
+		p_type x{"x"};
+		// Some known tests.
+		BOOST_CHECK_EQUAL(x,poly_ugcd(x,x));
+		BOOST_CHECK_EQUAL(12+12*x,poly_ugcd(pow(x,2)+7*x+6,pow(x,2)-5*x-6));
+		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,8)+pow(x,6)-3*pow(x,4)-3*pow(x,3)+8*pow(x,2)+2*x-5,
+			3*pow(x,6)+5*pow(x,4)-4*pow(x,2)-9*x+21),260708);
+		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,4)-9*pow(x,2)-4*x+12,pow(x,3)+5*pow(x,2)+2*x-8),-28+14*x*x+14*x);
+		BOOST_CHECK_EQUAL(1,poly_ugcd(pow(x,4)+pow(x,2)+1,pow(x,2)+1));
+		BOOST_CHECK_EQUAL(poly_ugcd(x*x+1,pow(x,5)+pow(x,4)+x+1),8);
+		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,6)+pow(x,5)+pow(x,3)+x,pow(x,4)+pow(x,2)+1),1);
+		// With zeroes.
+		BOOST_CHECK_EQUAL(x+1,poly_ugcd(x-x,x+1));
+		BOOST_CHECK_EQUAL(x+1,poly_ugcd(x+1,x-x));
+		BOOST_CHECK_EQUAL(0,poly_ugcd(x-x,x-x));
+		// Random testing.
+		std::uniform_int_distribution<int> ud(0,9);
+		for (auto i = 0; i < ntrials; ++i) {
+			p_type a = x - x, b = a;
+			const int nterms = ud(rng);
+			for (int j = 0; j < nterms; ++j) {
+				a += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
+				b += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
+			}
+			auto tmp = poly_ugcd(a,b);
+			if (a.size() != 0u || b.size() != 0u) {
+				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b),pq_type(tmp)).second.size(),0u);
+			}
+		}
+		for (auto i = 0; i < ntrials; ++i) {
+			p_type a = x - x, b = a;
+			const int nterms = ud(rng);
+			for (int j = 0; j < nterms; ++j) {
+				a += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
+				b += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
+			}
+			auto tmp = poly_ugcd(a*b,b);
+			if ((a*b).size() != 0u || b.size() != 0u) {
+				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a*b),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b),pq_type(tmp)).second.size(),0u);
+			}
+			tmp = poly_ugcd(a*b*b,b*a);
+			if ((a*b*b).size() != 0u || (b*a).size() != 0u) {
+				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a*b*b),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b*a),pq_type(tmp)).second.size(),0u);
+			}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_ugcd_test)
+{
+	boost::mpl::for_each<key_types>(ugcd_tester());
+}
+
+struct establish_limits_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using namespace piranha::detail;
+		using p_type = polynomial<integer,Key>;
+		p_type x{"x"}, y{"y"};
+		auto lims = poly_establish_limits(x+y,x+y);
+		BOOST_CHECK_EQUAL(lims.size(),2u);
+		BOOST_CHECK_EQUAL(lims[0].first,0);
+		BOOST_CHECK_EQUAL(lims[0].second,1);
+		BOOST_CHECK_EQUAL(lims[1].first,0);
+		BOOST_CHECK_EQUAL(lims[1].second,1);
+		lims = poly_establish_limits(x+y-x,x+y-x+y*y);
+		BOOST_CHECK_EQUAL(lims.size(),2u);
+		BOOST_CHECK_EQUAL(lims[0].first,0);
+		BOOST_CHECK_EQUAL(lims[0].second,0);
+		BOOST_CHECK_EQUAL(lims[1].first,1);
+		BOOST_CHECK_EQUAL(lims[1].second,2);
+		lims = poly_establish_limits(p_type{1},p_type{2});
+		BOOST_CHECK_EQUAL(lims.size(),0u);
+		lims = poly_establish_limits(x+1-x,x+2-x);
+		BOOST_CHECK_EQUAL(lims.size(),1u);
+		BOOST_CHECK_EQUAL(lims[0].first,0);
+		BOOST_CHECK_EQUAL(lims[0].second,0);
+		lims = poly_establish_limits(x+y-y,y+x.pow(4));
+		BOOST_CHECK_EQUAL(lims.size(),2u);
+		BOOST_CHECK_EQUAL(lims[0].first,0);
+		BOOST_CHECK_EQUAL(lims[0].second,4);
+		BOOST_CHECK_EQUAL(lims[1].first,0);
+		BOOST_CHECK_EQUAL(lims[1].second,1);
+		BOOST_CHECK_THROW(poly_establish_limits(x+y.pow(-1),y+x.pow(4)),std::invalid_argument);
+		// Try with zero variables.
+		p_type a{1}, b{2};
+		lims = poly_establish_limits(a,b);
+		BOOST_CHECK_EQUAL(lims.size(),0u);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_establish_limits_test)
+{
+	boost::mpl::for_each<key_types>(establish_limits_tester());
+}

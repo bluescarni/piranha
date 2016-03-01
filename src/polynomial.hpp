@@ -267,6 +267,131 @@ inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
 	return std::make_pair(std::move(q),std::move(r));
 }
 
+// Univariate polynomial GCD.
+// Implementation based on subresultant polynomial remainder sequence:
+// https://en.wikipedia.org/wiki/Polynomial_greatest_common_divisor
+// See also Zippel, 8.6. This implementation is actually based on
+// Winkler, chapter 4.
+// NOTE: here we do not need the full sequence of remainders, consider
+// removing the vector of polys once this is debugged and tested.
+// Preconditions:
+// - univariate polynomials on the same variable.
+// Type requirements:
+// - cf type supports exponentiation to unsigned, yielding the same type,
+// - cf type * cf type is still cf type.
+template <typename PType>
+inline PType poly_ugcd(PType a, PType b)
+{
+	using term_type = typename PType::term_type;
+	using cf_type = typename term_type::cf_type;
+	using key_type = typename term_type::key_type;
+	// Only univariate polynomials are allowed.
+	piranha_assert(a.get_symbol_set().size() == 1u && a.get_symbol_set() == b.get_symbol_set());
+	// If one of the two is zero, the gcd is the other.
+	if (math::is_zero(a) && !math::is_zero(b)) {
+		return b;
+	}
+	if (!math::is_zero(a) && math::is_zero(b)) {
+		return a;
+	}
+	// If both are zero, return zero.
+	if (math::is_zero(a) && math::is_zero(b)) {
+		PType retval;
+		retval.set_symbol_set(a.get_symbol_set());
+		return retval;
+	}
+	// Order so that deg(a) >= deg(b).
+	if (poly_lterm(a)->m_key < poly_lterm(b)->m_key) {
+		std::swap(a,b);
+	}
+	// Cache the arguments set. Make a copy as "a" will be moved below.
+	const auto args = a.get_symbol_set();
+	// NOTE: coefficients are alway ctible from ints.
+	cf_type h(1), g(1);
+	std::vector<PType> F;
+	using size_type = typename std::vector<PType>::size_type;
+	F.push_back(std::move(a));
+	F.push_back(std::move(b));
+	PType fprime(F.back());
+	size_type i = 2u;
+	// A key representing the constant univariate monomial.
+	// NOTE: all monomials support construction from init list.
+	key_type zero_key{typename key_type::value_type(0)};
+	while (fprime.size() != 0u && poly_lterm(fprime)->m_key != zero_key) {
+		auto l2 = poly_lterm(F[static_cast<size_type>(i - 2u)]),
+			l1 = poly_lterm(F[static_cast<size_type>(i - 1u)]);
+		// NOTE: we are using the degree here in order to maintain compatibility with
+		// all monomials. There is some small overhead in this, but it should not
+		// matter too much.
+		// NOTE: this will be used only on monomials with integral exponents, so it is always valid.
+		integer delta(l2->m_key.degree(args));
+		delta -= l1->m_key.degree(args);
+		poly_cf_mult(math::pow(l1->m_cf,static_cast<unsigned>(delta+1)),F[static_cast<size_type>(i - 2u)]);
+		fprime = poly_uldiv(F[static_cast<size_type>(i - 2u)],F[static_cast<size_type>(i - 1u)]).second;
+		if (fprime.size() != 0u) {
+			const cf_type h_delta = math::pow(h,static_cast<unsigned>(delta));
+			auto tmp(fprime);
+			poly_cf_div(tmp,g * h_delta);
+			g = l1->m_cf;
+			math::divexact(h,math::pow(g,delta) * h,h_delta);
+			F.push_back(std::move(tmp));
+			safe_integral_adder(i,size_type(1u));
+		}
+	}
+	return std::move(F.back());
+}
+
+// Establish the limits of the exponents of two polynomials. Will throw if a negative exponent is encountered.
+// Preconditions:
+// - equal symbol sets.
+// - non-empty polys.
+template <typename PType>
+inline std::vector<std::pair<typename PType::term_type::key_type::value_type,
+	typename PType::term_type::key_type::value_type>> poly_establish_limits(const PType &n, const PType &d)
+{
+	using expo_type = typename PType::term_type::key_type::value_type;
+	using v_type = std::vector<expo_type>;
+	using vp_type = std::vector<std::pair<expo_type,expo_type>>;
+	using vp_size_type = typename vp_type::size_type;
+	piranha_assert(n.get_symbol_set() == d.get_symbol_set());
+	piranha_assert(n.size() != 0u && d.size() != 0u);
+	// Return value, init with the first element from the numerator.
+	vp_type retval;
+	v_type tmp;
+	auto it = n._container().begin(), it_f = n._container().end();
+	it->m_key.extract_exponents(tmp,n.get_symbol_set());
+	std::transform(tmp.begin(),tmp.end(),std::back_inserter(retval),[](const expo_type &e) {return std::make_pair(e,e);});
+	for (; it != it_f; ++it) {
+		it->m_key.extract_exponents(tmp,n.get_symbol_set());
+		for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+			// NOTE: greater-than comparability is ensured for all exponent types.
+			if (tmp[i] < retval[static_cast<vp_size_type>(i)].first) {
+				retval[static_cast<vp_size_type>(i)].first = tmp[i];
+			} else if (tmp[i] > retval[static_cast<vp_size_type>(i)].second) {
+				retval[static_cast<vp_size_type>(i)].second = tmp[i];
+			}
+		}
+	}
+	// Denominator.
+	it_f = d._container().end();
+	for (it = d._container().begin(); it != it_f; ++it) {
+		it->m_key.extract_exponents(tmp,n.get_symbol_set());
+		for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+			if (tmp[i] < retval[static_cast<vp_size_type>(i)].first) {
+				retval[static_cast<vp_size_type>(i)].first = tmp[i];
+			} else if (tmp[i] > retval[static_cast<vp_size_type>(i)].second) {
+				retval[static_cast<vp_size_type>(i)].second = tmp[i];
+			}
+		}
+	}
+	// Check for negative expos.
+	if (std::any_of(retval.begin(),retval.end(),[](const std::pair<expo_type,expo_type> &p) {return p.first < expo_type(0);}))
+	{
+		piranha_throw(std::invalid_argument,"negative exponents are not allowed");
+	}
+	return retval;
+}
+
 }
 
 /// Polynomial class.
