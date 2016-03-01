@@ -40,8 +40,6 @@ see https://www.gnu.org/licenses/. */
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
- * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
- * (or standard containers) has strong exception safety guarantee.
  * \todo check usage of max_load_factor (especially wrt flukes in * instead of / or viceversa).
  * \todo review use of numeric_cast: in some places we might be using it in such a way we expect errors if converting floating point to int, but this is not the case (from the doc)
  * \todo the tuning parameters should be tested and justified (e.g., when to go into mt mode, etc.).
@@ -188,6 +186,10 @@ see https://www.gnu.org/licenses/. */
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method. Once we have this, we could
  * also think about re-implementing multiplication by zero by an actual coefficient multiplication, thus solving the incosistency with double
  * coefficients reported in audi (0 * inf = 0 --> empty polynomia, instead of NaN).
+ * \todo in mp_integer probably the ternary operations (and multadd and divexact etc.) should be modified so that the return value is demoted to
+ * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times, once it is set to dynamic
+ * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that iteratively always increases).
+ * Not sure there's a general solution.
  */
 namespace piranha
 {
