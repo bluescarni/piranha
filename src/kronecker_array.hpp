@@ -80,6 +80,8 @@ using ka_type_reqs = std::integral_constant<bool,std::is_integral<T>::value && s
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
+// NOTE: we should optimise the decodification with only one element, there should be no need to do divisions
+// and modulo operations.
 template <typename SignedInteger>
 class kronecker_array
 {
