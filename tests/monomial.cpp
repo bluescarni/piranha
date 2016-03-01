@@ -616,6 +616,71 @@ BOOST_AUTO_TEST_CASE(monomial_multiply_test)
 	boost::mpl::for_each<expo_types>(multiply_tester());
 }
 
+struct monomial_multiply_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using key_type = monomial<T,U>;
+			symbol_set ed;
+			key_type k1, k2, res;
+			key_type::multiply(res,k1,k2,ed);
+			BOOST_CHECK(res.size() == 0u);
+			ed.add("x");
+			k1 = key_type{T(2)};
+			k2 = key_type{T(3)};
+			key_type::multiply(res,k1,k2,ed);
+			BOOST_CHECK(res == key_type{T(5)});
+			ed.add("y");
+			BOOST_CHECK_THROW(key_type::multiply(res,k1,k2,ed),std::invalid_argument);
+			BOOST_CHECK(res == key_type{T(5)});
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_monomial_multiply_test)
+{
+	boost::mpl::for_each<expo_types>(monomial_multiply_tester());
+}
+
+struct monomial_divide_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using key_type = monomial<T,U>;
+			symbol_set ed;
+			key_type k1, k2, res;
+			key_type::divide(res,k1,k2,ed);
+			BOOST_CHECK(res.size() == 0u);
+			ed.add("x");
+			k1 = key_type{T(2)};
+			k2 = key_type{T(3)};
+			key_type::divide(res,k1,k2,ed);
+			BOOST_CHECK(res == key_type{T(-1)});
+			ed.add("y");
+			BOOST_CHECK_THROW(key_type::divide(res,k1,k2,ed),std::invalid_argument);
+			BOOST_CHECK(res == key_type{T(-1)});
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
 struct print_tester
 {
 	template <typename T>
@@ -1459,4 +1524,49 @@ struct split_tester
 BOOST_AUTO_TEST_CASE(monomial_split_test)
 {
 	boost::mpl::for_each<expo_types>(split_tester());
+}
+
+struct extract_exponents_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using key_type = monomial<T,U>;
+			std::vector<T> out;
+			key_type k{};
+			symbol_set ss;
+			k.extract_exponents(out,ss);
+			BOOST_CHECK_EQUAL(out.size(),0u);
+			ss.add(symbol{"a"});
+			BOOST_CHECK_THROW(k.extract_exponents(out,ss),std::invalid_argument);
+			BOOST_CHECK_EQUAL(out.size(),0u);
+			k = key_type{T(-2)};
+			k.extract_exponents(out,ss);
+			BOOST_CHECK_EQUAL(out.size(),1u);
+			BOOST_CHECK_EQUAL(out[0u],T(-2));
+			ss.add(symbol{"b"});
+			BOOST_CHECK_THROW(k.extract_exponents(out,ss),std::invalid_argument);
+			BOOST_CHECK_EQUAL(out.size(),1u);
+			BOOST_CHECK_EQUAL(out[0u],T(-2));
+			k = key_type{T(-2),T(3)};
+			out.resize(4u);
+			k.extract_exponents(out,ss);
+			BOOST_CHECK_EQUAL(out.size(),2u);
+			BOOST_CHECK_EQUAL(out[0u],T(-2));
+			BOOST_CHECK_EQUAL(out[1u],T(3));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_extract_exponents_test)
+{
+	boost::mpl::for_each<expo_types>(extract_exponents_tester());
 }
