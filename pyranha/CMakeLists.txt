@@ -76,7 +76,7 @@ endif()
 message(STATUS "Extra compile flags for pyranha: ${PYRANHA_EXTRA_COMPILE_FLAGS}")
 set_target_properties(_core PROPERTIES COMPILE_FLAGS "${PYRANHA_EXTRA_COMPILE_FLAGS}")
 
-# Module needs to Boost.Python and the Python libs, plus the mandatory libraries.
+# The module needs Boost.Python and the Python libs, plus the mandatory libraries.
 TARGET_LINK_LIBRARIES(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES})
 INSTALL(TARGETS _core
 	RUNTIME DESTINATION ${PYRANHA_INSTALL_PATH}
