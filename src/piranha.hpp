@@ -177,11 +177,17 @@ see https://www.gnu.org/licenses/. */
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
  *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
  *   - the fill_term_pointers parallelisation + deterministic ordering has not been done yet for rational coefficients.
+ * \todo in a bunch of generic constructors all over the place, we enable them only if the argument is not the same type as the calling class.
+ * This should probably be an is_base_of check, as done in forwarding.hpp, so that if one derives from the class then we are still not mixing
+ * up generic ctor and standard copy/move ones in the derived class.
  * \todo in order to circumvent the problem of the lack of thread local storage on osx, we should probably just create a local variable ad-hoc.
  * It will be suboptimal but at least it should work on osx.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
  * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs, e.g., implementing the test() method
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type traits.
+ * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method. Once we have this, we could
+ * also think about re-implementing multiplication by zero by an actual coefficient multiplication, thus solving the incosistency with double
+ * coefficients reported in audi (0 * inf = 0 --> empty polynomia, instead of NaN).
  */
 namespace piranha
 {

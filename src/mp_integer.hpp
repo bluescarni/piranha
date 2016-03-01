@@ -1289,6 +1289,9 @@ struct is_mp_integer_interoperable_type
  * - use the GMP facilities via mpz_view and/or the mpz_t constructor when interacting with float and double? Maybe pass through a real
  *   for interaction with long doubles? This might need a thread local mpz_t/real/mpfr_t in order to avoid having to allocate at each
  *   construction, but for thread local we have the usual issue on OSX.
+ * - if GMP ever adopts sane behaviour for memory errors or if we ever move away from it, we probably need to review the exception behaviour,
+ *   and possibly re-implement a bunch of things. For instance, now the copy-assignment operator is defaulted in mp_rational, but if exceptions
+ *   are allowed then we need to change the implementation to the copy+move idiom.
  */
 template <int NBits = 0>
 class mp_integer
