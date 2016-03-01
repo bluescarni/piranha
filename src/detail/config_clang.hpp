@@ -25,6 +25,7 @@ for more details.
 You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
+
 #ifndef PIRANHA_CONFIG_CLANG_HPP
 #define PIRANHA_CONFIG_CLANG_HPP
 
