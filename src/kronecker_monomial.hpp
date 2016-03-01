@@ -1002,6 +1002,27 @@ class kronecker_monomial
 		{
 			return m_value < other.m_value;
 		}
+		/// Split.
+		/**
+		 * This method will split \p this into two monomials: the second monomial will contain the exponent
+		 * of the first variable in \p args, the first monomial will contain all the other exponents.
+		 *
+		 * @param[in] args reference arguments set.
+		 *
+		 * @return a pair of monomials, the second one containing the first exponent, the first one containing all the
+		 * other exponents.
+		 *
+		 * @throws std::invalid_argument if the size of \p args is less than 2.
+		 * @throws unspecified any exception thrown by unpack() or by the constructor from a range.
+		 */
+		std::pair<kronecker_monomial,kronecker_monomial> split(const symbol_set &args) const
+		{
+			if (unlikely(args.size() < 2u)) {
+				piranha_throw(std::invalid_argument,"only monomials with 2 or more variables can be split");
+			}
+			auto tmp = unpack(args);
+			return std::make_pair(kronecker_monomial(tmp.begin() + 1,tmp.end()),kronecker_monomial(tmp[0u]));
+		}
 	private:
 		value_type m_value;
 };

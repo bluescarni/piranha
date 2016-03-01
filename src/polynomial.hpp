@@ -695,6 +695,41 @@ class polynomial:
 		{
 			return find_cf_impl(std::begin(l),std::end(l));
 		}
+		/// Split polynomial.
+		/**
+		 * This method will split the first symbolic argument of the polynomial. That is, it will return a univariate
+		 * representation of \p this in which the only symbolic argument is the first symbol in the symbol set of \p this,
+		 * and the coefficients are multivariate polynomials in the remaining variables.
+		 *
+		 * @return a representation of \p this as a univariate polynomial with multivariate polynomial coefficients.
+		 *
+		 * @throws std::invalid_argument if \p this does not have at least 2 symbolic arguments.
+		 * @throws unspecified: any exception thrown by:
+		 * - the <tt>split()</tt> method of the monomial,
+		 * - the construction of piranha::symbol_set,
+		 * - piranha::series::set_symbol_set(),
+		 * - the construction of terms, coefficients and keys,
+		 * - piranha::series::insert().
+		 */
+		polynomial<polynomial<Cf,Key>,Key> split() const
+		{
+			if (unlikely(this->get_symbol_set().size() < 2u)) {
+				piranha_throw(std::invalid_argument,"a polynomial needs at least 2 arguments in order to be split");
+			}
+			using r_term_type = typename polynomial<polynomial<Cf,Key>,Key>::term_type;
+			using term_type = typename base::term_type;
+			polynomial<polynomial<Cf,Key>,Key> retval;
+			retval.set_symbol_set(symbol_set(this->get_symbol_set().begin(),this->get_symbol_set().begin() + 1));
+			symbol_set tmp_ss(this->get_symbol_set().begin() + 1,this->get_symbol_set().end());
+			for (const auto &t: this->_container()) {
+				auto tmp_s = t.m_key.split(this->get_symbol_set());
+				polynomial tmp_p;
+				tmp_p.set_symbol_set(tmp_ss);
+				tmp_p.insert(term_type{t.m_cf,std::move(tmp_s.first)});
+				retval.insert(r_term_type{std::move(tmp_p),std::move(tmp_s.second)});
+			}
+			return retval;
+		}
 	private:
 		// Static data for auto_truncate_degree.
 		static std::mutex		s_at_degree_mutex;

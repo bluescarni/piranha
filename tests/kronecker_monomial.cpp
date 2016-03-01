@@ -1211,3 +1211,47 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_comparison_test)
 	BOOST_CHECK(!(k_monomial{2} < k_monomial{1}));
 	BOOST_CHECK(k_monomial{1} < k_monomial{2});
 }
+
+struct split_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using k_type = kronecker_monomial<T>;
+		symbol_set vs;
+		BOOST_CHECK_THROW(k_type{}.split(vs),std::invalid_argument);
+		vs.add("x");
+		BOOST_CHECK_THROW(k_type{}.split(vs),std::invalid_argument);
+		vs.add("y");
+		std::vector<T> v;
+		v.emplace_back(1);
+		v.emplace_back(2);
+		auto res = k_type(v.begin(),v.end()).split(vs);
+		BOOST_CHECK_EQUAL(res.first.get_int(),2);
+		BOOST_CHECK_EQUAL(res.second.get_int(),1);
+		// signed char does not have enough range for this.
+		if (std::is_same<T,signed char>::value) {
+			return;
+		}
+		v.emplace_back(-3);
+		auto old_vs(vs);
+		vs.add("z");
+		res = k_type(v.begin(),v.end()).split(vs);
+		BOOST_CHECK_EQUAL(res.second.get_int(),1);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[0u],2);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[1u],-3);
+		v.emplace_back(-2);
+		old_vs = vs;
+		vs.add("u");
+		res = k_type(v.begin(),v.end()).split(vs);
+		BOOST_CHECK_EQUAL(res.second.get_int(),1);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[0u],2);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[1u],-3);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[2u],-2);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_split_test)
+{
+	boost::mpl::for_each<int_types>(split_tester());
+}

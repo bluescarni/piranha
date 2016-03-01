@@ -66,7 +66,7 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-typedef boost::mpl::vector<signed char,short,int,integer,rational> expo_types;
+typedef boost::mpl::vector<signed char,int,integer,rational> expo_types;
 typedef boost::mpl::vector<std::integral_constant<std::size_t,0u>,std::integral_constant<std::size_t,1u>,std::integral_constant<std::size_t,5u>,
 	std::integral_constant<std::size_t,10u>> size_types;
 
@@ -1417,4 +1417,46 @@ BOOST_AUTO_TEST_CASE(monomial_comparison_test)
 	BOOST_CHECK(!(k_type_00{1,2,3,4} < k_type_00{1,2,3,4}));
 	BOOST_CHECK_THROW((void)(k_type_00{} < k_type_00{1}),std::invalid_argument);
 	BOOST_CHECK_THROW((void)(k_type_00{1} < k_type_00{}),std::invalid_argument);
+}
+
+struct split_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using k_type = monomial<T,U>;
+			symbol_set vs;
+			BOOST_CHECK_THROW(k_type{}.split(vs),std::invalid_argument);
+			vs.add("x");
+			BOOST_CHECK_THROW(k_type{}.split(vs),std::invalid_argument);
+			BOOST_CHECK_THROW(k_type{T(1)}.split(vs),std::invalid_argument);
+			vs.add("y");
+			auto res = k_type{T(1),T(2)}.split(vs);
+			BOOST_CHECK_EQUAL(res.first.size(),1u);
+			BOOST_CHECK_EQUAL(res.first[0u],T(2));
+			BOOST_CHECK_EQUAL(res.second.size(),1u);
+			BOOST_CHECK_EQUAL(res.second[0u],T(1));
+			vs.add("z");
+			BOOST_CHECK_THROW((k_type{T(1),T(2)}.split(vs)),std::invalid_argument);
+			res = k_type{T(1),T(2),T(3)}.split(vs);
+			BOOST_CHECK_EQUAL(res.first.size(),2u);
+			BOOST_CHECK_EQUAL(res.first[0u],T(2));
+			BOOST_CHECK_EQUAL(res.first[1u],T(3));
+			BOOST_CHECK_EQUAL(res.second.size(),1u);
+			BOOST_CHECK_EQUAL(res.second[0u],T(1));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_split_test)
+{
+	boost::mpl::for_each<expo_types>(split_tester());
 }

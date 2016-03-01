@@ -941,6 +941,31 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			return std::lexicographical_compare(std::get<1u>(sbe1),std::get<2u>(sbe1),
 				std::get<1u>(sbe2),std::get<2u>(sbe2));
 		}
+		/// Split.
+		/**
+		 * This method will split \p this into two monomials: the second monomial will contain the exponent
+		 * of the first variable in \p args, the first monomial will contain all the other exponents.
+		 *
+		 * @param[in] args reference arguments set.
+		 *
+		 * @return a pair of monomials, the second one containing the first exponent, the first one containing all the
+		 * other exponents.
+		 *
+		 * @throws std::invalid_argument if the size of \p args is different from the size of \p this or less than 2.
+		 * @throws unspecified any exception thrown by the constructor from a range.
+		 */
+		std::pair<monomial,monomial> split(const symbol_set &args) const
+		{
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"mismatch in the number of arguments");
+			}
+			if (unlikely(this->size() < 2u)) {
+				piranha_throw(std::invalid_argument,"only monomials with 2 or more variables can be split");
+			}
+			auto sbe = this->size_begin_end();
+			return std::make_pair(monomial(std::get<1u>(sbe) + 1,std::get<2u>(sbe)),
+				monomial(std::get<1u>(sbe),std::get<1u>(sbe) + 1));
+		}
 };
 
 template <typename T, typename S>
