@@ -122,6 +122,151 @@ struct key_has_linarg: detail::sfinae_types
 	static const bool value = std::is_same<std::string,decltype(test(std::declval<Key>()))>::value;
 };
 
+// Division utilities.
+// Return iterator to the leading term of a polynomial, as defined by the operator<()
+// of its key type. This is always available for any monomial type.
+template <typename PType>
+inline auto poly_lterm(const PType &p) -> decltype(p._container().begin())
+{
+	using term_type = typename PType::term_type;
+	return std::max_element(p._container().begin(),p._container().end(),[](const term_type &t1, const term_type &t2) {
+		return t1.m_key < t2.m_key;
+	});
+}
+
+// Multiply polynomial by a term. Preconditions:
+// - p is not zero,
+// - the coefficient of the term is not zero.
+// Type requirements:
+// - cf type supports mul3,
+// - key type supports multiply.
+template <typename PType>
+inline PType poly_term_mult(const typename PType::term_type &t, const PType &p)
+{
+	using term_type = typename PType::term_type;
+	using cf_type = typename term_type::cf_type;
+	using key_type = typename term_type::key_type;
+	piranha_assert(p.size() != 0u);
+	piranha_assert(!math::is_zero(t.m_cf));
+	// Initialise the return value.
+	PType retval;
+	retval.set_symbol_set(p.get_symbol_set());
+	// Prepare an adequate number of buckets (same as input poly).
+	retval._container().rehash(p._container().bucket_count());
+	// Go with the loop.
+	cf_type tmp_cf;
+	key_type tmp_key;
+	const auto it_f = p._container().end();
+	for (auto it = p._container().begin(); it != it_f; ++it) {
+		math::mul3(tmp_cf,t.m_cf,it->m_cf);
+		key_type::multiply(tmp_key,t.m_key,it->m_key,p.get_symbol_set());
+		piranha_assert(!math::is_zero(tmp_cf));
+		// NOTE: here we could use the unique_insert machinery
+		// to improve performance.
+		retval.insert(term_type{tmp_cf,tmp_key});
+	}
+	return retval;
+}
+
+// Multiply polynomial by non-zero cf in place. Preconditions:
+// - a is not zero.
+// Type requirements:
+// - cf type supports mul3.
+template <typename PType>
+inline void poly_cf_mult(const typename PType::term_type::cf_type &a, PType &p)
+{
+	piranha_assert(!math::is_zero(a));
+	const auto it_f = p._container().end();
+	for (auto it = p._container().begin(); it != it_f; ++it) {
+		math::mul3(it->m_cf,it->m_cf,a);
+		piranha_assert(!math::is_zero(it->m_cf));
+	}
+}
+
+// Divide polynomial by non-zero cf in place. Preconditions:
+// - a is not zero.
+// Type requirements:
+// - cf type supports divexact.
+template <typename PType>
+inline void poly_cf_div(PType &p, const typename PType::term_type::cf_type &a)
+{
+	piranha_assert(!math::is_zero(a));
+	const auto it_f = p._container().end();
+	for (auto it = p._container().begin(); it != it_f; ++it) {
+		// NOTE: here we could use a wrapper for mp_integer::_divexact(): this function
+		// is only used when we know that the division should be exact by construction,
+		// in the GCD code.
+		math::divexact(it->m_cf,it->m_cf,a);
+		piranha_assert(!math::is_zero(it->m_cf));
+	}
+}
+
+// Univariate polynomial long division:
+// https://en.wikipedia.org/wiki/Polynomial_long_division
+// Preconditions:
+// - univariate polynomials on the same variable,
+// - non-zero denominator.
+// Type requirements:
+// - cf must support exact division,
+// - key must support division.
+template <typename PType>
+inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
+{
+	using term_type = typename PType::term_type;
+	using cf_type = typename term_type::cf_type;
+	using key_type = typename term_type::key_type;
+	// Only univariate polynomials are allowed.
+	piranha_assert(n.get_symbol_set().size() == 1u &&
+		n.get_symbol_set() == d.get_symbol_set());
+	// Denominator must not be zero.
+	piranha_assert(d.size() != 0u);
+	// Cache the symbol set for brevity.
+	const auto &args = n.get_symbol_set();
+	// If the numerator is zero, just return two empty polys.
+	if (n.size() == 0u) {
+		PType q, r;
+		q.set_symbol_set(args);
+		r.set_symbol_set(args);
+		return std::make_pair(std::move(q),std::move(r));
+	}
+	// Initialisation: quotient is empty, remainder is the numerator.
+	PType q, r(n);
+	q.set_symbol_set(args);
+	// Leading term of the denominator, always the same.
+	const auto lden = poly_lterm(d);
+	piranha_assert(!math::is_zero(lden->m_cf));
+	// Temp cf and key used for computations in the loop.
+	cf_type tmp_cf;
+	key_type tmp_key;
+	while (true) {
+		if (r.size() == 0u) {
+			break;
+		}
+		// Leading term of the remainder.
+		const auto lr = poly_lterm(r);
+		if (lr->m_key < lden->m_key) {
+			break;
+		}
+		// NOTE: we want to check that the division is exact here,
+		// and throw if this is not the case.
+		math::divexact(tmp_cf,lr->m_cf,lden->m_cf);
+		key_type::divide(tmp_key,lr->m_key,lden->m_key,args);
+		term_type t{tmp_cf,tmp_key};
+		// NOTE: here we are basically progressively removing terms from r until
+		// it gets to zero. This sounds exactly like the kind of situation in which
+		// the iteration over the hash table could become really slow. This might
+		// matter when we need to re-determine the leading term of r above.
+		// We should consider adding a re-hashing every time we do a +/- operation on
+		// a series and the load factor gets below a certain threshold. We should also
+		// review uses of the insert() method of series to spot other possible
+		// places where this could be a problem (although once we have a good behaviour
+		// for +/- we should be mostly good - multiplication should already be ok).
+		r -= poly_term_mult(t,d);
+		q.insert(std::move(t));
+	}
+	return std::make_pair(std::move(q),std::move(r));
+}
+
 }
 
 /// Polynomial class.
