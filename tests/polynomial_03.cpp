@@ -33,8 +33,10 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <limits>
 #include <random>
 #include <stdexcept>
+#include <tuple>
 
 #include "../src/environment.hpp"
 #include "../src/kronecker_monomial.hpp"
@@ -51,7 +53,7 @@ static std::mt19937 rng;
 static const int ntrials = 100;
 
 using cf_types = boost::mpl::vector<integer,rational>;
-using key_types = boost::mpl::vector<monomial<int>,k_monomial>;
+using key_types = boost::mpl::vector<monomial<short>,monomial<integer>,k_monomial>;
 
 struct split_tester
 {
@@ -260,4 +262,90 @@ struct establish_limits_tester
 BOOST_AUTO_TEST_CASE(polynomial_establish_limits_test)
 {
 	boost::mpl::for_each<key_types>(establish_limits_tester());
+}
+
+struct mapping_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using namespace piranha::detail;
+		using p_type = polynomial<integer,Key>;
+		using kp_type = polynomial<integer,k_monomial>;
+		// Start with some basic checks.
+		p_type x{"x"}, y{"y"}, z{"z"};
+		kp_type kx{"x"};
+		auto res = poly_to_univariate(2*x,x*x);
+		BOOST_CHECK_EQUAL(std::get<0u>(res).size(),1u);
+		BOOST_CHECK(std::get<0u>(res).get_symbol_set() == x.get_symbol_set());
+		BOOST_CHECK_EQUAL(std::get<0u>(res)._container().begin()->m_cf,2);
+		BOOST_CHECK_EQUAL(std::get<0u>(res)._container().begin()->m_key.get_int(),1);
+		BOOST_CHECK_EQUAL(std::get<1u>(res).size(),1u);
+		BOOST_CHECK(std::get<1u>(res).get_symbol_set() == x.get_symbol_set());
+		BOOST_CHECK_EQUAL(std::get<1u>(res)._container().begin()->m_cf,1);
+		BOOST_CHECK_EQUAL(std::get<1u>(res)._container().begin()->m_key.get_int(),2);
+		BOOST_CHECK_EQUAL(std::get<2u>(res).size(),2u);
+		BOOST_CHECK_EQUAL(std::get<2u>(res)[0u],1);
+		BOOST_CHECK_EQUAL(std::get<2u>(res)[1u],3);
+		// Decodification.
+		auto dres = poly_from_univariate<Key>(std::get<0u>(res),std::get<2u>(res),symbol_set({symbol{"x"}}));
+		BOOST_CHECK_EQUAL(dres,2*x);
+		// Check the throwing with negative powers.
+		BOOST_CHECK_THROW(poly_to_univariate(y,y.pow(-1)),std::invalid_argument);
+		// Another simple example to check by hand.
+		res = poly_to_univariate(2*x*x+y*y,x*x*x-y);
+		BOOST_CHECK_EQUAL(std::get<2u>(res).size(),3u);
+		BOOST_CHECK_EQUAL(std::get<2u>(res)[0u],1);
+		BOOST_CHECK_EQUAL(std::get<2u>(res)[1u],4);
+		BOOST_CHECK_EQUAL(std::get<2u>(res)[2u],12);
+		BOOST_CHECK_EQUAL(std::get<0u>(res).size(),2u);
+		BOOST_CHECK_EQUAL(std::get<0u>(res).get_symbol_set().size(),1u);
+		BOOST_CHECK_EQUAL(*std::get<0u>(res).get_symbol_set().begin(),symbol("x"));
+		BOOST_CHECK_EQUAL(std::get<0u>(res),2*kx*kx+kx.pow(8));
+		BOOST_CHECK_EQUAL(std::get<1u>(res).size(),2u);
+		BOOST_CHECK_EQUAL(std::get<1u>(res).get_symbol_set().size(),1u);
+		BOOST_CHECK_EQUAL(*std::get<1u>(res).get_symbol_set().begin(),symbol("x"));
+		BOOST_CHECK_EQUAL(std::get<1u>(res),kx*kx*kx-kx.pow(4));
+		overflow_check(x,y);
+		dres = poly_from_univariate<Key>(std::get<0u>(res),std::get<2u>(res),symbol_set({symbol{"x"},symbol{"y"}}));
+		BOOST_CHECK_EQUAL(dres,2*x*x+y*y);
+		// Random checking.
+		std::uniform_int_distribution<int> ud(0,9);
+		for (int i = 0; i < ntrials; ++i) {
+			symbol_set ss({symbol{"x"},symbol{"y"},symbol{"z"}});
+			// Generate two random polys.
+			p_type n, d;
+			for (int j = 0; j < 10; ++j) {
+				n += x.pow(ud(rng)) * y.pow(ud(rng)) * z.pow(ud(rng));
+				d += x.pow(ud(rng)) * y.pow(ud(rng)) * z.pow(ud(rng));
+			}
+			// In these unlikely cases, skip the iteration.
+			if (n.get_symbol_set().size() != 3u || n.get_symbol_set() != d.get_symbol_set() || n.size() == 0u || d.size() == 0u) {
+				continue;
+			}
+			res = poly_to_univariate(n,d);
+			BOOST_CHECK_EQUAL(std::get<0u>(res).size(),n.size());
+			BOOST_CHECK(std::get<0u>(res).get_symbol_set() == symbol_set({symbol{"x"}}));
+			BOOST_CHECK_EQUAL(std::get<1u>(res).size(),d.size());
+			BOOST_CHECK(std::get<1u>(res).get_symbol_set() == symbol_set({symbol{"x"}}));
+			BOOST_CHECK_EQUAL(std::get<2u>(res).size(),4u);
+			dres = poly_from_univariate<Key>(std::get<0u>(res),std::get<2u>(res),ss);
+			BOOST_CHECK_EQUAL(dres,n);
+		}
+	}
+	template <typename T, typename std::enable_if<detail::is_mp_integer<typename T::term_type::key_type::value_type>::value,int>::type = 0>
+	void overflow_check(const T &x, const T &y) const
+	{
+		BOOST_CHECK_THROW(poly_to_univariate(x.pow(std::numeric_limits<k_monomial::value_type>::max()),x),std::overflow_error);
+		BOOST_CHECK_THROW(poly_to_univariate(x.pow(std::numeric_limits<k_monomial::value_type>::max() / 2)+
+			y.pow(std::numeric_limits<k_monomial::value_type>::max() / 2),x+y),std::overflow_error);
+	}
+	template <typename T, typename std::enable_if<!detail::is_mp_integer<typename T::term_type::key_type::value_type>::value,int>::type = 0>
+	void overflow_check(const T &, const T &) const
+	{}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_mapping_test)
+{
+	boost::mpl::for_each<key_types>(mapping_tester());
 }

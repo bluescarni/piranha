@@ -364,7 +364,8 @@ inline std::vector<std::pair<typename PType::term_type::key_type::value_type,
 	for (; it != it_f; ++it) {
 		it->m_key.extract_exponents(tmp,n.get_symbol_set());
 		for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
-			// NOTE: greater-than comparability is ensured for all exponent types.
+			// NOTE: greater-than comparability is ensured for all exponent types on which this
+			// method will be used.
 			if (tmp[i] < retval[static_cast<vp_size_type>(i)].first) {
 				retval[static_cast<vp_size_type>(i)].first = tmp[i];
 			} else if (tmp[i] > retval[static_cast<vp_size_type>(i)].second) {
@@ -390,6 +391,112 @@ inline std::vector<std::pair<typename PType::term_type::key_type::value_type,
 		piranha_throw(std::invalid_argument,"negative exponents are not allowed");
 	}
 	return retval;
+}
+
+// Simple dot product.
+template <typename It1, typename It2>
+inline auto poly_dot_product(It1 begin1, It1 end1, It2 begin2) -> decltype((*begin1) * (*begin2))
+{
+	using ret_type = decltype((*begin1) * (*begin2));
+	return std::inner_product(begin1,end1,begin2,ret_type(0));
+}
+
+// Convert multivariate polynomial to univariate. Preconditions:
+// - at least 1 symbolic argument,
+// - identical symbol set for n and d,
+// - non-null input polys.
+template <typename Cf, typename Key>
+inline std::tuple<polynomial<Cf,k_monomial>,polynomial<Cf,k_monomial>,std::vector<typename k_monomial::value_type>>
+	poly_to_univariate(const polynomial<Cf,Key> &n, const polynomial<Cf,Key> &d)
+{
+	piranha_assert(n.get_symbol_set().size() > 0u);
+	piranha_assert(n.get_symbol_set() == d.get_symbol_set());
+	piranha_assert(n.size() != 0u && d.size() != 0u);
+	using k_expo_type = typename k_monomial::value_type;
+	using expo_type = typename Key::value_type;
+	// Cache the args.
+	const auto &args = n.get_symbol_set();
+	// Establish the limits of the two polynomials.
+	auto limits = poly_establish_limits(n,d);
+	// Extract just the vector of max exponents.
+	std::vector<expo_type> max_expos;
+	std::transform(limits.begin(),limits.end(),std::back_inserter(max_expos),[](const std::pair<expo_type,expo_type> &p) {return p.second;});
+	using me_size_type = decltype(max_expos.size());
+	// Next we need to check the limits of the codification. We do everything in multiprecision and
+	// then we will attempt to cast back.
+	std::vector<integer> mp_cv;
+	mp_cv.push_back(integer(1));
+	for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+		mp_cv.push_back(mp_cv.back() * (integer(1) + max_expos[static_cast<me_size_type>(i)]));
+	}
+	// Determine the max univariate expo.
+	integer mp_kM = poly_dot_product(max_expos.begin(),max_expos.end(),mp_cv.begin());
+	// Attempt casting everything down.
+	auto kM = static_cast<k_expo_type>(mp_kM);
+	(void)kM;
+	std::vector<k_expo_type> cv;
+	std::transform(mp_cv.begin(),mp_cv.end(),std::back_inserter(cv),[](const integer &n) {return static_cast<k_expo_type>(n);});
+	// Proceed to the codification.
+	auto encode_poly = [&args,&cv](const polynomial<Cf,Key> &p) -> polynomial<Cf,k_monomial> {
+		using term_type = typename polynomial<Cf,k_monomial>::term_type;
+		polynomial<Cf,k_monomial> retval;
+		// The only symbol will be the first symbol from the input polys.
+		symbol_set ss;
+		ss.add(*args.begin());
+		retval.set_symbol_set(ss);
+		// Prepare rehashed.
+		retval._container().rehash(p._container().bucket_count());
+		// Go with the codification.
+		std::vector<expo_type> tmp_expos;
+		for (const auto &t: p._container()) {
+			// Extract the exponents.
+			t.m_key.extract_exponents(tmp_expos,args);
+			// NOTE: unique insertion?
+			retval.insert(term_type{t.m_cf,
+				k_monomial(static_cast<k_expo_type>(poly_dot_product(tmp_expos.begin(),tmp_expos.end(),cv.begin())))});
+		}
+		return retval;
+	};
+	return std::make_tuple(encode_poly(n),encode_poly(d),cv);
+}
+
+// From univariate to multivariate. Preconditions:
+// - n has only 1 symbol,
+// - coding vector and args are consistent,
+// - non-empty poly.
+template <typename Key, typename Cf>
+inline polynomial<Cf,Key>
+	poly_from_univariate(const polynomial<Cf,k_monomial> &n, const std::vector<typename k_monomial::value_type> &cv,
+	const symbol_set &args)
+{
+	piranha_assert(n.get_symbol_set().size() == 1u);
+	piranha_assert(cv.size() > 1u);
+	piranha_assert(args.size() == cv.size() - 1u);
+	piranha_assert(*n.get_symbol_set().begin() == *args.begin());
+	piranha_assert(n.size() != 0u);
+	using expo_type = typename Key::value_type;
+	using cv_size_type = decltype(cv.size());
+	auto decode_poly = [&args,&cv](const polynomial<Cf,k_monomial> &p) -> polynomial<Cf,Key> {
+		using term_type = typename polynomial<Cf,Key>::term_type;
+		// Init the return value.
+		polynomial<Cf,Key> retval;
+		retval.set_symbol_set(args);
+		retval._container().rehash(p._container().bucket_count());
+		// Go with the decodification.
+		std::vector<expo_type> tmp_expos;
+		using v_size_type = typename std::vector<expo_type>::size_type;
+		tmp_expos.resize(safe_cast<v_size_type>(args.size()));
+		for (const auto &t: p._container()) {
+			for (v_size_type i = 0u; i < tmp_expos.size(); ++i) {
+				// NOTE: use construction here rather than static_cast as expo_type could be integer.
+				tmp_expos[i] = expo_type((t.m_key.get_int() % cv[static_cast<cv_size_type>(i + 1u)]) /
+					cv[static_cast<cv_size_type>(i)]);
+			}
+			retval.insert(term_type{t.m_cf,Key(tmp_expos.begin(),tmp_expos.end())});
+		}
+		return retval;
+	};
+	return decode_poly(n);
 }
 
 }
@@ -999,6 +1106,105 @@ class polynomial:
 				retval.insert(r_term_type{std::move(tmp_p),std::move(tmp_s.second)});
 			}
 			return retval;
+		}
+		template <typename T>
+		static T division_impl(const T &n, const T &d)
+		{
+			static_assert(std::is_same<T,polynomial>::value,"Invalid type.");
+			using term_type = typename polynomial::term_type;
+			using expo_type = typename term_type::key_type::value_type;
+			// Cache it.
+			const auto &args = n.get_symbol_set();
+			// First handle the case of zero numerator.
+			if (n.size() == 0u) {
+				polynomial retval;
+				retval.set_symbol_set(args);
+				return retval;
+			}
+			// Second, handle the case of single coefficient series.
+			if (n.is_single_coefficient() && d.is_single_coefficient()) {
+				piranha_assert(n.size() == 1u);
+				piranha_assert(d.size() == 1u);
+				polynomial retval;
+				retval.set_symbol_set(args);
+				Cf tmp_cf;
+				math::divexact(tmp_cf,n._container().begin()->m_cf,d._container().begin()->m_cf);
+				retval.insert(term_type{std::move(tmp_cf),Key(args)});
+				return retval;
+			}
+			// Univariate case.
+			if (args.size() == 1u) {
+				// Here we need to check manually that the exponents are all positive. In the multivariate
+				// case, the check is rolled into the mapping to univariate.
+				if (n.ldegree() < expo_type(0) || d.ldegree() < expo_type(0)) {
+					piranha_throw(std::invalid_argument,"negative exponents are not allowed");
+				}
+				auto res = detail::poly_uldiv(n,d);
+				if (res.second.size() != 0u) {
+					piranha_throw(std::invalid_argument,"polynomial division is not exact");
+				}
+				return res.first;
+			}
+			// Multivariate case.
+			// Map to univariate.
+			auto umap = detail::poly_to_univariate(n,d);
+			// Do the univariate division.
+			auto ures = detail::poly_uldiv(std::get<0u>(umap),std::get<1u>(umap));
+			// Check if the division was exact.
+			if (ures.second.size() != 0u) {
+				piranha_throw(std::invalid_argument,"polynomial division is not exact.");
+			}
+			// Map back to multivariate.
+			auto retval = detail::poly_from_univariate<Key>(ures.first,std::get<2u>(umap),args);
+			// Final check: for each variable, the degree of retval + degree of d must be equal to the degree of n.
+			auto degree_vector_extractor = [&args](const polynomial &p) -> std::vector<expo_type> {
+				std::vector<expo_type> retval, tmp;
+				// Init with the first term of the polynomial.
+				piranha_assert(p.size() != 0u);
+				auto it = p._container().begin();
+				it->m_key.extract_exponents(retval,args);
+				++it;
+				for (; it != p._container().end(); ++it) {
+					it->m_key.extract_exponents(tmp,args);
+					for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+						if (tmp[i] > retval[i]) {
+							retval[i] = tmp[i];
+						}
+					}
+				}
+				return retval;
+			};
+			const auto n_dv = degree_vector_extractor(n), d_dv = degree_vector_extractor(d),
+				r_dv = degree_vector_extractor(retval);
+			for (decltype(n_dv.size()) i = 0u; i < n_dv.size(); ++i) {
+				if (integer(n_dv[i]) != integer(d_dv[i]) + integer(r_dv[i])) {
+					piranha_throw(std::invalid_argument,"polynomial division is not exact.");
+				}
+			}
+			return retval;
+		}
+		template <typename T = polynomial>
+		friend polynomial operator/(const polynomial &n, const polynomial &d)
+		{
+			// First the zero check.
+			if (d.size() == 0u) {
+				piranha_throw(zero_division_error,"polynomial division by zero");
+			}
+			// Then we need to deal with different symbol sets.
+			polynomial merged_n, merged_d;
+			polynomial const *real_n(&n), *real_d(&d);
+			if (n.get_symbol_set() != d.get_symbol_set()) {
+				auto merge = n.get_symbol_set().merge(d.get_symbol_set());
+				if (merge != n.get_symbol_set()) {
+					merged_n = n.extend_symbol_set(merge);
+					real_n = &merged_n;
+				}
+				if (merge != d.get_symbol_set()) {
+					merged_d = d.extend_symbol_set(merge);
+					real_d = &merged_d;
+				}
+			}
+			return division_impl(*real_n,*real_d);
 		}
 	private:
 		// Static data for auto_truncate_degree.
