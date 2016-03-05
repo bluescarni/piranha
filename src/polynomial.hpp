@@ -195,7 +195,7 @@ struct pd_wrapper
 			return t1.m_key < t2.m_key;
 		}
 	};
-	explicit pd_wrapper(const Poly &p)
+	explicit pd_wrapper(const Poly &p):m_ss(p.get_symbol_set())
 	{
 		for (const auto &t: p._container()) {
 			m_set.insert(t);
@@ -215,9 +215,20 @@ struct pd_wrapper
 					m_set.erase(it);
 				}
 			}
-		} 
+		}
+		return *this;
 	}
-	std::set<term_type,t_compare> m_set;
+	Poly to_poly() const
+	{
+		Poly retval;
+		retval.set_symbol_set(m_ss);
+		for (const auto &t: m_set) {
+			retval.insert(t);
+		}
+		return retval;
+	}
+	std::set<term_type,t_compare>	m_set;
+	const symbol_set		m_ss;
 };
 
 // Univariate polynomial long division:
@@ -249,7 +260,7 @@ inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
 		return std::make_pair(std::move(q),std::move(r));
 	}
 	// Initialisation: quotient is empty, remainder is the numerator.
-	PType q,
+	PType q;
 	q.set_symbol_set(args);
 	pd_wrapper<PType> r(n);
 	// Leading term of the denominator, always the same.
@@ -259,18 +270,18 @@ inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
 	cf_type tmp_cf;
 	key_type tmp_key;
 	while (true) {
-		if (r.m_poly.size() == 0u) {
+		if (r.m_set.empty()) {
 			break;
 		}
 		// Leading term of the remainder.
-		const auto &lr = r.m_lterm;
-		if (lr.m_key < lden->m_key) {
+		const auto lr = r.m_set.rbegin();
+		if (lr->m_key < lden->m_key) {
 			break;
 		}
 		// NOTE: we want to check that the division is exact here,
 		// and throw if this is not the case.
-		math::divexact(tmp_cf,lr.m_cf,lden->m_cf);
-		key_type::divide(tmp_key,lr.m_key,lden->m_key,args);
+		math::divexact(tmp_cf,lr->m_cf,lden->m_cf);
+		key_type::divide(tmp_key,lr->m_key,lden->m_key,args);
 		term_type t{tmp_cf,tmp_key};
 		// NOTE: here we are basically progressively removing terms from r until
 		// it gets to zero. This sounds exactly like the kind of situation in which
@@ -284,7 +295,7 @@ inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
 		r -= poly_term_mult(t,d);
 		q.insert(std::move(t));
 	}
-	return std::make_pair(std::move(q),std::move(r.m_poly));
+	return std::make_pair(std::move(q),r.to_poly());
 }
 
 // Divide polynomial by non-zero cf in place. Preconditions:
