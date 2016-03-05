@@ -41,7 +41,6 @@ see https://www.gnu.org/licenses/. */
 #include <map>
 #include <mutex>
 #include <numeric>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -184,41 +183,23 @@ inline void poly_cf_mult(const typename PType::term_type::cf_type &a, PType &p)
 	}
 }
 
-template <typename Poly>
-struct pd_wrapper
+// Divide polynomial by non-zero cf in place. Preconditions:
+// - a is not zero.
+// Type requirements:
+// - cf type supports divexact.
+template <typename PType>
+inline void poly_cf_div(PType &p, const typename PType::term_type::cf_type &a)
 {
-	using term_type = typename Poly::term_type;
-	struct t_compare
-	{
-		bool operator()(const term_type &t1, const term_type &t2) const
-		{
-			return t1.m_key < t2.m_key;
-		}
-	};
-	explicit pd_wrapper(const Poly &p)
-	{
-		for (const auto &t: p._container()) {
-			m_set.insert(t);
-		}
+	piranha_assert(!math::is_zero(a));
+	const auto it_f = p._container().end();
+	for (auto it = p._container().begin(); it != it_f; ++it) {
+		// NOTE: here we could use a wrapper for mp_integer::_divexact(): this function
+		// is only used when we know that the division should be exact by construction,
+		// in the GCD code.
+		math::divexact(it->m_cf,it->m_cf,a);
+		piranha_assert(!math::is_zero(it->m_cf));
 	}
-	pd_wrapper &operator-=(const Poly &other)
-	{
-		for (const auto &t: other._container()) {
-			auto it = m_set.find(t);
-			if (it == m_set.end()) {
-				auto p = m_set.insert(t);
-				piranha_assert(p.second);
-				math::negate(p.first->m_cf);
-			} else {
-				it->m_cf -= t.m_cf;
-				if (math::is_zero(it->m_cf)) {
-					m_set.erase(it);
-				}
-			}
-		} 
-	}
-	std::set<term_type,t_compare> m_set;
-};
+}
 
 // Univariate polynomial long division:
 // https://en.wikipedia.org/wiki/Polynomial_long_division
@@ -249,9 +230,8 @@ inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
 		return std::make_pair(std::move(q),std::move(r));
 	}
 	// Initialisation: quotient is empty, remainder is the numerator.
-	PType q,
+	PType q, r(n);
 	q.set_symbol_set(args);
-	pd_wrapper<PType> r(n);
 	// Leading term of the denominator, always the same.
 	const auto lden = poly_lterm(d);
 	piranha_assert(!math::is_zero(lden->m_cf));
@@ -259,18 +239,18 @@ inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
 	cf_type tmp_cf;
 	key_type tmp_key;
 	while (true) {
-		if (r.m_poly.size() == 0u) {
+		if (r.size() == 0u) {
 			break;
 		}
 		// Leading term of the remainder.
-		const auto &lr = r.m_lterm;
-		if (lr.m_key < lden->m_key) {
+		const auto lr = poly_lterm(r);
+		if (lr->m_key < lden->m_key) {
 			break;
 		}
 		// NOTE: we want to check that the division is exact here,
 		// and throw if this is not the case.
-		math::divexact(tmp_cf,lr.m_cf,lden->m_cf);
-		key_type::divide(tmp_key,lr.m_key,lden->m_key,args);
+		math::divexact(tmp_cf,lr->m_cf,lden->m_cf);
+		key_type::divide(tmp_key,lr->m_key,lden->m_key,args);
 		term_type t{tmp_cf,tmp_key};
 		// NOTE: here we are basically progressively removing terms from r until
 		// it gets to zero. This sounds exactly like the kind of situation in which
@@ -284,25 +264,7 @@ inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
 		r -= poly_term_mult(t,d);
 		q.insert(std::move(t));
 	}
-	return std::make_pair(std::move(q),std::move(r.m_poly));
-}
-
-// Divide polynomial by non-zero cf in place. Preconditions:
-// - a is not zero.
-// Type requirements:
-// - cf type supports divexact.
-template <typename PType>
-inline void poly_cf_div(PType &p, const typename PType::term_type::cf_type &a)
-{
-	piranha_assert(!math::is_zero(a));
-	const auto it_f = p._container().end();
-	for (auto it = p._container().begin(); it != it_f; ++it) {
-		// NOTE: here we could use a wrapper for mp_integer::_divexact(): this function
-		// is only used when we know that the division should be exact by construction,
-		// in the GCD code.
-		math::divexact(it->m_cf,it->m_cf,a);
-		piranha_assert(!math::is_zero(it->m_cf));
-	}
+	return std::make_pair(std::move(q),std::move(r));
 }
 
 // Univariate polynomial GCD.

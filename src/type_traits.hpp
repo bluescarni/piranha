@@ -1168,30 +1168,6 @@ class has_right_shift_in_place: detail::sfinae_types
 template <typename T, typename U>
 const bool has_right_shift_in_place<T,U>::value;
 
-//namespace detail
-//{
-
-//template <typename T>
-//using nro_enabler = typename std::enable_if<
-//	!std::is_same<T,decltype(std::declval<const T &>() * std::declval<const T &>())>::value ||
-//	!std::is_same<T,decltype(std::declval<const T &>() + std::declval<const T &>())>::value ||
-//	!std::is_same<T,decltype(std::declval<const T &>() - std::declval<const T &>())>::value
-//>::type;
-
-//}
-
-//template <typename T, typename = void>
-//struct has_exact_ring_operations
-//{
-//	static const bool value = false;
-//};
-
-//template <typename T>
-//struct has_exact_ring_operations<T,detail::nro_enabler<T>>
-//{
-//	static const bool value = false;
-//};
-
 }
 
 #endif

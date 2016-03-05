@@ -2146,11 +2146,3 @@ BOOST_AUTO_TEST_CASE(type_traits_shift_test)
 	BOOST_CHECK((!has_right_shift_in_place<long,float>::value));
 	BOOST_CHECK((!has_right_shift_in_place<long,std::string>::value));
 }
-
-BOOST_AUTO_TEST_CASE(type_traits_ring_operators_test)
-{
-	BOOST_CHECK(!has_exact_ring_operations<double>::value);
-	BOOST_CHECK(!has_exact_ring_operations<int>::value);
-	BOOST_CHECK(!has_exact_ring_operations<char &>::value);
-	BOOST_CHECK(!has_exact_ring_operations<const long long>::value);
-}
