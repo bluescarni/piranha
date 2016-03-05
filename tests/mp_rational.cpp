@@ -2318,3 +2318,21 @@ BOOST_AUTO_TEST_CASE(mp_rational_divexact_test)
 {
 	boost::mpl::for_each<size_types>(divexact_tester());
 }
+
+struct ero_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		BOOST_CHECK(has_exact_ring_operations<q_type>::value);
+		BOOST_CHECK(has_exact_ring_operations<const q_type>::value);
+		BOOST_CHECK(has_exact_ring_operations<q_type &&>::value);
+		BOOST_CHECK(has_exact_ring_operations<volatile q_type &&>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_ero_test)
+{
+	boost::mpl::for_each<size_types>(ero_tester());
+}

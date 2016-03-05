@@ -1364,3 +1364,21 @@ BOOST_AUTO_TEST_CASE(mp_integer_math_divexact_test)
 {
 	boost::mpl::for_each<size_types>(math_divexact_tester());
 }
+
+struct ero_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using z_type = mp_integer<T::value>;
+		BOOST_CHECK(has_exact_ring_operations<z_type>::value);
+		BOOST_CHECK(has_exact_ring_operations<const z_type>::value);
+		BOOST_CHECK(has_exact_ring_operations<z_type &&>::value);
+		BOOST_CHECK(has_exact_ring_operations<volatile z_type &&>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_ero_test)
+{
+	boost::mpl::for_each<size_types>(ero_tester());
+}

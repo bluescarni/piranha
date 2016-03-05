@@ -1168,6 +1168,24 @@ class has_right_shift_in_place: detail::sfinae_types
 template <typename T, typename U>
 const bool has_right_shift_in_place<T,U>::value;
 
+/// Detect if type has exact ring operations.
+/**
+ * This type trait should be specialised to \p true if the decay type of \p T supports exact
+ * addition, subtraction and multiplication.
+ */
+template <typename T, typename = void>
+struct has_exact_ring_operations
+{
+	/// Value of the type trait.
+	/**
+	 * The default implementation will set the value to \p false.
+	 */
+	static const bool value = false;
+};
+
+template <typename T, typename Enable>
+const bool has_exact_ring_operations<T,Enable>::value;
+
 }
 
 #endif

@@ -2114,6 +2114,20 @@ struct divexact_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>
 
 }
 
+/// Specialisation of piranha::has_exact_ring_operations for piranha::mp_rational.
+/**
+ * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_rational.
+ */
+template <typename T>
+struct has_exact_ring_operations<T,typename std::enable_if<detail::is_mp_rational<typename std::decay<T>::type>::value>::type>
+{
+	/// Value of the type trait.
+	static const bool value = true;
+};
+
+template <typename T>
+const bool has_exact_ring_operations<T,typename std::enable_if<detail::is_mp_rational<typename std::decay<T>::type>::value>::type>::value;
+
 namespace detail
 {
 
