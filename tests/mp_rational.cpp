@@ -2302,7 +2302,7 @@ struct divexact_tester
 	void operator()(const T &)
 	{
 		using q_type = mp_rational<T::value>;
-		BOOST_CHECK(has_divexact<q_type>::value);
+		BOOST_CHECK(has_exact_division<q_type>::value);
 		q_type out;
 		math::divexact(out,q_type{3},q_type{-2});
 		BOOST_CHECK_EQUAL(out,q_type{3}/q_type{-2});

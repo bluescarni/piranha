@@ -2693,7 +2693,7 @@ const bool has_gcd3<T>::value;
  * \p false otherwise.
  */
 template <typename T>
-class has_divexact: detail::sfinae_types
+class has_exact_division: detail::sfinae_types
 {
 		template <typename T1>
 		static auto test(const T1 &) -> decltype(math::divexact(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
@@ -2704,7 +2704,7 @@ class has_divexact: detail::sfinae_types
 };
 
 template <typename T>
-const bool has_divexact<T>::value;
+const bool has_exact_division<T>::value;
 
 }
 

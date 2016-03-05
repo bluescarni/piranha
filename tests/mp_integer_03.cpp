@@ -1349,7 +1349,7 @@ struct math_divexact_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
-		BOOST_CHECK(has_divexact<int_type>::value);
+		BOOST_CHECK(has_exact_division<int_type>::value);
 		int_type out;
 		math::divexact(out,int_type(4),int_type(-2));
 		BOOST_CHECK_EQUAL(out,-2);

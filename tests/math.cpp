@@ -956,8 +956,8 @@ BOOST_AUTO_TEST_CASE(math_gcd_test)
 
 BOOST_AUTO_TEST_CASE(math_divexact_test)
 {
-	BOOST_CHECK(!has_divexact<int>::value);
-	BOOST_CHECK(!has_divexact<double>::value);
-	BOOST_CHECK(!has_divexact<const short &>::value);
-	BOOST_CHECK(!has_divexact<char &&>::value);
+	BOOST_CHECK(!has_exact_division<int>::value);
+	BOOST_CHECK(!has_exact_division<double>::value);
+	BOOST_CHECK(!has_exact_division<const short &>::value);
+	BOOST_CHECK(!has_exact_division<char &&>::value);
 }
