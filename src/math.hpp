@@ -654,6 +654,21 @@ template <typename T, typename Enable = void>
 struct abs_impl
 {};
 
+}
+
+namespace detail
+{
+
+template <typename T>
+using abs_arith_enabler = typename std::enable_if<(std::is_signed<T>::value && std::is_integral<T>::value) ||
+	(std::is_unsigned<T>::value && std::is_integral<T>::value) ||
+	std::is_floating_point<T>::value>::type;
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::abs() functor for signed and unsigned integer types, and floating-point types.
 /**
  * This specialisation is activated when \p T is a signed or unsigned integer type, or a floating-point type.
@@ -661,9 +676,7 @@ struct abs_impl
  * while for unsigned integer types it will be the input value unchanged.
  */
 template <typename T>
-struct abs_impl<T,typename std::enable_if<(std::is_signed<T>::value && std::is_integral<T>::value) ||
-	(std::is_unsigned<T>::value && std::is_integral<T>::value) ||
-	std::is_floating_point<T>::value>::type>
+struct abs_impl<T,detail::abs_arith_enabler<T>>
 {
 	private:
 		template <typename U>
@@ -759,6 +772,8 @@ const bool has_negate<T>::value;
 namespace detail
 {
 
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+
 // Type definition and type checking for the output of Poisson brackets.
 template <typename T>
 using pbracket_type_tmp = decltype(math::partial(std::declval<const T &>(),std::string()) *
@@ -781,6 +796,8 @@ struct pbracket_type_<T,typename std::enable_if<
 // The final typedef.
 template <typename T>
 using pbracket_type = typename pbracket_type_<T>::type;
+
+#endif
 
 }
 

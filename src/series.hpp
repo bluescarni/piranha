@@ -1227,6 +1227,7 @@ class series: detail::series_tag, series_operators
 		/// Container type for terms.
 		using container_type = hash_set<term_type,detail::term_hasher<term_type>>;
 	private:
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 		// Avoid confusing doxygen.
 		typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
 		// Insertion.
@@ -1859,6 +1860,7 @@ class series: detail::series_tag, series_operators
 		// Final typedef.
 		template <typename T, typename U>
 		using pow_ret_type = typename pow_ret_type_<T,U>::type;
+#endif
 	public:
 		/// Size type.
 		/**

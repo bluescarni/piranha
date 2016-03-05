@@ -39,6 +39,8 @@ namespace piranha
 namespace detail
 {
 
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+
 // Polynomial tag struct to work around is_instace_of bug in GCC.
 struct polynomial_tag;
 
@@ -69,6 +71,8 @@ struct poly_in_cf<T,typename std::enable_if<(series_recursion_index<T>::value > 
 // Forward declaration of polynomial class.
 template <typename, typename>
 class polynomial;
+
+#endif
 
 }
 

@@ -797,6 +797,8 @@ using max_int = typename detail::max_int_impl<T,Args...>::type;
 namespace detail
 {
 
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+
 // Detect the availability of std::iterator_traits on type It, plus a couple more requisites from the
 // iterator concept.
 // NOTE: this needs also the is_swappable type trait, but this seems to be difficult to implement in C++11. Mostly because
@@ -865,6 +867,8 @@ struct is_iterator_impl<T,typename std::enable_if</*std::is_same<typename std::i
 	static const bool value = true;
 };
 
+#endif
+
 }
 
 /// Iterator type trait.
@@ -884,6 +888,8 @@ const bool is_iterator<T>::value;
 
 namespace detail
 {
+
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 
 template <typename T, typename = void>
 struct is_input_iterator_impl
@@ -929,6 +935,8 @@ struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::val
 {
 	static const bool value = true;
 };
+
+#endif
 
 }
 
