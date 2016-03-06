@@ -432,7 +432,7 @@ inline std::tuple<polynomial<Cf,k_monomial>,polynomial<Cf,k_monomial>,std::vecto
 	auto kM = static_cast<k_expo_type>(mp_kM);
 	(void)kM;
 	std::vector<k_expo_type> cv;
-	std::transform(mp_cv.begin(),mp_cv.end(),std::back_inserter(cv),[](const integer &n) {return static_cast<k_expo_type>(n);});
+	std::transform(mp_cv.begin(),mp_cv.end(),std::back_inserter(cv),[](const integer &z) {return static_cast<k_expo_type>(z);});
 	// Proceed to the codification.
 	auto encode_poly = [&args,&cv](const polynomial<Cf,Key> &p) -> polynomial<Cf,k_monomial> {
 		using term_type = typename polynomial<Cf,k_monomial>::term_type;
@@ -816,21 +816,21 @@ class polynomial:
 			auto retval = detail::poly_from_univariate<Key>(ures.first,std::get<2u>(umap),args);
 			// Final check: for each variable, the degree of retval + degree of d must be equal to the degree of n.
 			auto degree_vector_extractor = [&args](const polynomial &p) -> std::vector<expo_type> {
-				std::vector<expo_type> retval, tmp;
+				std::vector<expo_type> ret, tmp;
 				// Init with the first term of the polynomial.
 				piranha_assert(p.size() != 0u);
 				auto it = p._container().begin();
-				it->m_key.extract_exponents(retval,args);
+				it->m_key.extract_exponents(ret,args);
 				++it;
 				for (; it != p._container().end(); ++it) {
 					it->m_key.extract_exponents(tmp,args);
 					for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
-						if (tmp[i] > retval[i]) {
-							retval[i] = tmp[i];
+						if (tmp[i] > ret[i]) {
+							ret[i] = tmp[i];
 						}
 					}
 				}
-				return retval;
+				return ret;
 			};
 			const auto n_dv = degree_vector_extractor(n), d_dv = degree_vector_extractor(d),
 				r_dv = degree_vector_extractor(retval);
