@@ -39,11 +39,13 @@ see https://www.gnu.org/licenses/. */
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -108,6 +110,9 @@ struct division_tester
 		BOOST_CHECK((res.get_symbol_set() == symbol_set{symbol{"x"},symbol{"y"}}));
 		// Simple univariate tests.
 		BOOST_CHECK_EQUAL(x / x,1);
+		x /= x;
+		BOOST_CHECK_EQUAL(x,1);
+		x = p_type{"x"};
 		BOOST_CHECK_EQUAL(x*x / x,x);
 		BOOST_CHECK_EQUAL(x*x*x / x,x*x);
 		BOOST_CHECK_EQUAL(2*x / p_type{2},x);
@@ -140,6 +145,12 @@ struct division_tester
 				if (n.size() != 0u) {
 					BOOST_CHECK_EQUAL((n * m * n) / (m * n), n);
 				}
+				auto tmp = n * m;
+				tmp /= m;
+				BOOST_CHECK_EQUAL(tmp,n);
+				tmp *= m;
+				math::divexact(tmp,tmp,m);
+				BOOST_CHECK_EQUAL(tmp,n);
 			}
 		}
 		// With rationals as well.
@@ -153,8 +164,23 @@ struct division_tester
 				if (n.size() != 0u) {
 					BOOST_CHECK_EQUAL((n * m * n) / (m * n), n);
 				}
+				auto tmp = n * m;
+				tmp /= m;
+				BOOST_CHECK_EQUAL(tmp,n);
+				tmp *= m;
+				math::divexact(tmp,tmp,m);
+				BOOST_CHECK_EQUAL(tmp,n);
 			}
 		}
+		// Check the type traits.
+		BOOST_CHECK(is_divisible<p_type>::value);
+		BOOST_CHECK(is_divisible<pq_type>::value);
+		BOOST_CHECK(is_divisible_in_place<p_type>::value);
+		BOOST_CHECK(is_divisible_in_place<pq_type>::value);
+		BOOST_CHECK(has_exact_division<p_type>::value);
+		BOOST_CHECK(has_exact_division<pq_type>::value);
+		BOOST_CHECK(has_exact_ring_operations<p_type>::value);
+		BOOST_CHECK(has_exact_ring_operations<pq_type>::value);
 	}
 };
 
@@ -162,4 +188,55 @@ BOOST_AUTO_TEST_CASE(polynomial_division_test)
 {
 	environment env;
 	boost::mpl::for_each<key_types>(division_tester());
+	BOOST_CHECK((!has_exact_ring_operations<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((!has_exact_division<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((!is_divisible<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((!is_divisible_in_place<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((has_exact_ring_operations<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((!has_exact_division<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((!is_divisible<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((!is_divisible_in_place<polynomial<integer,monomial<rational>>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_division_recursive_test)
+{
+	using p_type = polynomial<rational,k_monomial>;
+	using pp_type = polynomial<p_type,k_monomial>;
+	BOOST_CHECK(has_exact_ring_operations<p_type>::value);
+	BOOST_CHECK(has_exact_ring_operations<pp_type>::value);
+	BOOST_CHECK(is_divisible<p_type>::value);
+	BOOST_CHECK(is_divisible<pp_type>::value);
+	BOOST_CHECK(has_exact_division<p_type>::value);
+	BOOST_CHECK(has_exact_division<pp_type>::value);
+	// A couple of simple tests.
+	pp_type x{"x"};
+	p_type y{"y"}, z{"z"}, t{"t"};
+	BOOST_CHECK_EQUAL((x*x*y*z) / x,x*y*z);
+	BOOST_CHECK_THROW((x*y*z) / (x*x),std::invalid_argument);
+	BOOST_CHECK_EQUAL((x*x*y*z) / y,x*x*z);
+	BOOST_CHECK_EQUAL((2*x*z*(x - y)*(x*x-y)) / (z*(x - y)),2*x*(x*x-y));
+	// Random testing.
+	std::uniform_int_distribution<int> dist(0,9);
+	for (int i = 0; i < ntrials; ++i) {
+		auto n_ = rq_poly(y,z,t,dist), m_ = rq_poly(y,z,t,dist);
+		auto d = dist(rng);
+		auto n = (n_ * dist(rng) * x.pow(dist(rng))) / (d == 0 ? 1 : d) ;
+		d = dist(rng);
+		auto m = (m_ * dist(rng) * x.pow(dist(rng))) / (d == 0 ? 1 : d);
+		if (m.size() == 0u) {
+			BOOST_CHECK_THROW(n / m,zero_division_error);
+		} else {
+			BOOST_CHECK_EQUAL((n * m) / m, n);
+			BOOST_CHECK_THROW((n * m + 1) / m,std::invalid_argument);
+			if (n.size() != 0u) {
+				BOOST_CHECK_EQUAL((n * m * n) / (m * n), n);
+			}
+			auto tmp = n * m;
+			tmp /= m;
+			BOOST_CHECK_EQUAL(tmp,n);
+			tmp *= m;
+			math::divexact(tmp,tmp,m);
+			BOOST_CHECK_EQUAL(tmp,n);
+		}
+	}
 }
