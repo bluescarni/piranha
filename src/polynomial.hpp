@@ -249,7 +249,7 @@ inline std::pair<PType,PType> poly_uldiv(const PType &n, const PType &d)
 // Divide polynomial by non-zero cf in place. Preconditions:
 // - a is not zero.
 // Type requirements:
-// - cf type supports divexact.
+// - cf type supports in-place division.
 template <typename PType>
 inline void poly_cf_div(PType &p, const typename PType::term_type::cf_type &a)
 {
@@ -259,7 +259,7 @@ inline void poly_cf_div(PType &p, const typename PType::term_type::cf_type &a)
 		// NOTE: here we could use a wrapper for mp_integer::_divexact(): this function
 		// is only used when we know that the division should be exact by construction,
 		// in the GCD code.
-		math::divexact(it->m_cf,it->m_cf,a);
+		it->m_cf /= a;
 		piranha_assert(!math::is_zero(it->m_cf));
 	}
 }
@@ -321,8 +321,12 @@ inline PType poly_ugcd(PType a, PType b)
 		// all monomials. There is some small overhead in this, but it should not
 		// matter too much.
 		// NOTE: this will be used only on monomials with integral exponents, so it is always valid.
-		integer delta(l2->m_key.degree(args));
-		delta -= l1->m_key.degree(args);
+		integer delta(l2->m_key.degree(args)), l1d(l1->m_key.degree(args));
+		if (delta.sign() < 0 || l1d.sign() < 0) {
+			piranha_throw(std::invalid_argument,"cannot compute the GCD of a polynomial with negative exponents");
+		}
+		piranha_assert(delta >= l1d);
+		delta -= l1d;
 		poly_cf_mult(math::pow(l1->m_cf,static_cast<unsigned>(delta+1)),F[static_cast<size_type>(i - 2u)]);
 		fprime = poly_uldiv(F[static_cast<size_type>(i - 2u)],F[static_cast<size_type>(i - 1u)]).second;
 		if (fprime.size() != 0u) {
@@ -330,12 +334,22 @@ inline PType poly_ugcd(PType a, PType b)
 			auto tmp(fprime);
 			poly_cf_div(tmp,g * h_delta);
 			g = l1->m_cf;
-			math::divexact(h,math::pow(g,delta) * h,h_delta);
+			h = (math::pow(g,static_cast<unsigned>(delta)) * h) / h_delta;
 			F.push_back(std::move(tmp));
 			safe_integral_adder(i,size_type(1u));
 		}
 	}
-	return std::move(F.back());
+	auto retval = std::move(F.back());
+	// Reduce by the gcd of the coefficients.
+	cf_type cf_gcd(0);
+	for (const auto &t: retval._container()) {
+		math::gcd3(cf_gcd,cf_gcd,t.m_cf);
+	}
+	for (const auto &t: retval._container()) {
+		// NOTE: candidate for integer divexact.
+		t.m_cf /= cf_gcd;
+	}
+	return retval;
 }
 
 // Establish the limits of the exponents of two polynomials. Will throw if a negative exponent is encountered.
@@ -1196,7 +1210,21 @@ class polynomial:
 			}
 			return retval;
 		}
-		/// Exact binary polynomial division.
+		// enabler??
+		template <typename T = polynomial>
+		Cf join() const
+		{
+			using cf_term_type = typename Cf::term_type;
+			Cf retval;
+			for (const auto &t: this->_container()) {
+				Cf tmp;
+				tmp.set_symbol_set(this->get_symbol_set());
+				tmp.insert(cf_term_type{1,t.m_key});
+				retval += tmp * t.m_cf;
+			}
+			return retval;
+		}
+		/// Exact polynomial division.
 		/**
 		 * \note
 		 * This operator is enabled only if:
@@ -1206,10 +1234,6 @@ class polynomial:
 		 * - the exponent type of the monomial is a C++ integral type or an instance of piranha::mp_integer.
 		 *
 		 * This operator will compute the exact result of <tt>n / d</tt>. If \p d does not divide \p n exactly, an error will be produced.
-		 *
-		 * \note
-		 * The current implementation of this functionality is asymptotically slow. Using this operator on large polynomials
-		 * is not advisable.
 		 *
 		 * @param[in] n the numerator.
 		 * @param[in] d the denominator.
@@ -1271,6 +1295,59 @@ class polynomial:
 		friend polynomial &operator/=(polynomial &n, const polynomial &d)
 		{
 			return n = n / d;
+		}
+		/// Polynomial GCD.
+		/**
+		 * \note
+		 * This static method is enabled only if the following conditions apply:
+		 * - the polynomial type is divisible and exponentiable to \p unsigned
+		 */
+		template <typename T = polynomial>
+		static polynomial gcd(const polynomial &a, const polynomial &b)
+		{
+			// Deal with different symbol sets.
+			polynomial merged_a, merged_b;
+			polynomial const *real_a(&a), *real_b(&b);
+			if (a.get_symbol_set() != b.get_symbol_set()) {
+				auto merge = a.get_symbol_set().merge(b.get_symbol_set());
+				if (merge != a.get_symbol_set()) {
+					merged_a = a.extend_symbol_set(merge);
+					real_a = &merged_a;
+				}
+				if (merge != b.get_symbol_set()) {
+					merged_b = b.extend_symbol_set(merge);
+					real_b = &merged_b;
+				}
+			}
+			// Cache it.
+			const auto &args = real_a->get_symbol_set();
+			// Then check for the zero args.
+			if (real_a->size() == 0u && real_b->size() == 0u) {
+				polynomial retval;
+				retval.set_symbol_set(args);
+				return retval;
+			}
+			if (real_a->size() == 0u) {
+				return *real_b;
+			}
+			if (real_b->size() == 0u) {
+				return *real_a;
+			}
+			// Proceed with the univariate case.
+			if (args.size() == 1u) {
+				return detail::poly_ugcd(*real_a,*real_b);
+			}
+			// Split recursively.
+			auto retval = detail::poly_ugcd(real_a->split(),real_b->split()).join();
+			// Reduce the GCD.
+			Cf g(0);
+			for (const auto &t: retval._container()) {
+				math::gcd3(g,g,t.m_cf);
+			}
+			for (const auto &t: retval._container()) {
+				t.m_cf /= g;
+			}
+			return retval;
 		}
 	private:
 		// Static data for auto_truncate_degree.
@@ -1436,6 +1513,16 @@ struct divexact_impl<T,detail::poly_divexact_enabler<T>>
 	T &operator()(T &out, const T &n, const T &d) const
 	{
 		return out = n / d;
+	}
+};
+
+// TODO proper enabler.
+template <typename T>
+struct gcd_impl<T,T,detail::poly_divexact_enabler<T>>
+{
+	T operator()(const T &a, const T &b) const
+	{
+		return T::gcd(a,b);
 	}
 };
 

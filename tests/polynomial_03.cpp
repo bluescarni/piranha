@@ -70,12 +70,14 @@ struct split_tester
 			BOOST_CHECK_THROW(p_type{}.split(),std::invalid_argument);
 			BOOST_CHECK_THROW(x.split(),std::invalid_argument);
 			BOOST_CHECK_EQUAL((2*x+3*y).split(),2*xx+3*y);
+			BOOST_CHECK_EQUAL((2*x+3*y).split().join(),2*x+3*y);
 			BOOST_CHECK((2*x+3*y).split().get_symbol_set() == symbol_set{symbol{"x"}});
 			BOOST_CHECK(((2*x+3*y).split()._container().begin()->m_cf.get_symbol_set() == symbol_set{symbol{"y"}}));
 			BOOST_CHECK_EQUAL((2*x*z+3*x*x*y-6*x*y*z).split(),xx*(2*z-6*y*z)+3*xx*xx*y);
 			BOOST_CHECK((2*x*z+3*x*x*y-6*x*y*z).split().get_symbol_set() == symbol_set{symbol{"x"}});
 			BOOST_CHECK(((2*x*z+3*x*x*y-6*x*y*z).split()._container().begin()->m_cf.get_symbol_set() == symbol_set{symbol{"y"},symbol{"z"}}));
 			BOOST_CHECK((std::is_same<decltype(x.split()),pp_type>::value));
+			BOOST_CHECK((std::is_same<decltype(x.split().join()),p_type>::value));
 			p_type null;
 			null.set_symbol_set((x+y).get_symbol_set());
 			BOOST_CHECK_EQUAL(null.split(),pp_type{});
@@ -88,7 +90,7 @@ struct split_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(polynomial_split_test)
+BOOST_AUTO_TEST_CASE(polynomial_split_join_test)
 {
 	environment env;
 	boost::mpl::for_each<cf_types>(split_tester());
