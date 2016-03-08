@@ -72,8 +72,10 @@ struct split_tester
 			BOOST_CHECK_EQUAL((2*x+3*y).split(),2*xx+3*y);
 			BOOST_CHECK_EQUAL((2*x+3*y).split().join(),2*x+3*y);
 			BOOST_CHECK((2*x+3*y).split().get_symbol_set() == symbol_set{symbol{"x"}});
+			BOOST_CHECK((2*x+3*y).split().join() == 2*x+3*y);
 			BOOST_CHECK(((2*x+3*y).split()._container().begin()->m_cf.get_symbol_set() == symbol_set{symbol{"y"}}));
 			BOOST_CHECK_EQUAL((2*x*z+3*x*x*y-6*x*y*z).split(),xx*(2*z-6*y*z)+3*xx*xx*y);
+			BOOST_CHECK_EQUAL((2*x*z+3*x*x*y-6*x*y*z).split().join(),2*x*z+3*x*x*y-6*x*y*z);
 			BOOST_CHECK((2*x*z+3*x*x*y-6*x*y*z).split().get_symbol_set() == symbol_set{symbol{"x"}});
 			BOOST_CHECK(((2*x*z+3*x*x*y-6*x*y*z).split()._container().begin()->m_cf.get_symbol_set() == symbol_set{symbol{"y"},symbol{"z"}}));
 			BOOST_CHECK((std::is_same<decltype(x.split()),pp_type>::value));
@@ -169,12 +171,12 @@ struct ugcd_tester
 		p_type x{"x"};
 		// Some known tests.
 		BOOST_CHECK_EQUAL(x,poly_ugcd(x,x));
-		BOOST_CHECK_EQUAL(12+12*x,poly_ugcd(pow(x,2)+7*x+6,pow(x,2)-5*x-6));
+		BOOST_CHECK_EQUAL(1+x,poly_ugcd(pow(x,2)+7*x+6,pow(x,2)-5*x-6));
 		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,8)+pow(x,6)-3*pow(x,4)-3*pow(x,3)+8*pow(x,2)+2*x-5,
-			3*pow(x,6)+5*pow(x,4)-4*pow(x,2)-9*x+21),260708);
-		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,4)-9*pow(x,2)-4*x+12,pow(x,3)+5*pow(x,2)+2*x-8),-28+14*x*x+14*x);
+			3*pow(x,6)+5*pow(x,4)-4*pow(x,2)-9*x+21),1);
+		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,4)-9*pow(x,2)-4*x+12,pow(x,3)+5*pow(x,2)+2*x-8),-2+x*x+x);
 		BOOST_CHECK_EQUAL(1,poly_ugcd(pow(x,4)+pow(x,2)+1,pow(x,2)+1));
-		BOOST_CHECK_EQUAL(poly_ugcd(x*x+1,pow(x,5)+pow(x,4)+x+1),8);
+		BOOST_CHECK_EQUAL(poly_ugcd(x*x+1,pow(x,5)+pow(x,4)+x+1),1);
 		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,6)+pow(x,5)+pow(x,3)+x,pow(x,4)+pow(x,2)+1),1);
 		// With zeroes.
 		BOOST_CHECK_EQUAL(x+1,poly_ugcd(x-x,x+1));

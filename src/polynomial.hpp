@@ -859,6 +859,8 @@ class polynomial:
 		template <typename T>
 		using cf_t = typename T::term_type::cf_type;
 		template <typename T>
+		using key_t = typename T::term_type::key_type;
+		template <typename T>
 		using expo_t = typename T::term_type::key_type::value_type;
 		// Enabler for exact poly division.
 		template <typename T>
@@ -870,6 +872,11 @@ class polynomial:
 			is_subtractable_in_place<T>::value &&
 			(std::is_integral<expo_t<T>>::value || detail::is_mp_integer<expo_t<T>>::value),
 		int>::type;
+		// Join enabler.
+		template <typename T>
+		using join_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag,cf_t<T>>::value &&
+			std::is_same<Key,key_t<T>>::value &&
+			detail::true_tt<decltype(std::declval<cf_t<T> &>() += std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>())>::value,int>::type;
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -1210,8 +1217,24 @@ class polynomial:
 			}
 			return retval;
 		}
-		// enabler??
-		template <typename T = polynomial>
+		/// Join polynomial.
+		/**
+		 * \note
+		 * This method is enabled only if the coefficient type \p Cf is a polynomial whose key type is \p Key, and which supports
+		 * the expression <tt>a += b * c</tt> where \p a, \p b and \p c are all instances of \p Cf).
+		 * 
+		 * This method is the opposite of piranha::polynomial::split(): given a polynomial with polynomial coefficients,
+		 * it will produce a multivariate polynomial in which the arguments of \p this and the arguments of the coefficients
+		 * have been joined.
+		 * 
+		 * @return the joined counterpart of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::series::set_symbol_set() and piranha::series::insert(),
+		 * - term construction,
+		 * - arithmetic operations on the coefficient type.
+		 */
+		template <typename T = polynomial, join_enabler<T> = 0>
 		Cf join() const
 		{
 			using cf_term_type = typename Cf::term_type;
