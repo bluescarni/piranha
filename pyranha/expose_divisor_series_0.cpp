@@ -38,7 +38,7 @@ namespace pyranha
 
 void expose_divisor_series_0()
 {
-	series_exposer<piranha::divisor_series,divisor_series_descriptor,0u,3u> ds_exposer;
+	series_exposer<piranha::divisor_series,divisor_series_descriptor,0u,1u> ds_exposer;
 }
 
 }
