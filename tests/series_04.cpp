@@ -53,7 +53,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/polynomial.hpp"
 #include "../src/print_coefficient.hpp"
 #include "../src/print_tex_coefficient.hpp"
-#include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series_multiplier.hpp"
 #include "../src/settings.hpp"
@@ -61,7 +60,7 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,rational,real> cf_types;
+typedef boost::mpl::vector<double,integer,rational> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
 template <typename Cf, typename Expo>
@@ -473,8 +472,8 @@ struct print_tex_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
-			// Avoid the stream tests with floating-point and similar, because of messy output.
-			if (std::is_same<Cf,double>::value || std::is_same<Cf,real>::value) {
+			// Avoid the stream tests with floating-point, because of messy output.
+			if (std::is_same<Cf,double>::value) {
 				return;
 			}
 			typedef g_series_type<Cf,Expo> p_type1;
@@ -678,6 +677,7 @@ struct type_traits_tester
 			BOOST_CHECK(!is_less_than_comparable<p_type11>::value);
 			BOOST_CHECK((!is_less_than_comparable<p_type11,int>::value));
 			BOOST_CHECK((!is_less_than_comparable<p_type11,p_type1>::value));
+			// Addition.
 			BOOST_CHECK(is_addable<p_type1>::value);
 			BOOST_CHECK((is_addable<p_type1,int>::value));
 			BOOST_CHECK((is_addable<int,p_type1>::value));
@@ -686,10 +686,13 @@ struct type_traits_tester
 			BOOST_CHECK((is_addable<int,p_type11>::value));
 			BOOST_CHECK((is_addable<p_type11,p_type1>::value));
 			BOOST_CHECK(is_addable_in_place<p_type1>::value);
+			BOOST_CHECK(!is_addable_in_place<p_type1 const>::value);
 			BOOST_CHECK((is_addable_in_place<p_type1,int>::value));
+			BOOST_CHECK((!is_addable_in_place<p_type1 const,int>::value));
 			BOOST_CHECK(is_addable_in_place<p_type11>::value);
 			BOOST_CHECK((is_addable_in_place<p_type11,int>::value));
 			BOOST_CHECK((is_addable_in_place<p_type11,p_type1>::value));
+			// Subtraction.
 			BOOST_CHECK(is_subtractable<p_type1>::value);
 			BOOST_CHECK((is_subtractable<p_type1,int>::value));
 			BOOST_CHECK((is_subtractable<int,p_type1>::value));
@@ -698,10 +701,42 @@ struct type_traits_tester
 			BOOST_CHECK((is_subtractable<int,p_type11>::value));
 			BOOST_CHECK((is_subtractable<p_type11,p_type1>::value));
 			BOOST_CHECK(is_subtractable_in_place<p_type1>::value);
+			BOOST_CHECK(!is_subtractable_in_place<p_type1 const>::value);
 			BOOST_CHECK((is_subtractable_in_place<p_type1,int>::value));
+			BOOST_CHECK((!is_subtractable_in_place<p_type1 const,int>::value));
 			BOOST_CHECK(is_subtractable_in_place<p_type11>::value);
 			BOOST_CHECK((is_subtractable_in_place<p_type11,int>::value));
 			BOOST_CHECK((is_subtractable_in_place<p_type11,p_type1>::value));
+			// Multiplication.
+			BOOST_CHECK(is_multipliable<p_type1>::value);
+			BOOST_CHECK((is_multipliable<p_type1,int>::value));
+			BOOST_CHECK((is_multipliable<int,p_type1>::value));
+			BOOST_CHECK(is_multipliable<p_type11>::value);
+			BOOST_CHECK((is_multipliable<p_type11,int>::value));
+			BOOST_CHECK((is_multipliable<int,p_type11>::value));
+			BOOST_CHECK((is_multipliable<p_type11,p_type1>::value));
+			BOOST_CHECK(is_multipliable_in_place<p_type1>::value);
+			BOOST_CHECK(!is_multipliable_in_place<p_type1 const>::value);
+			BOOST_CHECK((is_multipliable_in_place<p_type1,int>::value));
+			BOOST_CHECK((!is_multipliable_in_place<p_type1 const,int>::value));
+			BOOST_CHECK(is_multipliable_in_place<p_type11>::value);
+			BOOST_CHECK((is_multipliable_in_place<p_type11,int>::value));
+			BOOST_CHECK((is_multipliable_in_place<p_type11,p_type1>::value));
+			// Division.
+			BOOST_CHECK(!is_divisible<p_type1>::value);
+			BOOST_CHECK((is_divisible<p_type1,int>::value));
+			BOOST_CHECK((!is_divisible<int,p_type1>::value));
+			BOOST_CHECK(!is_divisible<p_type11>::value);
+			BOOST_CHECK((is_divisible<p_type11,int>::value));
+			BOOST_CHECK((!is_divisible<int,p_type11>::value));
+			BOOST_CHECK((!is_divisible<p_type11,p_type1>::value));
+			BOOST_CHECK(!is_divisible_in_place<p_type1>::value);
+			BOOST_CHECK(!is_divisible_in_place<p_type1 const>::value);
+			BOOST_CHECK((is_divisible_in_place<p_type1,int>::value));
+			BOOST_CHECK((!is_divisible_in_place<p_type1 const,int>::value));
+			BOOST_CHECK(!is_divisible_in_place<p_type11>::value);
+			BOOST_CHECK((is_divisible_in_place<p_type11,int>::value));
+			BOOST_CHECK((!is_divisible_in_place<p_type11,p_type1>::value));
 			BOOST_CHECK(has_print_coefficient<p_type1>::value);
 			BOOST_CHECK(has_print_coefficient<p_type11>::value);
 			BOOST_CHECK(has_print_tex_coefficient<p_type1>::value);
