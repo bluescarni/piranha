@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -196,6 +197,7 @@ struct ugcd_tester
 				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a),pq_type(tmp)).second.size(),0u);
 				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b),pq_type(tmp)).second.size(),0u);
 			}
+			BOOST_CHECK(tmp == poly_ugcd(b,a) || tmp == -poly_ugcd(b,a));
 		}
 		for (auto i = 0; i < ntrials; ++i) {
 			p_type a = x - x, b = a;
@@ -209,11 +211,13 @@ struct ugcd_tester
 				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a*b),pq_type(tmp)).second.size(),0u);
 				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b),pq_type(tmp)).second.size(),0u);
 			}
+			BOOST_CHECK(tmp == poly_ugcd(b,a*b) || tmp == -poly_ugcd(b,a*b));
 			tmp = poly_ugcd(a*b*b,b*a);
 			if ((a*b*b).size() != 0u || (b*a).size() != 0u) {
 				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a*b*b),pq_type(tmp)).second.size(),0u);
 				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b*a),pq_type(tmp)).second.size(),0u);
 			}
+			BOOST_CHECK(tmp == poly_ugcd(a*b,a*b*b) || tmp == -poly_ugcd(a*b,a*b*b));
 		}
 	}
 };
