@@ -89,6 +89,9 @@ struct division_tester
 		pq_type xq{"x"}, yq{"y"}, zq{"z"};
 		// Zero division.
 		BOOST_CHECK_THROW(p_type{1} / p_type{},zero_division_error);
+		BOOST_CHECK_THROW(x / p_type{},zero_division_error);
+		BOOST_CHECK_THROW(x / (x - x),zero_division_error);
+		BOOST_CHECK_THROW((x + y - y) / (x - x + y - y),zero_division_error);
 		// Null numerator.
 		BOOST_CHECK_EQUAL(p_type{0} / p_type{-2},0);
 		auto res = (x-x) / p_type{2};
@@ -121,8 +124,12 @@ struct division_tester
 		BOOST_CHECK_EQUAL((x+1)*(x-2)/(x + 1),x-2);
 		BOOST_CHECK_EQUAL((x+1)*(x-2)*(x+3)/((x + 1)*(x+3)),x-2);
 		BOOST_CHECK_THROW((x+1)*(x-2)/(x + 4),std::invalid_argument);
+		// Negative exponents.
 		BOOST_CHECK_THROW(x/x.pow(-1),std::invalid_argument);
 		BOOST_CHECK_THROW(x.pow(-1)/x,std::invalid_argument);
+		BOOST_CHECK_THROW((x.pow(-1) + y*x)/x,std::invalid_argument);
+		// Will work with zero numerator.
+		BOOST_CHECK_EQUAL((x-x)/(x+y.pow(-1)),0);
 		// Simple multivariate tests.
 		BOOST_CHECK_EQUAL((2*x*(x - y)) / x,2*x-2*y);
 		BOOST_CHECK_EQUAL((2*x*z*(x - y)*(x*x-y)) / (x - y),2*x*z*(x*x-y));
@@ -184,68 +191,212 @@ struct division_tester
 	}
 };
 
-//BOOST_AUTO_TEST_CASE(polynomial_division_test)
-//{
-//	environment env;
-//	boost::mpl::for_each<key_types>(division_tester());
-//	BOOST_CHECK((!has_exact_ring_operations<polynomial<double,k_monomial>>::value));
-//	BOOST_CHECK((!has_exact_division<polynomial<double,k_monomial>>::value));
-//	BOOST_CHECK((!is_divisible<polynomial<double,k_monomial>>::value));
-//	BOOST_CHECK((!is_divisible_in_place<polynomial<double,k_monomial>>::value));
-//	BOOST_CHECK((has_exact_ring_operations<polynomial<integer,monomial<rational>>>::value));
-//	BOOST_CHECK((!has_exact_division<polynomial<integer,monomial<rational>>>::value));
-//	BOOST_CHECK((!is_divisible<polynomial<integer,monomial<rational>>>::value));
-//	BOOST_CHECK((!is_divisible_in_place<polynomial<integer,monomial<rational>>>::value));
-//}
+BOOST_AUTO_TEST_CASE(polynomial_division_test)
+{
+	environment env;
+	boost::mpl::for_each<key_types>(division_tester());
+	BOOST_CHECK((!has_exact_ring_operations<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((!has_exact_division<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((!is_divisible<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((!is_divisible_in_place<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((has_exact_ring_operations<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((!has_exact_division<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((!is_divisible<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((!is_divisible_in_place<polynomial<integer,monomial<rational>>>::value));
+}
 
-//BOOST_AUTO_TEST_CASE(polynomial_division_recursive_test)
-//{
-//	using p_type = polynomial<rational,k_monomial>;
-//	using pp_type = polynomial<p_type,k_monomial>;
-//	BOOST_CHECK(has_exact_ring_operations<p_type>::value);
-//	BOOST_CHECK(has_exact_ring_operations<pp_type>::value);
-//	BOOST_CHECK(is_divisible<p_type>::value);
-//	BOOST_CHECK(is_divisible<pp_type>::value);
-//	BOOST_CHECK(has_exact_division<p_type>::value);
-//	BOOST_CHECK(has_exact_division<pp_type>::value);
-//	// A couple of simple tests.
-//	pp_type x{"x"};
-//	p_type y{"y"}, z{"z"}, t{"t"};
-//	BOOST_CHECK_EQUAL((x*x*y*z) / x,x*y*z);
-//	BOOST_CHECK_THROW((x*y*z) / (x*x),std::invalid_argument);
-//	BOOST_CHECK_EQUAL((x*x*y*z) / y,x*x*z);
-//	BOOST_CHECK_EQUAL((2*x*z*(x - y)*(x*x-y)) / (z*(x - y)),2*x*(x*x-y));
-//	// Random testing.
-//	std::uniform_int_distribution<int> dist(0,9);
-//	for (int i = 0; i < ntrials; ++i) {
-//		auto n_ = rq_poly(y,z,t,dist), m_ = rq_poly(y,z,t,dist);
-//		auto d = dist(rng);
-//		auto n = (n_ * dist(rng) * x.pow(dist(rng))) / (d == 0 ? 1 : d) ;
-//		d = dist(rng);
-//		auto m = (m_ * dist(rng) * x.pow(dist(rng))) / (d == 0 ? 1 : d);
-//		if (m.size() == 0u) {
-//			BOOST_CHECK_THROW(n / m,zero_division_error);
-//		} else {
-//			BOOST_CHECK_EQUAL((n * m) / m, n);
-//			BOOST_CHECK_THROW((n * m + 1) / m,std::invalid_argument);
-//			if (n.size() != 0u) {
-//				BOOST_CHECK_EQUAL((n * m * n) / (m * n), n);
-//			}
-//			auto tmp = n * m;
-//			tmp /= m;
-//			BOOST_CHECK_EQUAL(tmp,n);
-//			tmp *= m;
-//			math::divexact(tmp,tmp,m);
-//			BOOST_CHECK_EQUAL(tmp,n);
-//		}
-//	}
-//}
+BOOST_AUTO_TEST_CASE(polynomial_division_recursive_test)
+{
+	using p_type = polynomial<rational,k_monomial>;
+	using pp_type = polynomial<p_type,k_monomial>;
+	BOOST_CHECK(has_exact_ring_operations<p_type>::value);
+	BOOST_CHECK(has_exact_ring_operations<pp_type>::value);
+	BOOST_CHECK(is_divisible<p_type>::value);
+	BOOST_CHECK(is_divisible<pp_type>::value);
+	BOOST_CHECK(has_exact_division<p_type>::value);
+	BOOST_CHECK(has_exact_division<pp_type>::value);
+	// A couple of simple tests.
+	pp_type x{"x"};
+	p_type y{"y"}, z{"z"}, t{"t"};
+	BOOST_CHECK_EQUAL((x*x*y*z) / x,x*y*z);
+	BOOST_CHECK_THROW((x*y*z) / (x*x),std::invalid_argument);
+	BOOST_CHECK_EQUAL((x*x*y*z) / y,x*x*z);
+	BOOST_CHECK_EQUAL((2*x*z*(x - y)*(x*x-y)) / (z*(x - y)),2*x*(x*x-y));
+	BOOST_CHECK_EQUAL(pp_type{} / (x*y*z),0);
+	BOOST_CHECK_EQUAL(pp_type{} / (x.pow(-1)*y*z),0);
+	BOOST_CHECK_EQUAL(pp_type{} / (x*y*z + z.pow(-1)),0);
+	// Random testing.
+	std::uniform_int_distribution<int> dist(0,9);
+	for (int i = 0; i < ntrials; ++i) {
+		auto n_ = rq_poly(y,z,t,dist), m_ = rq_poly(y,z,t,dist);
+		auto d = dist(rng);
+		auto n = (n_ * dist(rng) * x.pow(dist(rng))) / (d == 0 ? 1 : d) ;
+		d = dist(rng);
+		auto m = (m_ * dist(rng) * x.pow(dist(rng))) / (d == 0 ? 1 : d);
+		if (m.size() == 0u) {
+			BOOST_CHECK_THROW(n / m,zero_division_error);
+		} else {
+			BOOST_CHECK_EQUAL((n * m) / m, n);
+			BOOST_CHECK_THROW((n * m + 1) / m,std::invalid_argument);
+			if (n.size() != 0u) {
+				BOOST_CHECK_EQUAL((n * m * n) / (m * n), n);
+			}
+			auto tmp = n * m;
+			tmp /= m;
+			BOOST_CHECK_EQUAL(tmp,n);
+			tmp *= m;
+			math::divexact(tmp,tmp,m);
+			BOOST_CHECK_EQUAL(tmp,n);
+		}
+	}
+}
+
+struct uprem_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using p_type = polynomial<integer,Key>;
+		p_type x{"x"}, y{"y"};
+		BOOST_CHECK_THROW(p_type::uprem(x+y,x+y),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::uprem(x,y),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::uprem(x,x-x),zero_division_error);
+		BOOST_CHECK_EQUAL(p_type::uprem(x-x,x),0);
+		BOOST_CHECK_THROW(p_type::uprem(x,x.pow(2)),std::invalid_argument);
+		BOOST_CHECK_EQUAL(p_type::uprem(x.pow(2),x),0);
+		BOOST_CHECK_EQUAL(p_type::uprem(x,x+1),-1);
+		// Random testing.
+		std::uniform_int_distribution<int> dist(0,9);
+		for (int i = 0; i < ntrials; ++i) {
+			p_type n, d;
+			auto nterms = dist(rng);
+			for (int j = 0; j < nterms; ++j) {
+				auto tmp = dist(rng);
+				n += x.pow(dist(rng)) * (tmp % 2 ? tmp : -tmp);
+			}
+			nterms = dist(rng);
+			for (int j = 0; j < nterms; ++j) {
+				auto tmp = dist(rng);
+				d += x.pow(dist(rng)) * (tmp % 2 ? tmp : -tmp);
+			}
+			if (n.get_symbol_set() != d.get_symbol_set() || n.get_symbol_set().size() != 1u ||
+				(n.degree() < d.degree() && n.size() != 0u))
+			{
+				BOOST_CHECK_THROW(p_type::uprem(n,d),std::invalid_argument);
+			} else if (d.size() == 0u) {
+				BOOST_CHECK_THROW(p_type::uprem(n,d),zero_division_error);
+			} else {
+				BOOST_CHECK_NO_THROW(p_type::uprem(n,d));
+			}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_uprem_test)
+{
+	boost::mpl::for_each<key_types>(uprem_tester());
+}
+
+struct content_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using p_type = polynomial<integer,Key>;
+		p_type x{"x"}, y{"y"};
+		BOOST_CHECK_EQUAL(p_type{}.content(),0);
+		BOOST_CHECK_EQUAL((x-x).content(),0);
+		BOOST_CHECK_EQUAL(p_type{1}.content(),1);
+		BOOST_CHECK_EQUAL(p_type{2}.content(),2);
+		BOOST_CHECK_EQUAL(x.content(),1);
+		BOOST_CHECK_EQUAL((2*x).content(),2);
+		BOOST_CHECK_EQUAL((12*x+9*y).content(),3);
+		BOOST_CHECK_EQUAL((12*x+8*y+6*x*y).content(),2);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_content_test)
+{
+	boost::mpl::for_each<key_types>(content_tester());
+}
+
+struct pp_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using p_type = polynomial<integer,Key>;
+		p_type x{"x"}, y{"y"};
+		BOOST_CHECK_THROW(p_type{}.primitive_part(),zero_division_error);
+		BOOST_CHECK_THROW((x-x).primitive_part(),zero_division_error);
+		BOOST_CHECK_EQUAL(x.primitive_part(),x);
+		BOOST_CHECK_EQUAL(p_type{1}.primitive_part(),1);
+		BOOST_CHECK_EQUAL(p_type{2}.primitive_part(),1);
+		BOOST_CHECK_EQUAL((2*x).primitive_part(),x);
+		BOOST_CHECK_EQUAL((12*x+9*y).primitive_part(),4*x+3*y);
+		BOOST_CHECK_EQUAL((12*x+8*y+6*x*y).primitive_part(),6*x+4*y+3*x*y);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_pp_test)
+{
+	boost::mpl::for_each<key_types>(pp_tester());
+}
+
+struct gcd_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using p_type = polynomial<integer,Key>;
+		BOOST_CHECK(has_gcd<p_type>::value);
+		BOOST_CHECK(has_gcd3<p_type>::value);
+		// Some zero tests.
+		BOOST_CHECK_EQUAL(p_type::gcd(p_type{},p_type{}),0);
+		p_type x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK_EQUAL(p_type::gcd(x,p_type{}),x);
+		BOOST_CHECK_EQUAL(p_type::gcd(p_type{},x),x);
+		BOOST_CHECK_EQUAL(p_type::gcd(x-x,p_type{}),0);
+		BOOST_CHECK_EQUAL(p_type::gcd(x-x,y-y),0);
+		BOOST_CHECK_EQUAL(p_type::gcd(x-x+y-y,y-y),0);
+		// The test from the Geddes book.
+		auto a = -30*x.pow(3)*y+90*x*x*y*y+15*x*x-60*x*y+45*y*y;
+		auto b = 100*x*x*y-140*x*x-250*x*y*y+350*x*y-150*y*y*y+210*y*y;
+		BOOST_CHECK_EQUAL(p_type::gcd(a,b),-15*y+5*x);
+		// Random testing.
+		std::uniform_int_distribution<int> dist(0,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n = rn_poly(x,y,z,dist), m = rn_poly(x,y,z,dist), r = rn_poly(x,y,z,dist);
+			auto g = p_type::gcd(n*r,m*n);
+std::cout << "i=" << i << '\n';
+std::cout << (n*r) << '\n';
+std::cout << (m*n) << '\n';
+std::cout << g << '\n';
+			if (math::is_zero(m*n)) {
+				BOOST_CHECK_EQUAL(g,n*r);
+			} else if (math::is_zero(n*r)) {
+				BOOST_CHECK_EQUAL(g,m*n);
+			} else {
+				BOOST_CHECK_NO_THROW((n * r) / g);
+				BOOST_CHECK_NO_THROW((m * n) / g);
+				BOOST_CHECK_EQUAL(g,p_type::gcd(m*n,n*r));
+			}
+		}
+	}
+};
 
 BOOST_AUTO_TEST_CASE(polynomial_gcd_test)
 {
-	using p_type = polynomial<integer,k_monomial>;
-	p_type x{"x"}, y{"y"};
-	auto a = -30*x.pow(3)*y+90*x*x*y*y+15*x*x-60*x*y+45*y*y;
-	auto b = 100*x*x*y-140*x*x-250*x*y*y+350*x*y-150*y*y*y+210*y*y;
-	std::cout << p_type::gcd(a,b) << '\n';
+	boost::mpl::for_each<key_types>(gcd_tester());
 }
+
+//BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_test)
+//{
+//	using p_type = polynomial<integer,monomial<short>>;
+//	using math::pow;
+//	p_type x{"x"}, y{"y"}, z{"z"};
+//	auto n = 9*x*pow(y,8)+5*x*x*pow(y,9)*pow(z,7)+9*pow(x,3)*pow(z,3)+5*pow(x,6)*pow(y,8)*pow(z,8)-8*pow(x,8)*y*y*pow(z,7)-8*pow(x,7)*pow(y,7)*pow(z,5)-8*pow(x,9)*pow(y,7)*pow(z,5);
+//	auto m = 5*pow(x,6)*pow(y,5)*pow(z,6)+9*pow(x,4)*pow(y,3)*pow(z,8)+pow(x,5)*pow(y,5)*pow(z,8)-8*pow(x,9)*y*pow(z,3)-2*pow(x,5)*pow(y,8)*pow(z,5)-2*pow(x,7)*pow(y,9)*pow(z,2)+5*pow(x,9)
+//		*pow(y,4)*pow(z,9)-8*pow(x,5)*pow(y,7)*pow(z,5);
+//	std::cout << p_type::gcd(n,m) << '\n';
+//}

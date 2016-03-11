@@ -99,42 +99,58 @@ BOOST_AUTO_TEST_CASE(polynomial_split_join_test)
 	boost::mpl::for_each<cf_types>(split_tester());
 }
 
-struct uldiv_tester
+struct udivrem_tester
 {
 	template <typename Key>
 	void operator()(const Key &)
 	{
-		using namespace piranha::detail;
 		using piranha::math::pow;
 		using p_type = polynomial<rational,Key>;
-		p_type x{"x"};
+		p_type x{"x"}, y{"y"};
 		// A few initial tests that can be checked manually.
-		auto res = poly_uldiv(x,x);
+		auto res = p_type::udivrem(x,x);
 		BOOST_CHECK_EQUAL(res.first,1);
 		BOOST_CHECK_EQUAL(res.second,0);
-		res = poly_uldiv(2*x,x);
+		res = p_type::udivrem(2*x,x);
 		BOOST_CHECK_EQUAL(res.first,2);
 		BOOST_CHECK_EQUAL(res.second,0);
-		res = poly_uldiv(x,2*x);
+		res = p_type::udivrem(x,2*x);
 		BOOST_CHECK_EQUAL(res.first,1/2_q);
 		BOOST_CHECK_EQUAL(res.second,0);
-		res = poly_uldiv(pow(x,3)-2*pow(x,2)-4,x-3);
+		res = p_type::udivrem(pow(x,3)-2*pow(x,2)-4,x-3);
 		BOOST_CHECK_EQUAL(res.first,pow(x,2)+x+3);
 		BOOST_CHECK_EQUAL(res.second,5);
-		res = poly_uldiv(pow(x,8)+pow(x,6)-3*pow(x,4)-3*pow(x,3)+8*pow(x,2)+2*x-5,3*pow(x,6)+5*pow(x,4)-4*x*x-9*x+21);
+		res = p_type::udivrem(pow(x,8)+pow(x,6)-3*pow(x,4)-3*pow(x,3)+8*pow(x,2)+2*x-5,3*pow(x,6)+5*pow(x,4)-4*x*x-9*x+21);
 		BOOST_CHECK_EQUAL(res.first,x*x/3-2/9_q);
 		BOOST_CHECK_EQUAL(res.second,-5*x.pow(4)/9+x*x/9-1/3_q);
-		res = poly_uldiv(x*x+4*x+1,x+2);
+		res = p_type::udivrem(x*x+4*x+1,x+2);
 		BOOST_CHECK_EQUAL(res.first,2+x);
 		BOOST_CHECK_EQUAL(res.second,-3);
 		// With zero numerator.
-		res = poly_uldiv(x-x,x+2);
+		res = p_type::udivrem(x-x,x+2);
 		BOOST_CHECK_EQUAL(res.first,0);
 		BOOST_CHECK_EQUAL(res.second,0);
 		// With plain numbers
-		res = poly_uldiv(x-x-3,x-x+2);
+		res = p_type::udivrem(x-x-3,x-x+2);
 		BOOST_CHECK_EQUAL(res.first,-3/2_q);
 		BOOST_CHECK_EQUAL(res.second,0);
+		// Multivariate error.
+		BOOST_CHECK_THROW(p_type::udivrem(x+y,x),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::udivrem(x+y-y,x),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::udivrem(x,x+y),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::udivrem(x+y,x+y),std::invalid_argument);
+		// Zero division error.
+		BOOST_CHECK_THROW(p_type::udivrem(x,x-x),zero_division_error);
+		// Different univariate.
+		BOOST_CHECK_THROW(p_type::udivrem(x,y),std::invalid_argument);
+		// Negative exponents.
+		BOOST_CHECK_THROW(p_type::udivrem(x,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::udivrem(x.pow(-1),x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::udivrem(x.pow(-1),x),std::invalid_argument);
+		// Negative powers are allowed if the numerator is zero.
+		res = p_type::udivrem((x-x),x.pow(-1));
+		BOOST_CHECK_EQUAL(res.first.size(),0u);
+		BOOST_CHECK_EQUAL(res.second.size(),0u);
 		// Randomised testing.
 		std::uniform_int_distribution<int> ud(0,9);
 		for (auto i = 0; i < ntrials; ++i) {
@@ -149,15 +165,25 @@ struct uldiv_tester
 			if (den.size() == 0u) {
 				den = x - x + 1;
 			}
-			auto tmp = poly_uldiv(num,den);
+			auto tmp = p_type::udivrem(num,den);
 			BOOST_CHECK_EQUAL(num,den*tmp.first + tmp.second);
 		}
+		// A recursive test.
+		using pp_type = polynomial<p_type,Key>;
+		pp_type xx{"x"};
+		auto res2 = pp_type::udivrem(x*xx,xx);
+		BOOST_CHECK_EQUAL(res2.first,x);
+		BOOST_CHECK_EQUAL(res2.second.size(),0u);
+		BOOST_CHECK_THROW(pp_type::udivrem(x.pow(-1)*xx,xx),std::invalid_argument)
+		res2 = pp_type::udivrem(xx-xx,x.pow(-1)*xx);
+		BOOST_CHECK_EQUAL(res2.first.size(),0u);
+		BOOST_CHECK_EQUAL(res2.second.size(),0u);
 	}
 };
 
-BOOST_AUTO_TEST_CASE(polynomial_uldiv_test)
+BOOST_AUTO_TEST_CASE(polynomial_udivrem_test)
 {
-	boost::mpl::for_each<key_types>(uldiv_tester());
+	boost::mpl::for_each<key_types>(udivrem_tester());
 }
 
 struct ugcd_tester
@@ -194,8 +220,8 @@ struct ugcd_tester
 			}
 			auto tmp = poly_ugcd(a,b);
 			if (a.size() != 0u || b.size() != 0u) {
-				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a),pq_type(tmp)).second.size(),0u);
-				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(a),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(b),pq_type(tmp)).second.size(),0u);
 			}
 			BOOST_CHECK(tmp == poly_ugcd(b,a) || tmp == -poly_ugcd(b,a));
 		}
@@ -208,14 +234,14 @@ struct ugcd_tester
 			}
 			auto tmp = poly_ugcd(a*b,b);
 			if ((a*b).size() != 0u || b.size() != 0u) {
-				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a*b),pq_type(tmp)).second.size(),0u);
-				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(a*b),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(b),pq_type(tmp)).second.size(),0u);
 			}
 			BOOST_CHECK(tmp == poly_ugcd(b,a*b) || tmp == -poly_ugcd(b,a*b));
 			tmp = poly_ugcd(a*b*b,b*a);
 			if ((a*b*b).size() != 0u || (b*a).size() != 0u) {
-				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(a*b*b),pq_type(tmp)).second.size(),0u);
-				BOOST_CHECK_EQUAL(poly_uldiv(pq_type(b*a),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(a*b*b),pq_type(tmp)).second.size(),0u);
+				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(b*a),pq_type(tmp)).second.size(),0u);
 			}
 			BOOST_CHECK(tmp == poly_ugcd(a*b,a*b*b) || tmp == -poly_ugcd(a*b,a*b*b));
 		}
