@@ -53,7 +53,7 @@ see https://www.gnu.org/licenses/. */
 using namespace piranha;
 
 using cf_types = boost::mpl::vector<double,integer,rational>;
-using k_types = boost::mpl::vector<monomial<int>,monomial<integer>,monomial<rational>,
+using k_types = boost::mpl::vector<monomial<int>,monomial<rational>,
 	// This should ensure in the overflow tests below we have enough bit width (we
 	// are testing with 3 variables).
 	kronecker_monomial<std::int_least64_t>>;
