@@ -150,6 +150,13 @@ void expose_polynomials_1();
 void expose_polynomials_2();
 void expose_polynomials_3();
 void expose_polynomials_4();
+void expose_polynomials_5();
+void expose_polynomials_6();
+void expose_polynomials_7();
+void expose_polynomials_8();
+void expose_polynomials_9();
+void expose_polynomials_10();
+void expose_polynomials_11();
 
 }
 

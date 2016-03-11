@@ -36,9 +36,9 @@ see https://www.gnu.org/licenses/. */
 namespace pyranha
 {
 
-void expose_polynomials_4()
+void expose_polynomials_10()
 {
-	series_exposer<piranha::polynomial,polynomial_descriptor,4u,5u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
+	series_exposer<piranha::polynomial,polynomial_descriptor,10u,11u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
 }
 
 }
