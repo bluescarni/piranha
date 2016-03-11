@@ -76,7 +76,7 @@ install:
       elif [[ "${CC}" == "gcc" && "${BUILD_TYPE}" == "Coverage" ]]; then
           export CC=gcc-5;
           export CXX=g++-5;
-          export GCOV_EXECUTABLE=gcov-5
+          export GCOV_EXECUTABLE=gcov-5;
       elif [[ "${CC}" == "clang" ]]; then
           export CC=clang-3.8;
           export CXX=clang++-3.8;
