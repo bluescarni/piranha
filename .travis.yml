@@ -70,16 +70,16 @@ matrix:
       #env: BUILD_TYPE="Doxygen"
 
 install:
-    - if [[ "${CC}" == "gcc" && "${BUILD_TYPE}" == "Debug" ]]; then
-          export CC=gcc-4.8;
-          export CXX=g++-4.8;
+    - if [[ "${CC}" == "clang" ]]; then
+          export CC=clang-3.8;
+          export CXX=clang++-3.8;;
       elif [[ "${CC}" == "gcc" && "${BUILD_TYPE}" == "Coverage" ]]; then
           export CC=gcc-5;
           export CXX=g++-5;
           export GCOV_EXECUTABLE=gcov-5;
-      elif [[ "${CC}" == "clang" ]]; then
-          export CC=clang-3.8;
-          export CXX=clang++-3.8;
+      else
+          export CC=gcc-4.8;
+          export CXX=g++-4.8;
       fi
 script:
     - mkdir build
