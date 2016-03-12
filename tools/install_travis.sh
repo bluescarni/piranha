@@ -21,7 +21,8 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         make;
         ctest -E "thread" -V;
         cd tests;
-        /home/travis/.local/bin/coveralls --exclude CMakeFiles --gcov $GCOV_EXECUTABLE --gcov-options '\-lp'
+        #/home/travis/.local/bin/coveralls --exclude CMakeFiles --gcov $GCOV_EXECUTABLE --gcov-options '\-lp'
+        bash <(curl -s https://codecov.io/bash);
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DCMAKE_BUILD_TYPE=Release ../;
     make;
