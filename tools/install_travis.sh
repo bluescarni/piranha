@@ -20,9 +20,9 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make;
         ctest -E "thread" -V;
-        cd tests;
         #/home/travis/.local/bin/coveralls --exclude CMakeFiles --gcov $GCOV_EXECUTABLE --gcov-options '\-lp'
-        bash <(curl -s https://codecov.io/bash);
+        wget https://codecov.io/bash;
+        bash bash -p ./tests -x "${GCOV_EXECUTABLE}" -g CMakeFiles;
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DCMAKE_BUILD_TYPE=Release ../;
     make;
