@@ -182,6 +182,9 @@ see https://www.gnu.org/licenses/. */
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
  * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs, e.g., implementing the test() method
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type traits.
+ * \todo safe_cast should probably have its own special exception. As it stands, when we do try { safe_cast() } catch {} we are catching other
+ * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails because of unsafe cast
+ * rather than other errors, see e.g. how it is used in the poly linear arg combination.
  */
 namespace piranha
 {
