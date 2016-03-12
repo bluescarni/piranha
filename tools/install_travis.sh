@@ -22,9 +22,7 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         wget https://codecov.io/bash;
         # Run gcov manually, then remove all coverage information pertaining
         # include files in /usr/include.
-        cd tests;
-        "${GCOV_EXECUTABLE}";
-        cd ..;
+        find ./ -type f -name '*.gcno' -not -path CMakeFiles -exec "${GCOV_EXECUTABLE}" -pb {} +
         find ./ -iname '*usr*include*.gcov' | xargs rm;
         bash bash -p ./tests -X gcov -g CMakeFiles;
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
