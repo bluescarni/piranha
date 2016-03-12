@@ -20,7 +20,7 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         make;
         ctest -E "thread" -V;
         wget https://codecov.io/bash;
-        bash bash -p ./tests -x "${GCOV_EXECUTABLE}" -g CMakeFiles -g /usr/include;
+        bash bash -p ./tests -x "${GCOV_EXECUTABLE}" -g CMakeFiles -a '\-r';
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DCMAKE_BUILD_TYPE=Release ../;
     make;
