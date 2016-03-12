@@ -54,10 +54,6 @@ struct polynomial_descriptor
 		std::tuple<double,piranha::monomial<piranha::rational>>,
 		std::tuple<double,piranha::monomial<short>>,
 		std::tuple<double,piranha::kronecker_monomial<>>,
-		// Long double precision.
-		std::tuple<long double,piranha::monomial<piranha::rational>>,
-		std::tuple<long double,piranha::monomial<short>>,
-		std::tuple<long double,piranha::kronecker_monomial<>>,
 		// Integer.
 		std::tuple<piranha::integer,piranha::monomial<piranha::rational>>,
 		std::tuple<piranha::integer,piranha::monomial<short>>,

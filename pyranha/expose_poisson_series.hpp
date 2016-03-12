@@ -90,6 +90,15 @@ void expose_poisson_series_2();
 void expose_poisson_series_3();
 void expose_poisson_series_4();
 void expose_poisson_series_5();
+void expose_poisson_series_6();
+void expose_poisson_series_7();
+void expose_poisson_series_8();
+void expose_poisson_series_9();
+void expose_poisson_series_10();
+void expose_poisson_series_11();
+void expose_poisson_series_12();
+void expose_poisson_series_13();
+void expose_poisson_series_14();
 
 }
 

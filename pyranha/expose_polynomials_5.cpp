@@ -28,17 +28,17 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
-#include "../src/poisson_series.hpp"
-#include "expose_poisson_series.hpp"
+#include "../src/polynomial.hpp"
+#include "expose_polynomials.hpp"
 #include "expose_utils.hpp"
-#include "poisson_series_descriptor.hpp"
+#include "polynomial_descriptor.hpp"
 
 namespace pyranha
 {
 
-void expose_poisson_series_4()
+void expose_polynomials_5()
 {
-	series_exposer<piranha::poisson_series,poisson_series_descriptor,4u,5u,ps_custom_hook> ps_exposer;
+	series_exposer<piranha::polynomial,polynomial_descriptor,5u,6u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
 }
 
 }

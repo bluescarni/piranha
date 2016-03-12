@@ -157,16 +157,16 @@ class math_test_case(_ut.TestCase):
 		# NOTE: according to
 		# https://docs.python.org/3/library/math.html
 		# the CPython math functions are wrappers around the corresponding
-		# C functions. The results should thus be the same.
-		self.assertEqual(math.cos(3.),pcos(3.))
-		self.assertEqual(math.cos(3.1234),pcos(3.1234))
-		self.assertEqual(math.sin(3.),psin(3.))
-		self.assertEqual(math.sin(3.1234),psin(3.1234))
+		# C functions. The results should thus be roughly the same.
+		self.assertAlmostEqual(math.cos(3.),pcos(3.))
+		self.assertAlmostEqual(math.cos(3.1234),pcos(3.1234))
+		self.assertAlmostEqual(math.sin(3.),psin(3.))
+		self.assertAlmostEqual(math.sin(3.1234),psin(3.1234))
 		pt = polynomial(double,k_monomial)()
-		self.assertEqual(math.cos(3),pcos(pt(3)))
-		self.assertEqual(math.cos(2.456),pcos(pt(2.456)))
-		self.assertEqual(math.sin(3),psin(pt(3)))
-		self.assertEqual(math.sin(-2.456),psin(pt(-2.456)))
+		self.assertAlmostEqual(math.cos(3),pcos(pt(3)).list[0][0])
+		self.assertAlmostEqual(math.cos(2.456),pcos(pt(2.456)).list[0][0])
+		self.assertAlmostEqual(math.sin(3),psin(pt(3)).list[0][0])
+		self.assertAlmostEqual(math.sin(-2.456),psin(pt(-2.456)).list[0][0])
 		self.assertRaises(TypeError,lambda : pcos(""))
 		self.assertRaises(TypeError,lambda : psin(""))
 		try:
