@@ -2592,18 +2592,19 @@ inline auto gcd3(T &out, const T &a, const T &b) -> decltype(gcd3_impl<T>()(out,
 
 /// Detect piranha::math::add3().
 /**
- * The type trait will be \p true if piranha::math::add3() can be used on instances of type \p T,
+ * The type trait will be \p true if piranha::math::add3() can be used on instances of the decay type of \p T,
  * \p false otherwise.
  */
 template <typename T>
 class has_add3: detail::sfinae_types
 {
+		using Td = typename std::decay<T>::type;
 		template <typename T1>
 		static auto test(const T1 &) -> decltype(math::add3(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Td>())),yes>::value;
 };
 
 template <typename T>
@@ -2611,18 +2612,19 @@ const bool has_add3<T>::value;
 
 /// Detect piranha::math::sub3().
 /**
- * The type trait will be \p true if piranha::math::sub3() can be used on instances of type \p T,
+ * The type trait will be \p true if piranha::math::sub3() can be used on instances of the decay type of \p T,
  * \p false otherwise.
  */
 template <typename T>
 class has_sub3: detail::sfinae_types
 {
+		using Td = typename std::decay<T>::type;
 		template <typename T1>
 		static auto test(const T1 &) -> decltype(math::sub3(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Td>())),yes>::value;
 };
 
 template <typename T>
@@ -2630,18 +2632,19 @@ const bool has_sub3<T>::value;
 
 /// Detect piranha::math::mul3().
 /**
- * The type trait will be \p true if piranha::math::mul3() can be used on instances of type \p T,
+ * The type trait will be \p true if piranha::math::mul3() can be used on instances of the decay type of \p T,
  * \p false otherwise.
  */
 template <typename T>
 class has_mul3: detail::sfinae_types
 {
+		using Td = typename std::decay<T>::type;
 		template <typename T1>
 		static auto test(const T1 &) -> decltype(math::mul3(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Td>())),yes>::value;
 };
 
 template <typename T>
@@ -2649,18 +2652,19 @@ const bool has_mul3<T>::value;
 
 /// Detect piranha::math::div3().
 /**
- * The type trait will be \p true if piranha::math::div3() can be used on instances of type \p T,
+ * The type trait will be \p true if piranha::math::div3() can be used on instances of the decay type of \p T,
  * \p false otherwise.
  */
 template <typename T>
 class has_div3: detail::sfinae_types
 {
+		using Td = typename std::decay<T>::type;
 		template <typename T1>
 		static auto test(const T1 &) -> decltype(math::div3(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Td>())),yes>::value;
 };
 
 template <typename T>
@@ -2668,18 +2672,20 @@ const bool has_div3<T>::value;
 
 /// Detect piranha::math::gcd().
 /**
- * The type trait will be \p true if piranha::math::gcd() can be used on instances of type \p T and \p U,
+ * The type trait will be \p true if piranha::math::gcd() can be used on instances of the decay types of \p T and \p U,
  * \p false otherwise.
  */
 template <typename T, typename U = T>
 class has_gcd: detail::sfinae_types
 {
+		using Td = typename std::decay<T>::type;
+		using Ud = typename std::decay<U>::type;
 		template <typename T1, typename U1>
 		static auto test(const T1 &a, const U1 &b) -> decltype(math::gcd(a,b),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>(),std::declval<U>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>())),yes>::value;
 };
 
 template <typename T, typename U>
@@ -2687,18 +2693,19 @@ const bool has_gcd<T,U>::value;
 
 /// Detect piranha::math::gcd3().
 /**
- * The type trait will be \p true if piranha::math::gcd3() can be used on instances of type \p T,
+ * The type trait will be \p true if piranha::math::gcd3() can be used on instances of the decay type of \p T,
  * \p false otherwise.
  */
 template <typename T>
 class has_gcd3: detail::sfinae_types
 {
+		using Td = typename std::decay<T>::type;
 		template <typename T1>
 		static auto test(const T1 &) -> decltype(math::gcd3(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Td>())),yes>::value;
 };
 
 template <typename T>
@@ -2706,18 +2713,19 @@ const bool has_gcd3<T>::value;
 
 /// Detect piranha::math::divexact().
 /**
- * The type trait will be \p true if piranha::math::divexact() can be used on instances of type \p T,
+ * The type trait will be \p true if piranha::math::divexact() can be used on instances of the decay type of \p T,
  * \p false otherwise.
  */
 template <typename T>
 class has_exact_division: detail::sfinae_types
 {
+		using Td = typename std::decay<T>::type;
 		template <typename T1>
 		static auto test(const T1 &) -> decltype(math::divexact(std::declval<T1 &>(),std::declval<const T1 &>(),std::declval<const T1 &>()),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Td>())),yes>::value;
 };
 
 template <typename T>

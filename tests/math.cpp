@@ -771,6 +771,8 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
 	{
 	// Addition.
 	BOOST_CHECK(has_add3<int>::value);
+	BOOST_CHECK(has_add3<int &>::value);
+	BOOST_CHECK(has_add3<const int &>::value);
 	int i1 = 0;
 	math::add3(i1,3,4);
 	BOOST_CHECK_EQUAL(i1,7);
@@ -793,6 +795,8 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
 	{
 	// Subtraction.
 	BOOST_CHECK(has_sub3<int>::value);
+	BOOST_CHECK(has_sub3<int &>::value);
+	BOOST_CHECK(has_sub3<const int &>::value);
 	int i1 = 0;
 	math::sub3(i1,3,4);
 	BOOST_CHECK_EQUAL(i1,-1);
@@ -812,6 +816,8 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
 	{
 	// Multiplication.
 	BOOST_CHECK(has_mul3<int>::value);
+	BOOST_CHECK(has_mul3<int &>::value);
+	BOOST_CHECK(has_mul3<const int &>::value);
 	int i1 = 0;
 	math::mul3(i1,3,4);
 	BOOST_CHECK_EQUAL(i1,12);
@@ -831,6 +837,8 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
 	{
 	// Division.
 	BOOST_CHECK(has_div3<int>::value);
+	BOOST_CHECK(has_div3<int &>::value);
+	BOOST_CHECK(has_div3<const int &>::value);
 	int i1 = 0;
 	math::div3(i1,6,3);
 	BOOST_CHECK_EQUAL(i1,2);
