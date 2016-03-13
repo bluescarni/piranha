@@ -209,6 +209,9 @@ struct ugcd_tester
 		BOOST_CHECK_EQUAL(x+1,poly_ugcd(x-x,x+1));
 		BOOST_CHECK_EQUAL(x+1,poly_ugcd(x+1,x-x));
 		BOOST_CHECK_EQUAL(0,poly_ugcd(x-x,x-x));
+		// With negative exponents.
+		BOOST_CHECK_THROW(poly_ugcd(x.pow(-1),x),std::invalid_argument);
+		BOOST_CHECK_THROW(poly_ugcd(x,x.pow(-1)),std::invalid_argument);
 		// Random testing.
 		std::uniform_int_distribution<int> ud(0,9);
 		for (auto i = 0; i < ntrials; ++i) {

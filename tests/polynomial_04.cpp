@@ -50,7 +50,7 @@ see https://www.gnu.org/licenses/. */
 using namespace piranha;
 
 static std::mt19937 rng;
-static const int ntrials = 100;
+static const int ntrials = 200;
 
 using key_types = boost::mpl::vector<monomial<short>,monomial<integer>,k_monomial>;
 
@@ -77,7 +77,7 @@ inline static Poly rq_poly(const Poly &x, const Poly &y, const Poly &z, std::uni
 	}
 	return retval;
 }
-#if 0
+
 struct division_tester
 {
 	template <typename Key>
@@ -265,6 +265,9 @@ struct uprem_tester
 		BOOST_CHECK_THROW(p_type::uprem(x,x.pow(2)),std::invalid_argument);
 		BOOST_CHECK_EQUAL(p_type::uprem(x.pow(2),x),0);
 		BOOST_CHECK_EQUAL(p_type::uprem(x,x+1),-1);
+		// Check with negative expos.
+		BOOST_CHECK_THROW(p_type::uprem(x,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::uprem(x,x.pow(-2)+x),std::invalid_argument);
 		// Random testing.
 		std::uniform_int_distribution<int> dist(0,9);
 		for (int i = 0; i < ntrials; ++i) {
@@ -342,7 +345,7 @@ BOOST_AUTO_TEST_CASE(polynomial_pp_test)
 {
 	boost::mpl::for_each<key_types>(pp_tester());
 }
-#endif
+
 struct gcd_tester
 {
 	template <typename Key>
@@ -360,6 +363,20 @@ struct gcd_tester
 		BOOST_CHECK_EQUAL(p_type::gcd(x-x,p_type{}),0);
 		BOOST_CHECK_EQUAL(p_type::gcd(x-x,y-y),0);
 		BOOST_CHECK_EQUAL(p_type::gcd(x-x+y-y,y-y),0);
+		// Negative exponents.
+		BOOST_CHECK_THROW(p_type::gcd(p_type{1},x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::gcd(x.pow(-1),p_type{1}),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::gcd(x,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::gcd(x.pow(-1),x),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::gcd(x+y,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::gcd(x.pow(-1),x+y),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::gcd(x+y,y.pow(-1) + x),std::invalid_argument);
+		BOOST_CHECK_THROW(p_type::gcd(y.pow(-1) + x,x+y),std::invalid_argument);
+		// Negative exponents will work if one poly is zero.
+		BOOST_CHECK_EQUAL(p_type::gcd(x.pow(-1),p_type{}),x.pow(-1));
+		BOOST_CHECK_EQUAL(p_type::gcd(p_type{},x.pow(-1)),x.pow(-1));
+		BOOST_CHECK_EQUAL(p_type::gcd(y+x.pow(-1),p_type{}),y+x.pow(-1));
+		BOOST_CHECK_EQUAL(p_type::gcd(p_type{},y+x.pow(-1)),y+x.pow(-1));
 		// Zerovariate tests.
 		BOOST_CHECK_EQUAL(p_type::gcd(p_type{12},p_type{9}),3);
 		BOOST_CHECK_EQUAL(p_type::gcd(p_type{0},p_type{9}),9);
@@ -380,12 +397,15 @@ struct gcd_tester
 			} else {
 				BOOST_CHECK_NO_THROW((n * r) / g);
 				BOOST_CHECK_NO_THROW((m * n) / g);
-				BOOST_CHECK_EQUAL(g,p_type::gcd(m*n,n*r));
+				auto inv_g = p_type::gcd(m*n,n*r);
+				if (inv_g != g) {
+					BOOST_CHECK_EQUAL(g,-inv_g);
+				}
 			}
 		}
 		// Some explicit tests manually verified via sympy.
-		auto explicit_check = [](const p_type &a, const p_type &b, const p_type &cmp) -> void {
-			auto g = p_type::gcd(a,b);
+		auto explicit_check = [](const p_type &x, const p_type &y, const p_type &cmp) -> void {
+			auto g = p_type::gcd(x,y);
 			BOOST_CHECK(g == cmp || g == -cmp);
 		};
 		explicit_check(
@@ -405,6 +425,12 @@ struct gcd_tester
 			-4*pow(x,4)*pow(y,8)+4*pow(x,5)*pow(y,5)*pow(z,7)-12*pow(x,3)*pow(y,7)+8*pow(x,3)*pow(y,8)*pow(z,4)-2*pow(x,7)*pow(y,5)*pow(z,7),
 			-6*pow(x,8)*y*pow(z,3)-12*pow(x,6)*pow(y,4)+9*pow(x,5)*pow(y,2)*pow(z,3),
 			2*pow(x,5)*y*pow(z,3) + 4*pow(x,3)*pow(y,4) - 3*pow(x,2)*pow(y,2)*pow(z,3)
+		);
+		explicit_check(
+			-4*pow(x,3)*pow(y,3)*pow(z,6)-12*pow(x,3)*pow(z,3)+16*pow(x,4)*pow(z,7)+8*pow(x,7)*y*pow(z,4),
+			4*pow(x,5)*pow(y,4)*pow(z,5)+8*pow(x,2)*pow(y,3)*pow(z,8)-2*x*pow(y,6)*pow(z,7)+3*pow(x,2)*pow(y,3)*pow(z,7)+9*pow(x,2)*pow(z,4)
+				-6*pow(x,6)*y*pow(z,5)-12*pow(x,3)*pow(z,8)-6*x*pow(y,3)*pow(z,4),
+			2*pow(x,5)*y*pow(z,4) + 4*pow(x,2)*pow(z,7) - x*pow(y,3)*pow(z,6) - 3*x*pow(z,3)
 		);
 	}
 };

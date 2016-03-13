@@ -134,6 +134,22 @@ inline auto poly_lterm(const PType &p) -> decltype(p._container().begin())
 	});
 }
 
+// Check that in a univariate poly there are no negative exponents.
+// Requires a strictly univariate poly.
+template <typename PType>
+inline void poly_uexpo_checker(const PType &p)
+{
+	const auto &args = p.get_symbol_set();
+	piranha_assert(args.size() == 1u);
+	using d_type = decltype(p._container().begin()->m_key.degree(args));
+	const d_type zero(0);
+	for (const auto &t: p._container()) {
+		if (unlikely(t.m_key.degree(args) < zero)) {
+			piranha_throw(std::invalid_argument,"negative exponents are not allowed");
+		}
+	}
+}
+
 // Multiply polynomial by non-zero cf in place. Preconditions:
 // - a is not zero.
 // Type requirements:
@@ -152,17 +168,16 @@ inline void poly_cf_mult(const typename PType::term_type::cf_type &a, PType &p)
 // Divide polynomial by non-zero cf in place. Preconditions:
 // - a is not zero.
 // Type requirements:
-// - cf type supports in-place division.
+// - cf type supports divexact().
+// NOTE: this is always used in exact divisions, we could wrap mp_integer::_divexact()
+// to improve performance.
 template <typename PType>
-inline void poly_cf_div(PType &p, const typename PType::term_type::cf_type &a)
+inline void poly_exact_cf_div(PType &p, const typename PType::term_type::cf_type &a)
 {
 	piranha_assert(!math::is_zero(a));
 	const auto it_f = p._container().end();
 	for (auto it = p._container().begin(); it != it_f; ++it) {
-		// NOTE: here we could use a wrapper for mp_integer::_divexact(): this function
-		// is only used when we know that the division should be exact by construction,
-		// in the GCD code.
-		it->m_cf /= a;
+		math::divexact(it->m_cf,it->m_cf,a);
 		piranha_assert(!math::is_zero(it->m_cf));
 	}
 }
@@ -200,6 +215,9 @@ inline PType poly_ugcd(PType a, PType b)
 		retval.set_symbol_set(a.get_symbol_set());
 		return retval;
 	}
+	// Check exponents.
+	poly_uexpo_checker(a);
+	poly_uexpo_checker(b);
 	// Order so that deg(a) >= deg(b).
 	if (poly_lterm(a)->m_key < poly_lterm(b)->m_key) {
 		std::swap(a,b);
@@ -227,9 +245,6 @@ inline PType poly_ugcd(PType a, PType b)
 		// matter too much.
 		// NOTE: this will be used only on monomials with integral exponents, so it is always valid.
 		integer delta(l2->m_key.degree(args)), l1d(l1->m_key.degree(args));
-		if (delta.sign() < 0 || l1d.sign() < 0) {
-			piranha_throw(std::invalid_argument,"cannot compute the GCD of a polynomial with negative exponents");
-		}
 		piranha_assert(delta >= l1d);
 		// NOTE: this is a pseudo-remainder operation here, we don't use the poly method as we need the delta
 		// information below.
@@ -239,7 +254,7 @@ inline PType poly_ugcd(PType a, PType b)
 		if (fprime.size() != 0u) {
 			const cf_type h_delta = math::pow(h,static_cast<unsigned>(delta));
 			auto tmp(fprime);
-			poly_cf_div(tmp,g * h_delta);
+			poly_exact_cf_div(tmp,g * h_delta);
 			g = l1->m_cf;
 			h = (math::pow(g,static_cast<unsigned>(delta)) * h) / h_delta;
 			F.push_back(std::move(tmp));
@@ -248,8 +263,9 @@ inline PType poly_ugcd(PType a, PType b)
 	}
 	auto retval = std::move(F.back());
 	auto content = retval.content();
-	poly_cf_div(retval,content);
-	return retval * math::gcd(a_cont,b_cont);
+	poly_exact_cf_div(retval,content);
+	poly_cf_mult(math::gcd(a_cont,b_cont),retval);
+	return retval;
 }
 
 // Establish the limits of the exponents of two polynomials. Will throw if a negative exponent is encountered.
@@ -746,19 +762,8 @@ class polynomial:
 			// Check negative exponents, if requested.
 			if (CheckExpos) {
 				// Check if there are negative exponents.
-				auto expo_checker = [&args](const polynomial &p) {
-					// NOTE: degree calculation and comparison is always available on the supported types.
-					using d_type = decltype(p._container().begin()->m_key.degree(args));
-					const d_type zero(0);
-					for (const auto &t: p._container()) {
-						if (unlikely(t.m_key.degree(args) < zero)) {
-							piranha_throw(std::invalid_argument,"a negative exponent was encountered "
-								"in the univariate polynomial division algorithm");
-						}
-					}
-				};
-				expo_checker(n);
-				expo_checker(d);
+				detail::poly_uexpo_checker(n);
+				detail::poly_uexpo_checker(d);
 			}
 			// Initialisation: quotient is empty, remainder is the numerator.
 			polynomial q, r(n);
@@ -899,8 +904,7 @@ class polynomial:
 		using content_enabler = typename std::enable_if<has_gcd3<typename T::term_type::cf_type>::value,int>::type;
 		// Primitive part enabler.
 		template <typename T>
-		using pp_enabler = typename std::enable_if<std::is_same<decltype(std::declval<const T &>() /
-			std::declval<const T &>().content()),T>::value,int>::type;
+		using pp_enabler = typename std::enable_if<detail::true_tt<content_enabler<T>>::value && has_exact_division<cf_t<T>>::value,int>::type;
 		// Prem enabler.
 		template <typename T>
 		using uprem_enabler = typename std::enable_if<
@@ -1266,6 +1270,8 @@ class polynomial:
 		template <typename T = polynomial, join_enabler<T> = 0>
 		Cf join() const
 		{
+			// NOTE: here we can improve performance by using
+			// lower level primitives rather than arithmetic operators.
 			using cf_term_type = typename Cf::term_type;
 			Cf retval;
 			for (const auto &t: this->_container()) {
@@ -1303,19 +1309,25 @@ class polynomial:
 		 * \note
 		 * This method is enabled only if:
 		 * - the method piranha::polynomial::content() is enabled,
-		 * - the polynomial can be divided by its coefficient type, yielding the
-		 *   polynomial as return type.
+		 * - the polynomial coefficient supports math::divexact().
 		 *
 		 * This method will return \p this divided by its content.
 		 *
 		 * @return the primitive part of \p this.
 		 *
-		 * @throws unspecified any exception thrown by the division operator or by piranha::polynomial::content().
+		 * @throws piranha::zero_division_error if the content is zero.
+		 * @throws unspecified any exception thrown by the division operation or by piranha::polynomial::content().
 		 */
 		template <typename T = polynomial, pp_enabler<T> = 0>
 		polynomial primitive_part() const
 		{
-			return *this / content();
+			polynomial retval(*this);
+			auto c = content();
+			if (unlikely(math::is_zero(c))) {
+				piranha_throw(zero_division_error,"the content of the polynomial is zero");
+			}
+			detail::poly_exact_cf_div(retval,c);
+			return retval;
 		}
 		/// Univariate polynomial division with remainder.
 		/**
@@ -1408,7 +1420,7 @@ class polynomial:
 			// NOTE: negative degrees will be caught by udivrem.
 			auto n_copy(n);
 			detail::poly_cf_mult(math::pow(ld->m_cf,static_cast<unsigned>(dn-dd+1)),n_copy);
-			// NOTE: here we can force divexact, when we implement it.
+			// NOTE: here we can force exact division in udivrem, when we implement it.
 			return udivrem(n_copy,d).second;
 		}
 		/// Exact polynomial division.
