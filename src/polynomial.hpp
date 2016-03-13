@@ -193,7 +193,8 @@ inline void poly_exact_cf_div(PType &p, const typename PType::term_type::cf_type
 // - univariate polynomials on the same variable.
 // Type requirements:
 // - cf type supports exponentiation to unsigned, yielding the same type,
-// - cf type * cf type is still cf type.
+// - cf type * cf type is still cf type, and multipliable in-place,
+// - cf type has divexact.
 template <typename PType>
 inline PType poly_ugcd(PType a, PType b)
 {
@@ -256,7 +257,8 @@ inline PType poly_ugcd(PType a, PType b)
 			auto tmp(fprime);
 			poly_exact_cf_div(tmp,g * h_delta);
 			g = l1->m_cf;
-			h = (math::pow(g,static_cast<unsigned>(delta)) * h) / h_delta;
+			h = (math::pow(g,static_cast<unsigned>(delta)) * h);
+			math::divexact(h,h,h_delta);
 			F.push_back(std::move(tmp));
 			safe_integral_adder(i,size_type(1u));
 		}
@@ -910,6 +912,16 @@ class polynomial:
 		using uprem_enabler = typename std::enable_if<
 			detail::true_tt<poly_div_enabler<T>>::value &&
 			std::is_same<decltype(math::pow(std::declval<const cf_t<T> &>(),0u)),cf_t<T>>::value,int>::type;
+		// Enabler for GCD.
+		template <typename T>
+		using gcd_enabler = typename std::enable_if<
+			has_gcd<cf_t<T>>::value && has_gcd3<cf_t<T>>::value &&
+			std::is_same<decltype(math::pow(std::declval<const cf_t<T> &>(),0u)),cf_t<T>>::value &&
+			is_multipliable_in_place<cf_t<T>>::value &&
+			std::is_same<decltype(std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>()),cf_t<T>>::value &&
+			has_exact_division<cf_t<T>>::value && std::is_copy_assignable<cf_t<T>>::value &&
+			detail::true_tt<content_enabler<T>>::value && detail::true_tt<poly_div_enabler<T>>::value
+		,int>::type;
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -1492,9 +1504,30 @@ class polynomial:
 		/**
 		 * \note
 		 * This static method is enabled only if the following conditions apply:
-		 * - the polynomial type is divisible and exponentiable to \p unsigned
+		 * - the coefficient type has math::gcd() and math::gcd3(), it is exponentiable to \p unsigned yielding
+		 *   the coefficient type, it is multipliable in-place and in binary form, yielding the coefficient type,
+		 *   it has math::divexact(), and it is copy-assignable,
+		 * - the polynomial type has piranha::polynomial::content() and piranha::polynomial::udivrem().
+		 *
+		 * This method will compute the GCD of polynomials \p a and \p b.
+		 *
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 *
+		 * @return the GCD of \p a and \p b.
+		 *
+		 * @throws std::invalid_argument if a negative exponent is encountered in \p a or \p b.
+		 * @throws std::overflow_error in case of (unlikely) integral overflow errors.
+		 * @throws unspecified any exception thrown by:
+		 * - the public interface of piranha::series, piranha::symbol_set,
+		 * - construction of polynomials and keys,
+		 * - construction, arithmetics and assignment of coefficients,
+		 * - math::gcd(), math::gcd3(), math::divexact(), math::pow(),
+		 * - piranha::polynomial::udivrem(), piranha::polynomial::content(),
+		 * - memory errors in standard containers,
+		 * - the conversion of piranha::integer to \p unsigned.
 		 */
-		template <typename T = polynomial>
+		template <typename T = polynomial, gcd_enabler<T> = 0>
 		static polynomial gcd(const polynomial &a, const polynomial &b)
 		{
 			// Deal with different symbol sets.
