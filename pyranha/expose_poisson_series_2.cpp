@@ -38,7 +38,7 @@ namespace pyranha
 
 void expose_poisson_series_2()
 {
-	series_exposer<piranha::poisson_series,poisson_series_descriptor,6u,9u,ps_custom_hook> ps_exposer;
+	series_exposer<piranha::poisson_series,poisson_series_descriptor,2u,3u,ps_custom_hook> ps_exposer;
 }
 
 }

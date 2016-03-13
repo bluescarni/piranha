@@ -162,6 +162,13 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_polynomials_2();
 	pyranha::expose_polynomials_3();
 	pyranha::expose_polynomials_4();
+	pyranha::expose_polynomials_5();
+	pyranha::expose_polynomials_6();
+	pyranha::expose_polynomials_7();
+	pyranha::expose_polynomials_8();
+	pyranha::expose_polynomials_9();
+	pyranha::expose_polynomials_10();
+	pyranha::expose_polynomials_11();
 	// Expose Poisson series.
 	pyranha::expose_poisson_series_0();
 	pyranha::expose_poisson_series_1();
@@ -169,10 +176,25 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_poisson_series_3();
 	pyranha::expose_poisson_series_4();
 	pyranha::expose_poisson_series_5();
+	pyranha::expose_poisson_series_6();
+	pyranha::expose_poisson_series_7();
+	pyranha::expose_poisson_series_8();
+	pyranha::expose_poisson_series_9();
+	pyranha::expose_poisson_series_10();
+	pyranha::expose_poisson_series_11();
+	pyranha::expose_poisson_series_12();
+	pyranha::expose_poisson_series_13();
+	pyranha::expose_poisson_series_14();
 	// Expose divisor series.
 	pyranha::expose_divisor_series_0();
 	pyranha::expose_divisor_series_1();
 	pyranha::expose_divisor_series_2();
+	pyranha::expose_divisor_series_3();
+	pyranha::expose_divisor_series_4();
+	pyranha::expose_divisor_series_5();
+	pyranha::expose_divisor_series_6();
+	pyranha::expose_divisor_series_7();
+	pyranha::expose_divisor_series_8();
 	// Expose the settings class.
 	bp::class_<piranha::settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",piranha::settings::get_max_term_output).staticmethod("_get_max_term_output");

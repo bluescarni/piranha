@@ -190,6 +190,9 @@ see https://www.gnu.org/licenses/. */
  * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times, once it is set to dynamic
  * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that iteratively always increases).
  * Not sure there's a general solution.
+ * \todo safe_cast should probably have its own special exception. As it stands, when we do try { safe_cast() } catch {} we are catching other
+ * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails because of unsafe cast
+ * rather than other errors, see e.g. how it is used in the poly linear arg combination.
  */
 namespace piranha
 {

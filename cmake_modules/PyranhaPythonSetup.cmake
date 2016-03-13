@@ -29,11 +29,9 @@
 # NOTE: if and when we decide to support OSX, recover some of the quirks in the PaGMO
 # version of this file. Let's keep it basic for the moment.
 
-INCLUDE(FindPythonInterp)
-INCLUDE(FindPythonLibs)
-
-# Find Python libraries
-FIND_PACKAGE(PythonLibs REQUIRED)
+# Find Python interpreter and libraries. This is the order suggested by CMake's documentation.
+find_package(PythonInterp REQUIRED)
+find_package(PythonLibs REQUIRED)
 MESSAGE(STATUS "Python libraries: " "${PYTHON_LIBRARIES}")
 MESSAGE(STATUS "Python library: " "${PYTHON_LIBRARY}")
 MESSAGE(STATUS "Python include dirs: " "${PYTHON_INCLUDE_DIRS}")

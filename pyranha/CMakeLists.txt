@@ -28,6 +28,13 @@ ADD_LIBRARY(_core SHARED
 	expose_polynomials_2.cpp
 	expose_polynomials_3.cpp
 	expose_polynomials_4.cpp
+	expose_polynomials_5.cpp
+	expose_polynomials_6.cpp
+	expose_polynomials_7.cpp
+	expose_polynomials_8.cpp
+	expose_polynomials_9.cpp
+	expose_polynomials_10.cpp
+	expose_polynomials_11.cpp
 	# Poisson series.
 	poisson_series_descriptor.hpp
 	expose_poisson_series.hpp
@@ -37,12 +44,27 @@ ADD_LIBRARY(_core SHARED
 	expose_poisson_series_3.cpp
 	expose_poisson_series_4.cpp
 	expose_poisson_series_5.cpp
+	expose_poisson_series_6.cpp
+	expose_poisson_series_7.cpp
+	expose_poisson_series_8.cpp
+	expose_poisson_series_9.cpp
+	expose_poisson_series_10.cpp
+	expose_poisson_series_11.cpp
+	expose_poisson_series_12.cpp
+	expose_poisson_series_13.cpp
+	expose_poisson_series_14.cpp
 	# Divisor series.
 	divisor_series_descriptor.hpp
 	expose_divisor_series.hpp
 	expose_divisor_series_0.cpp
 	expose_divisor_series_1.cpp
 	expose_divisor_series_2.cpp
+	expose_divisor_series_3.cpp
+	expose_divisor_series_4.cpp
+	expose_divisor_series_5.cpp
+	expose_divisor_series_6.cpp
+	expose_divisor_series_7.cpp
+	expose_divisor_series_8.cpp
 	# Python files.
 	__init__.py _common.py celmec.py math.py test.py types.py
 	${PYRANHA_TUTORIAL_FILES}

@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cstddef>
+#include <functional>
 #include <gmp.h>
 #include <limits>
 #include <random>
@@ -46,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "../src/binomial.hpp"
@@ -53,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -1363,6 +1366,520 @@ struct math_divexact_tester
 BOOST_AUTO_TEST_CASE(mp_integer_math_divexact_test)
 {
 	boost::mpl::for_each<size_types>(math_divexact_tester());
+}
+
+struct static_hash_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef detail::static_integer<T::value> int_type1;
+			typedef detail::static_integer<U::value> int_type2;
+			using lt1 = typename int_type1::limb_t;
+			using lt2 = typename int_type2::limb_t;
+			const auto lbits1 = int_type1::limb_bits;
+			const auto lbits2 = int_type2::limb_bits;
+			BOOST_CHECK_EQUAL(int_type1{}.hash(),0u);
+			BOOST_CHECK_EQUAL(int_type1{}.hash(),int_type2{}.hash());
+			BOOST_CHECK_EQUAL(int_type1{1}.hash(),int_type2{1}.hash());
+			BOOST_CHECK_EQUAL(int_type1{-1}.hash(),int_type2{-1}.hash());
+			BOOST_CHECK_EQUAL(int_type1{5}.hash(),int_type2{5}.hash());
+			BOOST_CHECK_EQUAL(int_type1{-5}.hash(),int_type2{-5}.hash());
+			// Random tests.
+			std::uniform_int_distribution<int> udist(0,1);
+			for (int i = 0; i < ntries; ++i) {
+				// Build randomly two identical integers wide as much as the narrowest of the two int types,
+				// and compare their hashes.
+				int_type1 a(1);
+				int_type2 b(1);
+				while (a.m_limbs[1u] < (lt1(1) << (lbits1 - 1u)) && b.m_limbs[1u] < (lt2(1) << (lbits2 - 1u))) {
+					int tmp = udist(rng);
+					a.m_limbs[0u] = static_cast<lt1>(a.m_limbs[0u] + lt1(tmp));
+					b.m_limbs[0u] = static_cast<lt2>(b.m_limbs[0u] + lt2(tmp));
+					a.lshift(1u);
+					b.lshift(1u);
+				}
+				if (udist(rng)) {
+					a.negate();
+					b.negate();
+				}
+				BOOST_CHECK_EQUAL(a.hash(),b.hash());
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_static_hash_test)
+{
+	boost::mpl::for_each<size_types>(static_hash_tester());
+}
+
+struct hash_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_hashable<int_type>::value);
+		BOOST_CHECK_EQUAL(int_type{}.hash(),0u);
+		{
+		int_type n;
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),0u);
+		}
+		{
+		int_type n(1), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(-1), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(2), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(-2), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(-100), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		// Random tests.
+		std::uniform_int_distribution<int> ud(std::numeric_limits<int>::lowest(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		// Try squaring as well for more range.
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		std::uniform_int_distribution<long long> udll(std::numeric_limits<long long>::lowest(),std::numeric_limits<long long>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udll(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udll(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		std::uniform_int_distribution<long> udl(std::numeric_limits<long>::lowest(),std::numeric_limits<long>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udl(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udl(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		std::uniform_int_distribution<unsigned long> udul(std::numeric_limits<unsigned long>::lowest(),std::numeric_limits<unsigned long>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udul(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udul(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		std::uniform_int_distribution<unsigned long long> udull(std::numeric_limits<unsigned long long>::lowest(),std::numeric_limits<unsigned long long>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udull(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udull(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		// Try some extremals.
+		{
+		int_type n(std::numeric_limits<long long>::max()), m(n);
+		if (n.is_static()) {
+			n.promote();
+		}
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(std::numeric_limits<long long>::lowest()), m(n);
+		if (n.is_static()) {
+			n.promote();
+		}
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(std::numeric_limits<double>::max()), m(n);
+		if (n.is_static()) {
+			n.promote();
+		}
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(std::numeric_limits<double>::lowest()), m(n);
+		if (n.is_static()) {
+			n.promote();
+		}
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_hash_test)
+{
+	boost::mpl::for_each<size_types>(hash_tester());
+}
+
+struct partial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_differentiable<int_type>::value);
+		int_type n;
+		BOOST_CHECK_EQUAL(math::partial(n,""),0);
+		n = 5;
+		BOOST_CHECK_EQUAL(math::partial(n,"abc"),0);
+		n = -5;
+		BOOST_CHECK_EQUAL(math::partial(n,"def"),0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_partial_test)
+{
+	boost::mpl::for_each<size_types>(partial_tester());
+}
+
+struct evaluate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		using d_type = std::unordered_map<std::string,double>;
+		BOOST_CHECK((is_evaluable<int_type,int>::value));
+		BOOST_CHECK((is_evaluable<int_type,int_type>::value));
+		BOOST_CHECK((is_evaluable<int_type,double>::value));
+		int_type n;
+		BOOST_CHECK_EQUAL(math::evaluate(n,d_type{}),0);
+		BOOST_CHECK_EQUAL(math::evaluate(n,d_type{{"foo",5.}}),0);
+		n = -1;
+		BOOST_CHECK_EQUAL(math::evaluate(n,d_type{{"foo",6.}}),-1);
+		n = 101;
+		BOOST_CHECK_EQUAL(math::evaluate(n,d_type{{"bar",6.},{"baz",.7}}),101);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_evaluate_test)
+{
+	boost::mpl::for_each<size_types>(evaluate_tester());
+}
+
+struct subs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK((!has_subs<int_type,int_type>::value));
+		BOOST_CHECK((!has_subs<int_type,int>::value));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_subs_test)
+{
+	boost::mpl::for_each<size_types>(subs_tester());
+}
+
+struct integrable_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(!is_integrable<int_type>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_integrable_test)
+{
+	boost::mpl::for_each<size_types>(integrable_tester());
+}
+
+BOOST_AUTO_TEST_CASE(mp_integer_literal_test)
+{
+	auto n0 = 12345_z;
+	BOOST_CHECK((std::is_same<integer,decltype(n0)>::value));
+	BOOST_CHECK_EQUAL(n0,12345);
+	n0 = -456_z;
+	BOOST_CHECK_EQUAL(n0,-456l);
+	BOOST_CHECK_THROW((n0 = -1234.5_z),std::invalid_argument);
+	BOOST_CHECK_EQUAL(n0,-456l);
+}
+
+struct mpz_view_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n0;
+		{
+		auto v0 = n0.get_mpz_view();
+		BOOST_CHECK_EQUAL(mpz_sgn(static_cast<detail::mpz_struct_t const *>(v0)),0);
+		// TT checks.
+		BOOST_CHECK(!std::is_copy_constructible<decltype(v0)>::value);
+		BOOST_CHECK(std::is_move_constructible<decltype(v0)>::value);
+		BOOST_CHECK(!std::is_copy_assignable<typename std::add_lvalue_reference<decltype(v0)>::type>::value);
+		BOOST_CHECK(!std::is_move_assignable<typename std::add_lvalue_reference<decltype(v0)>::type>::value);
+		}
+		n0 = -1;
+		{
+		auto v0 = n0.get_mpz_view();
+		BOOST_CHECK_EQUAL(mpz_cmp_si(static_cast<detail::mpz_struct_t const *>(v0),long(-1)),0);
+		}
+		n0 = 2;
+		{
+		auto v0 = n0.get_mpz_view();
+		BOOST_CHECK_EQUAL(mpz_cmp_si(static_cast<detail::mpz_struct_t const *>(v0),long(2)),0);
+		}
+		// Random tests.
+		std::uniform_int_distribution<int> ud(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		mpz_raii m;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			::mpz_set_si(&m.m_mpz,static_cast<long>(tmp));
+			int_type n1(tmp);
+			auto v1 = n1.get_mpz_view();
+			BOOST_CHECK_EQUAL(::mpz_cmp(v1,&m.m_mpz),0);
+			BOOST_CHECK_EQUAL(::mpz_cmp(&m.m_mpz,v1),0);
+			BOOST_CHECK_EQUAL(::mpz_cmp(&m.m_mpz,v1.get()),0);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_mpz_view_test)
+{
+	boost::mpl::for_each<size_types>(mpz_view_tester());
+}
+
+struct ipow_subs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK((!has_ipow_subs<int_type,int_type>::value));
+		BOOST_CHECK((!has_ipow_subs<int_type,int>::value));
+		BOOST_CHECK((!has_ipow_subs<int_type,long>::value));
+		BOOST_CHECK((!has_ipow_subs<int_type,double>::value));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_ipow_subs_test)
+{
+	boost::mpl::for_each<size_types>(ipow_subs_tester());
+}
+
+struct serialization_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+			std::numeric_limits<int>::max()), bool_dist(0,1);
+		int_type tmp;
+		for (int i = 0; i < ntries; ++i) {
+			int_type n(int_dist(rng));
+			std::stringstream ss;
+			{
+			boost::archive::text_oarchive oa(ss);
+			oa << n;
+			}
+			{
+			boost::archive::text_iarchive ia(ss);
+			ia >> tmp;
+			}
+			BOOST_CHECK_EQUAL(tmp,n);
+			BOOST_CHECK_EQUAL(tmp.is_static(),n.is_static());
+			// Randomly promote tmp if possible. The idea is that we later
+			// deserialize a small integer into it, then tmp should also switch
+			// back to being static.
+			if (tmp.is_static() && bool_dist(rng)) {
+				tmp.promote();
+			}
+		}
+		// Deserialize a large integer into "a" first, then deserialize
+		// a small one and check that "a" is static. This is an explicit case
+		// of the procedure explained above.
+		int_type a, b(std::numeric_limits<long long>::max());
+		std::stringstream ss;
+		{
+			boost::archive::text_oarchive oa(ss);
+			oa << b;
+		}
+		{
+			boost::archive::text_iarchive ia(ss);
+			ia >> a;
+		}
+		ss.str("");
+		BOOST_CHECK_EQUAL(a,b);
+		b = 1;
+		{
+			boost::archive::text_oarchive oa(ss);
+			oa << b;
+		}
+		{
+			boost::archive::text_iarchive ia(ss);
+			ia >> a;
+		}
+		BOOST_CHECK_EQUAL(a,1);
+		BOOST_CHECK(a.is_static());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_serialization_test)
+{
+	boost::mpl::for_each<size_types>(serialization_tester());
+}
+
+struct static_is_unitary_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::static_integer<T::value> int_type;
+		const auto limb_bits = int_type::limb_bits;
+		int_type n1;
+		BOOST_CHECK(!n1.is_unitary());
+		int_type n2(-1);
+		BOOST_CHECK(!n2.is_unitary());
+		int_type n3(1);
+		BOOST_CHECK(n3.is_unitary());
+		n3.set_bit(limb_bits);
+		BOOST_CHECK(!n3.is_unitary());
+		int_type n4(1);
+		BOOST_CHECK(n4.is_unitary());
+		n4 *= int_type(-1);
+		BOOST_CHECK(!n4.is_unitary());
+		n4 *= int_type(-1);
+		BOOST_CHECK(n4.is_unitary());
+		n4 *= int_type(0);
+		BOOST_CHECK(!n4.is_unitary());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_static_integer_is_unitary_test)
+{
+	boost::mpl::for_each<size_types>(static_is_unitary_tester());
+}
+
+struct is_unitary_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(has_is_unitary<int_type>::value);
+		std::uniform_int_distribution<int> int_dist(-10,10), bool_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			int tmp_int = int_dist(rng);
+			int_type tmp(tmp_int);
+			// Randomly promote.
+			if (tmp.is_static() && bool_dist(rng)) {
+				tmp.promote();
+			}
+			BOOST_CHECK_EQUAL(tmp_int == 1,tmp.is_unitary());
+			BOOST_CHECK_EQUAL(tmp_int == 1,math::is_unitary(tmp));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_is_unitary_test)
+{
+	boost::mpl::for_each<size_types>(is_unitary_tester());
 }
 
 struct ero_tester

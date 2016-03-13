@@ -38,7 +38,7 @@ namespace pyranha
 
 void expose_polynomials_2()
 {
-	series_exposer<piranha::polynomial,polynomial_descriptor,6u,9u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
+	series_exposer<piranha::polynomial,polynomial_descriptor,2u,3u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
 }
 
 }
