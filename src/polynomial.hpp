@@ -182,10 +182,6 @@ inline void poly_cf_div(PType &p, const typename PType::term_type::cf_type &a)
 template <typename PType>
 inline PType poly_ugcd(PType a, PType b)
 {
-//std::cout << "entering univariate\n";
-//std::cout << "the variable is: " << a.get_symbol_set().begin()->get_name() << '\n';
-//std::cout << a << '\n';
-//std::cout << b << '\n';
 	using term_type = typename PType::term_type;
 	using cf_type = typename term_type::cf_type;
 	using key_type = typename term_type::key_type;
@@ -193,16 +189,13 @@ inline PType poly_ugcd(PType a, PType b)
 	piranha_assert(a.get_symbol_set().size() == 1u && a.get_symbol_set() == b.get_symbol_set());
 	// If one of the two is zero, the gcd is the other.
 	if (math::is_zero(a) && !math::is_zero(b)) {
-//std::cout << "a is zero, returning b\n";
 		return b;
 	}
 	if (!math::is_zero(a) && math::is_zero(b)) {
-//std::cout << "b is zero, returning a\n";
 		return a;
 	}
 	// If both are zero, return zero.
 	if (math::is_zero(a) && math::is_zero(b)) {
-//std::cout << "both zero, returning zero\n";
 		PType retval;
 		retval.set_symbol_set(a.get_symbol_set());
 		return retval;
@@ -216,9 +209,7 @@ inline PType poly_ugcd(PType a, PType b)
 	// NOTE: coefficients are alway ctible from ints.
 	cf_type h(1), g(1);
 	// Store the content of a and b for later use.
-//std::cout << "computing the content of a and b\n";
 	auto a_cont = a.content(), b_cont = b.content();
-//std::cout << "a and b content computed:\n" << a_cont << '\n' << b_cont << '\n';
 	std::vector<PType> F;
 	using size_type = typename std::vector<PType>::size_type;
 	F.push_back(std::move(a));
@@ -229,7 +220,6 @@ inline PType poly_ugcd(PType a, PType b)
 	// NOTE: all monomials support construction from init list.
 	key_type zero_key{typename key_type::value_type(0)};
 	while (fprime.size() != 0u && poly_lterm(fprime)->m_key != zero_key) {
-//std::cout << "llll\n";
 		auto l2 = poly_lterm(F[static_cast<size_type>(i - 2u)]),
 			l1 = poly_lterm(F[static_cast<size_type>(i - 1u)]);
 		// NOTE: we are using the degree here in order to maintain compatibility with
@@ -244,32 +234,21 @@ inline PType poly_ugcd(PType a, PType b)
 		// NOTE: this is a pseudo-remainder operation here, we don't use the poly method as we need the delta
 		// information below.
 		delta -= l1d;
-//std::cout << F[static_cast<size_type>(i - 2u)] <<'\n';
-//std::cout << F[static_cast<size_type>(i - 1u)] <<'\n';
 		poly_cf_mult(math::pow(l1->m_cf,static_cast<unsigned>(delta+1)),F[static_cast<size_type>(i - 2u)]);
-//std::cout << "gonna prem\n";
-//std::cout << F[static_cast<size_type>(i - 2u)] <<'\n';
-//std::cout << F[static_cast<size_type>(i - 1u)] <<'\n';
 		fprime = PType::udivrem(F[static_cast<size_type>(i - 2u)],F[static_cast<size_type>(i - 1u)]).second;
-//std::cout << "premmed\n";
 		if (fprime.size() != 0u) {
 			const cf_type h_delta = math::pow(h,static_cast<unsigned>(delta));
 			auto tmp(fprime);
-//std::cout << "h1\n";
 			poly_cf_div(tmp,g * h_delta);
 			g = l1->m_cf;
-//std::cout << "h2\n";
 			h = (math::pow(g,static_cast<unsigned>(delta)) * h) / h_delta;
-//std::cout << "h3\n";
 			F.push_back(std::move(tmp));
 			safe_integral_adder(i,size_type(1u));
 		}
 	}
-//std::cout << "loop out\n";
 	auto retval = std::move(F.back());
 	auto content = retval.content();
 	poly_cf_div(retval,content);
-//std::cout << "getting out: " << retval * math::gcd(a_cont,b_cont) << '\n';
 	return retval * math::gcd(a_cont,b_cont);
 }
 
@@ -1506,9 +1485,6 @@ class polynomial:
 		template <typename T = polynomial>
 		static polynomial gcd(const polynomial &a, const polynomial &b)
 		{
-//std::cout << "entering the static gcd\n";
-//std::cout << a << '\n';
-//std::cout << b << '\n';
 			// Deal with different symbol sets.
 			polynomial merged_a, merged_b;
 			polynomial const *real_a(&a), *real_b(&b);
@@ -1525,39 +1501,48 @@ class polynomial:
 			}
 			// Cache it.
 			const auto &args = real_a->get_symbol_set();
-			// Then check for the zero args.
+			// Proceed with the univariate case.
+			if (args.size() == 1u) {
+				return detail::poly_ugcd(*real_a,*real_b);
+			}
+			// Zerovariate case. We need to handle this separately as the use of split() below
+			// requires a nonzero number of arguments.
+			if (args.size() == 0u) {
+				if (real_a->size() == 0u && real_b->size() == 0u) {
+					return polynomial{};
+				}
+				if (real_a->size() == 0u) {
+					return *real_b;
+				}
+				if (real_b->size() == 0u) {
+					return *real_a;
+				}
+				Cf g(0);
+				math::gcd3(g,real_a->_container().begin()->m_cf,real_b->_container().begin()->m_cf);
+				return polynomial(std::move(g));
+			}
+			// The general multivariate case.
+			return detail::poly_ugcd(real_a->split(),real_b->split()).join();
+			// NOTE: an older implementation that replaces the recursive call in the line immediately
+			// above. Let's keep it around for a while for debugging purposes.
+			/*
+			// Check for zero args.
 			if (real_a->size() == 0u && real_b->size() == 0u) {
-//std::cout << "both are zero, returning zero\n";
 				polynomial retval;
 				retval.set_symbol_set(args);
 				return retval;
 			}
 			if (real_a->size() == 0u) {
-//std::cout << "a is zero, returning b\n";
 				return *real_b;
 			}
 			if (real_b->size() == 0u) {
-//std::cout << "b is zero, returning a\n";
 				return *real_a;
 			}
-			// Proceed with the univariate case.
-			if (args.size() == 1u) {
-				return detail::poly_ugcd(*real_a,*real_b);
-			}
-			return detail::poly_ugcd(real_a->split(),real_b->split()).join();
-
-
-
-
-
-
-
 			// Primitive euclidean algorithm (Geddes 2.3).
 			auto as = real_a->split(), bs = real_b->split();
 			if (detail::poly_lterm(as)->m_key.degree(as.get_symbol_set()) < detail::poly_lterm(bs)->m_key.degree(as.get_symbol_set())) {
 				std::swap(as,bs);
 			}
-
 			using s_type = decltype(as);
 			auto c = as.primitive_part(), d = bs.primitive_part();
 			while (true) {
@@ -1574,6 +1559,7 @@ class polynomial:
 			}
 			auto gamma = math::gcd(as.content(),bs.content());
 			return (gamma * c).join();
+			*/
 		}
 	private:
 		// Static data for auto_truncate_degree.

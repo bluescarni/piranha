@@ -77,7 +77,7 @@ inline static Poly rq_poly(const Poly &x, const Poly &y, const Poly &z, std::uni
 	}
 	return retval;
 }
-
+#if 0
 struct division_tester
 {
 	template <typename Key>
@@ -342,13 +342,14 @@ BOOST_AUTO_TEST_CASE(polynomial_pp_test)
 {
 	boost::mpl::for_each<key_types>(pp_tester());
 }
-
+#endif
 struct gcd_tester
 {
 	template <typename Key>
 	void operator()(const Key &)
 	{
 		using p_type = polynomial<integer,Key>;
+		using math::pow;
 		BOOST_CHECK(has_gcd<p_type>::value);
 		BOOST_CHECK(has_gcd3<p_type>::value);
 		// Some zero tests.
@@ -359,6 +360,10 @@ struct gcd_tester
 		BOOST_CHECK_EQUAL(p_type::gcd(x-x,p_type{}),0);
 		BOOST_CHECK_EQUAL(p_type::gcd(x-x,y-y),0);
 		BOOST_CHECK_EQUAL(p_type::gcd(x-x+y-y,y-y),0);
+		// Zerovariate tests.
+		BOOST_CHECK_EQUAL(p_type::gcd(p_type{12},p_type{9}),3);
+		BOOST_CHECK_EQUAL(p_type::gcd(p_type{0},p_type{9}),9);
+		BOOST_CHECK_EQUAL(p_type::gcd(p_type{9},p_type{0}),9);
 		// The test from the Geddes book.
 		auto a = -30*x.pow(3)*y+90*x*x*y*y+15*x*x-60*x*y+45*y*y;
 		auto b = 100*x*x*y-140*x*x-250*x*y*y+350*x*y-150*y*y*y+210*y*y;
@@ -382,6 +387,16 @@ std::cout << g << '\n';
 				BOOST_CHECK_EQUAL(g,p_type::gcd(m*n,n*r));
 			}
 		}
+		// Some explicit tests manually verified via sympy.
+		auto explicit_check = [](const p_type &a, const p_type &b, const p_type &cmp) -> void {
+			auto g = p_type::gcd(a,b);
+			BOOST_CHECK(g == cmp || g == -cmp);
+		};
+		explicit_check(
+			pow(x,2)*pow(y,2)-2*x*pow(y,3)*pow(z,8)+pow(x,3)*y*y*pow(z,4)-2*pow(y,3)*pow(z,4),
+			pow(y,3)*z-2*x*pow(z,3)+x*pow(y,3)*pow(z,5)-2*pow(x,2)*pow(z,7),
+			1+x*z*z*z*z
+		);
 	}
 };
 
@@ -390,7 +405,7 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_test)
 	boost::mpl::for_each<key_types>(gcd_tester());
 }
 
-//BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_test)
+//BOOST_AUTO_TEST_CASE(polynomial_gcd_slow_test)
 //{
 //	using p_type = polynomial<integer,monomial<short>>;
 //	using math::pow;
