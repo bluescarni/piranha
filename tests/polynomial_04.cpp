@@ -373,10 +373,6 @@ struct gcd_tester
 		for (int i = 0; i < ntrials; ++i) {
 			auto n = rn_poly(x,y,z,dist), m = rn_poly(x,y,z,dist), r = rn_poly(x,y,z,dist);
 			auto g = p_type::gcd(n*r,m*n);
-std::cout << "i=" << i << '\n';
-std::cout << (n*r) << '\n';
-std::cout << (m*n) << '\n';
-std::cout << g << '\n';
 			if (math::is_zero(m*n)) {
 				BOOST_CHECK_EQUAL(g,n*r);
 			} else if (math::is_zero(n*r)) {
@@ -396,6 +392,19 @@ std::cout << g << '\n';
 			pow(x,2)*pow(y,2)-2*x*pow(y,3)*pow(z,8)+pow(x,3)*y*y*pow(z,4)-2*pow(y,3)*pow(z,4),
 			pow(y,3)*z-2*x*pow(z,3)+x*pow(y,3)*pow(z,5)-2*pow(x,2)*pow(z,7),
 			1+x*z*z*z*z
+		);
+		explicit_check(
+			4*pow(x,3)*pow(y,5)*pow(z,5)+8*pow(x,6)*pow(y,5)*pow(z,6)-2*pow(x,2)*pow(y,4)*pow(z,5)-4*pow(x,5)*pow(y,4)*pow(z,6),
+			8*pow(x,4)*pow(y,5)*pow(z,3)-2*pow(x,2)*pow(y,5)*pow(z,5)-2*pow(x,4)*pow(y,4)*pow(z,3)-6*pow(x,5)*pow(y,2)*pow(z,4)
+				+16*pow(x,7)*pow(y,5)*pow(z,4)-4*pow(x,5)*pow(y,5)*pow(z,6)-12*pow(x,8)*pow(y,2)*pow(z,5)-4*pow(x,7)*pow(y,4)*pow(z,4),
+			-4*pow(x,5)*pow(y,2)*pow(z,4) - 2*pow(x,2)*pow(y,2)*pow(z,3)
+		);
+		explicit_check(
+			-4*pow(x,5)*pow(y,8)*pow(z,4)+3*pow(x,3)*pow(y,6)*pow(z,3)+9*pow(x,2)*pow(y,5)*pow(z,3)-6*pow(x,2)*pow(y,6)*pow(z,7)+3*pow(x,4)*pow(y,6)*pow(z,7)
+			-2*pow(x,6)*pow(y,5)*pow(z,3)-6*pow(x,5)*pow(y,4)*pow(z,3)
+			-4*pow(x,4)*pow(y,8)+4*pow(x,5)*pow(y,5)*pow(z,7)-12*pow(x,3)*pow(y,7)+8*pow(x,3)*pow(y,8)*pow(z,4)-2*pow(x,7)*pow(y,5)*pow(z,7),
+			-6*pow(x,8)*y*pow(z,3)-12*pow(x,6)*pow(y,4)+9*pow(x,5)*pow(y,2)*pow(z,3),
+			2*pow(x,5)*y*pow(z,3) + 4*pow(x,3)*pow(y,4) - 3*pow(x,2)*pow(y,2)*pow(z,3)
 		);
 	}
 };
