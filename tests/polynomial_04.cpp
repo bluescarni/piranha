@@ -404,8 +404,8 @@ struct gcd_tester
 			}
 		}
 		// Some explicit tests manually verified via sympy.
-		auto explicit_check = [](const p_type &x, const p_type &y, const p_type &cmp) -> void {
-			auto g = p_type::gcd(x,y);
+		auto explicit_check = [](const p_type &n1, const p_type &n2, const p_type &cmp) -> void {
+			auto g = p_type::gcd(n1,n2);
 			BOOST_CHECK(g == cmp || g == -cmp);
 		};
 		explicit_check(
@@ -438,6 +438,15 @@ struct gcd_tester
 BOOST_AUTO_TEST_CASE(polynomial_gcd_test)
 {
 	boost::mpl::for_each<key_types>(gcd_tester());
+	// Check the type trait.
+	BOOST_CHECK((has_gcd<polynomial<integer,k_monomial>>::value));
+	BOOST_CHECK((!has_gcd<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((!has_gcd<polynomial<rational,k_monomial>>::value));
+	BOOST_CHECK((!has_gcd<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((has_gcd3<polynomial<integer,k_monomial>>::value));
+	BOOST_CHECK((!has_gcd3<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((!has_gcd3<polynomial<rational,k_monomial>>::value));
+	BOOST_CHECK((!has_gcd3<polynomial<double,k_monomial>>::value));
 }
 
 //BOOST_AUTO_TEST_CASE(polynomial_gcd_slow_test)

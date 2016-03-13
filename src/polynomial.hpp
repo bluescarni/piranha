@@ -903,7 +903,7 @@ class polynomial:
 			detail::true_tt<decltype(std::declval<cf_t<T> &>() += std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>())>::value,int>::type;
 		// Content enabler.
 		template <typename T>
-		using content_enabler = typename std::enable_if<has_gcd3<typename T::term_type::cf_type>::value,int>::type;
+		using content_enabler = typename std::enable_if<has_gcd3<cf_t<T>>::value,int>::type;
 		// Primitive part enabler.
 		template <typename T>
 		using pp_enabler = typename std::enable_if<detail::true_tt<content_enabler<T>>::value && has_exact_division<cf_t<T>>::value,int>::type;
@@ -1739,7 +1739,14 @@ using poly_ero_enabler = typename std::enable_if<
 	std::is_base_of<detail::polynomial_tag,typename std::decay<T>::type>::value &&
 	has_exact_ring_operations<typename std::decay<T>::type::term_type::cf_type>::value &&
 	(std::is_integral<typename std::decay<T>::type::term_type::key_type::value_type>::value ||
-	has_exact_division<typename std::decay<T>::type::term_type::key_type::value_type>::value)
+	has_exact_ring_operations<typename std::decay<T>::type::term_type::key_type::value_type>::value)
+>::type;
+
+// Enabler for GCD.
+template <typename T>
+using poly_gcd_enabler = typename std::enable_if<
+	std::is_base_of<detail::polynomial_tag,T>::value &&
+	true_tt<decltype(T::gcd(std::declval<const T &>(),std::declval<const T &>()))>::value
 >::type;
 
 }
@@ -1773,10 +1780,23 @@ struct divexact_impl<T,detail::poly_divexact_enabler<T>>
 	}
 };
 
-// TODO proper enabler.
+/// Implementation of piranha::math::gcd() for piranha::polynomial.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::polynomial that supports
+ * piranha::polynomial::gcd().
+ */
 template <typename T>
-struct gcd_impl<T,T,detail::poly_divexact_enabler<T>>
+struct gcd_impl<T,T,detail::poly_gcd_enabler<T>>
 {
+	/// Call operator.
+	/**
+	 * @param[in] a first argument.
+	 * @param[in] b second argument.
+	 *
+	 * @return the output of <tt>piranha::polynomial::gcd(a,b)</tt>.
+	 *
+	 * @throws unspecified any exception thrown by piranha::polynomial::gcd().
+	 */
 	T operator()(const T &a, const T &b) const
 	{
 		return T::gcd(a,b);
