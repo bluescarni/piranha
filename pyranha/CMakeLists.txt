@@ -35,6 +35,8 @@ ADD_LIBRARY(_core SHARED
 	expose_polynomials_9.cpp
 	expose_polynomials_10.cpp
 	expose_polynomials_11.cpp
+	expose_polynomials_12.cpp
+	expose_polynomials_13.cpp
 	# Poisson series.
 	poisson_series_descriptor.hpp
 	expose_poisson_series.hpp

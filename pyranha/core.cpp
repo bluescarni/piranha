@@ -169,6 +169,8 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_polynomials_9();
 	pyranha::expose_polynomials_10();
 	pyranha::expose_polynomials_11();
+	pyranha::expose_polynomials_12();
+	pyranha::expose_polynomials_13();
 	// Expose Poisson series.
 	pyranha::expose_poisson_series_0();
 	pyranha::expose_poisson_series_1();

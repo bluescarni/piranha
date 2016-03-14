@@ -30,13 +30,17 @@ see https://www.gnu.org/licenses/. */
 #define PYRANHA_EXPOSE_POLYNOMIALS_HPP
 
 #include <boost/python/class.hpp>
+#include <boost/python/def.hpp>
 #include <boost/python/list.hpp>
+#include <boost/python/operators.hpp>
+#include <boost/python/self.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <string>
 #include <tuple>
 #include <type_traits>
 
+#include "../src/math.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/type_traits.hpp"
 #include "expose_utils.hpp"
@@ -133,6 +137,44 @@ struct poly_custom_hook
 		bp::stl_input_iterator<expo_type> begin(l), end;
 		return s.find_cf(std::vector<expo_type>(begin,end));
 	}
+	// Division exposition.
+	template <typename T, typename std::enable_if<piranha::is_divisible<T>::value && piranha::is_divisible_in_place<T>::value,int>::type = 0>
+	void expose_division(bp::class_<T> &series_class) const
+	{
+		series_class.def(bp::self / bp::self);
+		series_class.def(bp::self /= bp::self);
+	}
+	template <typename T, typename std::enable_if<!piranha::is_divisible<T>::value || !piranha::is_divisible_in_place<T>::value,int>::type = 0>
+	void expose_division(bp::class_<T> &) const
+	{}
+	// Split and join.
+	template <typename T>
+	static auto split_wrapper(const T &p) -> decltype(p.split())
+	{
+		return p.split();
+	}
+	template <typename T>
+	static auto join_wrapper(const T &p) -> decltype(p.join())
+	{
+		return p.join();
+	}
+	template <typename T, typename = decltype(std::declval<const T &>().join())>
+	void expose_join(bp::class_<T> &series_class) const
+	{
+		series_class.def("join",join_wrapper<T>);
+	}
+	template <typename ... Args>
+	void expose_join(Args && ...) const {}
+	// GCD.
+	template <typename T, typename std::enable_if<piranha::has_gcd<T>::value,int>::type = 0>
+	void expose_gcd(bp::class_<T> &) const
+	{
+		bp::def("_gcd",piranha::math::gcd<T,T>);
+	}
+	template <typename T, typename std::enable_if<!piranha::has_gcd<T>::value,int>::type = 0>
+	void expose_gcd(bp::class_<T> &) const
+	{}
+	// The call operator.
 	template <typename T>
 	void operator()(bp::class_<T> &series_class) const
 	{
@@ -142,6 +184,13 @@ struct poly_custom_hook
 		expose_degree_auto_truncation_set(series_class);
 		// find_cf().
 		series_class.def("find_cf",find_cf_wrapper<T>);
+		// Division.
+		expose_division(series_class);
+		// Split and join.
+		series_class.def("split",split_wrapper<T>);
+		expose_join(series_class);
+		// GCD
+		expose_gcd(series_class);
 	}
 };
 
@@ -157,6 +206,8 @@ void expose_polynomials_8();
 void expose_polynomials_9();
 void expose_polynomials_10();
 void expose_polynomials_11();
+void expose_polynomials_12();
+void expose_polynomials_13();
 
 }
 
