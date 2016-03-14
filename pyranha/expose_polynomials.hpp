@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include "../src/math.hpp"
 #include "../src/polynomial.hpp"
@@ -174,6 +175,45 @@ struct poly_custom_hook
 	template <typename T, typename std::enable_if<!piranha::has_gcd<T>::value,int>::type = 0>
 	void expose_gcd(bp::class_<T> &) const
 	{}
+	// Height.
+	template <typename T>
+	static auto height_wrapper(const T &p) -> decltype(p.height())
+	{
+		return p.height();
+	}
+	template <typename T, typename = decltype(std::declval<const T &>().height())>
+	void expose_height(bp::class_<T> &series_class) const
+	{
+		series_class.def("height",height_wrapper<T>);
+	}
+	template <typename ... Args>
+	void expose_height(Args && ...) const {}
+	// Content.
+	template <typename T>
+	static auto content_wrapper(const T &p) -> decltype(p.content())
+	{
+		return p.content();
+	}
+	template <typename T, typename = decltype(std::declval<const T &>().content())>
+	void expose_content(bp::class_<T> &series_class) const
+	{
+		series_class.def("content",content_wrapper<T>);
+	}
+	template <typename ... Args>
+	void expose_content(Args && ...) const {}
+	// Primitive part.
+	template <typename T>
+	static auto primitive_part_wrapper(const T &p) -> decltype(p.primitive_part())
+	{
+		return p.primitive_part();
+	}
+	template <typename T, typename = decltype(std::declval<const T &>().primitive_part())>
+	void expose_primitive_part(bp::class_<T> &series_class) const
+	{
+		series_class.def("primitive_part",primitive_part_wrapper<T>);
+	}
+	template <typename ... Args>
+	void expose_primitive_part(Args && ...) const {}
 	// The call operator.
 	template <typename T>
 	void operator()(bp::class_<T> &series_class) const
@@ -189,8 +229,14 @@ struct poly_custom_hook
 		// Split and join.
 		series_class.def("split",split_wrapper<T>);
 		expose_join(series_class);
-		// GCD
+		// GCD.
 		expose_gcd(series_class);
+		// Height.
+		expose_height(series_class);
+		// Content.
+		expose_content(series_class);
+		// Primitive part.
+		expose_primitive_part(series_class);
 	}
 };
 

@@ -246,6 +246,8 @@ bp::def("_invert",&piranha::math::invert<arg>)
 	PYRANHA_EXPOSE_INVERT(piranha::rational);
 	PYRANHA_EXPOSE_INVERT(piranha::real);
 #undef PYRANHA_EXPOSE_INVERT
+	// GCD.
+	bp::def("_gcd",&piranha::math::gcd<piranha::integer,piranha::integer>);
 	// Cleanup function.
 	bp::def("_cleanup_type_system",&cleanup_type_system);
 }

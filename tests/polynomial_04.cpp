@@ -384,7 +384,7 @@ struct gcd_tester
 		// The test from the Geddes book.
 		auto a = -30*x.pow(3)*y+90*x*x*y*y+15*x*x-60*x*y+45*y*y;
 		auto b = 100*x*x*y-140*x*x-250*x*y*y+350*x*y-150*y*y*y+210*y*y;
-		BOOST_CHECK_EQUAL(p_type::gcd(a,b),-15*y+5*x);
+		BOOST_CHECK(p_type::gcd(a,b) == -15*y+5*x || -p_type::gcd(a,b) == -15*y+5*x);
 		// Random testing.
 		std::uniform_int_distribution<int> dist(0,4);
 		for (int i = 0; i < ntrials; ++i) {
@@ -459,3 +459,23 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_test)
 //		*pow(y,4)*pow(z,9)-8*pow(x,5)*pow(y,7)*pow(z,5);
 //	std::cout << p_type::gcd(n,m) << '\n';
 //}
+
+BOOST_AUTO_TEST_CASE(polynomial_height_test)
+{
+	{
+	using p_type = polynomial<integer,k_monomial>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL((x-y+3*z).height(),3);
+	BOOST_CHECK_EQUAL((-4*x-y+3*z).height(),4);
+	BOOST_CHECK_EQUAL(p_type{}.height(),0);
+	BOOST_CHECK_EQUAL(p_type{-100}.height(),100);
+	}
+	{
+	using p_type = polynomial<rational,monomial<short>>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL((x/2-y/10+3/2_q*z).height(),3/2_q);
+	BOOST_CHECK_EQUAL((-4/5_q*x-y-3*z).height(),3);
+	BOOST_CHECK_EQUAL(p_type{}.height(),0);
+	BOOST_CHECK_EQUAL(p_type{-100/4_q}.height(),25);
+	}
+}

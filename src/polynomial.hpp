@@ -922,6 +922,14 @@ class polynomial:
 			has_exact_division<cf_t<T>>::value && std::is_copy_assignable<cf_t<T>>::value &&
 			detail::true_tt<content_enabler<T>>::value && detail::true_tt<poly_div_enabler<T>>::value
 		,int>::type;
+		// Height.
+		template <typename T>
+		using height_type_ = decltype(math::abs(std::declval<const cf_t<T> &>()));
+		template <typename T>
+		using height_type = typename std::enable_if<std::is_constructible<height_type_<T>,int>::value &&
+			is_less_than_comparable<height_type_<T>>::value && std::is_move_assignable<height_type_<T>>::value &&
+			(std::is_copy_constructible<height_type_<T>>::value || std::is_move_constructible<height_type_<T>>::value),
+			height_type_<T>>::type;
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -1012,6 +1020,10 @@ class polynomial:
 		}
 		/// Inversion.
 		/**
+		 * \note
+		 * This method is enabled only if <tt>piranha::polynomial::pow(-1)</tt> is a well-formed
+		 * expression.
+		 * 
 		 * @return the calling polynomial raised to -1 using piranha::polynomial::pow().
 		 *
 		 * @throws unspecified any exception thrown by piranha::polynomial::pow().
@@ -1605,6 +1617,33 @@ class polynomial:
 			auto gamma = math::gcd(as.content(),bs.content());
 			return (gamma * c).join();
 			*/
+		}
+		/// Height.
+		/**
+		 * \note
+		 * This method is enabled only if the following conditions hold:
+		 * - the coefficient type supports piranha::math::abs(), yielding the type <tt>height_type<T></tt>,
+		 * - <tt>height_type<T></tt> is constructible from \p int, less-than comparable, move-assignable and copy or move constructible.
+		 * 
+		 * The height of a polynomial is defined as the maximum of the absolute values of the coefficients. If the polynomial
+		 * is empty, zero will be returned.
+		 * 
+		 * @return the height of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the construction, assignment, comparison, and absolute value calculation
+		 * of <tt>height_type<T></tt>.
+		 */
+		template <typename T = polynomial>
+		height_type<T> height() const
+		{
+			height_type<T> retval(0);
+			for (const auto &t: this->_container()) {
+				auto tmp(math::abs(t.m_cf));
+				if (!(tmp < retval)) {
+					retval = std::move(tmp);
+				}
+			}
+			return retval;
 		}
 	private:
 		// Static data for auto_truncate_degree.
