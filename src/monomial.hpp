@@ -973,9 +973,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		}
 		/// Comparison operator.
 		/**
-		 * \note
-		 * This template operator is enabled only if \p T satisfies piranha::is_less_than_comparable.
-		 *
 		 * The two monomials will be compared lexicographically.
 		 *
 		 * @param[in] other comparison argument.
@@ -985,7 +982,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws std::invalid_argument if the sizes of \p this and \p other differ.
 		 * @throws unspecified any exception thrown by <tt>std::lexicographical_compare()</tt>.
 		 */
-		template <typename U = T, comparison_enabler<U> = 0>
 		bool operator<(const monomial &other) const
 		{
 			const auto sbe1 = this->size_begin_end();
