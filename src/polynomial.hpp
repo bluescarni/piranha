@@ -820,7 +820,7 @@ class polynomial:
 				// NOTE: udivrem contains the check for negative exponents, zero n/d, etc.
 				auto res = polynomial::udivrem(n,d);
 				if (res.second.size() != 0u) {
-					piranha_throw(std::invalid_argument,"polynomial division is not exact");
+					piranha_throw(math::inexact_division,);
 				}
 				return std::move(res.first);
 			}
@@ -855,7 +855,7 @@ class polynomial:
 			auto ures = std::get<0u>(umap).template udivrem_impl<false>(std::get<0u>(umap),std::get<1u>(umap));
 			// Check if the division was exact.
 			if (ures.second.size() != 0u) {
-				piranha_throw(std::invalid_argument,"polynomial division is not exact.");
+				piranha_throw(math::inexact_division,);
 			}
 			// Map back to multivariate.
 			auto retval = detail::poly_from_univariate<Key>(ures.first,std::get<2u>(umap),args);
@@ -881,7 +881,7 @@ class polynomial:
 				r_dv = degree_vector_extractor(retval);
 			for (decltype(n_dv.size()) i = 0u; i < n_dv.size(); ++i) {
 				if (integer(n_dv[i]) != integer(d_dv[i]) + integer(r_dv[i])) {
-					piranha_throw(std::invalid_argument,"polynomial division is not exact.");
+					piranha_throw(math::inexact_division,);
 				}
 			}
 			return retval;
@@ -1460,7 +1460,8 @@ class polynomial:
 		 * @return the quotient <tt>n / d</tt>.
 		 *
 		 * @throws piranha::zero_division_error if \p d is zero.
-		 * @throws std::invalid_argument if the division is not exact or if a negative exponent is encountered.
+		 * @throws piranha::math::inexact_division if the division is not exact.
+		 * @throws std::invalid_argument if a negative exponent is encountered.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::polynomial::udivrem(),
 		 * - the public interface of piranha::hash_set, piranha::series, piranha::symbol_set,

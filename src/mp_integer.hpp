@@ -4390,7 +4390,7 @@ struct divexact_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>:
 	 *
 	 * @return a reference to \p out.
 	 *
-	 * @throws std::invalid_argument if the division of \p a by \p b is not exact.
+	 * @throws piranha::math::inexact_division if the division of \p a by \p b is not exact.
 	 * @throws unspecified any exception thrown by piranha::mp_integer::divrem().
 	 */
 	T &operator()(T &out, const T &a, const T &b) const
@@ -4398,7 +4398,7 @@ struct divexact_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>:
 		T r;
 		T::divrem(out,r,a,b);
 		if (!is_zero(r)) {
-			piranha_throw(std::invalid_argument,"integer division is not exact");
+			piranha_throw(inexact_division,);
 		}
 		return out;
 	}

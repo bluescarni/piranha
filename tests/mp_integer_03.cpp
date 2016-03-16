@@ -1359,7 +1359,7 @@ struct math_divexact_tester
 		math::divexact(out,int_type(0),int_type(-2));
 		BOOST_CHECK_EQUAL(out,0);
 		BOOST_CHECK_THROW(math::divexact(out,int_type(0),int_type(0)),zero_division_error);
-		BOOST_CHECK_THROW(math::divexact(out,int_type(3),int_type(2)),std::invalid_argument);
+		BOOST_CHECK_THROW(math::divexact(out,int_type(3),int_type(2)),math::inexact_division);
 	}
 };
 

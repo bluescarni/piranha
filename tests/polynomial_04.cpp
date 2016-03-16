@@ -106,7 +106,7 @@ struct division_tester
 		// Coefficient polys.
 		BOOST_CHECK_EQUAL(p_type{12} / p_type{-4},-3);
 		BOOST_CHECK_EQUAL(p_type{24} / p_type{3},8);
-		BOOST_CHECK_THROW(p_type{12} / p_type{11},std::invalid_argument);
+		BOOST_CHECK_THROW(p_type{12} / p_type{11},math::inexact_division);
 		BOOST_CHECK_EQUAL(pq_type{12} / pq_type{-11},-12/11_q);
 		res = (x-x+y-y+6) / p_type{2};
 		BOOST_CHECK_EQUAL(res,3);
@@ -119,11 +119,11 @@ struct division_tester
 		BOOST_CHECK_EQUAL(x*x / x,x);
 		BOOST_CHECK_EQUAL(x*x*x / x,x*x);
 		BOOST_CHECK_EQUAL(2*x / p_type{2},x);
-		BOOST_CHECK_THROW(x / p_type{2},std::invalid_argument);
+		BOOST_CHECK_THROW(x / p_type{2},math::inexact_division);
 		BOOST_CHECK_EQUAL(xq / pq_type{2},xq / 2);
 		BOOST_CHECK_EQUAL((x+1)*(x-2)/(x + 1),x-2);
 		BOOST_CHECK_EQUAL((x+1)*(x-2)*(x+3)/((x + 1)*(x+3)),x-2);
-		BOOST_CHECK_THROW((x+1)*(x-2)/(x + 4),std::invalid_argument);
+		BOOST_CHECK_THROW((x+1)*(x-2)/(x + 4),math::inexact_division);
 		// Negative exponents.
 		BOOST_CHECK_THROW(x/x.pow(-1),std::invalid_argument);
 		BOOST_CHECK_THROW(x.pow(-1)/x,std::invalid_argument);
@@ -134,12 +134,12 @@ struct division_tester
 		BOOST_CHECK_EQUAL((2*x*(x - y)) / x,2*x-2*y);
 		BOOST_CHECK_EQUAL((2*x*z*(x - y)*(x*x-y)) / (x - y),2*x*z*(x*x-y));
 		BOOST_CHECK_EQUAL((2*x*z*(x - y)*(x*x-y)) / (z*(x - y)),2*x*(x*x-y));
-		BOOST_CHECK_THROW((2*x*z*(x - y)*(x*x-y)) / (4*z*(x - y)),std::invalid_argument);
+		BOOST_CHECK_THROW((2*x*z*(x - y)*(x*x-y)) / (4*z*(x - y)),math::inexact_division);
 		BOOST_CHECK_EQUAL((2*x*z*(x - y)*(x*x-y)) / (2*z*(x - y)),x*(x*x-y));
 		BOOST_CHECK_EQUAL((2*xq*zq*(xq - yq)*(xq*xq-yq)) / (4*zq*(xq - yq)),xq*(xq*xq-yq)/2);
-		BOOST_CHECK_THROW((2*x*(x - y)) / z,std::invalid_argument);
+		BOOST_CHECK_THROW((2*x*(x - y)) / z,math::inexact_division);
 		// This fails after the mapping back to multivariate.
-		BOOST_CHECK_THROW((y*y+x*x*y*y*y) / x,std::invalid_argument);
+		BOOST_CHECK_THROW((y*y+x*x*y*y*y) / x,math::inexact_division);
 		// Random testing.
 		std::uniform_int_distribution<int> dist(0,9);
 		for (int i = 0; i < ntrials; ++i) {
@@ -148,7 +148,9 @@ struct division_tester
 				BOOST_CHECK_THROW(n / m,zero_division_error);
 			} else {
 				BOOST_CHECK_EQUAL((n * m) / m, n);
-				BOOST_CHECK_THROW((n * m + 1) / m,std::invalid_argument);
+				if (m != 1) {
+					BOOST_CHECK_THROW((n * m + 1) / m,math::inexact_division);
+				}
 				if (n.size() != 0u) {
 					BOOST_CHECK_EQUAL((n * m * n) / (m * n), n);
 				}
@@ -167,7 +169,9 @@ struct division_tester
 				BOOST_CHECK_THROW(n / m,zero_division_error);
 			} else {
 				BOOST_CHECK_EQUAL((n * m) / m, n);
-				BOOST_CHECK_THROW((n * m + 1) / m,std::invalid_argument);
+				if (m != 1) {
+					BOOST_CHECK_THROW((n * m + 1) / m,math::inexact_division);
+				}
 				if (n.size() != 0u) {
 					BOOST_CHECK_EQUAL((n * m * n) / (m * n), n);
 				}
@@ -219,7 +223,7 @@ BOOST_AUTO_TEST_CASE(polynomial_division_recursive_test)
 	pp_type x{"x"};
 	p_type y{"y"}, z{"z"}, t{"t"};
 	BOOST_CHECK_EQUAL((x*x*y*z) / x,x*y*z);
-	BOOST_CHECK_THROW((x*y*z) / (x*x),std::invalid_argument);
+	BOOST_CHECK_THROW((x*y*z) / (x*x),math::inexact_division);
 	BOOST_CHECK_EQUAL((x*x*y*z) / y,x*x*z);
 	BOOST_CHECK_EQUAL((2*x*z*(x - y)*(x*x-y)) / (z*(x - y)),2*x*(x*x-y));
 	BOOST_CHECK_EQUAL(pp_type{} / (x*y*z),0);
@@ -237,7 +241,7 @@ BOOST_AUTO_TEST_CASE(polynomial_division_recursive_test)
 			BOOST_CHECK_THROW(n / m,zero_division_error);
 		} else {
 			BOOST_CHECK_EQUAL((n * m) / m, n);
-			BOOST_CHECK_THROW((n * m + 1) / m,std::invalid_argument);
+			BOOST_CHECK_THROW((n * m + 1) / m,math::inexact_division);
 			if (n.size() != 0u) {
 				BOOST_CHECK_EQUAL((n * m * n) / (m * n), n);
 			}

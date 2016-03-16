@@ -2410,6 +2410,13 @@ inline auto div3(T &a, const T &b, const T &c) -> decltype(div3_impl<T>()(a,b,c)
 	return div3_impl<T>()(a,b,c);
 }
 
+/// Exception to signal an inexact division.
+struct inexact_division: public base_exception
+{
+	/// Default constructor.
+	explicit inexact_division(): base_exception("inexact division") {}
+};
+
 /// Default functor for the implementation of piranha::math::divexact().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -2421,7 +2428,7 @@ struct divexact_impl {};
 /// Exact division.
 /**
  * This method will write into \p a the exact result of <tt>b / c</tt>. The actual implementation of this function is in the piranha::math::divexact_impl functor's
- * call operator.
+ * call operator. The implementation should throw an instance of piranha::math::inexact_division if the division is not exact.
  *
  * @param[out] a the return value.
  * @param[in] b the first operand.

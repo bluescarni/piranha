@@ -147,6 +147,7 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::positive_overflow>();
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
+	pyranha::generic_translate<&PyExc_ArithmeticError,piranha::math::inexact_division>();
 	// Series list.
 	bp::def("_get_series_list",pyranha::get_series_list);
 	// The enums for save/load.
