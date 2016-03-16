@@ -1899,3 +1899,45 @@ BOOST_AUTO_TEST_CASE(mp_integer_ero_test)
 {
 	boost::mpl::for_each<size_types>(ero_tester());
 }
+
+struct bits_size_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using z_type = mp_integer<T::value>;
+		{
+		z_type n;
+		BOOST_CHECK_EQUAL(n.bits_size(),1u);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.bits_size(),1u);
+		n = z_type{1};
+		BOOST_CHECK_EQUAL(n.bits_size(),1u);
+		n = -1;
+		BOOST_CHECK_EQUAL(n.bits_size(),1u);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.bits_size(),1u);
+		n = z_type{1 << 5};
+		BOOST_CHECK_EQUAL(n.bits_size(),6u);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.bits_size(),6u);
+		}
+		// Random testing.
+		std::uniform_int_distribution<int> int_dist(0,16), bool_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			int tmp_int = int_dist(rng);
+			z_type n{1};
+			n <<= tmp_int;
+			// Randomly promote.
+			if (n.is_static() && bool_dist(rng)) {
+				n.promote();
+			}
+			BOOST_CHECK_EQUAL(n.bits_size(),unsigned(tmp_int) + 1u);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_bits_size_test)
+{
+	boost::mpl::for_each<size_types>(bits_size_tester());
+}

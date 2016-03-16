@@ -972,12 +972,18 @@ struct static_integer
 		}
 	}
 	// Compute the number of bits used in the representation of the integer.
+	// It will always return at least 1.
+	// NOTE: of course, this can be greatly improved performance-wise. See
+	// some ideas here:
+	// https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogObvious
+	// This routine is not currently used in any performance-critical code,
+	// but in case this changes we need to improve the implementation.
 	limb_t bits_size() const
 	{
 		using size_type = typename limbs_type::size_type;
 		const auto asize = abs_size();
 		if (asize == 0) {
-			return 0u;
+			return 1u;
 		}
 		const auto idx = static_cast<size_type>(asize - 1);
 		limb_t size = static_cast<limb_t>(limb_bits * idx), limb = m_limbs[idx];
@@ -3962,6 +3968,24 @@ class mp_integer
 			}
 			// NOTE: this is actually a macro.
 			return mpz_cmp_ui(&m_int.g_dy(),1ul) == 0;
+		}
+		/// Size in bits.
+		/**
+		 * This method will return the number of bits necessary to represent the absolute value of \p this.
+		 * If \p this is zero, 1 will be returned.
+		 * 
+		 * @return the size in bits of \p this.
+		 */
+		std::size_t bits_size() const
+		{
+			if (is_static()) {
+				constexpr auto limb_bits = detail::integer_union<NBits>::s_storage::limb_bits;
+				static_assert(std::numeric_limits<std::size_t>::max() >= limb_bits * 2u,"Overflow error.");
+				return static_cast<std::size_t>(m_int.g_st().bits_size());
+			}
+			// NOTE: in theory this could overflow. Not sure if it we should put any check here,
+			// GMP does not care about overflows :(
+			return ::mpz_sizeinbase(&m_int.g_dy(),2);
 		}
 		/** @name Low-level interface
 		 * Low-level methods.
