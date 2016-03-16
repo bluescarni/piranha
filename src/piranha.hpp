@@ -64,8 +64,6 @@ see https://www.gnu.org/licenses/. */
  * converter that might be registered in boost python. We need to query the registry and check at runtime.
  * \todo: pyranha tests should test the *exposition* and/or wrapping, not the functionality of the library. For poly/poisson series, add
  * tests for degree/order, plus add in math.py the degree/order methods in order to mirror math.hpp.
- * \todo in the rework of the substitution methods with toolboxes, remember to switch the interface of the key's subs to use string
- * instead of symbol for consistency.
  * \todo initializer_list ctors: should they be explicit or not?
  * \todo review usage of new, we probably want to switch to unqualified new() in order to account for possible overloads
  * to be found via ADL -> note that placement new cannot be overloaded:
@@ -193,6 +191,7 @@ see https://www.gnu.org/licenses/. */
  * \todo safe_cast should probably have its own special exception. As it stands, when we do try { safe_cast() } catch {} we are catching other
  * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails because of unsafe cast
  * rather than other errors, see e.g. how it is used in the poly linear arg combination.
+ * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a time.
  */
 namespace piranha
 {
