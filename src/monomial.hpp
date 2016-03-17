@@ -1046,6 +1046,31 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			return std::make_pair(monomial(std::get<1u>(sbe) + 1,std::get<2u>(sbe)),
 				monomial(std::get<1u>(sbe),std::get<1u>(sbe) + 1));
 		}
+		/// Detect negative exponents.
+		/**
+		 * This method will return \p true if at least one exponent is less than zero, \p false otherwise.
+		 *
+		 * @param[in] args reference arguments set.
+		 *
+		 * @return \p true if at least one exponent is less than zero, \p false otherwise.
+		 *
+		 * @throws std::invalid_argument if the size of \p args is different from the size of \p this.
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of an exponent from an \p int,
+		 * - the comparison operator of the exponent type.
+		 */
+		bool has_negative_exponent(const symbol_set &args) const
+		{
+			using value_type = typename base::value_type;
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"mismatch in the number of arguments");
+			}
+			auto sbe = this->size_begin_end();
+			const value_type zero(0);
+			return std::any_of(std::get<1u>(sbe),std::get<2u>(sbe),[&zero](const value_type &e) {
+				return e < zero;
+			});
+		}
 };
 
 template <typename T, typename S>

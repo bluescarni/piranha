@@ -1072,6 +1072,23 @@ class kronecker_monomial
 			auto tmp = unpack(args);
 			return std::make_pair(kronecker_monomial(tmp.begin() + 1,tmp.end()),kronecker_monomial(tmp[0u]));
 		}
+		/// Detect negative exponents.
+		/**
+		 * This method will return \p true if at least one exponent is less than zero, \p false otherwise.
+		 *
+		 * @param[in] args reference arguments set.
+		 *
+		 * @return \p true if at least one exponent is less than zero, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by unpack().
+		 */
+		bool has_negative_exponent(const symbol_set &args) const
+		{
+			auto tmp = unpack(args);
+			return std::any_of(tmp.begin(),tmp.end(),[](const value_type &e) {
+				return e < value_type(0);
+			});
+		}
 	private:
 		value_type m_value;
 };

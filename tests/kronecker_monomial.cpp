@@ -1338,3 +1338,31 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_extract_exponents_test)
 {
 	boost::mpl::for_each<int_types>(extract_exponents_tester());
 }
+
+struct has_negative_exponent_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using key_type = kronecker_monomial<T>;
+		key_type k{};
+		symbol_set ss;
+		BOOST_CHECK(!k.has_negative_exponent(ss));
+		ss.add("x");
+		BOOST_CHECK(!k.has_negative_exponent(ss));
+		k = key_type{1};
+		BOOST_CHECK(!k.has_negative_exponent(ss));
+		k = key_type{-1};
+		BOOST_CHECK(k.has_negative_exponent(ss));
+		ss.add("y");
+		k = key_type{1,0};
+		BOOST_CHECK(!k.has_negative_exponent(ss));
+		k = key_type{-1,2};
+		BOOST_CHECK(k.has_negative_exponent(ss));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_has_negative_exponent_test)
+{
+	boost::mpl::for_each<int_types>(has_negative_exponent_tester());
+}

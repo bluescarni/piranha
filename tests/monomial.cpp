@@ -1575,3 +1575,43 @@ BOOST_AUTO_TEST_CASE(monomial_extract_exponents_test)
 {
 	boost::mpl::for_each<expo_types>(extract_exponents_tester());
 }
+
+struct has_negative_exponent_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using key_type = monomial<T,U>;
+			key_type k{};
+			symbol_set ss;
+			BOOST_CHECK(!k.has_negative_exponent(ss));
+			ss.add("x");
+			BOOST_CHECK_THROW(k.has_negative_exponent(ss),std::invalid_argument);
+			k = key_type{T(1)};
+			BOOST_CHECK(!k.has_negative_exponent(ss));
+			k = key_type{T(0)};
+			BOOST_CHECK(!k.has_negative_exponent(ss));
+			k = key_type{T(-1)};
+			BOOST_CHECK(k.has_negative_exponent(ss));
+			ss.add("y");
+			BOOST_CHECK_THROW(k.has_negative_exponent(ss),std::invalid_argument);
+			k = key_type{T(0),T(1)};
+			BOOST_CHECK(!k.has_negative_exponent(ss));
+			k = key_type{T(0),T(-1)};
+			BOOST_CHECK(k.has_negative_exponent(ss));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_has_negative_exponent_test)
+{
+	boost::mpl::for_each<expo_types>(has_negative_exponent_tester());
+}
