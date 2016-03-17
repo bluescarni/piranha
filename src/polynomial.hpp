@@ -504,7 +504,7 @@ std::pair<bool,Poly> gcdheu(const Poly &a, const Poly &b, symbol_set::size_type 
 	const auto &ap = (s_index == 0u) ? a.primitive_part() : a;
 	const auto &bp = (s_index == 0u) ? b.primitive_part() : b;
 	// The current variable.
-	const std::string var = (args.begin() + s_index)->get_name();
+	const std::string var = args[s_index].get_name();
 	integer xi{2 * std::min(ap.height(),bp.height()) + 2};
 	// NOTE: the values of 6 iterations and 5000 bits limit are taken straight
 	// from the original implementation of the algorithm. It might as well be that
@@ -575,6 +575,10 @@ enum class polynomial_gcd_algorithm
  * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
  * 
  * This class satisfies the piranha::is_series type trait.
+ * 
+ * \warning
+ * The division and GCD operations are known to have poor performance, especially with large operands. Performance
+ * will be improved in future versions.
  *
  * ## Type requirements ##
  * 
