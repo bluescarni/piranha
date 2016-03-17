@@ -453,16 +453,231 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_test)
 	BOOST_CHECK((!has_gcd3<polynomial<double,k_monomial>>::value));
 }
 
-//BOOST_AUTO_TEST_CASE(polynomial_gcd_slow_test)
-//{
-//	using p_type = polynomial<integer,monomial<short>>;
-//	using math::pow;
-//	p_type x{"x"}, y{"y"}, z{"z"};
-//	auto n = 9*x*pow(y,8)+5*x*x*pow(y,9)*pow(z,7)+9*pow(x,3)*pow(z,3)+5*pow(x,6)*pow(y,8)*pow(z,8)-8*pow(x,8)*y*y*pow(z,7)-8*pow(x,7)*pow(y,7)*pow(z,5)-8*pow(x,9)*pow(y,7)*pow(z,5);
-//	auto m = 5*pow(x,6)*pow(y,5)*pow(z,6)+9*pow(x,4)*pow(y,3)*pow(z,8)+pow(x,5)*pow(y,5)*pow(z,8)-8*pow(x,9)*y*pow(z,3)-2*pow(x,5)*pow(y,8)*pow(z,5)-2*pow(x,7)*pow(y,9)*pow(z,2)+5*pow(x,9)
-//		*pow(y,4)*pow(z,9)-8*pow(x,5)*pow(y,7)*pow(z,5);
-//	std::cout << p_type::gcd(n,m) << '\n';
-//}
+struct gcd_psr_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using p_type = polynomial<integer,Key>;
+		using math::pow;
+		auto gcd_f = [](const p_type &a, const p_type &b) {
+			return p_type::gcd(a,b,polynomial_gcd_algorithm::prs_sr);
+		};
+		auto gcd_check = [](const p_type &a, const p_type &b, const p_type &g) {
+			try {
+				auto ret = p_type::gcd(a,b,polynomial_gcd_algorithm::heuristic);
+				BOOST_CHECK(ret == g || ret == -g);
+			} catch (...) {}
+		};
+		// Some zero tests.
+		BOOST_CHECK_EQUAL(gcd_f(p_type{},p_type{}),0);
+		p_type x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK_EQUAL(gcd_f(x,p_type{}),x);
+		BOOST_CHECK_EQUAL(gcd_f(p_type{},x),x);
+		BOOST_CHECK_EQUAL(gcd_f(x-x,p_type{}),0);
+		BOOST_CHECK_EQUAL(gcd_f(x-x,y-y),0);
+		BOOST_CHECK_EQUAL(gcd_f(x-x+y-y,y-y),0);
+		// Negative exponents.
+		BOOST_CHECK_THROW(gcd_f(p_type{1},x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x.pow(-1),p_type{1}),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x.pow(-1),x),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x+y,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x.pow(-1),x+y),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x+y,y.pow(-1) + x),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(y.pow(-1) + x,x+y),std::invalid_argument);
+		// Negative exponents will work if one poly is zero.
+		BOOST_CHECK_EQUAL(gcd_f(x.pow(-1),p_type{}),x.pow(-1));
+		BOOST_CHECK_EQUAL(gcd_f(p_type{},x.pow(-1)),x.pow(-1));
+		BOOST_CHECK_EQUAL(gcd_f(y+x.pow(-1),p_type{}),y+x.pow(-1));
+		BOOST_CHECK_EQUAL(gcd_f(p_type{},y+x.pow(-1)),y+x.pow(-1));
+		// Zerovariate tests.
+		BOOST_CHECK_EQUAL(gcd_f(p_type{12},p_type{9}),3);
+		BOOST_CHECK_EQUAL(gcd_f(p_type{0},p_type{9}),9);
+		BOOST_CHECK_EQUAL(gcd_f(p_type{9},p_type{0}),9);
+		// The test from the Geddes book.
+		auto a = -30*x.pow(3)*y+90*x*x*y*y+15*x*x-60*x*y+45*y*y;
+		auto b = 100*x*x*y-140*x*x-250*x*y*y+350*x*y-150*y*y*y+210*y*y;
+		BOOST_CHECK(gcd_f(a,b) == -15*y+5*x || -gcd_f(a,b) == -15*y+5*x);
+		// Random testing.
+		std::uniform_int_distribution<int> dist(0,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n = rn_poly(x,y,z,dist), m = rn_poly(x,y,z,dist), r = rn_poly(x,y,z,dist);
+			auto g = gcd_f(n*r,m*n);
+			gcd_check(n*r,m*n,g);
+			if (math::is_zero(m*n)) {
+				BOOST_CHECK_EQUAL(g,n*r);
+			} else if (math::is_zero(n*r)) {
+				BOOST_CHECK_EQUAL(g,m*n);
+			} else {
+				BOOST_CHECK_NO_THROW((n * r) / g);
+				BOOST_CHECK_NO_THROW((m * n) / g);
+				auto inv_g = gcd_f(m*n,n*r);
+				if (inv_g != g) {
+					BOOST_CHECK_EQUAL(g,-inv_g);
+				}
+			}
+		}
+		// Some explicit tests manually verified via sympy.
+		auto explicit_check = [gcd_f](const p_type &n1, const p_type &n2, const p_type &cmp) -> void {
+			auto g = gcd_f(n1,n2);
+			BOOST_CHECK(g == cmp || g == -cmp);
+		};
+		explicit_check(
+			pow(x,2)*pow(y,2)-2*x*pow(y,3)*pow(z,8)+pow(x,3)*y*y*pow(z,4)-2*pow(y,3)*pow(z,4),
+			pow(y,3)*z-2*x*pow(z,3)+x*pow(y,3)*pow(z,5)-2*pow(x,2)*pow(z,7),
+			1+x*z*z*z*z
+		);
+		explicit_check(
+			4*pow(x,3)*pow(y,5)*pow(z,5)+8*pow(x,6)*pow(y,5)*pow(z,6)-2*pow(x,2)*pow(y,4)*pow(z,5)-4*pow(x,5)*pow(y,4)*pow(z,6),
+			8*pow(x,4)*pow(y,5)*pow(z,3)-2*pow(x,2)*pow(y,5)*pow(z,5)-2*pow(x,4)*pow(y,4)*pow(z,3)-6*pow(x,5)*pow(y,2)*pow(z,4)
+				+16*pow(x,7)*pow(y,5)*pow(z,4)-4*pow(x,5)*pow(y,5)*pow(z,6)-12*pow(x,8)*pow(y,2)*pow(z,5)-4*pow(x,7)*pow(y,4)*pow(z,4),
+			-4*pow(x,5)*pow(y,2)*pow(z,4) - 2*pow(x,2)*pow(y,2)*pow(z,3)
+		);
+		explicit_check(
+			-4*pow(x,5)*pow(y,8)*pow(z,4)+3*pow(x,3)*pow(y,6)*pow(z,3)+9*pow(x,2)*pow(y,5)*pow(z,3)-6*pow(x,2)*pow(y,6)*pow(z,7)+3*pow(x,4)*pow(y,6)*pow(z,7)
+			-2*pow(x,6)*pow(y,5)*pow(z,3)-6*pow(x,5)*pow(y,4)*pow(z,3)
+			-4*pow(x,4)*pow(y,8)+4*pow(x,5)*pow(y,5)*pow(z,7)-12*pow(x,3)*pow(y,7)+8*pow(x,3)*pow(y,8)*pow(z,4)-2*pow(x,7)*pow(y,5)*pow(z,7),
+			-6*pow(x,8)*y*pow(z,3)-12*pow(x,6)*pow(y,4)+9*pow(x,5)*pow(y,2)*pow(z,3),
+			2*pow(x,5)*y*pow(z,3) + 4*pow(x,3)*pow(y,4) - 3*pow(x,2)*pow(y,2)*pow(z,3)
+		);
+		explicit_check(
+			-4*pow(x,3)*pow(y,3)*pow(z,6)-12*pow(x,3)*pow(z,3)+16*pow(x,4)*pow(z,7)+8*pow(x,7)*y*pow(z,4),
+			4*pow(x,5)*pow(y,4)*pow(z,5)+8*pow(x,2)*pow(y,3)*pow(z,8)-2*x*pow(y,6)*pow(z,7)+3*pow(x,2)*pow(y,3)*pow(z,7)+9*pow(x,2)*pow(z,4)
+				-6*pow(x,6)*y*pow(z,5)-12*pow(x,3)*pow(z,8)-6*x*pow(y,3)*pow(z,4),
+			2*pow(x,5)*y*pow(z,4) + 4*pow(x,2)*pow(z,7) - x*pow(y,3)*pow(z,6) - 3*x*pow(z,3)
+		);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_gcd_psr_test)
+{
+	boost::mpl::for_each<key_types>(gcd_psr_tester());
+}
+
+struct gcd_heu_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using p_type = polynomial<integer,Key>;
+		using math::pow;
+		auto gcd_f = [](const p_type &a, const p_type &b) {
+			return p_type::gcd(a,b,polynomial_gcd_algorithm::heuristic);
+		};
+		auto gcd_check = [](const p_type &a, const p_type &b, const p_type &g) {
+			auto ret = p_type::gcd(a,b,polynomial_gcd_algorithm::prs_sr);
+			BOOST_CHECK(ret == g || ret == -g);
+		};
+		// Some zero tests.
+		BOOST_CHECK_EQUAL(gcd_f(p_type{},p_type{}),0);
+		p_type x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK_EQUAL(gcd_f(x,p_type{}),x);
+		BOOST_CHECK_EQUAL(gcd_f(p_type{},x),x);
+		BOOST_CHECK_EQUAL(gcd_f(x-x,p_type{}),0);
+		BOOST_CHECK_EQUAL(gcd_f(x-x,y-y),0);
+		BOOST_CHECK_EQUAL(gcd_f(x-x+y-y,y-y),0);
+		// Negative exponents.
+		BOOST_CHECK_THROW(gcd_f(p_type{1},x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x.pow(-1),p_type{1}),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x.pow(-1),x),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x+y,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x.pow(-1),x+y),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(x+y,y.pow(-1) + x),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_f(y.pow(-1) + x,x+y),std::invalid_argument);
+		// Negative exponents will work if one poly is zero.
+		BOOST_CHECK_EQUAL(gcd_f(x.pow(-1),p_type{}),x.pow(-1));
+		BOOST_CHECK_EQUAL(gcd_f(p_type{},x.pow(-1)),x.pow(-1));
+		BOOST_CHECK_EQUAL(gcd_f(y+x.pow(-1),p_type{}),y+x.pow(-1));
+		BOOST_CHECK_EQUAL(gcd_f(p_type{},y+x.pow(-1)),y+x.pow(-1));
+		// Zerovariate tests.
+		BOOST_CHECK_EQUAL(gcd_f(p_type{12},p_type{9}),3);
+		BOOST_CHECK_EQUAL(gcd_f(p_type{0},p_type{9}),9);
+		BOOST_CHECK_EQUAL(gcd_f(p_type{9},p_type{0}),9);
+		// The test from the Geddes book.
+		auto a = -30*x.pow(3)*y+90*x*x*y*y+15*x*x-60*x*y+45*y*y;
+		auto b = 100*x*x*y-140*x*x-250*x*y*y+350*x*y-150*y*y*y+210*y*y;
+		BOOST_CHECK(gcd_f(a,b) == -15*y+5*x || -gcd_f(a,b) == -15*y+5*x);
+		// Random testing.
+		std::uniform_int_distribution<int> dist(0,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n = rn_poly(x,y,z,dist), m = rn_poly(x,y,z,dist), r = rn_poly(x,y,z,dist);
+			auto g = gcd_f(n*r,m*n);
+			gcd_check(n*r,m*n,g);
+			if (math::is_zero(m*n)) {
+				BOOST_CHECK_EQUAL(g,n*r);
+			} else if (math::is_zero(n*r)) {
+				BOOST_CHECK_EQUAL(g,m*n);
+			} else {
+				BOOST_CHECK_NO_THROW((n * r) / g);
+				BOOST_CHECK_NO_THROW((m * n) / g);
+				auto inv_g = gcd_f(m*n,n*r);
+				if (inv_g != g) {
+					BOOST_CHECK_EQUAL(g,-inv_g);
+				}
+			}
+		}
+		// Some explicit tests manually verified via sympy.
+		auto explicit_check = [gcd_f](const p_type &n1, const p_type &n2, const p_type &cmp) -> void {
+			auto g = gcd_f(n1,n2);
+			BOOST_CHECK(g == cmp || g == -cmp);
+		};
+		explicit_check(
+			pow(x,2)*pow(y,2)-2*x*pow(y,3)*pow(z,8)+pow(x,3)*y*y*pow(z,4)-2*pow(y,3)*pow(z,4),
+			pow(y,3)*z-2*x*pow(z,3)+x*pow(y,3)*pow(z,5)-2*pow(x,2)*pow(z,7),
+			1+x*z*z*z*z
+		);
+		explicit_check(
+			4*pow(x,3)*pow(y,5)*pow(z,5)+8*pow(x,6)*pow(y,5)*pow(z,6)-2*pow(x,2)*pow(y,4)*pow(z,5)-4*pow(x,5)*pow(y,4)*pow(z,6),
+			8*pow(x,4)*pow(y,5)*pow(z,3)-2*pow(x,2)*pow(y,5)*pow(z,5)-2*pow(x,4)*pow(y,4)*pow(z,3)-6*pow(x,5)*pow(y,2)*pow(z,4)
+				+16*pow(x,7)*pow(y,5)*pow(z,4)-4*pow(x,5)*pow(y,5)*pow(z,6)-12*pow(x,8)*pow(y,2)*pow(z,5)-4*pow(x,7)*pow(y,4)*pow(z,4),
+			-4*pow(x,5)*pow(y,2)*pow(z,4) - 2*pow(x,2)*pow(y,2)*pow(z,3)
+		);
+		explicit_check(
+			-4*pow(x,5)*pow(y,8)*pow(z,4)+3*pow(x,3)*pow(y,6)*pow(z,3)+9*pow(x,2)*pow(y,5)*pow(z,3)-6*pow(x,2)*pow(y,6)*pow(z,7)+3*pow(x,4)*pow(y,6)*pow(z,7)
+			-2*pow(x,6)*pow(y,5)*pow(z,3)-6*pow(x,5)*pow(y,4)*pow(z,3)
+			-4*pow(x,4)*pow(y,8)+4*pow(x,5)*pow(y,5)*pow(z,7)-12*pow(x,3)*pow(y,7)+8*pow(x,3)*pow(y,8)*pow(z,4)-2*pow(x,7)*pow(y,5)*pow(z,7),
+			-6*pow(x,8)*y*pow(z,3)-12*pow(x,6)*pow(y,4)+9*pow(x,5)*pow(y,2)*pow(z,3),
+			2*pow(x,5)*y*pow(z,3) + 4*pow(x,3)*pow(y,4) - 3*pow(x,2)*pow(y,2)*pow(z,3)
+		);
+		explicit_check(
+			-4*pow(x,3)*pow(y,3)*pow(z,6)-12*pow(x,3)*pow(z,3)+16*pow(x,4)*pow(z,7)+8*pow(x,7)*y*pow(z,4),
+			4*pow(x,5)*pow(y,4)*pow(z,5)+8*pow(x,2)*pow(y,3)*pow(z,8)-2*x*pow(y,6)*pow(z,7)+3*pow(x,2)*pow(y,3)*pow(z,7)+9*pow(x,2)*pow(z,4)
+				-6*pow(x,6)*y*pow(z,5)-12*pow(x,3)*pow(z,8)-6*x*pow(y,3)*pow(z,4),
+			2*pow(x,5)*y*pow(z,4) + 4*pow(x,2)*pow(z,7) - x*pow(y,3)*pow(z,6) - 3*x*pow(z,3)
+		);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_gcd_heu_test)
+{
+	boost::mpl::for_each<key_types>(gcd_heu_tester());
+	// Some misc tests specific to gcdheu.
+	using p_type = polynomial<integer,k_monomial>;
+	using math::pow;
+	using detail::gcdheu;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	// A few simple checks.
+	auto g_checker = [](const p_type &a, const p_type &b, const p_type &c) {
+		auto res = gcdheu(a,b);
+		BOOST_CHECK(!res.first);
+		BOOST_CHECK(res.second == c || -res.second == c);
+	};
+	g_checker(x,x,x);
+	g_checker(x+y,x+y,x+y);
+	g_checker(x+y+z,x+y+z,x+y+z);
+	g_checker(2*x+4*y+6*z,3*x+6*y+9*z,x + 2*y + 3*z);
+	g_checker(-2*x+4*y-6*z,3*x+6*y+9*z,p_type{1});
+	g_checker(-2*x+4*y-6*z,3*x-6*y+9*z,x - 2*y + 3*z);
+	g_checker((x+y)*(x-y)*z,x*(2*x-2*y)*y*z*z,z*(x-y));
+	g_checker((x+y)*(x-y)*z,x*(2*x-2*y)*y*z*z,z*(x-y));
+	// The test slow with PRS_SR.
+	auto n = 9*x*pow(y,8)+5*x*x*pow(y,9)*pow(z,7)+9*pow(x,3)*pow(z,3)+5*pow(x,6)*pow(y,8)*pow(z,8)-8*pow(x,8)*y*y*pow(z,7)-8*pow(x,7)*pow(y,7)*pow(z,5)-8*pow(x,9)*pow(y,7)*pow(z,5);
+	auto m = 5*pow(x,6)*pow(y,5)*pow(z,6)+9*pow(x,4)*pow(y,3)*pow(z,8)+pow(x,5)*pow(y,5)*pow(z,8)-8*pow(x,9)*y*pow(z,3)-2*pow(x,5)*pow(y,8)*pow(z,5)-2*pow(x,7)*pow(y,9)*pow(z,2)+5*pow(x,9)
+		*pow(y,4)*pow(z,9)-8*pow(x,5)*pow(y,7)*pow(z,5);
+	g_checker(n,m,x);
+}
 
 BOOST_AUTO_TEST_CASE(polynomial_height_test)
 {

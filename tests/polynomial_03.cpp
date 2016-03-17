@@ -386,3 +386,105 @@ BOOST_AUTO_TEST_CASE(polynomial_mapping_test)
 {
 	boost::mpl::for_each<key_types>(mapping_tester());
 }
+
+struct univariate_gcdheu_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using namespace piranha::detail;
+		using piranha::math::pow;
+		using p_type = polynomial<integer,Key>;
+		p_type x{"x"};
+		auto gcd_check = [](const p_type &a, const p_type &b, const p_type &g) {
+			auto res_heu = gcdheu(a,b);
+			BOOST_CHECK(!res_heu.first);
+			BOOST_CHECK(res_heu.second == g || res_heu.second == -g);
+		};
+		// Some known tests.
+		gcd_check(x,x,x);
+		gcd_check(pow(x,2)+7*x+6,pow(x,2)-5*x-6,1+x);
+		gcd_check(pow(x,8)+pow(x,6)-3*pow(x,4)-3*pow(x,3)+8*pow(x,2)+2*x-5,
+			3*pow(x,6)+5*pow(x,4)-4*pow(x,2)-9*x+21,p_type{1});
+		gcd_check(pow(x,4)-9*pow(x,2)-4*x+12,pow(x,3)+5*pow(x,2)+2*x-8,-2+x*x+x);
+		gcd_check(pow(x,4)+pow(x,2)+1,pow(x,2)+1,p_type{1});
+		gcd_check(x*x+1,pow(x,5)+pow(x,4)+x+1,p_type{1});
+		gcd_check(pow(x,6)+pow(x,5)+pow(x,3)+x,pow(x,4)+pow(x,2)+1,p_type{1});
+		// With zeroes.
+		gcd_check(x-x,x+1,x+1);
+		gcd_check(x+1,x-x,x+1);
+		gcd_check(x-x,x-x,p_type{});
+		// With constants.
+		gcd_check(p_type{},p_type{},p_type{});
+		gcd_check(p_type{},p_type{3},p_type{3});
+		gcd_check(p_type{3},p_type{},p_type{3});
+		gcd_check(p_type{9},p_type{12},p_type{3});
+		gcd_check(p_type{-24},p_type{30},p_type{-6});
+		// With negative exponents.
+		BOOST_CHECK_THROW(gcdheu(x.pow(-1),x),std::invalid_argument);
+		BOOST_CHECK_THROW(gcdheu(x,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(gcdheu(x.pow(-1),x.pow(-1)),std::invalid_argument);
+		// Random testing.
+		std::uniform_int_distribution<int> ud(0,9);
+		for (auto i = 0; i < ntrials; ++i) {
+			p_type a = x - x, b = a;
+			const int nterms = ud(rng);
+			for (int j = 0; j < nterms; ++j) {
+				a += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
+				b += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
+			}
+			auto res_heu = gcdheu(a,b);
+			if (res_heu.first) {
+				continue;
+			}
+			if (a.size() != 0u || b.size() != 0u) {
+				BOOST_CHECK_EQUAL(p_type::udivrem(a,res_heu.second).second.size(),0u);
+				BOOST_CHECK_EQUAL(p_type::udivrem(b,res_heu.second).second.size(),0u);
+			}
+			auto res_heu2 = gcdheu(b,a);
+			BOOST_CHECK(!res_heu2.first);
+			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
+			auto res_psr = poly_ugcd(a,b);
+			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+		}
+		for (auto i = 0; i < ntrials; ++i) {
+			p_type a = x - x, b = a;
+			const int nterms = ud(rng);
+			for (int j = 0; j < nterms; ++j) {
+				a += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
+				b += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
+			}
+			auto res_heu = gcdheu(a*b,b);
+			if (res_heu.first) {
+				continue;
+			}
+			if ((a*b).size() != 0u || b.size() != 0u) {
+				BOOST_CHECK_EQUAL(p_type::udivrem(a*b,res_heu.second).second.size(),0u);
+				BOOST_CHECK_EQUAL(p_type::udivrem(b,res_heu.second).second.size(),0u);
+			}
+			auto res_heu2 = gcdheu(b,a*b);
+			BOOST_CHECK(!res_heu2.first);
+			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
+			auto res_psr = poly_ugcd(a*b,b);
+			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+			res_heu = gcdheu(a*b*b,b*a);
+			if (res_heu.first) {
+				continue;
+			}
+			if ((a*b*b).size() != 0u || (b*a).size() != 0u) {
+				BOOST_CHECK_EQUAL(p_type::udivrem(a*b*b,res_heu.second).second.size(),0u);
+				BOOST_CHECK_EQUAL(p_type::udivrem(b*a,res_heu.second).second.size(),0u);
+			}
+			res_heu2 = gcdheu(b*a,a*b*b);
+			BOOST_CHECK(!res_heu2.first);
+			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
+			res_psr = poly_ugcd(a*b*b,b*a);
+			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_univariate_gcdheu_test)
+{
+	boost::mpl::for_each<key_types>(univariate_gcdheu_tester());
+}
