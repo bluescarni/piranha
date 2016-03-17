@@ -139,11 +139,19 @@ struct poly_custom_hook
 		return s.find_cf(std::vector<expo_type>(begin,end));
 	}
 	// Division exposition.
+	template <typename T>
+	static bp::tuple udivrem_wrapper(const T &n, const T &d)
+	{
+		auto retval = T::udivrem(n,d);
+		return bp::make_tuple(std::move(retval.first),std::move(retval.second));
+	}
 	template <typename T, typename std::enable_if<piranha::is_divisible<T>::value && piranha::is_divisible_in_place<T>::value,int>::type = 0>
 	void expose_division(bp::class_<T> &series_class) const
 	{
 		series_class.def(bp::self / bp::self);
 		series_class.def(bp::self /= bp::self);
+		series_class.def("udivrem",udivrem_wrapper<T>);
+		series_class.staticmethod("udivrem");
 	}
 	template <typename T, typename std::enable_if<!piranha::is_divisible<T>::value || !piranha::is_divisible_in_place<T>::value,int>::type = 0>
 	void expose_division(bp::class_<T> &) const
@@ -167,10 +175,23 @@ struct poly_custom_hook
 	template <typename ... Args>
 	void expose_join(Args && ...) const {}
 	// GCD.
+	template <typename T>
+	static T static_gcd_wrapper(const T &a, const T &b)
+	{
+		return T::gcd(a,b);
+	}
+	template <typename T>
+	static T static_gcd_wrapper_algo(const T &a, const T &b, piranha::polynomial_gcd_algorithm algo)
+	{
+		return T::gcd(a,b,algo);
+	}
 	template <typename T, typename std::enable_if<piranha::has_gcd<T>::value,int>::type = 0>
-	void expose_gcd(bp::class_<T> &) const
+	void expose_gcd(bp::class_<T> &series_class) const
 	{
 		bp::def("_gcd",piranha::math::gcd<T,T>);
+		series_class.def("gcd",static_gcd_wrapper<T>);
+		series_class.def("gcd",static_gcd_wrapper_algo<T>);
+		series_class.staticmethod("gcd");
 	}
 	template <typename T, typename std::enable_if<!piranha::has_gcd<T>::value,int>::type = 0>
 	void expose_gcd(bp::class_<T> &) const
