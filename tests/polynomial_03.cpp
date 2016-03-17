@@ -395,9 +395,20 @@ struct univariate_gcdheu_tester
 		using namespace piranha::detail;
 		using piranha::math::pow;
 		using p_type = polynomial<integer,Key>;
-		p_type x{"x"};
-		auto gcd_check = [](const p_type &a, const p_type &b, const p_type &g) {
-			auto res_heu = gcdheu(a,b);
+		p_type x{"x"}, y{"y"}, z{"z"};
+		// The idea here is that instead of calling the detail:: implementation we go through
+		// the gcd() static function in poly and force the algorithm. This is in order to test
+		// the exception throwing paths in the static method.
+		auto heu_wrapper = [](const p_type &a, const p_type &b) -> std::pair<bool,p_type> {
+			try {
+				auto res_heu = p_type::gcd(a,b,polynomial_gcd_algorithm::heuristic);
+				return std::make_pair(false,std::move(res_heu));
+			} catch (const std::runtime_error &) {
+				return std::make_pair(true,p_type{});
+			}
+		};
+		auto gcd_check = [heu_wrapper](const p_type &a, const p_type &b, const p_type &g) {
+			auto res_heu = heu_wrapper(a,b);
 			BOOST_CHECK(!res_heu.first);
 			BOOST_CHECK(res_heu.second == g || res_heu.second == -g);
 		};
@@ -421,9 +432,15 @@ struct univariate_gcdheu_tester
 		gcd_check(p_type{9},p_type{12},p_type{3});
 		gcd_check(p_type{-24},p_type{30},p_type{-6});
 		// With negative exponents.
-		BOOST_CHECK_THROW(gcdheu(x.pow(-1),x),std::invalid_argument);
-		BOOST_CHECK_THROW(gcdheu(x,x.pow(-1)),std::invalid_argument);
-		BOOST_CHECK_THROW(gcdheu(x.pow(-1),x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(heu_wrapper(x.pow(-1),x),std::invalid_argument);
+		BOOST_CHECK_THROW(heu_wrapper(x,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(heu_wrapper(x.pow(-1),x.pow(-1)),std::invalid_argument);
+		// An example that triggers a xi-too-large error.
+		auto res_l = heu_wrapper(
+			314928*pow(y,24)*pow(z,21)+629856*pow(y,26)*pow(z,24)+746496*pow(y,27)*pow(z,27)+1119744*pow(y,25)*pow(z,28),
+			-3359232*pow(y,27)*pow(z,31)-944784*pow(y,26)*pow(z,24)-2239488*pow(y,29)*pow(z,30)-1889568*pow(y,28)*pow(z,27)
+		);
+		BOOST_CHECK(res_l.first);
 		// Random testing.
 		std::uniform_int_distribution<int> ud(0,9);
 		for (auto i = 0; i < ntrials; ++i) {
@@ -433,7 +450,7 @@ struct univariate_gcdheu_tester
 				a += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
 				b += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
 			}
-			auto res_heu = gcdheu(a,b);
+			auto res_heu = heu_wrapper(a,b);
 			if (res_heu.first) {
 				continue;
 			}
@@ -441,7 +458,7 @@ struct univariate_gcdheu_tester
 				BOOST_CHECK_EQUAL(p_type::udivrem(a,res_heu.second).second.size(),0u);
 				BOOST_CHECK_EQUAL(p_type::udivrem(b,res_heu.second).second.size(),0u);
 			}
-			auto res_heu2 = gcdheu(b,a);
+			auto res_heu2 = heu_wrapper(b,a);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
 			auto res_psr = poly_ugcd(a,b);
@@ -454,7 +471,7 @@ struct univariate_gcdheu_tester
 				a += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
 				b += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
 			}
-			auto res_heu = gcdheu(a*b,b);
+			auto res_heu = heu_wrapper(a*b,b);
 			if (res_heu.first) {
 				continue;
 			}
@@ -462,12 +479,12 @@ struct univariate_gcdheu_tester
 				BOOST_CHECK_EQUAL(p_type::udivrem(a*b,res_heu.second).second.size(),0u);
 				BOOST_CHECK_EQUAL(p_type::udivrem(b,res_heu.second).second.size(),0u);
 			}
-			auto res_heu2 = gcdheu(b,a*b);
+			auto res_heu2 = heu_wrapper(b,a*b);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
 			auto res_psr = poly_ugcd(a*b,b);
 			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
-			res_heu = gcdheu(a*b*b,b*a);
+			res_heu = heu_wrapper(a*b*b,b*a);
 			if (res_heu.first) {
 				continue;
 			}
@@ -475,7 +492,7 @@ struct univariate_gcdheu_tester
 				BOOST_CHECK_EQUAL(p_type::udivrem(a*b*b,res_heu.second).second.size(),0u);
 				BOOST_CHECK_EQUAL(p_type::udivrem(b*a,res_heu.second).second.size(),0u);
 			}
-			res_heu2 = gcdheu(b*a,a*b*b);
+			res_heu2 = heu_wrapper(b*a,a*b*b);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
 			res_psr = poly_ugcd(a*b*b,b*a);
