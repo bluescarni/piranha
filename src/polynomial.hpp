@@ -134,19 +134,17 @@ inline auto poly_lterm(const PType &p) -> decltype(p._container().begin())
 	});
 }
 
-// Check that in a univariate poly there are no negative exponents.
-// Requires a strictly univariate poly.
+// Check that there are no negative exponents
+// in a polynomial.
 template <typename PType>
-inline void poly_uexpo_checker(const PType &p)
+inline void poly_expo_checker(const PType &p)
 {
+	using term_type = typename PType::term_type;
 	const auto &args = p.get_symbol_set();
-	piranha_assert(args.size() == 1u);
-	using d_type = decltype(p._container().begin()->m_key.degree(args));
-	const d_type zero(0);
-	for (const auto &t: p._container()) {
-		if (unlikely(t.m_key.degree(args) < zero)) {
-			piranha_throw(std::invalid_argument,"negative exponents are not allowed");
-		}
+	if (std::any_of(p._container().begin(),p._container().end(),[&args](const term_type &t) {
+		return t.m_key.has_negative_exponent(args);}))
+	{
+		piranha_throw(std::invalid_argument,"negative exponents are not allowed");
 	}
 }
 
@@ -217,8 +215,8 @@ inline PType poly_ugcd(PType a, PType b)
 		return retval;
 	}
 	// Check exponents.
-	poly_uexpo_checker(a);
-	poly_uexpo_checker(b);
+	poly_expo_checker(a);
+	poly_expo_checker(b);
 	// Order so that deg(a) >= deg(b).
 	if (poly_lterm(a)->m_key < poly_lterm(b)->m_key) {
 		std::swap(a,b);
@@ -428,7 +426,140 @@ inline polynomial<Cf,Key>
 	return decode_poly(n);
 }
 
+// Exception to signal that gcdheu() produced an integer xi too large.
+struct gcdheu_xi_too_large: public base_exception
+{
+	explicit gcdheu_xi_too_large(): base_exception("") {}
+};
+
+// Heuristic GCD algorithm. See the Geddes book, algorithm 7.4. See also:
+// http://www.sciencedirect.com/science/article/pii/S0747717189800045
+template <typename Poly>
+std::pair<bool,Poly> gcdheu(const Poly &a, const Poly &b, symbol_set::size_type s_index = 0u)
+{
+	static_assert(is_mp_integer<typename Poly::term_type::cf_type>::value,"Invalide type.");
+	// Require identical symbol sets.
+	piranha_assert(a.get_symbol_set() == b.get_symbol_set());
+	// Helper function to compute the symmetric version of the modulo operation.
+	// See Geddes 4.2 and:
+	// http://www.maplesoft.com/support/help/maple/view.aspx?path=mod
+	auto mod_s = [](const integer &n, const integer &m) -> integer {
+		// NOTE: require that the denominator is strictly positive.
+		piranha_assert(m > 0);
+		auto retval = n % m;
+		if (retval < -((m - 1) / 2)) {
+			retval += m;
+		} else if (retval > m / 2) {
+			retval -= m;
+		}
+		return retval;
+	};
+	// Apply mod_s to all coefficients in a poly.
+	auto mod_s_poly = [mod_s](const Poly &p, const integer &m) -> Poly {
+		Poly retval(p);
+		auto it = retval._container().begin();
+		for (; it != retval._container().end();) {
+			it->m_cf = mod_s(it->m_cf,m);
+			if (math::is_zero(it->m_cf)) {
+				it = retval._container().erase(it);
+			} else {
+				++it;
+			}
+		}
+		return retval;
+	};
+	// Cache it.
+	const auto &args = a.get_symbol_set();
+	// Handle empty polys.
+	if (a.size() == 0u && b.size() == 0u) {
+		Poly retval;
+		retval.set_symbol_set(args);
+		return std::make_pair(false,std::move(retval));
+	}
+	if (a.size() == 0u) {
+		return std::make_pair(false,b);
+	}
+	if (b.size() == 0u) {
+		return std::make_pair(false,a);
+	}
+	// If we are at the first recursion, check the exponents.
+	if (s_index == 0u) {
+		poly_expo_checker(a);
+		poly_expo_checker(b);
+	}
+	// This is the case in which the polynomials are reduced to two integers (essentially, the zerovariate case).
+	if (a.is_single_coefficient() && b.is_single_coefficient()) {
+		piranha_assert(a.size() == 1u && b.size() == 1u);
+		Poly retval;
+		retval.set_symbol_set(args);
+		retval += math::gcd(a._container().begin()->m_cf,b._container().begin()->m_cf);
+		return std::make_pair(false,std::move(retval));
+	}
+	// s_index is the recursion index for the gcdheu() call.
+	piranha_assert(s_index < args.size());
+	// We need to work on primitive polys when we enter the algorithm the
+	// first time.
+	// NOTE: extension of the lifetime of the output of primitive_part()
+	// via const reference.
+	const auto &ap = (s_index == 0u) ? a.primitive_part() : a;
+	const auto &bp = (s_index == 0u) ? b.primitive_part() : b;
+	// The current variable.
+	const std::string var = (args.begin() + s_index)->get_name();
+	integer xi{2 * std::min(ap.height(),bp.height()) + 2};
+	// NOTE: the values of 6 iterations and 5000 bits limit are taken straight
+	// from the original implementation of the algorithm. It might as well be that
+	// other tuning params are better.
+	for (int i = 0; i < 6; ++i) {
+		if (integer(xi.bits_size()) * std::max(ap.degree({var}),bp.degree({var})) > 5000) {
+			piranha_throw(gcdheu_xi_too_large,);
+		}
+		auto res = gcdheu(ap.subs(var,xi),bp.subs(var,xi),static_cast<symbol_set::size_type>(s_index + 1u));
+		if (!res.first) {
+			Poly &gamma = res.second;
+			Poly G;
+			G.set_symbol_set(args);
+			unsigned j = 0;
+			while (gamma.size() != 0u) {
+				Poly g(mod_s_poly(gamma,xi));
+				// NOTE: term mult here could be useful, but probably it makes more
+				// sense to just improve the series multiplication routine.
+				G += g * math::pow(Poly{var},j);
+				gamma = (gamma - g) / xi;
+				safe_integral_adder(j,1u);
+			}
+			try {
+				ap / G;
+				bp / G;
+				// NOTE: if we are in the first recursion, this will be the final result.
+				// As the algorithm produces results with the content removed, we need
+				// to do this step in order to match the output of PSR_SR.
+				if (s_index == 0u) {
+					detail::poly_cf_mult(math::gcd(a.content(),b.content()),G);
+				}
+				return std::make_pair(false,std::move(G));
+			} catch (const math::inexact_division &) {
+				// Continue in case the division check fails.
+			}
+		}
+		// NOTE: this is just a way of making xi bigger without too much correlation
+		// to its previous value.
+		xi = (xi * 73794) / 27011;
+	}
+	return std::make_pair(true,Poly{});
 }
+
+}
+
+/// Polynomial GCD algorithms.
+enum class polynomial_gcd_algorithm
+{
+	/// Automatic selection.
+	automatic,
+	/// Subresultant PRS.
+	prs_sr,
+	/// Heuristic GCD.
+	heuristic
+};
 
 /// Polynomial class.
 /**
@@ -764,8 +895,8 @@ class polynomial:
 			// Check negative exponents, if requested.
 			if (CheckExpos) {
 				// Check if there are negative exponents.
-				detail::poly_uexpo_checker(n);
-				detail::poly_uexpo_checker(d);
+				detail::poly_expo_checker(n);
+				detail::poly_expo_checker(d);
 			}
 			// Initialisation: quotient is empty, remainder is the numerator.
 			polynomial q, r(n);
@@ -930,6 +1061,29 @@ class polynomial:
 			is_less_than_comparable<height_type_<T>>::value && std::is_move_assignable<height_type_<T>>::value &&
 			(std::is_copy_constructible<height_type_<T>>::value || std::is_move_constructible<height_type_<T>>::value),
 			height_type_<T>>::type;
+		// Wrapper around heuristic GCD.
+		template <typename T, typename std::enable_if<detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
+		static std::pair<bool,T> try_gcdheu(const T &a, const T &b, polynomial_gcd_algorithm algo)
+		{
+			try {
+				return detail::gcdheu(a,b);
+			} catch (const detail::gcdheu_xi_too_large &) {}
+			// If we get here, a xi-too-large error was generated.
+			if (algo == polynomial_gcd_algorithm::heuristic) {
+				piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
+					"but it failed because the evaluation step produced too large values");
+			}
+			return std::make_pair(true,T{});
+		}
+		template <typename T, typename std::enable_if<!detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
+		static std::pair<bool,T> try_gcdheu(const T &, const T &, polynomial_gcd_algorithm algo)
+		{
+			if (algo == polynomial_gcd_algorithm::heuristic) {
+				piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
+					"but it cannot be applied to non-integral coefficients");
+			}
+			return std::make_pair(true,T{});
+		}
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -1522,26 +1676,33 @@ class polynomial:
 		 *   it has math::divexact(), and it is copy-assignable,
 		 * - the polynomial type has piranha::polynomial::content() and piranha::polynomial::udivrem().
 		 *
-		 * This method will compute the GCD of polynomials \p a and \p b.
+		 * This method will compute the GCD of polynomials \p a and \p b. The algorithm that will be employed
+		 * for the computation is selected by the \p algo flag. If \p algo is set to polynomial_gcd_algorithm::automatic
+		 * (the default) the heuristic GCD algorithm will be tried first, followed by the PSR SR algorithm in case of failures.
+		 * If \p algo is set to any other value, the selected algorithm will be used. The heuristic GCD algorithm can be
+		 * used only when the ceofficient type is an instance of piranha::mp_integer.
 		 *
 		 * @param[in] a first argument.
 		 * @param[in] b second argument.
+		 * @param[in] algo the GCD algorithm.
 		 *
 		 * @return the GCD of \p a and \p b.
 		 *
 		 * @throws std::invalid_argument if a negative exponent is encountered in \p a or \p b.
 		 * @throws std::overflow_error in case of (unlikely) integral overflow errors.
+		 * @throws std::runtime_error if \p algo is polynomial_gcd_algorithm::heuristic and the execution
+		 * of the algorithm fails or it the coefficient type is not an instance of piranha::mp_integer.
 		 * @throws unspecified any exception thrown by:
-		 * - the public interface of piranha::series, piranha::symbol_set,
-		 * - construction of polynomials and keys,
-		 * - construction, arithmetics and assignment of coefficients,
-		 * - math::gcd(), math::gcd3(), math::divexact(), math::pow(),
+		 * - the public interface of piranha::series, piranha::symbol_set, piranha::hash_set,
+		 * - construction of keys,
+		 * - construction, arithmetics and assignment of coefficients and polynomials,
+		 * - math::gcd(), math::gcd3(), math::divexact(), math::pow(), math::subs(),
 		 * - piranha::polynomial::udivrem(), piranha::polynomial::content(),
 		 * - memory errors in standard containers,
 		 * - the conversion of piranha::integer to \p unsigned.
 		 */
 		template <typename T = polynomial, gcd_enabler<T> = 0>
-		static polynomial gcd(const polynomial &a, const polynomial &b)
+		static polynomial gcd(const polynomial &a, const polynomial &b, polynomial_gcd_algorithm algo = polynomial_gcd_algorithm::automatic)
 		{
 			// Deal with different symbol sets.
 			polynomial merged_a, merged_b;
@@ -1555,6 +1716,16 @@ class polynomial:
 				if (merge != b.get_symbol_set()) {
 					merged_b = b.extend_symbol_set(merge);
 					real_b = &merged_b;
+				}
+			}
+			if (algo == polynomial_gcd_algorithm::automatic || algo == polynomial_gcd_algorithm::heuristic) {
+				auto heu_res = try_gcdheu(*real_a,*real_b,algo);
+				if (heu_res.first && algo == polynomial_gcd_algorithm::heuristic) {
+					piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
+						"but its execution failed due to too many iterations");
+				}
+				if (!heu_res.first) {
+					return std::move(heu_res.second);
 				}
 			}
 			// Cache it.
@@ -1823,7 +1994,8 @@ struct divexact_impl<T,detail::poly_divexact_enabler<T>>
 /// Implementation of piranha::math::gcd() for piranha::polynomial.
 /**
  * This specialisation is enabled if \p T is an instance of piranha::polynomial that supports
- * piranha::polynomial::gcd().
+ * piranha::polynomial::gcd(). The piranha::polynomial_gcd_algorithm::automatic algorithm
+ * will be used for the computation.
  */
 template <typename T>
 struct gcd_impl<T,T,detail::poly_gcd_enabler<T>>
