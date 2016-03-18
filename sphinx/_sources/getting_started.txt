@@ -45,8 +45,7 @@ Download
 
 At the present time Piranha is being actively developed and no stable release exists yet. Development
 happens in the `GitHub repository <https://github.com/bluescarni/piranha>`__.
-The ``master`` branch is considered to be the stable version of Piranha,
-whereas the separate ``development`` branch is where active development takes place.
+The ``master`` branch is considered to be the stable version of Piranha.
 
 A snapshot of the ``master`` branch can be downloaded
 `here <https://github.com/bluescarni/piranha/archive/master.zip>`__, or checked out using
