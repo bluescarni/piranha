@@ -1,7 +1,7 @@
 var searchData=
 [
   ['gamma',['gamma',['../classpiranha_1_1real.html#aaf96fa457f06e9027b710f799f5b7ce3',1,'piranha::real']]],
-  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
+  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../classpiranha_1_1polynomial.html#ad66e9879f235c8b2ebf4d8ee3e102ad2',1,'piranha::polynomial::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
   ['gcd3',['gcd3',['../namespacepiranha_1_1math.html#aed326292eae1eeef5a46fd472a6e3165',1,'piranha::math']]],
   ['get_5fall',['get_all',['../classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095',1,'piranha::future_list']]],
   ['get_5fauto_5ftruncate_5fdegree',['get_auto_truncate_degree',['../classpiranha_1_1polynomial.html#aca50ba865f88f3313084108e7ee5ce0a',1,'piranha::polynomial']]],

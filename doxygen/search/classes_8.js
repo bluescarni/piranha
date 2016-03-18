@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['inexact_5fdivision',['inexact_division',['../structpiranha_1_1math_1_1inexact__division.html',1,'piranha::math']]],
   ['integrate_5fimpl',['integrate_impl',['../structpiranha_1_1math_1_1integrate__impl.html',1,'piranha::math']]],
   ['integrate_5fimpl_3c_20series_2c_20detail_3a_3aseries_5fintegrate_5fenabler_3c_20series_20_3e_20_3e',['integrate_impl&lt; Series, detail::series_integrate_enabler&lt; Series &gt; &gt;',['../structpiranha_1_1math_1_1integrate__impl_3_01_series_00_01detail_1_1series__integrate__enabler_3_01_series_01_4_01_4.html',1,'piranha::math']]],
   ['invert_5fimpl',['invert_impl',['../structpiranha_1_1math_1_1invert__impl.html',1,'piranha::math']]],

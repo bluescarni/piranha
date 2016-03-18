@@ -11,6 +11,7 @@ var searchData=
   ['const_5freference',['const_reference',['../classpiranha_1_1cache__aligning__allocator.html#ab17359c1e58a884ca38306a676ef68d5',1,'piranha::cache_aligning_allocator']]],
   ['construct',['construct',['../classpiranha_1_1cache__aligning__allocator.html#a2fdeb193b56207db7f5b1f123f44b31e',1,'piranha::cache_aligning_allocator']]],
   ['container_5ftype',['container_type',['../classpiranha_1_1series.html#ad2bf73c31b49054d58efbc11b34883dc',1,'piranha::series']]],
+  ['content',['content',['../classpiranha_1_1polynomial.html#adb0f51aff4ecbe31a8f9111ae744ce4b',1,'piranha::polynomial']]],
   ['convert_5fto',['convert_to',['../namespacepiranha.html#a8740bbc3e472de1f0acebc18c416c35d',1,'piranha']]],
   ['convert_5fto_5fimpl',['convert_to_impl',['../structpiranha_1_1convert__to__impl.html',1,'piranha']]],
   ['cos',['cos',['../classpiranha_1_1poisson__series.html#a361423bb8229089adeb8404dcb9a7a1b',1,'piranha::poisson_series::cos()'],['../classpiranha_1_1real.html#a565829d0039a3301314f78340268637b',1,'piranha::real::cos()'],['../namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382',1,'piranha::math::cos()']]],

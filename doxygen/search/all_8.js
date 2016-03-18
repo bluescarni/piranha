@@ -7,7 +7,11 @@ var searchData=
   ['has_5fcosine',['has_cosine',['../classpiranha_1_1has__cosine.html',1,'piranha']]],
   ['has_5fdegree',['has_degree',['../classpiranha_1_1has__degree.html',1,'piranha']]],
   ['has_5fdiv3',['has_div3',['../classpiranha_1_1has__div3.html',1,'piranha']]],
-  ['has_5fdivexact',['has_divexact',['../classpiranha_1_1has__divexact.html',1,'piranha']]],
+  ['has_5fexact_5fdivision',['has_exact_division',['../classpiranha_1_1has__exact__division.html',1,'piranha']]],
+  ['has_5fexact_5fring_5foperations',['has_exact_ring_operations',['../structpiranha_1_1has__exact__ring__operations.html',1,'piranha']]],
+  ['has_5fexact_5fring_5foperations_3c_20t_2c_20detail_3a_3apoly_5fero_5fenabler_3c_20t_20_3e_20_3e',['has_exact_ring_operations&lt; T, detail::poly_ero_enabler&lt; T &gt; &gt;',['../structpiranha_1_1has__exact__ring__operations_3_01_t_00_01detail_1_1poly__ero__enabler_3_01_t_01_4_01_4.html',1,'piranha']]],
+  ['has_5fexact_5fring_5foperations_3c_20t_2c_20typename_20std_3a_3aenable_5fif_3c_20detail_3a_3ais_5fmp_5finteger_3c_20typename_20std_3a_3adecay_3c_20t_20_3e_3a_3atype_20_3e_3a_3avalue_20_3e_3a_3atype_20_3e',['has_exact_ring_operations&lt; T, typename std::enable_if&lt; detail::is_mp_integer&lt; typename std::decay&lt; T &gt;::type &gt;::value &gt;::type &gt;',['../structpiranha_1_1has__exact__ring__operations_3_01_t_00_01typename_01std_1_1enable__if_3_01detaif17ea9325d795f17462d88d55a508340.html',1,'piranha']]],
+  ['has_5fexact_5fring_5foperations_3c_20t_2c_20typename_20std_3a_3aenable_5fif_3c_20detail_3a_3ais_5fmp_5frational_3c_20typename_20std_3a_3adecay_3c_20t_20_3e_3a_3atype_20_3e_3a_3avalue_20_3e_3a_3atype_20_3e',['has_exact_ring_operations&lt; T, typename std::enable_if&lt; detail::is_mp_rational&lt; typename std::decay&lt; T &gt;::type &gt;::value &gt;::type &gt;',['../structpiranha_1_1has__exact__ring__operations_3_01_t_00_01typename_01std_1_1enable__if_3_01detai7775b0710e493a6d8656c145f01ce17e.html',1,'piranha']]],
   ['has_5fgcd',['has_gcd',['../classpiranha_1_1has__gcd.html',1,'piranha']]],
   ['has_5fgcd3',['has_gcd3',['../classpiranha_1_1has__gcd3.html',1,'piranha']]],
   ['has_5fipow_5fsubs',['has_ipow_subs',['../classpiranha_1_1has__ipow__subs.html',1,'piranha']]],
@@ -19,6 +23,7 @@ var searchData=
   ['has_5fmul3',['has_mul3',['../classpiranha_1_1has__mul3.html',1,'piranha']]],
   ['has_5fmultiply_5faccumulate',['has_multiply_accumulate',['../classpiranha_1_1has__multiply__accumulate.html',1,'piranha']]],
   ['has_5fnegate',['has_negate',['../classpiranha_1_1has__negate.html',1,'piranha']]],
+  ['has_5fnegative_5fexponent',['has_negative_exponent',['../classpiranha_1_1kronecker__monomial.html#a048bcbf68d6a119415f5a646eeb22bb1',1,'piranha::kronecker_monomial::has_negative_exponent()'],['../classpiranha_1_1monomial.html#ac3b9e77d2b986bb5435f5e333a0272f4',1,'piranha::monomial::has_negative_exponent()']]],
   ['has_5fpbracket',['has_pbracket',['../classpiranha_1_1has__pbracket.html',1,'piranha']]],
   ['has_5fprint_5fcoefficient',['has_print_coefficient',['../classpiranha_1_1has__print__coefficient.html',1,'piranha']]],
   ['has_5fprint_5ftex_5fcoefficient',['has_print_tex_coefficient',['../classpiranha_1_1has__print__tex__coefficient.html',1,'piranha']]],
@@ -46,5 +51,7 @@ var searchData=
   ['hash_5fset',['hash_set',['../classpiranha_1_1hash__set.html#ad89393eef8085dfde8cce757bdea15bb',1,'piranha::hash_set::hash_set(const hasher &amp;h=hasher{}, const key_equal &amp;k=key_equal{})'],['../classpiranha_1_1hash__set.html#a09a51cb0135a7ce05b1d2126fd5526c6',1,'piranha::hash_set::hash_set(const size_type &amp;n_buckets, const hasher &amp;h=hasher{}, const key_equal &amp;k=key_equal{}, unsigned n_threads=1u)'],['../classpiranha_1_1hash__set.html#afb332b27894abd27db2f96a37fb65424',1,'piranha::hash_set::hash_set(const hash_set &amp;other)'],['../classpiranha_1_1hash__set.html#a23ef017f6b6d2e063440dbe46df7e51a',1,'piranha::hash_set::hash_set(hash_set &amp;&amp;other) noexcept'],['../classpiranha_1_1hash__set.html#a9962971d0ab8e247dc260bffb3eb0b2e',1,'piranha::hash_set::hash_set(const InputIterator &amp;begin, const InputIterator &amp;end, const size_type &amp;n_buckets=0u, const hasher &amp;h=hasher{}, const key_equal &amp;k=key_equal{})'],['../classpiranha_1_1hash__set.html#a6e70936b664aa2f5211cadd7b5c29397',1,'piranha::hash_set::hash_set(std::initializer_list&lt; U &gt; list)']]],
   ['hash_5fset',['hash_set',['../classpiranha_1_1hash__set.html',1,'piranha']]],
   ['hash_5fset_3c_20p_5ftype_2c_20p_5ftype_5fhasher_20_3e',['hash_set&lt; p_type, p_type_hasher &gt;',['../classpiranha_1_1hash__set.html',1,'piranha']]],
-  ['hasher',['hasher',['../classpiranha_1_1hash__set.html#a771b69cb94918ae60f5115f77111d969',1,'piranha::hash_set']]]
+  ['hasher',['hasher',['../classpiranha_1_1hash__set.html#a771b69cb94918ae60f5115f77111d969',1,'piranha::hash_set']]],
+  ['height',['height',['../classpiranha_1_1polynomial.html#ad7ee9c0e575a7e8460e4e7540f13e6a7',1,'piranha::polynomial']]],
+  ['heuristic',['heuristic',['../namespacepiranha.html#a10eca18731adffdf7043d601309e6866a4163cf922db5cac4b933c8e333ba09ef',1,'piranha']]]
 ];

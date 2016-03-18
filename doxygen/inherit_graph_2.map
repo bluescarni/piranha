@@ -1,6 +1,7 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" title="STL class. " alt="" coords="5,48,109,77"/>
-<area shape="rect" id="node3" href="$classpiranha_1_1base__exception.html" title="Base exception class. " alt="" coords="157,48,320,77"/>
-<area shape="rect" id="node5" href="$structpiranha_1_1not__implemented__error.html" title="Exception for functionality not implemented or not available on the current platform. " alt="" coords="368,5,539,51"/>
-<area shape="rect" id="node7" href="$structpiranha_1_1zero__division__error.html" title="Exception for signalling division by zero. " alt="" coords="380,74,527,121"/>
+<area shape="rect" id="node1" title="STL class. " alt="" coords="5,83,109,112"/>
+<area shape="rect" id="node3" href="$classpiranha_1_1base__exception.html" title="Base exception class. " alt="" coords="157,83,320,112"/>
+<area shape="rect" id="node5" href="$structpiranha_1_1math_1_1inexact__division.html" title="Exception to signal an inexact division. " alt="" coords="379,5,528,51"/>
+<area shape="rect" id="node7" href="$structpiranha_1_1not__implemented__error.html" title="Exception for functionality not implemented or not available on the current platform. " alt="" coords="368,74,539,121"/>
+<area shape="rect" id="node9" href="$structpiranha_1_1zero__division__error.html" title="Exception for signalling division by zero. " alt="" coords="380,143,527,190"/>
 </map>

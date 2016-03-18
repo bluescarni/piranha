@@ -1,6 +1,8 @@
 var searchData=
 [
   ['index_5fof',['index_of',['../classpiranha_1_1symbol__set.html#aa6291230ba0c48f1b88ac2b6c1256efe',1,'piranha::symbol_set']]],
+  ['inexact_5fdivision',['inexact_division',['../structpiranha_1_1math_1_1inexact__division.html',1,'piranha::math']]],
+  ['inexact_5fdivision',['inexact_division',['../structpiranha_1_1math_1_1inexact__division.html#a9e68c62d2910ec05a66ce4a959cb463b',1,'piranha::math::inexact_division']]],
   ['insert',['insert',['../classpiranha_1_1divisor.html#a47a871f636bf0838da1bcd7d8aa5dfac',1,'piranha::divisor::insert()'],['../classpiranha_1_1hash__set.html#a551aa53c5f51aa1be748d590a7ae777d',1,'piranha::hash_set::insert()'],['../classpiranha_1_1series.html#ac049565106ddee1881fedf6481de9458',1,'piranha::series::insert(T &amp;&amp;term)'],['../classpiranha_1_1series.html#a2d1924707f1dbc3c82284e48bdaf87f1',1,'piranha::series::insert(T &amp;&amp;term)']]],
   ['int_5ftype',['int_type',['../classpiranha_1_1kronecker__array.html#a19177bdfe489c2108f5b1b9521123305',1,'piranha::kronecker_array::int_type()'],['../classpiranha_1_1mp__rational.html#ac966f004ceb41b9e076abfd1ce286f4f',1,'piranha::mp_rational::int_type()']]],
   ['integer',['integer',['../namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b',1,'piranha']]],

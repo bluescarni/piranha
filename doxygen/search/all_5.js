@@ -16,5 +16,6 @@ var searchData=
   ['evaluate_5fsparsity',['evaluate_sparsity',['../classpiranha_1_1hash__set.html#a947bcba0e0439d1abf15050567034978',1,'piranha::hash_set']]],
   ['exceptions_2ehpp',['exceptions.hpp',['../exceptions_8hpp.html',1,'']]],
   ['exp',['exp',['../classpiranha_1_1real.html#aeec6f38c62d817eef40d53d495eb548e',1,'piranha::real']]],
-  ['extend_5fsymbol_5fset',['extend_symbol_set',['../classpiranha_1_1series.html#a4f2565f34356755587a4b24d101b2db0',1,'piranha::series']]]
+  ['extend_5fsymbol_5fset',['extend_symbol_set',['../classpiranha_1_1series.html#a4f2565f34356755587a4b24d101b2db0',1,'piranha::series']]],
+  ['extract_5fexponents',['extract_exponents',['../classpiranha_1_1kronecker__monomial.html#aaee5ccbdb10a42195647bdcc7477db53',1,'piranha::kronecker_monomial::extract_exponents()'],['../classpiranha_1_1monomial.html#af99ede5d4a2f0e0418a6f03dfe3d13ab',1,'piranha::monomial::extract_exponents()']]]
 ];
