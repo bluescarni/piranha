@@ -114,6 +114,7 @@ class poisson_series:
 	public power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
 		poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>,detail::poisson_series_tag
 {
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 		using base = power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
 			poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>;
 		// Sin/cos utils.
@@ -469,6 +470,7 @@ class poisson_series:
 			}
 			return retval;
 		}
+#endif
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>

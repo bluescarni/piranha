@@ -26,16 +26,19 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_CONFIG_CLANG_HPP
-#define PIRANHA_CONFIG_CLANG_HPP
+#include "python_includes.hpp"
 
-#if __clang_major__ < 3 || (__clang_major__ == 3 && __clang_minor__ < 1)
-	#error Minimum Clang version supported is 3.1.
-#endif
+#include "../src/polynomial.hpp"
+#include "expose_polynomials.hpp"
+#include "expose_utils.hpp"
+#include "polynomial_descriptor.hpp"
 
-#define likely(x) __builtin_expect(!!(x),1)
-#define unlikely(x) __builtin_expect(!!(x),0)
+namespace pyranha
+{
 
-#define PIRANHA_COMPILER_IS_CLANG
+void expose_polynomials_12()
+{
+	series_exposer<piranha::polynomial,polynomial_descriptor,12u,13u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
+}
 
-#endif
+}

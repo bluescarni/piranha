@@ -135,6 +135,40 @@ def binomial(x,y):
 	from ._core import _binomial
 	return _cpp_type_catcher(_binomial,x,y)
 
+def gcd(x,y):
+	"""Greatest common divisor.
+	
+	This function is a wrapper around a lower level function. It will calculate the GCD of *x* and *y*,
+	supporting ``int`` and various series types as input.
+	
+	:param x: first argument
+	:type x: ``int`` or a supported series type
+	:param y: second argument
+	:type y: ``int`` or a supported series type
+	:returns: the GCD of *x* and *y*
+	:raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported
+	:raises: any exception raised by the invoked low-level function
+	
+	>>> gcd(12,9)
+	3
+	>>> from .types import polynomial, integer, k_monomial
+	>>> pt = polynomial(integer,k_monomial)()
+	>>> x,y = pt('x'), pt('y')
+	>>> gcd((x**2-y**2)*(x**3+1),(x+1)*(x+2*y)) # doctest: +SKIP
+	x+1
+	>>> gcd(x**-1,y) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: negative exponents are not allowed
+	>>> gcd(x,2) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+	
+	"""
+	from ._core import _gcd
+	return _cpp_type_catcher(_gcd,x,y)
+
 def partial(arg,name):
 	"""Partial derivative.
 	

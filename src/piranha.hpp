@@ -40,8 +40,6 @@ see https://www.gnu.org/licenses/. */
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
- * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
- * (or standard containers) has strong exception safety guarantee.
  * \todo check usage of max_load_factor (especially wrt flukes in * instead of / or viceversa).
  * \todo review use of numeric_cast: in some places we might be using it in such a way we expect errors if converting floating point to int, but this is not the case (from the doc)
  * \todo the tuning parameters should be tested and justified (e.g., when to go into mt mode, etc.).
@@ -66,8 +64,6 @@ see https://www.gnu.org/licenses/. */
  * converter that might be registered in boost python. We need to query the registry and check at runtime.
  * \todo: pyranha tests should test the *exposition* and/or wrapping, not the functionality of the library. For poly/poisson series, add
  * tests for degree/order, plus add in math.py the degree/order methods in order to mirror math.hpp.
- * \todo in the rework of the substitution methods with toolboxes, remember to switch the interface of the key's subs to use string
- * instead of symbol for consistency.
  * \todo initializer_list ctors: should they be explicit or not?
  * \todo review usage of new, we probably want to switch to unqualified new() in order to account for possible overloads
  * to be found via ADL -> note that placement new cannot be overloaded:
@@ -177,14 +173,25 @@ see https://www.gnu.org/licenses/. */
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
  *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
  *   - the fill_term_pointers parallelisation + deterministic ordering has not been done yet for rational coefficients.
+ * \todo in a bunch of generic constructors all over the place, we enable them only if the argument is not the same type as the calling class.
+ * This should probably be an is_base_of check, as done in forwarding.hpp, so that if one derives from the class then we are still not mixing
+ * up generic ctor and standard copy/move ones in the derived class.
  * \todo in order to circumvent the problem of the lack of thread local storage on osx, we should probably just create a local variable ad-hoc.
  * It will be suboptimal but at least it should work on osx.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
  * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs, e.g., implementing the test() method
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type traits.
+ * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method. Once we have this, we could
+ * also think about re-implementing multiplication by zero by an actual coefficient multiplication, thus solving the incosistency with double
+ * coefficients reported in audi (0 * inf = 0 --> empty polynomia, instead of NaN).
+ * \todo in mp_integer probably the ternary operations (and multadd and divexact etc.) should be modified so that the return value is demoted to
+ * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times, once it is set to dynamic
+ * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that iteratively always increases).
+ * Not sure there's a general solution.
  * \todo safe_cast should probably have its own special exception. As it stands, when we do try { safe_cast() } catch {} we are catching other
  * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails because of unsafe cast
  * rather than other errors, see e.g. how it is used in the poly linear arg combination.
+ * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a time.
  */
 namespace piranha
 {

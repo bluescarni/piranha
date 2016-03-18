@@ -58,6 +58,9 @@ struct polynomial_descriptor
 		std::tuple<piranha::integer,piranha::monomial<piranha::rational>>,
 		std::tuple<piranha::integer,piranha::monomial<short>>,
 		std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
+		// Integer recursive.
+		std::tuple<piranha::polynomial<piranha::integer,piranha::monomial<short>>,piranha::monomial<short>>,
+		std::tuple<piranha::polynomial<piranha::integer,piranha::kronecker_monomial<>>,piranha::kronecker_monomial<>>,
 		// Rational.
 		std::tuple<piranha::rational,piranha::monomial<piranha::rational>>,
 		std::tuple<piranha::rational,piranha::monomial<short>>,

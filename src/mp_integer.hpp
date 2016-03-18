@@ -972,12 +972,18 @@ struct static_integer
 		}
 	}
 	// Compute the number of bits used in the representation of the integer.
+	// It will always return at least 1.
+	// NOTE: of course, this can be greatly improved performance-wise. See
+	// some ideas here:
+	// https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogObvious
+	// This routine is not currently used in any performance-critical code,
+	// but in case this changes we need to improve the implementation.
 	limb_t bits_size() const
 	{
 		using size_type = typename limbs_type::size_type;
 		const auto asize = abs_size();
 		if (asize == 0) {
-			return 0u;
+			return 1u;
 		}
 		const auto idx = static_cast<size_type>(asize - 1);
 		limb_t size = static_cast<limb_t>(limb_bits * idx), limb = m_limbs[idx];
@@ -1289,6 +1295,9 @@ struct is_mp_integer_interoperable_type
  * - use the GMP facilities via mpz_view and/or the mpz_t constructor when interacting with float and double? Maybe pass through a real
  *   for interaction with long doubles? This might need a thread local mpz_t/real/mpfr_t in order to avoid having to allocate at each
  *   construction, but for thread local we have the usual issue on OSX.
+ * - if GMP ever adopts sane behaviour for memory errors or if we ever move away from it, we probably need to review the exception behaviour,
+ *   and possibly re-implement a bunch of things. For instance, now the copy-assignment operator is defaulted in mp_rational, but if exceptions
+ *   are allowed then we need to change the implementation to the copy+move idiom.
  */
 template <int NBits = 0>
 class mp_integer
@@ -3960,6 +3969,24 @@ class mp_integer
 			// NOTE: this is actually a macro.
 			return mpz_cmp_ui(&m_int.g_dy(),1ul) == 0;
 		}
+		/// Size in bits.
+		/**
+		 * This method will return the number of bits necessary to represent the absolute value of \p this.
+		 * If \p this is zero, 1 will be returned.
+		 * 
+		 * @return the size in bits of \p this.
+		 */
+		std::size_t bits_size() const
+		{
+			if (is_static()) {
+				constexpr auto limb_bits = detail::integer_union<NBits>::s_storage::limb_bits;
+				static_assert(std::numeric_limits<std::size_t>::max() >= limb_bits * 2u,"Overflow error.");
+				return static_cast<std::size_t>(m_int.g_st().bits_size());
+			}
+			// NOTE: in theory this could overflow. Not sure if it we should put any check here,
+			// GMP does not care about overflows :(
+			return ::mpz_sizeinbase(&m_int.g_dy(),2);
+		}
 		/** @name Low-level interface
 		 * Low-level methods.
 		 */
@@ -4363,7 +4390,7 @@ struct divexact_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>:
 	 *
 	 * @return a reference to \p out.
 	 *
-	 * @throws std::invalid_argument if the division of \p a by \p b is not exact.
+	 * @throws piranha::math::inexact_division if the division of \p a by \p b is not exact.
 	 * @throws unspecified any exception thrown by piranha::mp_integer::divrem().
 	 */
 	T &operator()(T &out, const T &a, const T &b) const
@@ -4371,7 +4398,7 @@ struct divexact_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>:
 		T r;
 		T::divrem(out,r,a,b);
 		if (!is_zero(r)) {
-			piranha_throw(std::invalid_argument,"integer division is not exact");
+			piranha_throw(inexact_division,);
 		}
 		return out;
 	}
@@ -4511,6 +4538,20 @@ inline auto ipow_subs(const T &x, const std::string &name, const Int &n, const U
 }
 
 }
+
+/// Specialisation of piranha::has_exact_ring_operations for piranha::mp_integer.
+/**
+ * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct has_exact_ring_operations<T,typename std::enable_if<detail::is_mp_integer<typename std::decay<T>::type>::value>::type>
+{
+	/// Value of the type trait.
+	static const bool value = true;
+};
+
+template <typename T>
+const bool has_exact_ring_operations<T,typename std::enable_if<detail::is_mp_integer<typename std::decay<T>::type>::value>::type>::value;
 
 /// Type trait to detect the presence of the piranha::math::ipow_subs function.
 /**

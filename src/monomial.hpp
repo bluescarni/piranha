@@ -81,7 +81,7 @@ namespace piranha
  * ## Type requirements ##
  * 
  * \p T and \p S must be suitable for use as first and third template arguments in piranha::array_key. Additionally,
- * \p T must satisfy the piranha::has_is_zero type trait.
+ * \p T must satisfy the piranha::has_is_zero type trait, and it must be copy-assignable.
  * 
  * ## Exception safety guarantee ##
  * 
@@ -101,6 +101,7 @@ template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class monomial: public array_key<T,monomial<T,S>,S>
 {
 		PIRANHA_TT_CHECK(has_is_zero,T);
+		PIRANHA_TT_CHECK(std::is_copy_assignable,T);
 		using base = array_key<T,monomial<T,S>,S>;
 		// Eval and subs type definition.
 		template <typename U, typename = void>
@@ -118,11 +119,17 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		// Enabler for ctor from init list.
 		template <typename U>
 		using init_list_enabler = typename std::enable_if<std::is_constructible<base,std::initializer_list<U>>::value,int>::type;
-		// Multiplication.
+		// Multiplication and division.
 		template <typename Cf, typename U>
 		using multiply_enabler = typename std::enable_if<
 			detail::true_tt<decltype(std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()))>::value &&
 			detail::true_tt<detail::cf_mult_enabler<Cf>>::value,int>::type;
+		template <typename U>
+		using monomial_multiply_enabler = typename std::enable_if<
+			detail::true_tt<decltype(std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()))>::value,int>::type;
+		template <typename U>
+		using monomial_divide_enabler = typename std::enable_if<
+			detail::true_tt<decltype(std::declval<U const &>().vector_sub(std::declval<U &>(),std::declval<U const &>()))>::value,int>::type;
 		// Enabler for linear argument.
 		template <typename U>
 		using linarg_enabler = typename std::enable_if<has_safe_cast<integer,U>::value,int>::type;
@@ -898,10 +905,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws std::invalid_argument if the size of \p t1 differs from the size of \p args.
 		 * @throws unspecified any exception thrown by piranha::array_key::vector_add(), or by piranha::math::mul3().
 		 */
-		// NOTE: important, here we are assuming that the element of res is distinct from t1 and t2. Maybe this should
-		// be explicitly stated somewhere, in the runtime requirements of multiplication.
-		// NOTE: here we need the extra U param as otherwise in the enabler we are accessing a method of monomial when
-		// it is still an incomplete type.
+		// NOTE: it should be ok to use this method (and the one below) with overlapping arguments, as this is allowed
+		// in small_vector::add().
 		template <typename Cf, typename U = monomial, multiply_enabler<Cf,U> = 0>
 		static void multiply(std::array<term<Cf,monomial>,multiply_arity> &res, const term<Cf,monomial> &t1,
 			const term<Cf,monomial> &t2, const symbol_set &args)
@@ -916,11 +921,58 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			// Now deal with the key.
 			t1.m_key.vector_add(t.m_key,t2.m_key);
 		}
-		/// Comparison operator.
+		/// Multiply monomials.
 		/**
 		 * \note
-		 * This template operator is enabled only if \p T satisfies piranha::is_less_than_comparable.
+		 * This method is enabled only if piranha::array_key::vector_add() is enabled for \p a.
 		 *
+		 * Multiply \p a by \p b, storing the result in \p out.
+		 *
+		 * This method offers the basic exception safety guarantee.
+		 *
+		 * @param[out] out return value.
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 * @param[in] args reference set of arguments.
+		 *
+		 * @throws std::invalid_argument if the size of \p a differs from the size of \p args.
+		 * @throws unspecified any exception thrown by piranha::array_key::vector_add().
+		 */
+		template <typename U = monomial, monomial_multiply_enabler<U> = 0>
+		static void multiply(monomial &out, const monomial &a, const monomial &b, const symbol_set &args)
+		{
+			if(unlikely(a.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			a.vector_add(out,b);
+		}
+		/// Divide monomials.
+		/**
+		 * \note
+		 * This method is enabled only if piranha::array_key::vector_sub() is enabled for \p a.
+		 *
+		 * Divide \p a by \p b, storing the result in \p out.
+		 *
+		 * This method offers the basic exception safety guarantee.
+		 *
+		 * @param[out] out return value.
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 * @param[in] args reference set of arguments.
+		 *
+		 * @throws std::invalid_argument if the size of \p a differs from the size of \p args.
+		 * @throws unspecified any exception thrown by piranha::array_key::vector_sub().
+		 */
+		template <typename U = monomial, monomial_divide_enabler<U> = 0>
+		static void divide(monomial &out, const monomial &a, const monomial &b, const symbol_set &args)
+		{
+			if(unlikely(a.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			a.vector_sub(out,b);
+		}
+		/// Comparison operator.
+		/**
 		 * The two monomials will be compared lexicographically.
 		 *
 		 * @param[in] other comparison argument.
@@ -930,7 +982,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws std::invalid_argument if the sizes of \p this and \p other differ.
 		 * @throws unspecified any exception thrown by <tt>std::lexicographical_compare()</tt>.
 		 */
-		template <typename U = T, comparison_enabler<U> = 0>
 		bool operator<(const monomial &other) const
 		{
 			const auto sbe1 = this->size_begin_end();
@@ -940,6 +991,85 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			return std::lexicographical_compare(std::get<1u>(sbe1),std::get<2u>(sbe1),
 				std::get<1u>(sbe2),std::get<2u>(sbe2));
+		}
+		/// Extract the vector of exponents.
+		/**
+		 * This method will write into \p out the content of \p this. If necessary, \p out will
+		 * be resized to match the size of \p this.
+		 * 
+		 * Note that this method does not offer a strong exception safety guarantee, as it uses
+		 * <tt>std::copy()</tt> internally to copy the exponents to \p out.
+		 * 
+		 * @param[out] out vector into which the exponents will be copied.
+		 * @param[in] args reference set of arguments.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::safe_cast(),
+		 * - the resizing of \p out,
+		 * - the copy assignment of the exponents.
+		 */
+		void extract_exponents(std::vector<typename base::value_type> &out, const symbol_set &args) const
+		{
+			using v_size_type = decltype(out.size());
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"mismatch in the number of arguments");
+			}
+			if (unlikely(out.size() != this->size())) {
+				out.resize(safe_cast<v_size_type>(this->size()));
+			}
+			auto sbe = this->size_begin_end();
+			std::copy(std::get<1u>(sbe),std::get<2u>(sbe),out.begin());
+		}
+		/// Split.
+		/**
+		 * This method will split \p this into two monomials: the second monomial will contain the exponent
+		 * of the first variable in \p args, the first monomial will contain all the other exponents.
+		 *
+		 * @param[in] args reference arguments set.
+		 *
+		 * @return a pair of monomials, the second one containing the first exponent, the first one containing all the
+		 * other exponents.
+		 *
+		 * @throws std::invalid_argument if the size of \p args is different from the size of \p this or less than 2.
+		 * @throws unspecified any exception thrown by the constructor from a range.
+		 */
+		std::pair<monomial,monomial> split(const symbol_set &args) const
+		{
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"mismatch in the number of arguments");
+			}
+			if (unlikely(this->size() < 2u)) {
+				piranha_throw(std::invalid_argument,"only monomials with 2 or more variables can be split");
+			}
+			auto sbe = this->size_begin_end();
+			return std::make_pair(monomial(std::get<1u>(sbe) + 1,std::get<2u>(sbe)),
+				monomial(std::get<1u>(sbe),std::get<1u>(sbe) + 1));
+		}
+		/// Detect negative exponents.
+		/**
+		 * This method will return \p true if at least one exponent is less than zero, \p false otherwise.
+		 *
+		 * @param[in] args reference arguments set.
+		 *
+		 * @return \p true if at least one exponent is less than zero, \p false otherwise.
+		 *
+		 * @throws std::invalid_argument if the size of \p args is different from the size of \p this.
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of an exponent from an \p int,
+		 * - the comparison operator of the exponent type.
+		 */
+		bool has_negative_exponent(const symbol_set &args) const
+		{
+			using value_type = typename base::value_type;
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"mismatch in the number of arguments");
+			}
+			auto sbe = this->size_begin_end();
+			const value_type zero(0);
+			return std::any_of(std::get<1u>(sbe),std::get<2u>(sbe),[&zero](const value_type &e) {
+				return e < zero;
+			});
 		}
 };
 

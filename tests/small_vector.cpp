@@ -747,6 +747,8 @@ struct add_tester
 			BOOST_CHECK(v3.size() == 0u);
 			v1.push_back(T(1));
 			BOOST_CHECK_THROW(v1.add(v3,v2),std::invalid_argument);
+			BOOST_CHECK(v1.size() == 1u);
+			BOOST_CHECK_EQUAL(*v1.begin(),T(1));
 			v2.push_back(T(2));
 			v1.add(v3,v2);
 			BOOST_CHECK(v3.size() == 1u);
@@ -761,6 +763,10 @@ struct add_tester
 			v3.resize(100);
 			v1.add(v3,v2);
 			BOOST_CHECK((v3 == v_type{8,10,12,4,6,8}));
+			v3.add(v3,v3);
+			BOOST_CHECK((v3 == v_type{8*2,10*2,12*2,4*2,6*2,8*2}));
+			v3.add(v3,v2);
+			BOOST_CHECK((v3 == v_type{8*2+7,10*2+8,12*2+9,4*2,6*2+1,8*2+2}));
 		}
 	};
 	template <typename T>
@@ -773,6 +779,54 @@ struct add_tester
 BOOST_AUTO_TEST_CASE(small_vector_add_test)
 {
 	boost::mpl::for_each<value_types>(add_tester());
+}
+
+struct sub_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U>;
+			v_type v1, v2, v3;
+			v1.sub(v3,v2);
+			BOOST_CHECK(v3.size() == 0u);
+			v1.push_back(T(1));
+			BOOST_CHECK_THROW(v1.sub(v3,v2),std::invalid_argument);
+			BOOST_CHECK(v1.size() == 1u);
+			BOOST_CHECK_EQUAL(*v1.begin(),T(1));
+			v2.push_back(T(2));
+			v1.sub(v3,v2);
+			BOOST_CHECK(v3.size() == 1u);
+			BOOST_CHECK(v3[0] == T(-1));
+			v1 = v_type{1,2,3,4,5,6};
+			v2 = v_type{7,8,9,0,1,2};
+			v1.sub(v3,v2);
+			BOOST_CHECK((v3 == v_type{-6,-6,-6,4,4,4}));
+			v3.resize(0);
+			v1.sub(v3,v2);
+			BOOST_CHECK((v3 == v_type{-6,-6,-6,4,4,4}));
+			v3.resize(100);
+			v1.sub(v3,v2);
+			BOOST_CHECK((v3 == v_type{-6,-6,-6,4,4,4}));
+			v3.sub(v3,v3);
+			BOOST_CHECK((v3 == v_type{0,0,0,0,0,0}));
+			v3.sub(v3,v2);
+			BOOST_CHECK((v3 == v_type{-7,-8,-9,0,-1,-2}));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_sub_test)
+{
+	boost::mpl::for_each<value_types>(sub_tester());
 }
 
 BOOST_AUTO_TEST_CASE(small_vector_print_sizes)

@@ -30,13 +30,18 @@ see https://www.gnu.org/licenses/. */
 #define PYRANHA_EXPOSE_POLYNOMIALS_HPP
 
 #include <boost/python/class.hpp>
+#include <boost/python/def.hpp>
 #include <boost/python/list.hpp>
+#include <boost/python/operators.hpp>
+#include <boost/python/self.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
+#include "../src/math.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/type_traits.hpp"
 #include "expose_utils.hpp"
@@ -133,6 +138,104 @@ struct poly_custom_hook
 		bp::stl_input_iterator<expo_type> begin(l), end;
 		return s.find_cf(std::vector<expo_type>(begin,end));
 	}
+	// Division exposition.
+	template <typename T>
+	static bp::tuple udivrem_wrapper(const T &n, const T &d)
+	{
+		auto retval = T::udivrem(n,d);
+		return bp::make_tuple(std::move(retval.first),std::move(retval.second));
+	}
+	template <typename T, typename std::enable_if<piranha::is_divisible<T>::value && piranha::is_divisible_in_place<T>::value,int>::type = 0>
+	void expose_division(bp::class_<T> &series_class) const
+	{
+		series_class.def(bp::self / bp::self);
+		series_class.def(bp::self /= bp::self);
+		series_class.def("udivrem",udivrem_wrapper<T>);
+		series_class.staticmethod("udivrem");
+	}
+	template <typename T, typename std::enable_if<!piranha::is_divisible<T>::value || !piranha::is_divisible_in_place<T>::value,int>::type = 0>
+	void expose_division(bp::class_<T> &) const
+	{}
+	// Split and join.
+	template <typename T>
+	static auto split_wrapper(const T &p) -> decltype(p.split())
+	{
+		return p.split();
+	}
+	template <typename T>
+	static auto join_wrapper(const T &p) -> decltype(p.join())
+	{
+		return p.join();
+	}
+	template <typename T, typename = decltype(std::declval<const T &>().join())>
+	void expose_join(bp::class_<T> &series_class) const
+	{
+		series_class.def("join",join_wrapper<T>);
+	}
+	template <typename ... Args>
+	void expose_join(Args && ...) const {}
+	// GCD.
+	template <typename T>
+	static T static_gcd_wrapper(const T &a, const T &b)
+	{
+		return T::gcd(a,b);
+	}
+	template <typename T>
+	static T static_gcd_wrapper_algo(const T &a, const T &b, piranha::polynomial_gcd_algorithm algo)
+	{
+		return T::gcd(a,b,algo);
+	}
+	template <typename T, typename std::enable_if<piranha::has_gcd<T>::value,int>::type = 0>
+	void expose_gcd(bp::class_<T> &series_class) const
+	{
+		bp::def("_gcd",piranha::math::gcd<T,T>);
+		series_class.def("gcd",static_gcd_wrapper<T>);
+		series_class.def("gcd",static_gcd_wrapper_algo<T>);
+		series_class.staticmethod("gcd");
+	}
+	template <typename T, typename std::enable_if<!piranha::has_gcd<T>::value,int>::type = 0>
+	void expose_gcd(bp::class_<T> &) const
+	{}
+	// Height.
+	template <typename T>
+	static auto height_wrapper(const T &p) -> decltype(p.height())
+	{
+		return p.height();
+	}
+	template <typename T, typename = decltype(std::declval<const T &>().height())>
+	void expose_height(bp::class_<T> &series_class) const
+	{
+		series_class.def("height",height_wrapper<T>);
+	}
+	template <typename ... Args>
+	void expose_height(Args && ...) const {}
+	// Content.
+	template <typename T>
+	static auto content_wrapper(const T &p) -> decltype(p.content())
+	{
+		return p.content();
+	}
+	template <typename T, typename = decltype(std::declval<const T &>().content())>
+	void expose_content(bp::class_<T> &series_class) const
+	{
+		series_class.def("content",content_wrapper<T>);
+	}
+	template <typename ... Args>
+	void expose_content(Args && ...) const {}
+	// Primitive part.
+	template <typename T>
+	static auto primitive_part_wrapper(const T &p) -> decltype(p.primitive_part())
+	{
+		return p.primitive_part();
+	}
+	template <typename T, typename = decltype(std::declval<const T &>().primitive_part())>
+	void expose_primitive_part(bp::class_<T> &series_class) const
+	{
+		series_class.def("primitive_part",primitive_part_wrapper<T>);
+	}
+	template <typename ... Args>
+	void expose_primitive_part(Args && ...) const {}
+	// The call operator.
 	template <typename T>
 	void operator()(bp::class_<T> &series_class) const
 	{
@@ -142,6 +245,19 @@ struct poly_custom_hook
 		expose_degree_auto_truncation_set(series_class);
 		// find_cf().
 		series_class.def("find_cf",find_cf_wrapper<T>);
+		// Division.
+		expose_division(series_class);
+		// Split and join.
+		series_class.def("split",split_wrapper<T>);
+		expose_join(series_class);
+		// GCD.
+		expose_gcd(series_class);
+		// Height.
+		expose_height(series_class);
+		// Content.
+		expose_content(series_class);
+		// Primitive part.
+		expose_primitive_part(series_class);
 	}
 };
 
@@ -157,6 +273,8 @@ void expose_polynomials_8();
 void expose_polynomials_9();
 void expose_polynomials_10();
 void expose_polynomials_11();
+void expose_polynomials_12();
+void expose_polynomials_13();
 
 }
 

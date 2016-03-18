@@ -147,6 +147,7 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::positive_overflow>();
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
+	pyranha::generic_translate<&PyExc_ArithmeticError,piranha::math::inexact_division>();
 	// Series list.
 	bp::def("_get_series_list",pyranha::get_series_list);
 	// The enums for save/load.
@@ -169,6 +170,8 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_polynomials_9();
 	pyranha::expose_polynomials_10();
 	pyranha::expose_polynomials_11();
+	pyranha::expose_polynomials_12();
+	pyranha::expose_polynomials_13();
 	// Expose Poisson series.
 	pyranha::expose_poisson_series_0();
 	pyranha::expose_poisson_series_1();
@@ -244,6 +247,8 @@ bp::def("_invert",&piranha::math::invert<arg>)
 	PYRANHA_EXPOSE_INVERT(piranha::rational);
 	PYRANHA_EXPOSE_INVERT(piranha::real);
 #undef PYRANHA_EXPOSE_INVERT
+	// GCD.
+	bp::def("_gcd",&piranha::math::gcd<piranha::integer,piranha::integer>);
 	// Cleanup function.
 	bp::def("_cleanup_type_system",&cleanup_type_system);
 }

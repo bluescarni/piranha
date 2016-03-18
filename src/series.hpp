@@ -628,7 +628,7 @@ class series_operators
 		// In-place add. Default implementation is to do simply x = x + y, if possible.
 		// NOTE: this should also be able to handle int += series, if we ever implement it.
 		template <typename T, typename U, typename std::enable_if<
-			!std::is_const<T>::value && std::is_assignable<T &,binary_add_type<T,U>>::value,
+			std::is_assignable<T &,binary_add_type<T,U>>::value,
 			int>::type = 0>
 		static T &dispatch_in_place_add(T &x, U &&y)
 		{
@@ -636,9 +636,12 @@ class series_operators
 			x = dispatch_binary_add(std::move(x),std::forward<U>(y));
 			return x;
 		}
+		// NOTE: as explained above, here the enabling mechanism essentially recasts U as a const reference,
+		// because we require in-place addition to work with the second argument as a const reference (as that is
+		// the canonical form of in-place addition). The actual call will however do perfect forwarding, so optimisations
+		// are still possible.
 		template <typename T, typename U>
-		using in_place_add_type = decltype(dispatch_in_place_add(std::declval<typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+		using in_place_add_type = decltype(dispatch_in_place_add(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()));
 		template <typename T, typename U>
 		using in_place_add_enabler = typename std::enable_if<detail::true_tt<in_place_add_type<T,U>>::value,int>::type;
 		// Subtraction.
@@ -683,7 +686,7 @@ class series_operators
 		using binary_sub_type = decltype(dispatch_binary_sub(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
 		template <typename T, typename U, typename std::enable_if<
-			!std::is_const<T>::value && std::is_assignable<T &,binary_sub_type<T,U>>::value,
+			std::is_assignable<T &,binary_sub_type<T,U>>::value,
 			int>::type = 0>
 		static T &dispatch_in_place_sub(T &x, U &&y)
 		{
@@ -691,8 +694,7 @@ class series_operators
 			return x;
 		}
 		template <typename T, typename U>
-		using in_place_sub_type = decltype(dispatch_in_place_sub(std::declval<typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+		using in_place_sub_type = decltype(dispatch_in_place_sub(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()));
 		template <typename T, typename U>
 		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<in_place_sub_type<T,U>>::value,int>::type;
 		// Multiplication.
@@ -766,7 +768,7 @@ class series_operators
 		template <typename T, typename U>
 		using binary_mul_type = typename std::enable_if<series_has_multiplier<binary_mul_type_<T,U>>::value,binary_mul_type_<T,U>>::type;
 		template <typename T, typename U, typename std::enable_if<
-			!std::is_const<T>::value && std::is_assignable<T &,binary_mul_type<T,U>>::value,
+			std::is_assignable<T &,binary_mul_type<T,U>>::value,
 			int>::type = 0>
 		static T &dispatch_in_place_mul(T &x, U &&y)
 		{
@@ -774,8 +776,7 @@ class series_operators
 			return x;
 		}
 		template <typename T, typename U>
-		using in_place_mul_type = decltype(dispatch_in_place_mul(std::declval<typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+		using in_place_mul_type = decltype(dispatch_in_place_mul(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()));
 		template <typename T, typename U>
 		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<in_place_mul_type<T,U>>::value,int>::type;
 		// Division.
@@ -840,7 +841,7 @@ class series_operators
 		using binary_div_type = decltype(dispatch_binary_div(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
 		template <typename T, typename U, typename std::enable_if<
-			!std::is_const<T>::value && std::is_assignable<T &,binary_div_type<T,U>>::value,
+			std::is_assignable<T &,binary_div_type<T,U>>::value,
 			int>::type = 0>
 		static T &dispatch_in_place_div(T &x, U &&y)
 		{
@@ -848,8 +849,7 @@ class series_operators
 			return x;
 		}
 		template <typename T, typename U>
-		using in_place_div_type = decltype(dispatch_in_place_div(std::declval<typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+		using in_place_div_type = decltype(dispatch_in_place_div(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()));
 		template <typename T, typename U>
 		using in_place_div_enabler = typename std::enable_if<detail::true_tt<in_place_div_type<T,U>>::value,int>::type;
 		// Equality.
@@ -1227,6 +1227,7 @@ class series: detail::series_tag, series_operators
 		/// Container type for terms.
 		using container_type = hash_set<term_type,detail::term_hasher<term_type>>;
 	private:
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 		// Avoid confusing doxygen.
 		typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
 		// Insertion.
@@ -1859,6 +1860,7 @@ class series: detail::series_tag, series_operators
 		// Final typedef.
 		template <typename T, typename U>
 		using pow_ret_type = typename pow_ret_type_<T,U>::type;
+#endif
 	public:
 		/// Size type.
 		/**

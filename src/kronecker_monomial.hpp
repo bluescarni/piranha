@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_KRONECKER_MONOMIAL_HPP
 #define PIRANHA_KRONECKER_MONOMIAL_HPP
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <functional>
@@ -545,7 +546,33 @@ class kronecker_monomial
 			// Coefficient first.
 			detail::cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
 			// Now the key.
-			t.m_key.m_value = static_cast<value_type>(t1.m_key.get_int() + t2.m_key.get_int());
+			math::add3(t.m_key.m_value,t1.m_key.get_int(),t2.m_key.get_int());
+		}
+		/// Multiply Kronecker monomials.
+		/**
+		 * Multiply \p a by \p b, storing the result in \p res.
+		 * No check is performed for overflow of either the limits of the integral type or the limits of the Kronecker codification.
+		 *
+		 * @param[out] res return value.
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 */
+		static void multiply(kronecker_monomial &res, const kronecker_monomial &a, const kronecker_monomial &b, const symbol_set &)
+		{
+			math::add3(res.m_value,a.m_value,b.m_value);
+		}
+		/// Divide Kronecker monomials.
+		/**
+		 * Divide \p a by \p b, storing the result in \p res.
+		 * No check is performed for overflow of either the limits of the integral type or the limits of the Kronecker codification.
+		 *
+		 * @param[out] res return value.
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 */
+		static void divide(kronecker_monomial &res, const kronecker_monomial &a, const kronecker_monomial &b, const symbol_set &)
+		{
+			math::sub3(res.m_value,a.m_value,b.m_value);
 		}
 		/// Hash value.
 		/**
@@ -1001,6 +1028,66 @@ class kronecker_monomial
 		bool operator<(const kronecker_monomial &other) const
 		{
 			return m_value < other.m_value;
+		}
+		/// Extract the vector of exponents.
+		/**
+		 * This method will write into \p out the content of \p this. If necessary, \p out will
+		 * be resized to match the size of \p args.
+		 * 
+		 * @param[out] out vector into which the exponents will be copied.
+		 * @param[in] args reference set of arguments.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::safe_cast(),
+		 * - the resizing of \p out,
+		 * - unpack().
+		 */
+		void extract_exponents(std::vector<value_type> &out, const symbol_set &args) const
+		{
+			using v_size_type = decltype(out.size());
+			auto tmp = unpack(args);
+			if (unlikely(out.size() != args.size())) {
+				out.resize(safe_cast<v_size_type>(args.size()));
+			}
+			std::copy(tmp.begin(),tmp.end(),out.begin());
+		}
+		/// Split.
+		/**
+		 * This method will split \p this into two monomials: the second monomial will contain the exponent
+		 * of the first variable in \p args, the first monomial will contain all the other exponents.
+		 *
+		 * @param[in] args reference arguments set.
+		 *
+		 * @return a pair of monomials, the second one containing the first exponent, the first one containing all the
+		 * other exponents.
+		 *
+		 * @throws std::invalid_argument if the size of \p args is less than 2.
+		 * @throws unspecified any exception thrown by unpack() or by the constructor from a range.
+		 */
+		std::pair<kronecker_monomial,kronecker_monomial> split(const symbol_set &args) const
+		{
+			if (unlikely(args.size() < 2u)) {
+				piranha_throw(std::invalid_argument,"only monomials with 2 or more variables can be split");
+			}
+			auto tmp = unpack(args);
+			return std::make_pair(kronecker_monomial(tmp.begin() + 1,tmp.end()),kronecker_monomial(tmp[0u]));
+		}
+		/// Detect negative exponents.
+		/**
+		 * This method will return \p true if at least one exponent is less than zero, \p false otherwise.
+		 *
+		 * @param[in] args reference arguments set.
+		 *
+		 * @return \p true if at least one exponent is less than zero, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by unpack().
+		 */
+		bool has_negative_exponent(const symbol_set &args) const
+		{
+			auto tmp = unpack(args);
+			return std::any_of(tmp.begin(),tmp.end(),[](const value_type &e) {
+				return e < value_type(0);
+			});
 		}
 	private:
 		value_type m_value;

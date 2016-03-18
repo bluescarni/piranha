@@ -44,7 +44,6 @@ namespace detail
 
 // An overloaded helper function to perform safely the addition in-place of two integral values. It will throw
 // std::overflow_error in case of out-of-range conditions.
-
 template <typename T, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value,int>::type = 0>
 inline void safe_integral_adder(T &a, const T &b)
 {

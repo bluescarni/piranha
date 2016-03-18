@@ -72,7 +72,7 @@ namespace piranha
  * This class represents a multivariate real trigonometric monomial, i.e., functions of the form
  * \f[
  * \begin{array}{c}
- * \sin \tabularnewline
+ * \sin \\
  * \cos
  * \end{array}
  * \left(n_0x_0 + n_1x_1 + \ldots + n_mx_m\right),
@@ -1030,7 +1030,7 @@ class real_trigonometric_kronecker_monomial
 		 * computed according to the standard angle sum identities. That is, given a monomial of the form
 		 * \f[
 		 * \begin{array}{c}
-		 * \sin \tabularnewline
+		 * \sin \\
 		 * \cos
 		 * \end{array}
 		 * \left(na + b\right)
@@ -1039,7 +1039,7 @@ class real_trigonometric_kronecker_monomial
 		 * one of
 		 * \f[
 		 * \begin{array}{c}
-		 * \left[\left(\sin nx,\cos b \right),\left(\cos nx,\sin b \right)\right], \tabularnewline
+		 * \left[\left(\sin nx,\cos b \right),\left(\cos nx,\sin b \right)\right], \\
 		 * \left[\left(\cos nx,\cos b \right),\left(-\sin nx,\sin b \right)\right],
 		 * \end{array}
 		 * \f]

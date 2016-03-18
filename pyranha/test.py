@@ -349,9 +349,10 @@ class polynomial_test_case(_ut.TestCase):
 	
 	"""
 	def runTest(self):
+		from . import polynomial_gcd_algorithm as pga
 		from .types import polynomial, rational, short, integer, double, real, monomial
 		from fractions import Fraction
-		from .math import integrate
+		from .math import integrate, gcd
 		self.assertEqual(type(polynomial(rational,monomial(short))()(1).list[0][0]),Fraction)
 		self.assertEqual(type(polynomial(integer,monomial(short))()(1).list[0][0]),int)
 		self.assertEqual(type(polynomial(double,monomial(short))()(1).list[0][0]),float)
@@ -376,6 +377,38 @@ class polynomial_test_case(_ut.TestCase):
 		self.assertRaises(TypeError,lambda : x.find_cf([1.]))
 		self.assertRaises(TypeError,lambda : x.find_cf([1,'a']))
 		self.assertRaises(TypeError,lambda : x.find_cf(1))
+		# Split and join.
+		pt = polynomial(integer,monomial(short))()
+		pt2 = polynomial(double,monomial(short))()
+		x,y,z = [pt(_) for _ in ['x','y','z']]
+		self.assertEqual((x+3*y-2*z).split().join(),x+3*y-2*z)
+		self.assertEqual(type((x+3*y-2*z).split()),polynomial(polynomial(integer,monomial(short)),monomial(short))())
+		# Division.
+		self.assertEqual(x/x,1)
+		self.assertEqual(((x+y)*(x+1))/(x+1),x+y)
+		self.assertRaises(TypeError, lambda: pt2() / pt2())
+		self.assertRaises(ArithmeticError, lambda: pt(1) / x)
+		self.assertEqual(pt.udivrem(x,x)[0],1)
+		self.assertEqual(pt.udivrem(x,x)[1],0)
+		self.assertEqual(pt.udivrem(x,x+1)[0],1)
+		self.assertEqual(pt.udivrem(x,x+1)[1],-1)
+		self.assertRaises(ValueError,lambda : pt.udivrem(x+y,x+y))
+		# GCD.
+		self.assert_(gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == x-y or gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == -x+y)
+		self.assertRaises(TypeError, lambda: gcd(x,1))
+		self.assertRaises(ValueError, lambda: gcd(x**-1,y))
+		self.assert_(pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == x-y or pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == -x+y)
+		self.assert_(pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.automatic) == x-y or pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.automatic) == -x+y)
+		self.assert_(pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.prs_sr) == x-y or pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.prs_sr) == -x+y)
+		self.assert_(pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.heuristic) == x-y or pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.heuristic) == -x+y)
+		# Content.
+		self.assertEqual((12*x+20*y).content(),4)
+		self.assertEqual((x-x).content(),0)
+		self.assertRaises(AttributeError, lambda: pt2().content())
+		# Primitive part.
+		self.assertEqual((12*x+20*y).primitive_part(),3*x+5*y)
+		self.assertRaises(ZeroDivisionError, lambda: (x-x).primitive_part())
+		self.assertRaises(AttributeError, lambda: pt2().primitive_part())
 
 class divisor_series_test_case(_ut.TestCase):
 	""":mod:`divisor_series` module test case.

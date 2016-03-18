@@ -62,7 +62,8 @@ namespace piranha
  * - the exception safety guarantee is weaker (see below),
  * - iterators and iterator invalidation: after a rehash operation, all iterators will be invalidated and existing
  *   references/pointers to the elements will also be invalid; after an insertion/erase operation, all existing iterators, pointers
- *   and references to the elements in the destination bucket will be invalid.
+ *   and references to the elements in the destination bucket will be invalid,
+ * - the complexity of iterator traversal depends on the load factor of the table.
  * 
  * The implementation employs a separate chaining strategy consisting of an array of buckets, each one a singly linked list with the first node
  * stored directly within the array (so that the first insertion in a bucket does not require any heap allocation).

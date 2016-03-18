@@ -109,11 +109,13 @@ class array_key
 		template <typename U>
 		using generic_ctor_enabler = typename std::enable_if<
 			has_safe_cast<value_type,U>::value,int>::type;
-		// Enabler for addition.
+		// Enabler for addition and subtraction.
 		// NOTE: here it is not difficult to make this an int enabler, like we usually do elsewhere,
 		// but alas the intel compiler chokes on this :/.
 		template <typename U>
 		using add_enabler = decltype(std::declval<U const &>().add(std::declval<U &>(),std::declval<U const &>()));
+		template <typename U>
+		using sub_enabler = decltype(std::declval<U const &>().sub(std::declval<U &>(),std::declval<U const &>()));
 		// Serialization support.
 		// NOTE: no need for split save/load, this is just a single-member class.
 		friend class boost::serialization::access;
@@ -414,6 +416,25 @@ class array_key
 		void vector_add(array_key &retval, const array_key &other) const
 		{
 			m_container.add(retval.m_container,other.m_container);
+		}
+		/// Vector sub.
+		/**
+		 * \note
+		 * This method is enabled only if the call to piranha::small_vector::sub()
+		 * is well-formed.
+		 *
+		 * Equivalent to calling piranha::small_vector::sub() on the internal containers of \p this
+		 * and of the arguments.
+		 *
+		 * @param[out] retval piranha::array_key that will hold the result of the subtraction.
+		 * @param[in] other piranha::array_key that will be subtracted from \p this.
+		 *
+		 * @throws unspecified any exception thrown by piranha::small_vector::sub().
+		 */
+		template <typename U = container_type, typename = sub_enabler<U>>
+		void vector_sub(array_key &retval, const array_key &other) const
+		{
+			m_container.sub(retval.m_container,other.m_container);
 		}
 		/// Merge arguments.
 		/**

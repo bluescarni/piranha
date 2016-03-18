@@ -122,7 +122,444 @@ struct key_has_linarg: detail::sfinae_types
 	static const bool value = std::is_same<std::string,decltype(test(std::declval<Key>()))>::value;
 };
 
+// Division utilities.
+// Return iterator to the leading term of a polynomial, as defined by the operator<()
+// of its key type. This is always available for any monomial type.
+template <typename PType>
+inline auto poly_lterm(const PType &p) -> decltype(p._container().begin())
+{
+	using term_type = typename PType::term_type;
+	return std::max_element(p._container().begin(),p._container().end(),[](const term_type &t1, const term_type &t2) {
+		return t1.m_key < t2.m_key;
+	});
 }
+
+// Check that there are no negative exponents
+// in a polynomial.
+template <typename PType>
+inline void poly_expo_checker(const PType &p)
+{
+	using term_type = typename PType::term_type;
+	const auto &args = p.get_symbol_set();
+	if (std::any_of(p._container().begin(),p._container().end(),[&args](const term_type &t) {
+		return t.m_key.has_negative_exponent(args);}))
+	{
+		piranha_throw(std::invalid_argument,"negative exponents are not allowed");
+	}
+}
+
+// Multiply polynomial by non-zero cf in place. Preconditions:
+// - a is not zero.
+// Type requirements:
+// - cf type supports in-place multiplication.
+template <typename PType>
+inline void poly_cf_mult(const typename PType::term_type::cf_type &a, PType &p)
+{
+	piranha_assert(!math::is_zero(a));
+	const auto it_f = p._container().end();
+	for (auto it = p._container().begin(); it != it_f; ++it) {
+		it->m_cf *= a;
+		piranha_assert(!math::is_zero(it->m_cf));
+	}
+}
+
+// Divide polynomial by non-zero cf in place. Preconditions:
+// - a is not zero.
+// Type requirements:
+// - cf type supports divexact().
+// NOTE: this is always used in exact divisions, we could wrap mp_integer::_divexact()
+// to improve performance.
+template <typename PType>
+inline void poly_exact_cf_div(PType &p, const typename PType::term_type::cf_type &a)
+{
+	piranha_assert(!math::is_zero(a));
+	const auto it_f = p._container().end();
+	for (auto it = p._container().begin(); it != it_f; ++it) {
+		math::divexact(it->m_cf,it->m_cf,a);
+		piranha_assert(!math::is_zero(it->m_cf));
+	}
+}
+
+// Univariate polynomial GCD.
+// Implementation based on subresultant polynomial remainder sequence:
+// https://en.wikipedia.org/wiki/Polynomial_greatest_common_divisor
+// See also Zippel, 8.6. This implementation is actually based on
+// Winkler, chapter 4.
+// NOTE: here we do not need the full sequence of remainders, consider
+// removing the vector of polys once this is debugged and tested.
+// Preconditions:
+// - univariate polynomials on the same variable.
+// Type requirements:
+// - cf type supports exponentiation to unsigned, yielding the same type,
+// - cf type * cf type is still cf type, and multipliable in-place,
+// - cf type has divexact.
+template <typename PType>
+inline PType poly_ugcd(PType a, PType b)
+{
+	using term_type = typename PType::term_type;
+	using cf_type = typename term_type::cf_type;
+	using key_type = typename term_type::key_type;
+	// Only univariate polynomials are allowed.
+	piranha_assert(a.get_symbol_set().size() == 1u && a.get_symbol_set() == b.get_symbol_set());
+	// If one of the two is zero, the gcd is the other.
+	if (math::is_zero(a) && !math::is_zero(b)) {
+		return b;
+	}
+	if (!math::is_zero(a) && math::is_zero(b)) {
+		return a;
+	}
+	// If both are zero, return zero.
+	if (math::is_zero(a) && math::is_zero(b)) {
+		PType retval;
+		retval.set_symbol_set(a.get_symbol_set());
+		return retval;
+	}
+	// Check exponents.
+	poly_expo_checker(a);
+	poly_expo_checker(b);
+	// Order so that deg(a) >= deg(b).
+	if (poly_lterm(a)->m_key < poly_lterm(b)->m_key) {
+		std::swap(a,b);
+	}
+	// Cache the arguments set. Make a copy as "a" will be moved below.
+	const auto args = a.get_symbol_set();
+	// NOTE: coefficients are alway ctible from ints.
+	cf_type h(1), g(1);
+	// Store the content of a and b for later use.
+	auto a_cont = a.content(), b_cont = b.content();
+	std::vector<PType> F;
+	using size_type = typename std::vector<PType>::size_type;
+	F.push_back(std::move(a));
+	F.push_back(std::move(b));
+	PType fprime(F.back());
+	size_type i = 2u;
+	// A key representing the constant univariate monomial.
+	// NOTE: all monomials support construction from init list.
+	key_type zero_key{typename key_type::value_type(0)};
+	while (fprime.size() != 0u && poly_lterm(fprime)->m_key != zero_key) {
+		auto l2 = poly_lterm(F[static_cast<size_type>(i - 2u)]),
+			l1 = poly_lterm(F[static_cast<size_type>(i - 1u)]);
+		// NOTE: we are using the degree here in order to maintain compatibility with
+		// all monomials. There is some small overhead in this, but it should not
+		// matter too much.
+		// NOTE: this will be used only on monomials with integral exponents, so it is always valid.
+		integer delta(l2->m_key.degree(args)), l1d(l1->m_key.degree(args));
+		piranha_assert(delta >= l1d);
+		// NOTE: this is a pseudo-remainder operation here, we don't use the poly method as we need the delta
+		// information below.
+		delta -= l1d;
+		poly_cf_mult(math::pow(l1->m_cf,static_cast<unsigned>(delta+1)),F[static_cast<size_type>(i - 2u)]);
+		fprime = PType::udivrem(F[static_cast<size_type>(i - 2u)],F[static_cast<size_type>(i - 1u)]).second;
+		if (fprime.size() != 0u) {
+			const cf_type h_delta = math::pow(h,static_cast<unsigned>(delta));
+			auto tmp(fprime);
+			poly_exact_cf_div(tmp,g * h_delta);
+			g = l1->m_cf;
+			h = (math::pow(g,static_cast<unsigned>(delta)) * h);
+			math::divexact(h,h,h_delta);
+			F.push_back(std::move(tmp));
+			safe_integral_adder(i,size_type(1u));
+		}
+	}
+	auto retval = std::move(F.back());
+	auto content = retval.content();
+	poly_exact_cf_div(retval,content);
+	poly_cf_mult(math::gcd(a_cont,b_cont),retval);
+	return retval;
+}
+
+// Establish the limits of the exponents of two polynomials. Will throw if a negative exponent is encountered.
+// Preconditions:
+// - equal symbol sets.
+// - non-empty polys.
+template <typename PType>
+inline std::vector<std::pair<typename PType::term_type::key_type::value_type,
+	typename PType::term_type::key_type::value_type>> poly_establish_limits(const PType &n, const PType &d)
+{
+	using expo_type = typename PType::term_type::key_type::value_type;
+	using v_type = std::vector<expo_type>;
+	using vp_type = std::vector<std::pair<expo_type,expo_type>>;
+	using vp_size_type = typename vp_type::size_type;
+	piranha_assert(n.get_symbol_set() == d.get_symbol_set());
+	piranha_assert(n.size() != 0u && d.size() != 0u);
+	// Return value, init with the first element from the numerator.
+	vp_type retval;
+	v_type tmp;
+	auto it = n._container().begin(), it_f = n._container().end();
+	it->m_key.extract_exponents(tmp,n.get_symbol_set());
+	std::transform(tmp.begin(),tmp.end(),std::back_inserter(retval),[](const expo_type &e) {return std::make_pair(e,e);});
+	for (; it != it_f; ++it) {
+		it->m_key.extract_exponents(tmp,n.get_symbol_set());
+		for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+			// NOTE: greater-than comparability is ensured for all exponent types on which this
+			// method will be used.
+			if (tmp[i] < retval[static_cast<vp_size_type>(i)].first) {
+				retval[static_cast<vp_size_type>(i)].first = tmp[i];
+			} else if (tmp[i] > retval[static_cast<vp_size_type>(i)].second) {
+				retval[static_cast<vp_size_type>(i)].second = tmp[i];
+			}
+		}
+	}
+	// Denominator.
+	it_f = d._container().end();
+	for (it = d._container().begin(); it != it_f; ++it) {
+		it->m_key.extract_exponents(tmp,n.get_symbol_set());
+		for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+			if (tmp[i] < retval[static_cast<vp_size_type>(i)].first) {
+				retval[static_cast<vp_size_type>(i)].first = tmp[i];
+			} else if (tmp[i] > retval[static_cast<vp_size_type>(i)].second) {
+				retval[static_cast<vp_size_type>(i)].second = tmp[i];
+			}
+		}
+	}
+	// Check for negative expos.
+	if (std::any_of(retval.begin(),retval.end(),[](const std::pair<expo_type,expo_type> &p) {return p.first < expo_type(0);}))
+	{
+		piranha_throw(std::invalid_argument,"negative exponents are not allowed");
+	}
+	return retval;
+}
+
+// Simple dot product.
+template <typename It1, typename It2>
+inline auto poly_dot_product(It1 begin1, It1 end1, It2 begin2) -> decltype((*begin1) * (*begin2))
+{
+	using ret_type = decltype((*begin1) * (*begin2));
+	return std::inner_product(begin1,end1,begin2,ret_type(0));
+}
+
+// Convert multivariate polynomial to univariate. Preconditions:
+// - at least 1 symbolic argument,
+// - identical symbol set for n and d,
+// - non-null input polys.
+template <typename Cf, typename Key>
+inline std::tuple<polynomial<Cf,k_monomial>,polynomial<Cf,k_monomial>,std::vector<typename k_monomial::value_type>>
+	poly_to_univariate(const polynomial<Cf,Key> &n, const polynomial<Cf,Key> &d)
+{
+	piranha_assert(n.get_symbol_set().size() > 0u);
+	piranha_assert(n.get_symbol_set() == d.get_symbol_set());
+	piranha_assert(n.size() != 0u && d.size() != 0u);
+	using k_expo_type = typename k_monomial::value_type;
+	using expo_type = typename Key::value_type;
+	// Cache the args.
+	const auto &args = n.get_symbol_set();
+	// Establish the limits of the two polynomials.
+	auto limits = poly_establish_limits(n,d);
+	// Extract just the vector of max exponents.
+	std::vector<expo_type> max_expos;
+	std::transform(limits.begin(),limits.end(),std::back_inserter(max_expos),[](const std::pair<expo_type,expo_type> &p) {return p.second;});
+	using me_size_type = decltype(max_expos.size());
+	// Next we need to check the limits of the codification. We do everything in multiprecision and
+	// then we will attempt to cast back.
+	std::vector<integer> mp_cv;
+	mp_cv.push_back(integer(1));
+	for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+		mp_cv.push_back(mp_cv.back() * (integer(1) + max_expos[static_cast<me_size_type>(i)]));
+	}
+	// Determine the max univariate expo.
+	integer mp_kM = poly_dot_product(max_expos.begin(),max_expos.end(),mp_cv.begin());
+	// Attempt casting everything down.
+	auto kM = static_cast<k_expo_type>(mp_kM);
+	(void)kM;
+	std::vector<k_expo_type> cv;
+	std::transform(mp_cv.begin(),mp_cv.end(),std::back_inserter(cv),[](const integer &z) {return static_cast<k_expo_type>(z);});
+	// Proceed to the codification.
+	auto encode_poly = [&args,&cv](const polynomial<Cf,Key> &p) -> polynomial<Cf,k_monomial> {
+		using term_type = typename polynomial<Cf,k_monomial>::term_type;
+		polynomial<Cf,k_monomial> retval;
+		// The only symbol will be the first symbol from the input polys.
+		symbol_set ss;
+		ss.add(*args.begin());
+		retval.set_symbol_set(ss);
+		// Prepare rehashed.
+		retval._container().rehash(p._container().bucket_count());
+		// Go with the codification.
+		std::vector<expo_type> tmp_expos;
+		for (const auto &t: p._container()) {
+			// Extract the exponents.
+			t.m_key.extract_exponents(tmp_expos,args);
+			// NOTE: unique insertion?
+			retval.insert(term_type{t.m_cf,
+				k_monomial(static_cast<k_expo_type>(poly_dot_product(tmp_expos.begin(),tmp_expos.end(),cv.begin())))});
+		}
+		return retval;
+	};
+	return std::make_tuple(encode_poly(n),encode_poly(d),cv);
+}
+
+// From univariate to multivariate. Preconditions:
+// - n has only 1 symbol,
+// - coding vector and args are consistent,
+// - non-empty poly.
+template <typename Key, typename Cf>
+inline polynomial<Cf,Key>
+	poly_from_univariate(const polynomial<Cf,k_monomial> &n, const std::vector<typename k_monomial::value_type> &cv,
+	const symbol_set &args)
+{
+	piranha_assert(n.get_symbol_set().size() == 1u);
+	piranha_assert(cv.size() > 1u);
+	piranha_assert(args.size() == cv.size() - 1u);
+	piranha_assert(*n.get_symbol_set().begin() == *args.begin());
+	piranha_assert(n.size() != 0u);
+	using expo_type = typename Key::value_type;
+	using cv_size_type = decltype(cv.size());
+	auto decode_poly = [&args,&cv](const polynomial<Cf,k_monomial> &p) -> polynomial<Cf,Key> {
+		using term_type = typename polynomial<Cf,Key>::term_type;
+		// Init the return value.
+		polynomial<Cf,Key> retval;
+		retval.set_symbol_set(args);
+		retval._container().rehash(p._container().bucket_count());
+		// Go with the decodification.
+		std::vector<expo_type> tmp_expos;
+		using v_size_type = typename std::vector<expo_type>::size_type;
+		tmp_expos.resize(safe_cast<v_size_type>(args.size()));
+		for (const auto &t: p._container()) {
+			for (v_size_type i = 0u; i < tmp_expos.size(); ++i) {
+				// NOTE: use construction here rather than static_cast as expo_type could be integer.
+				tmp_expos[i] = expo_type((t.m_key.get_int() % cv[static_cast<cv_size_type>(i + 1u)]) /
+					cv[static_cast<cv_size_type>(i)]);
+			}
+			retval.insert(term_type{t.m_cf,Key(tmp_expos.begin(),tmp_expos.end())});
+		}
+		return retval;
+	};
+	return decode_poly(n);
+}
+
+// Exception to signal that gcdheu() produced an integer xi too large.
+struct gcdheu_xi_too_large: public base_exception
+{
+	explicit gcdheu_xi_too_large(): base_exception("") {}
+};
+
+// Heuristic GCD algorithm. See the Geddes book, algorithm 7.4. See also:
+// http://www.sciencedirect.com/science/article/pii/S0747717189800045
+template <typename Poly>
+std::pair<bool,Poly> gcdheu(const Poly &a, const Poly &b, symbol_set::size_type s_index = 0u)
+{
+	static_assert(is_mp_integer<typename Poly::term_type::cf_type>::value,"Invalide type.");
+	// Require identical symbol sets.
+	piranha_assert(a.get_symbol_set() == b.get_symbol_set());
+	// Helper function to compute the symmetric version of the modulo operation.
+	// See Geddes 4.2 and:
+	// http://www.maplesoft.com/support/help/maple/view.aspx?path=mod
+	auto mod_s = [](const integer &n, const integer &m) -> integer {
+		// NOTE: require that the denominator is strictly positive.
+		piranha_assert(m > 0);
+		auto retval = n % m;
+		if (retval < -((m - 1) / 2)) {
+			retval += m;
+		} else if (retval > m / 2) {
+			retval -= m;
+		}
+		return retval;
+	};
+	// Apply mod_s to all coefficients in a poly.
+	auto mod_s_poly = [mod_s](const Poly &p, const integer &m) -> Poly {
+		Poly retval(p);
+		auto it = retval._container().begin();
+		for (; it != retval._container().end();) {
+			it->m_cf = mod_s(it->m_cf,m);
+			if (math::is_zero(it->m_cf)) {
+				it = retval._container().erase(it);
+			} else {
+				++it;
+			}
+		}
+		return retval;
+	};
+	// Cache it.
+	const auto &args = a.get_symbol_set();
+	// Handle empty polys.
+	if (a.size() == 0u && b.size() == 0u) {
+		Poly retval;
+		retval.set_symbol_set(args);
+		return std::make_pair(false,std::move(retval));
+	}
+	if (a.size() == 0u) {
+		return std::make_pair(false,b);
+	}
+	if (b.size() == 0u) {
+		return std::make_pair(false,a);
+	}
+	// If we are at the first recursion, check the exponents.
+	if (s_index == 0u) {
+		poly_expo_checker(a);
+		poly_expo_checker(b);
+	}
+	// This is the case in which the polynomials are reduced to two integers (essentially, the zerovariate case).
+	if (a.is_single_coefficient() && b.is_single_coefficient()) {
+		piranha_assert(a.size() == 1u && b.size() == 1u);
+		Poly retval;
+		retval.set_symbol_set(args);
+		retval += math::gcd(a._container().begin()->m_cf,b._container().begin()->m_cf);
+		return std::make_pair(false,std::move(retval));
+	}
+	// s_index is the recursion index for the gcdheu() call.
+	piranha_assert(s_index < args.size());
+	// We need to work on primitive polys when we enter the algorithm the
+	// first time.
+	// NOTE: extension of the lifetime of the output of primitive_part()
+	// via const reference.
+	const auto &ap = (s_index == 0u) ? a.primitive_part() : a;
+	const auto &bp = (s_index == 0u) ? b.primitive_part() : b;
+	// The current variable.
+	const std::string var = args[s_index].get_name();
+	integer xi{2 * std::min(ap.height(),bp.height()) + 2};
+	// NOTE: the values of 6 iterations and 5000 bits limit are taken straight
+	// from the original implementation of the algorithm. It might as well be that
+	// other tuning params are better.
+	for (int i = 0; i < 6; ++i) {
+		if (integer(xi.bits_size()) * std::max(ap.degree({var}),bp.degree({var})) > 5000) {
+			piranha_throw(gcdheu_xi_too_large,);
+		}
+		auto res = gcdheu(ap.subs(var,xi),bp.subs(var,xi),static_cast<symbol_set::size_type>(s_index + 1u));
+		if (!res.first) {
+			Poly &gamma = res.second;
+			Poly G;
+			G.set_symbol_set(args);
+			unsigned j = 0;
+			while (gamma.size() != 0u) {
+				Poly g(mod_s_poly(gamma,xi));
+				// NOTE: term mult here could be useful, but probably it makes more
+				// sense to just improve the series multiplication routine.
+				G += g * math::pow(Poly{var},j);
+				gamma = (gamma - g) / xi;
+				safe_integral_adder(j,1u);
+			}
+			try {
+				ap / G;
+				bp / G;
+				// NOTE: if we are in the first recursion, this will be the final result.
+				// As the algorithm produces results with the content removed, we need
+				// to do this step in order to match the output of PSR_SR.
+				if (s_index == 0u) {
+					detail::poly_cf_mult(math::gcd(a.content(),b.content()),G);
+				}
+				return std::make_pair(false,std::move(G));
+			} catch (const math::inexact_division &) {
+				// Continue in case the division check fails.
+			}
+		}
+		// NOTE: this is just a way of making xi bigger without too much correlation
+		// to its previous value.
+		xi = (xi * 73794) / 27011;
+	}
+	return std::make_pair(true,Poly{});
+}
+
+}
+
+/// Polynomial GCD algorithms.
+enum class polynomial_gcd_algorithm
+{
+	/// Automatic selection.
+	automatic,
+	/// Subresultant PRS.
+	prs_sr,
+	/// Heuristic GCD.
+	heuristic
+};
 
 /// Polynomial class.
 /**
@@ -138,6 +575,10 @@ struct key_has_linarg: detail::sfinae_types
  * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
  * 
  * This class satisfies the piranha::is_series type trait.
+ * 
+ * \warning
+ * The division and GCD operations are known to have poor performance, especially with large operands. Performance
+ * will be improved in future versions.
  *
  * ## Type requirements ##
  * 
@@ -168,6 +609,9 @@ class polynomial:
 		// Make friend with debug class.
 		template <typename>
 		friend class debug_access;
+		// Make friend with all poly types.
+		template <typename, typename>
+		friend class polynomial;
 		// Make friend with Poisson series.
 		template <typename>
 		friend class poisson_series;
@@ -390,6 +834,260 @@ class polynomial:
 			}
 			return it->m_cf;
 		}
+		// Division utilities.
+		// Couple of handy aliases.
+		template <typename T>
+		using cf_t = typename T::term_type::cf_type;
+		template <typename T>
+		using key_t = typename T::term_type::key_type;
+		template <typename T>
+		using expo_t = typename T::term_type::key_type::value_type;
+		// Multiply polynomial by a term. Preconditions:
+		// - p is not zero,
+		// - the coefficient of the term is not zero.
+		// Type requirements:
+		// - cf type supports multiplication,
+		// - key type supports multiply.
+		template <typename PType>
+		static PType term_mult(const typename PType::term_type &t, const PType &p)
+		{
+			using term_type = typename PType::term_type;
+			using key_type = typename term_type::key_type;
+			piranha_assert(p.size() != 0u);
+			piranha_assert(!math::is_zero(t.m_cf));
+			// Initialise the return value.
+			PType retval;
+			retval.set_symbol_set(p.get_symbol_set());
+			// Prepare an adequate number of buckets (same as input poly).
+			retval._container().rehash(p._container().bucket_count());
+			// Go with the loop.
+			key_type tmp_key;
+			const auto it_f = p._container().end();
+			for (auto it = p._container().begin(); it != it_f; ++it) {
+				key_type::multiply(tmp_key,t.m_key,it->m_key,p.get_symbol_set());
+				piranha_assert(!math::is_zero(t.m_cf * it->m_cf));
+				// NOTE: here we could use the unique_insert machinery
+				// to improve performance.
+				retval.insert(term_type{t.m_cf * it->m_cf,tmp_key});
+			}
+			return retval;
+		}
+		// Univariate euclidean division.
+		template <bool CheckExpos, typename T>
+		static std::pair<polynomial,polynomial> udivrem_impl(const T &n, const T &d)
+		{
+			using term_type = typename base::term_type;
+			using cf_type =  typename term_type::cf_type;
+			using key_type = typename term_type::key_type;
+			// Only univariate polynomials are allowed.
+			if (unlikely(n.get_symbol_set().size() != 1u || n.get_symbol_set() != d.get_symbol_set())) {
+				piranha_throw(std::invalid_argument,"only univariate polynomials in the same variable "
+					"are allowed in the polynomial division with remainder routine");
+			}
+			if (unlikely(d.size() == 0u)) {
+				piranha_throw(zero_division_error,"univariate polynomial division by zero");
+			}
+			// Cache the symbol set for brevity.
+			const auto &args = n.get_symbol_set();
+			// If the numerator is zero, just return two empty polys.
+			if (n.size() == 0u) {
+				polynomial q, r;
+				q.set_symbol_set(args);
+				r.set_symbol_set(args);
+				return std::make_pair(std::move(q),std::move(r));
+			}
+			// Check negative exponents, if requested.
+			if (CheckExpos) {
+				// Check if there are negative exponents.
+				detail::poly_expo_checker(n);
+				detail::poly_expo_checker(d);
+			}
+			// Initialisation: quotient is empty, remainder is the numerator.
+			polynomial q, r(n);
+			q.set_symbol_set(args);
+			// Leading term of the denominator, always the same.
+			const auto lden = detail::poly_lterm(d);
+			piranha_assert(!math::is_zero(lden->m_cf));
+			// Temp cf and key used for computations in the loop.
+			cf_type tmp_cf;
+			key_type tmp_key;
+			while (true) {
+				if (r.size() == 0u) {
+					break;
+				}
+				// Leading term of the remainder.
+				const auto lr = poly_lterm(r);
+				if (lr->m_key < lden->m_key) {
+					break;
+				}
+				// NOTE: we want to check that the division is exact here,
+				// and throw if this is not the case.
+				// NOTE: this should be made configurable to optimise the case in which we
+				// know the division will be exact (e.g., in GCD).
+				math::divexact(tmp_cf,lr->m_cf,lden->m_cf);
+				key_type::divide(tmp_key,lr->m_key,lden->m_key,args);
+				term_type t{tmp_cf,tmp_key};
+				// NOTE: here we are basically progressively removing terms from r until
+				// it gets to zero. This sounds exactly like the kind of situation in which
+				// the iteration over the hash table could become really slow. This might
+				// matter when we need to re-determine the leading term of r above.
+				// We should consider adding a re-hashing every time we do a +/- operation on
+				// a series and the load factor gets below a certain threshold. We should also
+				// review uses of the insert() method of series to spot other possible
+				// places where this could be a problem (although once we have a good behaviour
+				// for +/- we should be mostly good - multiplication should already be ok).
+				r -= term_mult(t,d);
+				q.insert(std::move(t));
+			}
+			return std::make_pair(std::move(q),std::move(r));
+		}
+		// Multivariate exact division.
+		template <typename T>
+		static T division_impl(const T &n, const T &d)
+		{
+			static_assert(std::is_same<T,polynomial>::value,"Invalid type.");
+			using term_type = typename polynomial::term_type;
+			using expo_type = typename term_type::key_type::value_type;
+			// Cache it.
+			const auto &args = n.get_symbol_set();
+			// Univariate case.
+			if (args.size() == 1u) {
+				// NOTE: udivrem contains the check for negative exponents, zero n/d, etc.
+				auto res = polynomial::udivrem(n,d);
+				if (res.second.size() != 0u) {
+					piranha_throw(math::inexact_division,);
+				}
+				return std::move(res.first);
+			}
+			// Multivariate or zerovariate case.
+			// NOTE: here we need to check a few things as the mapping to univariate has certain prereqs.
+			// First we check if n or d are zero.
+			if (d.size() == 0u) {
+				piranha_throw(zero_division_error,"polynomial division by zero");
+			}
+			if (n.size() == 0u) {
+				polynomial retval;
+				retval.set_symbol_set(args);
+				return retval;
+			}
+			// Deal with the case in which the number of arguments is zero. We need to do it here as the mapping
+			// requires at least 1 var.
+			if (args.size() == 0u) {
+				piranha_assert(n.size() == 1u && d.size() == 1u);
+				piranha_assert(n.is_single_coefficient() && d.is_single_coefficient());
+				polynomial retval;
+				retval.set_symbol_set(args);
+				Cf tmp_cf;
+				math::divexact(tmp_cf,n._container().begin()->m_cf,d._container().begin()->m_cf);
+				retval.insert(term_type{std::move(tmp_cf),Key(args)});
+				return retval;
+			}
+			// Map to univariate.
+			auto umap = detail::poly_to_univariate(n,d);
+			// Do the univariate division.
+			// NOTE: need to call udivrem_impl from the mapped univariate type.
+			// NOTE: the check for negative exponents is done in the mapping.
+			auto ures = std::get<0u>(umap).template udivrem_impl<false>(std::get<0u>(umap),std::get<1u>(umap));
+			// Check if the division was exact.
+			if (ures.second.size() != 0u) {
+				piranha_throw(math::inexact_division,);
+			}
+			// Map back to multivariate.
+			auto retval = detail::poly_from_univariate<Key>(ures.first,std::get<2u>(umap),args);
+			// Final check: for each variable, the degree of retval + degree of d must be equal to the degree of n.
+			auto degree_vector_extractor = [&args](const polynomial &p) -> std::vector<expo_type> {
+				std::vector<expo_type> ret, tmp;
+				// Init with the first term of the polynomial.
+				piranha_assert(p.size() != 0u);
+				auto it = p._container().begin();
+				it->m_key.extract_exponents(ret,args);
+				++it;
+				for (; it != p._container().end(); ++it) {
+					it->m_key.extract_exponents(tmp,args);
+					for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+						if (tmp[i] > ret[i]) {
+							ret[i] = tmp[i];
+						}
+					}
+				}
+				return ret;
+			};
+			const auto n_dv = degree_vector_extractor(n), d_dv = degree_vector_extractor(d),
+				r_dv = degree_vector_extractor(retval);
+			for (decltype(n_dv.size()) i = 0u; i < n_dv.size(); ++i) {
+				if (integer(n_dv[i]) != integer(d_dv[i]) + integer(r_dv[i])) {
+					piranha_throw(math::inexact_division,);
+				}
+			}
+			return retval;
+		}
+		// Enabler for exact poly division.
+		template <typename T>
+		using poly_div_enabler = typename std::enable_if<
+			is_multipliable_in_place<cf_t<T>>::value &&
+			std::is_same<decltype(std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>()),cf_t<T>>::value &&
+			has_exact_division<cf_t<T>>::value &&
+			has_exact_ring_operations<cf_t<T>>::value &&
+			is_subtractable_in_place<T>::value &&
+			(std::is_integral<expo_t<T>>::value || detail::is_mp_integer<expo_t<T>>::value),
+		int>::type;
+		// Join enabler.
+		template <typename T>
+		using join_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag,cf_t<T>>::value &&
+			std::is_same<Key,key_t<T>>::value &&
+			detail::true_tt<decltype(std::declval<cf_t<T> &>() += std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>())>::value,int>::type;
+		// Content enabler.
+		template <typename T>
+		using content_enabler = typename std::enable_if<has_gcd3<cf_t<T>>::value,int>::type;
+		// Primitive part enabler.
+		template <typename T>
+		using pp_enabler = typename std::enable_if<detail::true_tt<content_enabler<T>>::value && has_exact_division<cf_t<T>>::value,int>::type;
+		// Prem enabler.
+		template <typename T>
+		using uprem_enabler = typename std::enable_if<
+			detail::true_tt<poly_div_enabler<T>>::value &&
+			std::is_same<decltype(math::pow(std::declval<const cf_t<T> &>(),0u)),cf_t<T>>::value,int>::type;
+		// Enabler for GCD.
+		template <typename T>
+		using gcd_enabler = typename std::enable_if<
+			has_gcd<cf_t<T>>::value && has_gcd3<cf_t<T>>::value &&
+			std::is_same<decltype(math::pow(std::declval<const cf_t<T> &>(),0u)),cf_t<T>>::value &&
+			is_multipliable_in_place<cf_t<T>>::value &&
+			std::is_same<decltype(std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>()),cf_t<T>>::value &&
+			has_exact_division<cf_t<T>>::value && std::is_copy_assignable<cf_t<T>>::value &&
+			detail::true_tt<content_enabler<T>>::value && detail::true_tt<poly_div_enabler<T>>::value
+		,int>::type;
+		// Height.
+		template <typename T>
+		using height_type_ = decltype(math::abs(std::declval<const cf_t<T> &>()));
+		template <typename T>
+		using height_type = typename std::enable_if<std::is_constructible<height_type_<T>,int>::value &&
+			is_less_than_comparable<height_type_<T>>::value && std::is_move_assignable<height_type_<T>>::value &&
+			(std::is_copy_constructible<height_type_<T>>::value || std::is_move_constructible<height_type_<T>>::value),
+			height_type_<T>>::type;
+		// Wrapper around heuristic GCD.
+		template <typename T, typename std::enable_if<detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
+		static std::pair<bool,T> try_gcdheu(const T &a, const T &b, polynomial_gcd_algorithm algo)
+		{
+			try {
+				return detail::gcdheu(a,b);
+			} catch (const detail::gcdheu_xi_too_large &) {}
+			// If we get here, a xi-too-large error was generated.
+			if (algo == polynomial_gcd_algorithm::heuristic) {
+				piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
+					"but it failed because the evaluation step produced too large values");
+			}
+			return std::make_pair(true,T{});
+		}
+		template <typename T, typename std::enable_if<!detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
+		static std::pair<bool,T> try_gcdheu(const T &, const T &, polynomial_gcd_algorithm algo)
+		{
+			if (algo == polynomial_gcd_algorithm::heuristic) {
+				piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
+					"but it cannot be applied to non-integral coefficients");
+			}
+			return std::make_pair(true,T{});
+		}
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -480,6 +1178,10 @@ class polynomial:
 		}
 		/// Inversion.
 		/**
+		 * \note
+		 * This method is enabled only if <tt>piranha::polynomial::pow(-1)</tt> is a well-formed
+		 * expression.
+		 * 
 		 * @return the calling polynomial raised to -1 using piranha::polynomial::pow().
 		 *
 		 * @throws unspecified any exception thrown by piranha::polynomial::pow().
@@ -695,6 +1397,430 @@ class polynomial:
 		{
 			return find_cf_impl(std::begin(l),std::end(l));
 		}
+		/// Split polynomial.
+		/**
+		 * This method will split the first symbolic argument of the polynomial. That is, it will return a univariate
+		 * representation of \p this in which the only symbolic argument is the first symbol in the symbol set of \p this,
+		 * and the coefficients are multivariate polynomials in the remaining variables.
+		 *
+		 * @return a representation of \p this as a univariate polynomial with multivariate polynomial coefficients.
+		 *
+		 * @throws std::invalid_argument if \p this does not have at least 2 symbolic arguments.
+		 * @throws unspecified: any exception thrown by:
+		 * - the <tt>split()</tt> method of the monomial,
+		 * - the construction of piranha::symbol_set,
+		 * - piranha::series::set_symbol_set(),
+		 * - the construction of terms, coefficients and keys,
+		 * - piranha::series::insert().
+		 */
+		polynomial<polynomial<Cf,Key>,Key> split() const
+		{
+			if (unlikely(this->get_symbol_set().size() < 2u)) {
+				piranha_throw(std::invalid_argument,"a polynomial needs at least 2 arguments in order to be split");
+			}
+			using r_term_type = typename polynomial<polynomial<Cf,Key>,Key>::term_type;
+			using term_type = typename base::term_type;
+			polynomial<polynomial<Cf,Key>,Key> retval;
+			retval.set_symbol_set(symbol_set(this->get_symbol_set().begin(),this->get_symbol_set().begin() + 1));
+			symbol_set tmp_ss(this->get_symbol_set().begin() + 1,this->get_symbol_set().end());
+			for (const auto &t: this->_container()) {
+				auto tmp_s = t.m_key.split(this->get_symbol_set());
+				polynomial tmp_p;
+				tmp_p.set_symbol_set(tmp_ss);
+				tmp_p.insert(term_type{t.m_cf,std::move(tmp_s.first)});
+				retval.insert(r_term_type{std::move(tmp_p),std::move(tmp_s.second)});
+			}
+			return retval;
+		}
+		/// Join polynomial.
+		/**
+		 * \note
+		 * This method is enabled only if the coefficient type \p Cf is a polynomial whose key type is \p Key, and which supports
+		 * the expression <tt>a += b * c</tt> where \p a, \p b and \p c are all instances of \p Cf).
+		 * 
+		 * This method is the opposite of piranha::polynomial::split(): given a polynomial with polynomial coefficients,
+		 * it will produce a multivariate polynomial in which the arguments of \p this and the arguments of the coefficients
+		 * have been joined.
+		 * 
+		 * @return the joined counterpart of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::series::set_symbol_set() and piranha::series::insert(),
+		 * - term construction,
+		 * - arithmetic operations on the coefficient type.
+		 */
+		template <typename T = polynomial, join_enabler<T> = 0>
+		Cf join() const
+		{
+			// NOTE: here we can improve performance by using
+			// lower level primitives rather than arithmetic operators.
+			using cf_term_type = typename Cf::term_type;
+			Cf retval;
+			for (const auto &t: this->_container()) {
+				Cf tmp;
+				tmp.set_symbol_set(this->get_symbol_set());
+				tmp.insert(cf_term_type{1,t.m_key});
+				retval += tmp * t.m_cf;
+			}
+			return retval;
+		}
+		/// Content.
+		/**
+		 * \note
+		 * This method is enabled only if the coefficient type satisfies piranha::has_gcd3.
+		 *
+		 * This method will return the GCD of the polynomial's coefficients. If the polynomial
+		 * is empty, zero will be returned.
+		 *
+		 * @return the content of \p this.
+		 *
+		 * @throws unspecified any exception thrown by the polynomial constructor from \p int
+		 * or by piranha::math::gcd3().
+		 */
+		template <typename T = polynomial, content_enabler<T> = 0>
+		Cf content() const
+		{
+			Cf retval(0);
+			for (const auto &t: this->_container()) {
+				math::gcd3(retval,retval,t.m_cf);
+			}
+			return retval;
+		}
+		/// Primitive part.
+		/**
+		 * \note
+		 * This method is enabled only if:
+		 * - the method piranha::polynomial::content() is enabled,
+		 * - the polynomial coefficient supports math::divexact().
+		 *
+		 * This method will return \p this divided by its content.
+		 *
+		 * @return the primitive part of \p this.
+		 *
+		 * @throws piranha::zero_division_error if the content is zero.
+		 * @throws unspecified any exception thrown by the division operation or by piranha::polynomial::content().
+		 */
+		template <typename T = polynomial, pp_enabler<T> = 0>
+		polynomial primitive_part() const
+		{
+			polynomial retval(*this);
+			auto c = content();
+			if (unlikely(math::is_zero(c))) {
+				piranha_throw(zero_division_error,"the content of the polynomial is zero");
+			}
+			detail::poly_exact_cf_div(retval,c);
+			return retval;
+		}
+		/// Univariate polynomial division with remainder.
+		/**
+		 * \note
+		 * This static method is enabled only if:
+		 * - the polynomial coefficient type \p Cf is multipliable yielding the same type \p Cf, it is multipliable in-place and
+		 *   divisible exactly, and it has exact ring operations,
+		 * - the polynomial type is subtractable in-place,
+		 * - the exponent type of the monomial is a C++ integral type or an instance of piranha::mp_integer.
+		 *
+		 * This method will return a pair representing the quotient and the remainder of the division of the univariate polynomials
+		 * \p n and \p d. The input polynomials must be univariate in the same variable.
+		 *
+		 * @param[in] n the numerator.
+		 * @param[in] d the denominator.
+		 *
+		 * @return the quotient and remainder of the division of \p n by \p d, represented as a standard pair.
+		 *
+		 * @throws std::invalid_argument if:
+		 * - the input polynomials are not univariate or univariate in different variables, or
+		 * - the low degree of the input polynomials is less than zero.
+		 * @throws piranha::zero_division_error if \p d is empty.
+		 * @throws unspecified any exception thrown by:
+		 * - the public interface of piranha::hash_set and piranha::series,
+		 * - the monomial multiplication and division methods,
+		 * - arithmetic operations on the coefficients and on polynomials,
+		 * - construction of coefficients, monomials, terms and polynomials.
+		 */
+		template <typename T = polynomial, poly_div_enabler<T> = 0>
+		static std::pair<polynomial,polynomial> udivrem(const polynomial &n, const polynomial &d)
+		{
+			return udivrem_impl<true>(n,d);
+		}
+		/// Univariate pseudo-remainder.
+		/**
+		 * \note
+		 * This static method is enabled only if polynomial division is enabled, and the polynomial
+		 * coefficient type is exponentiable to \p unsigned, yielding the coefficient type as a result.
+		 *
+		 * The pseudo-remainder is defined as:
+		 * \f[
+		 * \mathrm{rem}\left(\mathrm{lc}\left( d \right)^{a-b+1} n,d \right),
+		 * \f]
+		 * where \f$\mathrm{lc}\f$ denotes the leading coefficient (that is, the coefficient of the term with the
+		 * highest univariate degree), and \f$a\f$ and \f$b\f$ are the degrees of \p n and \p d respectively.
+		 *
+		 * This method works only on univariate polyomials in the same variable and it requires the univariate degree of \p n to be not less than
+		 * the univariate degree of \p d. If \p n is zero, an empty polynomial will be returned.
+		 *
+		 * @param[in] n the numerator.
+		 * @param[in] d the denominator.
+		 *
+		 * @return the pseudo-remainder of <tt>n / d</tt>.
+		 *
+		 * @throws std::invalid_argument if the polynomials are not univariate in the same variable, or if the univariate
+		 * degree of \p d is greater than the univariate degree of \p n.
+		 * @throws piranha::zero_division_error if \p d is zero.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::polynomial::udivrem(),
+		 * - the public interface of piranha::series(),
+		 * - copy construction of polynomials,
+		 * - exponentiation and multiplication of coefficients,
+		 * - the conversion of piranha::integer to \p unsigned.
+		 */
+		template <typename T = polynomial, uprem_enabler<T> = 0>
+		static polynomial uprem(const polynomial &n, const polynomial &d)
+		{
+			// Only univariate polynomials are allowed.
+			if (unlikely(n.get_symbol_set().size() != 1u || n.get_symbol_set() != d.get_symbol_set())) {
+				piranha_throw(std::invalid_argument,"only univariate polynomials in the same variable "
+					"are allowed in the polynomial uprem routine");
+			}
+			const auto &args = n.get_symbol_set();
+			// NOTE: this check is repeated in divrem, we do it here as we want to get the leading term in d.
+			if (unlikely(d.size() == 0u)) {
+				piranha_throw(zero_division_error,"univariate polynomial division by zero");
+			}
+			// Same as above, we need the leading term.
+			if (unlikely(n.size() == 0u)) {
+				polynomial retval;
+				retval.set_symbol_set(args);
+				return retval;
+			}
+			auto ld = detail::poly_lterm(d);
+			integer dn(detail::poly_lterm(n)->m_key.degree(args)), dd(ld->m_key.degree(args));
+			if (dd > dn) {
+				piranha_throw(std::invalid_argument,"the degree of the denominator is greater than "
+					"the degree of the numerator in the polynomial uprem routine");
+			}
+			// NOTE: negative degrees will be caught by udivrem.
+			auto n_copy(n);
+			detail::poly_cf_mult(math::pow(ld->m_cf,static_cast<unsigned>(dn-dd+1)),n_copy);
+			// NOTE: here we can force exact division in udivrem, when we implement it.
+			return udivrem(n_copy,d).second;
+		}
+		/// Exact polynomial division.
+		/**
+		 * \note
+		 * This operator is enabled only if polynomial::udivrem() is enabled.
+		 *
+		 * This operator will compute the exact result of <tt>n / d</tt>. If \p d does not divide \p n exactly, an error will be produced.
+		 *
+		 * @param[in] n the numerator.
+		 * @param[in] d the denominator.
+		 *
+		 * @return the quotient <tt>n / d</tt>.
+		 *
+		 * @throws piranha::zero_division_error if \p d is zero.
+		 * @throws piranha::math::inexact_division if the division is not exact.
+		 * @throws std::invalid_argument if a negative exponent is encountered.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::polynomial::udivrem(),
+		 * - the public interface of piranha::hash_set, piranha::series, piranha::symbol_set,
+		 * - the monomial's <tt>extract_exponents()</tt> methods,
+		 * - construction of coefficients, monomials, terms and polynomials,
+		 * - arithmetic operations on the coefficients and on polynomials,
+		 * - memory errors in standard containers,
+		 * - conversion of piranha::integer to C++ integral types,
+		 * - piranha::safe_cast().
+		 */
+		template <typename T = polynomial, poly_div_enabler<T> = 0>
+		friend polynomial operator/(const polynomial &n, const polynomial &d)
+		{
+			// Then we need to deal with different symbol sets.
+			polynomial merged_n, merged_d;
+			polynomial const *real_n(&n), *real_d(&d);
+			if (n.get_symbol_set() != d.get_symbol_set()) {
+				auto merge = n.get_symbol_set().merge(d.get_symbol_set());
+				if (merge != n.get_symbol_set()) {
+					merged_n = n.extend_symbol_set(merge);
+					real_n = &merged_n;
+				}
+				if (merge != d.get_symbol_set()) {
+					merged_d = d.extend_symbol_set(merge);
+					real_d = &merged_d;
+				}
+			}
+			return division_impl(*real_n,*real_d);
+		}
+		/// Exact in-place polynomial division.
+		/**
+		 * \note
+		 * This operator is enabled only if the corresponding binary operation is enabled.
+		 *
+		 * This operator is equivalent to:
+		 * @code
+		 * return n = n / d;
+		 * @endcode
+		 *
+		 * @param[in,out] n the numerator.
+		 * @param[in] d the denominator.
+		 *
+		 * @return a reference to \p n.
+		 *
+		 * @throws unspecified any exception thrown by the binary operator.
+		 */
+		template <typename T = polynomial, poly_div_enabler<T> = 0>
+		friend polynomial &operator/=(polynomial &n, const polynomial &d)
+		{
+			return n = n / d;
+		}
+		/// Polynomial GCD.
+		/**
+		 * \note
+		 * This static method is enabled only if the following conditions apply:
+		 * - the coefficient type has math::gcd() and math::gcd3(), it is exponentiable to \p unsigned yielding
+		 *   the coefficient type, it is multipliable in-place and in binary form, yielding the coefficient type,
+		 *   it has math::divexact(), and it is copy-assignable,
+		 * - the polynomial type has piranha::polynomial::content() and piranha::polynomial::udivrem().
+		 *
+		 * This method will compute the GCD of polynomials \p a and \p b. The algorithm that will be employed
+		 * for the computation is selected by the \p algo flag. If \p algo is set to polynomial_gcd_algorithm::automatic
+		 * (the default) the heuristic GCD algorithm will be tried first, followed by the PSR SR algorithm in case of failures.
+		 * If \p algo is set to any other value, the selected algorithm will be used. The heuristic GCD algorithm can be
+		 * used only when the ceofficient type is an instance of piranha::mp_integer.
+		 *
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 * @param[in] algo the GCD algorithm.
+		 *
+		 * @return the GCD of \p a and \p b.
+		 *
+		 * @throws std::invalid_argument if a negative exponent is encountered in \p a or \p b.
+		 * @throws std::overflow_error in case of (unlikely) integral overflow errors.
+		 * @throws std::runtime_error if \p algo is polynomial_gcd_algorithm::heuristic and the execution
+		 * of the algorithm fails or it the coefficient type is not an instance of piranha::mp_integer.
+		 * @throws unspecified any exception thrown by:
+		 * - the public interface of piranha::series, piranha::symbol_set, piranha::hash_set,
+		 * - construction of keys,
+		 * - construction, arithmetics and assignment of coefficients and polynomials,
+		 * - math::gcd(), math::gcd3(), math::divexact(), math::pow(), math::subs(),
+		 * - piranha::polynomial::udivrem(), piranha::polynomial::content(),
+		 * - memory errors in standard containers,
+		 * - the conversion of piranha::integer to \p unsigned.
+		 */
+		template <typename T = polynomial, gcd_enabler<T> = 0>
+		static polynomial gcd(const polynomial &a, const polynomial &b, polynomial_gcd_algorithm algo = polynomial_gcd_algorithm::automatic)
+		{
+			// Deal with different symbol sets.
+			polynomial merged_a, merged_b;
+			polynomial const *real_a(&a), *real_b(&b);
+			if (a.get_symbol_set() != b.get_symbol_set()) {
+				auto merge = a.get_symbol_set().merge(b.get_symbol_set());
+				if (merge != a.get_symbol_set()) {
+					merged_a = a.extend_symbol_set(merge);
+					real_a = &merged_a;
+				}
+				if (merge != b.get_symbol_set()) {
+					merged_b = b.extend_symbol_set(merge);
+					real_b = &merged_b;
+				}
+			}
+			if (algo == polynomial_gcd_algorithm::automatic || algo == polynomial_gcd_algorithm::heuristic) {
+				auto heu_res = try_gcdheu(*real_a,*real_b,algo);
+				if (heu_res.first && algo == polynomial_gcd_algorithm::heuristic) {
+					piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
+						"but its execution failed due to too many iterations");
+				}
+				if (!heu_res.first) {
+					return std::move(heu_res.second);
+				}
+			}
+			// Cache it.
+			const auto &args = real_a->get_symbol_set();
+			// Proceed with the univariate case.
+			if (args.size() == 1u) {
+				return detail::poly_ugcd(*real_a,*real_b);
+			}
+			// Zerovariate case. We need to handle this separately as the use of split() below
+			// requires a nonzero number of arguments.
+			if (args.size() == 0u) {
+				if (real_a->size() == 0u && real_b->size() == 0u) {
+					return polynomial{};
+				}
+				if (real_a->size() == 0u) {
+					return *real_b;
+				}
+				if (real_b->size() == 0u) {
+					return *real_a;
+				}
+				Cf g(0);
+				math::gcd3(g,real_a->_container().begin()->m_cf,real_b->_container().begin()->m_cf);
+				return polynomial(std::move(g));
+			}
+			// The general multivariate case.
+			return detail::poly_ugcd(real_a->split(),real_b->split()).join();
+			// NOTE: an older implementation that replaces the recursive call in the line immediately
+			// above. Let's keep it around for a while for debugging purposes.
+			/*
+			// Check for zero args.
+			if (real_a->size() == 0u && real_b->size() == 0u) {
+				polynomial retval;
+				retval.set_symbol_set(args);
+				return retval;
+			}
+			if (real_a->size() == 0u) {
+				return *real_b;
+			}
+			if (real_b->size() == 0u) {
+				return *real_a;
+			}
+			// Primitive euclidean algorithm (Geddes 2.3).
+			auto as = real_a->split(), bs = real_b->split();
+			if (detail::poly_lterm(as)->m_key.degree(as.get_symbol_set()) < detail::poly_lterm(bs)->m_key.degree(as.get_symbol_set())) {
+				std::swap(as,bs);
+			}
+			using s_type = decltype(as);
+			auto c = as.primitive_part(), d = bs.primitive_part();
+			while (true) {
+				// NOTE: at the first iteration, d is not null as
+				// it is the primitive part of b (which is not zero). The
+				// following iterations, d is always set to r, but when r
+				// is zero we stop.
+				auto r = s_type::uprem(c,d);
+				c = d;
+				if (r.size() == 0u) {
+					break;
+				}
+				d = r.primitive_part();
+			}
+			auto gamma = math::gcd(as.content(),bs.content());
+			return (gamma * c).join();
+			*/
+		}
+		/// Height.
+		/**
+		 * \note
+		 * This method is enabled only if the following conditions hold:
+		 * - the coefficient type supports piranha::math::abs(), yielding the type <tt>height_type<T></tt>,
+		 * - <tt>height_type<T></tt> is constructible from \p int, less-than comparable, move-assignable and copy or move constructible.
+		 * 
+		 * The height of a polynomial is defined as the maximum of the absolute values of the coefficients. If the polynomial
+		 * is empty, zero will be returned.
+		 * 
+		 * @return the height of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the construction, assignment, comparison, and absolute value calculation
+		 * of <tt>height_type<T></tt>.
+		 */
+		template <typename T = polynomial>
+		height_type<T> height() const
+		{
+			height_type<T> retval(0);
+			for (const auto &t: this->_container()) {
+				auto tmp(math::abs(t.m_cf));
+				if (!(tmp < retval)) {
+					retval = std::move(tmp);
+				}
+			}
+			return retval;
+		}
 	private:
 		// Static data for auto_truncate_degree.
 		static std::mutex		s_at_degree_mutex;
@@ -817,7 +1943,99 @@ const bool has_get_auto_truncate_degree<S>::value;
 template <typename Series>
 using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type;
 
+// Enabler for divexact.
+template <typename T>
+using poly_divexact_enabler = typename std::enable_if<std::is_base_of<polynomial_tag,T>::value &&
+	is_divisible<T>::value>::type;
+
+// Enabler for exact ring operations.
+template <typename T>
+using poly_ero_enabler = typename std::enable_if<
+	std::is_base_of<detail::polynomial_tag,typename std::decay<T>::type>::value &&
+	has_exact_ring_operations<typename std::decay<T>::type::term_type::cf_type>::value &&
+	(std::is_integral<typename std::decay<T>::type::term_type::key_type::value_type>::value ||
+	has_exact_ring_operations<typename std::decay<T>::type::term_type::key_type::value_type>::value)
+>::type;
+
+// Enabler for GCD.
+template <typename T>
+using poly_gcd_enabler = typename std::enable_if<
+	std::is_base_of<detail::polynomial_tag,T>::value &&
+	true_tt<decltype(T::gcd(std::declval<const T &>(),std::declval<const T &>()))>::value
+>::type;
+
 }
+
+namespace math
+{
+
+/// Implementation of piranha::math::divexact() for piranha::polynomial.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::polynomial which supports
+ * exact polynomial division.
+ */
+template <typename T>
+struct divexact_impl<T,detail::poly_divexact_enabler<T>>
+{
+	/// Call operator.
+	/**
+	 * This operator will use the division operator of the polynomial type.
+	 *
+	 * @param[out] out return value.
+	 * @param[in] n the numerator.
+	 * @param[in] d the denominator.
+	 *
+	 * @return a reference to \p out.
+	 *
+	 * @throws unspecified any exception thrown by the polynomial division operator.
+	 */
+	T &operator()(T &out, const T &n, const T &d) const
+	{
+		return out = n / d;
+	}
+};
+
+/// Implementation of piranha::math::gcd() for piranha::polynomial.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::polynomial that supports
+ * piranha::polynomial::gcd(). The piranha::polynomial_gcd_algorithm::automatic algorithm
+ * will be used for the computation.
+ */
+template <typename T>
+struct gcd_impl<T,T,detail::poly_gcd_enabler<T>>
+{
+	/// Call operator.
+	/**
+	 * @param[in] a first argument.
+	 * @param[in] b second argument.
+	 *
+	 * @return the output of <tt>piranha::polynomial::gcd(a,b)</tt>.
+	 *
+	 * @throws unspecified any exception thrown by piranha::polynomial::gcd().
+	 */
+	T operator()(const T &a, const T &b) const
+	{
+		return T::gcd(a,b);
+	}
+};
+
+}
+
+/// Exact ring operations specialisation for piranha::polynomial.
+/**
+ * This specialisation is enabled if the decay type of \p T is an instance of piranha::polynomial
+ * whose coefficient type satisfies piranha::has_exact_ring_operations and whose exponent type is either
+ * a C++ integral type or another type which satisfies piranha::has_exact_ring_operations.
+ */
+template <typename T>
+struct has_exact_ring_operations<T,detail::poly_ero_enabler<T>>
+{
+	/// Value of the type trait.
+	static const bool value = true;
+};
+
+template <typename T>
+const bool has_exact_ring_operations<T,detail::poly_ero_enabler<T>>::value;
 
 /// Specialisation of piranha::series_multiplier for piranha::polynomial.
 /**

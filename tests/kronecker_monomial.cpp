@@ -466,6 +466,58 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_multiply_test)
 	boost::mpl::for_each<int_types>(multiply_tester());
 }
 
+struct monomial_multiply_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		k_type k1, k2, res;
+		symbol_set vs;
+		k_type::multiply(res,k1,k2,vs);
+		BOOST_CHECK_EQUAL(res.get_int(),0);
+		k1 = k_type{-5};
+		k2 = k_type{7};
+		k_type::multiply(res,k1,k2,vs);
+		BOOST_CHECK_EQUAL(res.get_int(),2);
+		vs.add("x");
+		vs.add("y");
+		k_type::multiply(res,k1,k2,vs);
+		BOOST_CHECK_EQUAL(res.get_int(),2);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_monomial_multiply_test)
+{
+	boost::mpl::for_each<int_types>(monomial_multiply_tester());
+}
+
+struct monomial_divide_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		k_type k1, k2, res;
+		symbol_set vs;
+		k_type::divide(res,k1,k2,vs);
+		BOOST_CHECK_EQUAL(res.get_int(),0);
+		k1 = k_type{-5};
+		k2 = k_type{7};
+		k_type::divide(res,k1,k2,vs);
+		BOOST_CHECK_EQUAL(res.get_int(),-12);
+		vs.add("x");
+		vs.add("y");
+		k_type::divide(res,k1,k2,vs);
+		BOOST_CHECK_EQUAL(res.get_int(),-12);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_monomial_divide_test)
+{
+	boost::mpl::for_each<int_types>(monomial_divide_tester());
+}
+
 struct equality_tester
 {
 	template <typename T>
@@ -1210,4 +1262,107 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_comparison_test)
 	BOOST_CHECK(!(k_monomial{1} < k_monomial{1}));
 	BOOST_CHECK(!(k_monomial{2} < k_monomial{1}));
 	BOOST_CHECK(k_monomial{1} < k_monomial{2});
+}
+
+struct split_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using k_type = kronecker_monomial<T>;
+		symbol_set vs;
+		BOOST_CHECK_THROW(k_type{}.split(vs),std::invalid_argument);
+		vs.add("x");
+		BOOST_CHECK_THROW(k_type{}.split(vs),std::invalid_argument);
+		vs.add("y");
+		std::vector<T> v;
+		v.emplace_back(1);
+		v.emplace_back(2);
+		auto res = k_type(v.begin(),v.end()).split(vs);
+		BOOST_CHECK_EQUAL(res.first.get_int(),2);
+		BOOST_CHECK_EQUAL(res.second.get_int(),1);
+		// signed char does not have enough range for this.
+		if (std::is_same<T,signed char>::value) {
+			return;
+		}
+		v.emplace_back(-3);
+		auto old_vs(vs);
+		vs.add("z");
+		res = k_type(v.begin(),v.end()).split(vs);
+		BOOST_CHECK_EQUAL(res.second.get_int(),1);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[0u],2);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[1u],-3);
+		v.emplace_back(-2);
+		old_vs = vs;
+		vs.add("u");
+		res = k_type(v.begin(),v.end()).split(vs);
+		BOOST_CHECK_EQUAL(res.second.get_int(),1);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[0u],2);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[1u],-3);
+		BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[2u],-2);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_split_test)
+{
+	boost::mpl::for_each<int_types>(split_tester());
+}
+
+struct extract_exponents_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using key_type = kronecker_monomial<T>;
+		std::vector<T> out;
+		key_type k{};
+		symbol_set ss;
+		k.extract_exponents(out,ss);
+		BOOST_CHECK_EQUAL(out.size(),0u);
+		ss.add(symbol{"a"});
+		k = key_type{T(-2)};
+		k.extract_exponents(out,ss);
+		BOOST_CHECK_EQUAL(out.size(),1u);
+		BOOST_CHECK_EQUAL(out[0u],T(-2));
+		ss.add(symbol{"b"});
+		k = key_type{T(-2),T(3)};
+		out.resize(4u);
+		k.extract_exponents(out,ss);
+		BOOST_CHECK_EQUAL(out.size(),2u);
+		BOOST_CHECK_EQUAL(out[0u],T(-2));
+		BOOST_CHECK_EQUAL(out[1u],T(3));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_extract_exponents_test)
+{
+	boost::mpl::for_each<int_types>(extract_exponents_tester());
+}
+
+struct has_negative_exponent_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using key_type = kronecker_monomial<T>;
+		key_type k{};
+		symbol_set ss;
+		BOOST_CHECK(!k.has_negative_exponent(ss));
+		ss.add("x");
+		BOOST_CHECK(!k.has_negative_exponent(ss));
+		k = key_type{1};
+		BOOST_CHECK(!k.has_negative_exponent(ss));
+		k = key_type{-1};
+		BOOST_CHECK(k.has_negative_exponent(ss));
+		ss.add("y");
+		k = key_type{1,0};
+		BOOST_CHECK(!k.has_negative_exponent(ss));
+		k = key_type{-1,2};
+		BOOST_CHECK(k.has_negative_exponent(ss));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_has_negative_exponent_test)
+{
+	boost::mpl::for_each<int_types>(has_negative_exponent_tester());
 }
