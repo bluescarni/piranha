@@ -180,6 +180,7 @@ struct base_series_multiplier_impl<Series,Derived,typename std::enable_if<is_mp_
 		// Copy over the terms and renormalise to lcm.
 		it_f = c1.end();
 		for (auto it = c1.begin(); it != it_f; ++it) {
+			// NOTE: these divisions are exact, we could take advantage of that.
 			m_terms1.push_back(term_type(rat_type(m_lcm / it->m_cf.den() * it->m_cf.num(),int_type(1)),it->m_key));
 		}
 		it_f = c2.end();

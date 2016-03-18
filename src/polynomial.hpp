@@ -140,6 +140,11 @@ template <typename PType>
 inline void poly_expo_checker(const PType &p)
 {
 	using term_type = typename PType::term_type;
+	using expo_type = typename term_type::key_type::value_type;
+	// Don't run any check if the exponent is unsigned.
+	if (std::is_integral<expo_type>::value && std::is_unsigned<expo_type>::value) {
+		return;
+	}
 	const auto &args = p.get_symbol_set();
 	if (std::any_of(p._container().begin(),p._container().end(),[&args](const term_type &t) {
 		return t.m_key.has_negative_exponent(args);}))

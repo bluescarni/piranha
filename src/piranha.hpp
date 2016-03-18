@@ -183,7 +183,7 @@ see https://www.gnu.org/licenses/. */
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method. Once we have this, we could
  * also think about re-implementing multiplication by zero by an actual coefficient multiplication, thus solving the incosistency with double
- * coefficients reported in audi (0 * inf = 0 --> empty polynomia, instead of NaN).
+ * coefficients reported in audi (0 * inf = 0 --> empty polynomial, instead of NaN).
  * \todo in mp_integer probably the ternary operations (and multadd and divexact etc.) should be modified so that the return value is demoted to
  * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times, once it is set to dynamic
  * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that iteratively always increases).
@@ -238,6 +238,7 @@ inline namespace literals {}
 #include "power_series.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
+#include "rational_function.hpp"
 #include "real.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "runtime_info.hpp"
