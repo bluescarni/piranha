@@ -232,6 +232,11 @@ inline PType poly_ugcd(PType a, PType b)
 	cf_type h(1), g(1);
 	// Store the content of a and b for later use.
 	auto a_cont = a.content(), b_cont = b.content();
+	// NOTE: it seems like removing the content from the inputs
+	// can help performance. Let's revisit this after we implement
+	// the sorted data structure for polys.
+	// poly_exact_cf_div(a,a_cont);
+	// poly_exact_cf_div(b,b_cont);
 	std::vector<PType> F;
 	using size_type = typename std::vector<PType>::size_type;
 	F.push_back(std::move(a));
