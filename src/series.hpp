@@ -1951,7 +1951,7 @@ class series: detail::series_tag, series_operators
 		/// Generic assignment operator.
 		/**
 		 * \note
-		 * This operator is enabled only if the generic constructor from \p x is enabled.
+		 * This operator is enabled only if the corresponding generic constructor from \p x is enabled.
 		 *
 		 * Generic assignment is equivalent to assignment to a piranha::series constructed
 		 * via the generic constructor.
