@@ -60,8 +60,25 @@ namespace piranha
  * - numerator and denominator are coprime,
  * - zero is always represented as <tt>0 / 1</tt>,
  * - the coefficient of the leading term of the denominator is always positive.
+ *
+ * ## Type requirements ##
+ *
+ * \p Key must be usable as second template parameter for piranha::polynomial, and the exponent type must be a C++ integral type or piranha::integer.
+ *
+ * ## Exception safety guarantee ##
+ *
+ * Unless noted otherwise, this class provides the strong exception safety guarantee.
+ *
+ * ## Move semantics ##
+ *
+ * Move operations will leave object of this class in a stat which is destructible and assignable.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
  */
-// TODO: document move semantics.
+// TODO: what type traits does it satisfy?
+// TODO: serialization.
 template <typename Key>
 class rational_function
 {

@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -371,6 +372,39 @@ BOOST_AUTO_TEST_CASE(rational_function_ctor_test)
 	boost::mpl::for_each<key_types>(constructor_tester());
 }
 
+struct stream_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		auto str_cmp = [](const r_type &x, const std::string &cmp) {
+			std::ostringstream oss;
+			oss << x;
+			BOOST_CHECK_EQUAL(oss.str(),cmp);
+		};
+		r_type r;
+		str_cmp(r,"0");
+		r = -123;
+		str_cmp(r,"-123");
+		r = -123/7_q;
+		str_cmp(r,"-123/7");
+		p_type x{"x"}, y{"y"};
+		r = -123/7_q + x;
+		str_cmp(r,"(-123+7*x)/7");
+		r = r_type{-123 + x,x+1};
+		str_cmp(r,"(-123+x)/(1+x)");
+		r = r_type{-123 + x,2*x};
+		str_cmp(r,"(-123+x)/(2*x)");
+		r = r_type{-123 + x,-x};
+		str_cmp(r,"(123-x)/x");
+		r = r_type{x,y};
+		str_cmp(r,"x/y");
+	}
+};
+
 BOOST_AUTO_TEST_CASE(rational_function_stream_test)
 {
+	boost::mpl::for_each<key_types>(stream_tester());
 }
