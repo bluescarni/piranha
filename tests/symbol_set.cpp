@@ -418,6 +418,7 @@ class pmap1_t {};
 class pmap2_t
 {
 	public:
+		pmap2_t &operator=(const pmap2_t &) = delete;
 		pmap2_t(const pmap2_t &) = delete;
 };
 
@@ -436,6 +437,7 @@ class pmap4_t
 class pmap5_t
 {
 	public:
+		pmap5_t &operator=(const pmap5_t &) = delete;
 		~pmap5_t() = delete;
 };
 

@@ -53,6 +53,22 @@ macro(PIRANHA_CHECK_UINT128_T)
 	ENDIF()
 endmacro(PIRANHA_CHECK_UINT128_T)
 
+# Setup the C++ standard flag. We try C++14 first, if not available we go with C++11.
+macro(PIRANHA_SET_CPP_STD_FLAG)
+	# This is valid for GCC, clang and Intel. I think that MSVC has the std version hardcoded.
+	if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_INTELXX)
+		set(PIRANHA_CHECK_CXX_FLAG)
+		check_cxx_compiler_flag("-std=c++14" PIRANHA_CHECK_CXX_FLAG)
+		if(PIRANHA_CHECK_CXX_FLAG)
+			message(STATUS "C++14 supported by the compiler, enabling.")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+		else()
+			message(STATUS "C++14 is not supported by the compiler, C++11 will be enabled.")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+		endif()
+	endif()
+endmacro()
+
 # Configuration for GCC.
 IF(CMAKE_COMPILER_IS_GNUCXX)
 	MESSAGE(STATUS "GNU compiler detected, checking version.")
@@ -72,7 +88,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g1")
 	endif()
 	# Set the standard flag.
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	PIRANHA_SET_CPP_STD_FLAG()
 	# Enable libstdc++ pedantic debug mode in debug builds.
 	# NOTE: this is disabled by default, as it requires the c++ library to be compiled with this
 	# flag enabled in order to be reliable (and this is not the case usually):
@@ -103,7 +119,8 @@ IF(CMAKE_COMPILER_IS_CLANGXX)
 		MESSAGE(FATAL_ERROR "Unsupported Clang version, please upgrade your compiler.")
 	ENDIF(NOT CLANG_VERSION_CHECK)
 	MESSAGE(STATUS "Clang version is ok.")
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	# Set the standard flag.
+	PIRANHA_SET_CPP_STD_FLAG()
 	# This used to be necessary with earlier versions of Clang which
 	# were not completely compatible with GCC's stdlib. Nowadays it seems
 	# unnecessary on most platforms.
@@ -121,8 +138,10 @@ if(CMAKE_COMPILER_IS_INTELXX)
 		message(FATAL_ERROR "Unsupported Intel compiler version, please upgrade your compiler.")
 	endif()
 	message(STATUS "Intel compiler version is ok.")
+	# Set the standard flag.
+	PIRANHA_SET_CPP_STD_FLAG()
 	# The diagnostic from the Intel compiler can be wrong and a pain in the ass.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -diag-disable 2304,2305,1682,2259,3373")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -diag-disable 2304,2305,1682,2259,3373")
 	PIRANHA_CHECK_UINT128_T()
 endif()
 

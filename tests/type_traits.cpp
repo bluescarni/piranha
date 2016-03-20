@@ -1635,6 +1635,7 @@ PIRANHA_DECL_ITT_SPEC(iter03,fake_it_traits_input<int>)
 // Broken iterator, minimal requirements.
 struct iter04
 {
+	iter04 &operator=(const iter04 &) = delete;
 	~iter04() = delete;
 	int &operator*();
 	iter04 &operator++();
