@@ -33,10 +33,12 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -77,6 +79,7 @@ struct constructor_tester
 		BOOST_CHECK(t.den().get_symbol_set().size() == 0u);
 		BOOST_CHECK_EQUAL(s.num(),0);
 		BOOST_CHECK_EQUAL(s.den(),0);
+		BOOST_CHECK_THROW(s.canonicalise(),zero_division_error);
 		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
 		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
 		// Revive.
@@ -85,6 +88,17 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(s.den(),1);
 		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
 		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		// Revive with move.
+		t = std::move(s);
+		s = std::move(t);
+		BOOST_CHECK_EQUAL(s.num(),5);
+		BOOST_CHECK_EQUAL(s.den(),1);
+		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		BOOST_CHECK_EQUAL(t.num(),0);
+		BOOST_CHECK_EQUAL(t.den(),0);
+		BOOST_CHECK(t.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(t.den().get_symbol_set().size() == 0u);
 		// Unary ctors.
 		BOOST_CHECK((std::is_constructible<r_type,p_type>::value));
 		BOOST_CHECK((std::is_constructible<r_type,p_type &>::value));
@@ -103,21 +117,71 @@ struct constructor_tester
 		BOOST_CHECK((!std::is_constructible<r_type,double>::value));
 		BOOST_CHECK((!std::is_constructible<r_type,const float>::value));
 		BOOST_CHECK((!std::is_constructible<r_type,real &&>::value));
-		r = r_type{1};
+		// Ctor from ints.
+		r = r_type{0};
+		BOOST_CHECK_EQUAL(r.num(),0);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{1u};
 		BOOST_CHECK_EQUAL(r.num(),1);
 		BOOST_CHECK_EQUAL(r.den(),1);
 		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
 		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
-		r = -2;
+		r = r_type{-2_z};
 		BOOST_CHECK_EQUAL(r.num(),-2);
 		BOOST_CHECK_EQUAL(r.den(),1);
 		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
 		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
-
-		std::cout << r_type{q_type{"x"}+q_type{"x"}.pow(2)/2} << '\n';
-		std::cout << r_type{123_z} << '\n';
-		std::cout << r_type{122/244_q} << '\n';
-		std::cout << r_type{-122/244_q} << '\n';
+		// Ctor from string.
+		r = r_type{"x"};
+		BOOST_CHECK_EQUAL(r.num(),x);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 1u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{std::string("y")};
+		BOOST_CHECK_EQUAL(r.num(),y);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 1u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		// Ctor from p_type.
+		r = r_type{p_type{}};
+		BOOST_CHECK_EQUAL(r.num(),0);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{x+2*y};
+		BOOST_CHECK_EQUAL(r.num(),x+2*y);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 2u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		// Ctor from rational.
+		r = r_type{0_q};
+		BOOST_CHECK_EQUAL(r.num(),0);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{8/-12_q};
+		BOOST_CHECK_EQUAL(r.num(),-2);
+		BOOST_CHECK_EQUAL(r.den(),3);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		// Ctor from q_type.
+		r = r_type{q_type{}};
+		BOOST_CHECK_EQUAL(r.num(),0);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{xq/3+2*yq};
+		BOOST_CHECK_EQUAL(r.num(),x+6*y);
+		BOOST_CHECK_EQUAL(r.den(),3);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 2u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{xq+xq.pow(2)/2};
+		BOOST_CHECK_EQUAL(r.num(),2*x+x*x);
+		BOOST_CHECK_EQUAL(r.den(),2);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 1u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
 		// Binary ctors.
 		BOOST_CHECK((std::is_constructible<r_type,p_type,p_type>::value));
 		BOOST_CHECK((std::is_constructible<r_type,p_type &,p_type>::value));
@@ -137,12 +201,167 @@ struct constructor_tester
 		BOOST_CHECK((!std::is_constructible<r_type,double,double>::value));
 		BOOST_CHECK((!std::is_constructible<r_type,const float,float>::value));
 		BOOST_CHECK((!std::is_constructible<r_type,real &&,real>::value));
-		std::cout << r_type{1_z,-2_z} << '\n';
-		std::cout << r_type{(x+y)*(x-y),(2*x+2*y)*z} << '\n';
-		std::cout << r_type{(x+y)*(x-y),(2*x+2*y)*-z} << '\n';
-		std::cout << r_type{(xq+yq)*(xq-yq),(2*xq+2*yq)*-zq} << '\n';
-		std::cout << r_type{4*(xq+yq)*(xq-yq),2*(2*xq+2*yq)*-zq} << '\n';
-		// Assignments.
+		// From ints.
+		r = r_type{4,-12};
+		BOOST_CHECK_EQUAL(r.num(),-1);
+		BOOST_CHECK_EQUAL(r.den(),3);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{0u,12u};
+		BOOST_CHECK_EQUAL(r.num(),0);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		BOOST_CHECK_THROW((r = r_type{0_z,0_z}),zero_division_error);
+		BOOST_CHECK_THROW((r = r_type{1,0}),zero_division_error);
+		r = r_type{4,1};
+		BOOST_CHECK_EQUAL(r.num(),4);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		// From strings.
+		r = r_type{"x","x"};
+		BOOST_CHECK_EQUAL(r.num(),1);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 1u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 1u);
+		r = r_type{std::string("x"),std::string("y")};
+		BOOST_CHECK_EQUAL(r.num(),x);
+		BOOST_CHECK_EQUAL(r.den(),y);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 2u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 2u);
+		// From p_type.
+		r = r_type{p_type{6},p_type{-15}};
+		BOOST_CHECK_EQUAL(r.num(),-2);
+		BOOST_CHECK_EQUAL(r.den(),5);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{(x+y)*(x-y),(2*x+2*y)*z};
+		BOOST_CHECK_EQUAL(r.num(),x-y);
+		BOOST_CHECK_EQUAL(r.den(),2*z);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 3u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 3u);
+		r = r_type{x,p_type{1}};
+		BOOST_CHECK_EQUAL(r.num(),x);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 1u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{p_type{0},(2*x+2*y)*z};
+		BOOST_CHECK_EQUAL(r.num(),0);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		BOOST_CHECK_THROW((r = r_type{(x+y)*(x-y),p_type{}}),zero_division_error);
+		BOOST_CHECK_THROW((r = r_type{(x+y)*(x-y),x.pow(-1)}),std::invalid_argument);
+		BOOST_CHECK_THROW((r = r_type{x.pow(-1),(x+y)*(x-y)}),std::invalid_argument);
+		// From rational.
+		r = r_type{0_q,-6_q};
+		BOOST_CHECK_EQUAL(r.num(),0);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{3_q,-6_q};
+		BOOST_CHECK_EQUAL(r.num(),-1);
+		BOOST_CHECK_EQUAL(r.den(),2);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{3/2_q,-7/6_q};
+		BOOST_CHECK_EQUAL(r.num(),-9);
+		BOOST_CHECK_EQUAL(r.den(),7);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		BOOST_CHECK_THROW((r = r_type{0_q,0_q}),zero_division_error);
+		BOOST_CHECK_THROW((r = r_type{3/2_q,0_q}),zero_division_error);
+		// From q_type.
+		r = r_type{q_type{6},q_type{-15}};
+		BOOST_CHECK_EQUAL(r.num(),-2);
+		BOOST_CHECK_EQUAL(r.den(),5);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{q_type{6},q_type{1}};
+		BOOST_CHECK_EQUAL(r.num(),6);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{q_type{},xq+yq};
+		BOOST_CHECK_EQUAL(r.num(),0);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
+		r = r_type{(xq/3+3*xq*yq/4)*(xq*xq+yq*yq),xq.pow(3)*(4*xq+9*xq*yq)*(xq-yq)/2};
+		// NOTE: k_monomial orders in revlex order.
+		if (std::is_same<Key,k_monomial>::value) {
+			BOOST_CHECK_EQUAL(r.num(),-(x*x+y*y));
+			BOOST_CHECK_EQUAL(r.den(),-(6*x.pow(3)*(x-y)));
+		} else {
+			BOOST_CHECK_EQUAL(r.num(),x*x+y*y);
+			BOOST_CHECK_EQUAL(r.den(),6*x.pow(3)*(x-y));
+		}
+		BOOST_CHECK(r.num().get_symbol_set().size() == 2u);
+		BOOST_CHECK(r.den().get_symbol_set().size() == 2u);
+		BOOST_CHECK_THROW((r = r_type{q_type{1},q_type{0}}),zero_division_error);
+		BOOST_CHECK_THROW((r = r_type{xq.pow(-1),xq}),std::invalid_argument);
+		BOOST_CHECK_THROW((r = r_type{xq,xq.pow(-1)}),std::invalid_argument);
+		// Some assignment checks.
+		BOOST_CHECK((std::is_same<decltype(s = s),r_type &>::value));
+		BOOST_CHECK((std::is_same<decltype(s = std::move(s)),r_type &>::value));
+		// Self assignment.
+		s = s;
+		BOOST_CHECK_EQUAL(s.num(),5);
+		BOOST_CHECK_EQUAL(s.den(),1);
+		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		s = std::move(s);
+		BOOST_CHECK_EQUAL(s.num(),5);
+		BOOST_CHECK_EQUAL(s.den(),1);
+		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		// Generic assignments.
+		BOOST_CHECK((std::is_assignable<r_type &,p_type>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,p_type &>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,p_type &&>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,q_type>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,q_type &>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,q_type &&>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,int>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,char &>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,const integer &>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,rational>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,const rational &>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,std::string>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,char *>::value));
+		BOOST_CHECK((std::is_assignable<r_type &,const char *>::value));
+		BOOST_CHECK((!std::is_assignable<r_type &,double>::value));
+		BOOST_CHECK((!std::is_assignable<r_type &,const float>::value));
+		BOOST_CHECK((!std::is_assignable<r_type &,real &&>::value));
+		BOOST_CHECK((std::is_same<decltype(s = 0),r_type &>::value));
+		BOOST_CHECK((std::is_same<decltype(s = xq),r_type &>::value));
+		BOOST_CHECK((std::is_same<decltype(s = std::move(x)),r_type &>::value));
+		s = 0;
+		BOOST_CHECK_EQUAL(s.num(),0);
+		BOOST_CHECK_EQUAL(s.den(),1);
+		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		s = 1_z;
+		BOOST_CHECK_EQUAL(s.num(),1);
+		BOOST_CHECK_EQUAL(s.den(),1);
+		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		s = x+y;
+		BOOST_CHECK_EQUAL(s.num(),x+y);
+		BOOST_CHECK_EQUAL(s.den(),1);
+		BOOST_CHECK(s.num().get_symbol_set().size() == 2u);
+		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		s = -3/6_q;
+		BOOST_CHECK_EQUAL(s.num(),-1);
+		BOOST_CHECK_EQUAL(s.den(),2);
+		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
+		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		s = xq - zq;
+		BOOST_CHECK_EQUAL(s.num(),-z+x);
+		BOOST_CHECK_EQUAL(s.den(),1);
+		BOOST_CHECK(s.num().get_symbol_set().size() == 2u);
+		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
 	}
 };
 
@@ -150,4 +369,8 @@ BOOST_AUTO_TEST_CASE(rational_function_ctor_test)
 {
 	environment env;
 	boost::mpl::for_each<key_types>(constructor_tester());
+}
+
+BOOST_AUTO_TEST_CASE(rational_function_stream_test)
+{
 }

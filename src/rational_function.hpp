@@ -47,7 +47,7 @@ namespace piranha
 
 /// Rational function.
 /**
- * This class represents rational functions, that is, mathematical object of the form
+ * This class represents rational functions, that is, mathematical objects of the form
  * \f[
  * \frac{f\left(x_0,x_1,\ldots\right)}{g\left(x_0,x_1,\ldots\right)},
  * \f]
@@ -59,7 +59,7 @@ namespace piranha
  * Rational functions are always kept in a canonical form defined by the following properties:
  * - numerator and denominator are coprime,
  * - zero is always represented as <tt>0 / 1</tt>,
- * - the leading term of the denominator always has a positive coefficient.
+ * - the coefficient of the leading term of the denominator is always positive.
  */
 // TODO: document move semantics.
 template <typename Key>
@@ -157,7 +157,7 @@ class rational_function
 		template <typename T, typename std::enable_if<pzs_enabler<T>::value,int>::type = 0>
 		void dispatch_unary_ctor(T &&x)
 		{
-			m_num = std::forward<T>(x);
+			m_num = p_type{std::forward<T>(x)};
 			m_den = p_type{1};
 			// Check for negative expos in the num if cting from a polynomial.
 			if (std::is_same<decay_t<T>,p_type>::value) {
@@ -187,23 +187,21 @@ class rational_function
 			// as the dispatcher does not support that.
 			detail::true_tt<decltype(std::declval<U &>().dispatch_unary_ctor(std::declval<const decay_t<T> &>()))>::value
 		,int>::type;
-		// Binary constructors.
+		// Binary constructors (binary counterparts of the above above).
 		// Enabler for construction from pzs. We require T and U to be the same, after decay.
 		template <typename T, typename U>
 		using pzs_enabler2 = std::integral_constant<bool,pzs_enabler<T>::value && std::is_same<decay_t<T>,decay_t<U>>::value>;
 		template <typename T, typename U, typename std::enable_if<pzs_enabler2<T,U>::value,int>::type = 0>
 		void dispatch_binary_ctor(T &&x, U &&y)
 		{
-			m_num = std::forward<T>(x);
-			m_den = std::forward<U>(y);
-			// When constructing from polys or integrals, we need to canonicalise.
+			m_num = p_type{std::forward<T>(x)};
+			m_den = p_type{std::forward<U>(y)};
+			// Always need to canonicalise.
 			// NOTE: normally we should *not* set m_num/m_den and canonicalise afterwards, as this
 			// is not exception safe. Here it is a special case because this function is called from
 			// a ctor only, thus if something goes wrong in the canonicalisation m_num/m_den will be destroyed
 			// in the cleanup.
-			if (std::is_same<decay_t<T>,p_type>::value || is_integral<decay_t<T>>::value) {
-				canonicalise();
-			}
+			canonicalise();
 		}
 		void dispatch_binary_ctor(const q_type &n, const q_type &d)
 		{
@@ -416,8 +414,11 @@ class rational_function
 					os << '(' << r.m_num << ')';
 				}
 				os << '/';
-				if (r.m_den.is_single_coefficient()) {
-					// If the denominator is a single coefficient, don't print brackets.
+				if (r.m_den.is_single_coefficient() ||
+					(r.m_den.size() == 1u && math::is_unitary(r.m_den._container().begin()->m_cf)))
+				{
+					// If the denominator is a single coefficient or it has a single term with unitary coefficient,
+					// don't print the brackets.
 					os << r.m_den;
 				} else {
 					os << '(' << r.m_den << ')';
