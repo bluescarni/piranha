@@ -822,7 +822,7 @@ class polynomial:
 			static degree_type<T> at_degree_max(0);
 			return at_degree_max;
 		}
-		// Enabler for string construction/assignment.
+		// Enabler for string construction.
 		template <typename Str>
 		using str_enabler = typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
 			std::is_same<typename std::decay<Str>::type,char *>::value ||
