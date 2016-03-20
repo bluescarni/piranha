@@ -22,7 +22,7 @@ addons:
     - python3-numpy
     - python-pip
     - g++-4.8
-    - clang
+    - clang-3.8
     - doxygen
     - graphviz
     - graphviz-dev
@@ -40,34 +40,34 @@ matrix:
   include:
     - compiler: gcc
       env: BUILD_TYPE="Release"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: gcc
-      env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="0"
-    - compiler: gcc
-      env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="1"
-    - compiler: gcc
-      env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Python2"
-    - compiler: clang
-      env: BUILD_TYPE="Python3"
-    - compiler: clang
-      env: BUILD_TYPE="Tutorial"
-    - compiler: gcc
-      env: BUILD_TYPE="Doxygen"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="0"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="1"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Release"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    #- compiler: clang
+      #env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Python2"
+    #- compiler: clang
+      #env: BUILD_TYPE="Python3"
+    #- compiler: clang
+      #env: BUILD_TYPE="Tutorial"
+    #- compiler: gcc
+      #env: BUILD_TYPE="Doxygen"
 
 install:
     - if [[ "${CC}" == "clang" ]]; then
