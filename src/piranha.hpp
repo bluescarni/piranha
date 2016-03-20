@@ -178,7 +178,6 @@ see https://www.gnu.org/licenses/. */
  * up generic ctor and standard copy/move ones in the derived class.
  * \todo in order to circumvent the problem of the lack of thread local storage on osx, we should probably just create a local variable ad-hoc.
  * It will be suboptimal but at least it should work on osx.
- * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
  * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs, e.g., implementing the test() method
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method. Once we have this, we could
