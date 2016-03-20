@@ -598,6 +598,7 @@ BOOST_AUTO_TEST_CASE(math_canonical_test)
 // Non-evaluable, missing copy-ctor.
 struct fake_ne
 {
+	fake_ne &operator=(const fake_ne &) = delete;
 	fake_ne(const fake_ne &) = delete;
 };
 
