@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -62,18 +63,22 @@ struct constructor_tester
 		q_type xq{"x"}, yq{"y"}, zq{"z"};
 		// Standard constructors.
 		r_type r;
+		BOOST_CHECK(r.is_canonical());
 		BOOST_CHECK_EQUAL(r.num(),0);
 		BOOST_CHECK_EQUAL(r.den(),1);
 		BOOST_CHECK(r.num().get_symbol_set().size() == 0u);
 		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
 		r = r_type{5};
 		auto s = r;
+		BOOST_CHECK(s.is_canonical());
 		BOOST_CHECK_EQUAL(s.num(),5);
 		BOOST_CHECK_EQUAL(s.den(),1);
 		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
 		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
 		// Check status of moved-from objects.
 		r_type t = std::move(s);
+		BOOST_CHECK(t.is_canonical());
+		BOOST_CHECK(!s.is_canonical());
 		BOOST_CHECK_EQUAL(t.num(),5);
 		BOOST_CHECK_EQUAL(t.den(),1);
 		BOOST_CHECK(t.num().get_symbol_set().size() == 0u);
@@ -85,13 +90,18 @@ struct constructor_tester
 		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
 		// Revive.
 		s = t;
+		BOOST_CHECK(s.is_canonical());
 		BOOST_CHECK_EQUAL(s.num(),5);
 		BOOST_CHECK_EQUAL(s.den(),1);
 		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
 		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
 		// Revive with move.
 		t = std::move(s);
+		BOOST_CHECK(!s.is_canonical());
+		BOOST_CHECK(t.is_canonical());
 		s = std::move(t);
+		BOOST_CHECK(!t.is_canonical());
+		BOOST_CHECK(s.is_canonical());
 		BOOST_CHECK_EQUAL(s.num(),5);
 		BOOST_CHECK_EQUAL(s.den(),1);
 		BOOST_CHECK(s.num().get_symbol_set().size() == 0u);
@@ -407,4 +417,55 @@ struct stream_tester
 BOOST_AUTO_TEST_CASE(rational_function_stream_test)
 {
 	boost::mpl::for_each<key_types>(stream_tester());
+}
+
+struct canonical_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		r_type r;
+		r._num() = 0;
+		r._den() = 2;
+		BOOST_CHECK(!r.is_canonical());
+		r._num() = 0;
+		r._den() = -1;
+		BOOST_CHECK(!r.is_canonical());
+		r._num() = 2;
+		r._den() = 2;
+		BOOST_CHECK(!r.is_canonical());
+		r._den() = 0;
+		BOOST_CHECK(!r.is_canonical());
+		r._den() = -1;
+		BOOST_CHECK(!r.is_canonical());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_canonical_test)
+{
+	boost::mpl::for_each<key_types>(canonical_tester());
+}
+
+struct add_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		BOOST_CHECK(is_addable<r_type>::value);
+		BOOST_CHECK((std::is_same<decltype(r_type{} + r_type{}),r_type>::value));
+		p_type x{"x"}, y{"y"}, z{"z"};
+		auto checker = [](const r_type &a, const r_type &b) {
+			BOOST_CHECK_EQUAL(a,b);
+			BOOST_CHECK(a.is_canonical());
+		};
+		checker(r_type{} + r_type{},r_type{});
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_add_test)
+{
+	boost::mpl::for_each<key_types>(add_tester());
 }
