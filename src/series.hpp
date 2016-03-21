@@ -1513,7 +1513,8 @@ class series: detail::series_tag, series_operators
 		template <typename Series, typename U>
 		struct eval_type_<Series,U,typename std::enable_if<has_multiply_accumulate<e_type<Series,U>,
 			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),std::declval<std::unordered_map<std::string,U> const &>())),
-			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const symbol_set::positions_map<U> &>(),std::declval<const symbol_set &>()))>::value &&
+			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const symbol_set::positions_map<U> &>(),
+			std::declval<const symbol_set &>()))>::value &&
 			std::is_constructible<e_type<Series,U>,int>::value
 			>::type>
 		{
@@ -1965,6 +1966,8 @@ class series: detail::series_tag, series_operators
 		template <typename T, typename U = series, generic_ctor_enabler<T,U> = 0>
 		series &operator=(const T &x)
 		{
+			static_assert(!std::is_base_of<series,T>::value,"Generic assignment should not be enabled with "
+				"a type deriving from the calling series.");
 			return operator=(series(x));
 		}
 		/// Series size.
