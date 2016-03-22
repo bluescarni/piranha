@@ -1692,7 +1692,7 @@ class polynomial:
 		 *
 		 * This method will compute the GCD of polynomials \p a and \p b. The algorithm that will be employed
 		 * for the computation is selected by the \p algo flag. If \p algo is set to polynomial_gcd_algorithm::automatic
-		 * (the default) the heuristic GCD algorithm will be tried first, followed by the PSR SR algorithm in case of failures.
+		 * (the default) the heuristic GCD algorithm will be tried first, followed by the PRS SR algorithm in case of failures.
 		 * If \p algo is set to any other value, the selected algorithm will be used. The heuristic GCD algorithm can be
 		 * used only when the ceofficient type is an instance of piranha::mp_integer.
 		 *
