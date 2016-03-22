@@ -97,6 +97,12 @@ class rational_function
 		/// The counterpart of rational_function::p_type with rational coefficients.
 		using q_type = polynomial<rational,Key>;
 	private:
+		// Detect types interoperable for arithmetics.
+		template <typename T>
+		using is_interoperable = std::integral_constant<bool,
+			is_integral<T>::value || std::is_same<T,rational>::value ||
+			std::is_same<T,p_type>::value || std::is_same<T,q_type>::value
+		>;
 		// Canonicalisation.
 		static std::pair<p_type,p_type> canonicalise_impl(const p_type &n, const p_type &d)
 		{
@@ -271,9 +277,22 @@ class rational_function
 				// The general case.
 				retval.m_num = a.m_num*b.m_den + a.m_den*b.m_num;
 				retval.m_den = a.m_den*b.m_den;
+				// NOTE: if the canonicalisation fails for some reason, it is not a problem
+				// as retval is a local variable that will just be destroyed. The destructor
+				// does not run any check.
 				retval.canonicalise();
 			}
 			return retval;
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static rational_function dispatch_binary_add(const rational_function &a, const T &b)
+		{
+			return a + rational_function{b};
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static rational_function dispatch_binary_add(const T &a, const rational_function &b)
+		{
+			return dispatch_binary_add(b,a);
 		}
 		template <typename T, typename U>
 		using binary_add_enabler = typename std::enable_if<detail::true_tt<
@@ -304,6 +323,16 @@ class rational_function
 				retval.canonicalise();
 			}
 			return retval;
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static rational_function dispatch_binary_sub(const rational_function &a, const T &b)
+		{
+			return a - rational_function{b};
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static rational_function dispatch_binary_sub(const T &a, const rational_function &b)
+		{
+			return rational_function{a} - b;
 		}
 		template <typename T, typename U>
 		using binary_sub_enabler = typename std::enable_if<detail::true_tt<
