@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_test)
 	BOOST_CHECK((!has_gcd3<polynomial<double,k_monomial>>::value));
 }
 
-struct gcd_psr_tester
+struct gcd_prs_tester
 {
 	template <typename Key>
 	void operator()(const Key &)
@@ -550,9 +550,9 @@ struct gcd_psr_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(polynomial_gcd_psr_test)
+BOOST_AUTO_TEST_CASE(polynomial_gcd_prs_test)
 {
-	boost::mpl::for_each<key_types>(gcd_psr_tester());
+	boost::mpl::for_each<key_types>(gcd_prs_tester());
 }
 
 struct gcd_heu_tester

@@ -461,8 +461,8 @@ struct univariate_gcdheu_tester
 			auto res_heu2 = heu_wrapper(b,a);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
-			auto res_psr = poly_ugcd(a,b);
-			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+			auto res_prs = poly_ugcd(a,b);
+			BOOST_CHECK(res_heu.second == res_prs || res_heu.second == -res_prs);
 		}
 		for (auto i = 0; i < ntrials; ++i) {
 			p_type a = x - x, b = a;
@@ -482,8 +482,8 @@ struct univariate_gcdheu_tester
 			auto res_heu2 = heu_wrapper(b,a*b);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
-			auto res_psr = poly_ugcd(a*b,b);
-			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+			auto res_prs = poly_ugcd(a*b,b);
+			BOOST_CHECK(res_heu.second == res_prs || res_heu.second == -res_prs);
 			res_heu = heu_wrapper(a*b*b,b*a);
 			if (res_heu.first) {
 				continue;
@@ -495,8 +495,8 @@ struct univariate_gcdheu_tester
 			res_heu2 = heu_wrapper(b*a,a*b*b);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
-			res_psr = poly_ugcd(a*b*b,b*a);
-			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+			res_prs = poly_ugcd(a*b*b,b*a);
+			BOOST_CHECK(res_heu.second == res_prs || res_heu.second == -res_prs);
 		}
 	}
 };
