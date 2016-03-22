@@ -35,6 +35,8 @@ see https://www.gnu.org/licenses/. */
 #include <boost/mpl/vector.hpp>
 #include <random>
 #include <stdexcept>
+#include <tuple>
+#include <utility>
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
@@ -656,10 +658,16 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_heu_test)
 	// Some misc tests specific to gcdheu.
 	using p_type = polynomial<integer,k_monomial>;
 	using math::pow;
-	using detail::gcdheu;
+	auto gcdheu = [](const p_type &a, const p_type &b) -> std::pair<bool,p_type> {
+		try {
+			return std::make_pair(false,std::move(std::get<0u>(detail::gcdheu_liao(a,b))));
+		} catch (const detail::gcdheu_failure &) {
+			return std::make_pair(true,p_type{});
+		}
+	};
 	p_type x{"x"}, y{"y"}, z{"z"};
 	// A few simple checks.
-	auto g_checker = [](const p_type &a, const p_type &b, const p_type &c) {
+	auto g_checker = [gcdheu](const p_type &a, const p_type &b, const p_type &c) {
 		auto res = gcdheu(a,b);
 		BOOST_CHECK(!res.first);
 		BOOST_CHECK(res.second == c || -res.second == c);
@@ -697,4 +705,17 @@ BOOST_AUTO_TEST_CASE(polynomial_height_test)
 	BOOST_CHECK_EQUAL(p_type{}.height(),0);
 	BOOST_CHECK_EQUAL(p_type{-100/4_q}.height(),25);
 	}
+}
+
+// This was a specific GCD computation that was very slow before changing the heuristic GCD algorithm.
+BOOST_AUTO_TEST_CASE(polynomial_slow_gcd_00_test)
+{
+	using p_type = polynomial<integer,k_monomial>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	auto a = -3*x.pow(2)*y.pow(3)*z.pow(2)-x*z.pow(2);
+	auto b = 4*x.pow(3)*y*z.pow(2)-3*y.pow(3)-3*x*y*z.pow(2);
+	auto c = -4*z.pow(3)-2*x.pow(3)*y.pow(3)-4*x.pow(4)*y*z.pow(4);
+	auto d = 3*x.pow(4)*y.pow(3)*z.pow(2)-2*x.pow(3)*y.pow(4)*z.pow(3)-4*x.pow(3)*y.pow(2)*z.pow(2)-2*x.pow(3)*y*z.pow(4);
+	auto g = math::gcd(a*d+b*c,b*d);
+	BOOST_CHECK(g == y || g == -y);
 }

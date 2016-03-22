@@ -435,12 +435,6 @@ struct univariate_gcdheu_tester
 		BOOST_CHECK_THROW(heu_wrapper(x.pow(-1),x),std::invalid_argument);
 		BOOST_CHECK_THROW(heu_wrapper(x,x.pow(-1)),std::invalid_argument);
 		BOOST_CHECK_THROW(heu_wrapper(x.pow(-1),x.pow(-1)),std::invalid_argument);
-		// An example that triggers a xi-too-large error.
-		auto res_l = heu_wrapper(
-			314928*pow(y,24)*pow(z,21)+629856*pow(y,26)*pow(z,24)+746496*pow(y,27)*pow(z,27)+1119744*pow(y,25)*pow(z,28),
-			-3359232*pow(y,27)*pow(z,31)-944784*pow(y,26)*pow(z,24)-2239488*pow(y,29)*pow(z,30)-1889568*pow(y,28)*pow(z,27)
-		);
-		BOOST_CHECK(res_l.first);
 		// Random testing.
 		std::uniform_int_distribution<int> ud(0,9);
 		for (auto i = 0; i < ntrials; ++i) {
