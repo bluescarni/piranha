@@ -475,11 +475,24 @@ struct add_tester
 		BOOST_CHECK(is_addable<r_type>::value);
 		BOOST_CHECK((is_addable<r_type,int>::value));
 		BOOST_CHECK((is_addable<integer,r_type>::value));
+		BOOST_CHECK((is_addable<rational,r_type>::value));
 		BOOST_CHECK((is_addable<p_type,r_type>::value));
 		BOOST_CHECK((is_addable<r_type,q_type>::value));
+		BOOST_CHECK(is_addable_in_place<r_type>::value);
+		BOOST_CHECK((is_addable_in_place<r_type,int>::value));
+		BOOST_CHECK((is_addable_in_place<r_type,integer>::value));
+		BOOST_CHECK((is_addable_in_place<r_type,rational>::value));
+		BOOST_CHECK((is_addable_in_place<r_type,p_type>::value));
+		BOOST_CHECK((is_addable_in_place<r_type,q_type>::value));
 		BOOST_CHECK((!is_addable<r_type,double>::value));
 		BOOST_CHECK((!is_addable<long double,r_type>::value));
+		BOOST_CHECK((!is_addable_in_place<r_type,double>::value));
+		BOOST_CHECK((!is_addable_in_place<r_type,float>::value));
 		BOOST_CHECK((std::is_same<decltype(r_type{} + r_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} + 1_z),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(1_q + r_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(p_type{} + r_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} + q_type{}),r_type>::value));
 		p_type x{"x"}, y{"y"}, z{"z"};
 		auto checker = [](const r_type &a, const r_type &b) {
 			BOOST_CHECK_EQUAL(a,b);
@@ -518,6 +531,11 @@ struct add_tester
 			check = add - r2;
 			BOOST_CHECK(check.is_canonical());
 			BOOST_CHECK_EQUAL(check,r1);
+			// Check the in-place version.
+			r1 += r2;
+			BOOST_CHECK_EQUAL(add,r1);
+			r1 += 1/2_q;
+			BOOST_CHECK_EQUAL(add + 1/2_q,r1);
 			// Check vs p_type.
 			add = r1 + n2;
 			BOOST_CHECK(add.is_canonical());

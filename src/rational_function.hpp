@@ -61,6 +61,14 @@ namespace piranha
  * - zero is always represented as <tt>0 / 1</tt>,
  * - the denominator is never zero and its leading term is always positive.
  *
+ * ## Interoperability with other types ##
+ *
+ * Interoperability with the following types is provided:
+ * - piranha::integer,
+ * - piranha::rational,
+ * - the polynomial type representing numerator and denominator (that is, piranha::rational_function::p_type) and its
+ *   counterpart with rational coefficients (that is, piranha::rational_function::q_type).
+ *
  * ## Type requirements ##
  *
  * \p Key must be usable as second template parameter for piranha::polynomial, and the exponent type must be a C++ integral type or piranha::integer.
@@ -292,7 +300,7 @@ class rational_function
 		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
 		static rational_function dispatch_binary_add(const T &a, const rational_function &b)
 		{
-			return dispatch_binary_add(b,a);
+			return rational_function{a} + b;
 		}
 		template <typename T, typename U>
 		using binary_add_enabler = typename std::enable_if<detail::true_tt<
@@ -612,10 +620,35 @@ class rational_function
 			return *this;
 		}
 		/// Binary addition.
+		/**
+		 * \note
+		 * This operator is enabled only if one of the arguments is piranha::rational_function
+		 * and the other argument is either piranha::rational_function or an interoperable type.
+		 *
+		 * This operator will compute the result of adding \p a to \p b.
+		 *
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 *
+		 * @return <tt>a + b</tt>.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - construction, assignment, multiplication, addition of piranha::rational_function::p_type,
+		 * - canonicalise().
+		 */
 		template <typename T, typename U, binary_add_enabler<T,U> = 0>
 		friend rational_function operator+(const T &a, const U &b)
 		{
 			return dispatch_binary_add(a,b);
+		}
+		template <typename T, typename U>
+		using in_place_add_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
+			+ std::declval<const U &>())>::value,int>::type;
+		template <typename T, typename U = rational_function, in_place_add_enabler<T,U> = 0>
+		rational_function &operator+=(const T &other)
+		{
+			// NOTE: this + other will always return rational_function.
+			return *this = *this + other;
 		}
 		/// Negated copy.
 		/**
@@ -630,6 +663,22 @@ class rational_function
 			return retval;
 		}
 		/// Binary subtraction.
+		/**
+		 * \note
+		 * This operator is enabled only if one of the arguments is piranha::rational_function
+		 * and the other argument is either piranha::rational_function or an interoperable type.
+		 *
+		 * This operator will compute the result of subtracting \p b from \p a.
+		 *
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 *
+		 * @return <tt>a - b</tt>.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - construction, assignment, multiplication, subtraction of piranha::rational_function::p_type,
+		 * - canonicalise().
+		 */
 		template <typename T, typename U, binary_sub_enabler<T,U> = 0>
 		friend rational_function operator-(const T &a, const U &b)
 		{
