@@ -265,11 +265,11 @@ class rational_function
 				retval.m_den = b.m_den;
 			} else if (udb) {
 				// Only b is unitary.
-				retval.m_num = b.m_num*a.m_den + a.m_num;
+				retval.m_num = a.m_num + b.m_num*a.m_den;
 				retval.m_den = a.m_den;
 			} else {
 				// The general case.
-				retval.m_num = a.m_num*b.m_den+a.m_den*b.m_num;
+				retval.m_num = a.m_num*b.m_den + a.m_den*b.m_num;
 				retval.m_den = a.m_den*b.m_den;
 				retval.canonicalise();
 			}
@@ -279,6 +279,35 @@ class rational_function
 		using binary_add_enabler = typename std::enable_if<detail::true_tt<
 			// NOTE: here the rational_function:: specifier is apprently needed only in GCC, probably a bug.
 			decltype(rational_function::dispatch_binary_add(std::declval<const T &>(),std::declval<const U &>()))>::value,int>::type;
+		// Binary subtraction.
+		static rational_function dispatch_binary_sub(const rational_function &a, const rational_function &b)
+		{
+			// Detect unitary denominators.
+			const bool uda = math::is_unitary(a.den()), udb = math::is_unitary(b.den());
+			rational_function retval;
+			if (uda && udb) {
+				// With unitary denominators, just add the numerators and set den to 1.
+				retval.m_num = a.m_num - b.m_num;
+				retval.m_den = 1;
+			} else if (uda) {
+				// Only a is unitary.
+				retval.m_num = a.m_num*b.m_den - b.m_num;
+				retval.m_den = b.m_den;
+			} else if (udb) {
+				// Only b is unitary.
+				retval.m_num = a.m_num - b.m_num*a.m_den;
+				retval.m_den = a.m_den;
+			} else {
+				// The general case.
+				retval.m_num = a.m_num*b.m_den - a.m_den*b.m_num;
+				retval.m_den = a.m_den*b.m_den;
+				retval.canonicalise();
+			}
+			return retval;
+		}
+		template <typename T, typename U>
+		using binary_sub_enabler = typename std::enable_if<detail::true_tt<
+			decltype(rational_function::dispatch_binary_sub(std::declval<const T &>(),std::declval<const U &>()))>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -494,16 +523,6 @@ class rational_function
 			return m_den;
 		}
 		//@}
-		/// Identity operator.
-		/**
-		 * @return a copy of \p this.
-		 *
-		 * @throws unspecified any exception thrown by the copy constructor.
-		 */
-		rational_function operator+() const
-		{
-			return *this;
-		}
 		/// Canonicality check.
 		/**
 		 * This method will return \p true if \p this is in canonical form, \p false otherwise.
@@ -532,19 +551,60 @@ class rational_function
 			}
 			return true;
 		}
+		/// Equality operator.
+		/**
+		 * @param[in] other comparison argument.
+		 *
+		 * @return \p true if the numerator and denominator of \p this are equal to the numerator and
+		 * denominator of \p other, \p false otherwise.
+		 */
 		bool operator==(const rational_function &other) const
 		{
 			return m_num == other.m_num && m_den == other.m_den;
 		}
+		/// Inequality operator.
+		/**
+		 * @param[in] other comparison argument.
+		 *
+		 * @return the opposite of rational_function::operator==().
+		 */
 		bool operator !=(const rational_function &other) const
 		{
 			return !(*this == other);
+		}
+		/// Identity operator.
+		/**
+		 * @return a copy of \p this.
+		 *
+		 * @throws unspecified any exception thrown by the copy constructor.
+		 */
+		rational_function operator+() const
+		{
+			return *this;
 		}
 		/// Binary addition.
 		template <typename T, typename U, binary_add_enabler<T,U> = 0>
 		friend rational_function operator+(const T &a, const U &b)
 		{
 			return dispatch_binary_add(a,b);
+		}
+		/// Negated copy.
+		/**
+		 * @return a copy of <tt>-this</tt>.
+		 *
+		 * @throws unspecified any exception thrown by the copy constructor.
+		 */
+		rational_function operator-() const
+		{
+			rational_function retval{*this};
+			math::negate(retval.m_num);
+			return retval;
+		}
+		/// Binary subtraction.
+		template <typename T, typename U, binary_sub_enabler<T,U> = 0>
+		friend rational_function operator-(const T &a, const U &b)
+		{
+			return dispatch_binary_sub(a,b);
 		}
 	private:
 		p_type	m_num;

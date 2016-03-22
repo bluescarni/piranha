@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -41,6 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -50,6 +52,21 @@ see https://www.gnu.org/licenses/. */
 using namespace piranha;
 
 using key_types = boost::mpl::vector<k_monomial,monomial<unsigned char>,monomial<integer>>;
+
+static std::mt19937 rng;
+static const int ntrials = 100;
+
+template <typename Poly>
+inline static Poly rn_poly(const Poly &x, const Poly &y, const Poly &z, std::uniform_int_distribution<int> &dist)
+{
+	int nterms = dist(rng);
+	Poly retval;
+	for (int i = 0; i < nterms; ++i) {
+		int m = dist(rng);
+		retval += m * (m % 2 ? 1 : -1 ) * x.pow(dist(rng)) * y.pow(dist(rng)) * z.pow(dist(rng));
+	}
+	return retval;
+}
 
 struct constructor_tester
 {
@@ -462,6 +479,34 @@ struct add_tester
 			BOOST_CHECK(a.is_canonical());
 		};
 		checker(r_type{} + r_type{},r_type{});
+		checker(r_type{} + r_type{x,y},r_type{x,y});
+		checker(r_type{x,y} + r_type{},r_type{x,y});
+		checker(r_type{2*x,y} + r_type{y,x},r_type{2*x*x+y*y,y*x});
+		// Random testing.
+		std::uniform_int_distribution<int> dist(0,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n1 = rn_poly(x,y,z,dist);
+			auto d1 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d1)) {
+				BOOST_CHECK_THROW((r_type{n1,d1}),zero_division_error);
+				continue;
+			}
+			auto n2 = rn_poly(x,y,z,dist);
+			auto d2 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d2)) {
+				BOOST_CHECK_THROW((r_type{n2,d2}),zero_division_error);
+				continue;
+			}
+			r_type r1{n1,d1}, r2{n2,d2};
+			auto add = r1 + r2;
+			BOOST_CHECK(add.is_canonical());
+			auto check = add - r1;
+			BOOST_CHECK(check.is_canonical());
+			BOOST_CHECK_EQUAL(check,r2);
+			check = add - r2;
+			BOOST_CHECK(check.is_canonical());
+			BOOST_CHECK_EQUAL(check,r1);
+		}
 	}
 };
 
