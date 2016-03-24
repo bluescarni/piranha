@@ -488,7 +488,7 @@ std::tuple<Poly,Poly,Poly> gcdheu_liao(const Poly &a, const Poly &b, symbol_set:
 	poly_exact_cf_div(q,g);
 	// The current variable.
 	const std::string var = args[s_index].get_name();
-	integer beta = 2 * std::min(p.height(),q.height()) + 29;
+	const integer beta = 2 * std::min(p.height(),q.height()) + 29;
 	auto xi = std::max(
 		std::min(beta,(10000 * beta.sqrt()) / 101),
 		2 * std::min(p.height() / math::abs(detail::poly_lterm(p)->m_cf),q.height() / math::abs(detail::poly_lterm(q)->m_cf)) + 2
@@ -526,24 +526,8 @@ std::tuple<Poly,Poly,Poly> gcdheu_liao(const Poly &a, const Poly &b, symbol_set:
 		}
 		return retval;
 	};
-	// Divide poly in place by integral m and remove those terms whose coefficient divided by n
-	// gives a nonzero remainder.
-	auto quo_ground = [](Poly &x, const integer &m) -> void {
-		piranha_assert(m > 0);
-		auto it = x._container().begin();
-		for (; it != x._container().end();) {
-			integer quo, rem;
-			integer::divrem(quo,rem,it->m_cf,m);
-			if (math::is_zero(rem)) {
-				it->m_cf = std::move(quo);
-				++it;
-			} else {
-				it = x._container().erase(it);
-			}
-		}
-	};
 	// Interpolation.
-	auto sp_interpolate = [mod_s_poly,quo_ground,&args,&var](const Poly &gamma, const integer &m) -> Poly {
+	auto sp_interpolate = [mod_s_poly,&args,&var](const Poly &gamma, const integer &m) -> Poly {
 		auto e(gamma);
 		Poly G;
 		G.set_symbol_set(args);
@@ -552,15 +536,26 @@ std::tuple<Poly,Poly,Poly> gcdheu_liao(const Poly &a, const Poly &b, symbol_set:
 			Poly tmp(mod_s_poly(e,m));
 			G += tmp * math::pow(Poly{var},i);
 			e -= tmp;
-			quo_ground(e,m);
+			poly_exact_cf_div(e,m);
 			safe_integral_adder(i,1u);
 		}
 		return G;
+	};
+	// Update xi at every step of the iteration.
+	auto xi_update = [&xi]() {
+		xi = (73794 * xi * xi.sqrt().sqrt()) / 27011;
 	};
 	for (int i = 0; i < 6; ++i) {
 		// NOTE: eventually we want to replace the generic subs with a specialised one.
 		auto tup_res = gcdheu_liao(p.subs(var,xi),q.subs(var,xi),static_cast<symbol_set::size_type>(s_index + 1u));
 		auto gamma = sp_interpolate(std::get<0u>(tup_res),xi);
+		// NOTE: I am not sure if it is possible for gamma to be zero, but it's better to be safe
+		// than sorry. Note that the interpolation above is fine even if tup_res[0] is zero (it will simply return
+		// zero).
+		if (math::is_zero(gamma)) {
+			xi_update();
+			continue;
+		}
 		poly_exact_cf_div(gamma,gamma.content());
 		try {
 			// NOTE: can improve performance in these scalar * poly multiplications.
@@ -570,19 +565,24 @@ std::tuple<Poly,Poly,Poly> gcdheu_liao(const Poly &a, const Poly &b, symbol_set:
 		}
 		auto cf_p = sp_interpolate(std::get<1u>(tup_res),xi);
 		try {
-			gamma = p / cf_p;
-			return std::make_tuple(g * gamma,cf_p,q / gamma);
+			// NOTE: we need to guard against division by zero here and below.
+			if (!math::is_zero(cf_p)) {
+				gamma = p / cf_p;
+				return std::make_tuple(g * gamma,cf_p,q / gamma);
+			}
 		} catch (const math::inexact_division &) {
 			// Continue in case the division check fails.
 		}
 		auto cf_q = sp_interpolate(std::get<2u>(tup_res),xi);
 		try {
-			gamma = q / cf_q;
-			return std::make_tuple(g * gamma,p / gamma,cf_q);
+			if (!math::is_zero(cf_q)) {
+				gamma = q / cf_q;
+				return std::make_tuple(g * gamma,p / gamma,cf_q);
+			}
 		} catch (const math::inexact_division &) {
 			// Continue in case the division check fails.
 		}
-		xi = (73794 * xi * xi.sqrt().sqrt()) / 27011;
+		xi_update();
 	}
 	piranha_throw(gcdheu_failure,);
 }

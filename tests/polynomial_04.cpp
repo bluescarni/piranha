@@ -708,7 +708,7 @@ BOOST_AUTO_TEST_CASE(polynomial_height_test)
 }
 
 // This was a specific GCD computation that was very slow before changing the heuristic GCD algorithm.
-BOOST_AUTO_TEST_CASE(polynomial_slow_gcd_00_test)
+BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_00_test)
 {
 	using p_type = polynomial<integer,k_monomial>;
 	p_type x{"x"}, y{"y"}, z{"z"};
@@ -718,4 +718,14 @@ BOOST_AUTO_TEST_CASE(polynomial_slow_gcd_00_test)
 	auto d = 3*x.pow(4)*y.pow(3)*z.pow(2)-2*x.pow(3)*y.pow(4)*z.pow(3)-4*x.pow(3)*y.pow(2)*z.pow(2)-2*x.pow(3)*y*z.pow(4);
 	auto g = math::gcd(a*d+b*c,b*d);
 	BOOST_CHECK(g == y || g == -y);
+}
+
+// This failed due to a division by zero by the cofactors cf_p/cf_q in gcdheu. The divisibility
+// test now also checks that the dividends are not zero.
+BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_01_test)
+{
+	using p_type = polynomial<integer,k_monomial>;
+	p_type x{"x"}, y{"y"};
+	BOOST_CHECK(math::gcd(-x+y,y) == 1 || math::gcd(-x+y,y) == -1);
+	BOOST_CHECK(math::gcd(y,-x+y) == 1 || math::gcd(y,-x+y) == -1);
 }
