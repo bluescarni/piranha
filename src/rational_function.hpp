@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "exceptions.hpp"
+#include "is_cf.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
@@ -63,11 +64,13 @@ namespace piranha
  *
  * ## Interoperability with other types ##
  *
- * Interoperability with the following types is provided:
+ * Instances of piranha::rational_function can be constructed and assigned from:
  * - piranha::integer,
  * - piranha::rational,
  * - the polynomial type representing numerator and denominator (that is, piranha::rational_function::p_type) and its
  *   counterpart with rational coefficients (that is, piranha::rational_function::q_type).
+ * 
+ * The arithmetic operators of piranha::rational_function interoperate with piranha::integer and piranha::rational.
  *
  * ## Type requirements ##
  *
@@ -79,7 +82,7 @@ namespace piranha
  *
  * ## Move semantics ##
  *
- * Move operations will leave object of this class in a stat which is destructible and assignable.
+ * Move operations will leave object of this class in a state which is destructible and assignable.
  *
  * ## Serialization ##
  *
@@ -108,8 +111,7 @@ class rational_function
 		// Detect types interoperable for arithmetics.
 		template <typename T>
 		using is_interoperable = std::integral_constant<bool,
-			is_integral<T>::value || std::is_same<T,rational>::value ||
-			std::is_same<T,p_type>::value || std::is_same<T,q_type>::value
+			is_integral<T>::value || std::is_same<T,rational>::value
 		>;
 		// Canonicalisation.
 		static std::pair<p_type,p_type> canonicalise_impl(const p_type &n, const p_type &d)
@@ -263,7 +265,7 @@ class rational_function
 		// the generic assignment operator is never used when T is rational_function.
 		template <typename T, typename U>
 		using generic_assignment_enabler = unary_ctor_enabler<T,U>;
-		// Binary addition.
+		// Addition.
 		static rational_function dispatch_binary_add(const rational_function &a, const rational_function &b)
 		{
 			// Detect unitary denominators.
@@ -306,7 +308,10 @@ class rational_function
 		using binary_add_enabler = typename std::enable_if<detail::true_tt<
 			// NOTE: here the rational_function:: specifier is apprently needed only in GCC, probably a bug.
 			decltype(rational_function::dispatch_binary_add(std::declval<const T &>(),std::declval<const U &>()))>::value,int>::type;
-		// Binary subtraction.
+		template <typename T, typename U>
+		using in_place_add_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
+			+ std::declval<const U &>())>::value,int>::type;
+		// Subtraction.
 		static rational_function dispatch_binary_sub(const rational_function &a, const rational_function &b)
 		{
 			// Detect unitary denominators.
@@ -345,6 +350,9 @@ class rational_function
 		template <typename T, typename U>
 		using binary_sub_enabler = typename std::enable_if<detail::true_tt<
 			decltype(rational_function::dispatch_binary_sub(std::declval<const T &>(),std::declval<const U &>()))>::value,int>::type;
+		template <typename T, typename U>
+		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
+			- std::declval<const U &>())>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -462,8 +470,11 @@ class rational_function
 			static_assert(!std::is_base_of<rational_function,decay_t<T>>::value,"Type error.");
 			return *this = rational_function(std::forward<T>(x));
 		}
-		/// Defaulted destructor.
-		~rational_function() = default;
+		/// Trivial destructor.
+		~rational_function()
+		{
+			PIRANHA_TT_CHECK(is_cf,rational_function);
+		}
 		/// Canonicalisation.
 		/**
 		 * This method will put \p this in canonical form. Normally, it is never necessary to call this method,
@@ -641,13 +652,26 @@ class rational_function
 		{
 			return dispatch_binary_add(a,b);
 		}
-		template <typename T, typename U>
-		using in_place_add_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
-			+ std::declval<const U &>())>::value,int>::type;
+		/// In-place addition.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an interoperable type.
+		 * 
+		 * This operator is equivalent to the expression:
+		 * @code
+		 * return *this = *this + other;
+		 * @endcode
+		 * 
+		 * @param[in] other argument.
+		 * 
+		 * @return a reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the corresponding binary operator.
+		 */
 		template <typename T, typename U = rational_function, in_place_add_enabler<T,U> = 0>
 		rational_function &operator+=(const T &other)
 		{
-			// NOTE: this + other will always return rational_function.
+			// NOTE: *this + other will always return rational_function.
 			return *this = *this + other;
 		}
 		/// Negated copy.
@@ -683,6 +707,27 @@ class rational_function
 		friend rational_function operator-(const T &a, const U &b)
 		{
 			return dispatch_binary_sub(a,b);
+		}
+		/// In-place subtraction.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an interoperable type.
+		 * 
+		 * This operator is equivalent to the expression:
+		 * @code
+		 * return *this = *this - other;
+		 * @endcode
+		 * 
+		 * @param[in] other argument.
+		 * 
+		 * @return a reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the corresponding binary operator.
+		 */
+		template <typename T, typename U = rational_function, in_place_sub_enabler<T,U> = 0>
+		rational_function &operator-=(const T &other)
+		{
+			return *this = *this - other;
 		}
 	private:
 		p_type	m_num;
