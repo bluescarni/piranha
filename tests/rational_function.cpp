@@ -554,16 +554,35 @@ struct sub_tester
 	{
 		using r_type = rational_function<Key>;
 		using p_type = typename r_type::p_type;
-		BOOST_CHECK(is_addable<r_type>::value);
+		BOOST_CHECK(is_subtractable<r_type>::value);
+		BOOST_CHECK((is_subtractable<r_type,int>::value));
+		BOOST_CHECK((is_subtractable<int,r_type>::value));
+		BOOST_CHECK((is_subtractable<r_type,integer>::value));
+		BOOST_CHECK((is_subtractable<integer,r_type>::value));
+		BOOST_CHECK((is_subtractable<r_type,rational>::value));
+		BOOST_CHECK((is_subtractable<rational,r_type>::value));
+		BOOST_CHECK(is_subtractable_in_place<r_type>::value);
+		BOOST_CHECK((is_subtractable_in_place<r_type,int>::value));
+		BOOST_CHECK((is_subtractable_in_place<r_type,integer>::value));
+		BOOST_CHECK((is_subtractable_in_place<r_type,rational>::value));
+		BOOST_CHECK((!is_subtractable<r_type,double>::value));
+		BOOST_CHECK((!is_subtractable<long double,r_type>::value));
+		BOOST_CHECK((!is_subtractable_in_place<r_type,double>::value));
+		BOOST_CHECK((!is_subtractable_in_place<r_type,float>::value));
 		BOOST_CHECK((std::is_same<decltype(r_type{} - r_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} - 1_z),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(1_q - r_type{}),r_type>::value));
 		p_type x{"x"}, y{"y"}, z{"z"};
 		auto checker = [](const r_type &a, const r_type &b) {
 			BOOST_CHECK_EQUAL(a,b);
 			BOOST_CHECK(a.is_canonical());
 		};
 		checker(r_type{} - r_type{},r_type{});
-		checker(r_type{} - r_type{x,y},-r_type{x,y});
+		checker(r_type{} - r_type{x,y},r_type{-x,y});
 		checker(r_type{x,y} - r_type{},r_type{x,y});
+		checker(r_type{x,y} - 2,r_type{x-2*y,y});
+		checker(1_z - r_type{x,y},r_type{-x+y,y});
+		checker(1/3_q - r_type{x,y},r_type{-3*x+y,3*y});
 		checker(r_type{2*x,y} - r_type{y,x},r_type{2*x*x-y*y,y*x});
 		// Random testing.
 		std::uniform_int_distribution<int> dist(0,4);
@@ -589,9 +608,20 @@ struct sub_tester
 			check = add + r2;
 			BOOST_CHECK(check.is_canonical());
 			BOOST_CHECK_EQUAL(check,r1);
+			// Vs integer and rational.
+			BOOST_CHECK_EQUAL(1 - r1 - 1,-r1);
+			BOOST_CHECK_EQUAL(1_z - r1 - 1_z,-r1);
+			BOOST_CHECK_EQUAL(-1/2_q - r1 + 1/2_q,-r1);
+			// Check the in-place version.
+			r1 -= r2;
+			BOOST_CHECK_EQUAL(add,r1);
+			r1 -= 1/2_q;
+			BOOST_CHECK_EQUAL(add - 1/2_q,r1);
+			r1 -= 1;
+			BOOST_CHECK_EQUAL(add - 1/2_q - 1,r1);
 		}
-		// Negated copy.
-		BOOST_CHECK_EQUAL((-r_type{2*x*x+y*y,y*x}),(r_type{0} - r_type{2*x*x+y*y,y*x}));
+		// Negation operator.
+		BOOST_CHECK_EQUAL((-r_type{2*x*x+y*y,y*x}),(r_type{-2*x*x-y*y,y*x}));
 	}
 };
 
