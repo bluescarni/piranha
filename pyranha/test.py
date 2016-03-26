@@ -397,10 +397,15 @@ class polynomial_test_case(_ut.TestCase):
 		self.assert_(gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == x-y or gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == -x+y)
 		self.assertRaises(TypeError, lambda: gcd(x,1))
 		self.assertRaises(ValueError, lambda: gcd(x**-1,y))
-		self.assert_(pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == x-y or pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == -x+y)
-		self.assert_(pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.automatic) == x-y or pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.automatic) == -x+y)
-		self.assert_(pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.prs_sr) == x-y or pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.prs_sr) == -x+y)
-		self.assert_(pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.heuristic) == x-y or pt.gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y),pga.heuristic) == -x+y)
+		def gcd_check(a,b,cmp):
+			for algo in [pga.automatic,pga.prs_sr,pga.heuristic]:
+				res = pt.gcd(a,b,algo)
+				self.assert_(res[0] == cmp or res[0] == -cmp)
+				res = pt.gcd(a,b,True,algo)
+				self.assert_(res[0] == cmp or res[0] == -cmp)
+				self.assertEqual(res[1],a / res[0])
+				self.assertEqual(res[2],b / res[0])
+		gcd_check((x**2-y**2)*(x+3),(x-y)*(x**3+y),x-y)
 		# Content.
 		self.assertEqual((12*x+20*y).content(),4)
 		self.assertEqual((x-x).content(),0)

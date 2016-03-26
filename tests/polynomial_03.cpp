@@ -395,14 +395,18 @@ struct univariate_gcdheu_tester
 		using namespace piranha::detail;
 		using piranha::math::pow;
 		using p_type = polynomial<integer,Key>;
-		p_type x{"x"}, y{"y"}, z{"z"};
+		p_type x{"x"};
 		// The idea here is that instead of calling the detail:: implementation we go through
 		// the gcd() static function in poly and force the algorithm. This is in order to test
 		// the exception throwing paths in the static method.
 		auto heu_wrapper = [](const p_type &a, const p_type &b) -> std::pair<bool,p_type> {
 			try {
-				auto res_heu = p_type::gcd(a,b,polynomial_gcd_algorithm::heuristic);
-				return std::make_pair(false,std::move(res_heu));
+				auto res_heu = p_type::gcd(a,b,true,polynomial_gcd_algorithm::heuristic);
+				if (!math::is_zero(std::get<0u>(res_heu))) {
+					BOOST_CHECK_EQUAL(a / std::get<0u>(res_heu),std::get<1u>(res_heu));
+					BOOST_CHECK_EQUAL(b / std::get<0u>(res_heu),std::get<2u>(res_heu));
+				}
+				return std::make_pair(false,std::move(std::get<0u>(res_heu)));
 			} catch (const std::runtime_error &) {
 				return std::make_pair(true,p_type{});
 			}

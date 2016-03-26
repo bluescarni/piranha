@@ -176,14 +176,32 @@ struct poly_custom_hook
 	void expose_join(Args && ...) const {}
 	// GCD.
 	template <typename T>
-	static T static_gcd_wrapper(const T &a, const T &b)
+	static bp::tuple static_gcd_wrapper(const T &a, const T &b)
 	{
-		return T::gcd(a,b);
+		auto retval = T::gcd(a,b);
+		return bp::make_tuple(std::move(std::get<0u>(retval)),std::move(std::get<1u>(retval)),
+			std::move(std::get<2u>(retval)));
 	}
 	template <typename T>
-	static T static_gcd_wrapper_algo(const T &a, const T &b, piranha::polynomial_gcd_algorithm algo)
+	static bp::tuple static_gcd_wrapper_algo(const T &a, const T &b, piranha::polynomial_gcd_algorithm algo)
 	{
-		return T::gcd(a,b,algo);
+		auto retval = T::gcd(a,b,false,algo);
+		return bp::make_tuple(std::move(std::get<0u>(retval)),std::move(std::get<1u>(retval)),
+			std::move(std::get<2u>(retval)));
+	}
+	template <typename T>
+	static bp::tuple static_gcd_wrapper_cofac_algo(const T &a, const T &b, bool with_cofactors, piranha::polynomial_gcd_algorithm algo)
+	{
+		auto retval = T::gcd(a,b,with_cofactors,algo);
+		return bp::make_tuple(std::move(std::get<0u>(retval)),std::move(std::get<1u>(retval)),
+			std::move(std::get<2u>(retval)));
+	}
+	template <typename T>
+	static bp::tuple static_gcd_wrapper_cofac(const T &a, const T &b, bool with_cofactors)
+	{
+		auto retval = T::gcd(a,b,with_cofactors);
+		return bp::make_tuple(std::move(std::get<0u>(retval)),std::move(std::get<1u>(retval)),
+			std::move(std::get<2u>(retval)));
 	}
 	template <typename T, typename std::enable_if<piranha::has_gcd<T>::value,int>::type = 0>
 	void expose_gcd(bp::class_<T> &series_class) const
@@ -191,6 +209,8 @@ struct poly_custom_hook
 		bp::def("_gcd",piranha::math::gcd<T,T>);
 		series_class.def("gcd",static_gcd_wrapper<T>);
 		series_class.def("gcd",static_gcd_wrapper_algo<T>);
+		series_class.def("gcd",static_gcd_wrapper_cofac_algo<T>);
+		series_class.def("gcd",static_gcd_wrapper_cofac<T>);
 		series_class.staticmethod("gcd");
 	}
 	template <typename T, typename std::enable_if<!piranha::has_gcd<T>::value,int>::type = 0>

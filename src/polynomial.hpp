@@ -1106,21 +1106,37 @@ class polynomial:
 			height_type_<T>>::type;
 		// Wrapper around heuristic GCD.
 		template <typename T, typename std::enable_if<detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
-		static std::pair<bool,T> try_gcdheu(const T &a, const T &b, polynomial_gcd_algorithm)
+		static std::pair<bool,std::tuple<T,T,T>> try_gcdheu(const T &a, const T &b, polynomial_gcd_algorithm)
 		{
 			try {
-				return std::make_pair(false,std::get<0u>(detail::gcdheu_liao(a,b)));
+				return std::make_pair(false,detail::gcdheu_liao(a,b));
 			} catch (const detail::gcdheu_failure &) {}
-			return std::make_pair(true,T{});
+			return std::make_pair(true,std::tuple<T,T,T>{});
 		}
 		template <typename T, typename std::enable_if<!detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
-		static std::pair<bool,T> try_gcdheu(const T &, const T &, polynomial_gcd_algorithm algo)
+		static std::pair<bool,std::tuple<T,T,T>> try_gcdheu(const T &, const T &, polynomial_gcd_algorithm algo)
 		{
 			if (algo == polynomial_gcd_algorithm::heuristic) {
 				piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
 					"but it cannot be applied to non-integral coefficients");
 			}
-			return std::make_pair(true,T{});
+			return std::make_pair(true,std::tuple<T,T,T>{});
+		}
+		// This is a wrapper to compute and return the cofactors, together with the GCD, when the PRS algorithm
+		// is used (the gcdheu algorithm already computes the cofactors).
+		template <typename T, typename U>
+		static std::tuple<T,T,T> wrap_gcd_cofactors(U &&gcd, const T &a, const T &b, bool with_cofactors)
+		{
+			if (with_cofactors) {
+				if (math::is_zero(gcd)) {
+					// In this case, a tuple of zeroes will be returned.
+					return std::make_tuple(std::forward<U>(gcd),T{},T{});
+				} else {
+					return std::make_tuple(std::forward<U>(gcd),a / gcd,b / gcd);
+				}
+			} else {
+				return std::make_tuple(std::forward<U>(gcd),T{},T{});
+			}
 		}
 	public:
 		/// Series rebind alias.
@@ -1720,11 +1736,16 @@ class polynomial:
 		 * If \p algo is set to any other value, the selected algorithm will be used. The heuristic GCD algorithm can be
 		 * used only when the ceofficient type is an instance of piranha::mp_integer.
 		 *
+		 * The \p with_cofactors flag signals whether the cofactors should be returned together with the GCD or not.
+		 *
 		 * @param[in] a first argument.
 		 * @param[in] b second argument.
+		 * @param[in] with_cofactors flag to signal that cofactors must be returned as well.
 		 * @param[in] algo the GCD algorithm.
 		 *
-		 * @return the GCD of \p a and \p b.
+		 * @return a tuple containing the GCD \p g of \p a and \p b, and the cofactors (that is, <tt>a / g</tt> and <tt>b / g</tt>),
+		 * if requested. If the cofactors are not requested, the content of the last two elements of the tuple is unspecified. If both input
+		 * arguments are zero, the cofactors will be zero as well.
 		 *
 		 * @throws std::invalid_argument if a negative exponent is encountered in \p a or \p b.
 		 * @throws std::overflow_error in case of (unlikely) integral overflow errors.
@@ -1740,7 +1761,8 @@ class polynomial:
 		 * - the conversion of piranha::integer to \p unsigned.
 		 */
 		template <typename T = polynomial, gcd_enabler<T> = 0>
-		static polynomial gcd(const polynomial &a, const polynomial &b, polynomial_gcd_algorithm algo = polynomial_gcd_algorithm::automatic)
+		static std::tuple<polynomial,polynomial,polynomial> gcd(const polynomial &a, const polynomial &b, bool with_cofactors = false,
+			polynomial_gcd_algorithm algo = polynomial_gcd_algorithm::automatic)
 		{
 			// Deal with different symbol sets.
 			polynomial merged_a, merged_b;
@@ -1770,26 +1792,26 @@ class polynomial:
 			const auto &args = real_a->get_symbol_set();
 			// Proceed with the univariate case.
 			if (args.size() == 1u) {
-				return detail::poly_ugcd(*real_a,*real_b);
+				return wrap_gcd_cofactors(detail::poly_ugcd(*real_a,*real_b),*real_a,*real_b,with_cofactors);
 			}
 			// Zerovariate case. We need to handle this separately as the use of split() below
 			// requires a nonzero number of arguments.
 			if (args.size() == 0u) {
 				if (real_a->size() == 0u && real_b->size() == 0u) {
-					return polynomial{};
+					return wrap_gcd_cofactors(polynomial{},*real_a,*real_b,with_cofactors);
 				}
 				if (real_a->size() == 0u) {
-					return *real_b;
+					return wrap_gcd_cofactors(*real_b,*real_a,*real_b,with_cofactors);
 				}
 				if (real_b->size() == 0u) {
-					return *real_a;
+					return wrap_gcd_cofactors(*real_a,*real_a,*real_b,with_cofactors);
 				}
 				Cf g(0);
 				math::gcd3(g,real_a->_container().begin()->m_cf,real_b->_container().begin()->m_cf);
-				return polynomial(std::move(g));
+				return wrap_gcd_cofactors(polynomial(std::move(g)),*real_a,*real_b,with_cofactors);
 			}
 			// The general multivariate case.
-			return detail::poly_ugcd(real_a->split(),real_b->split()).join();
+			return wrap_gcd_cofactors(detail::poly_ugcd(real_a->split(),real_b->split()).join(),*real_a,*real_b,with_cofactors);
 			// NOTE: an older implementation that replaces the recursive call in the line immediately
 			// above. Let's keep it around for a while for debugging purposes.
 			/*
@@ -2043,13 +2065,13 @@ struct gcd_impl<T,T,detail::poly_gcd_enabler<T>>
 	 * @param[in] a first argument.
 	 * @param[in] b second argument.
 	 *
-	 * @return the output of <tt>piranha::polynomial::gcd(a,b)</tt>.
+	 * @return the first element of the result of <tt>piranha::polynomial::gcd(a,b)</tt>.
 	 *
 	 * @throws unspecified any exception thrown by piranha::polynomial::gcd().
 	 */
 	T operator()(const T &a, const T &b) const
 	{
-		return T::gcd(a,b);
+		return std::get<0u>(T::gcd(a,b));
 	}
 };
 
