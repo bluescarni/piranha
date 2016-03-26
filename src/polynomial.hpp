@@ -1104,7 +1104,9 @@ class polynomial:
 			is_less_than_comparable<height_type_<T>>::value && std::is_move_assignable<height_type_<T>>::value &&
 			(std::is_copy_constructible<height_type_<T>>::value || std::is_move_constructible<height_type_<T>>::value),
 			height_type_<T>>::type;
-		// Wrapper around heuristic GCD.
+		// Wrapper around heuristic GCD. It will return false,tuple if the calculation went well,
+		// true,tuple otherwise. If run on polynomials with non-integer coefficients, it will throw
+		// if the requested algorithm is specifically the heuristic one.
 		template <typename T, typename std::enable_if<detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
 		static std::pair<bool,std::tuple<T,T,T>> try_gcdheu(const T &a, const T &b, polynomial_gcd_algorithm)
 		{
@@ -1116,6 +1118,8 @@ class polynomial:
 		template <typename T, typename std::enable_if<!detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
 		static std::pair<bool,std::tuple<T,T,T>> try_gcdheu(const T &, const T &, polynomial_gcd_algorithm algo)
 		{
+			// The idea here is that this is a different kind of failure from the one we throw in the main gcd()
+			// function, and we want to be able to discriminate the two.
 			if (algo == polynomial_gcd_algorithm::heuristic) {
 				piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
 					"but it cannot be applied to non-integral coefficients");
@@ -1812,6 +1816,8 @@ class polynomial:
 			if (algo == polynomial_gcd_algorithm::automatic || algo == polynomial_gcd_algorithm::heuristic) {
 				auto heu_res = try_gcdheu(*real_a,*real_b,algo);
 				if (heu_res.first && algo == polynomial_gcd_algorithm::heuristic) {
+					// This can happen only if the heuristic fails due to the number of iterations. Calling the heuristic
+					// with non-integral coefficients already throws from the try_gcdheu implementation.
 					piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
 						"but its execution failed due to too many iterations");
 				}
