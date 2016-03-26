@@ -191,6 +191,13 @@ see https://www.gnu.org/licenses/. */
  * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails because of unsafe cast
  * rather than other errors, see e.g. how it is used in the poly linear arg combination.
  * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a time.
+ * \todo when we rework division/gcd with the ordered poly representation, we need also to solve the issue of the interaction between truncation
+ * and division/GCD operations. It seems like we will need to relax some assumptions and assertions (e.g., multiplication by a non-zero entity
+ * could result in zero because of truncation), and add checks so that we can throw cleanly if something goes bad (division by zero, etc.).
+ * \todo related to the above, since we use pow() in the GCD algorithms we also have the problem of pow_caches() having the incorrect results.
+ * It seems like a good course of action would be to just invalidate the caches every time the truncation limit changes. We need to check with
+ * symengine in order to make sure this does not create troubles for them. Even after we do that, we still need to account for potentially strange
+ * things happening when we use pow() in GCD (e.g., nonzero poly to positive power returning zero).
  */
 namespace piranha
 {
