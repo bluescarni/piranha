@@ -442,6 +442,12 @@ struct gcdheu_failure: public base_exception
 	explicit gcdheu_failure(): base_exception("") {}
 };
 
+// Heuristic GCD.
+// This is based on the description of the algorithm from:
+// http://dl.acm.org/citation.cfm?id=220376
+// With respect to the algorithm described there, we do not check for the size of xi and the only criterion
+// for failure is too many iterations. This looks similar to what sympy is doing:
+// https://github.com/sympy/sympy/blob/master/sympy/polys/heuristicgcd.py
 template <typename Poly>
 std::tuple<Poly,Poly,Poly> gcdheu_liao(const Poly &a, const Poly &b, symbol_set::size_type s_index = 0u)
 {
@@ -1789,7 +1795,7 @@ class polynomial:
 		 * @throws unspecified any exception thrown by:
 		 * - the public interface of piranha::series, piranha::symbol_set, piranha::hash_set,
 		 * - construction of keys,
-		 * - construction, arithmetics and assignment of coefficients and polynomials,
+		 * - construction, arithmetics and other operations of coefficients and polynomials,
 		 * - math::gcd(), math::gcd3(), math::divexact(), math::pow(), math::subs(),
 		 * - piranha::polynomial::udivrem(), piranha::polynomial::content(),
 		 * - memory errors in standard containers,
