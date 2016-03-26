@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -56,7 +57,7 @@ namespace piranha
  * The monomial representation is determined by the \p Key template parameter. Only monomial types with integral exponents are allowed; signed exponent
  * types are allowed, but if a negative exponent is ever generated or encountered while operating on a rational function an error will be produced.
  *
- * Internally, a piranha::rational_function consists of a numerator and a denominator represented via piranha::polynomial with piranha::integer coefficients.
+ * Internally, a piranha::rational_function consists of a numerator and a denominator represented as piranha::polynomial with piranha::integer coefficients.
  * Rational functions are always kept in a canonical form defined by the following properties:
  * - numerator and denominator are coprime,
  * - zero is always represented as <tt>0 / 1</tt>,
@@ -136,12 +137,13 @@ class rational_function
 			// Handle single-coefficient polys.
 			if (n.is_single_coefficient() && d.is_single_coefficient()) {
 				piranha_assert(n.size() == 1u && d.size() == 1u);
+				// Use a rational to construct the canonical form.
 				rational tmp{n._container().begin()->m_cf,d._container().begin()->m_cf};
 				return std::make_pair(p_type{tmp.num()},p_type{tmp.den()});
 			}
 			// Compute the GCD and create the return values.
-			auto g = math::gcd(n,d);
-			auto retval = std::make_pair(n / g, d / g);
+			auto tup_res = p_type::gcd(n,d,true);
+			auto retval = std::make_pair(std::move(std::get<1u>(tup_res)),std::move(std::get<2u>(tup_res)));
 			// Check if we need to adjust the sign of the leading term
 			// of the denominator.
 			if (detail::poly_lterm(retval.second)->m_cf.sign() < 0) {
