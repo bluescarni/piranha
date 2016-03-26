@@ -185,7 +185,7 @@ inline void poly_exact_cf_div(PType &p, const typename PType::term_type::cf_type
 	}
 }
 
-// Univariate polynomial GCD.
+// Univariate polynomial GCD via PRS-SR.
 // Implementation based on subresultant polynomial remainder sequence:
 // https://en.wikipedia.org/wiki/Polynomial_greatest_common_divisor
 // See also Zippel, 8.6. This implementation is actually based on
@@ -199,7 +199,7 @@ inline void poly_exact_cf_div(PType &p, const typename PType::term_type::cf_type
 // - cf type * cf type is still cf type, and multipliable in-place,
 // - cf type has divexact.
 template <typename PType>
-inline PType poly_ugcd(PType a, PType b)
+inline PType gcd_prs_sr(PType a, PType b)
 {
 	using term_type = typename PType::term_type;
 	using cf_type = typename term_type::cf_type;
@@ -1829,7 +1829,7 @@ class polynomial:
 			const auto &args = real_a->get_symbol_set();
 			// Proceed with the univariate case.
 			if (args.size() == 1u) {
-				return wrap_gcd_cofactors(detail::poly_ugcd(*real_a,*real_b),*real_a,*real_b,with_cofactors);
+				return wrap_gcd_cofactors(detail::gcd_prs_sr(*real_a,*real_b),*real_a,*real_b,with_cofactors);
 			}
 			// Zerovariate case. We need to handle this separately as the use of split() below
 			// requires a nonzero number of arguments.
@@ -1848,7 +1848,7 @@ class polynomial:
 				return wrap_gcd_cofactors(polynomial(std::move(g)),*real_a,*real_b,with_cofactors);
 			}
 			// The general multivariate case.
-			return wrap_gcd_cofactors(detail::poly_ugcd(real_a->split(),real_b->split()).join(),*real_a,*real_b,with_cofactors);
+			return wrap_gcd_cofactors(detail::gcd_prs_sr(real_a->split(),real_b->split()).join(),*real_a,*real_b,with_cofactors);
 			// NOTE: an older implementation that replaces the recursive call in the line immediately
 			// above. Let's keep it around for a while for debugging purposes.
 			/*
