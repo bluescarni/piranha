@@ -465,11 +465,15 @@ struct gcd_prs_tester
 	{
 		using p_type = polynomial<integer,Key>;
 		using math::pow;
+		// Set the default algorithm to PRS, so that it is used at all levels of the recursion.
+		BOOST_CHECK(p_type::get_default_gcd_algorithm() == polynomial_gcd_algorithm::automatic);
+		p_type::set_default_gcd_algorithm(polynomial_gcd_algorithm::prs_sr);
 		auto gcd_f = [](const p_type &a, const p_type &b) {
-			return std::get<0u>(p_type::gcd(a,b,false,polynomial_gcd_algorithm::prs_sr));
+			return std::get<0u>(p_type::gcd(a,b,false));
 		};
 		auto gcd_check = [](const p_type &a, const p_type &b, const p_type &g) {
 			try {
+				// Here explicitly call the heuristic one, for comparison.
 				auto ret = std::get<0u>(p_type::gcd(a,b,false,polynomial_gcd_algorithm::heuristic));
 				BOOST_CHECK(ret == g || ret == -g);
 			} catch (const detail::gcdheu_failure &) {}
@@ -508,7 +512,7 @@ struct gcd_prs_tester
 		std::uniform_int_distribution<int> dist(0,4);
 		for (int i = 0; i < ntrials; ++i) {
 			auto n = rn_poly(x,y,z,dist), m = rn_poly(x,y,z,dist), r = rn_poly(x,y,z,dist);
-			auto tup_res = p_type::gcd(n*r,m*n,true,polynomial_gcd_algorithm::prs_sr);
+			auto tup_res = p_type::gcd(n*r,m*n,true);
 			const auto &g = std::get<0u>(tup_res);
 			if (!math::is_zero(g)) {
 				BOOST_CHECK_EQUAL((n*r) / g,std::get<1u>(tup_res));
@@ -557,6 +561,9 @@ struct gcd_prs_tester
 				-6*pow(x,6)*y*pow(z,5)-12*pow(x,3)*pow(z,8)-6*x*pow(y,3)*pow(z,4),
 			2*pow(x,5)*y*pow(z,4) + 4*pow(x,2)*pow(z,7) - x*pow(y,3)*pow(z,6) - 3*x*pow(z,3)
 		);
+		// Restore the automatic algorithm.
+		p_type::reset_default_gcd_algorithm();
+		BOOST_CHECK(p_type::get_default_gcd_algorithm() == polynomial_gcd_algorithm::automatic);
 	}
 };
 

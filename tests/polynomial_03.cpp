@@ -195,6 +195,9 @@ struct ugcd_tester
 		using piranha::math::pow;
 		using p_type = polynomial<integer,Key>;
 		using pq_type = polynomial<rational,Key>;
+		// Set the default algorithm to PRS, so it is used at all levels of the recursion.
+		BOOST_CHECK(p_type::get_default_gcd_algorithm() == polynomial_gcd_algorithm::automatic);
+		p_type::set_default_gcd_algorithm(polynomial_gcd_algorithm::prs_sr);
 		p_type x{"x"};
 		// Some known tests.
 		BOOST_CHECK_EQUAL(x,poly_ugcd(x,x));
@@ -248,6 +251,9 @@ struct ugcd_tester
 			}
 			BOOST_CHECK(tmp == poly_ugcd(a*b,a*b*b) || tmp == -poly_ugcd(a*b,a*b*b));
 		}
+		// Restore.
+		p_type::reset_default_gcd_algorithm();
+		BOOST_CHECK(p_type::get_default_gcd_algorithm() == polynomial_gcd_algorithm::automatic);
 	}
 };
 

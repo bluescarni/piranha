@@ -397,6 +397,12 @@ class polynomial_test_case(_ut.TestCase):
 		self.assert_(gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == x-y or gcd((x**2-y**2)*(x+3),(x-y)*(x**3+y)) == -x+y)
 		self.assertRaises(TypeError, lambda: gcd(x,1))
 		self.assertRaises(ValueError, lambda: gcd(x**-1,y))
+		# Test the methods to get/set the default GCD algo.
+		self.assertEqual(pt.get_default_gcd_algorithm(),pga.automatic)
+		pt.set_default_gcd_algorithm(pga.prs_sr)
+		self.assertEqual(pt.get_default_gcd_algorithm(),pga.prs_sr)
+		pt.reset_default_gcd_algorithm()
+		self.assertEqual(pt.get_default_gcd_algorithm(),pga.automatic)
 		def gcd_check(a,b,cmp):
 			for algo in [pga.automatic,pga.prs_sr,pga.heuristic]:
 				res = pt.gcd(a,b,algo)

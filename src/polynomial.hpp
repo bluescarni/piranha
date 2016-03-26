@@ -1721,6 +1721,36 @@ class polynomial:
 		{
 			return n = n / d;
 		}
+		/// Get the default algorithm to be used for GCD computations.
+		/**
+		 * The default value initialised on startup is polynomial_gcd_algorithm::automatic.
+		 * This method is thread-safe.
+		 *
+		 * @return the current default algorithm to be used for GCD computations.
+		 */
+		static polynomial_gcd_algorithm get_default_gcd_algorithm()
+		{
+			return s_def_gcd_algo.load();
+		}
+		/// Set the default algorithm to be used for GCD computations.
+		/**
+		 * This method is thread-safe.
+		 *
+		 * @param[in] algo the desired default algorithm to be used for GCD computations.
+		 */
+		static void set_default_gcd_algorithm(polynomial_gcd_algorithm algo)
+		{
+			s_def_gcd_algo.store(algo);
+		}
+		/// Reset the default algorithm to be used for GCD computations.
+		/**
+		 * This method will set the default algorithm to be used for GCD computations to polynomial_gcd_algorithm::automatic.
+		 * This method is thread-safe.
+		 */
+		static void reset_default_gcd_algorithm()
+		{
+			s_def_gcd_algo.store(polynomial_gcd_algorithm::automatic);
+		}
 		/// Polynomial GCD.
 		/**
 		 * \note
@@ -1732,9 +1762,10 @@ class polynomial:
 		 *
 		 * This method will compute the GCD of polynomials \p a and \p b. The algorithm that will be employed
 		 * for the computation is selected by the \p algo flag. If \p algo is set to polynomial_gcd_algorithm::automatic
-		 * (the default) the heuristic GCD algorithm will be tried first, followed by the PRS SR algorithm in case of failures.
+		 * the heuristic GCD algorithm will be tried first, followed by the PRS SR algorithm in case of failures.
 		 * If \p algo is set to any other value, the selected algorithm will be used. The heuristic GCD algorithm can be
-		 * used only when the ceofficient type is an instance of piranha::mp_integer.
+		 * used only when the ceofficient type is an instance of piranha::mp_integer. The default value for \p algo
+		 * is the one returned by get_default_gcd_algorithm().
 		 *
 		 * The \p with_cofactors flag signals whether the cofactors should be returned together with the GCD or not.
 		 *
@@ -1762,7 +1793,7 @@ class polynomial:
 		 */
 		template <typename T = polynomial, gcd_enabler<T> = 0>
 		static std::tuple<polynomial,polynomial,polynomial> gcd(const polynomial &a, const polynomial &b, bool with_cofactors = false,
-			polynomial_gcd_algorithm algo = polynomial_gcd_algorithm::automatic)
+			polynomial_gcd_algorithm algo = get_default_gcd_algorithm())
 		{
 			// Deal with different symbol sets.
 			polynomial merged_a, merged_b;
@@ -1879,9 +1910,11 @@ class polynomial:
 		}
 	private:
 		// Static data for auto_truncate_degree.
-		static std::mutex		s_at_degree_mutex;
-		static int			s_at_degree_mode;
-		static std::vector<std::string>	s_at_degree_names;
+		static std::mutex				s_at_degree_mutex;
+		static int					s_at_degree_mode;
+		static std::vector<std::string>			s_at_degree_names;
+		// Static data for default GCD algorithm selection.
+		static std::atomic<polynomial_gcd_algorithm>	s_def_gcd_algo;
 };
 
 // Static inits.
@@ -1893,6 +1926,9 @@ int polynomial<Cf,Key>::s_at_degree_mode = 0;
 
 template <typename Cf, typename Key>
 std::vector<std::string> polynomial<Cf,Key>::s_at_degree_names;
+
+template <typename Cf, typename Key>
+std::atomic<polynomial_gcd_algorithm> polynomial<Cf,Key>::s_def_gcd_algo(polynomial_gcd_algorithm::automatic);
 
 namespace detail
 {

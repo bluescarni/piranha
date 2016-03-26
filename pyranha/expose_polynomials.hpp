@@ -272,6 +272,12 @@ struct poly_custom_hook
 		expose_join(series_class);
 		// GCD.
 		expose_gcd(series_class);
+		series_class.def("get_default_gcd_algorithm",T::get_default_gcd_algorithm);
+		series_class.staticmethod("get_default_gcd_algorithm");
+		series_class.def("set_default_gcd_algorithm",T::set_default_gcd_algorithm);
+		series_class.staticmethod("set_default_gcd_algorithm");
+		series_class.def("reset_default_gcd_algorithm",T::reset_default_gcd_algorithm);
+		series_class.staticmethod("reset_default_gcd_algorithm");
 		// Height.
 		expose_height(series_class);
 		// Content.
