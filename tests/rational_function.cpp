@@ -599,7 +599,6 @@ struct sub_tester
 		BOOST_CHECK((std::is_same<decltype(r_type{} - r_type{}),r_type>::value));
 		BOOST_CHECK((std::is_same<decltype(r_type{} - 1_z),r_type>::value));
 		BOOST_CHECK((std::is_same<decltype(1_q - r_type{}),r_type>::value));
-		// This is mostly for checking that we are picking the overridden operators.
 		BOOST_CHECK((std::is_same<decltype(r_type{} - p_type{}),r_type>::value));
 		BOOST_CHECK((std::is_same<decltype(q_type{} - r_type{}),r_type>::value));
 		p_type x{"x"}, y{"y"}, z{"z"};
@@ -668,4 +667,245 @@ struct sub_tester
 BOOST_AUTO_TEST_CASE(rational_function_sub_test)
 {
 	boost::mpl::for_each<key_types>(sub_tester());
+}
+
+struct mul_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		using q_type = typename r_type::q_type;
+		BOOST_CHECK(is_multipliable<r_type>::value);
+		BOOST_CHECK((is_multipliable<r_type,int>::value));
+		BOOST_CHECK((is_multipliable<int,r_type>::value));
+		BOOST_CHECK((is_multipliable<r_type,integer>::value));
+		BOOST_CHECK((is_multipliable<integer,r_type>::value));
+		BOOST_CHECK((is_multipliable<r_type,rational>::value));
+		BOOST_CHECK((is_multipliable<rational,r_type>::value));
+		BOOST_CHECK((is_multipliable<r_type,p_type>::value));
+		BOOST_CHECK((is_multipliable<p_type,r_type>::value));
+		BOOST_CHECK((is_multipliable<r_type,q_type>::value));
+		BOOST_CHECK((is_multipliable<q_type,r_type>::value));
+		BOOST_CHECK(is_multipliable_in_place<r_type>::value);
+		BOOST_CHECK((is_multipliable_in_place<r_type,int>::value));
+		BOOST_CHECK((is_multipliable_in_place<r_type,integer>::value));
+		BOOST_CHECK((is_multipliable_in_place<r_type,rational>::value));
+		BOOST_CHECK((is_multipliable_in_place<r_type,p_type>::value));
+		BOOST_CHECK((is_multipliable_in_place<r_type,q_type>::value));
+		BOOST_CHECK((!is_multipliable<r_type,double>::value));
+		BOOST_CHECK((!is_multipliable<long double,r_type>::value));
+		BOOST_CHECK((!is_multipliable_in_place<r_type,double>::value));
+		BOOST_CHECK((!is_multipliable_in_place<r_type,float>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} * r_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} * 1_z),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(1_q * r_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} * p_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(q_type{} * r_type{}),r_type>::value));
+		p_type x{"x"}, y{"y"}, z{"z"};
+		auto checker = [](const r_type &a, const r_type &b) {
+			BOOST_CHECK_EQUAL(a,b);
+			BOOST_CHECK(a.is_canonical());
+		};
+		checker(r_type{} * r_type{},r_type{});
+		checker(r_type{} * r_type{x,y},r_type{});
+		checker(r_type{x,y} * r_type{},r_type{});
+		checker(r_type{1} * r_type{x,y},r_type{x,y});
+		checker(r_type{x,y} * r_type{1},r_type{x,y});
+		checker(r_type{x,y} * 2,r_type{2*x,y});
+		checker(2_z * r_type{x,y},r_type{2*x,y});
+		checker(1/3_q * r_type{x,y},r_type{x,3*y});
+		checker(r_type{2*x,y} * r_type{y,x},r_type{2});
+		checker(r_type{x,y+x} * x,r_type{x*x,x+y});
+		checker(x * r_type{x,y+x},r_type{x*x,x+y});
+		checker((q_type{"x"}/2) * r_type{x,y+x},r_type{x*x,2*(x+y)});
+		checker(r_type{x,y+x} * (q_type{"x"}/2),r_type{x*x,2*(x+y)});
+		// Random testing.
+		std::uniform_int_distribution<int> dist(0,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n1 = rn_poly(x,y,z,dist);
+			auto d1 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d1)) {
+				BOOST_CHECK_THROW((r_type{n1,d1}),zero_division_error);
+				continue;
+			}
+			auto n2 = rn_poly(x,y,z,dist);
+			auto d2 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d2)) {
+				BOOST_CHECK_THROW((r_type{n2,d2}),zero_division_error);
+				continue;
+			}
+			r_type r1{n1,d1}, r2{n2,d2};
+			auto mul = r1 * r2;
+			BOOST_CHECK(mul.is_canonical());
+			r_type check;
+			if (math::is_zero(r1)) {
+				BOOST_CHECK_THROW(mul / r1,zero_division_error);
+			} else {
+				check = mul / r1;
+				BOOST_CHECK(check.is_canonical());
+				BOOST_CHECK_EQUAL(check,r2);
+			}
+			if (math::is_zero(r2)) {
+				BOOST_CHECK_THROW(mul / r2,zero_division_error);
+			} else {
+				check = mul / r2;
+				BOOST_CHECK(check.is_canonical());
+				BOOST_CHECK_EQUAL(check,r1);
+			}
+			// Vs interop.
+			BOOST_CHECK_EQUAL((r1 * 2) / 2,r1);
+			BOOST_CHECK_EQUAL((r1 * 2_z) / 2_z,r1);
+			BOOST_CHECK_EQUAL((r1 * (1/2_q)) / (1/2_q),r1);
+			if (math::is_zero(n2)) {
+				BOOST_CHECK_THROW((r1 * n2) / n2,zero_division_error);
+			} else {
+				BOOST_CHECK_EQUAL((r1 * n2) / n2,r1);
+				BOOST_CHECK_EQUAL((q_type{n2}/2 * r1) / (q_type{n2}/2),r1);
+			}
+			// Check the in-place version.
+			r1 *= r2;
+			BOOST_CHECK_EQUAL(mul,r1);
+			r1 *= 1/2_q;
+			BOOST_CHECK_EQUAL(mul * 1/2_q,r1);
+			r1 *= 1;
+			BOOST_CHECK_EQUAL(mul * 1/2_q,r1);
+			r1 *= n2;
+			BOOST_CHECK_EQUAL(mul * 1/2_q * n2,r1);
+			r1 *= q_type{n2}/3;
+			BOOST_CHECK_EQUAL(mul * 1/2_q * n2 * q_type{n2}/3,r1);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_mul_test)
+{
+	boost::mpl::for_each<key_types>(mul_tester());
+}
+
+struct div_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		using q_type = typename r_type::q_type;
+		BOOST_CHECK(is_divisible<r_type>::value);
+		BOOST_CHECK((is_divisible<r_type,int>::value));
+		BOOST_CHECK((is_divisible<int,r_type>::value));
+		BOOST_CHECK((is_divisible<r_type,integer>::value));
+		BOOST_CHECK((is_divisible<integer,r_type>::value));
+		BOOST_CHECK((is_divisible<r_type,rational>::value));
+		BOOST_CHECK((is_divisible<rational,r_type>::value));
+		BOOST_CHECK((is_divisible<r_type,p_type>::value));
+		BOOST_CHECK((is_divisible<p_type,r_type>::value));
+		BOOST_CHECK((is_divisible<r_type,q_type>::value));
+		BOOST_CHECK((is_divisible<q_type,r_type>::value));
+		BOOST_CHECK(is_divisible_in_place<r_type>::value);
+		BOOST_CHECK((is_divisible_in_place<r_type,int>::value));
+		BOOST_CHECK((is_divisible_in_place<r_type,integer>::value));
+		BOOST_CHECK((is_divisible_in_place<r_type,rational>::value));
+		BOOST_CHECK((is_divisible_in_place<r_type,p_type>::value));
+		BOOST_CHECK((is_divisible_in_place<r_type,q_type>::value));
+		BOOST_CHECK((!is_divisible<r_type,double>::value));
+		BOOST_CHECK((!is_divisible<long double,r_type>::value));
+		BOOST_CHECK((!is_divisible_in_place<r_type,double>::value));
+		BOOST_CHECK((!is_divisible_in_place<r_type,float>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} / r_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} / 1_z),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(1_q / r_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(r_type{} / p_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(q_type{} / r_type{}),r_type>::value));
+		p_type x{"x"}, y{"y"}, z{"z"};
+		auto checker = [](const r_type &a, const r_type &b) {
+			BOOST_CHECK_EQUAL(a,b);
+			BOOST_CHECK(a.is_canonical());
+		};
+		checker(r_type{1} / r_type{1},r_type{1});
+		checker(r_type{1} / r_type{x,y},r_type{y,x});
+		checker(r_type{x,y} / r_type{1},r_type{x,y});
+		checker(r_type{x,y} / 2,r_type{x,2*y});
+		checker(2_z / r_type{x,y},r_type{2*y,x});
+		checker(1/3_q / r_type{x,y},r_type{y,3*x});
+		checker(r_type{2*x,y} / r_type{y,x},r_type{2*x*x,y*y});
+		checker(r_type{x,y+x} / x,r_type{p_type{1},x+y});
+		checker(x / r_type{x,y+x},r_type{y+x,p_type{1}});
+		checker((q_type{"x"}/2) / r_type{x,y+x},r_type{y+x,p_type{2}});
+		checker(r_type{x,y+x} / (q_type{"x"}/2),r_type{p_type{2},(x+y)});
+		// Random testing.
+		std::uniform_int_distribution<int> dist(0,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n1 = rn_poly(x,y,z,dist);
+			auto d1 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d1)) {
+				BOOST_CHECK_THROW((r_type{n1,d1}),zero_division_error);
+				continue;
+			}
+			auto n2 = rn_poly(x,y,z,dist);
+			auto d2 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d2)) {
+				BOOST_CHECK_THROW((r_type{n2,d2}),zero_division_error);
+				continue;
+			}
+			r_type r1{n1,d1}, r2{n2,d2};
+			if (math::is_zero(r2)) {
+				continue;
+			}
+			auto div = r1 / r2;
+			BOOST_CHECK(div.is_canonical());
+			auto check = div * r2;
+			BOOST_CHECK(check.is_canonical());
+			BOOST_CHECK_EQUAL(check,r1);
+			// Vs interop.
+			BOOST_CHECK_EQUAL((r1 / 2) * 2,r1);
+			BOOST_CHECK_EQUAL((r1 / 2_z) * 2_z,r1);
+			BOOST_CHECK_EQUAL((r1 / (1/2_q)) * (1/2_q),r1);
+			if (math::is_zero(n2)) {
+				BOOST_CHECK_THROW((r1 / n2) * n2,zero_division_error);
+			} else {
+				BOOST_CHECK_EQUAL((r1 / n2) * n2,r1);
+				BOOST_CHECK_EQUAL((q_type{n2}/2 * r2) / (q_type{n2}/2),r2);
+			}
+			// Check the in-place version.
+			r1 /= r2;
+			BOOST_CHECK_EQUAL(div,r1);
+			r1 /= 1/2_q;
+			BOOST_CHECK_EQUAL(div / (1/2_q),r1);
+			r1 /= 1;
+			BOOST_CHECK_EQUAL(div / (1/2_q),r1);
+			if (math::is_zero(n2)) {
+				continue;
+			}
+			r1 /= n2;
+			BOOST_CHECK_EQUAL((div / (1/2_q)) / n2,r1);
+			r1 /= q_type{n2}/3;
+			BOOST_CHECK_EQUAL(((div / (1/2_q)) / n2) / (q_type{n2}/3),r1);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_div_test)
+{
+	boost::mpl::for_each<key_types>(div_tester());
+}
+
+struct is_zero_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		BOOST_CHECK((has_is_zero<r_type>::value));
+		BOOST_CHECK(math::is_zero(r_type{}));
+		BOOST_CHECK(math::is_zero(r_type{0,1}));
+		BOOST_CHECK(math::is_zero(r_type{0,-123}));
+		BOOST_CHECK(!math::is_zero(r_type{1,-1}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_is_zero_test)
+{
+	boost::mpl::for_each<key_types>(is_zero_tester());
 }

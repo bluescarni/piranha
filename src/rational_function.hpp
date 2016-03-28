@@ -47,6 +47,13 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
+namespace detail
+{
+
+struct rational_function_tag {};
+
+}
+
 /// Rational function.
 /**
  * This class represents rational functions, that is, mathematical objects of the form
@@ -62,6 +69,8 @@ namespace piranha
  * - numerator and denominator are coprime,
  * - zero is always represented as <tt>0 / 1</tt>,
  * - the denominator is never zero and its leading term is always positive.
+ *
+ * This class satisfied the piranha::is_cf type trait.
  *
  * ## Interoperability with other types ##
  *
@@ -90,7 +99,7 @@ namespace piranha
 // TODO: what type traits does it satisfy?
 // TODO: serialization.
 template <typename Key>
-class rational_function
+class rational_function: public detail::rational_function_tag
 {
 		// Shortcut for supported integral type.
 		template <typename T>
@@ -366,10 +375,57 @@ class rational_function
 			}
 			return retval;
 		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static rational_function dispatch_binary_mul(const rational_function &a, const T &b)
+		{
+			return a * rational_function{b};
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static rational_function dispatch_binary_mul(const T &a, const rational_function &b)
+		{
+			return rational_function{a} * b;
+		}
 		template <typename T, typename U>
 		using binary_mul_enabler = typename std::enable_if<detail::true_tt<
 			decltype(rational_function::dispatch_binary_mul(std::declval<const decay_t<T> &>(),
 			std::declval<const decay_t<U> &>()))>::value,int>::type;
+		template <typename T, typename U>
+		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
+			* std::declval<const U &>())>::value,int>::type;
+		// Division.
+		static rational_function dispatch_binary_div(const rational_function &a, const rational_function &b)
+		{
+			// NOTE: division is like a multiplication with inverted second argument, so we need
+			// to check the num of b.
+			const bool uda = math::is_unitary(a.den()), udb = math::is_unitary(b.num());
+			rational_function retval;
+			if (uda && udb) {
+				retval.m_num = a.m_num * b.m_den;
+				retval.m_den = 1;
+			} else {
+				retval.m_num = a.m_num*b.m_den;
+				retval.m_den = a.m_den*b.m_num;
+				retval.canonicalise();
+			}
+			return retval;
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static rational_function dispatch_binary_div(const rational_function &a, const T &b)
+		{
+			return a / rational_function{b};
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static rational_function dispatch_binary_div(const T &a, const rational_function &b)
+		{
+			return rational_function{a} / b;
+		}
+		template <typename T, typename U>
+		using binary_div_enabler = typename std::enable_if<detail::true_tt<
+			decltype(rational_function::dispatch_binary_div(std::declval<const decay_t<T> &>(),
+			std::declval<const decay_t<U> &>()))>::value,int>::type;
+		template <typename T, typename U>
+		using in_place_div_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
+			/ std::declval<const U &>())>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -755,7 +811,8 @@ class rational_function
 		 * @return <tt>a * b</tt>.
 		 *
 		 * @throws unspecified any exception thrown by:
-		 * - construction, assignment, multiplication, addition of piranha::rational_function::p_type,
+		 * - construction, assignment, multiplication of piranha::rational_function::p_type,
+		 * - the generic unary constructor of piranha::rational_function,
 		 * - canonicalise().
 		 */
 		template <typename T, typename U, binary_mul_enabler<T,U> = 0>
@@ -763,10 +820,99 @@ class rational_function
 		{
 			return dispatch_binary_mul(a,b);
 		}
+		/// In-place multiplication.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an interoperable type.
+		 *
+		 * This operator is equivalent to the expression:
+		 * @code
+		 * return *this = *this * other;
+		 * @endcode
+		 *
+		 * @param[in] other argument.
+		 *
+		 * @return a reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by the corresponding binary operator.
+		 */
+		template <typename T, typename U = rational_function, in_place_mul_enabler<T,U> = 0>
+		rational_function &operator*=(const T &other)
+		{
+			return *this = *this * other;
+		}
+		/// Binary division.
+		/**
+		 * \note
+		 * This operator is enabled only if one of the arguments is piranha::rational_function
+		 * and the other argument is either piranha::rational_function or an interoperable type.
+		 *
+		 * This operator will compute the result of dividing \p a by \p b.
+		 *
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 *
+		 * @return <tt>a / b</tt>.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - construction, assignment, multiplication of piranha::rational_function::p_type,
+		 * - the generic unary constructor of piranha::rational_function,
+		 * - canonicalise().
+		 */
+		template <typename T, typename U, binary_div_enabler<T,U> = 0>
+		friend rational_function operator/(T &&a, U &&b)
+		{
+			return dispatch_binary_div(a,b);
+		}
+		/// In-place division.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an interoperable type.
+		 *
+		 * This operator is equivalent to the expression:
+		 * @code
+		 * return *this = *this / other;
+		 * @endcode
+		 *
+		 * @param[in] other argument.
+		 *
+		 * @return a reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by the corresponding binary operator.
+		 */
+		template <typename T, typename U = rational_function, in_place_div_enabler<T,U> = 0>
+		rational_function &operator/=(const T &other)
+		{
+			return *this = *this / other;
+		}
 	private:
 		p_type	m_num;
 		p_type	m_den;
 };
+
+namespace math
+{
+
+/// Specialisation of piranha::math::is_zero() for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] r the piranha::rational_function to be tested.
+	 *
+	 * @return the result of calling piranha::math::is_zero() on the numerator of \p r.
+	 */
+	bool operator()(const T &r) const
+	{
+		return is_zero(r.num());
+	}
+};
+
+}
 
 }
 
