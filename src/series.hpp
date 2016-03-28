@@ -621,9 +621,9 @@ class series_operators
 		// and that for the operator to be enabled the "canonical" form of addition operator must be available.
 		// The consequence is that if, for instance, only a move constructor is available, the operator
 		// will anyway be disabled even if technically we could still perform the computation.
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using binary_add_type = decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+			std::declval<const typename std::decay<U>::type &>()...));
 		// In-place add. Default implementation is to do simply x = x + y, if possible.
 		// NOTE: this should also be able to handle int += series, if we ever implement it.
 		template <typename T, typename U, typename std::enable_if<
@@ -681,9 +681,9 @@ class series_operators
 			retval.negate();
 			return retval;
 		}
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using binary_sub_type = decltype(dispatch_binary_sub(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+			std::declval<const typename std::decay<U>::type &>()...));
 		template <typename T, typename U, typename std::enable_if<
 			std::is_assignable<T &,binary_sub_type<T,U>>::value,
 			int>::type = 0>
@@ -761,11 +761,11 @@ class series_operators
 		}
 		// NOTE: this is the real type from the multiplication, below we put another enable_if to make it conditional
 		// on the presence of a series multiplier.
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using binary_mul_type_ = decltype(dispatch_binary_mul(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
-		template <typename T, typename U>
-		using binary_mul_type = typename std::enable_if<series_has_multiplier<binary_mul_type_<T,U>>::value,binary_mul_type_<T,U>>::type;
+			std::declval<const typename std::decay<U>::type &>()...));
+		template <typename T, typename ... U>
+		using binary_mul_type = typename std::enable_if<series_has_multiplier<binary_mul_type_<T,U...>>::value,binary_mul_type_<T,U...>>::type;
 		template <typename T, typename U, typename std::enable_if<
 			std::is_assignable<T &,binary_mul_type<T,U>>::value,
 			int>::type = 0>
@@ -836,9 +836,9 @@ class series_operators
 			series_common_type<T,U,3> x1(std::forward<T>(x));
 			return dispatch_binary_div(std::move(x1),std::forward<U>(y));
 		}
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using binary_div_type = decltype(dispatch_binary_div(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+			std::declval<const typename std::decay<U>::type &>()...));
 		template <typename T, typename U, typename std::enable_if<
 			std::is_assignable<T &,binary_div_type<T,U>>::value,
 			int>::type = 0>
@@ -937,10 +937,10 @@ class series_operators
 		 * - construction, assignment and other operations on piranha::symbol_set,
 		 * - piranha::series::insert().
 		 */
-		template <typename T, typename U>
-		friend binary_add_type<T,U> operator+(T &&x, U &&y)
+		template <typename T, typename ... U>
+		friend binary_add_type<T,U...> operator+(T &&x, U && ... y)
 		{
-			return dispatch_binary_add(std::forward<T>(x),std::forward<U>(y));
+			return dispatch_binary_add(std::forward<T>(x),std::forward<U>(y)...);
 		}
 		/// In-place addition involving piranha::series.
 		/**
@@ -977,10 +977,10 @@ class series_operators
 		 * - piranha::series::insert(),
 		 * - piranha::series::negate().
 		 */
-		template <typename T, typename U>
-		friend binary_sub_type<T,U> operator-(T &&x, U &&y)
+		template <typename T, typename ... U>
+		friend binary_sub_type<T,U...> operator-(T &&x, U && ... y)
 		{
-			return dispatch_binary_sub(std::forward<T>(x),std::forward<U>(y));
+			return dispatch_binary_sub(std::forward<T>(x),std::forward<U>(y)...);
 		}
 		/// In-place subtraction involving piranha::series.
 		/**
@@ -1017,10 +1017,10 @@ class series_operators
 		 * - piranha::series::insert(),
 		 * - the call operator of piranha::series_multiplier.
 		 */
-		template <typename T, typename U>
-		friend binary_mul_type<T,U> operator*(T &&x, U &&y)
+		template <typename T, typename ... U>
+		friend binary_mul_type<T,U...> operator*(T &&x, U && ... y)
 		{
-			return dispatch_binary_mul(std::forward<T>(x),std::forward<U>(y));
+			return dispatch_binary_mul(std::forward<T>(x),std::forward<U>(y)...);
 		}
 		/// In-place multiplication involving piranha::series.
 		/**
@@ -1058,10 +1058,10 @@ class series_operators
 		 * - piranha::hash_set::erase(),
 		 * - the division operator on the coefficient type of the result.
 		 */
-		template <typename T, typename U>
-		friend binary_div_type<T,U> operator/(T &&x, U &&y)
+		template <typename T, typename ... U>
+		friend binary_div_type<T,U...> operator/(T &&x, U && ... y)
 		{
-			return dispatch_binary_div(std::forward<T>(x),std::forward<U>(y));
+			return dispatch_binary_div(std::forward<T>(x),std::forward<U>(y)...);
 		}
 		/// In-place division involving piranha::series.
 		/**
