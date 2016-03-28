@@ -56,7 +56,9 @@ IF(BUILD_PYRANHA)
 ENDIF(BUILD_PYRANHA)
 
 # Boost libraries setup.
-SET(REQUIRED_BOOST_LIBS serialization iostreams)
+# NOTE: apparently, according to the FindBoost.cmake of cmake 3.5, iostreams
+# depends on regex.
+SET(REQUIRED_BOOST_LIBS serialization iostreams regex)
 IF(BUILD_TESTS)
 	# These libraries are needed only if building tests.
 	MESSAGE(STATUS "Linking unit tests to Boost.Test, Boost.Filesystem and Boost System")
@@ -78,9 +80,9 @@ MESSAGE(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 # NOTE: mark as system headers to avoid excessive warnings in debug mode.
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
-# Set the mandatory Boost libraries. NOTE: here we do not include the libraries
-# pulled in by the tests, only those which are needed by Piranha's core.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_IOSTREAMS_LIBRARY})
+# Set the mandatory Boost libraries.
+# NOTE: here we do not include the libraries pulled in by the tests, only those which are needed by Piranha's core.
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_REGEX_LIBRARY})
 
 # GMP setup.
 FIND_PACKAGE(GMP REQUIRED)
