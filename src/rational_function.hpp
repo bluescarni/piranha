@@ -65,13 +65,11 @@ namespace piranha
  *
  * ## Interoperability with other types ##
  *
- * Instances of piranha::rational_function can be constructed and assigned from:
+ * Instances of piranha::rational_function can interoperate with:
  * - piranha::integer,
  * - piranha::rational,
  * - the polynomial type representing numerator and denominator (that is, piranha::rational_function::p_type) and its
  *   counterpart with rational coefficients (that is, piranha::rational_function::q_type).
- * 
- * The arithmetic operators of piranha::rational_function interoperate with piranha::integer and piranha::rational.
  *
  * ## Type requirements ##
  *
@@ -112,7 +110,8 @@ class rational_function
 		// Detect types interoperable for arithmetics.
 		template <typename T>
 		using is_interoperable = std::integral_constant<bool,
-			is_integral<T>::value || std::is_same<T,rational>::value
+			is_integral<T>::value || std::is_same<T,rational>::value ||
+			std::is_same<T,p_type>::value || std::is_same<T,q_type>::value
 		>;
 		// Canonicalisation.
 		static std::pair<p_type,p_type> canonicalise_impl(const p_type &n, const p_type &d)
@@ -309,30 +308,26 @@ class rational_function
 		template <typename T, typename U>
 		using binary_add_enabler = typename std::enable_if<detail::true_tt<
 			// NOTE: here the rational_function:: specifier is apprently needed only in GCC, probably a bug.
-			decltype(rational_function::dispatch_binary_add(std::declval<const T &>(),std::declval<const U &>()))>::value,int>::type;
+			decltype(rational_function::dispatch_binary_add(std::declval<const decay_t<T> &>(),
+			std::declval<const decay_t<U> &>()))>::value,int>::type;
 		template <typename T, typename U>
 		using in_place_add_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
 			+ std::declval<const U &>())>::value,int>::type;
 		// Subtraction.
 		static rational_function dispatch_binary_sub(const rational_function &a, const rational_function &b)
 		{
-			// Detect unitary denominators.
 			const bool uda = math::is_unitary(a.den()), udb = math::is_unitary(b.den());
 			rational_function retval;
 			if (uda && udb) {
-				// With unitary denominators, just add the numerators and set den to 1.
 				retval.m_num = a.m_num - b.m_num;
 				retval.m_den = 1;
 			} else if (uda) {
-				// Only a is unitary.
 				retval.m_num = a.m_num*b.m_den - b.m_num;
 				retval.m_den = b.m_den;
 			} else if (udb) {
-				// Only b is unitary.
 				retval.m_num = a.m_num - b.m_num*a.m_den;
 				retval.m_den = a.m_den;
 			} else {
-				// The general case.
 				retval.m_num = a.m_num*b.m_den - a.m_den*b.m_num;
 				retval.m_den = a.m_den*b.m_den;
 				retval.canonicalise();
@@ -351,10 +346,30 @@ class rational_function
 		}
 		template <typename T, typename U>
 		using binary_sub_enabler = typename std::enable_if<detail::true_tt<
-			decltype(rational_function::dispatch_binary_sub(std::declval<const T &>(),std::declval<const U &>()))>::value,int>::type;
+			decltype(rational_function::dispatch_binary_sub(std::declval<const decay_t<T> &>(),
+			std::declval<const decay_t<U> &>()))>::value,int>::type;
 		template <typename T, typename U>
 		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
 			- std::declval<const U &>())>::value,int>::type;
+		// Multiplication.
+		static rational_function dispatch_binary_mul(const rational_function &a, const rational_function &b)
+		{
+			const bool uda = math::is_unitary(a.den()), udb = math::is_unitary(b.den());
+			rational_function retval;
+			if (uda && udb) {
+				retval.m_num = a.m_num * b.m_num;
+				retval.m_den = 1;
+			} else {
+				retval.m_num = a.m_num*b.m_num;
+				retval.m_den = a.m_den*b.m_den;
+				retval.canonicalise();
+			}
+			return retval;
+		}
+		template <typename T, typename U>
+		using binary_mul_enabler = typename std::enable_if<detail::true_tt<
+			decltype(rational_function::dispatch_binary_mul(std::declval<const decay_t<T> &>(),
+			std::declval<const decay_t<U> &>()))>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -370,11 +385,7 @@ class rational_function
 		/// Generic unary constructor.
 		/**
 		 * \note
-		 * This constructor is enabled if the decay type of \p T is either:
-		 * - rational_function::p_type,
-		 * - rational_function::q_type,
-		 * - a C++ integral type, piranha::integer or piranha::rational,
-		 * - a string type.
+		 * This constructor is enabled if the decay type of \p T is either an interoperable type or a string type.
 		 *
 		 * The constructor operates as follows:
 		 * - if \p T is rational_function::p_type, a C++ integral type, piranha::integer or a string type, then the numerator
@@ -402,11 +413,8 @@ class rational_function
 		/// Generic binary constructor.
 		/**
 		 * \note
-		 * This constructor is enabled only if the decay types of \p T and \p U are the same type \p Td. \p Td must be either:
-		 * - rational_function::p_type,
-		 * - rational_function::q_type,
-		 * - a C++ integral type, piranha::integer or piranha::rational,
-		 * - a string type.
+		 * This constructor is enabled only if the decay types of \p T and \p U are the same type \p Td. \p Td must be either
+		 * an interoperable type or a string type.
 		 *
 		 * The constructor operates as follows:
 		 * - if \p Td is rational_function::p_type, a C++ integral type, piranha::integer or a string type, then the numerator
@@ -647,10 +655,11 @@ class rational_function
 		 *
 		 * @throws unspecified any exception thrown by:
 		 * - construction, assignment, multiplication, addition of piranha::rational_function::p_type,
+		 * - the generic unary constructor of piranha::rational_function,
 		 * - canonicalise().
 		 */
 		template <typename T, typename U, binary_add_enabler<T,U> = 0>
-		friend rational_function operator+(const T &a, const U &b)
+		friend rational_function operator+(T &&a, U &&b)
 		{
 			return dispatch_binary_add(a,b);
 		}
@@ -703,10 +712,11 @@ class rational_function
 		 *
 		 * @throws unspecified any exception thrown by:
 		 * - construction, assignment, multiplication, subtraction of piranha::rational_function::p_type,
+		 * - the generic unary constructor of piranha::rational_function,
 		 * - canonicalise().
 		 */
 		template <typename T, typename U, binary_sub_enabler<T,U> = 0>
-		friend rational_function operator-(const T &a, const U &b)
+		friend rational_function operator-(T &&a, U &&b)
 		{
 			return dispatch_binary_sub(a,b);
 		}
@@ -730,6 +740,28 @@ class rational_function
 		rational_function &operator-=(const T &other)
 		{
 			return *this = *this - other;
+		}
+		/// Binary multiplication.
+		/**
+		 * \note
+		 * This operator is enabled only if one of the arguments is piranha::rational_function
+		 * and the other argument is either piranha::rational_function or an interoperable type.
+		 *
+		 * This operator will compute the result of multiplying \p a by \p b.
+		 *
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 *
+		 * @return <tt>a * b</tt>.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - construction, assignment, multiplication, addition of piranha::rational_function::p_type,
+		 * - canonicalise().
+		 */
+		template <typename T, typename U, binary_mul_enabler<T,U> = 0>
+		friend rational_function operator*(T &&a, U &&b)
+		{
+			return dispatch_binary_mul(a,b);
 		}
 	private:
 		p_type	m_num;

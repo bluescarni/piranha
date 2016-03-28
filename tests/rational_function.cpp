@@ -471,6 +471,7 @@ struct add_tester
 	{
 		using r_type = rational_function<Key>;
 		using p_type = typename r_type::p_type;
+		using q_type = typename r_type::q_type;
 		BOOST_CHECK(is_addable<r_type>::value);
 		BOOST_CHECK((is_addable<r_type,int>::value));
 		BOOST_CHECK((is_addable<int,r_type>::value));
@@ -478,10 +479,16 @@ struct add_tester
 		BOOST_CHECK((is_addable<integer,r_type>::value));
 		BOOST_CHECK((is_addable<r_type,rational>::value));
 		BOOST_CHECK((is_addable<rational,r_type>::value));
+		BOOST_CHECK((is_addable<r_type,p_type>::value));
+		BOOST_CHECK((is_addable<p_type,r_type>::value));
+		BOOST_CHECK((is_addable<r_type,q_type>::value));
+		BOOST_CHECK((is_addable<q_type,r_type>::value));
 		BOOST_CHECK(is_addable_in_place<r_type>::value);
 		BOOST_CHECK((is_addable_in_place<r_type,int>::value));
 		BOOST_CHECK((is_addable_in_place<r_type,integer>::value));
 		BOOST_CHECK((is_addable_in_place<r_type,rational>::value));
+		BOOST_CHECK((is_addable_in_place<r_type,p_type>::value));
+		BOOST_CHECK((is_addable_in_place<r_type,q_type>::value));
 		BOOST_CHECK((!is_addable<r_type,double>::value));
 		BOOST_CHECK((!is_addable<long double,r_type>::value));
 		BOOST_CHECK((!is_addable_in_place<r_type,double>::value));
@@ -489,6 +496,9 @@ struct add_tester
 		BOOST_CHECK((std::is_same<decltype(r_type{} + r_type{}),r_type>::value));
 		BOOST_CHECK((std::is_same<decltype(r_type{} + 1_z),r_type>::value));
 		BOOST_CHECK((std::is_same<decltype(1_q + r_type{}),r_type>::value));
+		// This is mostly for checking that we are picking the overridden operators.
+		BOOST_CHECK((std::is_same<decltype(r_type{} + p_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(q_type{} + r_type{}),r_type>::value));
 		p_type x{"x"}, y{"y"}, z{"z"};
 		auto checker = [](const r_type &a, const r_type &b) {
 			BOOST_CHECK_EQUAL(a,b);
@@ -501,6 +511,10 @@ struct add_tester
 		checker(1_z + r_type{x,y},r_type{x+y,y});
 		checker(1/3_q + r_type{x,y},r_type{3*x+y,3*y});
 		checker(r_type{2*x,y} + r_type{y,x},r_type{2*x*x+y*y,y*x});
+		checker(r_type{x,y+x} + x,r_type{x+x*x+x*y,x+y});
+		checker(x + r_type{x,y+x},r_type{x+x*x+x*y,x+y});
+		checker(q_type{"x"}/2 + r_type{x,y+x},r_type{2*x+x*x+x*y,2*(x+y)});
+		checker(r_type{x,y+x} + q_type{"x"}/2,r_type{2*x+x*x+x*y,2*(x+y)});
 		// Random testing.
 		std::uniform_int_distribution<int> dist(0,4);
 		for (int i = 0; i < ntrials; ++i) {
@@ -525,10 +539,12 @@ struct add_tester
 			check = add - r2;
 			BOOST_CHECK(check.is_canonical());
 			BOOST_CHECK_EQUAL(check,r1);
-			// Vs integer and rational.
+			// Vs interop.
 			BOOST_CHECK_EQUAL(-1 + r1 + 1,r1);
 			BOOST_CHECK_EQUAL(-1_z + r1 + 1_z,r1);
 			BOOST_CHECK_EQUAL(-1/2_q + r1 + 1/2_q,r1);
+			BOOST_CHECK_EQUAL(-n2 + r1 + n2,r1);
+			BOOST_CHECK_EQUAL(q_type{-n2}/2 + r1 + q_type{n2}/2,r1);
 			// Check the in-place version.
 			r1 += r2;
 			BOOST_CHECK_EQUAL(add,r1);
@@ -536,6 +552,10 @@ struct add_tester
 			BOOST_CHECK_EQUAL(add + 1/2_q,r1);
 			r1 += 1;
 			BOOST_CHECK_EQUAL(add + 1/2_q + 1,r1);
+			r1 += n2;
+			BOOST_CHECK_EQUAL(add + 1/2_q + 1 + n2,r1);
+			r1 += q_type{n2}/3;
+			BOOST_CHECK_EQUAL(add + 1/2_q + 1 + n2 + q_type{n2}/3,r1);
 		}
 		// Identity operator.
 		BOOST_CHECK_EQUAL((+r_type{2*x*x+y*y,y*x}),(r_type{2*x*x+y*y,y*x}));
@@ -554,6 +574,7 @@ struct sub_tester
 	{
 		using r_type = rational_function<Key>;
 		using p_type = typename r_type::p_type;
+		using q_type = typename r_type::q_type;
 		BOOST_CHECK(is_subtractable<r_type>::value);
 		BOOST_CHECK((is_subtractable<r_type,int>::value));
 		BOOST_CHECK((is_subtractable<int,r_type>::value));
@@ -561,10 +582,16 @@ struct sub_tester
 		BOOST_CHECK((is_subtractable<integer,r_type>::value));
 		BOOST_CHECK((is_subtractable<r_type,rational>::value));
 		BOOST_CHECK((is_subtractable<rational,r_type>::value));
+		BOOST_CHECK((is_subtractable<r_type,p_type>::value));
+		BOOST_CHECK((is_subtractable<p_type,r_type>::value));
+		BOOST_CHECK((is_subtractable<r_type,q_type>::value));
+		BOOST_CHECK((is_subtractable<q_type,r_type>::value));
 		BOOST_CHECK(is_subtractable_in_place<r_type>::value);
 		BOOST_CHECK((is_subtractable_in_place<r_type,int>::value));
 		BOOST_CHECK((is_subtractable_in_place<r_type,integer>::value));
 		BOOST_CHECK((is_subtractable_in_place<r_type,rational>::value));
+		BOOST_CHECK((is_subtractable_in_place<r_type,p_type>::value));
+		BOOST_CHECK((is_subtractable_in_place<r_type,q_type>::value));
 		BOOST_CHECK((!is_subtractable<r_type,double>::value));
 		BOOST_CHECK((!is_subtractable<long double,r_type>::value));
 		BOOST_CHECK((!is_subtractable_in_place<r_type,double>::value));
@@ -572,18 +599,25 @@ struct sub_tester
 		BOOST_CHECK((std::is_same<decltype(r_type{} - r_type{}),r_type>::value));
 		BOOST_CHECK((std::is_same<decltype(r_type{} - 1_z),r_type>::value));
 		BOOST_CHECK((std::is_same<decltype(1_q - r_type{}),r_type>::value));
+		// This is mostly for checking that we are picking the overridden operators.
+		BOOST_CHECK((std::is_same<decltype(r_type{} - p_type{}),r_type>::value));
+		BOOST_CHECK((std::is_same<decltype(q_type{} - r_type{}),r_type>::value));
 		p_type x{"x"}, y{"y"}, z{"z"};
 		auto checker = [](const r_type &a, const r_type &b) {
 			BOOST_CHECK_EQUAL(a,b);
 			BOOST_CHECK(a.is_canonical());
 		};
 		checker(r_type{} - r_type{},r_type{});
-		checker(r_type{} - r_type{x,y},r_type{-x,y});
+		checker(r_type{} - r_type{x,y},-r_type{x,y});
 		checker(r_type{x,y} - r_type{},r_type{x,y});
 		checker(r_type{x,y} - 2,r_type{x-2*y,y});
 		checker(1_z - r_type{x,y},r_type{-x+y,y});
-		checker(1/3_q - r_type{x,y},r_type{-3*x+y,3*y});
+		checker(1/3_q - r_type{x,y},r_type{y-3*x,3*y});
 		checker(r_type{2*x,y} - r_type{y,x},r_type{2*x*x-y*y,y*x});
+		checker(r_type{x,y+x} - x,r_type{x-x*x-x*y,x+y});
+		checker(x - r_type{x,y+x},r_type{-x+x*x+x*y,x+y});
+		checker(q_type{"x"}/2 - r_type{x,y+x},r_type{-2*x+x*x+x*y,2*(x+y)});
+		checker(r_type{x,y+x} - q_type{"x"}/2,r_type{2*x-x*x-x*y,2*(x+y)});
 		// Random testing.
 		std::uniform_int_distribution<int> dist(0,4);
 		for (int i = 0; i < ntrials; ++i) {
@@ -600,27 +634,33 @@ struct sub_tester
 				continue;
 			}
 			r_type r1{n1,d1}, r2{n2,d2};
-			auto add = r1 - r2;
-			BOOST_CHECK(add.is_canonical());
-			auto check = -add + r1;
+			auto sub = r1 - r2;
+			BOOST_CHECK(sub.is_canonical());
+			auto check = sub - r1;
 			BOOST_CHECK(check.is_canonical());
-			BOOST_CHECK_EQUAL(check,r2);
-			check = add + r2;
+			BOOST_CHECK_EQUAL(check,-r2);
+			check = -sub - r2;
 			BOOST_CHECK(check.is_canonical());
-			BOOST_CHECK_EQUAL(check,r1);
-			// Vs integer and rational.
+			BOOST_CHECK_EQUAL(check,-r1);
+			// Vs interop.
 			BOOST_CHECK_EQUAL(1 - r1 - 1,-r1);
 			BOOST_CHECK_EQUAL(1_z - r1 - 1_z,-r1);
-			BOOST_CHECK_EQUAL(-1/2_q - r1 + 1/2_q,-r1);
+			BOOST_CHECK_EQUAL(1/2_q - r1 - 1/2_q,-r1);
+			BOOST_CHECK_EQUAL(n2 - r1 - n2,-r1);
+			BOOST_CHECK_EQUAL(q_type{n2}/2 - r1 - q_type{n2}/2,-r1);
 			// Check the in-place version.
 			r1 -= r2;
-			BOOST_CHECK_EQUAL(add,r1);
+			BOOST_CHECK_EQUAL(sub,r1);
 			r1 -= 1/2_q;
-			BOOST_CHECK_EQUAL(add - 1/2_q,r1);
+			BOOST_CHECK_EQUAL(sub - 1/2_q,r1);
 			r1 -= 1;
-			BOOST_CHECK_EQUAL(add - 1/2_q - 1,r1);
+			BOOST_CHECK_EQUAL(sub - 1/2_q - 1,r1);
+			r1 -= n2;
+			BOOST_CHECK_EQUAL(sub - 1/2_q - 1 - n2,r1);
+			r1 -= q_type{n2}/3;
+			BOOST_CHECK_EQUAL(sub - 1/2_q - 1 - n2 - q_type{n2}/3,r1);
 		}
-		// Negation operator.
+		// Identity operator.
 		BOOST_CHECK_EQUAL((-r_type{2*x*x+y*y,y*x}),(r_type{-2*x*x-y*y,y*x}));
 	}
 };
