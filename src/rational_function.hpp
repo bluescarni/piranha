@@ -672,9 +672,32 @@ class rational_function: public detail::rational_function_tag
 		 * @return \p true if the numerator and denominator of \p this are equal to the numerator and
 		 * denominator of \p other, \p false otherwise.
 		 */
-		bool operator==(const rational_function &other) const
+//		bool operator==(const rational_function &other) const
+//		{
+//			return m_num == other.m_num && m_den == other.m_den;
+//		}
+		static bool dispatch_equality(const rational_function &a, const rational_function &b)
 		{
-			return m_num == other.m_num && m_den == other.m_den;
+			return a.m_num == b.m_num && a.m_den == b.m_den;
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static bool dispatch_equality(const rational_function &a, const T &b)
+		{
+			return a == rational_function{b};
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static bool dispatch_equality(const T &a, const rational_function &b)
+		{
+			return b == rational_function{a};
+		}
+		template <typename T, typename U>
+		using eq_enabler = typename std::enable_if<detail::true_tt<
+			decltype(rational_function::dispatch_equality(std::declval<const T &>(),
+			std::declval<const U &>()))>::value,int>::type;
+		template <typename T, typename U, eq_enabler<T,U> = 0>
+		friend bool operator==(const T &a, const U &b)
+		{
+			return dispatch_equality(a,b);
 		}
 		/// Inequality operator.
 		/**
@@ -682,9 +705,14 @@ class rational_function: public detail::rational_function_tag
 		 *
 		 * @return the opposite of rational_function::operator==().
 		 */
-		bool operator !=(const rational_function &other) const
+//		bool operator !=(const rational_function &other) const
+//		{
+//			return !(*this == other);
+//		}
+		template <typename T, typename U, eq_enabler<T,U> = 0>
+		friend bool operator!=(const T &a, const U &b)
 		{
-			return !(*this == other);
+			return !dispatch_equality(a,b);
 		}
 		/// Identity operator.
 		/**
