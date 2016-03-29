@@ -745,3 +745,22 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_01_test)
 	BOOST_CHECK(math::gcd(-x+y,y) == 1 || math::gcd(-x+y,y) == -1);
 	BOOST_CHECK(math::gcd(y,-x+y) == 1 || math::gcd(y,-x+y) == -1);
 }
+
+// This specific computation resulted in a bug in a previoud gcdheu implementation.
+BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_02_test)
+{
+	using p_type = polynomial<integer,k_monomial>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	auto num = 12*x.pow(6)*y.pow(7)*z.pow(3)+12*x.pow(3)*y.pow(5)*z.pow(4)-3*x.pow(4)*y.pow(9)*z.pow(3);
+	auto den = 36*x.pow(4)*y.pow(7)*z-48*x.pow(7)*y.pow(8)*z.pow(3)-48*x.pow(5)*y.pow(7)*z.pow(2)+36*x*y.pow(5)*z.pow(2)
+		-48*x.pow(2)*y.pow(5)*z.pow(3)-48*x.pow(4)*y.pow(6)*z.pow(4)-48*x.pow(3)*y.pow(4)-9*x.pow(2)*y.pow(9)*z+12*x.pow(3)*y.pow(9)*z.pow(2)
+		+12*x.pow(5)*y.pow(10)*z.pow(3)-48*y.pow(2)*z+12*x*y.pow(6);
+	auto correct = -12*y.pow(2)*z-12*x.pow(3)*y.pow(4)+3*x*y.pow(6);
+	p_type::set_default_gcd_algorithm(polynomial_gcd_algorithm::prs_sr);
+	auto prs = std::get<0u>(p_type::gcd(num,den,false));
+	BOOST_CHECK(prs == correct || prs == -correct);
+	p_type::set_default_gcd_algorithm(polynomial_gcd_algorithm::heuristic);
+	auto heu = std::get<0u>(p_type::gcd(num,den,false));
+	BOOST_CHECK(heu == correct || heu == -correct);
+	p_type::set_default_gcd_algorithm(polynomial_gcd_algorithm::automatic);
+}
