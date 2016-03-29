@@ -5,7 +5,7 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     - boost-latest
-    - llvm-toolchain-precise-3.8
+    - llvm-toolchain-precise
     - george-edison55-precise-backports
     packages:
     - libgmp-dev
@@ -22,7 +22,7 @@ addons:
     - python3-numpy
     - python-pip
     - g++-4.8
-    - clang-3.8
+    - clang-3.9
     - doxygen
     - graphviz
     - graphviz-dev
@@ -72,8 +72,8 @@ matrix:
 install:
     - if [[ "${CC}" == "clang" ]]; then
           export PIRANHA_COMPILER=clang;
-          export CC=clang-3.8;
-          export CXX=clang++-3.8;
+          export CC=clang-3.9;
+          export CXX=clang++-3.9;
       elif [[ "${CC}" == "gcc" && "${BUILD_TYPE}" == "Coverage" ]]; then
           export PIRANHA_COMPILER=gcc;
           export CC=gcc-5;
