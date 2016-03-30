@@ -52,7 +52,7 @@ see https://www.gnu.org/licenses/. */
 using namespace piranha;
 
 static std::mt19937 rng;
-static const int ntrials = 200;
+static const int ntrials = 300;
 
 using key_types = boost::mpl::vector<monomial<short>,monomial<integer>,k_monomial>;
 
@@ -676,7 +676,7 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_heu_test)
 	using math::pow;
 	auto gcdheu = [](const p_type &a, const p_type &b) -> std::pair<bool,p_type> {
 		try {
-			return std::make_pair(false,std::move(std::get<0u>(detail::gcdheu_liao(a,b))));
+			return std::make_pair(false,std::move(std::get<0u>(detail::gcdheu_geddes(a,b).second)));
 		} catch (const detail::gcdheu_failure &) {
 			return std::make_pair(true,p_type{});
 		}
@@ -738,6 +738,7 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_00_test)
 
 // This failed due to a division by zero by the cofactors cf_p/cf_q in gcdheu. The divisibility
 // test now also checks that the dividends are not zero.
+// NOTE: this does not apply anymore since the most recent implementation of gcdheu, but let's keep it around.
 BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_01_test)
 {
 	using p_type = polynomial<integer,k_monomial>;

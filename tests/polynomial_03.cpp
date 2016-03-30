@@ -51,7 +51,7 @@ see https://www.gnu.org/licenses/. */
 using namespace piranha;
 
 static std::mt19937 rng;
-static const int ntrials = 100;
+static const int ntrials = 300;
 
 using cf_types = boost::mpl::vector<integer,rational>;
 using key_types = boost::mpl::vector<monomial<short>,monomial<integer>,k_monomial>;

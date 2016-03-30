@@ -442,64 +442,22 @@ struct gcdheu_failure: public base_exception
 	explicit gcdheu_failure(): base_exception("") {}
 };
 
-// Heuristic GCD.
-// This is based on the description of the algorithm from:
-// http://dl.acm.org/citation.cfm?id=220376
-// With respect to the algorithm described there, we do not check for the size of xi and the only criterion
-// for failure is too many iterations. This looks similar to what sympy is doing:
-// https://github.com/sympy/sympy/blob/master/sympy/polys/heuristicgcd.py
+// This implementation is taken straight from the Geddes book. We used to have an implementation based on the paper
+// from Liao & Fateman, which supposedly is (or was) implemented in Maple, but that implementation had a bug which showed
+// up very rarely. Strangely enough, the sympy implementation of heugcd (also based on the Liao paper) has exactly the same
+// issue. Thus the motivation to use the implementation from Geddes.
+// This function returns:
+// - a status flag, to signal if the heuristic failed (true if failure occurred),
+// - the GCD and the 2 cofactors (a / GCD and b / GCD).
+// The function can also fail via throwing gcdheu_failure, which is a different type of failure from the status flag (the
+// gcdheu_failure signals that too large integers are being generated, the status flag signals that too many iterations
+// have been run). This difference is of no consequence for the user, as the exception is caught in try_gcdheu.
 template <typename Poly>
-std::tuple<Poly,Poly,Poly> gcdheu_liao(const Poly &a, const Poly &b, symbol_set::size_type s_index = 0u)
+std::pair<bool,std::tuple<Poly,Poly,Poly>> gcdheu_geddes(const Poly &a, const Poly &b, symbol_set::size_type s_index = 0u)
 {
 	static_assert(is_mp_integer<typename Poly::term_type::cf_type>::value,"Invalid type.");
 	// Require identical symbol sets.
 	piranha_assert(a.get_symbol_set() == b.get_symbol_set());
-	// Cache it.
-	const auto &args = a.get_symbol_set();
-	// Handle empty polys.
-	if (a.size() == 0u && b.size() == 0u) {
-		Poly retval;
-		retval.set_symbol_set(args);
-		// NOTE: not sure about the cofactors here, but we don't use them anyway.
-		return std::make_tuple(retval,retval,retval);
-	}
-	if (a.size() == 0u) {
-		Poly retval;
-		retval.set_symbol_set(args);
-		return std::make_tuple(b,retval,retval + 1);
-	}
-	if (b.size() == 0u) {
-		Poly retval;
-		retval.set_symbol_set(args);
-		return std::make_tuple(a,retval + 1,retval);
-	}
-	// If we are at the first recursion, check the exponents.
-	if (s_index == 0u) {
-		poly_expo_checker(a);
-		poly_expo_checker(b);
-	}
-	// The GCD of the content of a and b.
-	const integer g = math::gcd(a.content(),b.content());
-	// This is the case in which the polynomials are reduced to two integers (essentially, the zerovariate case).
-	if (a.is_single_coefficient() && b.is_single_coefficient()) {
-		piranha_assert(a.size() == 1u && b.size() == 1u);
-		Poly retval;
-		retval.set_symbol_set(args);
-		return std::make_tuple(retval + g,a / g,b / g);
-	}
-	// s_index is the recursion index for the call.
-	piranha_assert(s_index < args.size());
-	auto p(a), q(b);
-	poly_exact_cf_div(p,g);
-	poly_exact_cf_div(q,g);
-	// The current variable.
-	const std::string var = args[s_index].get_name();
-	const integer beta = 2 * std::min(p.height(),q.height()) + 29;
-	auto xi = std::max(
-		std::min(beta,(10000 * beta.sqrt()) / 101),
-		2 * std::min(p.height() / math::abs(detail::poly_lterm(p)->m_cf),q.height() / math::abs(detail::poly_lterm(q)->m_cf)) + 2
-	);
-	// Interpolation utils.
 	// Helper function to compute the symmetric version of the modulo operation.
 	// See Geddes 4.2 and:
 	// http://www.maplesoft.com/support/help/maple/view.aspx?path=mod
@@ -507,24 +465,20 @@ std::tuple<Poly,Poly,Poly> gcdheu_liao(const Poly &a, const Poly &b, symbol_set:
 		// NOTE: require that the denominator is strictly positive.
 		piranha_assert(m > 0);
 		auto retval = n % m;
-		// NOTE: the modulo operation on integer returns a potentially negative value.
 		if (retval < -((m - 1) / 2)) {
 			retval += m;
 		} else if (retval > m / 2) {
 			retval -= m;
 		}
-		piranha_assert(retval >= -((m.abs()-1)/2) && retval <= m.abs() / 2);
 		return retval;
 	};
 	// Apply mod_s to all coefficients in a poly.
-	auto mod_s_poly = [mod_s](const Poly &x, const integer &m) -> Poly {
-		Poly retval(x);
+	auto mod_s_poly = [mod_s](const Poly &p, const integer &m) -> Poly {
+		Poly retval(p);
 		auto it = retval._container().begin();
 		for (; it != retval._container().end();) {
 			it->m_cf = mod_s(it->m_cf,m);
 			if (math::is_zero(it->m_cf)) {
-				// If, after mod_s, the coefficient is zero,
-				// we need to remove the term.
 				it = retval._container().erase(it);
 			} else {
 				++it;
@@ -532,65 +486,112 @@ std::tuple<Poly,Poly,Poly> gcdheu_liao(const Poly &a, const Poly &b, symbol_set:
 		}
 		return retval;
 	};
-	// Interpolation.
-	auto sp_interpolate = [mod_s_poly,&args,&var](const Poly &gamma, const integer &m) -> Poly {
-		auto e(gamma);
-		Poly G;
-		G.set_symbol_set(args);
-		unsigned i = 0u;
-		while (e.size() != 0u) {
-			Poly tmp(mod_s_poly(e,m));
-			G += tmp * math::pow(Poly{var},i);
-			e -= tmp;
-			poly_exact_cf_div(e,m);
-			safe_integral_adder(i,1u);
-		}
-		return G;
-	};
-	// Update xi at every step of the iteration.
-	auto xi_update = [&xi]() {
-		xi = (73794 * xi * xi.sqrt().sqrt()) / 27011;
-	};
-	for (int i = 0; i < 6; ++i) {
-		// NOTE: eventually we want to replace the generic subs with a specialised one.
-		auto tup_res = gcdheu_liao(p.subs(var,xi),q.subs(var,xi),static_cast<symbol_set::size_type>(s_index + 1u));
-		auto gamma = sp_interpolate(std::get<0u>(tup_res),xi);
-		// NOTE: I am not sure if it is possible for gamma to be zero, but it's better to be safe
-		// than sorry. Note that the interpolation above is fine even if tup_res[0] is zero (it will simply return
-		// zero).
-		if (math::is_zero(gamma)) {
-			xi_update();
-			continue;
-		}
-		poly_exact_cf_div(gamma,gamma.content());
-		try {
-			// NOTE: can improve performance in these scalar * poly multiplications.
-			return std::make_tuple(g * gamma,p / gamma,q / gamma);
-		} catch (const math::inexact_division &) {
-			// Continue in case the division check fails.
-		}
-		auto cf_p = sp_interpolate(std::get<1u>(tup_res),xi);
-		try {
-			// NOTE: we need to guard against division by zero here and below.
-			if (!math::is_zero(cf_p)) {
-				gamma = p / cf_p;
-				return std::make_tuple(g * gamma,cf_p,q / gamma);
-			}
-		} catch (const math::inexact_division &) {
-			// Continue in case the division check fails.
-		}
-		auto cf_q = sp_interpolate(std::get<2u>(tup_res),xi);
-		try {
-			if (!math::is_zero(cf_q)) {
-				gamma = q / cf_q;
-				return std::make_tuple(g * gamma,p / gamma,cf_q);
-			}
-		} catch (const math::inexact_division &) {
-			// Continue in case the division check fails.
-		}
-		xi_update();
+	// Cache it.
+	const auto &args = a.get_symbol_set();
+	// The contents of input polys.
+	const integer a_cont = a.content(), b_cont = b.content();
+	// Handle empty polys.
+	if (a.size() == 0u && b.size() == 0u) {
+		Poly retval;
+		retval.set_symbol_set(args);
+		return std::make_pair(false,std::make_tuple(retval,retval,retval));
 	}
-	piranha_throw(gcdheu_failure,);
+	if (a.size() == 0u) {
+		Poly retval;
+		retval.set_symbol_set(args);
+		// NOTE: 'retval + 1' could be improved performance-wise.
+		return std::make_pair(false,std::make_tuple(b,retval,retval + 1));
+	}
+	if (b.size() == 0u) {
+		Poly retval;
+		retval.set_symbol_set(args);
+		// NOTE: 'retval + 1' could be improved performance-wise.
+		return std::make_pair(false,std::make_tuple(a,retval + 1,retval));
+	}
+	// If we are at the first recursion, check the exponents.
+	if (s_index == 0u) {
+		poly_expo_checker(a);
+		poly_expo_checker(b);
+	}
+	// This is the case in which the polynomials are reduced to two integers (essentially, the zerovariate case).
+	if (a.is_single_coefficient() && b.is_single_coefficient()) {
+		piranha_assert(a.size() == 1u && b.size() == 1u);
+		Poly retval;
+		retval.set_symbol_set(args);
+		auto gab = math::gcd(a_cont,b_cont);
+		// NOTE: the creation of the gcd retval and of the cofactors can be improved performance-wise
+		// (e.g., exact division of coefficients).
+		return std::make_pair(false,std::make_tuple(retval + gab,a / gab,b / gab));
+	}
+	// s_index is the recursion index for the gcdheu() call.
+	piranha_assert(s_index < args.size());
+	// We need to work on primitive polys.
+	// NOTE: performance improvements.
+	const auto ap = a / a_cont;
+	const auto bp = b / b_cont;
+	// The current variable.
+	const std::string var = args[s_index].get_name();
+	integer xi{2 * std::min(ap.height(),bp.height()) + 2};
+	// Functor to update xi at each iteration.
+	auto update_xi = [&xi]() {
+		// NOTE: this is just a way of making xi bigger without too much correlation
+		// to its previous value.
+		xi = (xi * 73794) / 27011;
+	};
+	// NOTE: the values of 6 iterations is taken straight from the original implementation of the algorithm.
+	// The value of 10000 bits is twice the original implementation, on the grounds that GMP should be rather efficient
+	// at bignum. It might as well be that other tuning params are better, but let's keep them hardcoded for now.
+	for (int i = 0; i < 6; ++i) {
+		if (integer(xi.bits_size()) * std::max(ap.degree({var}),bp.degree({var})) > 10000) {
+			piranha_throw(gcdheu_failure,);
+		}
+		auto res = gcdheu_geddes(ap.subs(var,xi),bp.subs(var,xi),static_cast<symbol_set::size_type>(s_index + 1u));
+		if (!res.first) {
+			Poly &gamma = std::get<0u>(res.second);
+			Poly G;
+			G.set_symbol_set(args);
+			unsigned j = 0;
+			while (gamma.size() != 0u) {
+				Poly g(mod_s_poly(gamma,xi));
+				// NOTE: term mult here could be useful, but probably it makes more
+				// sense to just improve the series multiplication routine.
+				G += g * math::pow(Poly{var},j);
+				gamma -= g;
+				poly_exact_cf_div(gamma,xi);
+				safe_integral_adder(j,1u);
+			}
+			// NOTE: I don't know if this is possible at all, but it's better to be safe than
+			// sorry. This prevents divisions by zero below.
+			if (G.size() == 0u) {
+				update_xi();
+				continue;
+			}
+			try {
+				// For the division test, we need to operate on the primitive
+				// part of the candidate GCD.
+				poly_exact_cf_div(G,G.content());
+				// The division test.
+				auto cf_a = ap / G;
+				auto cf_b = bp / G;
+				// Need to multiply by the GCD of the contents of a and b in order to produce
+				// the GCD with the largest coefficients.
+				const auto F = math::gcd(a_cont,b_cont);
+				poly_cf_mult(F,G);
+				// The cofactors above have been computed with the primitive parts of G and a,b.
+				// We need to rescale them in order to find the true cofactors, that is, a / G
+				// and b / G.
+				poly_cf_mult(a_cont,cf_a);
+				poly_exact_cf_div(cf_a,F);
+				poly_cf_mult(b_cont,cf_b);
+				poly_exact_cf_div(cf_b,F);
+				return std::make_pair(false,std::make_tuple(std::move(G),std::move(cf_a),std::move(cf_b)));
+			} catch (const math::inexact_division &) {
+				// Continue in case the division check fails.
+			}
+		}
+		update_xi();
+	}
+	return std::make_pair(true,std::make_tuple(Poly{},Poly{},Poly{}));
 }
 
 }
@@ -1117,7 +1118,7 @@ class polynomial:
 		static std::pair<bool,std::tuple<T,T,T>> try_gcdheu(const T &a, const T &b, polynomial_gcd_algorithm)
 		{
 			try {
-				return std::make_pair(false,detail::gcdheu_liao(a,b));
+				return detail::gcdheu_geddes(a,b);
 			} catch (const detail::gcdheu_failure &) {}
 			return std::make_pair(true,std::tuple<T,T,T>{});
 		}
