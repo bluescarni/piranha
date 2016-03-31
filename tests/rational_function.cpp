@@ -54,7 +54,7 @@ using namespace piranha;
 using key_types = boost::mpl::vector<k_monomial,monomial<unsigned char>,monomial<integer>>;
 
 static std::mt19937 rng;
-static const int ntrials = 100;
+static const int ntrials = 200;
 
 template <typename Poly>
 inline static Poly rn_poly(const Poly &x, const Poly &y, const Poly &z, std::uniform_int_distribution<int> &dist)
@@ -908,4 +908,44 @@ struct is_zero_tester
 BOOST_AUTO_TEST_CASE(rational_function_is_zero_test)
 {
 	boost::mpl::for_each<key_types>(is_zero_tester());
+}
+
+struct comparison_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		using q_type = typename r_type::q_type;
+		p_type x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK((is_equality_comparable<r_type>::value));
+		BOOST_CHECK((is_equality_comparable<r_type,p_type>::value));
+		BOOST_CHECK((is_equality_comparable<p_type,r_type>::value));
+		BOOST_CHECK((is_equality_comparable<r_type,q_type>::value));
+		BOOST_CHECK((is_equality_comparable<q_type,r_type>::value));
+		BOOST_CHECK((is_equality_comparable<r_type,int>::value));
+		BOOST_CHECK((is_equality_comparable<integer,r_type>::value));
+		BOOST_CHECK((is_equality_comparable<r_type,rational>::value));
+		BOOST_CHECK((!is_equality_comparable<r_type,double>::value));
+		BOOST_CHECK((!is_equality_comparable<std::string,r_type>::value));
+		BOOST_CHECK_EQUAL(r_type{0},p_type{});
+		BOOST_CHECK_EQUAL(p_type{0},r_type{});
+		BOOST_CHECK_EQUAL(r_type{},q_type{0});
+		BOOST_CHECK_EQUAL(q_type{},r_type{});
+		BOOST_CHECK_EQUAL(r_type{1},1);
+		BOOST_CHECK_EQUAL(1_z,r_type{1});
+		BOOST_CHECK_EQUAL((r_type{1,2}),1/2_q);
+		BOOST_CHECK_EQUAL((r_type{(x+y+z)*2,p_type{2}}),x+y+z);
+		BOOST_CHECK((r_type{x,y} != r_type{1}));
+		BOOST_CHECK((r_type{x,y} != 1/2_q));
+		BOOST_CHECK((-6 != r_type{x,p_type{2}}));
+		BOOST_CHECK((r_type{x,y} != q_type{x} / 2));
+		BOOST_CHECK((p_type{x} != r_type{x,p_type{2}}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_comparison_test)
+{
+	boost::mpl::for_each<key_types>(comparison_tester());
 }

@@ -426,6 +426,25 @@ class rational_function: public detail::rational_function_tag
 		template <typename T, typename U>
 		using in_place_div_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
 			/ std::declval<const U &>())>::value,int>::type;
+		// Comparison.
+		static bool dispatch_equality(const rational_function &a, const rational_function &b)
+		{
+			return a.m_num == b.m_num && a.m_den == b.m_den;
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static bool dispatch_equality(const rational_function &a, const T &b)
+		{
+			return a == rational_function{b};
+		}
+		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
+		static bool dispatch_equality(const T &a, const rational_function &b)
+		{
+			return b == rational_function{a};
+		}
+		template <typename T, typename U>
+		using eq_enabler = typename std::enable_if<detail::true_tt<
+			decltype(rational_function::dispatch_equality(std::declval<const T &>(),
+			std::declval<const U &>()))>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -667,33 +686,22 @@ class rational_function: public detail::rational_function_tag
 		}
 		/// Equality operator.
 		/**
-		 * @param[in] other comparison argument.
+		 * \note
+		 * This operator is enabled only if one of the arguments is piranha::rational_function
+		 * and the other argument is either piranha::rational_function or an interoperable type.
+		 *
+		 * The numerator and denominator of \p a and \p b will be compared (after any necessary conversion
+		 * of \p a or \p b to piranha::rational_function).
+		 *
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
 		 *
 		 * @return \p true if the numerator and denominator of \p this are equal to the numerator and
 		 * denominator of \p other, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by the generic unary constructor, if a
+		 * parameter is not piranha::rational_function.
 		 */
-//		bool operator==(const rational_function &other) const
-//		{
-//			return m_num == other.m_num && m_den == other.m_den;
-//		}
-		static bool dispatch_equality(const rational_function &a, const rational_function &b)
-		{
-			return a.m_num == b.m_num && a.m_den == b.m_den;
-		}
-		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
-		static bool dispatch_equality(const rational_function &a, const T &b)
-		{
-			return a == rational_function{b};
-		}
-		template <typename T, typename std::enable_if<is_interoperable<T>::value,int>::type = 0>
-		static bool dispatch_equality(const T &a, const rational_function &b)
-		{
-			return b == rational_function{a};
-		}
-		template <typename T, typename U>
-		using eq_enabler = typename std::enable_if<detail::true_tt<
-			decltype(rational_function::dispatch_equality(std::declval<const T &>(),
-			std::declval<const U &>()))>::value,int>::type;
 		template <typename T, typename U, eq_enabler<T,U> = 0>
 		friend bool operator==(const T &a, const U &b)
 		{
@@ -701,14 +709,19 @@ class rational_function: public detail::rational_function_tag
 		}
 		/// Inequality operator.
 		/**
-		 * @param[in] other comparison argument.
+		 * \note
+		 * This operator is enabled only if one of the arguments is piranha::rational_function
+		 * and the other argument is either piranha::rational_function or an interoperable type.
 		 *
-		 * @return the opposite of rational_function::operator==().
+		 * This operator is the opposite of operator==().
+		 *
+		 * @param[in] a first argument.
+		 * @param[in] b second argument.
+		 *
+		 * @return the opposite of operator==().
+		 *
+		 * @throws unspecified any exception thrown by operator==().
 		 */
-//		bool operator !=(const rational_function &other) const
-//		{
-//			return !(*this == other);
-//		}
 		template <typename T, typename U, eq_enabler<T,U> = 0>
 		friend bool operator!=(const T &a, const U &b)
 		{
