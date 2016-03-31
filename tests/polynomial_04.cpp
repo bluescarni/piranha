@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_01_test)
 	BOOST_CHECK(math::gcd(y,-x+y) == 1 || math::gcd(y,-x+y) == -1);
 }
 
-// This specific computation resulted in a bug in a previoud gcdheu implementation.
+// This specific computation resulted in a bug in a previous gcdheu implementation.
 BOOST_AUTO_TEST_CASE(polynomial_gcd_bug_02_test)
 {
 	using p_type = polynomial<integer,k_monomial>;
