@@ -1047,3 +1047,38 @@ BOOST_AUTO_TEST_CASE(rational_function_pow_test)
 {
 	boost::mpl::for_each<key_types>(pow_tester());
 }
+
+struct subs_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using math::pow;
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		using q_type = typename r_type::q_type;
+		r_type x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK((has_subs<r_type,int>::value));
+		BOOST_CHECK((has_subs<r_type,r_type>::value));
+		BOOST_CHECK((has_subs<r_type,p_type>::value));
+		BOOST_CHECK((has_subs<r_type,q_type>::value));
+		BOOST_CHECK((has_subs<r_type,integer>::value));
+		BOOST_CHECK((!has_subs<r_type,double>::value));
+		BOOST_CHECK((!has_subs<r_type,std::string>::value));
+		BOOST_CHECK((!has_subs<r_type,float>::value));
+		BOOST_CHECK_EQUAL(x.subs("x",1),1);
+		BOOST_CHECK_THROW((1/x).subs("x",0),zero_division_error);
+		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"z",-x-y),-1);
+		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"x",123_z),(123+y)/z);
+		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"x",3/2_q),(3+2*y)/(2*z));
+		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"y",p_type("z")*3),(x+3*z)/z);
+		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"z",q_type("z")/6),6*(x+y)/z);
+		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"a",123_z),(x+y)/z);
+		BOOST_CHECK_EQUAL(math::subs(x/(z+y),"x",0),0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_subs_test)
+{
+	boost::mpl::for_each<key_types>(subs_tester());
+}

@@ -413,6 +413,9 @@ class rational_function: public detail::rational_function_tag
 		// Exponentiation.
 		template <typename T>
 		using pow_enabler = typename std::enable_if<is_integral<T>::value,int>::type;
+		// Subs.
+		template <typename T>
+		using subs_enabler = typename std::enable_if<is_interoperable<T>::value || std::is_same<T,rational_function>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -922,6 +925,30 @@ class rational_function: public detail::rational_function_tag
 			}
 			return retval;
 		}
+		/// Substitution.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is an interoperable type or piranha::rational_function.
+		 *
+		 * The body of this method is equivalent to:
+		 * @code
+		 * return rational_function{math::subs(m_num,name,x),math::subs(m_den,name,x)};
+		 * @endcode
+		 *
+		 * @param[in] name name of the variable to be substituted.
+		 * @param[in] x substitution argument.
+		 *
+		 * @return the result of substituting \p name with \p x in \p this.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::math::subs(),
+		 * - the binary constructor of piranha::rational_function.
+		 */
+		template <typename T, subs_enabler<T> = 0>
+		rational_function subs(const std::string &name, const T &x) const
+		{
+			return rational_function{math::subs(m_num,name,x),math::subs(m_den,name,x)};
+		}
 	private:
 		p_type	m_num;
 		p_type	m_den;
@@ -949,6 +976,10 @@ struct is_zero_impl<T,typename std::enable_if<std::is_base_of<detail::rational_f
 	}
 };
 
+/// Specialisation of piranha::math::pow() for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
 template <typename T, typename U>
 struct pow_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
 {
@@ -957,10 +988,54 @@ struct pow_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_fun
 		using pow_enabler = typename std::enable_if<detail::true_tt<
 			decltype(std::declval<const T &>().pow(std::declval<const V &>()))>::value,int>::type;
 	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * The call operator is enabled only if <tt>return r.pow(n)</tt> is a valid expression.
+		 *
+		 * @param[in] r the piranha::rational_function base.
+		 * @param[in] n the integral exponent.
+		 *
+		 * @return <tt>r.pow(n)</tt>.
+		 *
+		 * @throws unspecified any exception thrown by piranha::rational::pow().
+		 */
 		template <typename V, pow_enabler<V> = 0>
 		T operator()(const T &r, const V &n) const
 		{
 			return r.pow(n);
+		}
+};
+
+/// Specialisation of piranha::math::subs() for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T, typename U>
+struct subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	private:
+		template <typename V>
+		using subs_enabler = typename std::enable_if<detail::true_tt<
+			decltype(std::declval<const T &>().subs(std::string{},std::declval<const V &>()))>::value,int>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * The call operator is enabled only if <tt>return r.subs(s,x)</tt> is a valid expression.
+		 *
+		 * @param[in] r the piranha::rational_function argument.
+		 * @param[in] s the name of the variable to be substituted.
+		 * @param[in] x the substitution argument.
+		 *
+		 * @return <tt>r.subs(s,x)</tt>.
+		 *
+		 * @throws unspecified any exception thrown by piranha::rational::subs().
+		 */
+		template <typename V, subs_enabler<V> = 0>
+		T operator()(const T &r, const std::string &s, const V &x) const
+		{
+			return r.subs(s,x);
 		}
 };
 
