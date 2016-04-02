@@ -1006,6 +1006,7 @@ struct pow_tester
 		BOOST_CHECK_EQUAL(pow(x/y,0_z),1);
 		BOOST_CHECK_EQUAL(pow(r_type{},0_z),1);
 		BOOST_CHECK_EQUAL(pow(x/y,-2),y*y/(x*x));
+		BOOST_CHECK_THROW((pow(r_type{},-1)),zero_division_error);
 		}
 		// Random testing.
 		p_type x{"x"}, y{"y"}, z{"z"};
@@ -1025,8 +1026,16 @@ struct pow_tester
 				auto p = pow(r1,expo);
 				BOOST_CHECK(p.is_canonical());
 				r_type acc{1};
-				for (auto  j = 0; j < expo; ++j) {
+				for (auto j = 0; j < expo; ++j) {
 					acc *= r1;
+				}
+				BOOST_CHECK_EQUAL(acc,p);
+			} else if (!math::is_zero(r1)) {
+				auto p = pow(r1,expo);
+				BOOST_CHECK(p.is_canonical());
+				r_type acc{1};
+				for (auto j = 0; j < -expo; ++j) {
+					acc /= r1;
 				}
 				BOOST_CHECK_EQUAL(acc,p);
 			}

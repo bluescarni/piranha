@@ -410,6 +410,9 @@ class rational_function: public detail::rational_function_tag
 		using eq_enabler = typename std::enable_if<detail::true_tt<
 			decltype(rational_function::dispatch_equality(std::declval<const T &>(),
 			std::declval<const U &>()))>::value,int>::type;
+		// Exponentiation.
+		template <typename T>
+		using pow_enabler = typename std::enable_if<is_integral<T>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -881,17 +884,43 @@ class rational_function: public detail::rational_function_tag
 		{
 			return *this = *this / other;
 		}
-		template <typename T>
-		using pow_enabler = typename std::enable_if<is_integral<T>::value,int>::type;
+		/// Exponentiation.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is a C++ integral type or piranha::integer.
+		 *
+		 * @param[in] n an integral exponent.
+		 *
+		 * @return \p this raised to the power of \p n.
+		 *
+		 * @throws piranha::zero_division_error if \p n is negative and \p this is zero.
+		 * @throws unspecified any exception thrown by calling math::pow() on instances of
+		 * piranha::rational_function::p_type.
+		 */
 		template <typename T, pow_enabler<T> = 0>
 		rational_function pow(const T &n) const
 		{
 			const integer n_int{n};
+			rational_function retval;
+			// NOTE: write directly into num/den of the retval,
+			// we don't need to use a ctor with its costly canonicalisation.
 			if (n_int.sign() >= 0) {
-				return rational_function{m_num.pow(n_int),m_den.pow(n_int)};
+				retval.m_num = math::pow(m_num,n_int);
+				retval.m_den = math::pow(m_den,n_int);
 			} else {
-				return rational_function{m_den.pow(-n_int),m_num.pow(-n_int)};
+				if (unlikely(math::is_zero(m_num))) {
+					piranha_throw(zero_division_error,"zero denominator in rational_function exponentiation");
+				}
+				retval.m_num = math::pow(m_den,-n_int);
+				retval.m_den = math::pow(m_num,-n_int);
+				// The only canonicalisation we need is checking the sign of the new
+				// denominator.
+				if (detail::poly_lterm(retval.m_den)->m_cf.sign() < 0) {
+					math::negate(retval.m_num);
+					math::negate(retval.m_den);
+				}
 			}
+			return retval;
 		}
 	private:
 		p_type	m_num;
