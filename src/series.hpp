@@ -511,7 +511,8 @@ struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
  * A few things to note about the operators implemented within this class:
  * - in case two series arguments have different symbol sets, either one or both series will be copied in a new series in which the symbols
  *   have been merged, and the operation will be performed on those series instead;
- * - in-place arithmetic operators are implemented as binary operators plus move-assignment;
+ * - in-place arithmetic operators are implemented as binary operators plus move-assignment (and they are thus disabled if either the corresponding
+ *   binary operation or the assignment are invalid);
  * - series multiplication requires the coefficient types to be multipliable and a valid specialisation of piranha::series_multiplier for the
  *   promoted series type;
  * - division is implemented only when the first argument has a recursion index greater than the second argument and
