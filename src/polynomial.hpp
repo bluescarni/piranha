@@ -539,10 +539,10 @@ std::pair<bool,std::tuple<Poly,Poly,Poly>> gcdheu_geddes(const Poly &a, const Po
 		xi = (xi * 73794) / 27011;
 	};
 	// NOTE: the values of 6 iterations is taken straight from the original implementation of the algorithm.
-	// The value of 10000 bits is twice the original implementation, on the grounds that GMP should be rather efficient
+	// The bits limit is larger than the original implementation, on the grounds that GMP should be rather efficient
 	// at bignum. It might as well be that other tuning params are better, but let's keep them hardcoded for now.
 	for (int i = 0; i < 6; ++i) {
-		if (integer(xi.bits_size()) * std::max(ap.degree({var}),bp.degree({var})) > 10000) {
+		if (integer(xi.bits_size()) * std::max(ap.degree({var}),bp.degree({var})) > 100000) {
 			piranha_throw(gcdheu_failure,);
 		}
 		auto res = gcdheu_geddes(ap.subs(var,xi),bp.subs(var,xi),static_cast<symbol_set::size_type>(s_index + 1u));
