@@ -976,7 +976,7 @@ struct is_zero_impl<T,typename std::enable_if<std::is_base_of<detail::rational_f
 	}
 };
 
-/// Specialisation of piranha::math::pow() for piranha::rational_function.
+/// Specialisation of piranha::math::pow() for piranha::rational_function bases.
 /**
  * This specialisation is enabled if \p T is an instance of piranha::rational_function.
  */
