@@ -42,6 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "polynomial.hpp"
+#include "pow.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -90,7 +91,7 @@ struct rational_function_tag {};
  *
  * ## Move semantics ##
  *
- * Move operations will leave object of this class in a state which is destructible and assignable.
+ * Move operations will leave objects of this class in a state which is destructible and assignable.
  *
  * ## Serialization ##
  *
@@ -230,46 +231,10 @@ class rational_function: public detail::rational_function_tag
 			// as the dispatcher does not support that.
 			detail::true_tt<decltype(std::declval<U &>().dispatch_unary_ctor(std::declval<const decay_t<T> &>()))>::value
 		,int>::type;
-		// Binary constructors (binary counterparts of the above above).
-		// Enabler for construction from pzs. We require T and U to be the same, after decay.
-		template <typename T, typename U>
-		using pzs_enabler2 = std::integral_constant<bool,pzs_enabler<T>::value && std::is_same<decay_t<T>,decay_t<U>>::value>;
-		template <typename T, typename U, typename std::enable_if<pzs_enabler2<T,U>::value,int>::type = 0>
-		void dispatch_binary_ctor(T &&x, U &&y)
-		{
-			m_num = p_type{std::forward<T>(x)};
-			m_den = p_type{std::forward<U>(y)};
-			// Always need to canonicalise.
-			// NOTE: normally we should *not* set m_num/m_den and canonicalise afterwards, as this
-			// is not exception safe. Here it is a special case because this function is called from
-			// a ctor only, thus if something goes wrong in the canonicalisation m_num/m_den will be destroyed
-			// in the cleanup.
-			canonicalise();
-		}
-		void dispatch_binary_ctor(const q_type &n, const q_type &d)
-		{
-			auto res_n = q_to_p_type(n);
-			auto res_d = q_to_p_type(d);
-			m_num = std::move(res_n.first);
-			m_den = std::move(res_d.first);
-			m_num *= std::move(res_d.second);
-			m_den *= std::move(res_n.second);
-			// Canonicalise.
-			canonicalise();
-		}
-		void dispatch_binary_ctor(const rational &n, const rational &d)
-		{
-			auto tmp = n / d;
-			m_num = tmp.num();
-			m_den = tmp.den();
-		}
-		// Enabler for generic binary ctor.
+		// Binary ctor enabler.
 		template <typename T, typename U, typename V>
-		using binary_ctor_enabler = typename std::enable_if<
-			// NOTE: this should disable the ctor if T derives from rational_function,
-			// as the dispatcher does not support that.
-			detail::true_tt<decltype(std::declval<V &>().dispatch_binary_ctor(std::declval<const decay_t<T> &>(),std::declval<const decay_t<U> &>()))>::value
-		,int>::type;
+		using binary_ctor_enabler = typename std::enable_if<std::is_constructible<V,T &&>::value &&
+			std::is_constructible<V,U &&>::value,int>::type;
 		// Enabler for generic assignment.
 		// Here we are re-using the enabler for generic unary construction. This should make sure that
 		// the generic assignment operator is never used when T is rational_function.
@@ -488,34 +453,24 @@ class rational_function: public detail::rational_function_tag
 		/// Generic binary constructor.
 		/**
 		 * \note
-		 * This constructor is enabled only if the decay types of \p T and \p U are the same type \p Td. \p Td must be either
-		 * an interoperable type or a string type.
+		 * This constructor is enabled only if piranha::rational_function can be constructed from \p T and \p U.
 		 *
-		 * The constructor operates as follows:
-		 * - if \p Td is rational_function::p_type, a C++ integral type, piranha::integer or a string type, then the numerator
-		 *   is constructed from \p x and the denominator from \p y;
-		 * - if \p Td is piranha::rational, then the first rational is divided by the second and the result's numerator and denominator
-		 *   are used to construct the numerator and denominator of \p this;
-		 * - if \p Td is rational_function::q_type, then, after construction, \p this will be mathematically equivalent
-		 *   to <tt>x / y</tt> (that is, \p x and \p y are both multiplied by <tt>lx * ly</tt>, the product of the LCMs of their coefficients;
-		 *   the resulting polynomials are used to initialise the numerator and denominator of \p this).
+		 * The body of this constructor is equivalent to:
+		 * @code
+		 * *this = rational_function(std::forward<T>(x)) / rational_function(std::forward<U>(y));
+		 * @endcode
 		 *
 		 * @param[in] x first argument.
 		 * @param[in] y second argument.
 		 *
-		 * @throws std::invalid_argument if, when constructing from rational_function::p_type or rational_function::q_type, a negative exponent is
-		 * encountered.
 		 * @throws unspecified any exception thrown by:
-		 * - the constructors, the assignment and the multiplication operators of rational_function::p_type,
-		 * - the division operator of piranha::rational,
-		 * - the constructors of the term type of rational_function::p_type,
-		 * - the public interface of piranha::series and piranha::hash_set,
-		 * - piranha::rational_function::canonicalise().
+		 * - the invoked unary constructors,
+		 * - the division operator of piranha::rational_function.
 		 */
 		template <typename T, typename U, typename V = rational_function, binary_ctor_enabler<T,U,V> = 0>
 		explicit rational_function(T &&x, U &&y)
 		{
-			dispatch_binary_ctor(std::forward<T>(x),std::forward<U>(y));
+			*this = rational_function(std::forward<T>(x)) / rational_function(std::forward<U>(y));
 		}
 		/// Copy-assignment operator.
 		/**

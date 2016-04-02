@@ -211,7 +211,11 @@ struct constructor_tester
 		BOOST_CHECK(r.num().get_symbol_set().size() == 1u);
 		BOOST_CHECK(r.den().get_symbol_set().size() == 0u);
 		// Binary ctors.
+		BOOST_CHECK((std::is_constructible<r_type,r_type,r_type>::value));
+		BOOST_CHECK((std::is_constructible<r_type,const r_type,r_type &&>::value));
 		BOOST_CHECK((std::is_constructible<r_type,p_type,p_type>::value));
+		BOOST_CHECK((std::is_constructible<r_type,p_type,int>::value));
+		BOOST_CHECK((std::is_constructible<r_type,const int &,p_type>::value));
 		BOOST_CHECK((std::is_constructible<r_type,p_type &,p_type>::value));
 		BOOST_CHECK((std::is_constructible<r_type,p_type &&,const p_type &>::value));
 		BOOST_CHECK((std::is_constructible<r_type,q_type,q_type>::value));
@@ -223,10 +227,14 @@ struct constructor_tester
 		BOOST_CHECK((std::is_constructible<r_type,rational, rational>::value));
 		BOOST_CHECK((std::is_constructible<r_type,const rational &, rational &&>::value));
 		BOOST_CHECK((std::is_constructible<r_type,std::string,std::string>::value));
+		BOOST_CHECK((std::is_constructible<r_type,std::string,int>::value));
+		BOOST_CHECK((std::is_constructible<r_type,q_type &&,std::string>::value));
 		BOOST_CHECK((std::is_constructible<r_type,std::string,std::string &>::value));
 		BOOST_CHECK((std::is_constructible<r_type,char *,char*>::value));
 		BOOST_CHECK((std::is_constructible<r_type,const char *,const char*>::value));
 		BOOST_CHECK((!std::is_constructible<r_type,double,double>::value));
+		BOOST_CHECK((!std::is_constructible<r_type,int,double>::value));
+		BOOST_CHECK((!std::is_constructible<r_type,double,rational>::value));
 		BOOST_CHECK((!std::is_constructible<r_type,const float,float>::value));
 		BOOST_CHECK((!std::is_constructible<r_type,real &&,real>::value));
 		// From ints.
@@ -330,6 +338,33 @@ struct constructor_tester
 		BOOST_CHECK_THROW((r = r_type{q_type{1},q_type{0}}),zero_division_error);
 		BOOST_CHECK_THROW((r = r_type{xq.pow(-1),xq}),std::invalid_argument);
 		BOOST_CHECK_THROW((r = r_type{xq,xq.pow(-1)}),std::invalid_argument);
+		// Some mixed binary ctor.
+		r = r_type{q_type{6},-15};
+		BOOST_CHECK_EQUAL(r.num(),-2);
+		BOOST_CHECK_EQUAL(r.den(),5);
+		r = r_type{r_type{6},-15/2_q};
+		BOOST_CHECK_EQUAL(r.num(),-4);
+		BOOST_CHECK_EQUAL(r.den(),5);
+		r = r_type{1_z,-15/2_q};
+		BOOST_CHECK_EQUAL(r.num(),-2);
+		BOOST_CHECK_EQUAL(r.den(),15);
+		r = r_type{1_q,x+3*y};
+		BOOST_CHECK_EQUAL(r.num(),1);
+		BOOST_CHECK_EQUAL(r.den(),x+3*y);
+		r = r_type{1_q,r_type{1,x+3*y}};
+		BOOST_CHECK_EQUAL(r.num(),x+3*y);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		r = r_type{r_type{1,x+3*y},x*2};
+		BOOST_CHECK_EQUAL(r.num(),1);
+		BOOST_CHECK_EQUAL(r.den(),2*x*(x+3*y));
+		r = r_type{-x,"x"};
+		BOOST_CHECK_EQUAL(r.num(),-1);
+		BOOST_CHECK_EQUAL(r.den(),1);
+		r = r_type{"y","x"};
+		BOOST_CHECK_EQUAL(r.num(),y);
+		BOOST_CHECK_EQUAL(r.den(),x);
+		BOOST_CHECK_THROW((r = r_type{r_type{1,x+3*y},0}),zero_division_error);
+		BOOST_CHECK_THROW((r = r_type{r_type{1,x+3*y},q_type{}}),zero_division_error);
 		// Some assignment checks.
 		BOOST_CHECK((std::is_same<decltype(s = s),r_type &>::value));
 		BOOST_CHECK((std::is_same<decltype(s = std::move(s)),r_type &>::value));
