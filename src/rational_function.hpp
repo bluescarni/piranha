@@ -881,6 +881,18 @@ class rational_function: public detail::rational_function_tag
 		{
 			return *this = *this / other;
 		}
+		template <typename T>
+		using pow_enabler = typename std::enable_if<is_integral<T>::value,int>::type;
+		template <typename T, pow_enabler<T> = 0>
+		rational_function pow(const T &n) const
+		{
+			const integer n_int{n};
+			if (n_int.sign() >= 0) {
+				return rational_function{m_num.pow(n_int),m_den.pow(n_int)};
+			} else {
+				return rational_function{m_den.pow(-n_int),m_num.pow(-n_int)};
+			}
+		}
 	private:
 		p_type	m_num;
 		p_type	m_den;
@@ -906,6 +918,21 @@ struct is_zero_impl<T,typename std::enable_if<std::is_base_of<detail::rational_f
 	{
 		return is_zero(r.num());
 	}
+};
+
+template <typename T, typename U>
+struct pow_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	private:
+		template <typename V>
+		using pow_enabler = typename std::enable_if<detail::true_tt<
+			decltype(std::declval<const T &>().pow(std::declval<const V &>()))>::value,int>::type;
+	public:
+		template <typename V, pow_enabler<V> = 0>
+		T operator()(const T &r, const V &n) const
+		{
+			return r.pow(n);
+		}
 };
 
 }

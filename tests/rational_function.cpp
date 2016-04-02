@@ -46,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/type_traits.hpp"
 
@@ -983,4 +984,57 @@ struct comparison_tester
 BOOST_AUTO_TEST_CASE(rational_function_comparison_test)
 {
 	boost::mpl::for_each<key_types>(comparison_tester());
+}
+
+struct pow_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using math::pow;
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		{
+		r_type x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK((is_exponentiable<r_type,int>::value));
+		BOOST_CHECK((is_exponentiable<r_type,integer>::value));
+		BOOST_CHECK((is_exponentiable<r_type,long long>::value));
+		BOOST_CHECK((!is_exponentiable<r_type,double>::value));
+		BOOST_CHECK((!is_exponentiable<r_type,rational>::value));
+		BOOST_CHECK((!is_exponentiable<r_type,r_type>::value));
+		BOOST_CHECK_EQUAL(pow(x/y,char(2)),x*x/(y*y));
+		BOOST_CHECK_EQUAL(pow(x/y,0_z),1);
+		BOOST_CHECK_EQUAL(pow(r_type{},0_z),1);
+		BOOST_CHECK_EQUAL(pow(x/y,-2),y*y/(x*x));
+		}
+		// Random testing.
+		p_type x{"x"}, y{"y"}, z{"z"};
+		std::uniform_int_distribution<int> dist(0,4), p_dist(-4,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n1 = rn_poly(x,y,z,dist);
+			auto d1 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d1)) {
+				BOOST_CHECK_THROW((r_type{n1,d1}),zero_division_error);
+				continue;
+			}
+			r_type r1{n1,d1};
+			auto expo = p_dist(rng);
+			if (expo == 0) {
+				BOOST_CHECK_EQUAL(pow(r1,expo),1);
+			} else if (expo > 0) {
+				auto p = pow(r1,expo);
+				BOOST_CHECK(p.is_canonical());
+				r_type acc{1};
+				for (auto  j = 0; j < expo; ++j) {
+					acc *= r1;
+				}
+				BOOST_CHECK_EQUAL(acc,p);
+			}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_pow_test)
+{
+	boost::mpl::for_each<key_types>(pow_tester());
 }
