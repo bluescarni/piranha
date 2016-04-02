@@ -285,8 +285,8 @@ class rational_function: public detail::rational_function_tag
 			decltype(rational_function::dispatch_binary_add(std::declval<const decay_t<T> &>(),
 			std::declval<const decay_t<U> &>()))>::value,int>::type;
 		template <typename T, typename U>
-		using in_place_add_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
-			+ std::declval<const U &>())>::value,int>::type;
+		using in_place_add_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const decay_t<T> &>()
+			+ std::declval<const decay_t<U> &>())>::value,int>::type;
 		// Subtraction.
 		static rational_function dispatch_binary_sub(const rational_function &a, const rational_function &b)
 		{
@@ -323,8 +323,8 @@ class rational_function: public detail::rational_function_tag
 			decltype(rational_function::dispatch_binary_sub(std::declval<const decay_t<T> &>(),
 			std::declval<const decay_t<U> &>()))>::value,int>::type;
 		template <typename T, typename U>
-		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
-			- std::declval<const U &>())>::value,int>::type;
+		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const decay_t<T> &>()
+			- std::declval<const decay_t<U> &>())>::value,int>::type;
 		// Multiplication.
 		static rational_function dispatch_binary_mul(const rational_function &a, const rational_function &b)
 		{
@@ -355,8 +355,8 @@ class rational_function: public detail::rational_function_tag
 			decltype(rational_function::dispatch_binary_mul(std::declval<const decay_t<T> &>(),
 			std::declval<const decay_t<U> &>()))>::value,int>::type;
 		template <typename T, typename U>
-		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
-			* std::declval<const U &>())>::value,int>::type;
+		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const decay_t<T> &>()
+			* std::declval<const decay_t<U> &>())>::value,int>::type;
 		// Division.
 		static rational_function dispatch_binary_div(const rational_function &a, const rational_function &b)
 		{
@@ -389,8 +389,8 @@ class rational_function: public detail::rational_function_tag
 			decltype(rational_function::dispatch_binary_div(std::declval<const decay_t<T> &>(),
 			std::declval<const decay_t<U> &>()))>::value,int>::type;
 		template <typename T, typename U>
-		using in_place_div_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const T &>()
-			/ std::declval<const U &>())>::value,int>::type;
+		using in_place_div_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<const decay_t<T> &>()
+			/ std::declval<const decay_t<U> &>())>::value,int>::type;
 		// Comparison.
 		static bool dispatch_equality(const rational_function &a, const rational_function &b)
 		{
@@ -738,9 +738,11 @@ class rational_function: public detail::rational_function_tag
 		 * @throws unspecified any exception thrown by the corresponding binary operator.
 		 */
 		template <typename T, typename U = rational_function, in_place_add_enabler<T,U> = 0>
-		rational_function &operator+=(const T &other)
+		rational_function &operator+=(T &&other)
 		{
 			// NOTE: *this + other will always return rational_function.
+			// NOTE: we should consider in the future std::move(*this) + std::forward<T>(other) to potentially improve performance,
+			// if the addition operator is also modified to take advantage of rvalues.
 			return *this = *this + other;
 		}
 		/// Negated copy.
@@ -795,7 +797,7 @@ class rational_function: public detail::rational_function_tag
 		 * @throws unspecified any exception thrown by the corresponding binary operator.
 		 */
 		template <typename T, typename U = rational_function, in_place_sub_enabler<T,U> = 0>
-		rational_function &operator-=(const T &other)
+		rational_function &operator-=(T &&other)
 		{
 			return *this = *this - other;
 		}
@@ -839,7 +841,7 @@ class rational_function: public detail::rational_function_tag
 		 * @throws unspecified any exception thrown by the corresponding binary operator.
 		 */
 		template <typename T, typename U = rational_function, in_place_mul_enabler<T,U> = 0>
-		rational_function &operator*=(const T &other)
+		rational_function &operator*=(T &&other)
 		{
 			return *this = *this * other;
 		}
@@ -883,7 +885,7 @@ class rational_function: public detail::rational_function_tag
 		 * @throws unspecified any exception thrown by the corresponding binary operator.
 		 */
 		template <typename T, typename U = rational_function, in_place_div_enabler<T,U> = 0>
-		rational_function &operator/=(const T &other)
+		rational_function &operator/=(T &&other)
 		{
 			return *this = *this / other;
 		}
