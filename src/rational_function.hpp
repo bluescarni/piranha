@@ -932,7 +932,7 @@ class rational_function: public detail::rational_function_tag
 		 *
 		 * The body of this method is equivalent to:
 		 * @code
-		 * return rational_function{math::subs(m_num,name,x),math::subs(m_den,name,x)};
+		 * return rational_function{math::subs(num(),name,x),math::subs(den(),name,x)};
 		 * @endcode
 		 *
 		 * @param[in] name name of the variable to be substituted.
@@ -947,7 +947,7 @@ class rational_function: public detail::rational_function_tag
 		template <typename T, subs_enabler<T> = 0>
 		rational_function subs(const std::string &name, const T &x) const
 		{
-			return rational_function{math::subs(m_num,name,x),math::subs(m_den,name,x)};
+			return rational_function{math::subs(num(),name,x),math::subs(den(),name,x)};
 		}
 	private:
 		p_type	m_num;
@@ -998,7 +998,7 @@ struct pow_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_fun
 		 *
 		 * @return <tt>r.pow(n)</tt>.
 		 *
-		 * @throws unspecified any exception thrown by piranha::rational::pow().
+		 * @throws unspecified any exception thrown by piranha::rational_function::pow().
 		 */
 		template <typename V, pow_enabler<V> = 0>
 		T operator()(const T &r, const V &n) const
@@ -1030,7 +1030,7 @@ struct subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_fu
 		 *
 		 * @return <tt>r.subs(s,x)</tt>.
 		 *
-		 * @throws unspecified any exception thrown by piranha::rational::subs().
+		 * @throws unspecified any exception thrown by piranha::rational_function::subs().
 		 */
 		template <typename V, subs_enabler<V> = 0>
 		T operator()(const T &r, const std::string &s, const V &x) const
