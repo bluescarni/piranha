@@ -536,7 +536,7 @@ class is_hashable_impl: detail::sfinae_types
 {
 		typedef typename std::decay<T>::type Td;
 		template <typename T1>
-		static auto test(const T1 &t) -> decltype((*(std::hash<T1> const *)nullptr)(t));
+		static auto test(const T1 &t) -> decltype(std::declval<const std::hash<T1> &>()(t));
 		static no test(...);
 	public:
 		static const bool value = std::is_same<decltype(test(std::declval<Td>())),std::size_t>::value;
@@ -548,13 +548,16 @@ class is_hashable_impl: detail::sfinae_types
 /**
  * This type trait will be \p true if the decay type of \p T is hashable, \p false otherwise.
  *
- * A type \p T is hashable when supplied with a specialisation of \p std::hash which
- * satisfies piranha::is_container_element.
+ * A type \p T is hashable when supplied with a specialisation of \p std::hash which:
+ * - has a call operator complying to the interface specified by the C++ standard,
+ * - satisfies piranha::is_container_element.
  * 
  * Note that depending on the implementation of the default \p std::hash class, using this type trait with
  * a type which does not provide a specialisation for \p std::hash could result in a compilation error
  * (e.g., if the unspecialised \p std::hash includes a \p false \p static_assert).
  */
+// NOTE: when we remove the is_container_element check we might need to make sure that std::hash is def ctible,
+// depending on how we use it. Check.
 template <typename T, typename = void>
 class is_hashable
 {

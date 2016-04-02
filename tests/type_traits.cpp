@@ -694,6 +694,7 @@ template <>
 struct hash<unhashable5>
 {
 	hash(const hash &) = delete;
+	hash &operator=(const hash &) = default;
 	std::size_t operator()(const unhashable5 &);
 };
 
