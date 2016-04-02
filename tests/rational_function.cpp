@@ -426,6 +426,13 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(s.den(),1);
 		BOOST_CHECK(s.num().get_symbol_set().size() == 2u);
 		BOOST_CHECK(s.den().get_symbol_set().size() == 0u);
+		// A check to trigger a code path in canonicalise() when the den is unitary.
+		s = 0;
+		s._num() = -10;
+		s._den() = 1;
+		s.canonicalise();
+		BOOST_CHECK(s.is_canonical());
+		BOOST_CHECK_EQUAL(s,-10);
 	}
 };
 
