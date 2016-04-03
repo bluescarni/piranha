@@ -1182,6 +1182,7 @@ struct partial_tester
 		using math::partial;
 		using r_type = rational_function<Key>;
 		using p_type = typename r_type::p_type;
+		{
 		BOOST_CHECK(is_differentiable<r_type>::value);
 		r_type x{"x"}, y{"y"};
 		BOOST_CHECK_EQUAL(partial(r_type{3,4},"x"),0);
@@ -1193,6 +1194,21 @@ struct partial_tester
 		p_type::register_custom_derivative("x",[](const p_type &) {return p_type{42};});
 		BOOST_CHECK_EQUAL(partial((4*x-2)/(x*x+1),"x"),(42*(x*x+1)-42*(4*x-2))/pow(x*x+1,2));
 		p_type::unregister_custom_derivative("x");
+		}
+		// Random testing.
+		p_type x{"x"}, y{"y"}, z{"z"};
+		std::uniform_int_distribution<int> dist(0,4), p_dist(-4,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n1 = rn_poly(x,y,z,dist);
+			auto d1 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d1)) {
+				BOOST_CHECK_THROW((r_type{n1,d1}),zero_division_error);
+				continue;
+			}
+			r_type r1{n1,d1};
+			BOOST_CHECK_EQUAL(partial(r1,"x"),(r_type{partial(r1.num(),"x")*r1.den()-partial(r1.den(),"x")*r1.num(),
+				r1.den()*r1.den()}));
+		}
 	}
 };
 
