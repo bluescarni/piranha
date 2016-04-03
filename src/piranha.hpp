@@ -198,6 +198,7 @@ see https://www.gnu.org/licenses/. */
  * It seems like a good course of action would be to just invalidate the caches every time the truncation limit changes. We need to check with
  * symengine in order to make sure this does not create troubles for them. Even after we do that, we still need to account for potentially strange
  * things happening when we use pow() in GCD (e.g., nonzero poly to positive power returning zero).
+ * \todo implement the GCD benchmarks from the liao paper as a performance test.
  */
 namespace piranha
 {
