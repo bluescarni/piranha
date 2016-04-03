@@ -29,7 +29,9 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_RATIONAL_FUNCTION_HPP
 #define PIRANHA_RATIONAL_FUNCTION_HPP
 
+#include <initializer_list>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -138,6 +140,9 @@ class rational_function: public detail::rational_function_tag
 			}
 			// NOTE: maybe these checks should go directly into the poly GCD routine. Keep it
 			// in mind for the future.
+			// NOTE: it would make sense here to deal with the single coefficient denominator case as well.
+			// This should give good performance when one is using rational_function as a rational polynomial,
+			// no need to go through a costly canonicalisation.
 			// If the denominator is unitary, just return the input values.
 			if (math::is_unitary(d)) {
 				return std::make_pair(n,d);
@@ -412,9 +417,11 @@ class rational_function: public detail::rational_function_tag
 		// Exponentiation.
 		template <typename T>
 		using pow_enabler = typename std::enable_if<is_integral<T>::value,int>::type;
-		// Subs.
+		// Substitutions.
 		template <typename T>
 		using subs_enabler = typename std::enable_if<is_interoperable<T>::value || std::is_same<T,rational_function>::value,int>::type;
+		template <typename T>
+		using ipow_subs_enabler = subs_enabler<T>;
 		// Serialization support.
 		friend class boost::serialization::access;
 		template <class Archive>
@@ -975,6 +982,32 @@ class rational_function: public detail::rational_function_tag
 		{
 			return rational_function{math::subs(num(),name,x),math::subs(den(),name,x)};
 		}
+		/// Substitution of integral power.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is an interoperable type or piranha::rational_function.
+		 *
+		 * The body of this method is equivalent to:
+		 * @code
+		 * return rational_function{math::ipow_subs(num(),name,n,x),math::ipow_subs(den(),name,n,x)};
+		 * @endcode
+		 *
+		 * @param[in] name name of the variable to be substituted.
+		 * @param[in] n power of \p name to be substituted.
+		 * @param[in] x substitution argument.
+		 *
+		 * @return the result of substituting \p name to the power of \p n with \p x in \p this.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::math::ipow_subs(),
+		 * - the binary constructor of piranha::rational_function.
+		 */
+		template <typename T, ipow_subs_enabler<T> = 0>
+		rational_function ipow_subs(const std::string &name, const integer &n, const T &x) const
+		{
+			return rational_function{math::ipow_subs(num(),name,n,x),
+				math::ipow_subs(den(),name,n,x)};
+		}
 	private:
 		p_type	m_num;
 		p_type	m_den;
@@ -1064,6 +1097,99 @@ struct subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_fu
 			return r.subs(s,x);
 		}
 };
+
+/// Specialisation of piranha::math::ipow_subs() for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T, typename U>
+struct ipow_subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	private:
+		template <typename V>
+		using ipow_subs_enabler = typename std::enable_if<detail::true_tt<
+			decltype(std::declval<const T &>().ipow_subs(std::string{},integer{},std::declval<const V &>()))>::value,int>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * The call operator is enabled only if <tt>return r.ipow_subs(s,n,x)</tt> is a valid expression.
+		 *
+		 * @param[in] r the piranha::rational_function argument.
+		 * @param[in] s the name of the variable to be substituted.
+		 * @param[in] n the power of \p s to be substituted.
+		 * @param[in] x the substitution argument.
+		 *
+		 * @return <tt>r.ipow_subs(s,n,x)</tt>.
+		 *
+		 * @throws unspecified any exception thrown by piranha::rational_function::ipow_subs().
+		 */
+		template <typename V, ipow_subs_enabler<V> = 0>
+		T operator()(const T &r, const std::string &s, const integer &n, const V &x) const
+		{
+			return r.ipow_subs(s,n,x);
+		}
+};
+
+/// Specialisation of the piranha::math::partial() functor for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct partial_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The result is computed via the quotient rule.
+	 *
+	 * @param[in] r piranha::rational_function argument.
+	 * @param[in] name name of the variable with respect to which to differentiate.
+	 *
+	 * @return the partial derivative of \p r with respect to \p name.
+	 *
+	 * @throws unspecified any exception thrown by:
+	 * - the partial derivative of numerator and denominator,
+	 * - arithmetic operations on piranha::rational_function::p_type,
+	 * - the binary constructor of piranha::rational_function.
+	 */
+	T operator()(const T &r, const std::string &name) const
+	{
+		return T{partial(r.num(),name)*r.den()-r.num()*partial(r.den(),name),r.den()*r.den()};
+	}
+};
+
+/// Specialisation of the piranha::math::integrate() functor for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct integrate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The integration will be successful only if the denominator of \p r does not depend on the integration variable.
+	 *
+	 * @param[in] r piranha::rational_function argument.
+	 * @param[in] name name of the integration variable.
+	 *
+	 * @return an antiderivative of \p r with respect to \p name.
+	 *
+	 * @throws std::invalid_argument if the denominator of \p r depends on the integration variable.
+	 * @throws unspecified any exception thrown by:
+	 * - piranha::math::integrate(),
+	 * - the constructor of piranha::rational_function::q_type from piranha::rational_function::p_type,
+	 * - the binary constructor of piranha::rational_function.
+	 */
+	T operator()(const T &r, const std::string &name)
+	{
+		if (!is_zero(degree(r.den(),{name}))) {
+			piranha_throw(std::invalid_argument,"cannot compute the integral of a rational function whose "
+				"denominator depends on the integration variable");
+		}
+		return T{integrate(typename T::q_type{r.num()},name),r.den()};
+	}
+};
+
 
 }
 

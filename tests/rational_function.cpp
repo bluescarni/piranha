@@ -1083,6 +1083,8 @@ struct subs_tester
 		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"z",q_type("z")/6),6*(x+y)/z);
 		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"a",123_z),(x+y)/z);
 		BOOST_CHECK_EQUAL(math::subs(x/(z+y),"x",0),0);
+		// Check that using negative powers throws.
+		BOOST_CHECK_THROW(math::subs(x/(z+y),"x",p_type{"x"}.pow(-1)),std::invalid_argument);
 	}
 };
 
@@ -1130,4 +1132,96 @@ struct serialization_tester
 BOOST_AUTO_TEST_CASE(rational_function_serialization_test)
 {
 	boost::mpl::for_each<key_types>(serialization_tester());
+}
+
+struct ipow_subs_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using math::pow;
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		using q_type = typename r_type::q_type;
+		r_type x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK((has_ipow_subs<r_type,int>::value));
+		BOOST_CHECK((has_ipow_subs<r_type,r_type>::value));
+		BOOST_CHECK((has_ipow_subs<r_type,p_type>::value));
+		BOOST_CHECK((has_ipow_subs<r_type,q_type>::value));
+		BOOST_CHECK((has_ipow_subs<r_type,integer>::value));
+		BOOST_CHECK((!has_ipow_subs<r_type,double>::value));
+		BOOST_CHECK((!has_ipow_subs<r_type,std::string>::value));
+		BOOST_CHECK((!has_ipow_subs<r_type,float>::value));
+		BOOST_CHECK_EQUAL(x.ipow_subs("x",1_z,y),y);
+		BOOST_CHECK_THROW((1/(x*x)).ipow_subs("x",2_z,0),zero_division_error);
+		BOOST_CHECK_EQUAL((1/(x*x)).ipow_subs("x",2_z,y),1/y);
+		BOOST_CHECK_EQUAL(math::ipow_subs((x+y)/(z*z),"z",2,-x-y),-1);
+		BOOST_CHECK_EQUAL(math::ipow_subs((x*x*x+y)/z,"x",2,123_z),(123*x+y)/z);
+		BOOST_CHECK_EQUAL(math::ipow_subs((x+y)/z,"x",2,3/2_q),(x+y)/z);
+		BOOST_CHECK_EQUAL(math::ipow_subs((x+y*y*y*y)/z,"y",2,p_type("z")*3),(x+9*z*z)/z);
+		BOOST_CHECK_EQUAL(math::ipow_subs((x+y)/(z*z),"z",2,q_type("z")/6),6*(x+y)/z);
+		BOOST_CHECK_EQUAL(math::ipow_subs((x+y)/z,"a",123,123_z),(x+y)/z);
+		BOOST_CHECK_EQUAL(math::ipow_subs(x/(z+y),"x",1,0),0);
+		BOOST_CHECK_EQUAL(math::ipow_subs(x/(z+y),"x",-1,0),x/(z+y));
+		// Check that using negative powers throws.
+		BOOST_CHECK_THROW(math::ipow_subs(x/(z+y),"x",1,p_type{"x"}.pow(-1)),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_ipow_subs_test)
+{
+	boost::mpl::for_each<key_types>(ipow_subs_tester());
+}
+
+struct partial_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using math::pow;
+		using math::partial;
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		BOOST_CHECK(is_differentiable<r_type>::value);
+		r_type x{"x"}, y{"y"};
+		BOOST_CHECK_EQUAL(partial(r_type{3,4},"x"),0);
+		BOOST_CHECK_EQUAL(partial(x,"x"),1);
+		BOOST_CHECK_EQUAL(partial(x/y,"z"),0);
+		BOOST_CHECK_EQUAL(partial(x/y,"x"),1/y);
+		BOOST_CHECK_EQUAL(partial((4*x-2)/(x*x+1),"x"),(-4*x*x+4*x+4)/pow(x*x+1,2));
+		// Try with custom derivatives.
+		p_type::register_custom_derivative("x",[](const p_type &) {return p_type{42};});
+		BOOST_CHECK_EQUAL(partial((4*x-2)/(x*x+1),"x"),(42*(x*x+1)-42*(4*x-2))/pow(x*x+1,2));
+		p_type::unregister_custom_derivative("x");
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_partial_test)
+{
+	boost::mpl::for_each<key_types>(partial_tester());
+}
+
+struct integrate_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using math::pow;
+		using math::integrate;
+		using r_type = rational_function<Key>;
+		BOOST_CHECK(is_integrable<r_type>::value);
+		r_type x{"x"}, y{"y"};
+		BOOST_CHECK_EQUAL(integrate(r_type{},"x"),0);
+		BOOST_CHECK_EQUAL(integrate(r_type{3,4},"x"),(r_type{3,4}*x));
+		BOOST_CHECK_EQUAL(integrate(x,"x"),x*x/2);
+		BOOST_CHECK_EQUAL(integrate(x,"y"),x*y);
+		BOOST_CHECK_THROW(integrate(1/x,"x"),std::invalid_argument);
+		BOOST_CHECK_EQUAL(integrate(1/x,"y"),y/x);
+		BOOST_CHECK_EQUAL(integrate((7*x*x+y*x)/(2*y),"x"),(14*x*x*x+3*x*x*y)/(12*y));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_integrate_test)
+{
+	boost::mpl::for_each<key_types>(integrate_tester());
 }
