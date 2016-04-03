@@ -157,6 +157,19 @@ struct NullHook
 	{}
 };
 
+// Generic copy wrappers.
+template <typename S>
+inline S copy_wrapper(const S &s)
+{
+	return s;
+}
+
+template <typename S>
+inline S deepcopy_wrapper(const S &s, bp::dict)
+{
+	return copy_wrapper(s);
+}
+
 // Generic series exposer.
 template <template <typename ...> class Series, typename Descriptor, std::size_t Begin = 0u,
 	std::size_t End = std::tuple_size<typename Descriptor::params>::value, typename CustomHook = NullHook>
@@ -184,17 +197,6 @@ class series_exposer
 		static void expose_ctor(bp::class_<T> &,
 			typename std::enable_if<!std::is_constructible<T,U>::value>::type * = nullptr)
 		{}
-		// Copy operations.
-		template <typename S>
-		static S copy_wrapper(const S &s)
-		{
-			return s;
-		}
-		template <typename S>
-		static S deepcopy_wrapper(const S &s, bp::dict)
-		{
-			return copy_wrapper(s);
-		}
 		// Sparsity wrapper.
 		template <typename S>
 		static bp::dict table_sparsity_wrapper(const S &s)

@@ -59,6 +59,7 @@ see https://www.gnu.org/licenses/. */
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_polynomials.hpp"
+#include "expose_rational_functions.hpp"
 #include "expose_utils.hpp"
 #include "python_converters.hpp"
 #include "type_system.hpp"
@@ -198,6 +199,9 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_divisor_series_6();
 	pyranha::expose_divisor_series_7();
 	pyranha::expose_divisor_series_8();
+	// Expose rational function.
+	pyranha::expose_rational_functions_0();
+	pyranha::expose_rational_functions_1();
 	// Expose the settings class.
 	bp::class_<piranha::settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",piranha::settings::get_max_term_output).staticmethod("_get_max_term_output");
