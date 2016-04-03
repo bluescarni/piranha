@@ -620,7 +620,7 @@ enum class polynomial_gcd_algorithm
  * - all the truncation-related requirements in piranha::power_series are satsified,
  * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
  * 
- * This class satisfies the piranha::is_series type trait.
+ * This class satisfies the piranha::is_series and piranha::is_cf type traits.
  * 
  * \warning
  * The division and GCD operations are known to have poor performance, especially with large operands. Performance
