@@ -4539,20 +4539,6 @@ inline auto ipow_subs(const T &x, const std::string &name, const Int &n, const U
 
 }
 
-/// Specialisation of piranha::has_exact_ring_operations for piranha::mp_integer.
-/**
- * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_integer.
- */
-template <typename T>
-struct has_exact_ring_operations<T,typename std::enable_if<detail::is_mp_integer<typename std::decay<T>::type>::value>::type>
-{
-	/// Value of the type trait.
-	static const bool value = true;
-};
-
-template <typename T>
-const bool has_exact_ring_operations<T,typename std::enable_if<detail::is_mp_integer<typename std::decay<T>::type>::value>::type>::value;
-
 /// Type trait to detect the presence of the piranha::math::ipow_subs function.
 /**
  * The type trait will be \p true if piranha::math::ipow_subs can be successfully called on instances
@@ -4613,6 +4599,20 @@ class key_has_ipow_subs: detail::sfinae_types
 // Static init.
 template <typename Key, typename T>
 const bool key_has_ipow_subs<Key,T>::value;
+
+/// Specialisation of piranha::has_exact_ring_operations for piranha::mp_integer.
+/**
+ * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct has_exact_ring_operations<T,typename std::enable_if<detail::is_mp_integer<typename std::decay<T>::type>::value>::type>
+{
+	/// Value of the type trait.
+	static const bool value = true;
+};
+
+template <typename T>
+const bool has_exact_ring_operations<T,typename std::enable_if<detail::is_mp_integer<typename std::decay<T>::type>::value>::type>::value;
 
 inline namespace literals
 {
