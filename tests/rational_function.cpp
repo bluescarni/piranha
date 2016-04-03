@@ -1243,38 +1243,41 @@ BOOST_AUTO_TEST_CASE(rational_function_integrate_test)
 	boost::mpl::for_each<key_types>(integrate_tester());
 }
 
+template <typename T>
+inline void tex_checker(const T &r, std::string cmp1, std::string cmp2 = "")
+{
+	std::ostringstream oss;
+	r.print_tex(oss);
+	auto oss_str = oss.str();
+	oss.str("");
+	print_tex_coefficient(oss,r);
+	auto oss_str2 = oss.str();
+	BOOST_CHECK_EQUAL(oss_str,oss_str2);
+	if (cmp2 != oss_str) {
+		BOOST_CHECK_EQUAL(cmp1,oss_str);
+	}
+}
+
 struct print_tex_tester
 {
 	template <typename Key>
 	void operator()(const Key &)
 	{
 		using r_type = rational_function<Key>;
-		auto checker = [](const r_type &r, std::string cmp1, std::string cmp2 = "") -> void {
-			std::ostringstream oss;
-			r.print_tex(oss);
-			auto oss_str = oss.str();
-			oss.str("");
-			print_tex_coefficient(oss,r);
-			auto oss_str2 = oss.str();
-			BOOST_CHECK_EQUAL(oss_str,oss_str2);
-			if (cmp2 != oss_str) {
-				BOOST_CHECK_EQUAL(cmp1,oss_str);
-			}
-		};
-		checker(r_type{},"0");
+		tex_checker(r_type{},"0");
 		r_type x{"x"}, y{"y"};
-		checker(x,"{x}");
-		checker(x*y,"{x}{y}");
-		checker(-x,"-{x}");
-		checker(-x*y,"-{x}{y}");
-		checker(x*y/2,"\\frac{{x}{y}}{2}");
-		checker(-x*y/2,"-\\frac{{x}{y}}{2}");
-		checker(-x*y/(x+2),"-\\frac{{x}{y}}{{x}+2}","-\\frac{{x}{y}}{2+{x}}");
-		checker(x*y/2,"\\frac{{x}{y}}{2}");
-		checker(x*y/(x+2),"\\frac{{x}{y}}{{x}+2}","\\frac{{x}{y}}{2+{x}}");
-		checker(x*y/(x-2),"\\frac{{x}{y}}{{x}-2}","-\\frac{{x}{y}}{2-{x}}");
-		checker((x-3*y)/x,"\\frac{{x}-3{y}}{{x}}","-\\frac{3{y}-{x}}{{x}}");
-		checker((x-2*y)/(x-y),"\\frac{{x}-2{y}}{{x}-{y}}","\\frac{2{y}-{x}}{{y}-{x}}");
+		tex_checker(x,"{x}");
+		tex_checker(x*y,"{x}{y}");
+		tex_checker(-x,"-{x}");
+		tex_checker(-x*y,"-{x}{y}");
+		tex_checker(x*y/2,"\\frac{{x}{y}}{2}");
+		tex_checker(-x*y/2,"-\\frac{{x}{y}}{2}");
+		tex_checker(-x*y/(x+2),"-\\frac{{x}{y}}{{x}+2}","-\\frac{{x}{y}}{2+{x}}");
+		tex_checker(x*y/2,"\\frac{{x}{y}}{2}");
+		tex_checker(x*y/(x+2),"\\frac{{x}{y}}{{x}+2}","\\frac{{x}{y}}{2+{x}}");
+		tex_checker(x*y/(x-2),"\\frac{{x}{y}}{{x}-2}","-\\frac{{x}{y}}{2-{x}}");
+		tex_checker((x-3*y)/x,"\\frac{{x}-3{y}}{{x}}","-\\frac{3{y}-{x}}{{x}}");
+		tex_checker((x-2*y)/(x-y),"\\frac{{x}-2{y}}{{x}-{y}}","\\frac{2{y}-{x}}{{y}-{x}}");
 	}
 };
 
