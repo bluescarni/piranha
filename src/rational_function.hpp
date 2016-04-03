@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include "mp_rational.hpp"
 #include "polynomial.hpp"
 #include "pow.hpp"
+#include "print_tex_coefficient.hpp"
 #include "serialization.hpp"
 #include "type_traits.hpp"
 
@@ -627,6 +628,50 @@ class rational_function: public detail::rational_function_tag
 			}
 			return os;
 		}
+		/// Print in TeX mode.
+		/**
+		 * This method will stream to \p os a TeX representation of \p this.
+		 *
+		 * @param[in] os target stream.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::rational_function::p_type::print_tex(),
+		 * - the unary negation operator of piranha::rational_function::p_type.
+		 */
+		void print_tex(std::ostream &os) const
+		{
+			if (math::is_zero(*this)) {
+				// Special case for zero.
+				os << "0";
+			} else if (math::is_unitary(m_den)) {
+				// If the denominator is 1, print just the numerator.
+				m_num.print_tex(os);
+			} else {
+				// The idea here is to have the first term of num and den positive.
+				piranha_assert(m_num.size() >= 1u);
+				piranha_assert(m_den.size() >= 1u);
+				const bool negate_num = m_num._container().begin()->m_cf.sign() < 0;
+				const bool negate_den = m_den._container().begin()->m_cf.sign() < 0;
+				if (negate_num != negate_den) {
+					// If we need to negate only one of num/den,
+					// then we need to prepend the minus sign.
+					os << '-';
+				}
+				os << "\\frac{";
+				if (negate_num) {
+					(-m_num).print_tex(os);
+				} else {
+					m_num.print_tex(os);
+				}
+				os << "}{";
+				if (negate_den) {
+					(-m_den).print_tex(os);
+				} else {
+					m_den.print_tex(os);
+				}
+				os << '}';
+			}
+		}
 		/** @name Low-level interface
 		 * Low-level methods.
 		 */
@@ -1013,6 +1058,28 @@ class rational_function: public detail::rational_function_tag
 		p_type	m_den;
 };
 
+/// Specialisation of piranha::print_tex_coefficient() for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct print_tex_coefficient_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * This operator will call internally piranha::rational_function::print_tex().
+	 *
+	 * @param[in] os target stream.
+	 * @param[in] r piranha::rational_function argument.
+	 *
+	 * @throws unspecified any exception thrown by piranha::rational_function::print_tex().
+	 */
+	void operator()(std::ostream &os, const T &r) const
+	{
+		r.print_tex(os);
+	}
+};
+
 namespace math
 {
 
@@ -1189,7 +1256,6 @@ struct integrate_impl<T,typename std::enable_if<std::is_base_of<detail::rational
 		return T{integrate(typename T::q_type{r.num()},name),r.den()};
 	}
 };
-
 
 }
 

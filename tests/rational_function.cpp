@@ -47,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
+#include "../src/print_tex_coefficient.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
@@ -1240,4 +1241,44 @@ struct integrate_tester
 BOOST_AUTO_TEST_CASE(rational_function_integrate_test)
 {
 	boost::mpl::for_each<key_types>(integrate_tester());
+}
+
+struct print_tex_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		auto checker = [](const r_type &r, std::string cmp1, std::string cmp2 = "") -> void {
+			std::ostringstream oss;
+			r.print_tex(oss);
+			auto oss_str = oss.str();
+			oss.str("");
+			print_tex_coefficient(oss,r);
+			auto oss_str2 = oss.str();
+			BOOST_CHECK_EQUAL(oss_str,oss_str2);
+			if (cmp2 != oss_str) {
+				BOOST_CHECK_EQUAL(cmp1,oss_str);
+			}
+		};
+		checker(r_type{},"0");
+		r_type x{"x"}, y{"y"};
+		checker(x,"{x}");
+		checker(x*y,"{x}{y}");
+		checker(-x,"-{x}");
+		checker(-x*y,"-{x}{y}");
+		checker(x*y/2,"\\frac{{x}{y}}{2}");
+		checker(-x*y/2,"-\\frac{{x}{y}}{2}");
+		checker(-x*y/(x+2),"-\\frac{{x}{y}}{{x}+2}","-\\frac{{x}{y}}{2+{x}}");
+		checker(x*y/2,"\\frac{{x}{y}}{2}");
+		checker(x*y/(x+2),"\\frac{{x}{y}}{{x}+2}","\\frac{{x}{y}}{2+{x}}");
+		checker(x*y/(x-2),"\\frac{{x}{y}}{{x}-2}","-\\frac{{x}{y}}{2-{x}}");
+		checker((x-3*y)/x,"\\frac{{x}-3{y}}{{x}}","-\\frac{3{y}-{x}}{{x}}");
+		checker((x-2*y)/(x-y),"\\frac{{x}-2{y}}{{x}-{y}}","\\frac{2{y}-{x}}{{y}-{x}}");
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_print_tex_test)
+{
+	boost::mpl::for_each<key_types>(print_tex_tester());
 }
