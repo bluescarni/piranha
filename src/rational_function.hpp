@@ -617,10 +617,11 @@ class rational_function: public detail::rational_function_tag
 				}
 				os << '/';
 				if (r.m_den.is_single_coefficient() ||
-					(r.m_den.size() == 1u && math::is_unitary(r.m_den._container().begin()->m_cf)))
+					(r.m_den.size() == 1u && math::is_unitary(r.m_den._container().begin()->m_cf) &&
+					integer{r.m_den.degree()} == 1))
 				{
-					// If the denominator is a single coefficient or it has a single term with unitary coefficient,
-					// don't print the brackets.
+					// If the denominator is a single coefficient or it has a single term with unitary coefficient
+					// and degree 1 (that is, it is of the form "x"), don't print the brackets.
 					os << r.m_den;
 				} else {
 					os << '(' << r.m_den << ')';

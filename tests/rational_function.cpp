@@ -462,7 +462,7 @@ struct stream_tester
 		str_cmp(r,"-123");
 		r = -123/7_q;
 		str_cmp(r,"-123/7");
-		p_type x{"x"}, y{"y"};
+		p_type x{"x"}, y{"y"}, z{"z"};
 		r = -123/7_q + x;
 		str_cmp(r,"(-123+7*x)/7");
 		r = r_type{-123 + x,x+1};
@@ -473,6 +473,9 @@ struct stream_tester
 		str_cmp(r,"(123-x)/x");
 		r = r_type{x,y};
 		str_cmp(r,"x/y");
+		// This was printed incorrectly (without brackets in den) in a previous version.
+		r = r_type{y,x*z};
+		str_cmp(r,"y/(x*z)");
 	}
 };
 
