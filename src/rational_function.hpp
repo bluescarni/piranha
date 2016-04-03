@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include "mp_rational.hpp"
 #include "polynomial.hpp"
 #include "pow.hpp"
+#include "serialization.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -97,8 +98,6 @@ struct rational_function_tag {};
  *
  * This class supports serialization.
  */
-// TODO: what type traits does it satisfy?
-// TODO: serialization.
 template <typename Key>
 class rational_function: public detail::rational_function_tag
 {
@@ -416,6 +415,31 @@ class rational_function: public detail::rational_function_tag
 		// Subs.
 		template <typename T>
 		using subs_enabler = typename std::enable_if<is_interoperable<T>::value || std::is_same<T,rational_function>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			// NOTE: here in principle we do not need the split member implementation,
+			// this syntax could be used for both load and save. However, for load
+			// we use an implementation that gives better exception safety: load num/den
+			// into local variables and the move them in. So if something goes wrong in the
+			// deserialization of one of the ints, we do not modify this.
+			ar & m_num;
+			ar & m_den;
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			p_type num, den;
+			ar & num;
+			ar & den;
+			// This ensures that if we load from a bad archive with non-coprime
+			// num and den or negative den, or... we get anyway a canonicalised
+			// rational_function or an error.
+			*this = rational_function{num,den};
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Default constructor.
 		/**

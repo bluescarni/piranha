@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -1088,4 +1089,45 @@ struct subs_tester
 BOOST_AUTO_TEST_CASE(rational_function_subs_test)
 {
 	boost::mpl::for_each<key_types>(subs_tester());
+}
+
+struct serialization_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		auto checker = [](const r_type &r) -> void {
+			r_type tmp;
+			std::stringstream ss;
+			{
+			boost::archive::text_oarchive oa(ss);
+			oa << r;
+			}
+			{
+			boost::archive::text_iarchive ia(ss);
+			ia >> tmp;
+			}
+			BOOST_CHECK_EQUAL(tmp,r);
+		};
+		// Random testing.
+		p_type x{"x"}, y{"y"}, z{"z"};
+		std::uniform_int_distribution<int> dist(0,4), p_dist(-4,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n1 = rn_poly(x,y,z,dist);
+			auto d1 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d1)) {
+				BOOST_CHECK_THROW((r_type{n1,d1}),zero_division_error);
+				continue;
+			}
+			r_type r1{n1,d1};
+			checker(r1);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_serialization_test)
+{
+	boost::mpl::for_each<key_types>(serialization_tester());
 }
