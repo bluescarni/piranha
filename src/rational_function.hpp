@@ -35,6 +35,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 #include "config.hpp"
@@ -1256,6 +1257,49 @@ struct integrate_impl<T,typename std::enable_if<std::is_base_of<detail::rational
 		}
 		return T{integrate(typename T::q_type{r.num()},name),r.den()};
 	}
+};
+
+/// Specialisation of the piranha::math::evaluate() functor for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct evaluate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	private:
+		// This is the real eval type.
+		template <typename U, typename V>
+		using eval_type_ = decltype(evaluate(std::declval<const U &>().num(),std::declval<const std::unordered_map<std::string,V> &>())
+			/ evaluate(std::declval<const U &>().den(),std::declval<const std::unordered_map<std::string,V> &>()));
+		// NOTE: this requirement is mentioned in piranha.hpp, to be added in general to evaluation functions. We might end up abstracting
+		// it somewhere, in that case we should use the abstraction here as well. This is basically an is_returnable check,
+		// and it is kind of similar to the pmappable check.
+		template <typename U, typename V>
+		using eval_type = typename std::enable_if<(std::is_copy_constructible<eval_type_<U,V>>::value ||
+			std::is_move_constructible<eval_type_<U,V>>::value) && std::is_destructible<eval_type_<U,V>>::value,eval_type_<U,V>>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm described below is supported by the involved types.
+		 * 
+		 * The evaluation of a rational function is constructed from the ratio of the evaluation of its numerator
+		 * by the evaluation of its denominator. The return type is the type resulting from this operation.
+		 * 
+		 * @param[in] r the piranha::rational_function argument.
+		 * @param[in] m the evaluation map.
+		 * 
+		 * @return the evaluation of \p r according to \p m.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the evaluation of the numerator and denominator of \p r,
+		 * - the division of the results of the evaluations of numerator and denominator.
+		 */
+		template <typename U, typename V>
+		eval_type<U,V> operator()(const U &r, const std::unordered_map<std::string,V> &m) const
+		{
+			return evaluate(r.num(),m) / evaluate(r.den(),m);
+		}
 };
 
 }

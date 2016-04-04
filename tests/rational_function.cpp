@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <initializer_list>
 #include <random>
 #include <sstream>
 #include <stdexcept>
@@ -1287,4 +1288,34 @@ struct print_tex_tester
 BOOST_AUTO_TEST_CASE(rational_function_print_tex_test)
 {
 	boost::mpl::for_each<key_types>(print_tex_tester());
+}
+
+struct evaluate_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using math::evaluate;
+		BOOST_CHECK((is_evaluable<r_type,int>::value));
+		BOOST_CHECK((is_evaluable<r_type,double>::value));
+		BOOST_CHECK((is_evaluable<r_type,integer>::value));
+		BOOST_CHECK((is_evaluable<r_type,rational>::value));
+		BOOST_CHECK((is_evaluable<r_type,r_type>::value));
+		BOOST_CHECK((!is_evaluable<r_type,std::string>::value));
+		r_type x{"x"}, y{"y"};
+		BOOST_CHECK((std::is_same<decltype(evaluate<rational>((x+y)/(3*y),{{"x",1/2_q},{"y",-3/5_q}})),rational>::value));
+		BOOST_CHECK((std::is_same<decltype(evaluate<double>((x+y)/(3*y),{{"x",1.},{"y",2.}})),double>::value));
+		BOOST_CHECK((std::is_same<decltype(evaluate<integer>((x+y)/(3*y),{{"x",1_z},{"y",2_z}})),integer>::value));
+		BOOST_CHECK((std::is_same<decltype(evaluate<r_type>((x+y)/(3*y),{{"x",r_type{}},{"y",r_type{}}})),r_type>::value));
+		BOOST_CHECK_EQUAL((evaluate<rational>((2*x*x+y)/(3*y),{{"x",1/2_q},{"y",-3/5_q}})),1/18_q);
+		BOOST_CHECK_EQUAL((evaluate<integer>((2*x*x+y)/(3*y),{{"x",2_z},{"y",3_z}})),1_z);
+		BOOST_CHECK_EQUAL((evaluate<r_type>((2*x*x+y)/(3*y),{{"x",r_type{"y"}},{"y",r_type{"x"}}})),(2*y*y+x)/(3*x));
+		BOOST_CHECK_THROW((evaluate<rational>((2*x*x+y)/(3*y),{{"x",1/2_q},{"y",0_q}})),zero_division_error);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_evaluate_test)
+{
+	boost::mpl::for_each<key_types>(evaluate_tester());
 }
