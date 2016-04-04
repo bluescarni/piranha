@@ -53,6 +53,13 @@ using integer_pow_enabler = typename std::enable_if<
 	(std::is_integral<T>::value && std::is_integral<U>::value)
 >::type;
 
+// Enabler for the pow overload for arithmetic and floating-point types.
+template <typename T, typename U>
+using pow_fp_arith_enabler = typename std::enable_if<
+	std::is_arithmetic<T>::value && std::is_arithmetic<U>::value &&
+	(std::is_floating_point<T>::value || std::is_floating_point<U>::value)
+>::type;
+
 }
 
 namespace math
@@ -73,10 +80,7 @@ struct pow_impl
  * is a floating-point type.
  */
 template <typename T, typename U>
-struct pow_impl<T,U,typename std::enable_if<
-	std::is_arithmetic<T>::value && std::is_arithmetic<U>::value &&
-	(std::is_floating_point<T>::value || std::is_floating_point<U>::value)
->::type>
+struct pow_impl<T,U,detail::pow_fp_arith_enabler<T,U>>
 {
 	/// Call operator.
 	/**
