@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PYRANHA_EXPOSE_RATIONAL_FUNCTIONS_HPP
 
 #include <boost/python/class.hpp>
+#include <boost/python/def.hpp>
 #include <boost/python/operators.hpp>
 #include <boost/python/self.hpp>
 #include <string>
@@ -37,7 +38,9 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/pow.hpp"
 #include "../src/rational_function.hpp"
+#include "../src/real.hpp"
 #include "expose_utils.hpp"
 #include "type_system.hpp"
 
@@ -86,6 +89,55 @@ struct rf_binary_ctor_exposer
 	bp::class_<T> &m_rf_class;
 };
 
+template <typename T>
+struct rf_interop_exposer
+{
+	rf_interop_exposer(bp::class_<T> &rf_class):m_rf_class(rf_class) {}
+	template <typename U>
+	void operator()(const U &) const
+	{
+		U x;
+		m_rf_class.def(bp::self += x);
+		m_rf_class.def(bp::self + x);
+		m_rf_class.def(x + bp::self);
+		m_rf_class.def(bp::self -= x);
+		m_rf_class.def(bp::self - x);
+		m_rf_class.def(x - bp::self);
+		m_rf_class.def(bp::self *= x);
+		m_rf_class.def(bp::self * x);
+		m_rf_class.def(x * bp::self);
+		m_rf_class.def(bp::self /= x);
+		m_rf_class.def(bp::self / x);
+		m_rf_class.def(x / bp::self);
+	}
+	bp::class_<T> &m_rf_class;
+};
+
+template <typename T>
+struct rf_eval_exposer
+{
+	rf_eval_exposer(bp::class_<T> &rf_class):m_rf_class(rf_class) {}
+	template <typename U>
+	void operator()(const U &) const
+	{
+		bp::def("_evaluate",generic_evaluate_wrapper<T,U>);
+	}
+	bp::class_<T> &m_rf_class;
+};
+
+template <typename T>
+struct rf_subs_exposer
+{
+	rf_subs_exposer(bp::class_<T> &rf_class):m_rf_class(rf_class) {}
+	template <typename U>
+	void operator()(const U &) const
+	{
+		bp::def("_subs",piranha::math::subs<T,U>);
+		bp::def("_ipow_subs",piranha::math::ipow_subs<T,U>);
+	}
+	bp::class_<T> &m_rf_class;
+};
+
 template <typename Key>
 inline void expose_rational_functions_impl()
 {
@@ -110,8 +162,8 @@ inline void expose_rational_functions_impl()
 	// Copy ctor.
 	rf_class.def(bp::init<const r_type &>());
 	// Shallow and deep copy.
-	rf_class.def("__copy__",copy_wrapper<r_type>);
-	rf_class.def("__deepcopy__",deepcopy_wrapper<r_type>);
+	rf_class.def("__copy__",generic_copy_wrapper<r_type>);
+	rf_class.def("__deepcopy__",generic_deepcopy_wrapper<r_type>);
 	// NOTE: here repr is found via argument-dependent lookup.
 	rf_class.def(repr(bp::self));
 	// Interaction with self.
@@ -127,6 +179,17 @@ inline void expose_rational_functions_impl()
 	rf_class.def(bp::self != bp::self);
 	rf_class.def(+bp::self);
 	rf_class.def(-bp::self);
+	// Interoperability with other types.
+	using interop_types = std::tuple<piranha::integer,piranha::rational,p_type,q_type>;
+	tuple_for_each(interop_types{},rf_interop_exposer<r_type>(rf_class));
+	// Pow.
+	rf_class.def("__pow__",piranha::math::pow<r_type,piranha::integer>);
+	// Evaluation.
+	using eval_types = std::tuple<piranha::integer,piranha::rational,r_type,double,piranha::real>;
+	tuple_for_each(eval_types{},rf_eval_exposer<r_type>(rf_class));
+	// Subs.
+	using subs_types = std::tuple<piranha::integer,piranha::rational,p_type,q_type,r_type>;
+	tuple_for_each(subs_types{},rf_subs_exposer<r_type>(rf_class));
 }
 
 }

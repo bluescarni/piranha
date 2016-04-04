@@ -159,15 +159,28 @@ struct NullHook
 
 // Generic copy wrappers.
 template <typename S>
-inline S copy_wrapper(const S &s)
+inline S generic_copy_wrapper(const S &s)
 {
 	return s;
 }
 
 template <typename S>
-inline S deepcopy_wrapper(const S &s, bp::dict)
+inline S generic_deepcopy_wrapper(const S &s, bp::dict)
 {
-	return copy_wrapper(s);
+	return s;
+}
+
+// Generic evaluate wrapper.
+template <typename S, typename T>
+inline auto generic_evaluate_wrapper(const S &s, bp::dict dict, const T &)
+	-> decltype(piranha::math::evaluate(s,std::declval<std::unordered_map<std::string,T>>()))
+{
+	std::unordered_map<std::string,T> cpp_dict;
+	bp::stl_input_iterator<std::string> it(dict), end;
+	for (; it != end; ++it) {
+		cpp_dict[*it] = bp::extract<T>(dict[*it])();
+	}
+	return piranha::math::evaluate(s,cpp_dict);
 }
 
 // Generic series exposer.
@@ -315,26 +328,13 @@ class series_exposer
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<piranha::is_evaluable<S,T>::value>::type * = nullptr) const
 			{
-				m_series_class.def("_evaluate",evaluate_wrapper<S,T>);
-				bp::def("_evaluate",evaluate_wrapper<S,T>);
+				m_series_class.def("_evaluate",generic_evaluate_wrapper<S,T>);
+				bp::def("_evaluate",generic_evaluate_wrapper<S,T>);
 			}
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<!piranha::is_evaluable<S,T>::value>::type * = nullptr) const
 			{}
 		};
-		// NOTE: math::evaluate for series is always the evaluate() member function, so we just need one wrapper.
-		// This is true at the moment for other functions, such as the subs ones, integrate, etc.
-		template <typename S, typename T>
-		static auto evaluate_wrapper(const S &s, bp::dict dict, const T &)
-			-> decltype(s.evaluate(std::declval<std::unordered_map<std::string,T>>()))
-		{
-			std::unordered_map<std::string,T> cpp_dict;
-			bp::stl_input_iterator<std::string> it(dict), end;
-			for (; it != end; ++it) {
-				cpp_dict[*it] = bp::extract<T>(dict[*it])();
-			}
-			return s.evaluate(cpp_dict);
-		}
 		template <typename S, typename T = Descriptor>
 		static void expose_eval(bp::class_<S> &series_class, typename std::enable_if<has_typedef_eval_types<T>::value>::type * = nullptr)
 		{
@@ -887,8 +887,8 @@ class series_exposer
 				// Copy constructor.
 				series_class.def(bp::init<const s_type &>());
 				// Shallow and deep copy.
-				series_class.def("__copy__",copy_wrapper<s_type>);
-				series_class.def("__deepcopy__",deepcopy_wrapper<s_type>);
+				series_class.def("__copy__",generic_copy_wrapper<s_type>);
+				series_class.def("__deepcopy__",generic_deepcopy_wrapper<s_type>);
 				// NOTE: here repr is found via argument-dependent lookup.
 				series_class.def(repr(bp::self));
 				// Length.
