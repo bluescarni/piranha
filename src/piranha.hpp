@@ -168,7 +168,8 @@ see https://www.gnu.org/licenses/. */
  * \todo hash_set needs more testing.
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
- * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements.
+ * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements. UPDATE: this probably needs to be an
+ * is_returnable check, no need to go all the way to is_container_element.
  * \todo the following items still remain to be finished up after the truncation rework:
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
  *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
@@ -199,6 +200,14 @@ see https://www.gnu.org/licenses/. */
  * symengine in order to make sure this does not create troubles for them. Even after we do that, we still need to account for potentially strange
  * things happening when we use pow() in GCD (e.g., nonzero poly to positive power returning zero).
  * \todo implement the GCD benchmarks from the liao paper as a performance test.
+ * \todo the evaluation functor impl should probably take the evaluation type as a parameter too, the same way pow_impl does. Other improvements:
+ * - overload for use with init list without explicit template param,
+ * - related to the first point, fix the template params order,
+ * - improve the error message if not all variables are provided (this should probably be caught in series::evaluate() early rather
+ *   than go down all the way to the key).
+ * \todo we need to decide if we want to keep the postifx notation for things like eval, subs etc. or just support the math:: versions. It probably does
+ * not make much sense to go back and remove the methods in the toolboxes, but for documentation purposes and in python particularly we should just
+ * support the math:: overloads (with partial() being the lone exception).
  */
 namespace piranha
 {
