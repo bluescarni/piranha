@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_RATIONAL_FUNCTION_HPP
 #define PIRANHA_RATIONAL_FUNCTION_HPP
 
+#include <algorithm>
 #include <initializer_list>
 #include <iostream>
 #include <stdexcept>
@@ -161,6 +162,8 @@ class rational_function: public detail::rational_function_tag
 			auto retval = std::make_pair(std::move(std::get<1u>(tup_res)),std::move(std::get<2u>(tup_res)));
 			// Check if we need to adjust the sign of the leading term
 			// of the denominator.
+			// NOTE: here we ask for the lterm into something that potentially might be zero
+			// if truncation is active. Keep this in mind.
 			if (detail::poly_lterm(retval.second)->m_cf.sign() < 0) {
 				math::negate(retval.first);
 				math::negate(retval.second);
@@ -998,6 +1001,7 @@ class rational_function: public detail::rational_function_tag
 				retval.m_den = math::pow(m_num,-n_int);
 				// The only canonicalisation we need is checking the sign of the new
 				// denominator.
+				// NOTE: this might potentially be zero in case of truncation.
 				if (detail::poly_lterm(retval.m_den)->m_cf.sign() < 0) {
 					math::negate(retval.m_num);
 					math::negate(retval.m_den);
@@ -1054,6 +1058,23 @@ class rational_function: public detail::rational_function_tag
 		{
 			return rational_function{math::ipow_subs(num(),name,n,x),
 				math::ipow_subs(den(),name,n,x)};
+		}
+		/// Trim.
+		/**
+		 * This method will return a copy of \p this whose numerator and denominator have been generated
+		 * by calling piranha::series::trim() on the numerator and denominator of \p this.
+		 * 
+		 * @return a copy of \p this with the ignorable arguments removed.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::series::trim().
+		 */
+		rational_function trim() const
+		{
+			// Don't use the ctor, as the result will be canonical by construction.
+			rational_function retval;
+			retval.m_num = m_num.trim();
+			retval.m_den = m_den.trim();
+			return retval;
 		}
 	private:
 		p_type	m_num;
@@ -1300,6 +1321,86 @@ struct evaluate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_
 		{
 			return evaluate(r.num(),m) / evaluate(r.den(),m);
 		}
+};
+
+/// Specialisation of the piranha::math::cos() functor for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct cos_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] r the piranha::rational_function argument.
+	 * 
+	 * @return 1 if \p r is zero.
+	 * 
+	 * @throws std::invalid_argument if \p r is not zero.
+	 * @throws unspecified any exception thrown by the constructor of piranha::rational_function from \p int.
+	 */
+	T operator()(const T &r) const
+	{
+		if (!is_zero(r)) {
+			piranha_throw(std::invalid_argument,"cannot compute the cosine of a nonzero rational function");
+		}
+		return T{1};
+	}
+};
+
+/// Specialisation of the piranha::math::sin() functor for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct sin_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] r the piranha::rational_function argument.
+	 * 
+	 * @return 0 if \p r is zero.
+	 * 
+	 * @throws std::invalid_argument if \p r is not zero.
+	 */
+	T operator()(const T &r) const
+	{
+		if (!is_zero(r)) {
+			piranha_throw(std::invalid_argument,"cannot compute the sine of a nonzero rational function");
+		}
+		return T{};
+	}
+};
+
+/// Specialisation of the piranha::math::degree() functor for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct degree_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The (partial) degree of a rational function is defined as the maximum (partial)
+	 * degree of numerator and denominator.
+	 * 
+	 * @param[in] r the piranha::rational_function argument.
+	 * @param[in] args either an empty pack, or a univariate pack containing a vector
+	 * of strings representing the names of the variables with respect to which
+	 * the partial degree is computed.
+	 * 
+	 * @return the (partial) degree of \p r.
+	 * 
+	 * @throws unspecified any exception thrown by the computation of the degrees
+	 * of the numerator or denominator of \p r.
+	 */
+	template <typename ... Args>
+	auto operator()(const T &r, const Args & ... args) const -> decltype(degree(r.num(),args...))
+	{
+		// NOTE: very important here, std::max returns a reference, so in the decltype()
+		// above we must not use the std::max otherwise we will return a reference.
+		return std::max(degree(r.num(),args...),degree(r.den(),args...));
+	}
 };
 
 }

@@ -169,7 +169,7 @@ see https://www.gnu.org/licenses/. */
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
  * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements. UPDATE: this probably needs to be an
- * is_returnable check, no need to go all the way to is_container_element.
+ * is_returnable check, no need to go all the way to is_container_element. NOTE: this also holds for the degree types.
  * \todo the following items still remain to be finished up after the truncation rework:
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
  *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
@@ -199,6 +199,8 @@ see https://www.gnu.org/licenses/. */
  * It seems like a good course of action would be to just invalidate the caches every time the truncation limit changes. We need to check with
  * symengine in order to make sure this does not create troubles for them. Even after we do that, we still need to account for potentially strange
  * things happening when we use pow() in GCD (e.g., nonzero poly to positive power returning zero).
+ * \todo again related to the above, there are a couple of instances of use of lterm with potentially zero polynomial due to truncation. Keep in mind,
+ * probably it is just best to replace poly multiplications with explicitly untruncated counterparts in rational function.
  * \todo implement the GCD benchmarks from the liao paper as a performance test.
  * \todo the evaluation functor impl should probably take the evaluation type as a parameter too, the same way pow_impl does. Other improvements:
  * - overload for use with init list without explicit template param,

@@ -20,6 +20,10 @@ ADD_LIBRARY(_core SHARED
 	type_system.hpp
 	expose_utils.hpp
 	expose_utils.cpp
+	# Rational functions.
+	expose_rational_functions.hpp
+	expose_rational_functions_0.cpp
+	expose_rational_functions_1.cpp
 	# Polynomials.
 	polynomial_descriptor.hpp
 	expose_polynomials.hpp
@@ -67,10 +71,6 @@ ADD_LIBRARY(_core SHARED
 	expose_divisor_series_6.cpp
 	expose_divisor_series_7.cpp
 	expose_divisor_series_8.cpp
-	# Rational functions.
-	expose_rational_functions.hpp
-	expose_rational_functions_0.cpp
-	expose_rational_functions_1.cpp
 	# Python files.
 	__init__.py _common.py celmec.py math.py test.py types.py
 	${PYRANHA_TUTORIAL_FILES}

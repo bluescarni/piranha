@@ -128,6 +128,7 @@ struct key_has_linarg: detail::sfinae_types
 template <typename PType>
 inline auto poly_lterm(const PType &p) -> decltype(p._container().begin())
 {
+	piranha_assert(!p.empty());
 	using term_type = typename PType::term_type;
 	return std::max_element(p._container().begin(),p._container().end(),[](const term_type &t1, const term_type &t2) {
 		return t1.m_key < t2.m_key;

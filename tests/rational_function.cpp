@@ -51,6 +51,8 @@ see https://www.gnu.org/licenses/. */
 #include "../src/print_tex_coefficient.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
+#include "../src/symbol_set.hpp"
+#include "../src/symbol.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -1318,4 +1320,97 @@ struct evaluate_tester
 BOOST_AUTO_TEST_CASE(rational_function_evaluate_test)
 {
 	boost::mpl::for_each<key_types>(evaluate_tester());
+}
+
+struct trim_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		{
+		r_type x{"x"}, y{"y"};
+		auto r = (x+y)/x;
+		auto r_trim = r.trim();
+		BOOST_CHECK(r.num().get_symbol_set() == r_trim.num().get_symbol_set());
+		BOOST_CHECK(r.den().get_symbol_set() != r_trim.den().get_symbol_set());
+		r = (x-x+y)/x;
+		r_trim = r.trim();
+		BOOST_CHECK(r.num().get_symbol_set() != r_trim.num().get_symbol_set());
+		BOOST_CHECK(r.den().get_symbol_set() != r_trim.den().get_symbol_set());
+		BOOST_CHECK((r.num().get_symbol_set() == symbol_set{symbol{"x"},symbol{"y"}}));
+		BOOST_CHECK((r_trim.num().get_symbol_set() == symbol_set{symbol{"y"}}));
+		}
+		// Random testing.
+		p_type x{"x"}, y{"y"}, z{"z"};
+		std::uniform_int_distribution<int> dist(0,4), p_dist(-4,4);
+		for (int i = 0; i < ntrials; ++i) {
+			auto n1 = rn_poly(x,y,z,dist);
+			auto d1 = rn_poly(x,y,z,dist);
+			if (math::is_zero(d1)) {
+				BOOST_CHECK_THROW((r_type{n1,d1}),zero_division_error);
+				continue;
+			}
+			r_type r1{n1,d1};
+			auto r1_trim = r1.trim();
+			BOOST_CHECK(r1_trim.is_canonical());
+			BOOST_CHECK_EQUAL(r1,r1_trim);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_trim_test)
+{
+	boost::mpl::for_each<key_types>(trim_tester());
+}
+
+struct sin_cos_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		BOOST_CHECK(has_sine<r_type>::value);
+		BOOST_CHECK(has_cosine<r_type>::value);
+		BOOST_CHECK_EQUAL(math::sin(r_type{}),0);
+		BOOST_CHECK_EQUAL(math::cos(r_type{}),1);
+		BOOST_CHECK_THROW(math::sin(r_type{"x"}),std::invalid_argument);
+		BOOST_CHECK_THROW(math::cos(r_type{"x"}),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_sin_cos_test)
+{
+	boost::mpl::for_each<key_types>(sin_cos_tester());
+}
+
+struct degree_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using math::degree;
+		using r_type = rational_function<Key>;
+		BOOST_CHECK(has_degree<r_type>::value);
+		r_type x{"x"}, y{"y"};
+		BOOST_CHECK_EQUAL(degree(r_type{}),0);
+		BOOST_CHECK_EQUAL(degree(x),1);
+		BOOST_CHECK_EQUAL(degree(y),1);
+		BOOST_CHECK_EQUAL(degree(x*x/y),2);
+		BOOST_CHECK_EQUAL(degree(y/(x*x)),2);
+		BOOST_CHECK_EQUAL(degree(y/(x*x),{"y"}),1);
+		BOOST_CHECK_EQUAL(degree(y/(x*x),{"x"}),2);
+		BOOST_CHECK_EQUAL(degree(y/(x*x),{"z"}),0);
+		// Check nothing funky is going on with the return type
+		// (during development, a bad use of std::max with trailing
+		// return type would end up returning a reference.
+		BOOST_CHECK((!std::is_reference<decltype(degree(x))>::value));
+		BOOST_CHECK((!std::is_reference<decltype(degree(x,{"x"}))>::value));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_degree_test)
+{
+	boost::mpl::for_each<key_types>(degree_tester());
 }

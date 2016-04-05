@@ -183,6 +183,57 @@ inline auto generic_evaluate_wrapper(const S &s, bp::dict dict, const T &)
 	return piranha::math::evaluate(s,cpp_dict);
 }
 
+// Generic canonical transformation wrapper.
+// NOTE: last param is dummy to let the Boost.Python type system to pick the correct type.
+template <typename S>
+inline bool generic_canonical_wrapper(bp::list new_p, bp::list new_q, bp::list p_list, bp::list q_list, const S &)
+{
+	bp::stl_input_iterator<S> begin_new_p(new_p), end_new_p;
+	bp::stl_input_iterator<S> begin_new_q(new_q), end_new_q;
+	bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
+	bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
+	return piranha::math::transformation_is_canonical(std::vector<S>(begin_new_p,end_new_p),std::vector<S>(begin_new_q,end_new_q),
+		std::vector<std::string>(begin_p,end_p),std::vector<std::string>(begin_q,end_q));
+}
+
+// Generic Poisson bracket wrapper.
+template <typename S>
+inline auto generic_pbracket_wrapper(const S &s1, const S &s2, bp::list p_list, bp::list q_list) ->
+	decltype(piranha::math::pbracket(s1,s2,{},{}))
+{
+	bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
+	bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
+	return piranha::math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
+		std::vector<std::string>(begin_q,end_q));
+}
+
+// Generic degree wrappers.
+template <typename S>
+inline auto generic_degree_wrapper(const S &s) -> decltype(piranha::math::degree(s))
+{
+	return piranha::math::degree(s);
+}
+
+template <typename S>
+inline auto generic_partial_degree_wrapper(const S &s, bp::list l) -> decltype(piranha::math::degree(s,std::vector<std::string>{}))
+{
+	bp::stl_input_iterator<std::string> begin(l), end;
+	return piranha::math::degree(s,std::vector<std::string>(begin,end));
+}
+
+template <typename S>
+inline auto generic_ldegree_wrapper(const S &s) -> decltype(piranha::math::ldegree(s))
+{
+	return piranha::math::ldegree(s);
+}
+
+template <typename S>
+inline auto generic_partial_ldegree_wrapper(const S &s, bp::list l) -> decltype(piranha::math::ldegree(s,std::vector<std::string>{}))
+{
+	bp::stl_input_iterator<std::string> begin(l), end;
+	return piranha::math::ldegree(s,std::vector<std::string>(begin,end));
+}
+
 // Generic series exposer.
 template <template <typename ...> class Series, typename Descriptor, std::size_t Begin = 0u,
 	std::size_t End = std::tuple_size<typename Descriptor::params>::value, typename CustomHook = NullHook>
@@ -527,43 +578,21 @@ class series_exposer
 		static void expose_partial(bp::class_<S> &,
 			typename std::enable_if<!piranha::is_differentiable<S>::value>::type * = nullptr)
 		{}
-		// Poisson bracket.
-		template <typename S>
-		static auto pbracket_wrapper(const S &s1, const S &s2, bp::list p_list, bp::list q_list) ->
-			decltype(piranha::math::pbracket(s1,s2,{},{}))
-		{
-			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
-			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
-			return piranha::math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
-				std::vector<std::string>(begin_q,end_q));
-		}
 		template <typename S>
 		static void expose_pbracket(bp::class_<S> &,
 			typename std::enable_if<piranha::has_pbracket<S>::value>::type * = nullptr)
 		{
-			bp::def("_pbracket",pbracket_wrapper<S>);
+			bp::def("_pbracket",generic_pbracket_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_pbracket(bp::class_<S> &,
 			typename std::enable_if<!piranha::has_pbracket<S>::value>::type * = nullptr)
 		{}
-		// Canonical transformation.
-		// NOTE: last param is dummy to let the Boost.Python type system to pick the correct type.
-		template <typename S>
-		static bool canonical_wrapper(bp::list new_p, bp::list new_q, bp::list p_list, bp::list q_list, const S &)
-		{
-			bp::stl_input_iterator<S> begin_new_p(new_p), end_new_p;
-			bp::stl_input_iterator<S> begin_new_q(new_q), end_new_q;
-			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
-			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
-			return piranha::math::transformation_is_canonical(std::vector<S>(begin_new_p,end_new_p),std::vector<S>(begin_new_q,end_new_q),
-				std::vector<std::string>(begin_p,end_p),std::vector<std::string>(begin_q,end_q));
-		}
 		template <typename S>
 		static void expose_canonical(bp::class_<S> &,
 			typename std::enable_if<piranha::has_transformation_is_canonical<S>::value>::type * = nullptr)
 		{
-			bp::def("_transformation_is_canonical",canonical_wrapper<S>);
+			bp::def("_transformation_is_canonical",generic_canonical_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_canonical(bp::class_<S> &,
@@ -671,38 +700,15 @@ class series_exposer
 			typename std::enable_if<piranha::has_degree<T>::value && piranha::has_ldegree<T>::value>::type * = nullptr)
 		{
 			// NOTE: probably we should make these piranha::math:: wrappers. Same for the trig ones.
-			series_class.def("degree",wrap_degree<T>);
-			series_class.def("degree",wrap_partial_degree_set<T>);
-			series_class.def("ldegree",wrap_ldegree<T>);
-			series_class.def("ldegree",wrap_partial_ldegree_set<T>);
+			series_class.def("degree",generic_degree_wrapper<T>);
+			series_class.def("degree",generic_partial_degree_wrapper<T>);
+			series_class.def("ldegree",generic_ldegree_wrapper<T>);
+			series_class.def("ldegree",generic_partial_ldegree_wrapper<T>);
 		}
 		template <typename T>
 		static void expose_degree(bp::class_<T> &,
 			typename std::enable_if<!piranha::has_degree<T>::value || !piranha::has_ldegree<T>::value>::type * = nullptr)
 		{}
-		// degree() wrappers.
-		template <typename S>
-		static auto wrap_degree(const S &s) -> decltype(s.degree())
-		{
-			return s.degree();
-		}
-		template <typename S>
-		static auto wrap_partial_degree_set(const S &s, bp::list l) -> decltype(s.degree(std::vector<std::string>{}))
-		{
-			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.degree(std::vector<std::string>(begin,end));
-		}
-		template <typename S>
-		static auto wrap_ldegree(const S &s) -> decltype(s.ldegree())
-		{
-			return s.ldegree();
-		}
-		template <typename S>
-		static auto wrap_partial_ldegree_set(const S &s, bp::list l) -> decltype(s.ldegree(std::vector<std::string>{}))
-		{
-			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.ldegree(std::vector<std::string>(begin,end));
-		}
 		// Truncation.
 		template <typename S>
 		struct truncate_degree_exposer

@@ -190,6 +190,22 @@ inline void expose_rational_functions_impl()
 	// Subs.
 	using subs_types = std::tuple<piranha::integer,piranha::rational,p_type,q_type,r_type>;
 	tuple_for_each(subs_types{},rf_subs_exposer<r_type>(rf_class));
+	// Integration.
+	bp::def("_integrate",piranha::math::integrate<r_type>);
+	// Partial.
+	bp::def("_partial",piranha::math::partial<r_type>);
+	// Poisson bracket.
+	bp::def("_pbracket",generic_pbracket_wrapper<r_type>);
+	// Canonical transformation.
+	bp::def("_transformation_is_canonical",generic_canonical_wrapper<r_type>);
+	// Trim.
+	rf_class.def("trim",&r_type::trim);
+	// Sin and cos.
+	bp::def("_sin",piranha::math::sin<r_type>);
+	bp::def("_cos",piranha::math::cos<r_type>);
+	// Degree.
+	bp::def("_degree",generic_degree_wrapper<r_type>);
+	bp::def("_degree",generic_partial_degree_wrapper<r_type>);
 }
 
 }
