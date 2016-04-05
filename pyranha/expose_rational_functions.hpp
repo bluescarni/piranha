@@ -206,6 +206,12 @@ inline void expose_rational_functions_impl()
 	// Degree.
 	bp::def("_degree",generic_degree_wrapper<r_type>);
 	bp::def("_degree",generic_partial_degree_wrapper<r_type>);
+	// Latex.
+	rf_class.def("_latex_",generic_latex_wrapper<r_type>);
+	// Pickling.
+	rf_class.def_pickle(generic_pickle_suite<r_type>());
+	// Invert.
+	bp::def("_invert",piranha::math::invert<r_type>);
 }
 
 }

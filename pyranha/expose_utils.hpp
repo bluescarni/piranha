@@ -76,9 +76,9 @@ namespace pyranha
 
 namespace bp = boost::python;
 
-// Pickle support for series.
+// Generic pickle support via Boost serialization.
 template <typename Series>
-struct series_pickle_suite : bp::pickle_suite
+struct generic_pickle_suite : bp::pickle_suite
 {
 	static bp::tuple getinitargs(const Series &)
 	{
@@ -232,6 +232,15 @@ inline auto generic_partial_ldegree_wrapper(const S &s, bp::list l) -> decltype(
 {
 	bp::stl_input_iterator<std::string> begin(l), end;
 	return piranha::math::ldegree(s,std::vector<std::string>(begin,end));
+}
+
+// Generic latex representation wrapper.
+template <typename S>
+inline std::string generic_latex_wrapper(const S &s)
+{
+	std::ostringstream oss;
+	s.print_tex(oss);
+	return oss.str();
 }
 
 // Generic series exposer.
@@ -817,14 +826,6 @@ class series_exposer
 			bp::stl_input_iterator<std::string> begin(l), end;
 			return s.t_lorder(std::vector<std::string>(begin,end));
 		}
-		// Latex representation.
-		template <typename S>
-		static std::string wrap_latex(const S &s)
-		{
-			std::ostringstream oss;
-			s.print_tex(oss);
-			return oss.str();
-		}
 		// Symbol set wrapper.
 		template <typename S>
 		static bp::list symbol_set_wrapper(const S &s)
@@ -947,11 +948,11 @@ class series_exposer
 				// Trigonometric series.
 				expose_trigonometric_series(series_class);
 				// Latex.
-				series_class.def("_latex_",wrap_latex<s_type>);
+				series_class.def("_latex_",generic_latex_wrapper<s_type>);
 				// Arguments set.
 				series_class.add_property("symbol_set",symbol_set_wrapper<s_type>);
 				// Pickle support.
-				series_class.def_pickle(series_pickle_suite<s_type>());
+				series_class.def_pickle(generic_pickle_suite<s_type>());
 				// Save and load.
 				expose_save_load(series_class);
 				// Expose invert(), if present.
