@@ -1404,7 +1404,7 @@ struct degree_tester
 		BOOST_CHECK_EQUAL(degree(y/(x*x),{"z"}),0);
 		// Check nothing funky is going on with the return type
 		// (during development, a bad use of std::max with trailing
-		// return type would end up returning a reference.
+		// return type would end up returning a reference).
 		BOOST_CHECK((!std::is_reference<decltype(degree(x))>::value));
 		BOOST_CHECK((!std::is_reference<decltype(degree(x,{"x"}))>::value));
 	}
