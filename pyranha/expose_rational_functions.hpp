@@ -109,6 +109,10 @@ struct rf_interop_exposer
 		m_rf_class.def(bp::self /= x);
 		m_rf_class.def(bp::self / x);
 		m_rf_class.def(x / bp::self);
+		m_rf_class.def(bp::self == x);
+		m_rf_class.def(x == bp::self);
+		m_rf_class.def(bp::self != x);
+		m_rf_class.def(x != bp::self);
 	}
 	bp::class_<T> &m_rf_class;
 };
@@ -137,6 +141,19 @@ struct rf_subs_exposer
 	}
 	bp::class_<T> &m_rf_class;
 };
+
+// Num and den wrappers.
+template <typename T>
+inline typename T::p_type rf_num_wrapper(const T &r)
+{
+	return r.num();
+}
+
+template <typename T>
+inline typename T::p_type rf_den_wrapper(const T &r)
+{
+	return r.den();
+}
 
 template <typename Key>
 inline void expose_rational_functions_impl()
@@ -212,6 +229,9 @@ inline void expose_rational_functions_impl()
 	rf_class.def_pickle(generic_pickle_suite<r_type>());
 	// Invert.
 	bp::def("_invert",piranha::math::invert<r_type>);
+	// num/den property.
+	rf_class.add_property("num",rf_num_wrapper<r_type>);
+	rf_class.add_property("den",rf_den_wrapper<r_type>);
 }
 
 }
