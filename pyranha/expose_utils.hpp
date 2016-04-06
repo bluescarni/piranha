@@ -705,14 +705,13 @@ class series_exposer
 			expose_degree_truncation(series_class);
 		}
 		template <typename T>
-		static void expose_degree(bp::class_<T> &series_class,
+		static void expose_degree(bp::class_<T> &,
 			typename std::enable_if<piranha::has_degree<T>::value && piranha::has_ldegree<T>::value>::type * = nullptr)
 		{
-			// NOTE: probably we should make these piranha::math:: wrappers. Same for the trig ones.
-			series_class.def("degree",generic_degree_wrapper<T>);
-			series_class.def("degree",generic_partial_degree_wrapper<T>);
-			series_class.def("ldegree",generic_ldegree_wrapper<T>);
-			series_class.def("ldegree",generic_partial_ldegree_wrapper<T>);
+			bp::def("_degree",generic_degree_wrapper<T>);
+			bp::def("_degree",generic_partial_degree_wrapper<T>);
+			bp::def("_ldegree",generic_ldegree_wrapper<T>);
+			bp::def("_ldegree",generic_partial_ldegree_wrapper<T>);
 		}
 		template <typename T>
 		static void expose_degree(bp::class_<T> &,
@@ -766,17 +765,17 @@ class series_exposer
 		{}
 		// Trigonometric exposer.
 		template <typename S>
-		static void expose_trigonometric_series(bp::class_<S> &series_class, typename std::enable_if<
+		static void expose_trigonometric_series(bp::class_<S> &, typename std::enable_if<
 			piranha::has_t_degree<S>::value && piranha::has_t_ldegree<S>::value && piranha::has_t_order<S>::value && piranha::has_t_lorder<S>::value>::type * = nullptr)
 		{
-			series_class.def("t_degree",wrap_t_degree<S>);
-			series_class.def("t_degree",wrap_partial_t_degree<S>);
-			series_class.def("t_ldegree",wrap_t_ldegree<S>);
-			series_class.def("t_ldegree",wrap_partial_t_ldegree<S>);
-			series_class.def("t_order",wrap_t_order<S>);
-			series_class.def("t_order",wrap_partial_t_order<S>);
-			series_class.def("t_lorder",wrap_t_lorder<S>);
-			series_class.def("t_lorder",wrap_partial_t_lorder<S>);
+			bp::def("_t_degree",wrap_t_degree<S>);
+			bp::def("_t_degree",wrap_partial_t_degree<S>);
+			bp::def("_t_ldegree",wrap_t_ldegree<S>);
+			bp::def("_t_ldegree",wrap_partial_t_ldegree<S>);
+			bp::def("_t_order",wrap_t_order<S>);
+			bp::def("_t_order",wrap_partial_t_order<S>);
+			bp::def("_t_lorder",wrap_t_lorder<S>);
+			bp::def("_t_lorder",wrap_partial_t_lorder<S>);
 		}
 		template <typename S>
 		static void expose_trigonometric_series(bp::class_<S> &, typename std::enable_if<
@@ -887,8 +886,8 @@ class series_exposer
 				expose_generic_type_generator<Series,Args...>();
 				// Start exposing.
 				auto series_class = expose_class<s_type>();
-				// Add the _is_series tag.
-				series_class.attr("_is_series") = true;
+				// Add the _is_exposed_type tag.
+				series_class.attr("_is_exposed_type") = true;
 				// Constructor from string, if available.
 				expose_ctor<const std::string &>(series_class);
 				// Copy constructor.
@@ -976,11 +975,11 @@ class series_exposer
 		~series_exposer() = default;
 };
 
-inline bp::list get_series_list()
+inline bp::list get_exposed_types_list()
 {
 	bp::list retval;
 	for (const auto &p: et_map) {
-		if (::PyObject_HasAttrString(p.second.ptr(),"_is_series")) {
+		if (::PyObject_HasAttrString(p.second.ptr(),"_is_exposed_type")) {
 			retval.append(p.second);
 		}
 	}

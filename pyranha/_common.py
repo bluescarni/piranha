@@ -44,8 +44,8 @@ def _cpp_type_catcher(func,*args):
 # The rationale is that custom derivatives will contain Python objects, and we
 # want to remove them before the C++ library exits.
 def _cleanup_custom_derivatives():
-	from ._core import _get_series_list as gsl
-	for s_type in gsl():
+	from ._core import _get_exposed_types_list as getl
+	for s_type in getl():
 		if hasattr(s_type,'unregister_all_custom_derivatives'):
 			s_type.unregister_all_custom_derivatives()
 	print('Custom derivatives cleanup completed.')
@@ -53,39 +53,11 @@ def _cleanup_custom_derivatives():
 # NOTE: this is probably not needed at the moment as there is no way Python objects
 # end up in the cache, but it might happen in the future.
 def _cleanup_pow_caches():
-	from ._core import _get_series_list as gsl
-	for s_type in gsl():
+	from ._core import _get_exposed_types_list as getl
+	for s_type in getl():
 		if hasattr(s_type,'clear_pow_cache'):
 			s_type.clear_pow_cache()
 	print('Pow caches cleanup completed.')
-
-# Helper to check that d is a dictionary suitable for use in evaluation.
-def _check_eval_dict(d):
-	# Type checks.
-	if not isinstance(d,dict):
-		raise TypeError('evaluation dictionary must be a dict object')
-	if len(d) == 0:
-		raise ValueError('evaluation dictionary cannot be empty')
-	if not all([isinstance(k,str) for k in d]):
-		raise TypeError('all keys in the evaluation dictionary must be string objects')
-	t_set = set([type(d[k]) for k in d])
-	if not len(t_set) == 1:
-		raise TypeError('all values in the evaluation dictionary must be of the same type')
-
-# Wrapper for the evaluate() method. Will first check input dict,
-# and then try to invoke the underlying C++ exposed method.
-def _evaluate_wrapper(self,d):
-	# Check input dict.
-	_check_eval_dict(d)
-	return _cpp_type_catcher(self._evaluate,d,d[list(d.keys())[0]])
-
-# Register the evaluate wrappers.
-def _register_evaluate_wrappers():
-	from ._core import _get_series_list as gsl
-	for s_type in gsl():
-		# Some series might not have evaluate.
-		if hasattr(s_type,'_evaluate'):
-			setattr(s_type,'evaluate',_evaluate_wrapper)
 
 # Render a series in png format using latex + dvipng.
 # Code adapted from and inspired by:
@@ -146,19 +118,18 @@ def _repr_png_(self):
 
 # Register the png representation method.
 def _register_repr_png():
-	from ._core import _get_series_list as gsl
-	for s_type in gsl():
+	from ._core import _get_exposed_types_list as getl
+	for s_type in getl():
 		setattr(s_type,'_repr_png_',_repr_png_)
 
 # Register the latex representation method.
 def _register_repr_latex():
-	from ._core import _get_series_list as gsl
-	for s_type in gsl():
+	from ._core import _get_exposed_types_list as getl
+	for s_type in getl():
 		setattr(s_type,'_repr_latex_',lambda self: r'\[ ' + self._latex_() + r' \]')
 
 # Register common wrappers.
 def _register_wrappers():
-	_register_evaluate_wrappers()
 	_register_repr_png()
 	_register_repr_latex()
 
@@ -172,10 +143,10 @@ def _replace_gtg_call():
 		return _orig_gtg_call(self,l_args)
 	_core._generic_type_generator.__call__ = _gtg_call_wrapper
 
-# Remove hashing from series types.
+# Remove hashing from exposed types.
 def _remove_hash():
-	from ._core import _get_series_list as gsl
-	for s_type in gsl():
+	from ._core import _get_exposed_types_list as getl
+	for s_type in getl():
 		setattr(s_type,'__hash__',None)
 
 def _monkey_patching():

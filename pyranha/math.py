@@ -32,9 +32,23 @@ from __future__ import absolute_import as _ai
 
 from ._common import _cpp_type_catcher
 
-# NOTE: some ideas to improve the extensibility of these functions:
-# http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user
-# Note that now we are adopting an approach of just deferring everything to C++.
+# This is used in a few functions below.
+def __check_names_argument(names):
+	if not names is None and (not isinstance(names,list) or not all([isinstance(_,str) for _ in names])):
+		raise TypeError('the optional \'names\' argument must be a list of strings')
+
+# Helper to check that d is a dictionary suitable for use in evaluation.
+def __check_eval_dict(d):
+	# Type checks.
+	if not isinstance(d,dict):
+		raise TypeError('evaluation dictionary must be a dict object')
+	if len(d) == 0:
+		raise ValueError('evaluation dictionary cannot be empty')
+	if not all([isinstance(k,str) for k in d]):
+		raise TypeError('all keys in the evaluation dictionary must be string objects')
+	t_set = set([type(d[k]) for k in d])
+	if not len(t_set) == 1:
+		raise TypeError('all values in the evaluation dictionary must be of the same type')
 
 def cos(arg):
 	"""Cosine.
@@ -427,8 +441,7 @@ def truncate_degree(arg,max_degree,names = None):
 
 	"""
 	from ._core import _truncate_degree
-	if not names is None and (not isinstance(names,list) or not all([isinstance(_,str) for _ in names])):
-		raise TypeError('the optional \'names\' argument must be a list of strings')
+	__check_names_argument(names)
 	if names is None:
 		return _cpp_type_catcher(_truncate_degree,arg,max_degree)
 	else:
@@ -486,10 +499,9 @@ def evaluate(arg,eval_dict):
 	TypeError: invalid argument type(s)
 
 	"""
-	from ._common import _check_eval_dict
 	from ._core import _evaluate
 	# Check input dict.
-	_check_eval_dict(eval_dict)
+	__check_eval_dict(eval_dict)
 	return _cpp_type_catcher(_evaluate,arg,eval_dict,eval_dict[list(eval_dict.keys())[0]])
 
 def subs(arg,name,x):
@@ -640,3 +652,225 @@ def invert(arg):
 	"""
 	from ._core import _invert
 	return _cpp_type_catcher(_invert,arg)
+
+def degree(arg,names = None):
+	"""Degree.
+
+	This function will return the degree of the input argument. Various symbolic types are supported as input
+	(e.g., polynomials, Poisson series, rational functions). If *names* is ``None``, then the total degree is
+	returned. Otherwise, *names* must be a list of strings enumerating the variables to be considered for the
+	computation of the partial degree.
+
+	:param arg: argument whose degree will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the degree
+	:type names: ``None`` or a list of strings
+	:returns: the degree of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
+	>>> t = polynomial(rational,k_monomial)()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> degree(x**3+y*z)
+	3
+	>>> degree(x**3+y*z,['z'])
+	1
+	>>> from fractions import Fraction as F
+	>>> degree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _degree
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_degree,arg)
+	else:
+		return _cpp_type_catcher(_degree,arg,names)
+
+def ldegree(arg,names = None):
+	"""Low degree.
+
+	This function will return the low degree of the input argument. Various symbolic types are supported as input
+	(e.g., polynomials, Poisson series, rational functions). If *names* is ``None``, then the total low degree is
+	returned. Otherwise, *names* must be a list of strings enumerating the variables to be considered for the
+	computation of the partial low degree.
+
+	:param arg: argument whose low degree will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the low degree
+	:type names: ``None`` or a list of strings
+	:returns: the low degree of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
+	>>> t = polynomial(rational,k_monomial)()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> ldegree(x**3+y*z)
+	2
+	>>> ldegree(x**3+y*x,['x'])
+	1
+	>>> from fractions import Fraction as F
+	>>> ldegree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _ldegree
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_ldegree,arg)
+	else:
+		return _cpp_type_catcher(_ldegree,arg,names)
+
+def t_degree(arg,names = None):
+	"""Trigonometric degree.
+
+	This function will return the trigonometric degree of the input argument. Various symbolic types are supported as
+	input. If *names* is ``None``, then the total degree is returned. Otherwise, *names* must be a list of strings
+	enumerating the variables to be considered for the computation of the partial degree.
+
+	:param arg: argument whose trigonometric degree will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the degree
+	:type names: ``None`` or a list of strings
+	:returns: the trigonometric degree of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
+	>>> from pyranha.math import cos
+	>>> t = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> t_degree(cos(3*x+y-z)+cos(2*x))
+	3
+	>>> t_degree(cos(3*x+y+z)+cos(x),['z'])
+	1
+	>>> from fractions import Fraction as F
+	>>> t_degree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_degree
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_t_degree,arg)
+	else:
+		return _cpp_type_catcher(_t_degree,arg,names)
+
+def t_ldegree(arg,names = None):
+	"""Trigonometric low degree.
+
+	This function will return the trigonometric low degree of the input argument. Various symbolic types are supported as
+	input. If *names* is ``None``, then the total low degree is returned. Otherwise, *names* must be a list of strings
+	enumerating the variables to be considered for the computation of the partial low degree.
+
+	:param arg: argument whose trigonometric low degree will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the low degree
+	:type names: ``None`` or a list of strings
+	:returns: the trigonometric low degree of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
+	>>> from pyranha.math import cos
+	>>> t = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> t_ldegree(cos(3*x+y-z)+cos(2*x))
+	2
+	>>> t_ldegree(cos(3*x+y-z)+cos(2*y+z),['y'])
+	1
+	>>> from fractions import Fraction as F
+	>>> t_ldegree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_ldegree
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_t_ldegree,arg)
+	else:
+		return _cpp_type_catcher(_t_ldegree,arg,names)
+
+def t_order(arg,names = None):
+	"""Trigonometric order.
+
+	This function will return the trigonometric order of the input argument. Various symbolic types are supported as
+	input. If *names* is ``None``, then the total order is returned. Otherwise, *names* must be a list of strings
+	enumerating the variables to be considered for the computation of the partial order.
+
+	:param arg: argument whose trigonometric order will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the order
+	:type names: ``None`` or a list of strings
+	:returns: the order of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
+	>>> from pyranha.math import cos
+	>>> t = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> t_order(cos(3*x+y-z)+cos(x))
+	5
+	>>> t_order(cos(3*x+y-z)-sin(y),['z'])
+	1
+	>>> from fractions import Fraction as F
+	>>> t_order(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_order
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_t_order,arg)
+	else:
+		return _cpp_type_catcher(_t_order,arg,names)
+
+def t_lorder(arg,names = None):
+	"""Trigonometric low order.
+
+	This function will return the trigonometric low order of the input argument. Various symbolic types are supported as
+	input. If *names* is ``None``, then the total low order is returned. Otherwise, *names* must be a list of strings
+	enumerating the variables to be considered for the computation of the partial low order.
+
+	:param arg: argument whose trigonometric low order will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the low order
+	:type names: ``None`` or a list of strings
+	:returns: the trigonometric low order of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
+	>>> from pyranha.math import cos
+	>>> t = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> t_lorder(cos(4*x+y-z)+cos(2*x))
+	2
+	>>> t_lorder(cos(3*x+y-z)+cos(2*y+z),['y'])
+	1
+	>>> from fractions import Fraction as F
+	>>> t_lorder(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_lorder
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_t_lorder,arg)
+	else:
+		return _cpp_type_catcher(_t_lorder,arg,names)

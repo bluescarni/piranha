@@ -158,16 +158,16 @@ class settings(object):
 		return _s._reset_n_threads()
 	@staticmethod
 	def get_latex_repr():
-		r"""Check if series types have a ``_repr_latex_()`` method.
+		r"""Check if exposed types have a ``_repr_latex_()`` method.
 
 		The ``_repr_latex_()`` method, if present, is used by the IPython notebook to display the TeX
-		representation of a series via a Javascript library. If a series is very large, it might be preferrable
+		representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable
 		to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX
-		representation is disabled, IPython will fall back to the PNG-based representation of the series, which
+		representation is disabled, IPython will fall back to the PNG-based representation of the object, which
 		leverages - if available - a local installation of TeX for increased performance via a static rendering
-		of the TeX representation of the series to a PNG bitmap.
+		of the TeX representation of the object to a PNG bitmap.
 
-		By default, the TeX representation of series is enabled.
+		By default, the TeX representation is enabled.
 
 		>>> settings.get_latex_repr()
 		True
@@ -178,15 +178,15 @@ class settings(object):
 		'\\[ \\frac{1}{2}{x}^{2} \\]'
 
 		"""
-		from ._core import _get_series_list as gsl
-		s_type = gsl()[0]
+		from ._core import _get_exposed_types_list as getl
+		s_type = getl()[0]
 		with settings.__lock:
 			return hasattr(s_type,'_repr_latex_')
 	@staticmethod
 	def set_latex_repr(flag):
-		r"""Set the availability of the ``_repr_latex_()`` method in series.
+		r"""Set the availability of the ``_repr_latex_()`` method for the exposed types.
 
-		If *flag* is ``True``, the ``_repr_latex_()`` method of series types will be enabled. Otherwise,
+		If *flag* is ``True``, the ``_repr_latex_()`` method of exposed types will be enabled. Otherwise,
 		the method will be disabled. See the documentation for :py:meth:`pyranha.settings.get_latex_repr` for a
 		description of how the method is used.
 
@@ -214,7 +214,7 @@ class settings(object):
 
 		"""
 		from . import _core
-		from ._core import _get_series_list as gsl
+		from ._core import _get_exposed_types_list as getl
 		from ._common import _register_repr_latex
 		if not isinstance(flag,bool):
 			raise TypeError("the 'flag' parameter must be a bool")
@@ -225,7 +225,7 @@ class settings(object):
 			if flag:
 				_register_repr_latex()
 			else:
-				for s_type in gsl():
+				for s_type in getl():
 					assert(hasattr(s_type,'_repr_latex_'))
 					delattr(s_type,'_repr_latex_')
 	@staticmethod

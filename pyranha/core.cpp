@@ -149,8 +149,8 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
 	pyranha::generic_translate<&PyExc_ArithmeticError,piranha::math::inexact_division>();
-	// Series list.
-	bp::def("_get_series_list",pyranha::get_series_list);
+	// Exposed types list.
+	bp::def("_get_exposed_types_list",pyranha::get_exposed_types_list);
 	// The enums for save/load.
 	bp::enum_<piranha::file_format>("file_format")
 		.value("text",piranha::file_format::text)
