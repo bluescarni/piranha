@@ -653,6 +653,8 @@ class rational_function: public detail::rational_function_tag
 				m_num.print_tex(os);
 			} else {
 				// The idea here is to have the first term of num and den positive.
+				// NOTE: here we are relying on the fact that negation of poly proceeds
+				// by copy + in-place negation, and thus the order of the terms is preserved.
 				piranha_assert(m_num.size() >= 1u);
 				piranha_assert(m_den.size() >= 1u);
 				const bool negate_num = m_num._container().begin()->m_cf.sign() < 0;
