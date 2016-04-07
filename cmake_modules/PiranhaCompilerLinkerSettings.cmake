@@ -172,6 +172,8 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fstack-protector-all)
 	# This became available in GCC at one point.
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wodr)
+	# This is available only in clang at the moment apparently.
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wunsequenced)
 endif()
 
 # Clang specific configuration.
