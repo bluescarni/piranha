@@ -104,7 +104,7 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
 {
 	typedef typename Term::cf_type cf_type;
 	Derived retval;
-	retval.m_symbol_set = s;
+	retval.set_symbol_set(s);
 	retval.insert(Term(cf_type(1),t.m_key));
 	return std::make_pair(t.m_cf,std::move(retval));
 }
@@ -246,10 +246,10 @@ class series_recursion_index
 		static const std::size_t value = 0u;
 };
 
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-
 template <typename T, typename Enable>
 const std::size_t series_recursion_index<T,Enable>::value;
+
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 
 template <typename T>
 class series_recursion_index<T,typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type>
@@ -1222,9 +1222,6 @@ class series: detail::series_tag, series_operators
 		// Partial need access to the custom derivatives.
 		template <typename, typename>
 		friend struct math::partial_impl;
-		// NOTE: this friendship is related to the bug workaround above.
-		template <typename Term2, typename Derived2>
-		friend std::pair<typename Term2::cf_type,Derived2> detail::pair_from_term(const symbol_set &, const Term2 &);
 	protected:
 		/// Container type for terms.
 		using container_type = hash_set<term_type,detail::term_hasher<term_type>>;
