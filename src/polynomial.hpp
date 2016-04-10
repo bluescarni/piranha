@@ -595,6 +595,31 @@ std::pair<bool,std::tuple<Poly,Poly,Poly>> gcdheu_geddes(const Poly &a, const Po
 	return std::make_pair(true,std::make_tuple(Poly{},Poly{},Poly{}));
 }
 
+// Namespace for generic polynomial division enabler, used to stuff
+// in handy aliases.
+namespace ptd
+{
+
+template <typename T>
+using cf_t = typename T::term_type::cf_type;
+
+template <typename T>
+using expo_t = typename T::term_type::key_type::value_type;
+
+template <typename T, typename U>
+using enabler = typename std::enable_if<
+	std::is_base_of<polynomial_tag,T>::value &&
+	std::is_same<T,U>::value &&
+	is_multipliable_in_place<cf_t<T>>::value &&
+	std::is_same<decltype(std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>()),cf_t<T>>::value &&
+	has_exact_division<cf_t<T>>::value &&
+	has_exact_ring_operations<cf_t<T>>::value &&
+	is_subtractable_in_place<T>::value &&
+	(std::is_integral<expo_t<T>>::value || is_mp_integer<expo_t<T>>::value),
+int>::type;
+
+}
+
 }
 
 /// Polynomial GCD algorithms.
@@ -668,6 +693,12 @@ class polynomial:
 		// The base class.
 		using base = power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,Key,
 			polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>;
+		// A couple of helpers from C++14.
+		template <typename T>
+		using decay_t = typename std::decay<T>::type;
+		template <bool B, typename T = void>
+		using enable_if_t = typename std::enable_if<B,T>::type;
+		// String constructor.
 		template <typename Str>
 		void construct_from_string(Str &&str)
 		{
@@ -1069,15 +1100,16 @@ class polynomial:
 			return retval;
 		}
 		// Enabler for exact poly division.
-		template <typename T>
-		using poly_div_enabler = typename std::enable_if<
-			is_multipliable_in_place<cf_t<T>>::value &&
-			std::is_same<decltype(std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>()),cf_t<T>>::value &&
-			has_exact_division<cf_t<T>>::value &&
-			has_exact_ring_operations<cf_t<T>>::value &&
-			is_subtractable_in_place<T>::value &&
-			(std::is_integral<expo_t<T>>::value || detail::is_mp_integer<expo_t<T>>::value),
-		int>::type;
+		// NOTE: the further constraining here that T must be polynomial is to work around a GCC < 5 (?) bug,
+		// in which template operators from other template instantiations of polynomial<> are considered. We can
+		// remove this once we bump the minimum version of GCC required.
+		template <typename T, typename U = T>
+		using poly_div_enabler = enable_if_t<std::is_same<decay_t<T>,polynomial>::value,
+			detail::ptd::enabler<decay_t<T>,decay_t<U>>>;
+		// Enabler for in-place division.
+		template <typename T, typename U>
+		using poly_in_place_div_enabler = enable_if_t<detail::true_tt<poly_div_enabler<T,U>>::value &&
+			!std::is_const<T>::value,int>;
 		// Join enabler.
 		template <typename T>
 		using join_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag,cf_t<T>>::value &&
@@ -1670,7 +1702,8 @@ class polynomial:
 		/// Exact polynomial division.
 		/**
 		 * \note
-		 * This operator is enabled only if polynomial::udivrem() is enabled.
+		 * This operator is enabled only if the decay types of \p T and \p U are the same type \p Td
+		 * and polynomial::udivrem() is enabled for \p Td.
 		 *
 		 * This operator will compute the exact result of <tt>n / d</tt>. If \p d does not divide \p n exactly, an error will be produced.
 		 *
@@ -1692,8 +1725,8 @@ class polynomial:
 		 * - conversion of piranha::integer to C++ integral types,
 		 * - piranha::safe_cast().
 		 */
-		template <typename T = polynomial, poly_div_enabler<T> = 0>
-		friend polynomial operator/(const polynomial &n, const polynomial &d)
+		template <typename T, typename U, poly_div_enabler<T,U> = 0>
+		friend polynomial operator/(T &&n, U &&d)
 		{
 			// Then we need to deal with different symbol sets.
 			polynomial merged_n, merged_d;
@@ -1714,7 +1747,8 @@ class polynomial:
 		/// Exact in-place polynomial division.
 		/**
 		 * \note
-		 * This operator is enabled only if the corresponding binary operation is enabled.
+		 * This operator is enabled only if operator/() is enabled for the input types and \p T
+		 * is not const.
 		 *
 		 * This operator is equivalent to:
 		 * @code
@@ -1728,8 +1762,8 @@ class polynomial:
 		 *
 		 * @throws unspecified any exception thrown by the binary operator.
 		 */
-		template <typename T = polynomial, poly_div_enabler<T> = 0>
-		friend polynomial &operator/=(polynomial &n, const polynomial &d)
+		template <typename T, typename U, poly_in_place_div_enabler<T,U> = 0>
+		friend polynomial &operator/=(T &n, U &&d)
 		{
 			return n = n / d;
 		}

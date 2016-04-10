@@ -190,6 +190,8 @@ struct division_tester
 		BOOST_CHECK(is_divisible<pq_type>::value);
 		BOOST_CHECK(is_divisible_in_place<p_type>::value);
 		BOOST_CHECK(is_divisible_in_place<pq_type>::value);
+		BOOST_CHECK((!is_divisible_in_place<p_type const, p_type>::value));
+		BOOST_CHECK((!is_divisible_in_place<pq_type const, pq_type>::value));
 		BOOST_CHECK(has_exact_division<p_type>::value);
 		BOOST_CHECK(has_exact_division<pq_type>::value);
 		BOOST_CHECK(has_exact_ring_operations<p_type>::value);
