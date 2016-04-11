@@ -782,7 +782,51 @@ class series_operators
 		template <typename T, typename ... U>
 		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<in_place_mul_type<T,U...>>::value,int>::type;
 		// Division.
-		// NOTE: only two cases are possible at the moment, when we divide a series by an object with lower recursion index.
+		// NOTE: the divisibility requirement here is already satisfied in the determination of the return type.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 0u,int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		{
+			using ret_type = series_common_type<T,U,3>;
+			using term_type = typename ret_type::term_type;
+			using key_type = typename term_type::key_type;
+			// NOTE: is_zero() is always available for series.
+			if (math::is_zero(y)) {
+				piranha_throw(zero_division_error,"zero denominator in series division");
+			}
+			if (math::is_zero(x)) {
+				return ret_type{};
+			}
+			if (!x.is_single_coefficient() || !y.is_single_coefficient()) {
+				piranha_throw(std::invalid_argument,"cannot perform division on series which do not "
+					"consist of a single coefficient");
+			}
+			ret_type retval;
+			retval.insert(term_type{x._container().begin()->m_cf / y._container().begin()->m_cf,key_type(symbol_set{})});
+			return retval;
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 1u &&
+			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		{
+			typename std::decay<T>::type y1(std::forward<U>(y));
+			return dispatch_binary_div(std::forward<T>(x),std::move(y1));
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 2u,int>::type = 0>
+		static auto dispatch_binary_div(T &&x, U &&y) -> decltype(dispatch_binary_div(std::forward<U>(y),std::forward<T>(x)))
+		{
+			return dispatch_binary_div(std::forward<U>(y),std::forward<T>(x));
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 3u &&
+			std::is_constructible<series_common_type<T,U,3>,const typename std::decay<T>::type &>::value &&
+			std::is_constructible<series_common_type<T,U,3>,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		{
+			series_common_type<T,U,0> x1(std::forward<T>(x));
+			series_common_type<T,U,0> y1(std::forward<U>(y));
+			return dispatch_binary_div(std::move(x1),std::move(y1));
+		}
 		// The implementation of these two cases 4 and 5 is different from the other operations, as we cannot promote to a common
 		// type (true series division is not implemented).
 		// NOTE: the use of the old syntax for the enable_if with nullptr is because of a likely GCC bug:
