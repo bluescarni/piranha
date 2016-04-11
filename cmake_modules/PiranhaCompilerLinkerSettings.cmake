@@ -129,6 +129,9 @@ IF(CMAKE_COMPILER_IS_CLANGXX)
 	# For now it seems like -Wshadow from clang behaves better than GCC's, just enable it here
 	# for the time being.
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wshadow)
+	# Clang is better at this flag than GCC, which emits a questionable warning when compiling
+	# the Python bindings.
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Werror)
 ENDIF(CMAKE_COMPILER_IS_CLANGXX)
 
 if(CMAKE_COMPILER_IS_INTELXX)
@@ -174,11 +177,4 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wodr)
 	# This is available only in clang at the moment apparently.
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wunsequenced)
-endif()
-
-# Clang specific configuration.
-if(CMAKE_COMPILER_IS_CLANGXX)
-	# Clang is better at this flag than GCC, which emits a questionable warning when compiling
-	# the Python bindings.
-	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Werror)
 endif()
