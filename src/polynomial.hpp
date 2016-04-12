@@ -596,7 +596,8 @@ std::pair<bool,std::tuple<Poly,Poly,Poly>> gcdheu_geddes(const Poly &a, const Po
 }
 
 // Namespace for generic polynomial division enabler, used to stuff
-// in handy aliases.
+// in handy aliases. We put it here in order to share it with the enabler
+// for the divexact specialisation.
 namespace ptd
 {
 
@@ -2085,8 +2086,7 @@ using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::
 
 // Enabler for divexact.
 template <typename T>
-using poly_divexact_enabler = typename std::enable_if<std::is_base_of<polynomial_tag,T>::value &&
-	is_divisible<T>::value>::type;
+using poly_divexact_enabler = typename std::enable_if<true_tt<ptd::enabler<T,T>>::value>::type;
 
 // Enabler for exact ring operations.
 template <typename T>

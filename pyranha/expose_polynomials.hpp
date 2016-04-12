@@ -145,16 +145,21 @@ struct poly_custom_hook
 		auto retval = T::udivrem(n,d);
 		return bp::make_tuple(std::move(retval.first),std::move(retval.second));
 	}
-	template <typename T, typename std::enable_if<piranha::is_divisible<T>::value && piranha::is_divisible_in_place<T>::value,int>::type = 0>
+	template <typename T>
+	static T uprem_wrapper(const T &n, const T &d)
+	{
+		return T::uprem(n,d);
+	}
+	template <typename T, typename std::enable_if<piranha::detail::true_tt<piranha::detail::ptd::enabler<T,T>>::value,int>::type = 0>
 	void expose_division(bp::class_<T> &series_class) const
 	{
-		series_class.def(bp::self / bp::self);
-		series_class.def(bp::self /= bp::self);
 		series_class.def("udivrem",udivrem_wrapper<T>);
 		series_class.staticmethod("udivrem");
+		series_class.def("uprem",uprem_wrapper<T>);
+		series_class.staticmethod("uprem");
 	}
-	template <typename T, typename std::enable_if<!piranha::is_divisible<T>::value || !piranha::is_divisible_in_place<T>::value,int>::type = 0>
-	void expose_division(bp::class_<T> &) const
+	template <typename T, typename ... Args>
+	void expose_division(bp::class_<T> &, const Args & ...) const
 	{}
 	// Split and join.
 	template <typename T>

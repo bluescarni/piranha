@@ -205,12 +205,12 @@ BOOST_AUTO_TEST_CASE(polynomial_division_test)
 	boost::mpl::for_each<key_types>(division_tester());
 	BOOST_CHECK((!has_exact_ring_operations<polynomial<double,k_monomial>>::value));
 	BOOST_CHECK((!has_exact_division<polynomial<double,k_monomial>>::value));
-	BOOST_CHECK((!is_divisible<polynomial<double,k_monomial>>::value));
-	BOOST_CHECK((!is_divisible_in_place<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((is_divisible<polynomial<double,k_monomial>>::value));
+	BOOST_CHECK((is_divisible_in_place<polynomial<double,k_monomial>>::value));
 	BOOST_CHECK((has_exact_ring_operations<polynomial<integer,monomial<rational>>>::value));
 	BOOST_CHECK((!has_exact_division<polynomial<integer,monomial<rational>>>::value));
-	BOOST_CHECK((!is_divisible<polynomial<integer,monomial<rational>>>::value));
-	BOOST_CHECK((!is_divisible_in_place<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((is_divisible<polynomial<integer,monomial<rational>>>::value));
+	BOOST_CHECK((is_divisible_in_place<polynomial<integer,monomial<rational>>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_division_recursive_test)

@@ -115,6 +115,41 @@ class basic_test_case(_ut.TestCase):
 		self.assertEqual(evaluate(x,{'x' : 3}),3)
 		self.assertEqual(evaluate(2 * x,{'x' : Fraction(3,2)}),Fraction(3))
 
+class series_division_test_case(_ut.TestCase):
+	"""Series division test case.
+	
+	To be used within the :mod:`unittest` framework. Will test features common
+	to all series types.
+	
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(series_division_test_case)
+	
+	"""
+	def runTest(self):
+		from fractions import Fraction as F
+		from .types import poisson_series, polynomial, monomial, short, rational, double
+		pt = poisson_series(polynomial(rational,monomial(short)))()
+		pt2 = poisson_series(polynomial(double,monomial(short)))()
+		x,y,z = [pt(_) for _ in 'xyz']
+		self.assertEqual(pt(4)/pt(3),F(4,3))
+		self.assertEqual(type(pt(4)/pt(3)),pt)
+		self.assertEqual(pt(4)/2,2)
+		self.assertEqual(type(pt(4)/2),pt)
+		self.assertEqual(1/pt(2),F(1,2))
+		self.assertEqual(type(1/pt(2)),pt)
+		self.assertEqual(1./pt(2),1./2.)
+		# We don't support mixed operations among series types.
+		self.assertRaises(TypeError,lambda : type(pt(2) / pt2(1)))
+		self.assertEqual(type(1./pt(2)),pt2)
+		self.assertEqual(type(pt(2) / 1.),pt2)
+		self.assertEqual((x**2-1)/(x+1),x-1)
+		self.assertEqual(type((x**2-1)/(x+1)),pt)
+		self.assertRaises(ZeroDivisionError,lambda : x / 0)
+		self.assertRaises(ArithmeticError,lambda : x / y)
+		tmp = pt(4)
+		tmp /= 4
+		self.assertEqual(tmp,1)
+
 class mpmath_test_case(_ut.TestCase):
 	""":mod:`mpmath` test case.
 	
@@ -385,9 +420,13 @@ class polynomial_test_case(_ut.TestCase):
 		self.assertEqual((x+3*y-2*z).split().join(),x+3*y-2*z)
 		self.assertEqual(type((x+3*y-2*z).split()),polynomial(polynomial(integer,monomial(short)),monomial(short))())
 		# Division.
+		# NOTE: should also add some uprem testing as well.
 		self.assertEqual(x/x,1)
 		self.assertEqual(((x+y)*(x+1))/(x+1),x+y)
-		self.assertRaises(TypeError, lambda: pt2() / pt2())
+		x /= x
+		self.assertEqual(x,1)
+		x = pt('x')
+		self.assertRaises(ZeroDivisionError, lambda: pt2() / pt2())
 		self.assertRaises(ArithmeticError, lambda: pt(1) / x)
 		self.assertEqual(pt.udivrem(x,x)[0],1)
 		self.assertEqual(pt.udivrem(x,x)[1],0)
@@ -981,6 +1020,7 @@ def run_test_suite():
 	"""
 	retval = 0
 	suite = _ut.TestLoader().loadTestsFromTestCase(basic_test_case)
+	suite.addTest(series_division_test_case())
 	suite.addTest(mpmath_test_case())
 	suite.addTest(math_test_case())
 	suite.addTest(polynomial_test_case())

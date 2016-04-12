@@ -330,13 +330,15 @@ class series_exposer
 		template <typename S, typename T>
 		using division_ops_ic = std::integral_constant<bool,
 			piranha::is_divisible_in_place<S,T>::value &&
-			piranha::is_divisible<S,T>::value>;
+			piranha::is_divisible<S,T>::value &&
+			piranha::is_divisible<T,S>::value>;
 		template <typename S, typename T, typename std::enable_if<division_ops_ic<S,T>::value,int>::type = 0>
 		static void expose_division(bp::class_<S> &series_class, const T &in)
 		{
 			namespace sn = boost::python::self_ns;
 			series_class.def(sn::operator/=(bp::self,in));
 			series_class.def(sn::operator/(bp::self,in));
+			series_class.def(sn::operator/(in,bp::self));
 		}
 		template <typename S, typename T, typename std::enable_if<!division_ops_ic<S,T>::value,int>::type = 0>
 		static void expose_division(bp::class_<S> &, const T &)
@@ -912,6 +914,8 @@ class series_exposer
 				series_class.def(bp::self - bp::self);
 				series_class.def(bp::self *= bp::self);
 				series_class.def(bp::self * bp::self);
+				series_class.def(bp::self /= bp::self);
+				series_class.def(bp::self / bp::self);
 				series_class.def(bp::self == bp::self);
 				series_class.def(bp::self != bp::self);
 				series_class.def(+bp::self);
