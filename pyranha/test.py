@@ -118,8 +118,7 @@ class basic_test_case(_ut.TestCase):
 class series_division_test_case(_ut.TestCase):
 	"""Series division test case.
 	
-	To be used within the :mod:`unittest` framework. Will test features common
-	to all series types.
+	To be used within the :mod:`unittest` framework. Will test series division.
 	
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(series_division_test_case)
@@ -149,6 +148,52 @@ class series_division_test_case(_ut.TestCase):
 		tmp = pt(4)
 		tmp /= 4
 		self.assertEqual(tmp,1)
+
+class series_in_place_ops_test_case(_ut.TestCase):
+	"""Series in-place operations test case.
+
+	To be used within the :mod:`unittest` framework. Will test in-place series arithmetics.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(series_in_place_ops_test_case)
+
+	"""
+	def runTest(self):
+		# The idea of the test is to make sure that in-place operations
+		# really mutate the object (and do not end up creating a new object instead).
+		from .types import polynomial, monomial, short, rational
+		pt = polynomial(rational,monomial(short))()
+		x = pt('x')
+		x0 = pt('x')
+		# Test with scalar.
+		x_id = id(x)
+		x += 1
+		self.assertEqual(x,x0 + 1)
+		self.assertEqual(id(x),x_id)
+		x -= 2
+		self.assertEqual(x,x0 - 1)
+		self.assertEqual(id(x),x_id)
+		x *= 2
+		self.assertEqual(x,2*x0 - 2)
+		self.assertEqual(id(x),x_id)
+		x /= 2
+		self.assertEqual(x,x0 - 1)
+		self.assertEqual(id(x),x_id)
+		# Test with series.
+		x,y = pt('x'),pt('y')
+		x_id = id(x)
+		x += y
+		self.assertEqual(x,x0 + y)
+		self.assertEqual(id(x),x_id)
+		x -= y
+		self.assertEqual(x,x0)
+		self.assertEqual(id(x),x_id)
+		x *= y
+		self.assertEqual(x,x0*y)
+		self.assertEqual(id(x),x_id)
+		x /= pt(2)
+		self.assertEqual(x,x0*y/2)
+		self.assertEqual(id(x),x_id)
 
 class mpmath_test_case(_ut.TestCase):
 	""":mod:`mpmath` test case.
@@ -965,26 +1010,46 @@ class rational_function_test_case(_ut.TestCase):
 		self.assertEqual(repr(3*x),"3*x")
 		# Arithmetics.
 		tmp = copy(x)
+		id_tmp = id(tmp)
 		tmp += 1
 		self.assertEqual(tmp,x+1)
 		self.assertEqual(tmp,1+x)
+		self.assertEqual(id(tmp),id_tmp)
 		tmp -= 2
 		self.assertEqual(tmp,+(x-1))
 		self.assertEqual(tmp,-(1-x))
+		self.assertEqual(id(tmp),id_tmp)
 		tmp += 1
 		tmp *= 2
 		self.assertEqual(tmp,x*2)
 		self.assertEqual(tmp,2*x)
+		self.assertEqual(id(tmp),id_tmp)
 		tmp /= 2
 		tmp /= 3
 		self.assertEqual(tmp,x/3)
 		self.assertEqual(tmp,1/(3/x))
+		self.assertEqual(id(tmp),id_tmp)
 		self.assert_(x/3 == tmp)
 		self.assert_(x/4 != tmp)
 		self.assert_(tmp != x/4)
 		self.assert_(x/4 != 1)
 		self.assert_(1 != x/4)
 		self.assertRaises(TypeError,lambda: x + 1.2)
+		# Check in-place id wrt series arguments.
+		tmp = copy(x)
+		id_tmp = id(tmp)
+		tmp += y
+		self.assertEqual(tmp,x+y)
+		self.assertEqual(id(tmp),id_tmp)
+		tmp-= y
+		self.assertEqual(tmp,x)
+		self.assertEqual(id(tmp),id_tmp)
+		tmp *= y
+		self.assertEqual(tmp,x*y)
+		self.assertEqual(id(tmp),id_tmp)
+		tmp /= y
+		self.assertEqual(tmp,x)
+		self.assertEqual(id(tmp),id_tmp)
 		# Exponentiation.
 		self.assertEqual(((x+y)/(x-y))**2,(x+y)*(x+y)/((x-y)*(x-y)))
 		self.assertEqual(((x+y)/(x-y))**-2,(x-y)*(x-y)/((x+y)*(x+y)))
@@ -1020,6 +1085,7 @@ def run_test_suite():
 	"""
 	retval = 0
 	suite = _ut.TestLoader().loadTestsFromTestCase(basic_test_case)
+	suite.addTest(series_in_place_ops_test_case())
 	suite.addTest(series_division_test_case())
 	suite.addTest(mpmath_test_case())
 	suite.addTest(math_test_case())

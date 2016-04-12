@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/operators.hpp>
+#include <boost/python/return_arg.hpp>
 #include <boost/python/self.hpp>
 #include <string>
 #include <tuple>
@@ -106,7 +107,12 @@ struct rf_interop_exposer
 		m_rf_class.def(bp::self *= x);
 		m_rf_class.def(bp::self * x);
 		m_rf_class.def(x * bp::self);
+#if PY_MAJOR_VERSION < 3
 		m_rf_class.def(bp::self /= x);
+#else
+		m_rf_class.def("__itruediv__",generic_in_place_division_wrapper<T,U>,bp::return_arg<1u>{});
+#endif
+
 		m_rf_class.def(bp::self / x);
 		m_rf_class.def(x / bp::self);
 		m_rf_class.def(bp::self == x);
@@ -190,7 +196,11 @@ inline void expose_rational_functions_impl()
 	rf_class.def(bp::self - bp::self);
 	rf_class.def(bp::self *= bp::self);
 	rf_class.def(bp::self * bp::self);
+#if PY_MAJOR_VERSION < 3
 	rf_class.def(bp::self /= bp::self);
+#else
+	rf_class.def("__itruediv__",generic_in_place_division_wrapper<r_type,r_type>,bp::return_arg<1u>{});
+#endif
 	rf_class.def(bp::self / bp::self);
 	rf_class.def(bp::self == bp::self);
 	rf_class.def(bp::self != bp::self);

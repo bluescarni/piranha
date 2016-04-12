@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/list.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/operators.hpp>
+#include <boost/python/return_arg.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <cstddef>
@@ -243,6 +244,15 @@ inline std::string generic_latex_wrapper(const S &s)
 	return oss.str();
 }
 
+// A simple wrapper for in-place division. We need this because Boost.Python does not expose correctly
+// in-place division in Python 3.
+// https://svn.boost.org/trac/boost/ticket/11797
+template <typename T, typename U>
+inline T &generic_in_place_division_wrapper(T &n, const U &d)
+{
+	return n /= d;
+}
+
 // Generic series exposer.
 template <template <typename ...> class Series, typename Descriptor, std::size_t Begin = 0u,
 	std::size_t End = std::tuple_size<typename Descriptor::params>::value, typename CustomHook = NullHook>
@@ -336,7 +346,11 @@ class series_exposer
 		static void expose_division(bp::class_<S> &series_class, const T &in)
 		{
 			namespace sn = boost::python::self_ns;
+#if PY_MAJOR_VERSION < 3
 			series_class.def(sn::operator/=(bp::self,in));
+#else
+			series_class.def("__itruediv__",generic_in_place_division_wrapper<S,T>,bp::return_arg<1u>{});
+#endif
 			series_class.def(sn::operator/(bp::self,in));
 			series_class.def(sn::operator/(in,bp::self));
 		}
@@ -914,7 +928,11 @@ class series_exposer
 				series_class.def(bp::self - bp::self);
 				series_class.def(bp::self *= bp::self);
 				series_class.def(bp::self * bp::self);
+#if PY_MAJOR_VERSION < 3
 				series_class.def(bp::self /= bp::self);
+#else
+				series_class.def("__itruediv__",generic_in_place_division_wrapper<s_type,s_type>,bp::return_arg<1u>{});
+#endif
 				series_class.def(bp::self / bp::self);
 				series_class.def(bp::self == bp::self);
 				series_class.def(bp::self != bp::self);
