@@ -95,7 +95,7 @@ struct mock_cf
 };
 
 // A few extra tests for division after the recent changes in implementation.
-BOOST_AUTO_TEST_CASE(series_division_tests)
+BOOST_AUTO_TEST_CASE(series_division_test)
 {
 	environment env;
 	{
