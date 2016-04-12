@@ -59,6 +59,8 @@ struct polynomial_descriptor
 		std::tuple<piranha::integer,piranha::monomial<short>>,
 		std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
 		// Integer recursive.
+		// NOTE: this is not really part of the public API, but it can be useful when experimenting
+		// with recursive poly algorithms.
 		std::tuple<piranha::polynomial<piranha::integer,piranha::monomial<short>>,piranha::monomial<short>>,
 		std::tuple<piranha::polynomial<piranha::integer,piranha::kronecker_monomial<>>,piranha::kronecker_monomial<>>,
 		// Rational.
@@ -71,7 +73,7 @@ struct polynomial_descriptor
 		std::tuple<piranha::real,piranha::kronecker_monomial<>>
 	>;
 	using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-	using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+	using pow_types = interop_types;
 	using eval_types = interop_types;
 	using subs_types = interop_types;
 	// For now, we have only degrees computed as integers or rationals.

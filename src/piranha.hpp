@@ -210,6 +210,10 @@ see https://www.gnu.org/licenses/. */
  * \todo we need to decide if we want to keep the postifx notation for things like eval, subs etc. or just support the math:: versions. It probably does
  * not make much sense to go back and remove the methods in the toolboxes, but for documentation purposes and in python particularly we should just
  * support the math:: overloads (with partial() being the lone exception).
+ * \todo consider using pragmas for suppressing warnings selectively: e.g., in the python bindings exposition in GCC, in that new division test
+ * in series_05.
+ * \todo the in-place division operator might be broken in Python 3: it looks like it is not working in-place (missing the correct method)
+ * and python implements it with the binary version.
  */
 namespace piranha
 {

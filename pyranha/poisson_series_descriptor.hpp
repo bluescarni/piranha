@@ -74,8 +74,8 @@ struct poisson_series_descriptor
 		std::tuple<piranha::divisor_series<piranha::polynomial<double,piranha::kronecker_monomial<>>,piranha::divisor<short>>>
 	>;
 	using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-	using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-	using eval_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+	using pow_types = interop_types;
+	using eval_types = interop_types;
 	using subs_types = eval_types;
 	using degree_truncation_types = std::tuple<piranha::integer,piranha::rational>;
 	interop_types		it;
