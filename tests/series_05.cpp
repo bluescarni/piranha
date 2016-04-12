@@ -99,22 +99,127 @@ BOOST_AUTO_TEST_CASE(series_division_tests)
 {
 	environment env;
 	{
+	// Equal rec index, no type changes.
 	using s_type = g_series_type<integer,int>;
-	using s_type2 = g_series_type<double,int>;
 	BOOST_CHECK((is_divisible<s_type>::value));
-	BOOST_CHECK((!is_divisible<g_series_type<mock_cf,int>>::value));
+	BOOST_CHECK((is_divisible_in_place<s_type>::value));
 	s_type x{"x"}, y{"y"};
-	BOOST_CHECK((std::is_same<s_type,decltype(s_type{} / s_type{})>::value));
-	BOOST_CHECK_EQUAL(s_type{4} / s_type{-3},-1);
-	BOOST_CHECK((s_type{} / s_type{-3}).empty());
-	BOOST_CHECK_THROW(s_type{4} / s_type{},zero_division_error);
-	BOOST_CHECK_THROW(x/x,std::invalid_argument);
-	BOOST_CHECK_THROW(x/y,std::invalid_argument);
-	BOOST_CHECK_THROW(s_type{1}/y,std::invalid_argument);
-	BOOST_CHECK_THROW(s_type{1}/x,std::invalid_argument);
-	BOOST_CHECK((s_type{} / x).empty());
-	BOOST_CHECK((is_divisible<s_type2,s_type>::value));
-	BOOST_CHECK((std::is_same<s_type2,decltype(s_type2{} / s_type{})>::value));
-	BOOST_CHECK_EQUAL(s_type2{4} / s_type{-3},-4./3.);
+	BOOST_CHECK((std::is_same<s_type,decltype(x/y)>::value));
+	BOOST_CHECK_EQUAL(s_type{4}/s_type{-3},-1);
+	BOOST_CHECK_THROW(s_type{4}/s_type{},zero_division_error);
+	BOOST_CHECK_EQUAL(s_type{0}/s_type{-3},0);
+	BOOST_CHECK_THROW(x / y,std::invalid_argument);
+	s_type tmp{4};
+	BOOST_CHECK_THROW(tmp /= s_type{},zero_division_error);
+	tmp /= s_type{-3};
+	BOOST_CHECK_EQUAL(tmp,-1);
+	BOOST_CHECK_THROW(x /= y,std::invalid_argument);
+	BOOST_CHECK((!is_divisible<g_series_type<mock_cf,int>>::value));
+	BOOST_CHECK((!is_divisible_in_place<g_series_type<mock_cf,int>>::value));
+	}
+	{
+	// Equal rec index, first coefficient wins.
+	using s_type1 = g_series_type<integer,int>;
+	using s_type2 = g_series_type<int,int>;
+	BOOST_CHECK((is_divisible<s_type1,s_type2>::value));
+	BOOST_CHECK((is_divisible_in_place<s_type1,s_type2>::value));
+	s_type1 x{"x"};
+	s_type2 y{"y"};
+	BOOST_CHECK((std::is_same<s_type1,decltype(x/y)>::value));
+	BOOST_CHECK_EQUAL(s_type1{4}/s_type2{-3},-1);
+	BOOST_CHECK_THROW(s_type1{4}/s_type2{},zero_division_error);
+	BOOST_CHECK_EQUAL(s_type1{0}/s_type2{-3},0);
+	BOOST_CHECK_THROW(x / y,std::invalid_argument);
+	s_type1 tmp{4};
+	BOOST_CHECK_THROW(tmp /= s_type2{},zero_division_error);
+	tmp /= s_type2{-3};
+	BOOST_CHECK_EQUAL(tmp,-1);
+	BOOST_CHECK_THROW(x /= y,std::invalid_argument);
+	BOOST_CHECK((!is_divisible<g_series_type<mock_cf,int>,s_type2>::value));
+	BOOST_CHECK((!is_divisible_in_place<g_series_type<mock_cf,int>,s_type2>::value));
+	}
+	{
+	// Equal rec index, second coefficient wins.
+	using s_type1 = g_series_type<int,int>;
+	using s_type2 = g_series_type<integer,int>;
+	BOOST_CHECK((is_divisible<s_type1,s_type2>::value));
+	BOOST_CHECK((is_divisible_in_place<s_type1,s_type2>::value));
+	s_type1 x{"x"};
+	s_type2 y{"y"};
+	BOOST_CHECK((std::is_same<s_type2,decltype(x/y)>::value));
+	BOOST_CHECK_EQUAL(s_type1{4}/s_type2{-3},-1);
+	BOOST_CHECK_THROW(s_type1{4}/s_type2{},zero_division_error);
+	BOOST_CHECK_EQUAL(s_type1{0}/s_type2{-3},0);
+	BOOST_CHECK_THROW(x / y,std::invalid_argument);
+	s_type1 tmp{4};
+	BOOST_CHECK_THROW(tmp /= s_type2{},zero_division_error);
+	tmp /= s_type2{-3};
+	BOOST_CHECK_EQUAL(tmp,-1);
+	BOOST_CHECK_THROW(x /= y,std::invalid_argument);
+	BOOST_CHECK((!is_divisible<s_type2,g_series_type<mock_cf,int>>::value));
+	BOOST_CHECK((!is_divisible_in_place<s_type2,g_series_type<mock_cf,int>>::value));
+	}
+	{
+	// Equal rec index, need a new coefficient.
+	using s_type1 = g_series_type<short,int>;
+	using s_type2 = g_series_type<signed char,int>;
+	using s_type3 = g_series_type<int,int>;
+	BOOST_CHECK((is_divisible<s_type1,s_type2>::value));
+	BOOST_CHECK((is_divisible_in_place<s_type1,s_type2>::value));
+	s_type1 x{"x"};
+	s_type2 y{"y"};
+	BOOST_CHECK((std::is_same<s_type3,decltype(x/y)>::value));
+	BOOST_CHECK_EQUAL(s_type1{4}/s_type2{-3},-1);
+	BOOST_CHECK_THROW(s_type1{4}/s_type2{},zero_division_error);
+	BOOST_CHECK_EQUAL(s_type1{0}/s_type2{-3},0);
+	s_type1 tmp{4};
+	BOOST_CHECK_THROW(tmp /= s_type2{},zero_division_error);
+	tmp /= s_type2{-3};
+	BOOST_CHECK_EQUAL(tmp,-1);
+	BOOST_CHECK_THROW(x /= y,std::invalid_argument);
+	BOOST_CHECK_THROW(x / y,std::invalid_argument);
+	}
+	{
+	// Second has higher recursion index, result is second.
+	using s_type1 = g_series_type<int,int>;
+	using s_type2 = g_series_type<s_type1,int>;
+	BOOST_CHECK((is_divisible<s_type1,s_type2>::value));
+	BOOST_CHECK((!is_divisible_in_place<s_type1,s_type2>::value));
+	s_type1 x{"x"};
+	s_type2 y{"y"};
+	BOOST_CHECK((std::is_same<s_type2,decltype(x/y)>::value));
+	BOOST_CHECK_EQUAL(s_type1{4}/s_type2{-3},-1);
+	BOOST_CHECK_THROW(s_type1{4}/s_type2{},zero_division_error);
+	BOOST_CHECK_EQUAL(s_type1{0}/s_type2{-3},0);
+	BOOST_CHECK_THROW(x / y,std::invalid_argument);
+	// Try with scalar as well.
+	BOOST_CHECK((is_divisible<int,s_type2>::value));
+	BOOST_CHECK((std::is_same<s_type2,decltype(1/y)>::value));
+	BOOST_CHECK_EQUAL(4/s_type2{-3},-1);
+	BOOST_CHECK_THROW(4/s_type2{},zero_division_error);
+	BOOST_CHECK_EQUAL(0/s_type2{-3},0);
+	BOOST_CHECK((!is_divisible<g_series_type<mock_cf,int>,s_type2>::value));
+	BOOST_CHECK((!is_divisible_in_place<g_series_type<mock_cf,int>,s_type2>::value));
+	}
+	{
+	// Second has higher recursion index, result is a new coefficient.
+	using s_type1 = g_series_type<signed char,int>;
+	using s_type2 = g_series_type<g_series_type<short,int>,int>;
+	using s_type3 = g_series_type<g_series_type<int,int>,int>;
+	BOOST_CHECK((is_divisible<s_type1,s_type2>::value));
+	BOOST_CHECK((!is_divisible_in_place<s_type1,s_type2>::value));
+	s_type1 x{"x"};
+	s_type2 y{"y"};
+	BOOST_CHECK((std::is_same<s_type3,decltype(x/y)>::value));
+	BOOST_CHECK_EQUAL(s_type1{4}/s_type2{-3},-1);
+	BOOST_CHECK_THROW(s_type1{4}/s_type2{},zero_division_error);
+	BOOST_CHECK_EQUAL(s_type1{0}/s_type2{-3},0);
+	BOOST_CHECK_THROW(x / y,std::invalid_argument);
+	// Try with scalar as well.
+	BOOST_CHECK((is_divisible<short,s_type1>::value));
+	BOOST_CHECK((std::is_same<g_series_type<int,int>,decltype(1/x)>::value));
+	BOOST_CHECK_EQUAL(4/s_type1{-3},-1);
+	BOOST_CHECK_THROW(4/s_type1{},zero_division_error);
+	BOOST_CHECK_EQUAL(0/s_type1{-3},0);
 	}
 }

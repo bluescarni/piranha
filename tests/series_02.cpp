@@ -1862,10 +1862,13 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 	// Case 5.
 	BOOST_CHECK((std::is_same<p_type1d,decltype(p_type1{} / 0.)>::value));
 	BOOST_CHECK((std::is_same<p_type1f,decltype(p_type1{} / 0.f)>::value));
-	// Check non-divisible series.
-	BOOST_CHECK((!is_divisible<double,p_type1>::value));
-	BOOST_CHECK((!is_divisible<int,p_type1>::value));
-	BOOST_CHECK((!is_divisible<integer,p_type1>::value));
+	// Some scalars on the first argument.
+	BOOST_CHECK((is_divisible<double,p_type1>::value));
+	BOOST_CHECK((std::is_same<decltype(3. / p_type1{}),g_series_type<double,int>>::value));
+	BOOST_CHECK((is_divisible<int,p_type1>::value));
+	BOOST_CHECK((std::is_same<decltype(3 / p_type1{}),p_type1>::value));
+	BOOST_CHECK((is_divisible<integer,p_type1>::value));
+	BOOST_CHECK((std::is_same<decltype(3_z / p_type1{}),p_type1>::value));
 	// Type testing for in-place division.
 	// Case 4.
 	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() /= 0)>::value));
@@ -1873,7 +1876,8 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() /= 0.)>::value));
 	// Not divisible in-place.
 	BOOST_CHECK((!is_divisible_in_place<int,p_type1>::value));
-	BOOST_CHECK((!is_divisible_in_place<p_type11,p_type1>::value));
+	// Divisible in-place after recent changes.
+	BOOST_CHECK((is_divisible_in_place<p_type11,p_type1>::value));
 	// Special cases to test the erasing of terms.
 	using pint = g_series_type<integer,int>;
 	pint x{"x"}, y{"y"};

@@ -515,8 +515,8 @@ struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
  *   binary operation or the assignment are invalid);
  * - series multiplication requires the coefficient types to be multipliable and a valid specialisation of piranha::series_multiplier for the
  *   promoted series type;
- * - division is implemented only when the first argument has a recursion index greater than the second argument and
- *   the first argument's coefficient type is divisible by the second argument;
+ * - division is implemented only when it reduces to coefficient division (true series division may be implemented in specific series types,
+ *   e.g., piranha::polynomial);
  * - the comparison operators will use <tt>operator+()</tt> on the coefficient types to determine if any type promotion is necessary
  *   before performing the comparison.
  *
@@ -783,6 +783,7 @@ class series_operators
 		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<in_place_mul_type<T,U...>>::value,int>::type;
 		// Division.
 		// NOTE: the divisibility requirement here is already satisfied in the determination of the return type.
+		// The base case: same recursion, no promotion.
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 0u,int>::type = 0>
 		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
 		{
@@ -804,6 +805,7 @@ class series_operators
 			retval.insert(term_type{x._container().begin()->m_cf / y._container().begin()->m_cf,key_type(symbol_set{})});
 			return retval;
 		}
+		// Same recursion, first coefficient wins.
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 1u &&
 			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
 			int>::type = 0>
@@ -812,12 +814,21 @@ class series_operators
 			typename std::decay<T>::type y1(std::forward<U>(y));
 			return dispatch_binary_div(std::forward<T>(x),std::move(y1));
 		}
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 2u,int>::type = 0>
-		static auto dispatch_binary_div(T &&x, U &&y) -> decltype(dispatch_binary_div(std::forward<U>(y),std::forward<T>(x)))
+		// Two cases:
+		// - same recursion, second coefficient wins,
+		// - second operand has higher recursion, first operand promotes to second.
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,3>::value == 2u || bso_type<T,U,3>::value == 6u) &&
+			std::is_constructible<typename std::decay<U>::type,const typename std::decay<T>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
 		{
-			return dispatch_binary_div(std::forward<U>(y),std::forward<T>(x));
+			typename std::decay<U>::type x1(std::forward<T>(x));
+			return dispatch_binary_div(std::move(x1),std::forward<U>(y));
 		}
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 3u &&
+		// Two cases:
+		// - same recursion, need promoted coefficient,
+		// - second operand has higher recursion, both promote to a third type.
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,3>::value == 3u || bso_type<T,U,3>::value == 7u) &&
 			std::is_constructible<series_common_type<T,U,3>,const typename std::decay<T>::type &>::value &&
 			std::is_constructible<series_common_type<T,U,3>,const typename std::decay<U>::type &>::value,
 			int>::type = 0>
