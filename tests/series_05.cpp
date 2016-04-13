@@ -166,18 +166,7 @@ BOOST_AUTO_TEST_CASE(series_division_test)
 	using s_type3 = g_series_type<int,int>;
 	BOOST_CHECK((is_divisible<s_type1,s_type2>::value));
 	BOOST_CHECK((is_divisible_in_place<s_type1,s_type2>::value));
-	s_type1 x{"x"};
-	s_type2 y{"y"};
-	BOOST_CHECK((std::is_same<s_type3,decltype(x/y)>::value));
-	BOOST_CHECK_EQUAL(s_type1{4}/s_type2{-3},-1);
-	BOOST_CHECK_THROW(s_type1{4}/s_type2{},zero_division_error);
-	BOOST_CHECK_EQUAL(s_type1{0}/s_type2{-3},0);
-	s_type1 tmp{4};
-	BOOST_CHECK_THROW(tmp /= s_type2{},zero_division_error);
-	tmp /= s_type2{-3};
-	BOOST_CHECK_EQUAL(tmp,-1);
-	BOOST_CHECK_THROW(x /= y,std::invalid_argument);
-	BOOST_CHECK_THROW(x / y,std::invalid_argument);
+	BOOST_CHECK((std::is_same<s_type3,decltype(s_type1{}/s_type2{})>::value));
 	}
 	{
 	// Second has higher recursion index, result is second.
@@ -208,18 +197,9 @@ BOOST_AUTO_TEST_CASE(series_division_test)
 	using s_type3 = g_series_type<g_series_type<int,int>,int>;
 	BOOST_CHECK((is_divisible<s_type1,s_type2>::value));
 	BOOST_CHECK((!is_divisible_in_place<s_type1,s_type2>::value));
-	s_type1 x{"x"};
-	s_type2 y{"y"};
-	BOOST_CHECK((std::is_same<s_type3,decltype(x/y)>::value));
-	BOOST_CHECK_EQUAL(s_type1{4}/s_type2{-3},-1);
-	BOOST_CHECK_THROW(s_type1{4}/s_type2{},zero_division_error);
-	BOOST_CHECK_EQUAL(s_type1{0}/s_type2{-3},0);
-	BOOST_CHECK_THROW(x / y,std::invalid_argument);
+	BOOST_CHECK((std::is_same<s_type3,decltype(s_type1{}/s_type2{})>::value));
 	// Try with scalar as well.
 	BOOST_CHECK((is_divisible<short,s_type1>::value));
-	BOOST_CHECK((std::is_same<g_series_type<int,int>,decltype(1/x)>::value));
-	BOOST_CHECK_EQUAL(4/s_type1{-3},-1);
-	BOOST_CHECK_THROW(4/s_type1{},zero_division_error);
-	BOOST_CHECK_EQUAL(0/s_type1{-3},0);
+	BOOST_CHECK((std::is_same<g_series_type<int,int>,decltype(1/s_type1{})>::value));
 	}
 }
