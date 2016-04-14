@@ -191,6 +191,7 @@ see https://www.gnu.org/licenses/. */
  * \todo safe_cast should probably have its own special exception. As it stands, when we do try { safe_cast() } catch {} we are catching other
  * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails because of unsafe cast
  * rather than other errors, see e.g. how it is used in the poly linear arg combination.
+ * \todo same above applies for linear arg combination
  * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a time.
  * \todo when we rework division/gcd with the ordered poly representation, we need also to solve the issue of the interaction between truncation
  * and division/GCD operations. It seems like we will need to relax some assumptions and assertions (e.g., multiplication by a non-zero entity
