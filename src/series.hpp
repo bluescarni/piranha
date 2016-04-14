@@ -1302,6 +1302,15 @@ class series: detail::series_tag, series_operators
 			}
 			insertion_impl<Sign>(std::forward<T>(term));
 		}
+// NOTE: here GCC complains about the in-place operators with -Wconversion
+// when constructing series with, e.g., a char coefficient. This is triggered
+// for instance in series_05.cpp. This is not the best solution, maybe when
+// we have complex<int> + double = complex<double> we can replace the char/short
+// tests in series_05 with something that does not trigger this warning.
+#if defined(PIRANHA_COMPILER_IS_GCC)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wconversion"
+#endif
 		// Cf arithmetics when inserting, normal and move variants.
 		template <bool Sign, typename Iterator>
 		static void insertion_cf_arithmetics(Iterator &it, const term_type &term)
@@ -1321,6 +1330,9 @@ class series: detail::series_tag, series_operators
 				it->m_cf -= std::move(term.m_cf);
 			}
 		}
+#if defined(PIRANHA_COMPILER_IS_GCC)
+    #pragma GCC diagnostic pop
+#endif
 		// Insert compatible, non-ignorable term.
 		template <bool Sign, typename T>
 		void insertion_impl(T &&term)
