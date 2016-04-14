@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/rational_function.hpp"
 
-#define BOOST_TEST_MODULE rational_function_test
+#define BOOST_TEST_MODULE rational_function_01_test
 #include <boost/test/unit_test.hpp>
 
 #include <boost/mpl/for_each.hpp>
@@ -1025,7 +1025,7 @@ struct pow_tester
 		}
 		// Random testing.
 		p_type x{"x"}, y{"y"}, z{"z"};
-		std::uniform_int_distribution<int> dist(0,4), p_dist(-4,4);
+		std::uniform_int_distribution<int> dist(0,4), p_dist(-4,4), clear_dist(0,9);
 		for (int i = 0; i < ntrials; ++i) {
 			auto n1 = rn_poly(x,y,z,dist);
 			auto d1 = rn_poly(x,y,z,dist);
@@ -1053,6 +1053,9 @@ struct pow_tester
 					acc /= r1;
 				}
 				BOOST_CHECK_EQUAL(acc,p);
+			}
+			if (clear_dist(rng) == 0) {
+				r_type::clear_pow_cache();
 			}
 		}
 	}

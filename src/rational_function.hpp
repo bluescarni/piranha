@@ -30,14 +30,17 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_RATIONAL_FUNCTION_HPP
 
 #include <algorithm>
+#include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "config.hpp"
 #include "exceptions.hpp"
@@ -419,9 +422,6 @@ class rational_function: public detail::rational_function_tag
 		using eq_enabler = typename std::enable_if<detail::true_tt<
 			decltype(rational_function::dispatch_equality(std::declval<const T &>(),
 			std::declval<const U &>()))>::value,int>::type;
-		// Exponentiation.
-		template <typename T>
-		using pow_enabler = typename std::enable_if<is_integral<T>::value,int>::type;
 		// Substitutions.
 		template <typename T>
 		using subs_enabler = typename std::enable_if<is_interoperable<T>::value || std::is_same<T,rational_function>::value,int>::type;
@@ -452,11 +452,41 @@ class rational_function: public detail::rational_function_tag
 			*this = rational_function{num,den};
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		// Hashing utils.
+		struct rf_hasher
+		{
+			template <typename T>
+			std::size_t operator()(const T &s) const
+			{
+				return s.hash();
+			}
+		};
+		struct rf_equal_to
+		{
+			template <typename T>
+			bool operator()(const T &a, const T &b) const
+			{
+				return a.is_identical(b);
+			}
+		};
+		// Pow machinery, with cache.
+		template <typename T>
+		using pow_enabler = typename std::enable_if<is_integral<T>::value,int>::type;
+		template <typename RF>
+		using pow_map_type = std::unordered_map<RF,std::vector<RF>,rf_hasher,rf_equal_to>;
+		template <typename RF = rational_function>
+		static pow_map_type<RF> &get_pow_cache()
+		{
+			static pow_map_type<RF> s_pow_cache;
+			return s_pow_cache;
+		}
+		// The mutex for access to the pow cache.
+		static std::mutex s_pow_mutex;
 	public:
 		/// Default constructor.
 		/**
 		 * The numerator will be set to zero, the denominator to 1.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the constructor of rational_function::p_type from \p int.
 		 */
 		rational_function():m_num(),m_den(1) {}
@@ -517,9 +547,9 @@ class rational_function: public detail::rational_function_tag
 		/// Copy-assignment operator.
 		/**
 		 * @param[in] other assignment argument.
-		 * 
+		 *
 		 * @return a reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		rational_function &operator=(const rational_function &other)
@@ -595,12 +625,12 @@ class rational_function: public detail::rational_function_tag
 		/// Stream operator.
 		/**
 		 * Will stream to \p os a human-readable representation of \p r.
-		 * 
+		 *
 		 * @param[in,out] os target stream.
 		 * @param[in] r the piranha::rational_function to be streamed.
-		 * 
+		 *
 		 * @return a reference to \p os.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the stream opertor of rational_function::p_type.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const rational_function &r)
@@ -808,16 +838,16 @@ class rational_function: public detail::rational_function_tag
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * This operator is equivalent to the expression:
 		 * @code
 		 * return *this = *this + other;
 		 * @endcode
-		 * 
+		 *
 		 * @param[in] other argument.
-		 * 
+		 *
 		 * @return a reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the corresponding binary operator.
 		 */
 		template <typename T, typename U = rational_function, in_place_add_enabler<T,U> = 0>
@@ -867,16 +897,16 @@ class rational_function: public detail::rational_function_tag
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * This operator is equivalent to the expression:
 		 * @code
 		 * return *this = *this - other;
 		 * @endcode
-		 * 
+		 *
 		 * @param[in] other argument.
-		 * 
+		 *
 		 * @return a reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the corresponding binary operator.
 		 */
 		template <typename T, typename U = rational_function, in_place_sub_enabler<T,U> = 0>
@@ -977,39 +1007,77 @@ class rational_function: public detail::rational_function_tag
 		 * \note
 		 * This method is enabled only if \p T is a C++ integral type or piranha::integer.
 		 *
+		 * Similarly to piranha::series::pow(), this method keeps a cache of natural powers of
+		 * rational functions in order to expedite computations when the same powers of rational
+		 * functions are requested repeatedly (e.g., during substitution operations). The cache is
+		 * thread-safe and it can be cleared with piranha::rational_function::clear_pow_cache().
+		 *
 		 * @param[in] n an integral exponent.
 		 *
 		 * @return \p this raised to the power of \p n.
 		 *
 		 * @throws piranha::zero_division_error if \p n is negative and \p this is zero.
-		 * @throws unspecified any exception thrown by calling math::pow() on instances of
-		 * piranha::rational_function::p_type.
+		 * @throws unspecified any exception thrown by:
+		 * - threading primitives,
+		 * - memory errors in standard containers,
+		 * - construction, assignment and arithmetic operations on piranha::rational_function.
 		 */
 		template <typename T, pow_enabler<T> = 0>
 		rational_function pow(const T &n) const
 		{
-			const integer n_int{n};
+			// NOTE: here we are renouncing the pow() optimisation
+			// implemented for the polynomials. Consider bringing
+			// it back if it becomes important.
+			const integer n_int{n}, un_int = n_int.abs();
 			rational_function retval;
-			// NOTE: write directly into num/den of the retval,
-			// we don't need to use a ctor with its costly canonicalisation.
-			if (n_int.sign() >= 0) {
-				retval.m_num = math::pow(m_num,n_int);
-				retval.m_den = math::pow(m_den,n_int);
-			} else {
-				if (unlikely(math::is_zero(m_num))) {
+			{
+			// Lock the cache.
+			std::lock_guard<std::mutex> lock(s_pow_mutex);
+			auto &v = get_pow_cache()[*this];
+			using s_type = decltype(v.size());
+			// Init the vector, if needed.
+			if (!v.size()) {
+				v.push_back(rational_function{1});
+			}
+			// Fill in the missing powers.
+			while (v.size() <= un_int) {
+				// NOTE: avoid canonicalisation by setting directly
+				// the num/den.
+				// NOTE: this will have to be replaced by explicit untruncated
+				// multiplication.
+				rational_function tmp;
+				tmp.m_num = v.back().m_num * m_num;
+				tmp.m_den = v.back().m_den * m_den;
+				v.push_back(std::move(tmp));
+			}
+			retval = v[static_cast<s_type>(un_int)];
+			}
+			// We need to fix retval in case of negative powers.
+			if (n_int.sign() < 0) {
+				if (unlikely(math::is_zero(retval.m_num))) {
 					piranha_throw(zero_division_error,"zero denominator in rational_function exponentiation");
 				}
-				retval.m_num = math::pow(m_den,-n_int);
-				retval.m_den = math::pow(m_num,-n_int);
+				// Swap num/den.
+				std::swap(retval.m_num,retval.m_den);
 				// The only canonicalisation we need is checking the sign of the new
 				// denominator.
-				// NOTE: this might potentially be zero in case of truncation.
 				if (detail::poly_lterm(retval.m_den)->m_cf.sign() < 0) {
 					math::negate(retval.m_num);
 					math::negate(retval.m_den);
 				}
 			}
 			return retval;
+		}
+		/// Clear the internal cache of natural powers.
+		/**
+		 * This method can be used to clear the cache of natural powers of series maintained by piranha::rational_function::pow().
+		 *
+		 * @throws unspecified any exception thrown by threading primitives.
+		 */
+		static void clear_pow_cache()
+		{
+			std::lock_guard<std::mutex> lock(s_pow_mutex);
+			get_pow_cache().clear();
 		}
 		/// Substitution.
 		/**
@@ -1065,9 +1133,9 @@ class rational_function: public detail::rational_function_tag
 		/**
 		 * This method will return a copy of \p this whose numerator and denominator have been generated
 		 * by calling piranha::series::trim() on the numerator and denominator of \p this.
-		 * 
+		 *
 		 * @return a copy of \p this with the ignorable arguments removed.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by piranha::series::trim().
 		 */
 		rational_function trim() const
@@ -1078,10 +1146,37 @@ class rational_function: public detail::rational_function_tag
 			retval.m_den = m_den.trim();
 			return retval;
 		}
+		/// Hash value.
+		/**
+		 * The hash of a rational function is computed by combining the hashes of
+		 * numerator and denominator.
+		 *
+		 * @return a hash value for \p this.
+		 */
+		std::size_t hash() const
+		{
+			return static_cast<std::size_t>(num().hash() + den().hash());
+		}
+		/// Identical check.
+		/**
+		 * Two rational functions are identical if their numerators and denominators are, via
+		 * piranha::rational_function::p_type::is_identical().
+		 *
+		 * @param[in] other comparison argument.
+		 *
+		 * @return \p true if \p this is identical to \p other, \p false otherwise.
+		 */
+		bool is_identical(const rational_function &other) const
+		{
+			return m_num.is_identical(other.m_num) && m_den.is_identical(other.m_den);
+		}
 	private:
 		p_type	m_num;
 		p_type	m_den;
 };
+
+template <typename Key>
+std::mutex rational_function<Key>::s_pow_mutex;
 
 /// Specialisation of piranha::print_tex_coefficient() for piranha::rational_function.
 /**
@@ -1305,15 +1400,15 @@ struct evaluate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_
 		/**
 		 * \note
 		 * This operator is enabled only if the algorithm described below is supported by the involved types.
-		 * 
+		 *
 		 * The evaluation of a rational function is constructed from the ratio of the evaluation of its numerator
 		 * by the evaluation of its denominator. The return type is the type resulting from this operation.
-		 * 
+		 *
 		 * @param[in] r the piranha::rational_function argument.
 		 * @param[in] m the evaluation map.
-		 * 
+		 *
 		 * @return the evaluation of \p r according to \p m.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the evaluation of the numerator and denominator of \p r,
 		 * - the division of the results of the evaluations of numerator and denominator.
@@ -1335,9 +1430,9 @@ struct cos_impl<T,typename std::enable_if<std::is_base_of<detail::rational_funct
 	/// Call operator.
 	/**
 	 * @param[in] r the piranha::rational_function argument.
-	 * 
+	 *
 	 * @return 1 if \p r is zero.
-	 * 
+	 *
 	 * @throws std::invalid_argument if \p r is not zero.
 	 * @throws unspecified any exception thrown by the constructor of piranha::rational_function from \p int.
 	 */
@@ -1360,9 +1455,9 @@ struct sin_impl<T,typename std::enable_if<std::is_base_of<detail::rational_funct
 	/// Call operator.
 	/**
 	 * @param[in] r the piranha::rational_function argument.
-	 * 
+	 *
 	 * @return 0 if \p r is zero.
-	 * 
+	 *
 	 * @throws std::invalid_argument if \p r is not zero.
 	 */
 	T operator()(const T &r) const
@@ -1385,14 +1480,14 @@ struct degree_impl<T,typename std::enable_if<std::is_base_of<detail::rational_fu
 	/**
 	 * The (partial) degree of a rational function is defined as the maximum (partial)
 	 * degree of numerator and denominator.
-	 * 
+	 *
 	 * @param[in] r the piranha::rational_function argument.
 	 * @param[in] args either an empty pack, or a univariate pack containing a vector
 	 * of strings representing the names of the variables with respect to which
 	 * the partial degree is computed.
-	 * 
+	 *
 	 * @return the (partial) degree of \p r.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by the computation of the degrees
 	 * of the numerator or denominator of \p r.
 	 */

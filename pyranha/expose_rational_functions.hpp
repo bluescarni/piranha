@@ -211,6 +211,7 @@ inline void expose_rational_functions_impl()
 	tuple_for_each(interop_types{},rf_interop_exposer<r_type>(rf_class));
 	// Pow.
 	rf_class.def("__pow__",piranha::math::pow<r_type,piranha::integer>);
+	rf_class.def("clear_pow_cache",r_type::clear_pow_cache).staticmethod("clear_pow_cache");
 	// Evaluation.
 	using eval_types = std::tuple<piranha::integer,piranha::rational,r_type,double,piranha::real>;
 	tuple_for_each(eval_types{},rf_eval_exposer<r_type>(rf_class));

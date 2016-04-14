@@ -33,13 +33,13 @@ import unittest as _ut
 
 class basic_test_case(_ut.TestCase):
 	"""Basic test case.
-	
+
 	To be used within the :mod:`unittest` framework. Will test features common
 	to all series types.
-	
+
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(basic_test_case)
-	
+
 	"""
 	def runTest(self):
 		from fractions import Fraction
@@ -117,12 +117,12 @@ class basic_test_case(_ut.TestCase):
 
 class series_division_test_case(_ut.TestCase):
 	"""Series division test case.
-	
+
 	To be used within the :mod:`unittest` framework. Will test series division.
-	
+
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(series_division_test_case)
-	
+
 	"""
 	def runTest(self):
 		from fractions import Fraction as F
@@ -197,14 +197,14 @@ class series_in_place_ops_test_case(_ut.TestCase):
 
 class mpmath_test_case(_ut.TestCase):
 	""":mod:`mpmath` test case.
-	
+
 	To be used within the :mod:`unittest` framework. Will test interoperability between
 	the :mod:`mpmath` library and the C++ *real* class. If the :mod:`mpmath` library is not available, the
 	test will return immediately.
-	
+
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(mpmath_test_case)
-	
+
 	"""
 	def runTest(self):
 		try:
@@ -223,13 +223,13 @@ class mpmath_test_case(_ut.TestCase):
 
 class math_test_case(_ut.TestCase):
 	""":mod:`math` module test case.
-	
+
 	To be used within the :mod:`unittest` framework. Will test the functions implemented in the
 	:mod:`math` module.
-	
+
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(math_test_case)
-	
+
 	"""
 	def runTest(self):
 		import math
@@ -421,13 +421,13 @@ class math_test_case(_ut.TestCase):
 
 class polynomial_test_case(_ut.TestCase):
 	""":mod:`polynomial` module test case.
-	
+
 	To be used within the :mod:`unittest` framework. Will test the functions implemented in the
 	:mod:`polynomial` module.
-	
+
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(polynomial_test_case)
-	
+
 	"""
 	def runTest(self):
 		from . import polynomial_gcd_algorithm as pga
@@ -545,13 +545,13 @@ class divisor_series_test_case(_ut.TestCase):
 
 class poisson_series_test_case(_ut.TestCase):
 	""":mod:`poisson_series` module test case.
-	
+
 	To be used within the :mod:`unittest` framework. Will test the functions implemented in the
 	:mod:`poisson_series` module.
-	
+
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(poisson_series_test_case)
-	
+
 	"""
 	def runTest(self):
 		from .types import poisson_series, rational, monomial, short, divisor_series, divisor, polynomial
@@ -1054,6 +1054,9 @@ class rational_function_test_case(_ut.TestCase):
 		self.assertEqual(((x+y)/(x-y))**2,(x+y)*(x+y)/((x-y)*(x-y)))
 		self.assertEqual(((x+y)/(x-y))**-2,(x-y)*(x-y)/((x+y)*(x+y)))
 		self.assertRaises(TypeError,lambda: x ** F(3,4))
+		# Try clearing the cache.
+		rt.clear_pow_cache()
+		self.assertEqual(((x+y)/(x-y))**2,(x+y)*(x+y)/((x-y)*(x-y)))
 		# Evaluation.
 		from .math import evaluate
 		self.assertEqual(evaluate(x,{"x":2}),2)
@@ -1079,9 +1082,9 @@ class rational_function_test_case(_ut.TestCase):
 
 def run_test_suite():
 	"""Run the full test suite.
-	
+
 	This function will raise an exception if at least one test fails.
-	
+
 	"""
 	retval = 0
 	suite = _ut.TestLoader().loadTestsFromTestCase(basic_test_case)
