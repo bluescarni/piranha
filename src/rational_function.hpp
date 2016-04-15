@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <mutex>
@@ -109,6 +110,9 @@ struct rational_function_tag {};
 template <typename Key>
 class rational_function: public detail::rational_function_tag
 {
+		// Make friend with the math::partial() specialisation functor.
+		template <typename, typename>
+		friend struct math::partial_impl;
 		// Shortcut for supported integral type.
 		template <typename T>
 		using is_integral = std::integral_constant<bool,
@@ -482,6 +486,20 @@ class rational_function: public detail::rational_function_tag
 		}
 		// The mutex for access to the pow cache.
 		static std::mutex s_pow_mutex;
+		// Custom derivatives boilerplate.
+		template <typename T>
+		using cp_map_type = std::unordered_map<std::string,std::function<T(const T &)>>;
+		template <typename T = rational_function>
+		static cp_map_type<T> &get_cp_map()
+		{
+			static cp_map_type<T> cp_map;
+			return cp_map;
+		}
+		template <typename F>
+		using custom_partial_enabler = typename std::enable_if<std::is_constructible<
+			std::function<rational_function(const rational_function &)>,F>::value,int>::type;
+		// The mutex for access to the custom derivatives.
+		static std::mutex s_cp_mutex;
 	public:
 		/// Default constructor.
 		/**
@@ -1170,6 +1188,86 @@ class rational_function: public detail::rational_function_tag
 		{
 			return m_num.is_identical(other.m_num) && m_den.is_identical(other.m_den);
 		}
+		/// Register custom partial derivative.
+		/**
+		 * \note
+		 * This method is enabled only if \p F is a type that can be used to construct
+		 * <tt>std::function<rational_function(const rational_function &)</tt>.
+		 *
+		 * Register a copy of a callable \p func associated to the symbol called \p name for use by piranha::math::partial().
+		 * \p func will be used to compute the partial derivative of piranha::rational_function with respect to
+		 * \p name in place of the default partial differentiation algorithm.
+		 *
+		 * It is safe to call this method from multiple threads.
+		 *
+		 * @param[in] name symbol for which the custom partial derivative function will be registered.
+		 * @param[in] func custom partial derivative function.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - failure(s) in threading primitives,
+		 * - lookup and insertion operations on \p std::unordered_map,
+		 * - construction and move-assignment of \p std::function.
+		 */
+		template <typename F, custom_partial_enabler<F> = 0>
+		static void register_custom_derivative(const std::string &name, F func)
+		{
+			using f_type = std::function<rational_function(const rational_function &)>;
+			std::lock_guard<std::mutex> lock(s_cp_mutex);
+			get_cp_map()[name] = f_type(func);
+		}
+		/// Unregister custom partial derivative.
+		/**
+		 * Unregister the custom partial derivative function associated to the symbol called \p name. If no custom
+		 * partial derivative was previously registered using register_custom_derivative(), calling this function will be a no-op.
+		 *
+		 * It is safe to call this method from multiple threads.
+		 *
+		 * @param[in] name symbol for which the custom partial derivative function will be unregistered.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - failure(s) in threading primitives,
+		 * - lookup and erase operations on \p std::unordered_map.
+		 */
+		static void unregister_custom_derivative(const std::string &name)
+		{
+			std::lock_guard<std::mutex> lock(s_cp_mutex);
+			auto it = get_cp_map().find(name);
+			if (it != get_cp_map().end()) {
+				get_cp_map().erase(it);
+			}
+		}
+		/// Unregister all custom partial derivatives.
+		/**
+		 * Will unregister all custom derivatives currently registered via register_custom_derivative().
+		 * It is safe to call this method from multiple threads.
+		 *
+		 * @throws unspecified any exception thrown by failure(s) in threading primitives.
+		 */
+		static void unregister_all_custom_derivatives()
+		{
+			std::lock_guard<std::mutex> lock(s_cp_mutex);
+			get_cp_map().clear();
+		}
+		/// Partial derivative.
+		/**
+		 * The result is computed via the quotient rule. Internally, this method will call
+		 * piranha::polynomial::partial() (rather than piranha::math::partial()), thus any custom
+		 * derivative defined in piranha::rational_function::p_type will be ignored.
+		 *
+		 * @param[in] name name of the variable with respect to which to differentiate.
+		 *
+		 * @return the partial derivative of \p r with respect to \p name.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the partial derivative of numerator and denominator,
+		 * - arithmetic operations on piranha::rational_function::p_type,
+		 * - the binary constructor of piranha::rational_function.
+		 */
+		rational_function partial(const std::string &name) const
+		{
+			return rational_function{num().partial(name)*den()-num()*den().partial(name),
+				den()*den()};
+		}
 	private:
 		p_type	m_num;
 		p_type	m_den;
@@ -1177,6 +1275,9 @@ class rational_function: public detail::rational_function_tag
 
 template <typename Key>
 std::mutex rational_function<Key>::s_pow_mutex;
+
+template <typename Key>
+std::mutex rational_function<Key>::s_cp_mutex;
 
 /// Specialisation of piranha::print_tex_coefficient() for piranha::rational_function.
 /**
@@ -1320,28 +1421,45 @@ struct ipow_subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::ration
 
 /// Specialisation of the piranha::math::partial() functor for piranha::rational_function.
 /**
- * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ * This specialisation is activated when \p T is an instance of piranha::rational_function.
  */
 template <typename T>
 struct partial_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
 {
 	/// Call operator.
 	/**
-	 * The result is computed via the quotient rule.
+	 * The call operator will first check whether a custom partial derivative for \p T was registered
+	 * via piranha::rational_function::register_custom_derivative(). In such a case, the custom derivative function will be used
+	 * to compute the return value. Otherwise, the output of piranha::rational_function::partial() will be returned.
 	 *
-	 * @param[in] r piranha::rational_function argument.
-	 * @param[in] name name of the variable with respect to which to differentiate.
+	 * @param[in] r input piranha::rational_function.
+	 * @param[in] name name of the argument with respect to which the differentiation will be calculated.
 	 *
 	 * @return the partial derivative of \p r with respect to \p name.
 	 *
 	 * @throws unspecified any exception thrown by:
-	 * - the partial derivative of numerator and denominator,
-	 * - arithmetic operations on piranha::rational_function::p_type,
-	 * - the binary constructor of piranha::rational_function.
+	 * - piranha::rational_function::partial(),
+	 * - failure(s) in threading primitives,
+	 * - lookup operations on \p std::unordered_map,
+	 * - the copy assignment and call operators of the registered custom partial derivative function.
 	 */
 	T operator()(const T &r, const std::string &name) const
 	{
-		return T{partial(r.num(),name)*r.den()-r.num()*partial(r.den(),name),r.den()*r.den()};
+		bool custom = false;
+		std::function<T(const T &)> func;
+		// Try to locate a custom partial derivative and copy it into func, if found.
+		{
+			std::lock_guard<std::mutex> lock(T::s_cp_mutex);
+			auto it = T::get_cp_map().find(name);
+			if (it != T::get_cp_map().end()) {
+				func = it->second;
+				custom = true;
+			}
+		}
+		if (custom) {
+			return func(r);
+		}
+		return r.partial(name);
 	}
 };
 

@@ -1200,10 +1200,6 @@ struct partial_tester
 		BOOST_CHECK_EQUAL(partial(x/y,"z"),0);
 		BOOST_CHECK_EQUAL(partial(x/y,"x"),1/y);
 		BOOST_CHECK_EQUAL(partial((4*x-2)/(x*x+1),"x"),(-4*x*x+4*x+4)/pow(x*x+1,2));
-		// Try with custom derivatives.
-		p_type::register_custom_derivative("x",[](const p_type &) {return p_type{42};});
-		BOOST_CHECK_EQUAL(partial((4*x-2)/(x*x+1),"x"),(42*(x*x+1)-42*(4*x-2))/pow(x*x+1,2));
-		p_type::unregister_custom_derivative("x");
 		}
 		// Random testing.
 		p_type x{"x"}, y{"y"}, z{"z"};
