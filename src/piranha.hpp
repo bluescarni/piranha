@@ -31,7 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 /** \file piranha.hpp
  * \brief Global piranha header file.
- * 
+ *
  * Include this file to import piranha's entire public interface.
  */
 
@@ -211,6 +211,7 @@ see https://www.gnu.org/licenses/. */
  * \todo we need to decide if we want to keep the postifx notation for things like eval, subs etc. or just support the math:: versions. It probably does
  * not make much sense to go back and remove the methods in the toolboxes, but for documentation purposes and in python particularly we should just
  * support the math:: overloads (with partial() being the lone exception).
+ * \todo the macros in pyranha should probably be prepended with PYRANHA_.
  */
 namespace piranha
 {

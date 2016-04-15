@@ -253,6 +253,62 @@ inline T &generic_in_place_division_wrapper(T &n, const U &d)
 	return n /= d;
 }
 
+// Utility function to check if object is callable. Will throw TypeError if not.
+inline void check_callable(bp::object func)
+{
+#if PY_MAJOR_VERSION < 3
+	bp::object builtin_module = bp::import("__builtin__");
+	if (!builtin_module.attr("callable")(func)) {
+		::PyErr_SetString(PyExc_TypeError,"object is not callable");
+		bp::throw_error_already_set();
+	}
+#else
+	// This will throw on failure.
+	try {
+		bp::object call_method = func.attr("__call__");
+		(void)call_method;
+	} catch (...) {
+		// NOTE: it seems like it is ok to overwrite the global error status of Python here,
+		// after it has already been set by Boost.Python via the exception thrown above.
+		::PyErr_SetString(PyExc_TypeError,"object is not callable");
+		bp::throw_error_already_set();
+	}
+#endif
+}
+
+// Various generic utils for differentiation.
+// NOTE: here it is important to keep the member/free distinction because of the special semantics of partial.
+template <typename S>
+inline auto generic_partial_wrapper(const S &s, const std::string &name) -> decltype(piranha::math::partial(s,name))
+{
+	return piranha::math::partial(s,name);
+}
+
+template <typename S>
+inline auto generic_partial_member_wrapper(const S &s, const std::string &name) -> decltype(s.partial(name))
+{
+	return s.partial(name);
+}
+
+// NOTE: here we need to take care of multithreading in the future. We need to check at least that:
+// - the check and copy are thread-safe,
+// - calling the function itself is thread-safe (e.g., if pbracket one day gets parallelised we might
+//   end up calling func from multiple C++ threads at the same time).
+// Note that the issue here is calling the same Python interpreter from multiple C++ threads of which
+// the interpreter knows nothing.
+template <typename S>
+inline void generic_register_custom_derivative_wrapper(const std::string &name, bp::object func)
+{
+	using partial_type = decltype(std::declval<const S &>().partial(std::string()));
+	check_callable(func);
+	// Make a deep copy.
+	bp::object deepcopy = bp::import("copy").attr("deepcopy");
+	bp::object f_copy = deepcopy(func);
+	S::register_custom_derivative(name,[f_copy](const S &s) -> partial_type {
+		return bp::extract<partial_type>(f_copy(s));
+	});
+}
+
 // Generic series exposer.
 template <template <typename ...> class Series, typename Descriptor, std::size_t Begin = 0u,
 	std::size_t End = std::tuple_size<typename Descriptor::params>::value, typename CustomHook = NullHook>
@@ -560,29 +616,6 @@ class series_exposer
 			typename std::enable_if<!piranha::is_integrable<S>::value>::type * = nullptr)
 		{}
 		// Differentiation.
-		// NOTE: here it is important to keep the member/free distinction because of the special semantics of partial.
-		template <typename S>
-		static auto partial_wrapper(const S &s, const std::string &name) -> decltype(piranha::math::partial(s,name))
-		{
-			return piranha::math::partial(s,name);
-		}
-		template <typename S>
-		static auto partial_member_wrapper(const S &s, const std::string &name) -> decltype(s.partial(name))
-		{
-			return s.partial(name);
-		}
-		// Custom partial derivatives registration wrapper.
-		// NOTE: here we need to take care of multithreading in the future, most likely by adding
-		// the Python threading bits inside the lambda and also outside when checking func.
-		template <typename S>
-		static void register_custom_derivative(const std::string &name, bp::object func)
-		{
-			using partial_type = decltype(std::declval<const S &>().partial(std::string()));
-			check_callable(func);
-			S::register_custom_derivative(name,[func](const S &s) -> partial_type {
-				return bp::extract<partial_type>(func(s));
-			});
-		}
 		template <typename S>
 		static void expose_partial(bp::class_<S> &series_class,
 			typename std::enable_if<piranha::is_differentiable<S>::value>::type * = nullptr)
@@ -590,10 +623,11 @@ class series_exposer
 			// NOTE: we need this below in order to specifiy exactly the address of the templated
 			// static method for unregistering the custom derivatives.
 			using partial_type = decltype(piranha::math::partial(std::declval<const S &>(),std::string{}));
-			series_class.def("partial",partial_member_wrapper<S>);
-			bp::def("_partial",partial_wrapper<S>);
+			series_class.def("partial",generic_partial_member_wrapper<S>);
+			bp::def("_partial",generic_partial_wrapper<S>);
 			// Custom derivatives support.
-			series_class.def("register_custom_derivative",register_custom_derivative<S>).staticmethod("register_custom_derivative");
+			series_class.def("register_custom_derivative",generic_register_custom_derivative_wrapper<S>)
+				.staticmethod("register_custom_derivative");
 			series_class.def("unregister_custom_derivative",
 				S::template unregister_custom_derivative<S,partial_type>).staticmethod("unregister_custom_derivative");
 			series_class.def("unregister_all_custom_derivatives",
@@ -623,28 +657,6 @@ class series_exposer
 		static void expose_canonical(bp::class_<S> &,
 			typename std::enable_if<!piranha::has_transformation_is_canonical<S>::value>::type * = nullptr)
 		{}
-		// Utility function to check if object is callable. Will throw TypeError if not.
-		static void check_callable(bp::object func)
-		{
-#if PY_MAJOR_VERSION < 3
-			bp::object builtin_module = bp::import("__builtin__");
-			if (!builtin_module.attr("callable")(func)) {
-				::PyErr_SetString(PyExc_TypeError,"object is not callable");
-				bp::throw_error_already_set();
-			}
-#else
-			// This will throw on failure.
-			try {
-				bp::object call_method = func.attr("__call__");
-				(void)call_method;
-			} catch (...) {
-				// NOTE: it seems like it is ok to overwrite the global error status of Python here,
-				// after it has already been set by Boost.Python via the exception thrown above.
-				::PyErr_SetString(PyExc_TypeError,"object is not callable");
-				bp::throw_error_already_set();
-			}
-#endif
-		}
 		// filter() wrap.
 		template <typename S>
 		static S wrap_filter(const S &s, bp::object func)

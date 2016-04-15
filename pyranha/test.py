@@ -149,6 +149,39 @@ class series_division_test_case(_ut.TestCase):
 		tmp /= 4
 		self.assertEqual(tmp,1)
 
+class custom_derivatives_test_case(_ut.TestCase):
+	"""Test case for custom derivatives in series.
+
+	To be used within the :mod:`unittest` framework. Will check that the custom
+	derivatives machinery works properly.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(custom_derivatives_test_case)
+
+	"""
+	def runTest(self):
+		from .types import polynomial, monomial, short, rational
+		from .math import partial
+		pt = polynomial(rational,monomial(short))()
+		x = pt('x')
+		# A custom derivative functor with a state,
+		# used to check we actually deepcopy it.
+		class cd(object):
+			def __init__(self):
+				self.value = 1
+			def __call__(self,p):
+				return pt(self.value)
+			def set_value(self,value):
+				self.value = value
+		c = cd()
+		pt.register_custom_derivative('x',c)
+		pt.register_custom_derivative('y',c)
+		self.assertEqual(partial(x,'x'),1)
+		c.set_value(42)
+		self.assertEqual(partial(x,'x'),1)
+		pt.unregister_custom_derivative('x')
+		pt.unregister_all_custom_derivatives()
+
 class series_in_place_ops_test_case(_ut.TestCase):
 	"""Series in-place operations test case.
 
@@ -1089,6 +1122,7 @@ def run_test_suite():
 	retval = 0
 	suite = _ut.TestLoader().loadTestsFromTestCase(basic_test_case)
 	suite.addTest(series_in_place_ops_test_case())
+	suite.addTest(custom_derivatives_test_case())
 	suite.addTest(series_division_test_case())
 	suite.addTest(mpmath_test_case())
 	suite.addTest(math_test_case())

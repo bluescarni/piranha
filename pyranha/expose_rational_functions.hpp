@@ -222,6 +222,12 @@ inline void expose_rational_functions_impl()
 	bp::def("_integrate",piranha::math::integrate<r_type>);
 	// Partial.
 	bp::def("_partial",piranha::math::partial<r_type>);
+	rf_class.def("register_custom_derivative",generic_register_custom_derivative_wrapper<r_type>)
+		.staticmethod("register_custom_derivative");
+	rf_class.def("unregister_custom_derivative",
+		r_type::unregister_custom_derivative).staticmethod("unregister_custom_derivative");
+	rf_class.def("unregister_all_custom_derivatives",
+		r_type::unregister_all_custom_derivatives).staticmethod("unregister_all_custom_derivatives");
 	// Poisson bracket.
 	bp::def("_pbracket",generic_pbracket_wrapper<r_type>);
 	// Canonical transformation.

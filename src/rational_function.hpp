@@ -1251,8 +1251,7 @@ class rational_function: public detail::rational_function_tag
 		/// Partial derivative.
 		/**
 		 * The result is computed via the quotient rule. Internally, this method will call
-		 * piranha::polynomial::partial() (rather than piranha::math::partial()), thus any custom
-		 * derivative defined in piranha::rational_function::p_type will be ignored.
+		 * piranha::math::partial() on the numerator and denominator of \p this.
 		 *
 		 * @param[in] name name of the variable with respect to which to differentiate.
 		 *
@@ -1265,7 +1264,8 @@ class rational_function: public detail::rational_function_tag
 		 */
 		rational_function partial(const std::string &name) const
 		{
-			return rational_function{num().partial(name)*den()-num()*den().partial(name),
+			using math::partial;
+			return rational_function{partial(num(),name)*den()-num()*partial(den(),name),
 				den()*den()};
 		}
 	private:

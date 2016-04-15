@@ -38,8 +38,10 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/environment.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/pow.hpp"
 
 using namespace piranha;
 
@@ -89,4 +91,45 @@ struct is_identical_tester
 BOOST_AUTO_TEST_CASE(rational_function_is_identical_test)
 {
 	boost::mpl::for_each<key_types>(is_identical_tester());
+}
+
+struct partial_tester
+{
+	template <typename Key>
+	void operator()(const Key &)
+	{
+		using r_type = rational_function<Key>;
+		using p_type = typename r_type::p_type;
+		r_type x{"x"}, y{"y"}, z{"z"};
+		r_type::register_custom_derivative("x",[](const r_type &) {return r_type{42};});
+		BOOST_CHECK_EQUAL(math::partial(x,"x"),42);
+		BOOST_CHECK_EQUAL(math::partial(x + 2*y,"x"),42);
+		r_type::unregister_custom_derivative("x");
+		r_type::register_custom_derivative("x",[&x](const r_type &r) {
+			return r.partial("x") + r.partial("y") * 2*x;
+		});
+		BOOST_CHECK_EQUAL(math::partial((x+y)/(x-z+y),"x"),
+			((1+2*x)*(x-z+y)-(x+y)*(1+2*x))/math::pow(x-z+y,2));
+		r_type::unregister_all_custom_derivatives();
+		BOOST_CHECK_EQUAL(math::partial((x+y)/(x-z+y),"x"),
+			((x-z+y)-(x+y))/math::pow(x-z+y,2));
+		r_type::register_custom_derivative("x",[&x](const r_type &r) {
+			return r.partial("x") + r.partial("y") * 2*x + r.partial("z") * -1/(x*x);
+		});
+		BOOST_CHECK_EQUAL(math::subs(math::subs(math::partial((x+y)/(x-z+y),"x"),"y",x*x),"z",1/x),
+			((1+2*x)*(x-1/x+x*x)-(x+x*x)*(1+1/(x*x)+2*x))/math::pow(x-1/x+x*x,2));
+		r_type::unregister_all_custom_derivatives();
+		// Try also with custom diffs on the poly type.
+		p_type::register_custom_derivative("x",[](const p_type &p) {
+			return p.partial("x") + p.partial("y") * 2*p_type{"x"};
+		});
+		BOOST_CHECK_EQUAL(math::partial((x+y)/(x-z+y),"x"),
+			((1+2*x)*(x-z+y)-(x+y)*(1+2*x))/math::pow(x-z+y,2));
+		p_type::unregister_all_custom_derivatives();
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_function_partial_test)
+{
+	boost::mpl::for_each<key_types>(partial_tester());
 }
