@@ -1228,26 +1228,26 @@ enum class file_compression
 /**
  * This class contains the arithmetic and comparison operator overloads for piranha::series instances
  * via the parent class piranha::series_operators.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * - \p Cf and \p Key must be suitable for use in piranha::term.
  * - \p Derived must derive from piranha::series of \p Cf, \p Key and \p Derived.
  * - \p Derived must satisfy piranha::is_series.
  * - \p Derived must satisfy piranha::is_container_element.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Moved-from series are left in a state equivalent to an empty series.
  *
  * ## Serialization ##
  *
  * This class supports serialization if its term type does.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
  /* TODO:
@@ -1942,7 +1942,7 @@ class series: detail::series_tag, series_operators
 		 * the term's key and a unitary coefficient.
 		 *
 		 * This iterator is an input iterator which additionally offers the multi-pass guarantee.
-		 * 
+		 *
 		 * @see piranha::series::begin() and piranha::series::end().
 		 */
 		typedef const_iterator_impl const_iterator;
@@ -1976,7 +1976,7 @@ class series: detail::series_tag, series_operators
 		 * - otherwise, the constructor is disabled.
 		 *
 		 * @param[in] x object to construct from.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the copy assignment operator of piranha::symbol_set,
 		 * - the construction of a coefficient from \p x or of a key from piranha::symbol_set,
@@ -2001,9 +2001,9 @@ class series: detail::series_tag, series_operators
 		/// Copy-assignment operator.
 		/**
 		 * @param[in] other assignment argument.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		series &operator=(const series &other)
@@ -2023,11 +2023,11 @@ class series: detail::series_tag, series_operators
 		 *
 		 * Generic assignment is equivalent to assignment to a piranha::series constructed
 		 * via the generic constructor.
-		 * 
+		 *
 		 * @param[in] x assignment argument.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the generic constructor.
 		 */
 		template <typename T, typename U = series, generic_ctor_enabler<T,U> = 0>
@@ -2059,9 +2059,9 @@ class series: detail::series_tag, series_operators
 		 * That is, the series is either empty (in which case it is considered to be equivalent to a coefficient constructed
 		 * from zero) or consisting of a single term with unitary key (in which case the series is considered equivalent to
 		 * its only coefficient).
-		 * 
+		 *
 		 * @return \p true in case of single-coefficient series, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the <tt>is_unitary()</tt> method of the key type.
 		 */
 		bool is_single_coefficient() const
@@ -2074,7 +2074,7 @@ class series: detail::series_tag, series_operators
 		 * This method is enabled only if the decay type of \p T is piranha::series::term_type.
 		 *
 		 * This method will insert \p term into the series using internally piranha::hash_set::insert.
-		 * 
+		 *
 		 * The insertion algorithm proceeds as follows:
 		 * - if the term is not compatible for insertion, an \p std::invalid_argument exception is thrown;
 		 * - if the term is ignorable, the method will return without performing any insertion;
@@ -2084,17 +2084,17 @@ class series: detail::series_tag, series_operators
 		 *   - if, after the addition/subtraction the existing term is ignorable, it will be erased;
 		 * - else:
 		 *   - the term is inserted into the term container and, if \p Sign is \p false, its coefficient is negated.
-		 * 
+		 *
 		 * After any modification to an existing term in the series (e.g., via insertion with negative \p Sign or via in-place addition
 		 * or subtraction of existing coefficients), the term will be checked again for compatibility and ignorability, and, in case
 		 * the term has become incompatible or ignorable, it will be erased from the series.
-		 * 
+		 *
 		 * The exception safety guarantee upon insertion is that the series will be left in an undefined but valid state. Such a guarantee
 		 * relies on the fact that the addition/subtraction and negation methods of the coefficient type will leave the coefficient in a valid
 		 * (possibly undefined) state in face of exceptions.
-		 * 
+		 *
 		 * @param[in] term term to be inserted.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::hash_set::insert(),
 		 * - piranha::hash_set::find(),
@@ -2113,9 +2113,9 @@ class series: detail::series_tag, series_operators
 		 * This method is enabled only if the decay type of \p T is piranha::series::term_type.
 		 *
 		 * Convenience wrapper for the generic insert() method, with \p Sign set to \p true.
-		 * 
+		 *
 		 * @param[in] term term to be inserted.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by generic insert().
 		 */
 		template <typename T, insert_enabler<T> = 0>
@@ -2126,7 +2126,7 @@ class series: detail::series_tag, series_operators
 		/// Identity operator.
 		/**
 		 * @return copy of \p this, cast to \p Derived.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		Derived operator+() const
@@ -2136,7 +2136,7 @@ class series: detail::series_tag, series_operators
 		/// Negation operator.
 		/**
 		 * @return a copy of \p this on which negate() has been called.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - negate(),
 		 * - the copy constructor of \p Derived.
@@ -2151,9 +2151,9 @@ class series: detail::series_tag, series_operators
 		/**
 		 * This method will call math::negate() on the coefficients of all terms. In case of exceptions,
 		 * the basic exception safety guarantee is provided.
-		 * 
+		 *
 		 * If any term becomes ignorable or incompatible after negation, it will be erased from the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by math::negate() on the coefficient type.
 		 */
 		void negate()
@@ -2181,9 +2181,9 @@ class series: detail::series_tag, series_operators
 		/**
 		 * Will call piranha::hash_set::evaluate_sparsity() on the internal terms container
 		 * and return the result.
-		 * 
+		 *
 		 * @return the output of piranha::hash_set::evaluate_sparsity().
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by piranha::hash_set::evaluate_sparsity().
 		 */
 		sparsity_info_type table_sparsity() const
@@ -2194,7 +2194,7 @@ class series: detail::series_tag, series_operators
 		/**
 		 * Will call piranha::hash_set::load_factor() on the internal terms container
 		 * and return the result.
-		 * 
+		 *
 		 * @return the load factor of the internal container.
 		 */
 		double table_load_factor() const
@@ -2230,9 +2230,9 @@ class series: detail::series_tag, series_operators
 		 * This cache can be cleared with clear_pow_cache().
 		 *
 		 * @param[in] x exponent.
-		 * 
+		 *
 		 * @return \p this raised to the power of \p x.
-		 * 
+		 *
 		 * @throws std::invalid_argument if exponentiation is computed via repeated series multiplications and
 		 * \p x does not represent a non-negative integer.
 		 * @throws unspecified any exception thrown by:
@@ -2357,12 +2357,12 @@ class series: detail::series_tag, series_operators
 		 * Register a copy of a callable \p func associated to the symbol called \p name for use by piranha::math::partial().
 		 * \p func will be used to compute the partial derivative of instances of type \p Derived with respect to
 		 * \p name in place of the default partial differentiation algorithm.
-		 * 
+		 *
 		 * It is safe to call this method from multiple threads.
-		 * 
+		 *
 		 * @param[in] name symbol for which the custom partial derivative function will be registered.
 		 * @param[in] func custom partial derivative function.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - failure(s) in threading primitives,
 		 * - lookup and insertion operations on \p std::unordered_map,
@@ -2383,11 +2383,11 @@ class series: detail::series_tag, series_operators
 		 *
 		 * Unregister the custom partial derivative function associated to the symbol called \p name. If no custom
 		 * partial derivative was previously registered using register_custom_derivative(), calling this function will be a no-op.
-		 * 
+		 *
 		 * It is safe to call this method from multiple threads.
-		 * 
+		 *
 		 * @param[in] name symbol for which the custom partial derivative function will be unregistered.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - failure(s) in threading primitives,
 		 * - lookup and erase operations on \p std::unordered_map.
@@ -2410,7 +2410,7 @@ class series: detail::series_tag, series_operators
 		 *
 		 * Will unregister all custom derivatives currently registered via register_custom_derivative().
 		 * It is safe to call this method from multiple threads.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by failure(s) in threading primitives.
 		 */
 		template <typename Series = Derived, typename Partial = partial_type<Series>>
@@ -2425,15 +2425,15 @@ class series: detail::series_tag, series_operators
 		 * provide, when dereferenced, an \p std::pair in which the first element is a copy of the coefficient of
 		 * the term, whereas the second element is a single-term instance of \p Derived built from the term's key
 		 * and a unitary coefficient.
-		 * 
+		 *
 		 * Note that terms are stored unordered in the series, hence it is not defined which particular
 		 * term will be returned by calling this method. The only guarantee is that the iterator can be used to transverse
 		 * all the series' terms until piranha::series::end() is eventually reached.
-		 * 
+		 *
 		 * Calling any non-const method on the series will invalidate the iterators obtained via piranha::series::begin() and piranha::series::end().
-		 * 
+		 *
 		 * @return an iterator to the first term of the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of piranha::symbol_set,
 		 * - insert(),
@@ -2452,9 +2452,9 @@ class series: detail::series_tag, series_operators
 		/**
 		 * Return an iterator one past the last term of the series. See the documentation of piranha::series::begin()
 		 * on how the returned iterator can be used.
-		 * 
+		 *
 		 * @return an iterator to the end of the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of piranha::symbol_set,
 		 * - insert(),
@@ -2475,11 +2475,11 @@ class series: detail::series_tag, series_operators
 		 * containing all terms in \p this for which \p func returns \p true.
 		 * Terms are passed to \p func in the format resulting from dereferencing the iterators obtained
 		 * via piranha::series::begin().
-		 * 
+		 *
 		 * @param[in] func filtering functor.
-		 * 
+		 *
 		 * @return filtered series.
-		 * 
+		 *
 		 * @throw unspecified any exception thrown by:
 		 * - the call operator of \p func,
 		 * - insert(),
@@ -2504,15 +2504,15 @@ class series: detail::series_tag, series_operators
 		 * value of the functor to construct a new series. Terms are passed to \p func in the same format
 		 * resulting from dereferencing the iterators obtained via piranha::series::begin(), and \p func is expected to produce
 		 * a return value of the same type.
-		 * 
+		 *
 		 * The return series is first initialised as an empty series. For each input term \p t, the return value
 		 * of \p func is used to construct a new temporary series from the multiplication of \p t.first and
 		 * \p t.second. Each temporary series is then added to the return value series.
-		 * 
+		 *
 		 * This method requires the coefficient type to be multipliable by \p Derived.
-		 * 
+		 *
 		 * @param[in] func transforming functor.
-		 * 
+		 *
 		 * @return transformed series.
 		 *
 		 * @throw unspecified any exception thrown by:
@@ -2521,7 +2521,7 @@ class series: detail::series_tag, series_operators
 		 * - the assignment operator of piranha::symbol_set,
 		 * - term, coefficient, key construction,
 		 * - series multiplication and addition.
-		 * 
+		 *
 		 * \todo require multipliability of cf * Derived and addability of the result to Derived in place.
 		 */
 		Derived transform(std::function<std::pair<typename term_type::cf_type,Derived>
@@ -2550,11 +2550,11 @@ class series: detail::series_tag, series_operators
 		 * according to the evaluation types of coefficient and key. The return value accumulates the evaluation
 		 * of all terms in the series via the product of the evaluations of the coefficient-key pairs in each term.
 		 * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
-		 * 
+		 *
 		 * @param[in] dict dictionary of that will be used for evaluation.
-		 * 
+		 *
 		 * @return evaluation of the series according to the evaluation dictionary \p dict.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - coefficient and key evaluation,
 		 * - insertion operations on \p std::unordered_map,
@@ -2588,12 +2588,12 @@ class series: detail::series_tag, series_operators
 		 * have been removed from the internal set of symbols. Which symbols are removed depends on the trimming
 		 * method \p trim_identify() of the key type (e.g., in a polynomial a symbol can be discarded if its exponent
 		 * is zero in all monomials).
-		 * 
+		 *
 		 * If the coefficient type is an instance of piranha::series, trim() will be called recursively on the coefficients
 		 * while building the return value.
-		 * 
+		 *
 		 * @return trimmed version of \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - operations on piranha::symbol_set,
 		 * - the trimming methods of coefficient and/or key,
@@ -2621,16 +2621,16 @@ class series: detail::series_tag, series_operators
 		 * Print series to stream \p os in TeX mode. The representation is constructed in the same way as explained in
 		 * piranha::series::operator<<(), but using piranha::print_tex_coefficient() and the key's TeX printing method instead of the plain
 		 * printing functions.
-		 * 
+		 *
 		 * @param os target stream.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::print_tex_coefficient(),
 		 * - the TeX printing method of the key type,
 		 * - memory allocation errors in standard containers,
 		 * - piranha::settings::get_max_term_output(),
 		 * - streaming to \p os or to instances of \p std::ostringstream.
-		 * 
+		 *
 		 * @see operator<<().
 		 */
 		void print_tex(std::ostream &os) const
@@ -2645,15 +2645,15 @@ class series: detail::series_tag, series_operators
 		/// Overloaded stream operator for piranha::series.
 		/**
 		 * Will direct to stream a human-readable representation of the series.
-		 * 
+		 *
 		 * The human-readable representation of the series is built as follows:
-		 * 
+		 *
 		 * - the coefficient and key of each term are printed adjacent to each other separated by the character "*",
 		 *   the former via the piranha::print_coefficient() function, the latter via its <tt>print()</tt> method;
 		 * - terms are separated by a "+" sign.
-		 * 
+		 *
 		 * The following additional transformations take place on the printed output:
-		 * 
+		 *
 		 * - if the printed output of a coefficient is the string "1" and the printed output of its key
 		 *   is not empty, the coefficient and the "*" sign are not printed;
 		 * - if the printed output of a coefficient is the string "-1" and the printed output of its key
@@ -2663,14 +2663,14 @@ class series: detail::series_tag, series_operators
 		 * - at most piranha::settings::get_max_term_output() terms are printed, and terms in excess are
 		 *   represented with ellipsis "..." at the end of the output; if piranha::settings::get_max_term_output()
 		 *   is zero, all the terms will be printed.
-		 * 
+		 *
 		 * Note that the print order of the terms will be undefined.
-		 * 
+		 *
 		 * @param[in,out] os target stream.
 		 * @param[in] s piranha::series argument.
-		 * 
+		 *
 		 * @return reference to \p os.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::print_coefficient(),
 		 * - the <tt>print()</tt> method of the key type,
@@ -2981,10 +2981,10 @@ struct print_coefficient_impl<Series,typename std::enable_if<
 	/**
 	 * Equivalent to the stream operator overload of piranha::series, apart from a couple
 	 * of parentheses '()' enclosing the coefficient series if its size is larger than 1.
-	 * 
+	 *
 	 * @param[in] os target stream.
 	 * @param[in] s coefficient series to be printed.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by the stream operator overload of piranha::series.
 	 */
 	void operator()(std::ostream &os, const Series &s) const
@@ -3011,10 +3011,10 @@ struct print_tex_coefficient_impl<Series,typename std::enable_if<
 	/**
 	 * Equivalent to piranha::series::print_tex(), apart from a couple
 	 * of parentheses '()' enclosing the coefficient series if its size is larger than 1.
-	 * 
+	 *
 	 * @param[in] os target stream.
 	 * @param[in] s coefficient series to be printed.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by piranha::series::print_tex().
 	 */
 	void operator()(std::ostream &os, const Series &s) const
@@ -3042,9 +3042,9 @@ struct negate_impl<T,typename std::enable_if<is_series<T>::value>::type>
 	/// Call operator.
 	/**
 	 * @param[in,out] s piranha::series to be negated.
-	 * 
+	 *
 	 * @return the return value of piranha::series::negate()..
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by piranha::series::negate().
 	 */
 	template <typename U>
@@ -3065,7 +3065,7 @@ struct is_zero_impl<Series,typename std::enable_if<is_series<Series>::value>::ty
 	/// Call operator.
 	/**
 	 * @param[in] s piranha::series to be tested.
-	 * 
+	 *
 	 * @return \p true if \p s is empty, \p false otherwise.
 	 */
 	bool operator()(const Series &s) const
@@ -3100,12 +3100,12 @@ struct pow_impl<Series,T,detail::pow_series_enabler<Series,T>>
 	/// Call operator.
 	/**
 	 * The exponentiation will be computed via the series' <tt>pow()</tt> method.
-	 * 
+	 *
 	 * @param[in] s base.
 	 * @param[in] x exponent.
-	 * 
+	 *
 	 * @return \p s to the power of \p x.
-	 * 
+	 *
 	 * @throws unspecified any exception resulting from the series' <tt>pow()</tt> method.
 	 */
 	template <typename S, typename U>
@@ -3395,12 +3395,12 @@ struct partial_impl<Series,detail::series_partial_enabler<Series>>
 	 * The call operator will first check whether a custom partial derivative for \p Series was registered
 	 * via piranha::series::register_custom_derivative(). In such a case, the custom derivative function will be used
 	 * to compute the return value. Otherwise, the output of piranha::series::partial() will be returned.
-	 * 
+	 *
 	 * @param[in] s input series.
 	 * @param[in] name name of the argument with respect to which the differentiation will be calculated.
-	 * 
+	 *
 	 * @return the partial derivative of \p s with respect to \p name.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by:
 	 * - piranha::series::partial(),
 	 * - failure(s) in threading primitives,
@@ -3408,7 +3408,7 @@ struct partial_impl<Series,detail::series_partial_enabler<Series>>
 	 * - the copy assignment and call operators of the registered custom partial derivative function.
 	 */
 	template <typename T>
-	auto operator()(const T &s, const std::string &name) -> decltype(s.partial(name))
+	auto operator()(const T &s, const std::string &name) const -> decltype(s.partial(name))
 	{
 		using partial_type = decltype(s.partial(name));
 		bool custom = false;
@@ -3447,7 +3447,7 @@ struct integrate_impl<Series,detail::series_integrate_enabler<Series>>
 	 * @throws unspecified any exception thrown by the invoked series method.
 	 */
 	template <typename T>
-	auto operator()(const T &s, const std::string &name) -> decltype(s.integrate(name))
+	auto operator()(const T &s, const std::string &name) const -> decltype(s.integrate(name))
 	{
 		return s.integrate(name);
 	}
