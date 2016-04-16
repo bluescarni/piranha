@@ -31,7 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 /** \file type_traits.hpp
  * \brief Type traits.
- * 
+ *
  * This header contains general-purpose type traits classes.
  */
 
@@ -118,7 +118,7 @@ class arith_tt_helper
 /// Addable type trait.
 /**
  * Will be \p true if objects of type \p T can be added to objects of type \p U using the binary addition operator.
- * 
+ *
  * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
  @code
  operator+(const Td &, const Ud &)
@@ -147,7 +147,7 @@ const bool is_addable<T,U>::value;
 /// In-place addable type trait.
 /**
  * Will be \p true if objects of type \p U can be added in-place to objects of type \p T.
- * 
+ *
  * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
  @code
  operator+=(Td &, const Ud &)
@@ -382,12 +382,12 @@ const bool enable_noexcept_checks<T,Enable>::value;
 /// Type trait for well-behaved container elements.
 /**
  * The type trait will be true if all these conditions hold:
- * 
+ *
  * - \p T is default-constructible,
  * - \p T is copy-constructible,
  * - \p T has nothrow move semantics,
  * - \p T is nothrow-destructible.
- * 
+ *
  * If the piranha::enable_noexcept_checks trait is \p false for \p T, then the nothrow checks will be discarded.
  */
 template <typename T>
@@ -551,7 +551,7 @@ class is_hashable_impl: detail::sfinae_types
  * A type \p T is hashable when supplied with a specialisation of \p std::hash which:
  * - has a call operator complying to the interface specified by the C++ standard,
  * - satisfies piranha::is_container_element.
- * 
+ *
  * Note that depending on the implementation of the default \p std::hash class, using this type trait with
  * a type which does not provide a specialisation for \p std::hash could result in a compilation error
  * (e.g., if the unspecialised \p std::hash includes a \p false \p static_assert).
@@ -615,7 +615,7 @@ struct is_function_object_impl<T,ReturnType,typename std::enable_if<std::is_clas
  * \p Args as arguments. That is, the type trait will be \p true if the following conditions are met:
  * - \p T is a class,
  * - \p T is equipped with a call operator returning \p ReturnType and taking \p Args as arguments.
- * 
+ *
  * \p T can be const qualified (in which case the call operator must be also const in order for the type trait to be satisfied).
  */
 template <typename T, typename ReturnType, typename ... Args>
@@ -634,7 +634,7 @@ const bool is_function_object<T,ReturnType,Args...>::value;
  * \p T is a hash function object for \p U if the following requirements are met:
  * - \p T is a function object with const call operator accepting as input const \p U and returning \p std::size_t,
  * - \p T satisfies piranha::is_container_element.
- * 
+ *
  * The decay type of \p U is considered in this type trait.
  */
 template <typename T, typename U, typename = void>
@@ -666,7 +666,7 @@ const bool is_hash_function_object<T,U,typename std::enable_if<is_function_objec
  * \p T is an equality function object for \p U if the following requirements are met:
  * - \p T is a function object with const call operator accepting as input two const \p U and returning \p bool,
  * - \p T satisfies piranha::is_container_element.
- * 
+ *
  * The decay type of \p U is considered in this type trait.
  */
 template <typename T, typename U, typename = void>
@@ -698,7 +698,7 @@ const bool is_equality_function_object<T,U,typename std::enable_if<is_function_o
 /**
  * This macro will declare a template struct parametrized over one type \p T and called <tt>has_typedef_type_name</tt>,
  * whose static const bool member \p value will be \p true if \p T contains a \p typedef called \p type_name, false otherwise.
- * 
+ *
  * For instance:
  * \code
  * PIRANHA_DECLARE_HAS_TYPEDEF(foo_type);
@@ -1066,7 +1066,7 @@ const bool has_begin_end<T>::value;
 /// Left-shift type trait.
 /**
  * Will be \p true if objects of type \p T can be left-shifted by objects of type \p U.
- * 
+ *
  * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
  @code
  operator<<(const Td &, const Ud &)
@@ -1095,7 +1095,7 @@ const bool has_left_shift<T,U>::value;
 /// Right-shift type trait.
 /**
  * Will be \p true if objects of type \p T can be right-shifted by objects of type \p U.
- * 
+ *
  * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
  @code
  operator>>(const Td &, const Ud &)
@@ -1124,7 +1124,7 @@ const bool has_right_shift<T,U>::value;
 /// In-place left-shift type trait.
 /**
  * Will be \p true if objects of type \p T can be left-shifted in-place by objects of type \p U.
- * 
+ *
  * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
  @code
  operator<<=(Td &, const Ud &)
@@ -1153,7 +1153,7 @@ const bool has_left_shift_in_place<T,U>::value;
 /// In-place right-shift type trait.
 /**
  * Will be \p true if objects of type \p T can be right-shifted in-place by objects of type \p U.
- * 
+ *
  * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
  @code
  operator<<=(Td &, const Ud &)
@@ -1196,6 +1196,22 @@ struct has_exact_ring_operations
 
 template <typename T, typename Enable>
 const bool has_exact_ring_operations<T,Enable>::value;
+
+/// Detect if type can be returned from a function.
+template <typename T>
+struct is_returnable
+{
+	/// Value of the type trait.
+	/**
+	 * The type trait will be true if \p T is destructible and copy or move
+	 * constructible.
+	 */
+	static const bool value = std::is_destructible<T>::value &&
+		(std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value);
+};
+
+template <typename T>
+const bool is_returnable<T>::value;
 
 }
 
