@@ -241,9 +241,10 @@ using series_rebind = detail::series_rebind_<T,Cf>;
 template <typename T, typename = void>
 class series_recursion_index
 {
+		static const std::size_t implementation_defined = 0u;
 	public:
 		/// Value of the recursion index.
-		static const std::size_t value = 0u;
+		static const std::size_t value = implementation_defined;
 };
 
 template <typename T, typename Enable>
