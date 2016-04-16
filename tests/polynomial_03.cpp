@@ -174,7 +174,7 @@ struct udivrem_tester
 		auto res2 = pp_type::udivrem(x*xx,xx);
 		BOOST_CHECK_EQUAL(res2.first,x);
 		BOOST_CHECK_EQUAL(res2.second.size(),0u);
-		BOOST_CHECK_THROW(pp_type::udivrem(x.pow(-1)*xx,xx),std::invalid_argument)
+		BOOST_CHECK_THROW(pp_type::udivrem(x.pow(-1)*xx,xx),std::invalid_argument);
 		res2 = pp_type::udivrem(xx-xx,x.pow(-1)*xx);
 		BOOST_CHECK_EQUAL(res2.first.size(),0u);
 		BOOST_CHECK_EQUAL(res2.second.size(),0u);
