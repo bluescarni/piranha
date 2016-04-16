@@ -258,7 +258,7 @@ class series_recursion_index<T,typename std::enable_if<std::is_base_of<detail::s
 		static_assert(series_recursion_index<cf_type>::value < std::numeric_limits<std::size_t>::max(),
 			"Overflow error.");
 	public:
-		static const std::size_t value = std::is_base_of<detail::series_tag,cf_type>::value ? series_recursion_index<cf_type>::value + 1u : 1u;
+		static const std::size_t value = static_cast<std::size_t>(series_recursion_index<cf_type>::value + 1u);
 };
 
 template <typename T>
