@@ -142,9 +142,11 @@ inline RetT apply_cf_functor(const T &s)
 template <typename T>
 class is_series
 {
+		static const bool implementation_defined = std::is_base_of<detail::series_tag,T>::value &&
+			is_container_element<T>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_base_of<detail::series_tag,T>::value && is_container_element<T>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -281,9 +283,10 @@ class series_has_multiplier: detail::sfinae_types
 		template <typename T>
 		static auto test(const T &s) -> decltype(series_multiplier<T>(s,s)());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Sd>())),Sd>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Sd>())),Sd>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename Series>
