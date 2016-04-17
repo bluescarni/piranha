@@ -46,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/polynomial.hpp"
 #include "../src/pow.hpp"
 #include "../src/series.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -213,6 +214,9 @@ struct sri_tester
 		// This works thanks to the fact that rational_function has a sri of 1.
 		BOOST_CHECK((std::is_same<psr_type,decltype(p_type{} + psr_type{})>::value));
 		BOOST_CHECK((std::is_same<psr_type,decltype(psr_type{} + p_type{})>::value));
+		// This would work if the sri was 0.
+		BOOST_CHECK((!is_addable<r_type,poisson_series<double>>::value));
+		BOOST_CHECK((!is_addable<poisson_series<double>,r_type>::value));
 	}
 };
 
