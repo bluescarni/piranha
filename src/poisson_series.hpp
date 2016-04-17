@@ -81,13 +81,13 @@ struct poisson_series_tag {};
  * This class represents multivariate Poisson series as collections of multivariate Poisson series terms,
  * in which the trigonometric monomials are represented by piranha::rtk_monomial.
  * \p Cf represents the ring over which the Poisson series is defined.
- * 
+ *
  * This class satisfies the piranha::is_series type trait.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * \p Cf must be suitable for use in piranha::series as first template argument.
- * 
+ *
  * ## Exception safety guarantee ##
  *
  * This class provides the same guarantee as the base series type it derives from.
@@ -99,7 +99,7 @@ struct poisson_series_tag {};
  * ## Serialization ##
  *
  * This class supports serialization if the underlying coefficient type does.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // TODO:
@@ -540,9 +540,14 @@ class poisson_series:
 		}
 		/// Cosine.
 		/**
+		 * \note
+		 * This method is enabled only if piranha::poisson_series::sin() is enabled.
+		 *
 		 * This method works in the same way as piranha::poisson_series::sin().
 		 *
 		 * @return the cosine of \p this.
+		 *
+		 * @throws unspecified any exception thrown by piranha::poisson_series::sin().
 		 */
 		template <typename T = poisson_series>
 		cos_type<T> cos() const
@@ -562,11 +567,11 @@ class poisson_series:
 		 *   - if the coefficient is a polynomial, a strategy of integration by parts is attempted, its success depending on whether
 		 *     the degree of the polynomial is a non-negative integral value;
 		 *   - otherwise, an error will be produced.
-		 * 
+		 *
 		 * @param[in] name integration variable.
-		 * 
+		 *
 		 * @return the antiderivative of \p this with respect to \p name.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the integration procedure fails.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::symbol construction,
