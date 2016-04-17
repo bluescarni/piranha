@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include "pow.hpp"
 #include "print_tex_coefficient.hpp"
 #include "serialization.hpp"
+#include "series.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -426,11 +427,57 @@ class rational_function: public detail::rational_function_tag
 		using eq_enabler = typename std::enable_if<detail::true_tt<
 			decltype(rational_function::dispatch_equality(std::declval<const T &>(),
 			std::declval<const U &>()))>::value,int>::type;
-		// Substitutions.
+		// subs().
 		template <typename T>
-		using subs_enabler = typename std::enable_if<is_interoperable<T>::value || std::is_same<T,rational_function>::value,int>::type;
+		using has_special_subs = std::integral_constant<bool,
+			is_interoperable<T>::value || std::is_same<T,rational_function>::value>;
+		// Type resulting from the normal substitution method.
 		template <typename T>
-		using ipow_subs_enabler = subs_enabler<T>;
+		using normal_subs_type = decltype(math::subs(std::declval<const p_type &>(),std::string{},
+			std::declval<const T &>()) / math::subs(std::declval<const p_type &>(),std::string{},
+			std::declval<const T &>()));
+		template <typename T>
+		using has_normal_subs = std::integral_constant<bool,
+			!has_special_subs<T>::value &&
+			is_returnable<normal_subs_type<T>>::value>;
+		template <typename T, typename std::enable_if<has_special_subs<T>::value,int>::type = 0>
+		static rational_function subs_impl(const rational_function &r, const std::string &name, const T &x)
+		{
+			return rational_function{math::subs(r.num(),name,x),math::subs(r.den(),name,x)};
+		}
+		template <typename T, typename std::enable_if<has_normal_subs<T>::value,int>::type = 0>
+		static normal_subs_type<T> subs_impl(const rational_function &r, const std::string &name, const T &x)
+		{
+			return math::subs(r.num(),name,x) / math::subs(r.den(),name,x);
+		}
+		template <typename T>
+		using subs_type = decltype(subs_impl(std::declval<const rational_function &>(),std::string{},
+			std::declval<const T &>()));
+		// ipow_subs().
+		template <typename T>
+		using has_special_ipow_subs = has_special_subs<T>;
+		// Type resulting from the normal substitution method.
+		template <typename T>
+		using normal_ipow_subs_type = decltype(math::ipow_subs(std::declval<const p_type &>(),std::string{},integer{},
+			std::declval<const T &>()) / math::ipow_subs(std::declval<const p_type &>(),std::string{},integer{},
+			std::declval<const T &>()));
+		template <typename T>
+		using has_normal_ipow_subs = std::integral_constant<bool,
+			!has_special_ipow_subs<T>::value &&
+			is_returnable<normal_ipow_subs_type<T>>::value>;
+		template <typename T, typename std::enable_if<has_special_ipow_subs<T>::value,int>::type = 0>
+		static rational_function ipow_subs_impl(const rational_function &r, const std::string &name, const integer &n, const T &x)
+		{
+			return rational_function{math::ipow_subs(r.num(),name,n,x),math::ipow_subs(r.den(),name,n,x)};
+		}
+		template <typename T, typename std::enable_if<has_normal_ipow_subs<T>::value,int>::type = 0>
+		static normal_ipow_subs_type<T> ipow_subs_impl(const rational_function &r, const std::string &name, const integer &n, const T &x)
+		{
+			return math::ipow_subs(r.num(),name,n,x) / math::ipow_subs(r.den(),name,n,x);
+		}
+		template <typename T>
+		using ipow_subs_type = decltype(ipow_subs_impl(std::declval<const rational_function &>(),std::string{},
+			integer{},std::declval<const T &>()));
 		// Serialization support.
 		friend class boost::serialization::access;
 		template <class Archive>
@@ -1100,11 +1147,18 @@ class rational_function: public detail::rational_function_tag
 		/// Substitution.
 		/**
 		 * \note
-		 * This method is enabled only if \p T is an interoperable type or piranha::rational_function.
+		 * This method is enabled only if either:
+		 * - \p T is an interoperable type or piranha::rational_function, or
+		 * - the expression <tt>math::subs(num(),name,x) / math::subs(den(),name,x)</tt>
+		 *   is well-formed, yielding a type that satisfies piranha::is_returnable.
 		 *
-		 * The body of this method is equivalent to:
+		 * If \p T is an interoperable type or piranha::rational_function, the body of this method is equivalent to:
 		 * @code
 		 * return rational_function{math::subs(num(),name,x),math::subs(den(),name,x)};
+		 * @endcode
+		 * Otherwise, the body of this method is equivalent to:
+		 * @code
+		 * return math::subs(num(),name,x) / math::subs(den(),name,x);
 		 * @endcode
 		 *
 		 * @param[in] name name of the variable to be substituted.
@@ -1114,21 +1168,30 @@ class rational_function: public detail::rational_function_tag
 		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::math::subs(),
-		 * - the binary constructor of piranha::rational_function.
+		 * - the binary constructor of piranha::rational_function,
+		 * - the division operator on the type resulting from the substitution
+		 *   in the numerator and denominator.
 		 */
-		template <typename T, subs_enabler<T> = 0>
-		rational_function subs(const std::string &name, const T &x) const
+		template <typename T>
+		subs_type<T> subs(const std::string &name, const T &x) const
 		{
-			return rational_function{math::subs(num(),name,x),math::subs(den(),name,x)};
+			return subs_impl(*this,name,x);
 		}
 		/// Substitution of integral power.
 		/**
 		 * \note
-		 * This method is enabled only if \p T is an interoperable type or piranha::rational_function.
+		 * This method is enabled only if either:
+		 * - \p T is an interoperable type or piranha::rational_function, or
+		 * - the expression <tt>math::ipow_subs(num(),name,n,x) / math::ipow_subs(den(),name,n,x)</tt>
+		 *   is well-formed, yielding a type that satisfies piranha::is_returnable.
 		 *
-		 * The body of this method is equivalent to:
+		 * If \p T is an interoperable type or piranha::rational_function, the body of this method is equivalent to:
 		 * @code
 		 * return rational_function{math::ipow_subs(num(),name,n,x),math::ipow_subs(den(),name,n,x)};
+		 * @endcode
+		 * Otherwise, the body of this method is equivalent to:
+		 * @code
+		 * return math::ipow_subs(num(),name,n,x) / math::ipow_subs(den(),name,n,x);
 		 * @endcode
 		 *
 		 * @param[in] name name of the variable to be substituted.
@@ -1139,13 +1202,14 @@ class rational_function: public detail::rational_function_tag
 		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::math::ipow_subs(),
-		 * - the binary constructor of piranha::rational_function.
+		 * - the binary constructor of piranha::rational_function,
+		 * - the division operator on the type resulting from the substitution
+		 *   in the numerator and denominator.
 		 */
-		template <typename T, ipow_subs_enabler<T> = 0>
-		rational_function ipow_subs(const std::string &name, const integer &n, const T &x) const
+		template <typename T>
+		ipow_subs_type<T> ipow_subs(const std::string &name, const integer &n, const T &x) const
 		{
-			return rational_function{math::ipow_subs(num(),name,n,x),
-				math::ipow_subs(den(),name,n,x)};
+			return ipow_subs_impl(*this,name,n,x);
 		}
 		/// Trim.
 		/**
@@ -1363,8 +1427,7 @@ struct subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_fu
 {
 	private:
 		template <typename V>
-		using subs_enabler = typename std::enable_if<detail::true_tt<
-			decltype(std::declval<const T &>().subs(std::string{},std::declval<const V &>()))>::value,int>::type;
+		using subs_type = decltype(std::declval<const T &>().subs(std::string{},std::declval<const V &>()));
 	public:
 		/// Call operator.
 		/**
@@ -1379,8 +1442,8 @@ struct subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_fu
 		 *
 		 * @throws unspecified any exception thrown by piranha::rational_function::subs().
 		 */
-		template <typename V, subs_enabler<V> = 0>
-		T operator()(const T &r, const std::string &s, const V &x) const
+		template <typename V>
+		subs_type<V> operator()(const T &r, const std::string &s, const V &x) const
 		{
 			return r.subs(s,x);
 		}
@@ -1395,8 +1458,8 @@ struct ipow_subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::ration
 {
 	private:
 		template <typename V>
-		using ipow_subs_enabler = typename std::enable_if<detail::true_tt<
-			decltype(std::declval<const T &>().ipow_subs(std::string{},integer{},std::declval<const V &>()))>::value,int>::type;
+		using ipow_subs_type = decltype(std::declval<const T &>().ipow_subs(std::string{},integer{},
+			std::declval<const V &>()));
 	public:
 		/// Call operator.
 		/**
@@ -1412,8 +1475,8 @@ struct ipow_subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::ration
 		 *
 		 * @throws unspecified any exception thrown by piranha::rational_function::ipow_subs().
 		 */
-		template <typename V, ipow_subs_enabler<V> = 0>
-		T operator()(const T &r, const std::string &s, const integer &n, const V &x) const
+		template <typename V>
+		ipow_subs_type<V> operator()(const T &r, const std::string &s, const integer &n, const V &x) const
 		{
 			return r.ipow_subs(s,n,x);
 		}
@@ -1618,7 +1681,66 @@ struct degree_impl<T,typename std::enable_if<std::is_base_of<detail::rational_fu
 	}
 };
 
+/// Specialisation of the piranha::math::divexact() functor for piranha::rational_function.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function.
+ */
+template <typename T>
+struct divexact_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * This call operator is equivalent to:
+	 * @code
+	 * retval = n / d;
+	 * @endcode
+	 *
+	 * @param[out] retval the result of exact division.
+	 * @param[in] n the numerator.
+	 * @param[in] d the denominator.
+	 *
+	 * @throws unspecified any exception thrown by piranha::rational_function::operator/().
+	 */
+	void operator()(T &retval, const T &n, const T &d) const
+	{
+		retval = n / d;
+	}
+};
+
 }
+
+namespace detail
+{
+
+template <typename T>
+using sri_rf_enabler = typename std::enable_if<std::is_base_of<detail::rational_function_tag,
+	typename std::decay<T>::type>::value>::type;
+
+}
+
+/// Specialisation of piranha::series_recursion_index for piranha::rational_function.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::rational_function.
+ * Although piranha::rational_function is not a piranha::series, it is assigned a recursion index
+ * of 1 in order to provide useful type coercion in a number of situations (e.g., adding
+ * a Poisson series over rational functions to a polynomial).
+ */
+// NOTE: this was prompted by the necessity of allowing subs with generic objects in subs() and
+// ipow_subs(). It seems to work ok and it does not seem to conflict with the general series operators
+// (which is the only place where the recursion index is used), but we should tread carefully:
+// rational_function is not a series and does not provide any term/cf/key types and the likes.
+// The logic in the series operators is SFINAE friendly and does not error out due to the lack
+// of these typedefs.
+template <typename T>
+class series_recursion_index<T,detail::sri_rf_enabler<T>>
+{
+	public:
+		/// Value of the type trait.
+		static const std::size_t value = 1u;
+};
+
+template <typename T>
+const std::size_t series_recursion_index<T,detail::sri_rf_enabler<T>>::value;
 
 }
 

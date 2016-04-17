@@ -1081,16 +1081,23 @@ struct subs_tester
 		BOOST_CHECK((has_subs<r_type,p_type>::value));
 		BOOST_CHECK((has_subs<r_type,q_type>::value));
 		BOOST_CHECK((has_subs<r_type,integer>::value));
-		BOOST_CHECK((!has_subs<r_type,double>::value));
+		// More checks for these in rational_function_02.
+		BOOST_CHECK((has_subs<r_type,double>::value));
+		BOOST_CHECK((has_subs<r_type,float>::value));
 		BOOST_CHECK((!has_subs<r_type,std::string>::value));
-		BOOST_CHECK((!has_subs<r_type,float>::value));
 		BOOST_CHECK_EQUAL(x.subs("x",1),1);
+		BOOST_CHECK((std::is_same<r_type,decltype(x.subs("x",1))>::value));
 		BOOST_CHECK_THROW((1/x).subs("x",0),zero_division_error);
 		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"z",-x-y),-1);
+		BOOST_CHECK((std::is_same<r_type,decltype(math::subs((x+y)/z,"z",-x-y))>::value));
 		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"x",123_z),(123+y)/z);
+		BOOST_CHECK((std::is_same<r_type,decltype(math::subs((x+y)/z,"x",123_z))>::value));
 		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"x",3/2_q),(3+2*y)/(2*z));
+		BOOST_CHECK((std::is_same<r_type,decltype(math::subs((x+y)/z,"x",3/2_q))>::value));
 		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"y",p_type("z")*3),(x+3*z)/z);
+		BOOST_CHECK((std::is_same<r_type,decltype(math::subs((x+y)/z,"y",p_type("z")*3))>::value));
 		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"z",q_type("z")/6),6*(x+y)/z);
+		BOOST_CHECK((std::is_same<r_type,decltype(math::subs((x+y)/z,"z",q_type("z")/6))>::value));
 		BOOST_CHECK_EQUAL(math::subs((x+y)/z,"a",123_z),(x+y)/z);
 		BOOST_CHECK_EQUAL(math::subs(x/(z+y),"x",0),0);
 		// Check that using negative powers throws.
@@ -1159,17 +1166,23 @@ struct ipow_subs_tester
 		BOOST_CHECK((has_ipow_subs<r_type,p_type>::value));
 		BOOST_CHECK((has_ipow_subs<r_type,q_type>::value));
 		BOOST_CHECK((has_ipow_subs<r_type,integer>::value));
-		BOOST_CHECK((!has_ipow_subs<r_type,double>::value));
 		BOOST_CHECK((!has_ipow_subs<r_type,std::string>::value));
-		BOOST_CHECK((!has_ipow_subs<r_type,float>::value));
+		// More checks for these in rational_function_02.
+		BOOST_CHECK((has_ipow_subs<r_type,double>::value));
+		BOOST_CHECK((has_ipow_subs<r_type,float>::value));
 		BOOST_CHECK_EQUAL(x.ipow_subs("x",1_z,y),y);
+		BOOST_CHECK((std::is_same<r_type,decltype(x.ipow_subs("x",1_z,y))>::value));
 		BOOST_CHECK_THROW((1/(x*x)).ipow_subs("x",2_z,0),zero_division_error);
+		BOOST_CHECK((std::is_same<r_type,decltype((1/(x*x)).ipow_subs("x",2_z,0))>::value));
 		BOOST_CHECK_EQUAL((1/(x*x)).ipow_subs("x",2_z,y),1/y);
 		BOOST_CHECK_EQUAL(math::ipow_subs((x+y)/(z*z),"z",2,-x-y),-1);
 		BOOST_CHECK_EQUAL(math::ipow_subs((x*x*x+y)/z,"x",2,123_z),(123*x+y)/z);
 		BOOST_CHECK_EQUAL(math::ipow_subs((x+y)/z,"x",2,3/2_q),(x+y)/z);
+		BOOST_CHECK((std::is_same<r_type,decltype(math::ipow_subs((x+y)/z,"x",2,3/2_q))>::value));
 		BOOST_CHECK_EQUAL(math::ipow_subs((x+y*y*y*y)/z,"y",2,p_type("z")*3),(x+9*z*z)/z);
+		BOOST_CHECK((std::is_same<r_type,decltype(math::ipow_subs((x+y*y*y*y)/z,"y",2,p_type("z")*3))>::value));
 		BOOST_CHECK_EQUAL(math::ipow_subs((x+y)/(z*z),"z",2,q_type("z")/6),6*(x+y)/z);
+		BOOST_CHECK((std::is_same<r_type,decltype(math::ipow_subs((x+y)/(z*z),"z",2,q_type("z")/6))>::value));
 		BOOST_CHECK_EQUAL(math::ipow_subs((x+y)/z,"a",123,123_z),(x+y)/z);
 		BOOST_CHECK_EQUAL(math::ipow_subs(x/(z+y),"x",1,0),0);
 		BOOST_CHECK_EQUAL(math::ipow_subs(x/(z+y),"x",-1,0),x/(z+y));
