@@ -439,4 +439,6 @@ BOOST_AUTO_TEST_CASE(poisson_series_rational_function_test)
 	BOOST_CHECK_THROW(math::sin(x/y),std::invalid_argument);
 	BOOST_CHECK_THROW(math::cos(x/2),std::invalid_argument);
 	BOOST_CHECK_THROW(math::sin(x/3),std::invalid_argument);
+	// Time integration.
+	std::cout << math::cos(x).t_integrate() << '\n';
 }

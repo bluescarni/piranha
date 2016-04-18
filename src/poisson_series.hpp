@@ -413,25 +413,25 @@ class poisson_series:
 		{
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not a polynomial");
 		}
-		// Time integration.
-		template <typename T>
-		using ti_type_ = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>()) /
-			std::declval<const integer &>());
-		template <typename T>
-		using ti_type = typename std::enable_if<std::is_constructible<ti_type_<T>,int>::value &&
-			is_addable_in_place<ti_type_<T>>::value &&
-			std::is_base_of<detail::divisor_series_tag,typename T::term_type::cf_type>::value,ti_type_<T>>::type;
 		// Serialization.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-		// Implementation of time integration.
+		// Time integration.
+		// First the implementation for divisor series.
+		template <typename T>
+		using ti_type_divisor_ = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>()) /
+			std::declval<const integer &>());
+		template <typename T>
+		using ti_type_divisor = typename std::enable_if<std::is_constructible<ti_type_divisor_<T>,int>::value &&
+			is_addable_in_place<ti_type_divisor_<T>>::value &&
+			std::is_base_of<detail::divisor_series_tag,typename T::term_type::cf_type>::value,ti_type_divisor_<T>>::type;
 		template <typename T = poisson_series>
-		ti_type<T> t_integrate_impl(const std::vector<std::string> &names) const
+		ti_type_divisor<T> t_integrate_impl(const std::vector<std::string> &names) const
 		{
 			using return_type = ti_type<T>;
 			// Calling series types.
 			using term_type = typename base::term_type;
 			// The value type of the trigonometric key.
-			using k_value_type = typename base::term_type::key_type::value_type;
+			using k_value_type = typename term_type::key_type::value_type;
 			// Divisor series types.
 			using d_series_type = typename base::term_type::cf_type;
 			using d_term_type = typename d_series_type::term_type;
@@ -508,6 +508,59 @@ class poisson_series:
 			}
 			return retval;
 		}
+		// Implementation when the coefficient is a rational function.
+		template <typename T = poisson_series, typename std::enable_if<std::is_base_of<
+			detail::rational_function_tag,typename T::term_type::cf_type>::value,int>::type = 0>
+		T t_integrate_impl(const std::vector<std::string> &names) const
+		{
+			// Types from base.
+			using term_type = typename base::term_type;
+			using r_type = typename term_type::cf_type;
+			using p_type = typename r_type::p_type;
+			using key_type = typename term_type::key_type;
+			using k_value_type = typename key_type::value_type;
+			piranha_assert(names.size() == this->get_symbol_set().size());
+			T retval;
+			retval.set_symbol_set(this->get_symbol_set());
+			// A temp vector of integers used to normalise the divisors coming
+			// out of the integration operation from the trig keys.
+			std::vector<integer> tmp_int;
+			for (const auto &t: this->_container()) {
+				// Clear the tmp integer vector.
+				tmp_int.clear();
+				// Get the flavour of the current trig monomial.
+				const bool flavour = t.m_key.get_flavour();
+				// Get the vector of trigonometric multipliers.
+				const auto trig_vector = t.m_key.unpack(this->m_symbol_set);
+				// Copy it over to the tmp_int as integer values.
+				std::transform(trig_vector.begin(),trig_vector.end(),std::back_inserter(tmp_int),
+					[](const k_value_type &n) {return integer(n);});
+				// Construct a polynomial from the extracted multipliers, using
+				// the names in linear combination.
+				p_type tmp;
+				for (decltype(tmp_int.size()) i = 0u; i < tmp_int.size(); ++i) {
+					tmp += p_type{names[static_cast<decltype(names.size())>(i)]} * tmp_int[i];
+				}
+				// Construct the new coefficient from the current coefficient,
+				// divided by the newly constructed poly.
+				r_type r{t.m_cf};
+				r /= tmp;
+				// Need to negate the coefficient if the current trig monomial is a sine.
+				if (!flavour) {
+					math::negate(r);
+				}
+				// Create a copy of the current trig monomial and flip its flavour.
+				key_type tmp_key{t.m_key};
+				tmp_key.set_flavour(!flavour);
+				// Create new term from new coefficient and key, and insert it.
+				retval.insert(term_type{std::move(r),std::move(tmp_key)});
+			}
+			return retval;
+		}
+		// The final typedef.
+		template <typename T>
+		using ti_type = decltype(std::declval<const T &>().t_integrate_impl(
+			std::declval<const std::vector<std::string> &>()));
 #endif
 	public:
 		/// Series rebind alias.
