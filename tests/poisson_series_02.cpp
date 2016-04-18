@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/pow.hpp"
+#include "../src/rational_function.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
@@ -412,4 +413,30 @@ BOOST_AUTO_TEST_CASE(poisson_series_multiplier_test)
 	settings::reset_n_threads();
 	settings::reset_min_work_per_thread();
 	}
+}
+
+// Tests specific for PS with rational function coefficients.
+BOOST_AUTO_TEST_CASE(poisson_series_rational_function_test)
+{
+	using ps_type = poisson_series<rational_function<k_monomial>>;
+	ps_type x{"x"}, y{"y"}, z{"z"};
+	// Sine and cosine.
+	BOOST_CHECK(has_sine<ps_type>::value);
+	BOOST_CHECK(has_cosine<ps_type>::value);
+	BOOST_CHECK((std::is_same<ps_type,decltype(math::cos(x))>::value));
+	BOOST_CHECK((std::is_same<ps_type,decltype(math::sin(x))>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(2*x/2)),"cos(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(x)),"sin(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(x-y)),"cos(x-y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(x+y)),"sin(x+y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-x-y)),"cos(x+y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-x+y)),"-sin(x-y)");
+	BOOST_CHECK_EQUAL(math::cos(ps_type{}),1);
+	BOOST_CHECK_EQUAL(math::sin(ps_type{}),0);
+	BOOST_CHECK_THROW(math::cos(ps_type{1}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(ps_type{2}-y),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(x/y),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(x/y),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(x/2),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(x/3),std::invalid_argument);
 }
