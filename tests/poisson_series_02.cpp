@@ -440,5 +440,24 @@ BOOST_AUTO_TEST_CASE(poisson_series_rational_function_test)
 	BOOST_CHECK_THROW(math::cos(x/2),std::invalid_argument);
 	BOOST_CHECK_THROW(math::sin(x/3),std::invalid_argument);
 	// Time integration.
-	std::cout << math::cos(x).t_integrate() << '\n';
+	ps_type nu_x{"\\nu_{x}"}, nu_y{"\\nu_{y}"}, nu_z{"\\nu_{z}"};
+	ps_type a_x{"\\alpha_{x}"}, a_y{"\\alpha_{y}"}, a_z{"\\alpha_{z}"};
+	BOOST_CHECK_EQUAL((3/4_q*y*math::cos(-2*x)).t_integrate(),3*y/(8_q*nu_x)*math::sin(2*x));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::cos(-2*x+3*z)).t_integrate(),3*y/(4_q*(2*nu_x-3*nu_z))*math::sin(2*x-3*z));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x)).t_integrate(),3*y/(8_q*nu_x)*math::cos(2*x));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z)).t_integrate(),3*y/(4_q*(2*nu_x-3*nu_z))*math::cos(2*x-3*z));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z) + 3/4_q*y*math::cos(-2*x+3*z)).t_integrate(),
+		3*y/(4_q*(2*nu_x-3*nu_z))*math::cos(2*x-3*z) + 3*y/(4_q*(2*nu_x-3*nu_z))*math::sin(2*x-3*z));
+	BOOST_CHECK_THROW(math::cos(ps_type{}).t_integrate(),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(ps_type{x-x}).t_integrate(),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::sin(ps_type{}).t_integrate(),0);
+	BOOST_CHECK_EQUAL(math::sin(ps_type{x-x}).t_integrate(),0);
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}","\\alpha_{z}"}),
+		3*y/(4_q*(2*a_x-3*a_z))*math::cos(2*x-3*z));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}","\\alpha_{z}","\\alpha_{z}"}),
+		3*y/(4_q*(2*a_x-3*a_z))*math::cos(2*x-3*z));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}","\\alpha_{x}","\\alpha_{z}","\\alpha_{z}"}),
+		3*y/(4_q*(2*a_x-3*a_z))*math::cos(2*x-3*z));
+	BOOST_CHECK_THROW((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}"}),std::invalid_argument);
+	BOOST_CHECK_THROW((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{z},\\alpha_{x}"}),std::invalid_argument);
 }

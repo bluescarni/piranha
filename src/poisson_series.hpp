@@ -518,33 +518,27 @@ class poisson_series:
 			using r_type = typename term_type::cf_type;
 			using p_type = typename r_type::p_type;
 			using key_type = typename term_type::key_type;
-			using k_value_type = typename key_type::value_type;
 			piranha_assert(names.size() == this->get_symbol_set().size());
 			T retval;
 			retval.set_symbol_set(this->get_symbol_set());
-			// A temp vector of integers used to normalise the divisors coming
-			// out of the integration operation from the trig keys.
-			std::vector<integer> tmp_int;
 			for (const auto &t: this->_container()) {
-				// Clear the tmp integer vector.
-				tmp_int.clear();
 				// Get the flavour of the current trig monomial.
 				const bool flavour = t.m_key.get_flavour();
 				// Get the vector of trigonometric multipliers.
 				const auto trig_vector = t.m_key.unpack(this->m_symbol_set);
-				// Copy it over to the tmp_int as integer values.
-				std::transform(trig_vector.begin(),trig_vector.end(),std::back_inserter(tmp_int),
-					[](const k_value_type &n) {return integer(n);});
 				// Construct a polynomial from the extracted multipliers, using
 				// the names in linear combination.
 				p_type tmp;
-				for (decltype(tmp_int.size()) i = 0u; i < tmp_int.size(); ++i) {
-					tmp += p_type{names[static_cast<decltype(names.size())>(i)]} * tmp_int[i];
+				for (decltype(trig_vector.size()) i = 0u; i < trig_vector.size(); ++i) {
+					tmp += p_type{names[static_cast<decltype(names.size())>(i)]} * trig_vector[i];
+				}
+				if (math::is_zero(tmp)) {
+					piranha_throw(std::invalid_argument,"an invalid trigonometric term was encountered while "
+						"attempting a time integration");
 				}
 				// Construct the new coefficient from the current coefficient,
 				// divided by the newly constructed poly.
-				r_type r{t.m_cf};
-				r /= tmp;
+				r_type r{t.m_cf / std::move(tmp)};
 				// Need to negate the coefficient if the current trig monomial is a sine.
 				if (!flavour) {
 					math::negate(r);
@@ -714,7 +708,7 @@ class poisson_series:
 		/**
 		 * \note
 		 * This method is enabled only if:
-		 * - the coefficient type is an instance of piranha::divisor_series, and
+		 * - the coefficient type is an instance of piranha::divisor_series or piranha::rational_function, and
 		 * - the operations required by the computation of the time integration are supported by all
 		 *   the involved types.
 		 *
@@ -728,7 +722,7 @@ class poisson_series:
 		 * \frac{1}{5}{z}\frac{1}{\left(\nu_{x}-\nu_{y}\right)}\sin{\left({x}-{y}\right)},
 		 * \f]
 		 * where \f$ \nu_{x} \f$ and \f$ \nu_{y} \f$ are the frequencies associated to \f$ x \f$ and \f$ y \f$ (that is,
-		 * \f$ x = \nu_{x}t \f$ and \f$ x = \nu_{y}t \f$).
+		 * it is understood that \f$ x = \nu_{x}t \f$ and \f$ x = \nu_{y}t \f$).
 		 *
 		 * This method will throw an error if any term of the calling series has a unitary key (e.g., in the Poisson series
 		 * \f$ \frac{1}{5}z \f$ the only trigonometric key is \f$ \cos\left( 0 \right) \f$ and would thus result in a division by zero
@@ -736,6 +730,7 @@ class poisson_series:
 		 *
 		 * @return the result of the time integration.
 		 *
+		 * @throws std::invalid_argument if the calling series has a unitary key.
 		 * @throws unspecified any exception thrown by:
 		 * - memory errors in standard containers,
 		 * - the public interfaces of piranha::symbol_set, piranha::mp_integer and piranha::series,
