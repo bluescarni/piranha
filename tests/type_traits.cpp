@@ -40,8 +40,10 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <iterator>
 #include <list>
+#include <memory>
 #include <set>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <vector>
 
@@ -694,6 +696,7 @@ template <>
 struct hash<unhashable5>
 {
 	hash(const hash &) = delete;
+	hash &operator=(const hash &) = default;
 	std::size_t operator()(const unhashable5 &);
 };
 
@@ -2146,4 +2149,32 @@ BOOST_AUTO_TEST_CASE(type_traits_shift_test)
 	BOOST_CHECK((!has_right_shift_in_place<float,long>::value));
 	BOOST_CHECK((!has_right_shift_in_place<long,float>::value));
 	BOOST_CHECK((!has_right_shift_in_place<long,std::string>::value));
+}
+
+struct unreturnable_00
+{
+	unreturnable_00(const unreturnable_00 &) = delete;
+	unreturnable_00(unreturnable_00 &&) = delete;
+};
+
+struct unreturnable_01
+{
+	~unreturnable_01() = delete;
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_returnable_test)
+{
+	BOOST_CHECK(is_returnable<int>::value);
+	BOOST_CHECK(is_returnable<int &>::value);
+	BOOST_CHECK(is_returnable<const int &>::value);
+	BOOST_CHECK(is_returnable<int &&>::value);
+	BOOST_CHECK(is_returnable<int *>::value);
+	BOOST_CHECK(is_returnable<std::string>::value);
+	BOOST_CHECK(is_returnable<std::thread>::value);
+	BOOST_CHECK(is_returnable<std::unique_ptr<int>>::value);
+	BOOST_CHECK(is_returnable<std::shared_ptr<int>>::value);
+	BOOST_CHECK(!is_returnable<unreturnable_00>::value);
+	BOOST_CHECK(is_returnable<unreturnable_00 &>::value);
+	BOOST_CHECK(!is_returnable<unreturnable_01>::value);
+	BOOST_CHECK(is_returnable<unreturnable_01 &>::value);
 }

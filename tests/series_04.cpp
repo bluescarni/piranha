@@ -723,20 +723,20 @@ struct type_traits_tester
 			BOOST_CHECK((is_multipliable_in_place<p_type11,int>::value));
 			BOOST_CHECK((is_multipliable_in_place<p_type11,p_type1>::value));
 			// Division.
-			BOOST_CHECK(!is_divisible<p_type1>::value);
+			BOOST_CHECK(is_divisible<p_type1>::value);
 			BOOST_CHECK((is_divisible<p_type1,int>::value));
-			BOOST_CHECK((!is_divisible<int,p_type1>::value));
-			BOOST_CHECK(!is_divisible<p_type11>::value);
+			BOOST_CHECK((is_divisible<int,p_type1>::value));
+			BOOST_CHECK(is_divisible<p_type11>::value);
 			BOOST_CHECK((is_divisible<p_type11,int>::value));
-			BOOST_CHECK((!is_divisible<int,p_type11>::value));
-			BOOST_CHECK((!is_divisible<p_type11,p_type1>::value));
-			BOOST_CHECK(!is_divisible_in_place<p_type1>::value);
+			BOOST_CHECK((is_divisible<int,p_type11>::value));
+			BOOST_CHECK((is_divisible<p_type11,p_type1>::value));
+			BOOST_CHECK(is_divisible_in_place<p_type1>::value);
 			BOOST_CHECK(!is_divisible_in_place<p_type1 const>::value);
 			BOOST_CHECK((is_divisible_in_place<p_type1,int>::value));
 			BOOST_CHECK((!is_divisible_in_place<p_type1 const,int>::value));
-			BOOST_CHECK(!is_divisible_in_place<p_type11>::value);
+			BOOST_CHECK(is_divisible_in_place<p_type11>::value);
 			BOOST_CHECK((is_divisible_in_place<p_type11,int>::value));
-			BOOST_CHECK((!is_divisible_in_place<p_type11,p_type1>::value));
+			BOOST_CHECK((is_divisible_in_place<p_type11,p_type1>::value));
 			BOOST_CHECK(has_print_coefficient<p_type1>::value);
 			BOOST_CHECK(has_print_coefficient<p_type11>::value);
 			BOOST_CHECK(has_print_tex_coefficient<p_type1>::value);

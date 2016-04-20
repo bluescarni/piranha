@@ -128,6 +128,7 @@ struct key_has_linarg: detail::sfinae_types
 template <typename PType>
 inline auto poly_lterm(const PType &p) -> decltype(p._container().begin())
 {
+	piranha_assert(!p.empty());
 	using term_type = typename PType::term_type;
 	return std::max_element(p._container().begin(),p._container().end(),[](const term_type &t1, const term_type &t2) {
 		return t1.m_key < t2.m_key;
@@ -140,6 +141,11 @@ template <typename PType>
 inline void poly_expo_checker(const PType &p)
 {
 	using term_type = typename PType::term_type;
+	using expo_type = typename term_type::key_type::value_type;
+	// Don't run any check if the exponent is unsigned.
+	if (std::is_integral<expo_type>::value && std::is_unsigned<expo_type>::value) {
+		return;
+	}
 	const auto &args = p.get_symbol_set();
 	if (std::any_of(p._container().begin(),p._container().end(),[&args](const term_type &t) {
 		return t.m_key.has_negative_exponent(args);}))
@@ -180,7 +186,7 @@ inline void poly_exact_cf_div(PType &p, const typename PType::term_type::cf_type
 	}
 }
 
-// Univariate polynomial GCD.
+// Univariate polynomial GCD via PRS-SR.
 // Implementation based on subresultant polynomial remainder sequence:
 // https://en.wikipedia.org/wiki/Polynomial_greatest_common_divisor
 // See also Zippel, 8.6. This implementation is actually based on
@@ -194,7 +200,7 @@ inline void poly_exact_cf_div(PType &p, const typename PType::term_type::cf_type
 // - cf type * cf type is still cf type, and multipliable in-place,
 // - cf type has divexact.
 template <typename PType>
-inline PType poly_ugcd(PType a, PType b)
+inline PType gcd_prs_sr(PType a, PType b)
 {
 	using term_type = typename PType::term_type;
 	using cf_type = typename term_type::cf_type;
@@ -227,6 +233,11 @@ inline PType poly_ugcd(PType a, PType b)
 	cf_type h(1), g(1);
 	// Store the content of a and b for later use.
 	auto a_cont = a.content(), b_cont = b.content();
+	// NOTE: it seems like removing the content from the inputs
+	// can help performance. Let's revisit this after we implement
+	// the sorted data structure for polys.
+	// poly_exact_cf_div(a,a_cont);
+	// poly_exact_cf_div(b,b_cont);
 	std::vector<PType> F;
 	using size_type = typename std::vector<PType>::size_type;
 	F.push_back(std::move(a));
@@ -426,18 +437,26 @@ inline polynomial<Cf,Key>
 	return decode_poly(n);
 }
 
-// Exception to signal that gcdheu() produced an integer xi too large.
-struct gcdheu_xi_too_large: public base_exception
+// Exception to signal that heuristic GCD failed.
+struct gcdheu_failure: public base_exception
 {
-	explicit gcdheu_xi_too_large(): base_exception("") {}
+	explicit gcdheu_failure(): base_exception("") {}
 };
 
-// Heuristic GCD algorithm. See the Geddes book, algorithm 7.4. See also:
-// http://www.sciencedirect.com/science/article/pii/S0747717189800045
+// This implementation is taken straight from the Geddes book. We used to have an implementation based on the paper
+// from Liao & Fateman, which supposedly is (or was) implemented in Maple, but that implementation had a bug which showed
+// up very rarely. Strangely enough, the sympy implementation of heugcd (also based on the Liao paper) has exactly the same
+// issue. Thus the motivation to use the implementation from Geddes.
+// This function returns:
+// - a status flag, to signal if the heuristic failed (true if failure occurred),
+// - the GCD and the 2 cofactors (a / GCD and b / GCD).
+// The function can also fail via throwing gcdheu_failure, which is a different type of failure from the status flag (the
+// gcdheu_failure signals that too large integers are being generated, the status flag signals that too many iterations
+// have been run). This difference is of no consequence for the user, as the exception is caught in try_gcdheu.
 template <typename Poly>
-std::pair<bool,Poly> gcdheu(const Poly &a, const Poly &b, symbol_set::size_type s_index = 0u)
+std::pair<bool,std::tuple<Poly,Poly,Poly>> gcdheu_geddes(const Poly &a, const Poly &b, symbol_set::size_type s_index = 0u)
 {
-	static_assert(is_mp_integer<typename Poly::term_type::cf_type>::value,"Invalide type.");
+	static_assert(is_mp_integer<typename Poly::term_type::cf_type>::value,"Invalid type.");
 	// Require identical symbol sets.
 	piranha_assert(a.get_symbol_set() == b.get_symbol_set());
 	// Helper function to compute the symmetric version of the modulo operation.
@@ -470,17 +489,25 @@ std::pair<bool,Poly> gcdheu(const Poly &a, const Poly &b, symbol_set::size_type 
 	};
 	// Cache it.
 	const auto &args = a.get_symbol_set();
+	// The contents of input polys.
+	const integer a_cont = a.content(), b_cont = b.content();
 	// Handle empty polys.
 	if (a.size() == 0u && b.size() == 0u) {
 		Poly retval;
 		retval.set_symbol_set(args);
-		return std::make_pair(false,std::move(retval));
+		return std::make_pair(false,std::make_tuple(retval,retval,retval));
 	}
 	if (a.size() == 0u) {
-		return std::make_pair(false,b);
+		Poly retval;
+		retval.set_symbol_set(args);
+		// NOTE: 'retval + 1' could be improved performance-wise.
+		return std::make_pair(false,std::make_tuple(b,retval,retval + 1));
 	}
 	if (b.size() == 0u) {
-		return std::make_pair(false,a);
+		Poly retval;
+		retval.set_symbol_set(args);
+		// NOTE: 'retval + 1' could be improved performance-wise.
+		return std::make_pair(false,std::make_tuple(a,retval + 1,retval));
 	}
 	// If we are at the first recursion, check the exponents.
 	if (s_index == 0u) {
@@ -492,30 +519,36 @@ std::pair<bool,Poly> gcdheu(const Poly &a, const Poly &b, symbol_set::size_type 
 		piranha_assert(a.size() == 1u && b.size() == 1u);
 		Poly retval;
 		retval.set_symbol_set(args);
-		retval += math::gcd(a._container().begin()->m_cf,b._container().begin()->m_cf);
-		return std::make_pair(false,std::move(retval));
+		auto gab = math::gcd(a_cont,b_cont);
+		// NOTE: the creation of the gcd retval and of the cofactors can be improved performance-wise
+		// (e.g., exact division of coefficients).
+		return std::make_pair(false,std::make_tuple(retval + gab,a / gab,b / gab));
 	}
 	// s_index is the recursion index for the gcdheu() call.
 	piranha_assert(s_index < args.size());
-	// We need to work on primitive polys when we enter the algorithm the
-	// first time.
-	// NOTE: extension of the lifetime of the output of primitive_part()
-	// via const reference.
-	const auto &ap = (s_index == 0u) ? a.primitive_part() : a;
-	const auto &bp = (s_index == 0u) ? b.primitive_part() : b;
+	// We need to work on primitive polys.
+	// NOTE: performance improvements.
+	const auto ap = a / a_cont;
+	const auto bp = b / b_cont;
 	// The current variable.
 	const std::string var = args[s_index].get_name();
 	integer xi{2 * std::min(ap.height(),bp.height()) + 2};
-	// NOTE: the values of 6 iterations and 5000 bits limit are taken straight
-	// from the original implementation of the algorithm. It might as well be that
-	// other tuning params are better.
+	// Functor to update xi at each iteration.
+	auto update_xi = [&xi]() {
+		// NOTE: this is just a way of making xi bigger without too much correlation
+		// to its previous value.
+		xi = (xi * 73794) / 27011;
+	};
+	// NOTE: the values of 6 iterations is taken straight from the original implementation of the algorithm.
+	// The bits limit is larger than the original implementation, on the grounds that GMP should be rather efficient
+	// at bignum. It might as well be that other tuning params are better, but let's keep them hardcoded for now.
 	for (int i = 0; i < 6; ++i) {
-		if (integer(xi.bits_size()) * std::max(ap.degree({var}),bp.degree({var})) > 5000) {
-			piranha_throw(gcdheu_xi_too_large,);
+		if (integer(xi.bits_size()) * std::max(ap.degree({var}),bp.degree({var})) > 100000) {
+			piranha_throw(gcdheu_failure,);
 		}
-		auto res = gcdheu(ap.subs(var,xi),bp.subs(var,xi),static_cast<symbol_set::size_type>(s_index + 1u));
+		auto res = gcdheu_geddes(ap.subs(var,xi),bp.subs(var,xi),static_cast<symbol_set::size_type>(s_index + 1u));
 		if (!res.first) {
-			Poly &gamma = res.second;
+			Poly &gamma = std::get<0u>(res.second);
 			Poly G;
 			G.set_symbol_set(args);
 			unsigned j = 0;
@@ -524,28 +557,68 @@ std::pair<bool,Poly> gcdheu(const Poly &a, const Poly &b, symbol_set::size_type 
 				// NOTE: term mult here could be useful, but probably it makes more
 				// sense to just improve the series multiplication routine.
 				G += g * math::pow(Poly{var},j);
-				gamma = (gamma - g) / xi;
+				gamma -= g;
+				poly_exact_cf_div(gamma,xi);
 				safe_integral_adder(j,1u);
 			}
+			// NOTE: I don't know if this is possible at all, but it's better to be safe than
+			// sorry. This prevents divisions by zero below.
+			if (G.size() == 0u) {
+				update_xi();
+				continue;
+			}
 			try {
-				ap / G;
-				bp / G;
-				// NOTE: if we are in the first recursion, this will be the final result.
-				// As the algorithm produces results with the content removed, we need
-				// to do this step in order to match the output of PSR_SR.
-				if (s_index == 0u) {
-					detail::poly_cf_mult(math::gcd(a.content(),b.content()),G);
-				}
-				return std::make_pair(false,std::move(G));
+				// For the division test, we need to operate on the primitive
+				// part of the candidate GCD.
+				poly_exact_cf_div(G,G.content());
+				// The division test.
+				auto cf_a = ap / G;
+				auto cf_b = bp / G;
+				// Need to multiply by the GCD of the contents of a and b in order to produce
+				// the GCD with the largest coefficients.
+				const auto F = math::gcd(a_cont,b_cont);
+				poly_cf_mult(F,G);
+				// The cofactors above have been computed with the primitive parts of G and a,b.
+				// We need to rescale them in order to find the true cofactors, that is, a / G
+				// and b / G.
+				poly_cf_mult(a_cont,cf_a);
+				poly_exact_cf_div(cf_a,F);
+				poly_cf_mult(b_cont,cf_b);
+				poly_exact_cf_div(cf_b,F);
+				return std::make_pair(false,std::make_tuple(std::move(G),std::move(cf_a),std::move(cf_b)));
 			} catch (const math::inexact_division &) {
 				// Continue in case the division check fails.
 			}
 		}
-		// NOTE: this is just a way of making xi bigger without too much correlation
-		// to its previous value.
-		xi = (xi * 73794) / 27011;
+		update_xi();
 	}
-	return std::make_pair(true,Poly{});
+	return std::make_pair(true,std::make_tuple(Poly{},Poly{},Poly{}));
+}
+
+// Namespace for generic polynomial division enabler, used to stuff
+// in handy aliases. We put it here in order to share it with the enabler
+// for the divexact specialisation.
+namespace ptd
+{
+
+template <typename T>
+using cf_t = typename T::term_type::cf_type;
+
+template <typename T>
+using expo_t = typename T::term_type::key_type::value_type;
+
+template <typename T, typename U>
+using enabler = typename std::enable_if<
+	std::is_base_of<polynomial_tag,T>::value &&
+	std::is_same<T,U>::value &&
+	is_multipliable_in_place<cf_t<T>>::value &&
+	std::is_same<decltype(std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>()),cf_t<T>>::value &&
+	has_exact_division<cf_t<T>>::value &&
+	has_exact_ring_operations<cf_t<T>>::value &&
+	is_subtractable_in_place<T>::value &&
+	(std::is_integral<expo_t<T>>::value || is_mp_integer<expo_t<T>>::value),
+int>::type;
+
 }
 
 }
@@ -574,7 +647,7 @@ enum class polynomial_gcd_algorithm
  * - all the truncation-related requirements in piranha::power_series are satsified,
  * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
  * 
- * This class satisfies the piranha::is_series type trait.
+ * This class satisfies the piranha::is_series and piranha::is_cf type traits.
  * 
  * \warning
  * The division and GCD operations are known to have poor performance, especially with large operands. Performance
@@ -621,6 +694,12 @@ class polynomial:
 		// The base class.
 		using base = power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,Key,
 			polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>;
+		// A couple of helpers from C++14.
+		template <typename T>
+		using decay_t = typename std::decay<T>::type;
+		template <bool B, typename T = void>
+		using enable_if_t = typename std::enable_if<B,T>::type;
+		// String constructor.
 		template <typename Str>
 		void construct_from_string(Str &&str)
 		{
@@ -812,7 +891,7 @@ class polynomial:
 			static degree_type<T> at_degree_max(0);
 			return at_degree_max;
 		}
-		// Enabler for string construction/assignment.
+		// Enabler for string construction.
 		template <typename Str>
 		using str_enabler = typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
 			std::is_same<typename std::decay<Str>::type,char *>::value ||
@@ -1022,15 +1101,16 @@ class polynomial:
 			return retval;
 		}
 		// Enabler for exact poly division.
-		template <typename T>
-		using poly_div_enabler = typename std::enable_if<
-			is_multipliable_in_place<cf_t<T>>::value &&
-			std::is_same<decltype(std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>()),cf_t<T>>::value &&
-			has_exact_division<cf_t<T>>::value &&
-			has_exact_ring_operations<cf_t<T>>::value &&
-			is_subtractable_in_place<T>::value &&
-			(std::is_integral<expo_t<T>>::value || detail::is_mp_integer<expo_t<T>>::value),
-		int>::type;
+		// NOTE: the further constraining here that T must be polynomial is to work around a GCC < 5 (?) bug,
+		// in which template operators from other template instantiations of polynomial<> are considered. We can
+		// remove this once we bump the minimum version of GCC required.
+		template <typename T, typename U = T>
+		using poly_div_enabler = enable_if_t<std::is_same<decay_t<T>,polynomial>::value,
+			detail::ptd::enabler<decay_t<T>,decay_t<U>>>;
+		// Enabler for in-place division.
+		template <typename T, typename U>
+		using poly_in_place_div_enabler = enable_if_t<detail::true_tt<poly_div_enabler<T,U>>::value &&
+			!std::is_const<T>::value,int>;
 		// Join enabler.
 		template <typename T>
 		using join_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag,cf_t<T>>::value &&
@@ -1065,28 +1145,43 @@ class polynomial:
 			is_less_than_comparable<height_type_<T>>::value && std::is_move_assignable<height_type_<T>>::value &&
 			(std::is_copy_constructible<height_type_<T>>::value || std::is_move_constructible<height_type_<T>>::value),
 			height_type_<T>>::type;
-		// Wrapper around heuristic GCD.
+		// Wrapper around heuristic GCD. It will return false,tuple if the calculation went well,
+		// true,tuple otherwise. If run on polynomials with non-integer coefficients, it will throw
+		// if the requested algorithm is specifically the heuristic one.
 		template <typename T, typename std::enable_if<detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
-		static std::pair<bool,T> try_gcdheu(const T &a, const T &b, polynomial_gcd_algorithm algo)
+		static std::pair<bool,std::tuple<T,T,T>> try_gcdheu(const T &a, const T &b, polynomial_gcd_algorithm)
 		{
 			try {
-				return detail::gcdheu(a,b);
-			} catch (const detail::gcdheu_xi_too_large &) {}
-			// If we get here, a xi-too-large error was generated.
-			if (algo == polynomial_gcd_algorithm::heuristic) {
-				piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
-					"but it failed because the evaluation step produced too large values");
-			}
-			return std::make_pair(true,T{});
+				return detail::gcdheu_geddes(a,b);
+			} catch (const detail::gcdheu_failure &) {}
+			return std::make_pair(true,std::tuple<T,T,T>{});
 		}
 		template <typename T, typename std::enable_if<!detail::is_mp_integer<cf_t<T>>::value,int>::type = 0>
-		static std::pair<bool,T> try_gcdheu(const T &, const T &, polynomial_gcd_algorithm algo)
+		static std::pair<bool,std::tuple<T,T,T>> try_gcdheu(const T &, const T &, polynomial_gcd_algorithm algo)
 		{
+			// The idea here is that this is a different kind of failure from the one we throw in the main gcd()
+			// function, and we want to be able to discriminate the two.
 			if (algo == polynomial_gcd_algorithm::heuristic) {
 				piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
 					"but it cannot be applied to non-integral coefficients");
 			}
-			return std::make_pair(true,T{});
+			return std::make_pair(true,std::tuple<T,T,T>{});
+		}
+		// This is a wrapper to compute and return the cofactors, together with the GCD, when the PRS algorithm
+		// is used (the gcdheu algorithm already computes the cofactors).
+		template <typename T, typename U>
+		static std::tuple<T,T,T> wrap_gcd_cofactors(U &&gcd, const T &a, const T &b, bool with_cofactors)
+		{
+			if (with_cofactors) {
+				if (math::is_zero(gcd)) {
+					// In this case, a tuple of zeroes will be returned.
+					return std::make_tuple(std::forward<U>(gcd),T{},T{});
+				} else {
+					return std::make_tuple(std::forward<U>(gcd),a / gcd,b / gcd);
+				}
+			} else {
+				return std::make_tuple(std::forward<U>(gcd),T{},T{});
+			}
 		}
 	public:
 		/// Series rebind alias.
@@ -1608,7 +1703,8 @@ class polynomial:
 		/// Exact polynomial division.
 		/**
 		 * \note
-		 * This operator is enabled only if polynomial::udivrem() is enabled.
+		 * This operator is enabled only if the decay types of \p T and \p U are the same type \p Td
+		 * and polynomial::udivrem() is enabled for \p Td.
 		 *
 		 * This operator will compute the exact result of <tt>n / d</tt>. If \p d does not divide \p n exactly, an error will be produced.
 		 *
@@ -1630,8 +1726,8 @@ class polynomial:
 		 * - conversion of piranha::integer to C++ integral types,
 		 * - piranha::safe_cast().
 		 */
-		template <typename T = polynomial, poly_div_enabler<T> = 0>
-		friend polynomial operator/(const polynomial &n, const polynomial &d)
+		template <typename T, typename U, poly_div_enabler<T,U> = 0>
+		friend polynomial operator/(T &&n, U &&d)
 		{
 			// Then we need to deal with different symbol sets.
 			polynomial merged_n, merged_d;
@@ -1652,7 +1748,8 @@ class polynomial:
 		/// Exact in-place polynomial division.
 		/**
 		 * \note
-		 * This operator is enabled only if the corresponding binary operation is enabled.
+		 * This operator is enabled only if operator/() is enabled for the input types and \p T
+		 * is not const.
 		 *
 		 * This operator is equivalent to:
 		 * @code
@@ -1666,10 +1763,40 @@ class polynomial:
 		 *
 		 * @throws unspecified any exception thrown by the binary operator.
 		 */
-		template <typename T = polynomial, poly_div_enabler<T> = 0>
-		friend polynomial &operator/=(polynomial &n, const polynomial &d)
+		template <typename T, typename U, poly_in_place_div_enabler<T,U> = 0>
+		friend polynomial &operator/=(T &n, U &&d)
 		{
 			return n = n / d;
+		}
+		/// Get the default algorithm to be used for GCD computations.
+		/**
+		 * The default value initialised on startup is polynomial_gcd_algorithm::automatic.
+		 * This method is thread-safe.
+		 *
+		 * @return the current default algorithm to be used for GCD computations.
+		 */
+		static polynomial_gcd_algorithm get_default_gcd_algorithm()
+		{
+			return s_def_gcd_algo.load();
+		}
+		/// Set the default algorithm to be used for GCD computations.
+		/**
+		 * This method is thread-safe.
+		 *
+		 * @param[in] algo the desired default algorithm to be used for GCD computations.
+		 */
+		static void set_default_gcd_algorithm(polynomial_gcd_algorithm algo)
+		{
+			s_def_gcd_algo.store(algo);
+		}
+		/// Reset the default algorithm to be used for GCD computations.
+		/**
+		 * This method will set the default algorithm to be used for GCD computations to polynomial_gcd_algorithm::automatic.
+		 * This method is thread-safe.
+		 */
+		static void reset_default_gcd_algorithm()
+		{
+			s_def_gcd_algo.store(polynomial_gcd_algorithm::automatic);
 		}
 		/// Polynomial GCD.
 		/**
@@ -1682,15 +1809,21 @@ class polynomial:
 		 *
 		 * This method will compute the GCD of polynomials \p a and \p b. The algorithm that will be employed
 		 * for the computation is selected by the \p algo flag. If \p algo is set to polynomial_gcd_algorithm::automatic
-		 * (the default) the heuristic GCD algorithm will be tried first, followed by the PSR SR algorithm in case of failures.
+		 * the heuristic GCD algorithm will be tried first, followed by the PRS SR algorithm in case of failures.
 		 * If \p algo is set to any other value, the selected algorithm will be used. The heuristic GCD algorithm can be
-		 * used only when the ceofficient type is an instance of piranha::mp_integer.
+		 * used only when the ceofficient type is an instance of piranha::mp_integer. The default value for \p algo
+		 * is the one returned by get_default_gcd_algorithm().
+		 *
+		 * The \p with_cofactors flag signals whether the cofactors should be returned together with the GCD or not.
 		 *
 		 * @param[in] a first argument.
 		 * @param[in] b second argument.
+		 * @param[in] with_cofactors flag to signal that cofactors must be returned as well.
 		 * @param[in] algo the GCD algorithm.
 		 *
-		 * @return the GCD of \p a and \p b.
+		 * @return a tuple containing the GCD \p g of \p a and \p b, and the cofactors (that is, <tt>a / g</tt> and <tt>b / g</tt>),
+		 * if requested. If the cofactors are not requested, the content of the last two elements of the tuple is unspecified. If both input
+		 * arguments are zero, the cofactors will be zero as well.
 		 *
 		 * @throws std::invalid_argument if a negative exponent is encountered in \p a or \p b.
 		 * @throws std::overflow_error in case of (unlikely) integral overflow errors.
@@ -1699,14 +1832,15 @@ class polynomial:
 		 * @throws unspecified any exception thrown by:
 		 * - the public interface of piranha::series, piranha::symbol_set, piranha::hash_set,
 		 * - construction of keys,
-		 * - construction, arithmetics and assignment of coefficients and polynomials,
+		 * - construction, arithmetics and other operations of coefficients and polynomials,
 		 * - math::gcd(), math::gcd3(), math::divexact(), math::pow(), math::subs(),
 		 * - piranha::polynomial::udivrem(), piranha::polynomial::content(),
 		 * - memory errors in standard containers,
 		 * - the conversion of piranha::integer to \p unsigned.
 		 */
 		template <typename T = polynomial, gcd_enabler<T> = 0>
-		static polynomial gcd(const polynomial &a, const polynomial &b, polynomial_gcd_algorithm algo = polynomial_gcd_algorithm::automatic)
+		static std::tuple<polynomial,polynomial,polynomial> gcd(const polynomial &a, const polynomial &b, bool with_cofactors = false,
+			polynomial_gcd_algorithm algo = get_default_gcd_algorithm())
 		{
 			// Deal with different symbol sets.
 			polynomial merged_a, merged_b;
@@ -1725,6 +1859,8 @@ class polynomial:
 			if (algo == polynomial_gcd_algorithm::automatic || algo == polynomial_gcd_algorithm::heuristic) {
 				auto heu_res = try_gcdheu(*real_a,*real_b,algo);
 				if (heu_res.first && algo == polynomial_gcd_algorithm::heuristic) {
+					// This can happen only if the heuristic fails due to the number of iterations. Calling the heuristic
+					// with non-integral coefficients already throws from the try_gcdheu implementation.
 					piranha_throw(std::runtime_error,"the heuristic polynomial GCD algorithm was explicitly selected, "
 						"but its execution failed due to too many iterations");
 				}
@@ -1736,26 +1872,26 @@ class polynomial:
 			const auto &args = real_a->get_symbol_set();
 			// Proceed with the univariate case.
 			if (args.size() == 1u) {
-				return detail::poly_ugcd(*real_a,*real_b);
+				return wrap_gcd_cofactors(detail::gcd_prs_sr(*real_a,*real_b),*real_a,*real_b,with_cofactors);
 			}
 			// Zerovariate case. We need to handle this separately as the use of split() below
 			// requires a nonzero number of arguments.
 			if (args.size() == 0u) {
 				if (real_a->size() == 0u && real_b->size() == 0u) {
-					return polynomial{};
+					return wrap_gcd_cofactors(polynomial{},*real_a,*real_b,with_cofactors);
 				}
 				if (real_a->size() == 0u) {
-					return *real_b;
+					return wrap_gcd_cofactors(*real_b,*real_a,*real_b,with_cofactors);
 				}
 				if (real_b->size() == 0u) {
-					return *real_a;
+					return wrap_gcd_cofactors(*real_a,*real_a,*real_b,with_cofactors);
 				}
 				Cf g(0);
 				math::gcd3(g,real_a->_container().begin()->m_cf,real_b->_container().begin()->m_cf);
-				return polynomial(std::move(g));
+				return wrap_gcd_cofactors(polynomial(std::move(g)),*real_a,*real_b,with_cofactors);
 			}
 			// The general multivariate case.
-			return detail::poly_ugcd(real_a->split(),real_b->split()).join();
+			return wrap_gcd_cofactors(detail::gcd_prs_sr(real_a->split(),real_b->split()).join(),*real_a,*real_b,with_cofactors);
 			// NOTE: an older implementation that replaces the recursive call in the line immediately
 			// above. Let's keep it around for a while for debugging purposes.
 			/*
@@ -1823,9 +1959,11 @@ class polynomial:
 		}
 	private:
 		// Static data for auto_truncate_degree.
-		static std::mutex		s_at_degree_mutex;
-		static int			s_at_degree_mode;
-		static std::vector<std::string>	s_at_degree_names;
+		static std::mutex				s_at_degree_mutex;
+		static int					s_at_degree_mode;
+		static std::vector<std::string>			s_at_degree_names;
+		// Static data for default GCD algorithm selection.
+		static std::atomic<polynomial_gcd_algorithm>	s_def_gcd_algo;
 };
 
 // Static inits.
@@ -1837,6 +1975,9 @@ int polynomial<Cf,Key>::s_at_degree_mode = 0;
 
 template <typename Cf, typename Key>
 std::vector<std::string> polynomial<Cf,Key>::s_at_degree_names;
+
+template <typename Cf, typename Key>
+std::atomic<polynomial_gcd_algorithm> polynomial<Cf,Key>::s_def_gcd_algo(polynomial_gcd_algorithm::automatic);
 
 namespace detail
 {
@@ -1945,8 +2086,7 @@ using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::
 
 // Enabler for divexact.
 template <typename T>
-using poly_divexact_enabler = typename std::enable_if<std::is_base_of<polynomial_tag,T>::value &&
-	is_divisible<T>::value>::type;
+using poly_divexact_enabler = typename std::enable_if<true_tt<ptd::enabler<T,T>>::value>::type;
 
 // Enabler for exact ring operations.
 template <typename T>
@@ -2009,13 +2149,13 @@ struct gcd_impl<T,T,detail::poly_gcd_enabler<T>>
 	 * @param[in] a first argument.
 	 * @param[in] b second argument.
 	 *
-	 * @return the output of <tt>piranha::polynomial::gcd(a,b)</tt>.
+	 * @return the first element of the result of <tt>piranha::polynomial::gcd(a,b)</tt>.
 	 *
 	 * @throws unspecified any exception thrown by piranha::polynomial::gcd().
 	 */
 	T operator()(const T &a, const T &b) const
 	{
-		return T::gcd(a,b);
+		return std::get<0u>(T::gcd(a,b));
 	}
 };
 

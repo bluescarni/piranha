@@ -5,7 +5,7 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     - boost-latest
-    - llvm-toolchain-precise
+    - llvm-toolchain-precise-3.8
     - george-edison55-precise-backports
     packages:
     - libgmp-dev

@@ -161,6 +161,13 @@ inline T fp_binomial(const T &x, const T &y)
 	return T(0);
 }
 
+// Enabler for the specialisation of binomial for floating-point and arithmetic arguments.
+template <typename T, typename U>
+using binomial_fp_arith_enabler = typename std::enable_if<
+	std::is_arithmetic<T>::value && std::is_arithmetic<U>::value &&
+	(std::is_floating_point<T>::value || std::is_floating_point<U>::value)
+>::type;
+
 }
 
 namespace math
@@ -181,10 +188,7 @@ struct binomial_impl
  * is a floating-point type.
  */
 template <typename T, typename U>
-struct binomial_impl<T,U,typename std::enable_if<
-	std::is_arithmetic<T>::value && std::is_arithmetic<U>::value &&
-	(std::is_floating_point<T>::value || std::is_floating_point<U>::value)
->::type>
+struct binomial_impl<T,U,detail::binomial_fp_arith_enabler<T,U>>
 {
 	/// Result type for the call operator.
 	/**

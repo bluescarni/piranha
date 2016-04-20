@@ -41,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/rational_function.hpp"
 #include "../src/real.hpp"
 #include "type_system.hpp"
 
@@ -71,11 +72,13 @@ struct poisson_series_descriptor
 		// Divisor series for the double polynomial coefficients.
 		std::tuple<piranha::divisor_series<piranha::polynomial<double,piranha::monomial<piranha::rational>>,piranha::divisor<short>>>,
 		std::tuple<piranha::divisor_series<piranha::polynomial<double,piranha::monomial<short>>,piranha::divisor<short>>>,
-		std::tuple<piranha::divisor_series<piranha::polynomial<double,piranha::kronecker_monomial<>>,piranha::divisor<short>>>
+		std::tuple<piranha::divisor_series<piranha::polynomial<double,piranha::kronecker_monomial<>>,piranha::divisor<short>>>,
+		// Rational function coefficient.
+		std::tuple<piranha::rational_function<piranha::k_monomial>>
 	>;
 	using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-	using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-	using eval_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+	using pow_types = interop_types;
+	using eval_types = interop_types;
 	using subs_types = eval_types;
 	using degree_truncation_types = std::tuple<piranha::integer,piranha::rational>;
 	interop_types		it;

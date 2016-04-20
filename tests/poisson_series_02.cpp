@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/pow.hpp"
+#include "../src/rational_function.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
@@ -412,4 +413,57 @@ BOOST_AUTO_TEST_CASE(poisson_series_multiplier_test)
 	settings::reset_n_threads();
 	settings::reset_min_work_per_thread();
 	}
+}
+
+// Tests specific for PS with rational function coefficients.
+BOOST_AUTO_TEST_CASE(poisson_series_rational_function_test)
+{
+	using ps_type = poisson_series<rational_function<k_monomial>>;
+	ps_type x{"x"}, y{"y"}, z{"z"};
+	// Sine and cosine.
+	BOOST_CHECK(has_sine<ps_type>::value);
+	BOOST_CHECK(has_cosine<ps_type>::value);
+	BOOST_CHECK((std::is_same<ps_type,decltype(math::cos(x))>::value));
+	BOOST_CHECK((std::is_same<ps_type,decltype(math::sin(x))>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(2*x/2)),"cos(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(x)),"sin(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(x-y)),"cos(x-y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(x+y)),"sin(x+y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-x-y)),"cos(x+y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-x+y)),"-sin(x-y)");
+	BOOST_CHECK_EQUAL(math::cos(ps_type{}),1);
+	BOOST_CHECK_EQUAL(math::sin(ps_type{}),0);
+	BOOST_CHECK_THROW(math::cos(ps_type{1}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(ps_type{2}-y),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(x/y),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(x/y),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(x/2),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(x/3),std::invalid_argument);
+	// Time integration.
+	ps_type nu_x{"\\nu_{x}"}, nu_y{"\\nu_{y}"}, nu_z{"\\nu_{z}"};
+	ps_type a_x{"\\alpha_{x}"}, a_y{"\\alpha_{y}"}, a_z{"\\alpha_{z}"};
+	BOOST_CHECK_EQUAL((3/4_q*y*math::cos(-2*x)).t_integrate(),3*y/(8_q*nu_x)*math::sin(2*x));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::cos(-2*x+3*z)).t_integrate(),3*y/(4_q*(2*nu_x-3*nu_z))*math::sin(2*x-3*z));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x)).t_integrate(),3*y/(8_q*nu_x)*math::cos(2*x));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z)).t_integrate(),3*y/(4_q*(2*nu_x-3*nu_z))*math::cos(2*x-3*z));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z) + 3/4_q*y*math::cos(-2*x+3*z)).t_integrate(),
+		3*y/(4_q*(2*nu_x-3*nu_z))*math::cos(2*x-3*z) + 3*y/(4_q*(2*nu_x-3*nu_z))*math::sin(2*x-3*z));
+	BOOST_CHECK_THROW(math::cos(ps_type{}).t_integrate(),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(ps_type{x-x}).t_integrate(),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::sin(ps_type{}).t_integrate(),0);
+	BOOST_CHECK_EQUAL(math::sin(ps_type{x-x}).t_integrate(),0);
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}","\\alpha_{z}"}),
+		3*y/(4_q*(2*a_x-3*a_z))*math::cos(2*x-3*z));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}","\\alpha_{z}","\\alpha_{z}"}),
+		3*y/(4_q*(2*a_x-3*a_z))*math::cos(2*x-3*z));
+	BOOST_CHECK_EQUAL((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}","\\alpha_{x}","\\alpha_{z}","\\alpha_{z}"}),
+		3*y/(4_q*(2*a_x-3*a_z))*math::cos(2*x-3*z));
+	BOOST_CHECK_THROW((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}"}),std::invalid_argument);
+	BOOST_CHECK_THROW((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{z},\\alpha_{x}"}),std::invalid_argument);
+	// Custom partial derivative which also checks series division.
+	ps_type::register_custom_derivative("x",[](const ps_type &p) {return p.partial("x") + p.partial("y")*4;});
+	auto tmp = math::subs(math::partial((x+3*y-z)/(4*z+x)*math::cos(x-2*y+z),"x"),"y",4*x);
+	BOOST_CHECK_EQUAL(tmp,-7*(13*x - z)*math::sin(7*x - z)/(x + 4*z) + 13*math::cos(7*x - z)/(x + 4*z)
+		- (13*x - z)*math::cos(7*x - z)/math::pow(x + 4*z,2));
+	ps_type::unregister_all_custom_derivatives();
 }

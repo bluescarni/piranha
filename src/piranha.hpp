@@ -31,7 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 /** \file piranha.hpp
  * \brief Global piranha header file.
- * 
+ *
  * Include this file to import piranha's entire public interface.
  */
 
@@ -93,7 +93,8 @@ see https://www.gnu.org/licenses/. */
  * \todo probably better to remove the thread_management class and use free functions directly for the binding.
  * \todo review the usage of the static keyword for functions: we are header-only now, it's probably not needed (esp. static inline).
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at least to make
- * sure they behave consistently wrt locale settings.
+ * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
+ * and keep lexical_cast only for the conversion of piranha's types to string.
  * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in term. Should we require it to be
@@ -168,7 +169,8 @@ see https://www.gnu.org/licenses/. */
  * \todo hash_set needs more testing.
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
- * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements.
+ * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements. UPDATE: this probably needs to be an
+ * is_returnable check, no need to go all the way to is_container_element. NOTE: this also holds for the degree types.
  * \todo the following items still remain to be finished up after the truncation rework:
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
  *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
@@ -178,12 +180,11 @@ see https://www.gnu.org/licenses/. */
  * up generic ctor and standard copy/move ones in the derived class.
  * \todo in order to circumvent the problem of the lack of thread local storage on osx, we should probably just create a local variable ad-hoc.
  * It will be suboptimal but at least it should work on osx.
- * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
  * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs, e.g., implementing the test() method
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method. Once we have this, we could
  * also think about re-implementing multiplication by zero by an actual coefficient multiplication, thus solving the incosistency with double
- * coefficients reported in audi (0 * inf = 0 --> empty polynomia, instead of NaN).
+ * coefficients reported in audi (0 * inf = 0 --> empty polynomial, instead of NaN).
  * \todo in mp_integer probably the ternary operations (and multadd and divexact etc.) should be modified so that the return value is demoted to
  * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times, once it is set to dynamic
  * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that iteratively always increases).
@@ -191,7 +192,31 @@ see https://www.gnu.org/licenses/. */
  * \todo safe_cast should probably have its own special exception. As it stands, when we do try { safe_cast() } catch {} we are catching other
  * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails because of unsafe cast
  * rather than other errors, see e.g. how it is used in the poly linear arg combination.
+ * \todo same above applies for linear arg combination
  * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a time.
+ * \todo when we rework division/gcd with the ordered poly representation, we need also to solve the issue of the interaction between truncation
+ * and division/GCD operations. It seems like we will need to relax some assumptions and assertions (e.g., multiplication by a non-zero entity
+ * could result in zero because of truncation), and add checks so that we can throw cleanly if something goes bad (division by zero, etc.).
+ * \todo related to the above, since we use pow() in the GCD algorithms we also have the problem of pow_caches() having the incorrect results.
+ * It seems like a good course of action would be to just invalidate the caches every time the truncation limit changes. We need to check with
+ * symengine in order to make sure this does not create troubles for them. Even after we do that, we still need to account for potentially strange
+ * things happening when we use pow() in GCD (e.g., nonzero poly to positive power returning zero).
+ * \todo again related to the above, there are a couple of instances of use of lterm with potentially zero polynomial due to truncation. Keep in mind,
+ * probably it is just best to replace poly multiplications with explicitly untruncated counterparts in rational function.
+ * \todo implement the GCD benchmarks from the liao paper as a performance test.
+ * \todo the evaluation functor impl should probably take the evaluation type as a parameter too, the same way pow_impl does. Other improvements:
+ * - overload for use with init list without explicit template param,
+ * - related to the first point, fix the template params order,
+ * - improve the error message if not all variables are provided (this should probably be caught in series::evaluate() early rather
+ *   than go down all the way to the key).
+ * \todo we need to decide if we want to keep the postifx notation for things like eval, subs etc. or just support the math:: versions. It probably does
+ * not make much sense to go back and remove the methods in the toolboxes, but for documentation purposes and in python particularly we should just
+ * support the math:: overloads (with partial() being the lone exception).
+ * \todo the macros in pyranha should probably be prepended with PYRANHA_.
+ * \todo it seems like, at least in some cases, it is possible to avoid extra template arguments for enabling purposes
+ * if one uses static methods rather than instance methods (something related to the calling class not being a complete
+ * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
+ * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
  */
 namespace piranha
 {
@@ -238,6 +263,7 @@ inline namespace literals {}
 #include "power_series.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
+#include "rational_function.hpp"
 #include "real.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "runtime_info.hpp"

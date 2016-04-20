@@ -51,7 +51,7 @@ see https://www.gnu.org/licenses/. */
 using namespace piranha;
 
 static std::mt19937 rng;
-static const int ntrials = 100;
+static const int ntrials = 300;
 
 using cf_types = boost::mpl::vector<integer,rational>;
 using key_types = boost::mpl::vector<monomial<short>,monomial<integer>,k_monomial>;
@@ -174,7 +174,7 @@ struct udivrem_tester
 		auto res2 = pp_type::udivrem(x*xx,xx);
 		BOOST_CHECK_EQUAL(res2.first,x);
 		BOOST_CHECK_EQUAL(res2.second.size(),0u);
-		BOOST_CHECK_THROW(pp_type::udivrem(x.pow(-1)*xx,xx),std::invalid_argument)
+		BOOST_CHECK_THROW(pp_type::udivrem(x.pow(-1)*xx,xx),std::invalid_argument);
 		res2 = pp_type::udivrem(xx-xx,x.pow(-1)*xx);
 		BOOST_CHECK_EQUAL(res2.first.size(),0u);
 		BOOST_CHECK_EQUAL(res2.second.size(),0u);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(polynomial_udivrem_test)
 	boost::mpl::for_each<key_types>(udivrem_tester());
 }
 
-struct ugcd_tester
+struct gcd_prs_sr_tester
 {
 	template <typename Key>
 	void operator()(const Key &)
@@ -195,23 +195,26 @@ struct ugcd_tester
 		using piranha::math::pow;
 		using p_type = polynomial<integer,Key>;
 		using pq_type = polynomial<rational,Key>;
+		// Set the default algorithm to PRS, so it is used at all levels of the recursion.
+		BOOST_CHECK(p_type::get_default_gcd_algorithm() == polynomial_gcd_algorithm::automatic);
+		p_type::set_default_gcd_algorithm(polynomial_gcd_algorithm::prs_sr);
 		p_type x{"x"};
 		// Some known tests.
-		BOOST_CHECK_EQUAL(x,poly_ugcd(x,x));
-		BOOST_CHECK_EQUAL(1+x,poly_ugcd(pow(x,2)+7*x+6,pow(x,2)-5*x-6));
-		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,8)+pow(x,6)-3*pow(x,4)-3*pow(x,3)+8*pow(x,2)+2*x-5,
+		BOOST_CHECK_EQUAL(x,gcd_prs_sr(x,x));
+		BOOST_CHECK_EQUAL(1+x,gcd_prs_sr(pow(x,2)+7*x+6,pow(x,2)-5*x-6));
+		BOOST_CHECK_EQUAL(gcd_prs_sr(pow(x,8)+pow(x,6)-3*pow(x,4)-3*pow(x,3)+8*pow(x,2)+2*x-5,
 			3*pow(x,6)+5*pow(x,4)-4*pow(x,2)-9*x+21),1);
-		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,4)-9*pow(x,2)-4*x+12,pow(x,3)+5*pow(x,2)+2*x-8),-2+x*x+x);
-		BOOST_CHECK_EQUAL(1,poly_ugcd(pow(x,4)+pow(x,2)+1,pow(x,2)+1));
-		BOOST_CHECK_EQUAL(poly_ugcd(x*x+1,pow(x,5)+pow(x,4)+x+1),1);
-		BOOST_CHECK_EQUAL(poly_ugcd(pow(x,6)+pow(x,5)+pow(x,3)+x,pow(x,4)+pow(x,2)+1),1);
+		BOOST_CHECK_EQUAL(gcd_prs_sr(pow(x,4)-9*pow(x,2)-4*x+12,pow(x,3)+5*pow(x,2)+2*x-8),-2+x*x+x);
+		BOOST_CHECK_EQUAL(1,gcd_prs_sr(pow(x,4)+pow(x,2)+1,pow(x,2)+1));
+		BOOST_CHECK_EQUAL(gcd_prs_sr(x*x+1,pow(x,5)+pow(x,4)+x+1),1);
+		BOOST_CHECK_EQUAL(gcd_prs_sr(pow(x,6)+pow(x,5)+pow(x,3)+x,pow(x,4)+pow(x,2)+1),1);
 		// With zeroes.
-		BOOST_CHECK_EQUAL(x+1,poly_ugcd(x-x,x+1));
-		BOOST_CHECK_EQUAL(x+1,poly_ugcd(x+1,x-x));
-		BOOST_CHECK_EQUAL(0,poly_ugcd(x-x,x-x));
+		BOOST_CHECK_EQUAL(x+1,gcd_prs_sr(x-x,x+1));
+		BOOST_CHECK_EQUAL(x+1,gcd_prs_sr(x+1,x-x));
+		BOOST_CHECK_EQUAL(0,gcd_prs_sr(x-x,x-x));
 		// With negative exponents.
-		BOOST_CHECK_THROW(poly_ugcd(x.pow(-1),x),std::invalid_argument);
-		BOOST_CHECK_THROW(poly_ugcd(x,x.pow(-1)),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_prs_sr(x.pow(-1),x),std::invalid_argument);
+		BOOST_CHECK_THROW(gcd_prs_sr(x,x.pow(-1)),std::invalid_argument);
 		// Random testing.
 		std::uniform_int_distribution<int> ud(0,9);
 		for (auto i = 0; i < ntrials; ++i) {
@@ -221,12 +224,12 @@ struct ugcd_tester
 				a += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
 				b += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
 			}
-			auto tmp = poly_ugcd(a,b);
+			auto tmp = gcd_prs_sr(a,b);
 			if (a.size() != 0u || b.size() != 0u) {
 				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(a),pq_type(tmp)).second.size(),0u);
 				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(b),pq_type(tmp)).second.size(),0u);
 			}
-			BOOST_CHECK(tmp == poly_ugcd(b,a) || tmp == -poly_ugcd(b,a));
+			BOOST_CHECK(tmp == gcd_prs_sr(b,a) || tmp == -gcd_prs_sr(b,a));
 		}
 		for (auto i = 0; i < ntrials; ++i) {
 			p_type a = x - x, b = a;
@@ -235,25 +238,28 @@ struct ugcd_tester
 				a += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
 				b += ((ud(rng) < 5 ? 1 : -1) * ud(rng) * x.pow(ud(rng))) / (ud(rng) + 1);
 			}
-			auto tmp = poly_ugcd(a*b,b);
+			auto tmp = gcd_prs_sr(a*b,b);
 			if ((a*b).size() != 0u || b.size() != 0u) {
 				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(a*b),pq_type(tmp)).second.size(),0u);
 				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(b),pq_type(tmp)).second.size(),0u);
 			}
-			BOOST_CHECK(tmp == poly_ugcd(b,a*b) || tmp == -poly_ugcd(b,a*b));
-			tmp = poly_ugcd(a*b*b,b*a);
+			BOOST_CHECK(tmp == gcd_prs_sr(b,a*b) || tmp == -gcd_prs_sr(b,a*b));
+			tmp = gcd_prs_sr(a*b*b,b*a);
 			if ((a*b*b).size() != 0u || (b*a).size() != 0u) {
 				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(a*b*b),pq_type(tmp)).second.size(),0u);
 				BOOST_CHECK_EQUAL(pq_type::udivrem(pq_type(b*a),pq_type(tmp)).second.size(),0u);
 			}
-			BOOST_CHECK(tmp == poly_ugcd(a*b,a*b*b) || tmp == -poly_ugcd(a*b,a*b*b));
+			BOOST_CHECK(tmp == gcd_prs_sr(a*b,a*b*b) || tmp == -gcd_prs_sr(a*b,a*b*b));
 		}
+		// Restore.
+		p_type::reset_default_gcd_algorithm();
+		BOOST_CHECK(p_type::get_default_gcd_algorithm() == polynomial_gcd_algorithm::automatic);
 	}
 };
 
-BOOST_AUTO_TEST_CASE(polynomial_ugcd_test)
+BOOST_AUTO_TEST_CASE(polynomial_gcd_prs_sr_test)
 {
-	boost::mpl::for_each<key_types>(ugcd_tester());
+	boost::mpl::for_each<key_types>(gcd_prs_sr_tester());
 }
 
 struct establish_limits_tester
@@ -395,14 +401,18 @@ struct univariate_gcdheu_tester
 		using namespace piranha::detail;
 		using piranha::math::pow;
 		using p_type = polynomial<integer,Key>;
-		p_type x{"x"}, y{"y"}, z{"z"};
+		p_type x{"x"};
 		// The idea here is that instead of calling the detail:: implementation we go through
 		// the gcd() static function in poly and force the algorithm. This is in order to test
 		// the exception throwing paths in the static method.
 		auto heu_wrapper = [](const p_type &a, const p_type &b) -> std::pair<bool,p_type> {
 			try {
-				auto res_heu = p_type::gcd(a,b,polynomial_gcd_algorithm::heuristic);
-				return std::make_pair(false,std::move(res_heu));
+				auto res_heu = p_type::gcd(a,b,true,polynomial_gcd_algorithm::heuristic);
+				if (!math::is_zero(std::get<0u>(res_heu))) {
+					BOOST_CHECK_EQUAL(a / std::get<0u>(res_heu),std::get<1u>(res_heu));
+					BOOST_CHECK_EQUAL(b / std::get<0u>(res_heu),std::get<2u>(res_heu));
+				}
+				return std::make_pair(false,std::move(std::get<0u>(res_heu)));
 			} catch (const std::runtime_error &) {
 				return std::make_pair(true,p_type{});
 			}
@@ -435,12 +445,6 @@ struct univariate_gcdheu_tester
 		BOOST_CHECK_THROW(heu_wrapper(x.pow(-1),x),std::invalid_argument);
 		BOOST_CHECK_THROW(heu_wrapper(x,x.pow(-1)),std::invalid_argument);
 		BOOST_CHECK_THROW(heu_wrapper(x.pow(-1),x.pow(-1)),std::invalid_argument);
-		// An example that triggers a xi-too-large error.
-		auto res_l = heu_wrapper(
-			314928*pow(y,24)*pow(z,21)+629856*pow(y,26)*pow(z,24)+746496*pow(y,27)*pow(z,27)+1119744*pow(y,25)*pow(z,28),
-			-3359232*pow(y,27)*pow(z,31)-944784*pow(y,26)*pow(z,24)-2239488*pow(y,29)*pow(z,30)-1889568*pow(y,28)*pow(z,27)
-		);
-		BOOST_CHECK(res_l.first);
 		// Random testing.
 		std::uniform_int_distribution<int> ud(0,9);
 		for (auto i = 0; i < ntrials; ++i) {
@@ -461,8 +465,8 @@ struct univariate_gcdheu_tester
 			auto res_heu2 = heu_wrapper(b,a);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
-			auto res_psr = poly_ugcd(a,b);
-			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+			auto res_prs = gcd_prs_sr(a,b);
+			BOOST_CHECK(res_heu.second == res_prs || res_heu.second == -res_prs);
 		}
 		for (auto i = 0; i < ntrials; ++i) {
 			p_type a = x - x, b = a;
@@ -482,8 +486,8 @@ struct univariate_gcdheu_tester
 			auto res_heu2 = heu_wrapper(b,a*b);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
-			auto res_psr = poly_ugcd(a*b,b);
-			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+			auto res_prs = gcd_prs_sr(a*b,b);
+			BOOST_CHECK(res_heu.second == res_prs || res_heu.second == -res_prs);
 			res_heu = heu_wrapper(a*b*b,b*a);
 			if (res_heu.first) {
 				continue;
@@ -495,8 +499,8 @@ struct univariate_gcdheu_tester
 			res_heu2 = heu_wrapper(b*a,a*b*b);
 			BOOST_CHECK(!res_heu2.first);
 			BOOST_CHECK(res_heu.second == res_heu2.second || res_heu.second == -res_heu2.second);
-			res_psr = poly_ugcd(a*b*b,b*a);
-			BOOST_CHECK(res_heu.second == res_psr || res_heu.second == -res_psr);
+			res_prs = gcd_prs_sr(a*b*b,b*a);
+			BOOST_CHECK(res_heu.second == res_prs || res_heu.second == -res_prs);
 		}
 	}
 };

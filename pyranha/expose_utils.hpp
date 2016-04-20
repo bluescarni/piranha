@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
-#include <boost/lexical_cast.hpp>
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/dict.hpp>
@@ -43,6 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/list.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/operators.hpp>
+#include <boost/python/return_arg.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <cstddef>
@@ -76,9 +76,9 @@ namespace pyranha
 
 namespace bp = boost::python;
 
-// Pickle support for series.
+// Generic pickle support via Boost serialization.
 template <typename Series>
-struct series_pickle_suite : bp::pickle_suite
+struct generic_pickle_suite : bp::pickle_suite
 {
 	static bp::tuple getinitargs(const Series &)
 	{
@@ -119,7 +119,7 @@ inline bp::class_<T> expose_class()
 		::PyErr_SetString(PyExc_RuntimeError,(std::string("the C++ type '") + demangled_type_name(t_idx) + "' has already been exposed").c_str());
 		bp::throw_error_already_set();
 	}
-	bp::class_<T> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
+	bp::class_<T> class_inst((std::string("_exposed_type_")+std::to_string(exposed_types_counter)).c_str(),bp::init<>());
 	++exposed_types_counter;
 	// NOTE: class_ inherits from bp::object, here the "call operator" of a class type will construct an instance
 	// of that object. We then get the Python type out of that. It seems like another possible way of achieving
@@ -157,6 +157,157 @@ struct NullHook
 	{}
 };
 
+// Generic copy wrappers.
+template <typename S>
+inline S generic_copy_wrapper(const S &s)
+{
+	return s;
+}
+
+template <typename S>
+inline S generic_deepcopy_wrapper(const S &s, bp::dict)
+{
+	return s;
+}
+
+// Generic evaluate wrapper.
+template <typename S, typename T>
+inline auto generic_evaluate_wrapper(const S &s, bp::dict dict, const T &)
+	-> decltype(piranha::math::evaluate(s,std::declval<std::unordered_map<std::string,T>>()))
+{
+	std::unordered_map<std::string,T> cpp_dict;
+	bp::stl_input_iterator<std::string> it(dict), end;
+	for (; it != end; ++it) {
+		cpp_dict[*it] = bp::extract<T>(dict[*it])();
+	}
+	return piranha::math::evaluate(s,cpp_dict);
+}
+
+// Generic canonical transformation wrapper.
+// NOTE: last param is dummy to let the Boost.Python type system to pick the correct type.
+template <typename S>
+inline bool generic_canonical_wrapper(bp::list new_p, bp::list new_q, bp::list p_list, bp::list q_list, const S &)
+{
+	bp::stl_input_iterator<S> begin_new_p(new_p), end_new_p;
+	bp::stl_input_iterator<S> begin_new_q(new_q), end_new_q;
+	bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
+	bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
+	return piranha::math::transformation_is_canonical(std::vector<S>(begin_new_p,end_new_p),std::vector<S>(begin_new_q,end_new_q),
+		std::vector<std::string>(begin_p,end_p),std::vector<std::string>(begin_q,end_q));
+}
+
+// Generic Poisson bracket wrapper.
+template <typename S>
+inline auto generic_pbracket_wrapper(const S &s1, const S &s2, bp::list p_list, bp::list q_list) ->
+	decltype(piranha::math::pbracket(s1,s2,{},{}))
+{
+	bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
+	bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
+	return piranha::math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
+		std::vector<std::string>(begin_q,end_q));
+}
+
+// Generic degree wrappers.
+template <typename S>
+inline auto generic_degree_wrapper(const S &s) -> decltype(piranha::math::degree(s))
+{
+	return piranha::math::degree(s);
+}
+
+template <typename S>
+inline auto generic_partial_degree_wrapper(const S &s, bp::list l) -> decltype(piranha::math::degree(s,std::vector<std::string>{}))
+{
+	bp::stl_input_iterator<std::string> begin(l), end;
+	return piranha::math::degree(s,std::vector<std::string>(begin,end));
+}
+
+template <typename S>
+inline auto generic_ldegree_wrapper(const S &s) -> decltype(piranha::math::ldegree(s))
+{
+	return piranha::math::ldegree(s);
+}
+
+template <typename S>
+inline auto generic_partial_ldegree_wrapper(const S &s, bp::list l) -> decltype(piranha::math::ldegree(s,std::vector<std::string>{}))
+{
+	bp::stl_input_iterator<std::string> begin(l), end;
+	return piranha::math::ldegree(s,std::vector<std::string>(begin,end));
+}
+
+// Generic latex representation wrapper.
+template <typename S>
+inline std::string generic_latex_wrapper(const S &s)
+{
+	std::ostringstream oss;
+	s.print_tex(oss);
+	return oss.str();
+}
+
+// A simple wrapper for in-place division. We need this because Boost.Python does not expose correctly
+// in-place division in Python 3.
+// https://svn.boost.org/trac/boost/ticket/11797
+template <typename T, typename U>
+inline T &generic_in_place_division_wrapper(T &n, const U &d)
+{
+	return n /= d;
+}
+
+// Utility function to check if object is callable. Will throw TypeError if not.
+inline void check_callable(bp::object func)
+{
+#if PY_MAJOR_VERSION < 3
+	bp::object builtin_module = bp::import("__builtin__");
+	if (!builtin_module.attr("callable")(func)) {
+		::PyErr_SetString(PyExc_TypeError,"object is not callable");
+		bp::throw_error_already_set();
+	}
+#else
+	// This will throw on failure.
+	try {
+		bp::object call_method = func.attr("__call__");
+		(void)call_method;
+	} catch (...) {
+		// NOTE: it seems like it is ok to overwrite the global error status of Python here,
+		// after it has already been set by Boost.Python via the exception thrown above.
+		::PyErr_SetString(PyExc_TypeError,"object is not callable");
+		bp::throw_error_already_set();
+	}
+#endif
+}
+
+// Various generic utils for differentiation.
+// NOTE: here it is important to keep the member/free distinction because of the special semantics of partial.
+template <typename S>
+inline auto generic_partial_wrapper(const S &s, const std::string &name) -> decltype(piranha::math::partial(s,name))
+{
+	return piranha::math::partial(s,name);
+}
+
+template <typename S>
+inline auto generic_partial_member_wrapper(const S &s, const std::string &name) -> decltype(s.partial(name))
+{
+	return s.partial(name);
+}
+
+// NOTE: here we need to take care of multithreading in the future. We need to check at least that:
+// - the check and copy are thread-safe,
+// - calling the function itself is thread-safe (e.g., if pbracket one day gets parallelised we might
+//   end up calling func from multiple C++ threads at the same time).
+// Note that the issue here is calling the same Python interpreter from multiple C++ threads of which
+// the interpreter knows nothing.
+template <typename S>
+inline void generic_register_custom_derivative_wrapper(const std::string &name, bp::object func)
+{
+	using partial_type = decltype(std::declval<const S &>().partial(std::string()));
+	check_callable(func);
+	// Make a deep copy.
+	bp::object deepcopy = bp::import("copy").attr("deepcopy");
+	bp::object f_copy = deepcopy(func);
+	S::register_custom_derivative(name,[f_copy](const S &s) -> partial_type {
+		return bp::extract<partial_type>(f_copy(s));
+	});
+}
+
 // Generic series exposer.
 template <template <typename ...> class Series, typename Descriptor, std::size_t Begin = 0u,
 	std::size_t End = std::tuple_size<typename Descriptor::params>::value, typename CustomHook = NullHook>
@@ -184,17 +335,6 @@ class series_exposer
 		static void expose_ctor(bp::class_<T> &,
 			typename std::enable_if<!std::is_constructible<T,U>::value>::type * = nullptr)
 		{}
-		// Copy operations.
-		template <typename S>
-		static S copy_wrapper(const S &s)
-		{
-			return s;
-		}
-		template <typename S>
-		static S deepcopy_wrapper(const S &s, bp::dict)
-		{
-			return copy_wrapper(s);
-		}
 		// Sparsity wrapper.
 		template <typename S>
 		static bp::dict table_sparsity_wrapper(const S &s)
@@ -255,13 +395,19 @@ class series_exposer
 		template <typename S, typename T>
 		using division_ops_ic = std::integral_constant<bool,
 			piranha::is_divisible_in_place<S,T>::value &&
-			piranha::is_divisible<S,T>::value>;
+			piranha::is_divisible<S,T>::value &&
+			piranha::is_divisible<T,S>::value>;
 		template <typename S, typename T, typename std::enable_if<division_ops_ic<S,T>::value,int>::type = 0>
 		static void expose_division(bp::class_<S> &series_class, const T &in)
 		{
 			namespace sn = boost::python::self_ns;
+#if PY_MAJOR_VERSION < 3
 			series_class.def(sn::operator/=(bp::self,in));
+#else
+			series_class.def("__itruediv__",generic_in_place_division_wrapper<S,T>,bp::return_arg<1u>{});
+#endif
 			series_class.def(sn::operator/(bp::self,in));
+			series_class.def(sn::operator/(in,bp::self));
 		}
 		template <typename S, typename T, typename std::enable_if<!division_ops_ic<S,T>::value,int>::type = 0>
 		static void expose_division(bp::class_<S> &, const T &)
@@ -313,26 +459,13 @@ class series_exposer
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<piranha::is_evaluable<S,T>::value>::type * = nullptr) const
 			{
-				m_series_class.def("_evaluate",evaluate_wrapper<S,T>);
-				bp::def("_evaluate",evaluate_wrapper<S,T>);
+				m_series_class.def("_evaluate",generic_evaluate_wrapper<S,T>);
+				bp::def("_evaluate",generic_evaluate_wrapper<S,T>);
 			}
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<!piranha::is_evaluable<S,T>::value>::type * = nullptr) const
 			{}
 		};
-		// NOTE: math::evaluate for series is always the evaluate() member function, so we just need one wrapper.
-		// This is true at the moment for other functions, such as the subs ones, integrate, etc.
-		template <typename S, typename T>
-		static auto evaluate_wrapper(const S &s, bp::dict dict, const T &)
-			-> decltype(s.evaluate(std::declval<std::unordered_map<std::string,T>>()))
-		{
-			std::unordered_map<std::string,T> cpp_dict;
-			bp::stl_input_iterator<std::string> it(dict), end;
-			for (; it != end; ++it) {
-				cpp_dict[*it] = bp::extract<T>(dict[*it])();
-			}
-			return s.evaluate(cpp_dict);
-		}
 		template <typename S, typename T = Descriptor>
 		static void expose_eval(bp::class_<S> &series_class, typename std::enable_if<has_typedef_eval_types<T>::value>::type * = nullptr)
 		{
@@ -482,29 +615,6 @@ class series_exposer
 			typename std::enable_if<!piranha::is_integrable<S>::value>::type * = nullptr)
 		{}
 		// Differentiation.
-		// NOTE: here it is important to keep the member/free distinction because of the special semantics of partial.
-		template <typename S>
-		static auto partial_wrapper(const S &s, const std::string &name) -> decltype(piranha::math::partial(s,name))
-		{
-			return piranha::math::partial(s,name);
-		}
-		template <typename S>
-		static auto partial_member_wrapper(const S &s, const std::string &name) -> decltype(s.partial(name))
-		{
-			return s.partial(name);
-		}
-		// Custom partial derivatives registration wrapper.
-		// NOTE: here we need to take care of multithreading in the future, most likely by adding
-		// the Python threading bits inside the lambda and also outside when checking func.
-		template <typename S>
-		static void register_custom_derivative(const std::string &name, bp::object func)
-		{
-			using partial_type = decltype(std::declval<const S &>().partial(std::string()));
-			check_callable(func);
-			S::register_custom_derivative(name,[func](const S &s) -> partial_type {
-				return bp::extract<partial_type>(func(s));
-			});
-		}
 		template <typename S>
 		static void expose_partial(bp::class_<S> &series_class,
 			typename std::enable_if<piranha::is_differentiable<S>::value>::type * = nullptr)
@@ -512,10 +622,11 @@ class series_exposer
 			// NOTE: we need this below in order to specifiy exactly the address of the templated
 			// static method for unregistering the custom derivatives.
 			using partial_type = decltype(piranha::math::partial(std::declval<const S &>(),std::string{}));
-			series_class.def("partial",partial_member_wrapper<S>);
-			bp::def("_partial",partial_wrapper<S>);
+			series_class.def("partial",generic_partial_member_wrapper<S>);
+			bp::def("_partial",generic_partial_wrapper<S>);
 			// Custom derivatives support.
-			series_class.def("register_custom_derivative",register_custom_derivative<S>).staticmethod("register_custom_derivative");
+			series_class.def("register_custom_derivative",generic_register_custom_derivative_wrapper<S>)
+				.staticmethod("register_custom_derivative");
 			series_class.def("unregister_custom_derivative",
 				S::template unregister_custom_derivative<S,partial_type>).staticmethod("unregister_custom_derivative");
 			series_class.def("unregister_all_custom_derivatives",
@@ -525,70 +636,26 @@ class series_exposer
 		static void expose_partial(bp::class_<S> &,
 			typename std::enable_if<!piranha::is_differentiable<S>::value>::type * = nullptr)
 		{}
-		// Poisson bracket.
-		template <typename S>
-		static auto pbracket_wrapper(const S &s1, const S &s2, bp::list p_list, bp::list q_list) ->
-			decltype(piranha::math::pbracket(s1,s2,{},{}))
-		{
-			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
-			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
-			return piranha::math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
-				std::vector<std::string>(begin_q,end_q));
-		}
 		template <typename S>
 		static void expose_pbracket(bp::class_<S> &,
 			typename std::enable_if<piranha::has_pbracket<S>::value>::type * = nullptr)
 		{
-			bp::def("_pbracket",pbracket_wrapper<S>);
+			bp::def("_pbracket",generic_pbracket_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_pbracket(bp::class_<S> &,
 			typename std::enable_if<!piranha::has_pbracket<S>::value>::type * = nullptr)
 		{}
-		// Canonical transformation.
-		// NOTE: last param is dummy to let the Boost.Python type system to pick the correct type.
-		template <typename S>
-		static bool canonical_wrapper(bp::list new_p, bp::list new_q, bp::list p_list, bp::list q_list, const S &)
-		{
-			bp::stl_input_iterator<S> begin_new_p(new_p), end_new_p;
-			bp::stl_input_iterator<S> begin_new_q(new_q), end_new_q;
-			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
-			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
-			return piranha::math::transformation_is_canonical(std::vector<S>(begin_new_p,end_new_p),std::vector<S>(begin_new_q,end_new_q),
-				std::vector<std::string>(begin_p,end_p),std::vector<std::string>(begin_q,end_q));
-		}
 		template <typename S>
 		static void expose_canonical(bp::class_<S> &,
 			typename std::enable_if<piranha::has_transformation_is_canonical<S>::value>::type * = nullptr)
 		{
-			bp::def("_transformation_is_canonical",canonical_wrapper<S>);
+			bp::def("_transformation_is_canonical",generic_canonical_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_canonical(bp::class_<S> &,
 			typename std::enable_if<!piranha::has_transformation_is_canonical<S>::value>::type * = nullptr)
 		{}
-		// Utility function to check if object is callable. Will throw TypeError if not.
-		static void check_callable(bp::object func)
-		{
-#if PY_MAJOR_VERSION < 3
-			bp::object builtin_module = bp::import("__builtin__");
-			if (!builtin_module.attr("callable")(func)) {
-				::PyErr_SetString(PyExc_TypeError,"object is not callable");
-				bp::throw_error_already_set();
-			}
-#else
-			// This will throw on failure.
-			try {
-				bp::object call_method = func.attr("__call__");
-				(void)call_method;
-			} catch (...) {
-				// NOTE: it seems like it is ok to overwrite the global error status of Python here,
-				// after it has already been set by Boost.Python via the exception thrown above.
-				::PyErr_SetString(PyExc_TypeError,"object is not callable");
-				bp::throw_error_already_set();
-			}
-#endif
-		}
 		// filter() wrap.
 		template <typename S>
 		static S wrap_filter(const S &s, bp::object func)
@@ -665,42 +732,18 @@ class series_exposer
 			expose_degree_truncation(series_class);
 		}
 		template <typename T>
-		static void expose_degree(bp::class_<T> &series_class,
+		static void expose_degree(bp::class_<T> &,
 			typename std::enable_if<piranha::has_degree<T>::value && piranha::has_ldegree<T>::value>::type * = nullptr)
 		{
-			// NOTE: probably we should make these piranha::math:: wrappers. Same for the trig ones.
-			series_class.def("degree",wrap_degree<T>);
-			series_class.def("degree",wrap_partial_degree_set<T>);
-			series_class.def("ldegree",wrap_ldegree<T>);
-			series_class.def("ldegree",wrap_partial_ldegree_set<T>);
+			bp::def("_degree",generic_degree_wrapper<T>);
+			bp::def("_degree",generic_partial_degree_wrapper<T>);
+			bp::def("_ldegree",generic_ldegree_wrapper<T>);
+			bp::def("_ldegree",generic_partial_ldegree_wrapper<T>);
 		}
 		template <typename T>
 		static void expose_degree(bp::class_<T> &,
 			typename std::enable_if<!piranha::has_degree<T>::value || !piranha::has_ldegree<T>::value>::type * = nullptr)
 		{}
-		// degree() wrappers.
-		template <typename S>
-		static auto wrap_degree(const S &s) -> decltype(s.degree())
-		{
-			return s.degree();
-		}
-		template <typename S>
-		static auto wrap_partial_degree_set(const S &s, bp::list l) -> decltype(s.degree(std::vector<std::string>{}))
-		{
-			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.degree(std::vector<std::string>(begin,end));
-		}
-		template <typename S>
-		static auto wrap_ldegree(const S &s) -> decltype(s.ldegree())
-		{
-			return s.ldegree();
-		}
-		template <typename S>
-		static auto wrap_partial_ldegree_set(const S &s, bp::list l) -> decltype(s.ldegree(std::vector<std::string>{}))
-		{
-			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.ldegree(std::vector<std::string>(begin,end));
-		}
 		// Truncation.
 		template <typename S>
 		struct truncate_degree_exposer
@@ -749,17 +792,17 @@ class series_exposer
 		{}
 		// Trigonometric exposer.
 		template <typename S>
-		static void expose_trigonometric_series(bp::class_<S> &series_class, typename std::enable_if<
+		static void expose_trigonometric_series(bp::class_<S> &, typename std::enable_if<
 			piranha::has_t_degree<S>::value && piranha::has_t_ldegree<S>::value && piranha::has_t_order<S>::value && piranha::has_t_lorder<S>::value>::type * = nullptr)
 		{
-			series_class.def("t_degree",wrap_t_degree<S>);
-			series_class.def("t_degree",wrap_partial_t_degree<S>);
-			series_class.def("t_ldegree",wrap_t_ldegree<S>);
-			series_class.def("t_ldegree",wrap_partial_t_ldegree<S>);
-			series_class.def("t_order",wrap_t_order<S>);
-			series_class.def("t_order",wrap_partial_t_order<S>);
-			series_class.def("t_lorder",wrap_t_lorder<S>);
-			series_class.def("t_lorder",wrap_partial_t_lorder<S>);
+			bp::def("_t_degree",wrap_t_degree<S>);
+			bp::def("_t_degree",wrap_partial_t_degree<S>);
+			bp::def("_t_ldegree",wrap_t_ldegree<S>);
+			bp::def("_t_ldegree",wrap_partial_t_ldegree<S>);
+			bp::def("_t_order",wrap_t_order<S>);
+			bp::def("_t_order",wrap_partial_t_order<S>);
+			bp::def("_t_lorder",wrap_t_lorder<S>);
+			bp::def("_t_lorder",wrap_partial_t_lorder<S>);
 		}
 		template <typename S>
 		static void expose_trigonometric_series(bp::class_<S> &, typename std::enable_if<
@@ -808,14 +851,6 @@ class series_exposer
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
 			return s.t_lorder(std::vector<std::string>(begin,end));
-		}
-		// Latex representation.
-		template <typename S>
-		static std::string wrap_latex(const S &s)
-		{
-			std::ostringstream oss;
-			s.print_tex(oss);
-			return oss.str();
 		}
 		// Symbol set wrapper.
 		template <typename S>
@@ -878,15 +913,15 @@ class series_exposer
 				expose_generic_type_generator<Series,Args...>();
 				// Start exposing.
 				auto series_class = expose_class<s_type>();
-				// Add the _is_series tag.
-				series_class.attr("_is_series") = true;
+				// Add the _is_exposed_type tag.
+				series_class.attr("_is_exposed_type") = true;
 				// Constructor from string, if available.
 				expose_ctor<const std::string &>(series_class);
 				// Copy constructor.
 				series_class.def(bp::init<const s_type &>());
 				// Shallow and deep copy.
-				series_class.def("__copy__",copy_wrapper<s_type>);
-				series_class.def("__deepcopy__",deepcopy_wrapper<s_type>);
+				series_class.def("__copy__",generic_copy_wrapper<s_type>);
+				series_class.def("__deepcopy__",generic_deepcopy_wrapper<s_type>);
 				// NOTE: here repr is found via argument-dependent lookup.
 				series_class.def(repr(bp::self));
 				// Length.
@@ -904,6 +939,12 @@ class series_exposer
 				series_class.def(bp::self - bp::self);
 				series_class.def(bp::self *= bp::self);
 				series_class.def(bp::self * bp::self);
+#if PY_MAJOR_VERSION < 3
+				series_class.def(bp::self /= bp::self);
+#else
+				series_class.def("__itruediv__",generic_in_place_division_wrapper<s_type,s_type>,bp::return_arg<1u>{});
+#endif
+				series_class.def(bp::self / bp::self);
 				series_class.def(bp::self == bp::self);
 				series_class.def(bp::self != bp::self);
 				series_class.def(+bp::self);
@@ -939,11 +980,11 @@ class series_exposer
 				// Trigonometric series.
 				expose_trigonometric_series(series_class);
 				// Latex.
-				series_class.def("_latex_",wrap_latex<s_type>);
+				series_class.def("_latex_",generic_latex_wrapper<s_type>);
 				// Arguments set.
 				series_class.add_property("symbol_set",symbol_set_wrapper<s_type>);
 				// Pickle support.
-				series_class.def_pickle(series_pickle_suite<s_type>());
+				series_class.def_pickle(generic_pickle_suite<s_type>());
 				// Save and load.
 				expose_save_load(series_class);
 				// Expose invert(), if present.
@@ -967,11 +1008,11 @@ class series_exposer
 		~series_exposer() = default;
 };
 
-inline bp::list get_series_list()
+inline bp::list get_exposed_types_list()
 {
 	bp::list retval;
 	for (const auto &p: et_map) {
-		if (::PyObject_HasAttrString(p.second.ptr(),"_is_series")) {
+		if (::PyObject_HasAttrString(p.second.ptr(),"_is_exposed_type")) {
 			retval.append(p.second);
 		}
 	}

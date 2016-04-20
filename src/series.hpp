@@ -104,7 +104,7 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
 {
 	typedef typename Term::cf_type cf_type;
 	Derived retval;
-	retval.m_symbol_set = s;
+	retval.set_symbol_set(s);
 	retval.insert(Term(cf_type(1),t.m_key));
 	return std::make_pair(t.m_cf,std::move(retval));
 }
@@ -142,9 +142,11 @@ inline RetT apply_cf_functor(const T &s)
 template <typename T>
 class is_series
 {
+		static const bool implementation_defined = std::is_base_of<detail::series_tag,T>::value &&
+			is_container_element<T>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_base_of<detail::series_tag,T>::value && is_container_element<T>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -241,15 +243,16 @@ using series_rebind = detail::series_rebind_<T,Cf>;
 template <typename T, typename = void>
 class series_recursion_index
 {
+		static const std::size_t implementation_defined = 0u;
 	public:
 		/// Value of the recursion index.
-		static const std::size_t value = 0u;
+		static const std::size_t value = implementation_defined;
 };
-
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
 
 template <typename T, typename Enable>
 const std::size_t series_recursion_index<T,Enable>::value;
+
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 
 template <typename T>
 class series_recursion_index<T,typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type>
@@ -258,7 +261,7 @@ class series_recursion_index<T,typename std::enable_if<std::is_base_of<detail::s
 		static_assert(series_recursion_index<cf_type>::value < std::numeric_limits<std::size_t>::max(),
 			"Overflow error.");
 	public:
-		static const std::size_t value = std::is_base_of<detail::series_tag,cf_type>::value ? series_recursion_index<cf_type>::value + 1u : 1u;
+		static const std::size_t value = static_cast<std::size_t>(series_recursion_index<cf_type>::value + 1u);
 };
 
 template <typename T>
@@ -280,9 +283,10 @@ class series_has_multiplier: detail::sfinae_types
 		template <typename T>
 		static auto test(const T &s) -> decltype(series_multiplier<T>(s,s)());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Sd>())),Sd>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Sd>())),Sd>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename Series>
@@ -511,14 +515,16 @@ struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
  * A few things to note about the operators implemented within this class:
  * - in case two series arguments have different symbol sets, either one or both series will be copied in a new series in which the symbols
  *   have been merged, and the operation will be performed on those series instead;
- * - in-place arithmetic operators are implemented as binary operators plus move-assignment;
- * - addition and subtraction are always available for any series type;
+ * - in-place arithmetic operators are implemented as binary operators plus move-assignment (and they are thus disabled if either the corresponding
+ *   binary operation or the assignment are invalid);
  * - series multiplication requires the coefficient types to be multipliable and a valid specialisation of piranha::series_multiplier for the
  *   promoted series type;
- * - division is implemented only when the first argument has a recursion index greater than the second argument and
- *   the first argument's coefficient type is divisible by the second argument;
+ * - division is implemented only when it reduces to coefficient division (true series division may be implemented in specific series types,
+ *   e.g., piranha::polynomial);
  * - the comparison operators will use <tt>operator+()</tt> on the coefficient types to determine if any type promotion is necessary
  *   before performing the comparison.
+ *
+ * The operators are implemented using variadic templates in order to allow overriding them via non-variadic overloads.
  */
 class series_operators
 {
@@ -622,9 +628,9 @@ class series_operators
 		// and that for the operator to be enabled the "canonical" form of addition operator must be available.
 		// The consequence is that if, for instance, only a move constructor is available, the operator
 		// will anyway be disabled even if technically we could still perform the computation.
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using binary_add_type = decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+			std::declval<const typename std::decay<U>::type &>()...));
 		// In-place add. Default implementation is to do simply x = x + y, if possible.
 		// NOTE: this should also be able to handle int += series, if we ever implement it.
 		template <typename T, typename U, typename std::enable_if<
@@ -640,10 +646,10 @@ class series_operators
 		// because we require in-place addition to work with the second argument as a const reference (as that is
 		// the canonical form of in-place addition). The actual call will however do perfect forwarding, so optimisations
 		// are still possible.
-		template <typename T, typename U>
-		using in_place_add_type = decltype(dispatch_in_place_add(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()));
-		template <typename T, typename U>
-		using in_place_add_enabler = typename std::enable_if<detail::true_tt<in_place_add_type<T,U>>::value,int>::type;
+		template <typename T, typename ... U>
+		using in_place_add_type = decltype(dispatch_in_place_add(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()...));
+		template <typename T, typename ... U>
+		using in_place_add_enabler = typename std::enable_if<detail::true_tt<in_place_add_type<T,U...>>::value,int>::type;
 		// Subtraction.
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,1>::value == 0u,int>::type = 0>
 		static series_common_type<T,U,1> dispatch_binary_sub(T &&x, U &&y)
@@ -682,9 +688,9 @@ class series_operators
 			retval.negate();
 			return retval;
 		}
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using binary_sub_type = decltype(dispatch_binary_sub(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+			std::declval<const typename std::decay<U>::type &>()...));
 		template <typename T, typename U, typename std::enable_if<
 			std::is_assignable<T &,binary_sub_type<T,U>>::value,
 			int>::type = 0>
@@ -693,10 +699,10 @@ class series_operators
 			x = dispatch_binary_sub(std::move(x),std::forward<U>(y));
 			return x;
 		}
-		template <typename T, typename U>
-		using in_place_sub_type = decltype(dispatch_in_place_sub(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()));
-		template <typename T, typename U>
-		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<in_place_sub_type<T,U>>::value,int>::type;
+		template <typename T, typename ... U>
+		using in_place_sub_type = decltype(dispatch_in_place_sub(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()...));
+		template <typename T, typename ... U>
+		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<in_place_sub_type<T,U...>>::value,int>::type;
 		// Multiplication.
 		template <typename T, typename U>
 		static series_common_type<T,U,2> binary_mul_impl(T &&x, U &&y)
@@ -762,11 +768,11 @@ class series_operators
 		}
 		// NOTE: this is the real type from the multiplication, below we put another enable_if to make it conditional
 		// on the presence of a series multiplier.
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using binary_mul_type_ = decltype(dispatch_binary_mul(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
-		template <typename T, typename U>
-		using binary_mul_type = typename std::enable_if<series_has_multiplier<binary_mul_type_<T,U>>::value,binary_mul_type_<T,U>>::type;
+			std::declval<const typename std::decay<U>::type &>()...));
+		template <typename T, typename ... U>
+		using binary_mul_type = typename std::enable_if<series_has_multiplier<binary_mul_type_<T,U...>>::value,binary_mul_type_<T,U...>>::type;
 		template <typename T, typename U, typename std::enable_if<
 			std::is_assignable<T &,binary_mul_type<T,U>>::value,
 			int>::type = 0>
@@ -775,12 +781,63 @@ class series_operators
 			x = dispatch_binary_mul(std::move(x),std::forward<U>(y));
 			return x;
 		}
-		template <typename T, typename U>
-		using in_place_mul_type = decltype(dispatch_in_place_mul(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()));
-		template <typename T, typename U>
-		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<in_place_mul_type<T,U>>::value,int>::type;
+		template <typename T, typename ... U>
+		using in_place_mul_type = decltype(dispatch_in_place_mul(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()...));
+		template <typename T, typename ... U>
+		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<in_place_mul_type<T,U...>>::value,int>::type;
 		// Division.
-		// NOTE: only two cases are possible at the moment, when we divide a series by an object with lower recursion index.
+		// NOTE: the divisibility requirement here is already satisfied in the determination of the return type.
+		// The base case: same recursion, no promotion.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 0u,int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		{
+			using ret_type = series_common_type<T,U,3>;
+			// NOTE: is_zero() is always available for series.
+			if (math::is_zero(y)) {
+				piranha_throw(zero_division_error,"zero denominator in series division");
+			}
+			if (math::is_zero(x)) {
+				return ret_type{};
+			}
+			if (!y.is_single_coefficient()) {
+				piranha_throw(std::invalid_argument,"divisor in series division does not "
+					"consist of a single coefficient");
+			}
+			return x / y._container().begin()->m_cf;
+		}
+		// Same recursion, first coefficient wins.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 1u &&
+			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		{
+			typename std::decay<T>::type y1(std::forward<U>(y));
+			return dispatch_binary_div(std::forward<T>(x),std::move(y1));
+		}
+		// Two cases:
+		// - same recursion, second coefficient wins,
+		// - second operand has higher recursion, first operand promotes to second.
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,3>::value == 2u || bso_type<T,U,3>::value == 6u) &&
+			std::is_constructible<typename std::decay<U>::type,const typename std::decay<T>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		{
+			typename std::decay<U>::type x1(std::forward<T>(x));
+			return dispatch_binary_div(std::move(x1),std::forward<U>(y));
+		}
+		// Two cases:
+		// - same recursion, need promoted coefficient,
+		// - second operand has higher recursion, both promote to a third type.
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,3>::value == 3u || bso_type<T,U,3>::value == 7u) &&
+			std::is_constructible<series_common_type<T,U,3>,const typename std::decay<T>::type &>::value &&
+			std::is_constructible<series_common_type<T,U,3>,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		{
+			series_common_type<T,U,0> x1(std::forward<T>(x));
+			series_common_type<T,U,0> y1(std::forward<U>(y));
+			return dispatch_binary_div(std::move(x1),std::move(y1));
+		}
 		// The implementation of these two cases 4 and 5 is different from the other operations, as we cannot promote to a common
 		// type (true series division is not implemented).
 		// NOTE: the use of the old syntax for the enable_if with nullptr is because of a likely GCC bug:
@@ -837,9 +894,9 @@ class series_operators
 			series_common_type<T,U,3> x1(std::forward<T>(x));
 			return dispatch_binary_div(std::move(x1),std::forward<U>(y));
 		}
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using binary_div_type = decltype(dispatch_binary_div(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+			std::declval<const typename std::decay<U>::type &>()...));
 		template <typename T, typename U, typename std::enable_if<
 			std::is_assignable<T &,binary_div_type<T,U>>::value,
 			int>::type = 0>
@@ -848,10 +905,10 @@ class series_operators
 			x = dispatch_binary_div(std::move(x),std::forward<U>(y));
 			return x;
 		}
-		template <typename T, typename U>
-		using in_place_div_type = decltype(dispatch_in_place_div(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()));
-		template <typename T, typename U>
-		using in_place_div_enabler = typename std::enable_if<detail::true_tt<in_place_div_type<T,U>>::value,int>::type;
+		template <typename T, typename ... U>
+		using in_place_div_type = decltype(dispatch_in_place_div(std::declval<T &>(),std::declval<const typename std::decay<U>::type &>()...));
+		template <typename T, typename ... U>
+		using in_place_div_enabler = typename std::enable_if<detail::true_tt<in_place_div_type<T,U...>>::value,int>::type;
 		// Equality.
 		// Low-level implementation of equality.
 		template <typename T>
@@ -916,11 +973,11 @@ class series_operators
 		{
 			return dispatch_equality(y,x);
 		}
-		template <typename T, typename U>
+		template <typename T, typename ... U>
 		using eq_type = decltype(dispatch_equality(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
-		template <typename T, typename U>
-		using eq_enabler = typename std::enable_if<detail::true_tt<eq_type<T,U>>::value,int>::type;
+			std::declval<const typename std::decay<U>::type &>()...));
+		template <typename T, typename ... U>
+		using eq_enabler = typename std::enable_if<detail::true_tt<eq_type<T,U...>>::value,int>::type;
 	public:
 		/// Binary addition involving piranha::series.
 		/**
@@ -938,10 +995,10 @@ class series_operators
 		 * - construction, assignment and other operations on piranha::symbol_set,
 		 * - piranha::series::insert().
 		 */
-		template <typename T, typename U>
-		friend binary_add_type<T,U> operator+(T &&x, U &&y)
+		template <typename T, typename ... U>
+		friend binary_add_type<T,U...> operator+(T &&x, U && ... y)
 		{
-			return dispatch_binary_add(std::forward<T>(x),std::forward<U>(y));
+			return dispatch_binary_add(std::forward<T>(x),std::forward<U>(y)...);
 		}
 		/// In-place addition involving piranha::series.
 		/**
@@ -956,10 +1013,10 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator+().
 		 */
-		template <typename T, typename U, in_place_add_enabler<T,U> = 0>
-		friend T &operator+=(T &x, U &&y)
+		template <typename T, typename ... U, in_place_add_enabler<T,U...> = 0>
+		friend T &operator+=(T &x, U && ... y)
 		{
-			return dispatch_in_place_add(x,std::forward<U>(y));
+			return dispatch_in_place_add(x,std::forward<U>(y)...);
 		}
 		/// Binary subtraction involving piranha::series.
 		/**
@@ -978,10 +1035,10 @@ class series_operators
 		 * - piranha::series::insert(),
 		 * - piranha::series::negate().
 		 */
-		template <typename T, typename U>
-		friend binary_sub_type<T,U> operator-(T &&x, U &&y)
+		template <typename T, typename ... U>
+		friend binary_sub_type<T,U...> operator-(T &&x, U && ... y)
 		{
-			return dispatch_binary_sub(std::forward<T>(x),std::forward<U>(y));
+			return dispatch_binary_sub(std::forward<T>(x),std::forward<U>(y)...);
 		}
 		/// In-place subtraction involving piranha::series.
 		/**
@@ -996,10 +1053,10 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator-().
 		 */
-		template <typename T, typename U, in_place_sub_enabler<T,U> = 0>
-		friend T &operator-=(T &x, U &&y)
+		template <typename T, typename ... U, in_place_sub_enabler<T,U...> = 0>
+		friend T &operator-=(T &x, U && ... y)
 		{
-			return dispatch_in_place_sub(x,std::forward<U>(y));
+			return dispatch_in_place_sub(x,std::forward<U>(y)...);
 		}
 		/// Binary multiplication involving piranha::series.
 		/**
@@ -1018,10 +1075,10 @@ class series_operators
 		 * - piranha::series::insert(),
 		 * - the call operator of piranha::series_multiplier.
 		 */
-		template <typename T, typename U>
-		friend binary_mul_type<T,U> operator*(T &&x, U &&y)
+		template <typename T, typename ... U>
+		friend binary_mul_type<T,U...> operator*(T &&x, U && ... y)
 		{
-			return dispatch_binary_mul(std::forward<T>(x),std::forward<U>(y));
+			return dispatch_binary_mul(std::forward<T>(x),std::forward<U>(y)...);
 		}
 		/// In-place multiplication involving piranha::series.
 		/**
@@ -1036,10 +1093,10 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator*().
 		 */
-		template <typename T, typename U, in_place_mul_enabler<T,U> = 0>
-		friend T &operator*=(T &x, U &&y)
+		template <typename T, typename ... U, in_place_mul_enabler<T,U...> = 0>
+		friend T &operator*=(T &x, U && ... y)
 		{
-			return dispatch_in_place_mul(x,std::forward<U>(y));
+			return dispatch_in_place_mul(x,std::forward<U>(y)...);
 		}
 		/// Binary division involving piranha::series.
 		/**
@@ -1059,10 +1116,10 @@ class series_operators
 		 * - piranha::hash_set::erase(),
 		 * - the division operator on the coefficient type of the result.
 		 */
-		template <typename T, typename U>
-		friend binary_div_type<T,U> operator/(T &&x, U &&y)
+		template <typename T, typename ... U>
+		friend binary_div_type<T,U...> operator/(T &&x, U && ... y)
 		{
-			return dispatch_binary_div(std::forward<T>(x),std::forward<U>(y));
+			return dispatch_binary_div(std::forward<T>(x),std::forward<U>(y)...);
 		}
 		/// In-place division involving piranha::series.
 		/**
@@ -1077,10 +1134,10 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator/().
 		 */
-		template <typename T, typename U, in_place_div_enabler<T,U> = 0>
-		friend T &operator/=(T &x, U &&y)
+		template <typename T, typename ... U, in_place_div_enabler<T,U...> = 0>
+		friend T &operator/=(T &x, U && ... y)
 		{
-			return dispatch_in_place_div(x,std::forward<U>(y));
+			return dispatch_in_place_div(x,std::forward<U>(y)...);
 		}
 		/// Equality operator involving piranha::series.
 		/**
@@ -1102,10 +1159,10 @@ class series_operators
 		 * - any invoked series, coefficient or key constructor,
 		 * - construction, assignment and other operations on piranha::symbol_set.
 		 */
-		template <typename T, typename U, eq_enabler<T,U> = 0>
-		friend bool operator==(const T &x, const U &y)
+		template <typename T, typename ... U, eq_enabler<T,U...> = 0>
+		friend bool operator==(const T &x, const U & ... y)
 		{
-			return dispatch_equality(x,y);
+			return dispatch_equality(x,y...);
 		}
 		/// Inequality operator involving piranha::series.
 		/**
@@ -1120,10 +1177,10 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator==().
 		 */
-		template <typename T, typename U, eq_enabler<T,U> = 0>
-		friend bool operator!=(const T &x, const U &y)
+		template <typename T, typename ... U, eq_enabler<T,U...> = 0>
+		friend bool operator!=(const T &x, const U & ... y)
 		{
-			return !dispatch_equality(x,y);
+			return !dispatch_equality(x,y...);
 		}
 };
 
@@ -1171,26 +1228,26 @@ enum class file_compression
 /**
  * This class contains the arithmetic and comparison operator overloads for piranha::series instances
  * via the parent class piranha::series_operators.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * - \p Cf and \p Key must be suitable for use in piranha::term.
  * - \p Derived must derive from piranha::series of \p Cf, \p Key and \p Derived.
  * - \p Derived must satisfy piranha::is_series.
  * - \p Derived must satisfy piranha::is_container_element.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Moved-from series are left in a state equivalent to an empty series.
  *
  * ## Serialization ##
  *
  * This class supports serialization if its term type does.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
  /* TODO:
@@ -1220,9 +1277,6 @@ class series: detail::series_tag, series_operators
 		// Partial need access to the custom derivatives.
 		template <typename, typename>
 		friend struct math::partial_impl;
-		// NOTE: this friendship is related to the bug workaround above.
-		template <typename Term2, typename Derived2>
-		friend std::pair<typename Term2::cf_type,Derived2> detail::pair_from_term(const symbol_set &, const Term2 &);
 	protected:
 		/// Container type for terms.
 		using container_type = hash_set<term_type,detail::term_hasher<term_type>>;
@@ -1248,6 +1302,15 @@ class series: detail::series_tag, series_operators
 			}
 			insertion_impl<Sign>(std::forward<T>(term));
 		}
+// NOTE: here GCC complains about the in-place operators with -Wconversion
+// when constructing series with, e.g., a char coefficient. This is triggered
+// for instance in series_05.cpp. This is not the best solution, maybe when
+// we have complex<int> + double = complex<double> we can replace the char/short
+// tests in series_05 with something that does not trigger this warning.
+#if defined(PIRANHA_COMPILER_IS_GCC)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wconversion"
+#endif
 		// Cf arithmetics when inserting, normal and move variants.
 		template <bool Sign, typename Iterator>
 		static void insertion_cf_arithmetics(Iterator &it, const term_type &term)
@@ -1267,6 +1330,9 @@ class series: detail::series_tag, series_operators
 				it->m_cf -= std::move(term.m_cf);
 			}
 		}
+#if defined(PIRANHA_COMPILER_IS_GCC)
+    #pragma GCC diagnostic pop
+#endif
 		// Insert compatible, non-ignorable term.
 		template <bool Sign, typename T>
 		void insertion_impl(T &&term)
@@ -1514,7 +1580,8 @@ class series: detail::series_tag, series_operators
 		template <typename Series, typename U>
 		struct eval_type_<Series,U,typename std::enable_if<has_multiply_accumulate<e_type<Series,U>,
 			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),std::declval<std::unordered_map<std::string,U> const &>())),
-			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const symbol_set::positions_map<U> &>(),std::declval<const symbol_set &>()))>::value &&
+			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const symbol_set::positions_map<U> &>(),
+			std::declval<const symbol_set &>()))>::value &&
 			std::is_constructible<e_type<Series,U>,int>::value
 			>::type>
 		{
@@ -1875,7 +1942,7 @@ class series: detail::series_tag, series_operators
 		 * the term's key and a unitary coefficient.
 		 *
 		 * This iterator is an input iterator which additionally offers the multi-pass guarantee.
-		 * 
+		 *
 		 * @see piranha::series::begin() and piranha::series::end().
 		 */
 		typedef const_iterator_impl const_iterator;
@@ -1909,7 +1976,7 @@ class series: detail::series_tag, series_operators
 		 * - otherwise, the constructor is disabled.
 		 *
 		 * @param[in] x object to construct from.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the copy assignment operator of piranha::symbol_set,
 		 * - the construction of a coefficient from \p x or of a key from piranha::symbol_set,
@@ -1934,9 +2001,9 @@ class series: detail::series_tag, series_operators
 		/// Copy-assignment operator.
 		/**
 		 * @param[in] other assignment argument.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		series &operator=(const series &other)
@@ -1952,20 +2019,22 @@ class series: detail::series_tag, series_operators
 		/// Generic assignment operator.
 		/**
 		 * \note
-		 * This operator is enabled only if the generic constructor from \p x is enabled.
+		 * This operator is enabled only if the corresponding generic constructor from \p x is enabled.
 		 *
 		 * Generic assignment is equivalent to assignment to a piranha::series constructed
 		 * via the generic constructor.
-		 * 
+		 *
 		 * @param[in] x assignment argument.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the generic constructor.
 		 */
 		template <typename T, typename U = series, generic_ctor_enabler<T,U> = 0>
 		series &operator=(const T &x)
 		{
+			static_assert(!std::is_base_of<series,T>::value,"Generic assignment should not be enabled with "
+				"a type deriving from the calling series.");
 			return operator=(series(x));
 		}
 		/// Series size.
@@ -1990,9 +2059,9 @@ class series: detail::series_tag, series_operators
 		 * That is, the series is either empty (in which case it is considered to be equivalent to a coefficient constructed
 		 * from zero) or consisting of a single term with unitary key (in which case the series is considered equivalent to
 		 * its only coefficient).
-		 * 
+		 *
 		 * @return \p true in case of single-coefficient series, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the <tt>is_unitary()</tt> method of the key type.
 		 */
 		bool is_single_coefficient() const
@@ -2005,7 +2074,7 @@ class series: detail::series_tag, series_operators
 		 * This method is enabled only if the decay type of \p T is piranha::series::term_type.
 		 *
 		 * This method will insert \p term into the series using internally piranha::hash_set::insert.
-		 * 
+		 *
 		 * The insertion algorithm proceeds as follows:
 		 * - if the term is not compatible for insertion, an \p std::invalid_argument exception is thrown;
 		 * - if the term is ignorable, the method will return without performing any insertion;
@@ -2015,17 +2084,17 @@ class series: detail::series_tag, series_operators
 		 *   - if, after the addition/subtraction the existing term is ignorable, it will be erased;
 		 * - else:
 		 *   - the term is inserted into the term container and, if \p Sign is \p false, its coefficient is negated.
-		 * 
+		 *
 		 * After any modification to an existing term in the series (e.g., via insertion with negative \p Sign or via in-place addition
 		 * or subtraction of existing coefficients), the term will be checked again for compatibility and ignorability, and, in case
 		 * the term has become incompatible or ignorable, it will be erased from the series.
-		 * 
+		 *
 		 * The exception safety guarantee upon insertion is that the series will be left in an undefined but valid state. Such a guarantee
 		 * relies on the fact that the addition/subtraction and negation methods of the coefficient type will leave the coefficient in a valid
 		 * (possibly undefined) state in face of exceptions.
-		 * 
+		 *
 		 * @param[in] term term to be inserted.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::hash_set::insert(),
 		 * - piranha::hash_set::find(),
@@ -2044,9 +2113,9 @@ class series: detail::series_tag, series_operators
 		 * This method is enabled only if the decay type of \p T is piranha::series::term_type.
 		 *
 		 * Convenience wrapper for the generic insert() method, with \p Sign set to \p true.
-		 * 
+		 *
 		 * @param[in] term term to be inserted.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by generic insert().
 		 */
 		template <typename T, insert_enabler<T> = 0>
@@ -2057,7 +2126,7 @@ class series: detail::series_tag, series_operators
 		/// Identity operator.
 		/**
 		 * @return copy of \p this, cast to \p Derived.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		Derived operator+() const
@@ -2067,7 +2136,7 @@ class series: detail::series_tag, series_operators
 		/// Negation operator.
 		/**
 		 * @return a copy of \p this on which negate() has been called.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - negate(),
 		 * - the copy constructor of \p Derived.
@@ -2082,9 +2151,9 @@ class series: detail::series_tag, series_operators
 		/**
 		 * This method will call math::negate() on the coefficients of all terms. In case of exceptions,
 		 * the basic exception safety guarantee is provided.
-		 * 
+		 *
 		 * If any term becomes ignorable or incompatible after negation, it will be erased from the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by math::negate() on the coefficient type.
 		 */
 		void negate()
@@ -2112,9 +2181,9 @@ class series: detail::series_tag, series_operators
 		/**
 		 * Will call piranha::hash_set::evaluate_sparsity() on the internal terms container
 		 * and return the result.
-		 * 
+		 *
 		 * @return the output of piranha::hash_set::evaluate_sparsity().
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by piranha::hash_set::evaluate_sparsity().
 		 */
 		sparsity_info_type table_sparsity() const
@@ -2125,7 +2194,7 @@ class series: detail::series_tag, series_operators
 		/**
 		 * Will call piranha::hash_set::load_factor() on the internal terms container
 		 * and return the result.
-		 * 
+		 *
 		 * @return the load factor of the internal container.
 		 */
 		double table_load_factor() const
@@ -2161,9 +2230,9 @@ class series: detail::series_tag, series_operators
 		 * This cache can be cleared with clear_pow_cache().
 		 *
 		 * @param[in] x exponent.
-		 * 
+		 *
 		 * @return \p this raised to the power of \p x.
-		 * 
+		 *
 		 * @throws std::invalid_argument if exponentiation is computed via repeated series multiplications and
 		 * \p x does not represent a non-negative integer.
 		 * @throws unspecified any exception thrown by:
@@ -2288,12 +2357,12 @@ class series: detail::series_tag, series_operators
 		 * Register a copy of a callable \p func associated to the symbol called \p name for use by piranha::math::partial().
 		 * \p func will be used to compute the partial derivative of instances of type \p Derived with respect to
 		 * \p name in place of the default partial differentiation algorithm.
-		 * 
+		 *
 		 * It is safe to call this method from multiple threads.
-		 * 
+		 *
 		 * @param[in] name symbol for which the custom partial derivative function will be registered.
 		 * @param[in] func custom partial derivative function.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - failure(s) in threading primitives,
 		 * - lookup and insertion operations on \p std::unordered_map,
@@ -2314,11 +2383,11 @@ class series: detail::series_tag, series_operators
 		 *
 		 * Unregister the custom partial derivative function associated to the symbol called \p name. If no custom
 		 * partial derivative was previously registered using register_custom_derivative(), calling this function will be a no-op.
-		 * 
+		 *
 		 * It is safe to call this method from multiple threads.
-		 * 
+		 *
 		 * @param[in] name symbol for which the custom partial derivative function will be unregistered.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - failure(s) in threading primitives,
 		 * - lookup and erase operations on \p std::unordered_map.
@@ -2341,7 +2410,7 @@ class series: detail::series_tag, series_operators
 		 *
 		 * Will unregister all custom derivatives currently registered via register_custom_derivative().
 		 * It is safe to call this method from multiple threads.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by failure(s) in threading primitives.
 		 */
 		template <typename Series = Derived, typename Partial = partial_type<Series>>
@@ -2356,15 +2425,15 @@ class series: detail::series_tag, series_operators
 		 * provide, when dereferenced, an \p std::pair in which the first element is a copy of the coefficient of
 		 * the term, whereas the second element is a single-term instance of \p Derived built from the term's key
 		 * and a unitary coefficient.
-		 * 
+		 *
 		 * Note that terms are stored unordered in the series, hence it is not defined which particular
 		 * term will be returned by calling this method. The only guarantee is that the iterator can be used to transverse
 		 * all the series' terms until piranha::series::end() is eventually reached.
-		 * 
+		 *
 		 * Calling any non-const method on the series will invalidate the iterators obtained via piranha::series::begin() and piranha::series::end().
-		 * 
+		 *
 		 * @return an iterator to the first term of the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of piranha::symbol_set,
 		 * - insert(),
@@ -2383,9 +2452,9 @@ class series: detail::series_tag, series_operators
 		/**
 		 * Return an iterator one past the last term of the series. See the documentation of piranha::series::begin()
 		 * on how the returned iterator can be used.
-		 * 
+		 *
 		 * @return an iterator to the end of the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of piranha::symbol_set,
 		 * - insert(),
@@ -2406,11 +2475,11 @@ class series: detail::series_tag, series_operators
 		 * containing all terms in \p this for which \p func returns \p true.
 		 * Terms are passed to \p func in the format resulting from dereferencing the iterators obtained
 		 * via piranha::series::begin().
-		 * 
+		 *
 		 * @param[in] func filtering functor.
-		 * 
+		 *
 		 * @return filtered series.
-		 * 
+		 *
 		 * @throw unspecified any exception thrown by:
 		 * - the call operator of \p func,
 		 * - insert(),
@@ -2435,15 +2504,15 @@ class series: detail::series_tag, series_operators
 		 * value of the functor to construct a new series. Terms are passed to \p func in the same format
 		 * resulting from dereferencing the iterators obtained via piranha::series::begin(), and \p func is expected to produce
 		 * a return value of the same type.
-		 * 
+		 *
 		 * The return series is first initialised as an empty series. For each input term \p t, the return value
 		 * of \p func is used to construct a new temporary series from the multiplication of \p t.first and
 		 * \p t.second. Each temporary series is then added to the return value series.
-		 * 
+		 *
 		 * This method requires the coefficient type to be multipliable by \p Derived.
-		 * 
+		 *
 		 * @param[in] func transforming functor.
-		 * 
+		 *
 		 * @return transformed series.
 		 *
 		 * @throw unspecified any exception thrown by:
@@ -2452,7 +2521,7 @@ class series: detail::series_tag, series_operators
 		 * - the assignment operator of piranha::symbol_set,
 		 * - term, coefficient, key construction,
 		 * - series multiplication and addition.
-		 * 
+		 *
 		 * \todo require multipliability of cf * Derived and addability of the result to Derived in place.
 		 */
 		Derived transform(std::function<std::pair<typename term_type::cf_type,Derived>
@@ -2481,11 +2550,11 @@ class series: detail::series_tag, series_operators
 		 * according to the evaluation types of coefficient and key. The return value accumulates the evaluation
 		 * of all terms in the series via the product of the evaluations of the coefficient-key pairs in each term.
 		 * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
-		 * 
+		 *
 		 * @param[in] dict dictionary of that will be used for evaluation.
-		 * 
+		 *
 		 * @return evaluation of the series according to the evaluation dictionary \p dict.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - coefficient and key evaluation,
 		 * - insertion operations on \p std::unordered_map,
@@ -2519,12 +2588,12 @@ class series: detail::series_tag, series_operators
 		 * have been removed from the internal set of symbols. Which symbols are removed depends on the trimming
 		 * method \p trim_identify() of the key type (e.g., in a polynomial a symbol can be discarded if its exponent
 		 * is zero in all monomials).
-		 * 
+		 *
 		 * If the coefficient type is an instance of piranha::series, trim() will be called recursively on the coefficients
 		 * while building the return value.
-		 * 
+		 *
 		 * @return trimmed version of \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - operations on piranha::symbol_set,
 		 * - the trimming methods of coefficient and/or key,
@@ -2552,16 +2621,16 @@ class series: detail::series_tag, series_operators
 		 * Print series to stream \p os in TeX mode. The representation is constructed in the same way as explained in
 		 * piranha::series::operator<<(), but using piranha::print_tex_coefficient() and the key's TeX printing method instead of the plain
 		 * printing functions.
-		 * 
+		 *
 		 * @param os target stream.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::print_tex_coefficient(),
 		 * - the TeX printing method of the key type,
 		 * - memory allocation errors in standard containers,
 		 * - piranha::settings::get_max_term_output(),
 		 * - streaming to \p os or to instances of \p std::ostringstream.
-		 * 
+		 *
 		 * @see operator<<().
 		 */
 		void print_tex(std::ostream &os) const
@@ -2576,15 +2645,15 @@ class series: detail::series_tag, series_operators
 		/// Overloaded stream operator for piranha::series.
 		/**
 		 * Will direct to stream a human-readable representation of the series.
-		 * 
+		 *
 		 * The human-readable representation of the series is built as follows:
-		 * 
+		 *
 		 * - the coefficient and key of each term are printed adjacent to each other separated by the character "*",
 		 *   the former via the piranha::print_coefficient() function, the latter via its <tt>print()</tt> method;
 		 * - terms are separated by a "+" sign.
-		 * 
+		 *
 		 * The following additional transformations take place on the printed output:
-		 * 
+		 *
 		 * - if the printed output of a coefficient is the string "1" and the printed output of its key
 		 *   is not empty, the coefficient and the "*" sign are not printed;
 		 * - if the printed output of a coefficient is the string "-1" and the printed output of its key
@@ -2594,14 +2663,14 @@ class series: detail::series_tag, series_operators
 		 * - at most piranha::settings::get_max_term_output() terms are printed, and terms in excess are
 		 *   represented with ellipsis "..." at the end of the output; if piranha::settings::get_max_term_output()
 		 *   is zero, all the terms will be printed.
-		 * 
+		 *
 		 * Note that the print order of the terms will be undefined.
-		 * 
+		 *
 		 * @param[in,out] os target stream.
 		 * @param[in] s piranha::series argument.
-		 * 
+		 *
 		 * @return reference to \p os.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::print_coefficient(),
 		 * - the <tt>print()</tt> method of the key type,
@@ -2912,10 +2981,10 @@ struct print_coefficient_impl<Series,typename std::enable_if<
 	/**
 	 * Equivalent to the stream operator overload of piranha::series, apart from a couple
 	 * of parentheses '()' enclosing the coefficient series if its size is larger than 1.
-	 * 
+	 *
 	 * @param[in] os target stream.
 	 * @param[in] s coefficient series to be printed.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by the stream operator overload of piranha::series.
 	 */
 	void operator()(std::ostream &os, const Series &s) const
@@ -2942,10 +3011,10 @@ struct print_tex_coefficient_impl<Series,typename std::enable_if<
 	/**
 	 * Equivalent to piranha::series::print_tex(), apart from a couple
 	 * of parentheses '()' enclosing the coefficient series if its size is larger than 1.
-	 * 
+	 *
 	 * @param[in] os target stream.
 	 * @param[in] s coefficient series to be printed.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by piranha::series::print_tex().
 	 */
 	void operator()(std::ostream &os, const Series &s) const
@@ -2973,9 +3042,9 @@ struct negate_impl<T,typename std::enable_if<is_series<T>::value>::type>
 	/// Call operator.
 	/**
 	 * @param[in,out] s piranha::series to be negated.
-	 * 
+	 *
 	 * @return the return value of piranha::series::negate()..
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by piranha::series::negate().
 	 */
 	template <typename U>
@@ -2996,7 +3065,7 @@ struct is_zero_impl<Series,typename std::enable_if<is_series<Series>::value>::ty
 	/// Call operator.
 	/**
 	 * @param[in] s piranha::series to be tested.
-	 * 
+	 *
 	 * @return \p true if \p s is empty, \p false otherwise.
 	 */
 	bool operator()(const Series &s) const
@@ -3031,12 +3100,12 @@ struct pow_impl<Series,T,detail::pow_series_enabler<Series,T>>
 	/// Call operator.
 	/**
 	 * The exponentiation will be computed via the series' <tt>pow()</tt> method.
-	 * 
+	 *
 	 * @param[in] s base.
 	 * @param[in] x exponent.
-	 * 
+	 *
 	 * @return \p s to the power of \p x.
-	 * 
+	 *
 	 * @throws unspecified any exception resulting from the series' <tt>pow()</tt> method.
 	 */
 	template <typename S, typename U>
@@ -3326,12 +3395,12 @@ struct partial_impl<Series,detail::series_partial_enabler<Series>>
 	 * The call operator will first check whether a custom partial derivative for \p Series was registered
 	 * via piranha::series::register_custom_derivative(). In such a case, the custom derivative function will be used
 	 * to compute the return value. Otherwise, the output of piranha::series::partial() will be returned.
-	 * 
+	 *
 	 * @param[in] s input series.
 	 * @param[in] name name of the argument with respect to which the differentiation will be calculated.
-	 * 
+	 *
 	 * @return the partial derivative of \p s with respect to \p name.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by:
 	 * - piranha::series::partial(),
 	 * - failure(s) in threading primitives,
@@ -3339,7 +3408,7 @@ struct partial_impl<Series,detail::series_partial_enabler<Series>>
 	 * - the copy assignment and call operators of the registered custom partial derivative function.
 	 */
 	template <typename T>
-	auto operator()(const T &s, const std::string &name) -> decltype(s.partial(name))
+	auto operator()(const T &s, const std::string &name) const -> decltype(s.partial(name))
 	{
 		using partial_type = decltype(s.partial(name));
 		bool custom = false;
@@ -3378,7 +3447,7 @@ struct integrate_impl<Series,detail::series_integrate_enabler<Series>>
 	 * @throws unspecified any exception thrown by the invoked series method.
 	 */
 	template <typename T>
-	auto operator()(const T &s, const std::string &name) -> decltype(s.integrate(name))
+	auto operator()(const T &s, const std::string &name) const -> decltype(s.integrate(name))
 	{
 		return s.integrate(name);
 	}

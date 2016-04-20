@@ -180,6 +180,7 @@ struct base_series_multiplier_impl<Series,Derived,typename std::enable_if<is_mp_
 		// Copy over the terms and renormalise to lcm.
 		it_f = c1.end();
 		for (auto it = c1.begin(); it != it_f; ++it) {
+			// NOTE: these divisions are exact, we could take advantage of that.
 			m_terms1.push_back(term_type(rat_type(m_lcm / it->m_cf.den() * it->m_cf.num(),int_type(1)),it->m_key));
 		}
 		it_f = c2.end();
@@ -940,6 +941,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				return retval;
 			}
 			const size_type size1 = m_v1.size(), size2 = m_v2.size();
+			(void)size2;
 			piranha_assert(size1 && size2);
 			// Convert n_threads to size_type for convenience.
 			const size_type n_threads = safe_cast<size_type>(m_n_threads);

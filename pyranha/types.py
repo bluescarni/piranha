@@ -81,3 +81,6 @@ divisor = _t.divisor
 
 #: Generic type generator for divisor series.
 divisor_series = _t.divisor_series
+
+#: Generic type generator for rational functions.
+rational_function = _t.rational_function

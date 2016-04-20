@@ -59,6 +59,7 @@ see https://www.gnu.org/licenses/. */
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_polynomials.hpp"
+#include "expose_rational_functions.hpp"
 #include "expose_utils.hpp"
 #include "python_converters.hpp"
 #include "type_system.hpp"
@@ -148,8 +149,8 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
 	pyranha::generic_translate<&PyExc_ArithmeticError,piranha::math::inexact_division>();
-	// Series list.
-	bp::def("_get_series_list",pyranha::get_series_list);
+	// Exposed types list.
+	bp::def("_get_exposed_types_list",pyranha::get_exposed_types_list);
 	// The enums for save/load.
 	bp::enum_<piranha::file_format>("file_format")
 		.value("text",piranha::file_format::text)
@@ -188,6 +189,7 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_poisson_series_12();
 	pyranha::expose_poisson_series_13();
 	pyranha::expose_poisson_series_14();
+	pyranha::expose_poisson_series_15();
 	// Expose divisor series.
 	pyranha::expose_divisor_series_0();
 	pyranha::expose_divisor_series_1();
@@ -198,6 +200,9 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_divisor_series_6();
 	pyranha::expose_divisor_series_7();
 	pyranha::expose_divisor_series_8();
+	// Expose rational function.
+	pyranha::expose_rational_functions_0();
+	pyranha::expose_rational_functions_1();
 	// Expose the settings class.
 	bp::class_<piranha::settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",piranha::settings::get_max_term_output).staticmethod("_get_max_term_output");

@@ -66,8 +66,8 @@ struct divisor_series_descriptor
 		std::tuple<piranha::polynomial<piranha::real,piranha::kronecker_monomial<>>,d_type>
 	>;
 	using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-	using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-	using eval_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+	using pow_types = interop_types;
+	using eval_types = interop_types;
 	interop_types		it;
 	pow_types		pt;
 	eval_types		et;

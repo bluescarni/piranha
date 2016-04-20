@@ -4,7 +4,7 @@ ENABLE_TESTING()
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 
-SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules")
 
 MESSAGE(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 
@@ -56,7 +56,9 @@ IF(BUILD_PYRANHA)
 ENDIF(BUILD_PYRANHA)
 
 # Boost libraries setup.
-SET(REQUIRED_BOOST_LIBS serialization iostreams)
+# NOTE: apparently, according to the FindBoost.cmake of cmake 3.5, iostreams
+# depends on regex.
+SET(REQUIRED_BOOST_LIBS serialization iostreams regex)
 IF(BUILD_TESTS)
 	# These libraries are needed only if building tests.
 	MESSAGE(STATUS "Linking unit tests to Boost.Test, Boost.Filesystem and Boost System")
@@ -78,9 +80,9 @@ MESSAGE(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 # NOTE: mark as system headers to avoid excessive warnings in debug mode.
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
-# Set the mandatory Boost libraries. NOTE: here we do not include the libraries
-# pulled in by the tests, only those which are needed by Piranha's core.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_IOSTREAMS_LIBRARY})
+# Set the mandatory Boost libraries.
+# NOTE: here we do not include the libraries pulled in by the tests, only those which are needed by Piranha's core.
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_REGEX_LIBRARY})
 
 # GMP setup.
 FIND_PACKAGE(GMP REQUIRED)
@@ -129,7 +131,7 @@ IF(PIRANHA_GIT_EXECUTABLE)
 	MESSAGE(STATUS "Git executable: ${PIRANHA_GIT_EXECUTABLE}")
 	# Version number setup.
 	SET(PIRANHA_GIT_ARGS "log" "--no-color" "-n1" "--date=short" "--pretty=format:%ad")
-	EXECUTE_PROCESS(COMMAND ${PIRANHA_GIT_EXECUTABLE} ${PIRANHA_GIT_ARGS} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE PIRANHA_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+	EXECUTE_PROCESS(COMMAND ${PIRANHA_GIT_EXECUTABLE} ${PIRANHA_GIT_ARGS} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE PIRANHA_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 	STRING(REGEX REPLACE "-" "." PIRANHA_VERSION ${PIRANHA_GIT_VERSION})
 	MESSAGE(STATUS "Piranha version: ${PIRANHA_VERSION}")
 	SET(PIRANHA_VERSION "#define PIRANHA_VERSION \"${PIRANHA_VERSION}\"")

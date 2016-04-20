@@ -1335,7 +1335,7 @@ class real: public detail::real_base<>
 		 */
 		real &multiply_accumulate(const real &r1, const real &r2)
 		{
-			const auto prec1 = std::max< ::mpfr_prec_t>(r1.get_prec(),r2.get_prec());
+			const ::mpfr_prec_t prec1 = std::max< ::mpfr_prec_t>(r1.get_prec(),r2.get_prec());
 			if (prec1 > get_prec()) {
 				*this = real{*this,prec1};
 			}
