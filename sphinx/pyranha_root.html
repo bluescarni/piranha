@@ -87,7 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="reference.html">Complete reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="pyranha_reference.html">Python reference</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_celmec.html"><code class="docutils literal"><span class="pre">pyranha.celmec</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_math.html"><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_test.html"><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
@@ -162,17 +162,17 @@ The methods are thread-safe.</p>
 <dl class="staticmethod">
 <dt id="pyranha.settings.get_latex_repr">
 <em class="property">static </em><code class="descname">get_latex_repr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_latex_repr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_latex_repr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if series types have a <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method.</p>
+<dd><p>Check if exposed types have a <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method.</p>
 <p>The <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method, if present, is used by the IPython notebook to display the TeX
-representation of a series via a Javascript library. If a series is very large, it might be preferrable
+representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable
 to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX
-representation is disabled, IPython will fall back to the PNG-based representation of the series, which
+representation is disabled, IPython will fall back to the PNG-based representation of the object, which
 leverages - if available - a local installation of TeX for increased performance via a static rendering
-of the TeX representation of the series to a PNG bitmap.</p>
-<p>By default, the TeX representation of series is enabled.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
+of the TeX representation of the object to a PNG bitmap.</p>
+<p>By default, the TeX representation is enabled.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span>
@@ -195,7 +195,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
 <span class="go">20</span>
 </pre></div>
 </div>
@@ -205,7 +205,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 <dt id="pyranha.settings.get_min_work_per_thread">
 <em class="property">static </em><code class="descname">get_min_work_per_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_min_work_per_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_min_work_per_thread" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the minimum work per thread.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
 <span class="go">500000 # This will be an implementation-defined value.</span>
 </pre></div>
 </div>
@@ -224,7 +224,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span> 
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span> 
 <span class="go">16 # This will be a platform-dependent value.</span>
 </pre></div>
 </div>
@@ -242,7 +242,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
 <span class="go">10</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">reset_max_term_output</span><span class="p">()</span>
@@ -256,7 +256,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 <dt id="pyranha.settings.reset_min_work_per_thread">
 <em class="property">static </em><code class="descname">reset_min_work_per_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.reset_min_work_per_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.reset_min_work_per_thread" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset the minimum work per thread.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
 <span class="go">10</span>
@@ -279,7 +279,7 @@ of the TeX representation of the series to a PNG bitmap.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
 <span class="go">10</span>
@@ -293,8 +293,8 @@ of the TeX representation of the series to a PNG bitmap.</p>
 <dl class="staticmethod">
 <dt id="pyranha.settings.set_latex_repr">
 <em class="property">static </em><code class="descname">set_latex_repr</code><span class="sig-paren">(</span><em>flag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.set_latex_repr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.set_latex_repr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the availability of the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method in series.</p>
-<p>If <em>flag</em> is <code class="docutils literal"><span class="pre">True</span></code>, the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method of series types will be enabled. Otherwise,
+<dd><p>Set the availability of the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method for the exposed types.</p>
+<p>If <em>flag</em> is <code class="docutils literal"><span class="pre">True</span></code>, the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method of exposed types will be enabled. Otherwise,
 the method will be disabled. See the documentation for <a class="reference internal" href="#pyranha.settings.get_latex_repr" title="pyranha.settings.get_latex_repr"><code class="xref py py-meth docutils literal"><span class="pre">pyranha.settings.get_latex_repr()</span></code></a> for a
 description of how the method is used.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -307,17 +307,17 @@ description of how the method is used.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
 <span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span> 
 <span class="gt">Traceback (most recent call last):</span>
   <span class="c">...</span>
 <span class="gr">AttributeError</span>: <span class="n">object has no attribute &#39;_latex_repr_&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span>
 <span class="go">&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span> 
@@ -342,7 +342,7 @@ description of how the method is used.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
 <span class="go">10</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> 
@@ -372,7 +372,7 @@ description of how the method is used.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
 <span class="go">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
@@ -402,7 +402,7 @@ description of how the method is used.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
 <span class="go">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 

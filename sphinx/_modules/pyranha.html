@@ -289,16 +289,16 @@
 		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_n_threads</span><span class="p">()</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.get_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_latex_repr">[docs]</a>	<span class="k">def</span> <span class="nf">get_latex_repr</span><span class="p">():</span>
-		<span class="sd">r&quot;&quot;&quot;Check if series types have a ``_repr_latex_()`` method.</span>
+		<span class="sd">r&quot;&quot;&quot;Check if exposed types have a ``_repr_latex_()`` method.</span>
 
 <span class="sd">		The ``_repr_latex_()`` method, if present, is used by the IPython notebook to display the TeX</span>
-<span class="sd">		representation of a series via a Javascript library. If a series is very large, it might be preferrable</span>
+<span class="sd">		representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable</span>
 <span class="sd">		to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX</span>
-<span class="sd">		representation is disabled, IPython will fall back to the PNG-based representation of the series, which</span>
+<span class="sd">		representation is disabled, IPython will fall back to the PNG-based representation of the object, which</span>
 <span class="sd">		leverages - if available - a local installation of TeX for increased performance via a static rendering</span>
-<span class="sd">		of the TeX representation of the series to a PNG bitmap.</span>
+<span class="sd">		of the TeX representation of the object to a PNG bitmap.</span>
 
-<span class="sd">		By default, the TeX representation of series is enabled.</span>
+<span class="sd">		By default, the TeX representation is enabled.</span>
 
 <span class="sd">		&gt;&gt;&gt; settings.get_latex_repr()</span>
 <span class="sd">		True</span>
@@ -309,15 +309,15 @@
 <span class="sd">		&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_get_series_list</span> <span class="k">as</span> <span class="n">gsl</span>
-		<span class="n">s_type</span> <span class="o">=</span> <span class="n">gsl</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
+		<span class="n">s_type</span> <span class="o">=</span> <span class="n">getl</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
 		<span class="k">with</span> <span class="n">settings</span><span class="o">.</span><span class="n">__lock</span><span class="p">:</span>
 			<span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span><span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.set_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_latex_repr">[docs]</a>	<span class="k">def</span> <span class="nf">set_latex_repr</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
-		<span class="sd">r&quot;&quot;&quot;Set the availability of the ``_repr_latex_()`` method in series.</span>
+		<span class="sd">r&quot;&quot;&quot;Set the availability of the ``_repr_latex_()`` method for the exposed types.</span>
 
-<span class="sd">		If *flag* is ``True``, the ``_repr_latex_()`` method of series types will be enabled. Otherwise,</span>
+<span class="sd">		If *flag* is ``True``, the ``_repr_latex_()`` method of exposed types will be enabled. Otherwise,</span>
 <span class="sd">		the method will be disabled. See the documentation for :py:meth:`pyranha.settings.get_latex_repr` for a</span>
 <span class="sd">		description of how the method is used.</span>
 
@@ -345,7 +345,7 @@
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_core</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_get_series_list</span> <span class="k">as</span> <span class="n">gsl</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
 		<span class="kn">from</span> <span class="nn">._common</span> <span class="kn">import</span> <span class="n">_register_repr_latex</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flag</span><span class="p">,</span><span class="nb">bool</span><span class="p">):</span>
 			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;the &#39;flag&#39; parameter must be a bool&quot;</span><span class="p">)</span>
@@ -356,7 +356,7 @@
 			<span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
 				<span class="n">_register_repr_latex</span><span class="p">()</span>
 			<span class="k">else</span><span class="p">:</span>
-				<span class="k">for</span> <span class="n">s_type</span> <span class="ow">in</span> <span class="n">gsl</span><span class="p">():</span>
+				<span class="k">for</span> <span class="n">s_type</span> <span class="ow">in</span> <span class="n">getl</span><span class="p">():</span>
 					<span class="k">assert</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span><span class="s1">&#39;_repr_latex_&#39;</span><span class="p">))</span>
 					<span class="nb">delattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span><span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
 	<span class="nd">@staticmethod</span>

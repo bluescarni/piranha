@@ -87,7 +87,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="hello_piranha.html">Hello Piranha!</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fundamental_types.html">Fundamental numerical types in Piranha</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Piranha polynomials and series</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Piranha polynomials and series</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#degree-truncation">Degree truncation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#performance">Performance</a></li>
 </ul>
@@ -146,7 +146,7 @@
 <p>In Piranha a <code class="docutils literal"><span class="pre">series</span></code> is a collection of terms where a sum operation is implied between terms. Each term, in turn, is a pair made of a coefficient and a key. The key uniquely identifies a term in a series, in the sense that no terms with equivalent key can exist inside the same series (e.g., the terms <code class="docutils literal"><span class="pre">7*x</span></code> and <code class="docutils literal"><span class="pre">6*x</span></code> would be compressed into the single term <code class="docutils literal"><span class="pre">13*x</span></code> in a <code class="docutils literal"><span class="pre">polynomial</span></code>).</p>
 <p>Piranha implements so far three different <strong>key</strong> types: <code class="docutils literal"><span class="pre">monomial</span></code> (here meaning a product of powers of symbolic variables, where the powers are not limited to being integral values), trigonometric monomials (e.g., objects of the type &#8220;cos(2*x-y)&#8221;) and <code class="docutils literal"><span class="pre">divisors</span></code> (e.g., objects of the type 1/[(x-y)**n*(x+2*y)**m]). A <strong>coefficient</strong> type can be any type that satisfies a few basic requirements (e.g., it must support basic arithmetic operations). Piranha provides some useful coefficient types such as arbitrary-precision integrals/rationals/reals:</p>
 <ul class="simple">
-<li><a class="reference internal" href="fundamental_types.html#fundamental-types"><span>Fundamental numerical types in Piranha</span></a></li>
+<li><a class="reference internal" href="fundamental_types.html#fundamental-types"><span class="std std-ref">Fundamental numerical types in Piranha</span></a></li>
 </ul>
 <p>Monomials are used to define polynomials, trigonometric monomials are used to define Poisson series, and divisors are used to define divisor series. I will talk a bit about polynomials because they are the simplest symbolic objects. So, in order to define a polynomial over ℤ in Piranha you could do something like this:</p>
 <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">p_type</span> <span class="o">=</span> <span class="n">polynomial</span><span class="o">&lt;</span><span class="n">integer</span><span class="p">,</span><span class="n">monomial</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">;</span>

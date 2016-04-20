@@ -89,7 +89,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="pyranha_reference.html">Python reference</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="pyranha_root.html"><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_celmec.html"><code class="docutils literal"><span class="pre">pyranha.celmec</span></code></a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_test.html"><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_types.html"><code class="docutils literal"><span class="pre">pyranha.types</span></code></a></li>
 </ul>
@@ -175,11 +175,11 @@ as input.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
 <span class="go">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
 <span class="go">21</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="kn">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="k">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
 <span class="go">Fraction(18, 25)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mf">2.4</span><span class="p">)</span> 
@@ -211,7 +211,7 @@ low-level function</td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="go">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> 
 <span class="gt">Traceback (most recent call last):</span>
@@ -219,11 +219,54 @@ low-level function</td>
 <span class="gr">ValueError</span>: <span class="n">cannot compute the cosine of a non-zero integer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span> 
 <span class="go">-0.4161468...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">)))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">))</span>
 <span class="go">cos(2*x)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.math.degree">
+<code class="descclassname">pyranha.math.</code><code class="descname">degree</code><span class="sig-paren">(</span><em>arg</em>, <em>names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#degree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Degree.</p>
+<p>This function will return the degree of the input argument. Various symbolic types are supported as input
+(e.g., polynomials, Poisson series, rational functions). If <em>names</em> is <code class="docutils literal"><span class="pre">None</span></code>, then the total degree is
+returned. Otherwise, <em>names</em> must be a list of strings enumerating the variables to be considered for the
+computation of the partial degree.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arg</strong> (<em>a supported symbolic type.</em>) &#8211; argument whose degree will be returned</li>
+<li><strong>names</strong> (<code class="docutils literal"><span class="pre">None</span></code> or a list of strings) &#8211; list of the names of the variables to be considered in the computation of the degree</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the degree of <em>arg</em></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if the type of <em>arg</em> is not supported, or any other exception raised by the invoked
+low-level function</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">degree</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">degree</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">,[</span><span class="s1">&#39;z&#39;</span><span class="p">])</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="k">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">degree</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> 
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
@@ -264,7 +307,7 @@ and this type needs to support the operations needed to compute the evaluation.<
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">})</span>
@@ -318,7 +361,7 @@ and this type needs to support the operations needed to compute the evaluation.<
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="go">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 <span class="go">720</span>
@@ -361,9 +404,9 @@ supporting <code class="docutils literal"><span class="pre">int</span></code> an
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">9</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">9</span><span class="p">)</span>
 <span class="go">3</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">integer</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">integer</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">integer</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="mi">1</span><span class="p">),(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="p">))</span> 
@@ -406,7 +449,7 @@ low-level function</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span>
@@ -443,7 +486,7 @@ low-level function</td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="kn">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="k">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">invert</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
 <span class="go">Fraction(2, 1)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">invert</span><span class="p">(</span><span class="mf">1.23</span><span class="p">)</span> 
@@ -452,7 +495,7 @@ low-level function</td>
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
 <span class="gr">ZeroDivisionError</span>: <span class="n">division by zero</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span><span class="p">,</span> <span class="n">divisor</span><span class="p">,</span> <span class="n">divisor_series</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span><span class="p">,</span> <span class="n">divisor</span><span class="p">,</span> <span class="n">divisor_series</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">invert</span><span class="p">(</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">))</span>
 <span class="go">x**-1</span>
@@ -501,7 +544,7 @@ a lower-level C++ routine that supports various combinations for the types of <e
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">rational</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">rational</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ipow_subs</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">5</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
@@ -513,6 +556,49 @@ a lower-level C++ routine that supports various combinations for the types of <e
    <span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ipow_subs</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">6</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="mf">2.1</span><span class="p">,</span><span class="n">z</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span>  
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.math.ldegree">
+<code class="descclassname">pyranha.math.</code><code class="descname">ldegree</code><span class="sig-paren">(</span><em>arg</em>, <em>names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#ldegree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.ldegree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Low degree.</p>
+<p>This function will return the low degree of the input argument. Various symbolic types are supported as input
+(e.g., polynomials, Poisson series, rational functions). If <em>names</em> is <code class="docutils literal"><span class="pre">None</span></code>, then the total low degree is
+returned. Otherwise, <em>names</em> must be a list of strings enumerating the variables to be considered for the
+computation of the partial low degree.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arg</strong> (<em>a supported symbolic type.</em>) &#8211; argument whose low degree will be returned</li>
+<li><strong>names</strong> (<code class="docutils literal"><span class="pre">None</span></code> or a list of strings) &#8211; list of the names of the variables to be considered in the computation of the low degree</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the low degree of <em>arg</em></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if the type of <em>arg</em> is not supported, or any other exception raised by the invoked
+low-level function</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ldegree</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ldegree</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">x</span><span class="p">,[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="k">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ldegree</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> 
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
@@ -545,7 +631,7 @@ low-level function</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">integer</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">integer</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">integer</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">partial</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
@@ -591,7 +677,7 @@ and coordinates with names in <em>q_list</em>. <em>f</em> and <em>g</em> must be
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pbracket</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="n">v</span><span class="p">,[</span><span class="s1">&#39;v&#39;</span><span class="p">],[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
@@ -631,7 +717,7 @@ low-level function</td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="go">0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> 
 <span class="gt">Traceback (most recent call last):</span>
@@ -639,7 +725,7 @@ low-level function</td>
 <span class="gr">ValueError</span>: <span class="n">cannot compute the cosine of a non-zero integer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span> 
 <span class="go">0.9092974...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">)))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">))</span>
 <span class="go">sin(2*x)</span>
@@ -680,7 +766,7 @@ supports various combinations for the types of <em>arg</em> and <em>x</em>.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
@@ -688,6 +774,178 @@ supports various combinations for the types of <em>arg</em> and <em>x</em>.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="n">y</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">y</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>  
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.math.t_degree">
+<code class="descclassname">pyranha.math.</code><code class="descname">t_degree</code><span class="sig-paren">(</span><em>arg</em>, <em>names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#t_degree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.t_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trigonometric degree.</p>
+<p>This function will return the trigonometric degree of the input argument. Various symbolic types are supported as
+input. If <em>names</em> is <code class="docutils literal"><span class="pre">None</span></code>, then the total degree is returned. Otherwise, <em>names</em> must be a list of strings
+enumerating the variables to be considered for the computation of the partial degree.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arg</strong> (<em>a supported symbolic type.</em>) &#8211; argument whose trigonometric degree will be returned</li>
+<li><strong>names</strong> (<code class="docutils literal"><span class="pre">None</span></code> or a list of strings) &#8211; list of the names of the variables to be considered in the computation of the degree</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the trigonometric degree of <em>arg</em></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if the type of <em>arg</em> is not supported, or any other exception raised by the invoked
+low-level function</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.math</span> <span class="k">import</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">))()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_degree</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_degree</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">+</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),[</span><span class="s1">&#39;z&#39;</span><span class="p">])</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="k">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_degree</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.math.t_ldegree">
+<code class="descclassname">pyranha.math.</code><code class="descname">t_ldegree</code><span class="sig-paren">(</span><em>arg</em>, <em>names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#t_ldegree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.t_ldegree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trigonometric low degree.</p>
+<p>This function will return the trigonometric low degree of the input argument. Various symbolic types are supported as
+input. If <em>names</em> is <code class="docutils literal"><span class="pre">None</span></code>, then the total low degree is returned. Otherwise, <em>names</em> must be a list of strings
+enumerating the variables to be considered for the computation of the partial low degree.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arg</strong> (<em>a supported symbolic type.</em>) &#8211; argument whose trigonometric low degree will be returned</li>
+<li><strong>names</strong> (<code class="docutils literal"><span class="pre">None</span></code> or a list of strings) &#8211; list of the names of the variables to be considered in the computation of the low degree</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the trigonometric low degree of <em>arg</em></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if the type of <em>arg</em> is not supported, or any other exception raised by the invoked
+low-level function</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.math</span> <span class="k">import</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">))()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_ldegree</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_ldegree</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="n">z</span><span class="p">),[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="k">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_ldegree</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.math.t_lorder">
+<code class="descclassname">pyranha.math.</code><code class="descname">t_lorder</code><span class="sig-paren">(</span><em>arg</em>, <em>names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#t_lorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.t_lorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trigonometric low order.</p>
+<p>This function will return the trigonometric low order of the input argument. Various symbolic types are supported as
+input. If <em>names</em> is <code class="docutils literal"><span class="pre">None</span></code>, then the total low order is returned. Otherwise, <em>names</em> must be a list of strings
+enumerating the variables to be considered for the computation of the partial low order.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arg</strong> (<em>a supported symbolic type.</em>) &#8211; argument whose trigonometric low order will be returned</li>
+<li><strong>names</strong> (<code class="docutils literal"><span class="pre">None</span></code> or a list of strings) &#8211; list of the names of the variables to be considered in the computation of the low order</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the trigonometric low order of <em>arg</em></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if the type of <em>arg</em> is not supported, or any other exception raised by the invoked
+low-level function</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.math</span> <span class="k">import</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">))()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_lorder</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_lorder</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="n">z</span><span class="p">),[</span><span class="s1">&#39;y&#39;</span><span class="p">])</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="k">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_lorder</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.math.t_order">
+<code class="descclassname">pyranha.math.</code><code class="descname">t_order</code><span class="sig-paren">(</span><em>arg</em>, <em>names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#t_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.t_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trigonometric order.</p>
+<p>This function will return the trigonometric order of the input argument. Various symbolic types are supported as
+input. If <em>names</em> is <code class="docutils literal"><span class="pre">None</span></code>, then the total order is returned. Otherwise, <em>names</em> must be a list of strings
+enumerating the variables to be considered for the computation of the partial order.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arg</strong> (<em>a supported symbolic type.</em>) &#8211; argument whose trigonometric order will be returned</li>
+<li><strong>names</strong> (<code class="docutils literal"><span class="pre">None</span></code> or a list of strings) &#8211; list of the names of the variables to be considered in the computation of the order</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the order of <em>arg</em></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if the type of <em>arg</em> is not supported, or any other exception raised by the invoked
+low-level function</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.math</span> <span class="k">import</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">))()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_order</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_order</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">y</span><span class="p">),[</span><span class="s1">&#39;z&#39;</span><span class="p">])</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fractions</span> <span class="k">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t_order</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> 
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
@@ -725,7 +983,7 @@ a lower-level C++ routine that supports various combinations for the types of <e
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">)))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t_subs</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">),</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
@@ -775,7 +1033,7 @@ and coordinates as functions of the old momenta <em>p_list</em> and <em>q_list</
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">L</span><span class="p">,</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">,</span><span class="n">l</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">h</span> <span class="o">=</span> <span class="p">[</span><span class="n">pt</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="s1">&#39;LGHlgh&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">transformation_is_canonical</span><span class="p">([</span><span class="o">-</span><span class="n">l</span><span class="p">],[</span><span class="n">L</span><span class="p">],[</span><span class="s1">&#39;L&#39;</span><span class="p">],[</span><span class="s1">&#39;l&#39;</span><span class="p">])</span>
@@ -847,7 +1105,7 @@ a list of strings enumerating the variables to be considered for the computation
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span><span class="p">,</span> <span class="n">poisson_series</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span><span class="p">,</span> <span class="n">poisson_series</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">truncate_degree</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="n">z</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> 

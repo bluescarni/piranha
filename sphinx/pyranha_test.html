@@ -90,7 +90,7 @@
 <li class="toctree-l3"><a class="reference internal" href="pyranha_root.html"><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_celmec.html"><code class="docutils literal"><span class="pre">pyranha.celmec</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_math.html"><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="pyranha_types.html"><code class="docutils literal"><span class="pre">pyranha.types</span></code></a></li>
 </ul>
 </li>
@@ -153,7 +153,7 @@
 <dd><p>Basic test case.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will test features common
 to all series types.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">basic_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -164,8 +164,31 @@ to all series types.</p>
 <em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">converters_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#converters_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.converters_test_case" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test case for the automatic conversion to/from Python from/to C++.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">converters_test_case</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.test.custom_derivatives_test_case">
+<em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">custom_derivatives_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#custom_derivatives_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.custom_derivatives_test_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test case for custom derivatives in series.</p>
+<p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will check that the custom
+derivatives machinery works properly.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">custom_derivatives_test_case</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.test.degree_test_case">
+<em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">degree_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#degree_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.degree_test_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test case for the degree/ldegree functionality.</p>
+<p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">degree_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -176,7 +199,7 @@ to all series types.</p>
 <dd><p><code class="xref py py-mod docutils literal"><span class="pre">divisor_series</span></code> module test case.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will test the functions implemented in the
 <code class="xref py py-mod docutils literal"><span class="pre">divisor_series</span></code> module.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">divisor_series_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -187,7 +210,7 @@ to all series types.</p>
 <em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">doctests_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#doctests_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.doctests_test_case" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test case that will run all the doctests.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">doctests_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -198,7 +221,7 @@ to all series types.</p>
 <em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">integrate_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#integrate_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.integrate_test_case" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test case for the integration functionality.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">integrate_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -210,7 +233,7 @@ to all series types.</p>
 <dd><p><code class="xref py py-mod docutils literal"><span class="pre">math</span></code> module test case.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will test the functions implemented in the
 <code class="xref py py-mod docutils literal"><span class="pre">math</span></code> module.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">math_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -223,7 +246,7 @@ to all series types.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will test interoperability between
 the <code class="xref py py-mod docutils literal"><span class="pre">mpmath</span></code> library and the C++ <em>real</em> class. If the <code class="xref py py-mod docutils literal"><span class="pre">mpmath</span></code> library is not available, the
 test will return immediately.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">mpmath_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -235,7 +258,7 @@ test will return immediately.</p>
 <dd><p><code class="xref py py-mod docutils literal"><span class="pre">poisson_series</span></code> module test case.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will test the functions implemented in the
 <code class="xref py py-mod docutils literal"><span class="pre">poisson_series</span></code> module.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">poisson_series_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -247,8 +270,19 @@ test will return immediately.</p>
 <dd><p><code class="xref py py-mod docutils literal"><span class="pre">polynomial</span></code> module test case.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will test the functions implemented in the
 <code class="xref py py-mod docutils literal"><span class="pre">polynomial</span></code> module.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">polynomial_test_case</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.test.rational_function_test_case">
+<em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">rational_function_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#rational_function_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.rational_function_test_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test case for rational functions.</p>
+<p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">rational_function_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -265,8 +299,41 @@ test will return immediately.</p>
 <em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">serialization_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#serialization_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.serialization_test_case" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test case for the serialization of series.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">serialization_test_case</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.test.series_division_test_case">
+<em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">series_division_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#series_division_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.series_division_test_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>Series division test case.</p>
+<p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will test series division.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">series_division_test_case</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.test.series_in_place_ops_test_case">
+<em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">series_in_place_ops_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#series_in_place_ops_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.series_in_place_ops_test_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>Series in-place operations test case.</p>
+<p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework. Will test in-place series arithmetics.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">series_in_place_ops_test_case</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.test.t_degree_order_test_case">
+<em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">t_degree_order_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#t_degree_order_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.t_degree_order_test_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test case for the t_degree/t_ldegree/t_order/t_lorder functionality.</p>
+<p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">t_degree_order_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -276,7 +343,7 @@ test will return immediately.</p>
 <em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">t_integrate_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#t_integrate_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.t_integrate_test_case" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test case for the time integration functionality.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">t_integrate_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -287,7 +354,7 @@ test will return immediately.</p>
 <em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">truncate_degree_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#truncate_degree_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.truncate_degree_test_case" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test case for the degree-based truncation of series.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">truncate_degree_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -298,7 +365,7 @@ test will return immediately.</p>
 <em class="property">class </em><code class="descclassname">pyranha.test.</code><code class="descname">tutorial_test_case</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/test.html#tutorial_test_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.test.tutorial_test_case" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test case that will check the tutorial files.</p>
 <p>To be used within the <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> framework.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="kn">as</span> <span class="nn">ut</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">unittest</span> <span class="k">as</span> <span class="nn">ut</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">suite</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">tutorial_test_case</span><span class="p">)</span>
 </pre></div>
 </div>
