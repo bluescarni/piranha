@@ -93,7 +93,8 @@ see https://www.gnu.org/licenses/. */
  * \todo probably better to remove the thread_management class and use free functions directly for the binding.
  * \todo review the usage of the static keyword for functions: we are header-only now, it's probably not needed (esp. static inline).
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at least to make
- * sure they behave consistently wrt locale settings.
+ * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
+ * and keep lexical_cast only for the conversion of piranha's types to string.
  * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in term. Should we require it to be
@@ -215,6 +216,7 @@ see https://www.gnu.org/licenses/. */
  * \todo it seems like, at least in some cases, it is possible to avoid extra template arguments for enabling purposes
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
+ * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
  */
 namespace piranha
 {

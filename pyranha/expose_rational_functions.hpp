@@ -222,6 +222,7 @@ inline void expose_rational_functions_impl()
 	bp::def("_integrate",piranha::math::integrate<r_type>);
 	// Partial.
 	bp::def("_partial",piranha::math::partial<r_type>);
+	rf_class.def("partial",&r_type::partial);
 	rf_class.def("register_custom_derivative",generic_register_custom_derivative_wrapper<r_type>)
 		.staticmethod("register_custom_derivative");
 	rf_class.def("unregister_custom_derivative",

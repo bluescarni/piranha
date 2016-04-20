@@ -460,4 +460,10 @@ BOOST_AUTO_TEST_CASE(poisson_series_rational_function_test)
 		3*y/(4_q*(2*a_x-3*a_z))*math::cos(2*x-3*z));
 	BOOST_CHECK_THROW((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{x}"}),std::invalid_argument);
 	BOOST_CHECK_THROW((3/4_q*y*math::sin(-2*x+3*z)).t_integrate({"\\alpha_{z},\\alpha_{x}"}),std::invalid_argument);
+	// Custom partial derivative which also checks series division.
+	ps_type::register_custom_derivative("x",[](const ps_type &p) {return p.partial("x") + p.partial("y")*4;});
+	auto tmp = math::subs(math::partial((x+3*y-z)/(4*z+x)*math::cos(x-2*y+z),"x"),"y",4*x);
+	BOOST_CHECK_EQUAL(tmp,-7*(13*x - z)*math::sin(7*x - z)/(x + 4*z) + 13*math::cos(7*x - z)/(x + 4*z)
+		- (13*x - z)*math::cos(7*x - z)/math::pow(x + 4*z,2));
+	ps_type::unregister_all_custom_derivatives();
 }

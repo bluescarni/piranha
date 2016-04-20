@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
-#include <boost/lexical_cast.hpp>
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/dict.hpp>
@@ -120,7 +119,7 @@ inline bp::class_<T> expose_class()
 		::PyErr_SetString(PyExc_RuntimeError,(std::string("the C++ type '") + demangled_type_name(t_idx) + "' has already been exposed").c_str());
 		bp::throw_error_already_set();
 	}
-	bp::class_<T> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
+	bp::class_<T> class_inst((std::string("_exposed_type_")+std::to_string(exposed_types_counter)).c_str(),bp::init<>());
 	++exposed_types_counter;
 	// NOTE: class_ inherits from bp::object, here the "call operator" of a class type will construct an instance
 	// of that object. We then get the Python type out of that. It seems like another possible way of achieving

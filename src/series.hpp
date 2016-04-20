@@ -792,8 +792,6 @@ class series_operators
 		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
 		{
 			using ret_type = series_common_type<T,U,3>;
-			using term_type = typename ret_type::term_type;
-			using key_type = typename term_type::key_type;
 			// NOTE: is_zero() is always available for series.
 			if (math::is_zero(y)) {
 				piranha_throw(zero_division_error,"zero denominator in series division");
@@ -801,13 +799,11 @@ class series_operators
 			if (math::is_zero(x)) {
 				return ret_type{};
 			}
-			if (!x.is_single_coefficient() || !y.is_single_coefficient()) {
-				piranha_throw(std::invalid_argument,"cannot perform division on series which do not "
+			if (!y.is_single_coefficient()) {
+				piranha_throw(std::invalid_argument,"divisor in series division does not "
 					"consist of a single coefficient");
 			}
-			ret_type retval;
-			retval.insert(term_type{x._container().begin()->m_cf / y._container().begin()->m_cf,key_type(symbol_set{})});
-			return retval;
+			return x / y._container().begin()->m_cf;
 		}
 		// Same recursion, first coefficient wins.
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 1u &&
