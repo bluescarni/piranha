@@ -110,10 +110,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a967476e993825552fcdf57ef065a4496"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a967476e993825552fcdf57ef065a4496"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1integrate__impl_3_01_series_00_01detail_1_1series__integrate__enabler_3_01_series_01_4_01_4.html#a967476e993825552fcdf57ef065a4496">operator()</a> (const T &amp;s, const std::string &amp;name) -&gt; decltype(s.integrate(name))</td></tr>
-<tr class="memdesc:a967476e993825552fcdf57ef065a4496"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a967476e993825552fcdf57ef065a4496">More...</a><br /></td></tr>
-<tr class="separator:a967476e993825552fcdf57ef065a4496"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4f4613c5b90a2949f37602633d497a2"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ad4f4613c5b90a2949f37602633d497a2"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1integrate__impl_3_01_series_00_01detail_1_1series__integrate__enabler_3_01_series_01_4_01_4.html#ad4f4613c5b90a2949f37602633d497a2">operator()</a> (const T &amp;s, const std::string &amp;name) const  -&gt; decltype(s.integrate(name))</td></tr>
+<tr class="memdesc:ad4f4613c5b90a2949f37602633d497a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#ad4f4613c5b90a2949f37602633d497a2">More...</a><br /></td></tr>
+<tr class="separator:ad4f4613c5b90a2949f37602633d497a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Series&gt;<br />
@@ -122,9 +122,9 @@ struct piranha::math::integrate_impl&lt; Series, detail::series_integrate_enable
 <p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a989976cf0e0e1637ea0cd176cc87f0dc" title="Integration. ">piranha::math::integrate()</a> functor for series types. </p>
 <p>This specialisation is activated when <code>Series</code> is an instance of <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a> with a const <code><a class="el" href="namespacepiranha_1_1math.html#a989976cf0e0e1637ea0cd176cc87f0dc" title="Integration. ">integrate()</a></code> method taking a const <code>std::string</code> as parameter. </p>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l03369">3369</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l03438">3438</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a967476e993825552fcdf57ef065a4496"></a>
+<a class="anchor" id="ad4f4613c5b90a2949f37602633d497a2"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -150,7 +150,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; decltype(s.integrate(name))
+          <td></td><td> const -&gt; decltype(s.integrate(name))
 	</td>
         </tr>
       </table>
@@ -177,7 +177,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l03381">3381</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l03450">3450</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>

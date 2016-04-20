@@ -1,11 +1,12 @@
 var searchData=
 [
   ['gamma',['gamma',['../classpiranha_1_1real.html#aaf96fa457f06e9027b710f799f5b7ce3',1,'piranha::real']]],
-  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../classpiranha_1_1polynomial.html#ad66e9879f235c8b2ebf4d8ee3e102ad2',1,'piranha::polynomial::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
+  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../classpiranha_1_1polynomial.html#aa2bbd407e2c9a60fd37a2c7d5f956b3a',1,'piranha::polynomial::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
   ['gcd3',['gcd3',['../namespacepiranha_1_1math.html#aed326292eae1eeef5a46fd472a6e3165',1,'piranha::math']]],
   ['get_5fall',['get_all',['../classpiranha_1_1future__list.html#a768ec5d6187ff911e39f8da460eab095',1,'piranha::future_list']]],
   ['get_5fauto_5ftruncate_5fdegree',['get_auto_truncate_degree',['../classpiranha_1_1polynomial.html#aca50ba865f88f3313084108e7ee5ce0a',1,'piranha::polynomial']]],
   ['get_5fcache_5fline_5fsize',['get_cache_line_size',['../classpiranha_1_1runtime__info.html#aac7510b135cddd7cdb28a9bea7e6d889',1,'piranha::runtime_info::get_cache_line_size()'],['../classpiranha_1_1settings__.html#a7416d94ce5d919f7f1bd1c80e95a24fe',1,'piranha::settings_::get_cache_line_size()']]],
+  ['get_5fdefault_5fgcd_5falgorithm',['get_default_gcd_algorithm',['../classpiranha_1_1polynomial.html#a2f8720b75662fd74c3b34dd17174729b',1,'piranha::polynomial']]],
   ['get_5festimate_5fthreshold',['get_estimate_threshold',['../classpiranha_1_1tuning.html#ae52b6a8240816c547472fa5194a48f3b',1,'piranha::tuning']]],
   ['get_5fflavour',['get_flavour',['../classpiranha_1_1real__trigonometric__kronecker__monomial.html#aa62aa33c1e95a45e20783c931c7e6a5e',1,'piranha::real_trigonometric_kronecker_monomial']]],
   ['get_5fhardware_5fconcurrency',['get_hardware_concurrency',['../classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b',1,'piranha::runtime_info']]],

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.11"/>
-<title>piranha: piranha::math::value&lt; T, U &gt; Struct Template Reference</title>
+<title>piranha: piranha::math::binomial_impl&lt; T, U, detail::binomial_fp_arith_enabler&lt; T, U &gt; &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -91,55 +91,53 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="namespacepiranha_1_1math.html">math</a></li><li class="navelem"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdb2bc7c5bfcf0d6683eba94e39b8459ac.html">value</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="namespacepiranha_1_1math.html">math</a></li><li class="navelem"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1binomial__fp__arith__enabler_3_01_t_00_01_u_01_4_01_4.html">binomial_impl&lt; T, U, detail::binomial_fp_arith_enabler&lt; T, U &gt; &gt;</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdd7d5d97078a5e1ac07dee9c2f0f45d5a.html">List of all members</a>  </div>
+<a href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1binomial__fp__arith__enablf289f43dbfb169d21de7bd5c675ff934.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::math::value&lt; T, U &gt; Struct Template Reference</div>  </div>
+<div class="title">piranha::math::binomial_impl&lt; T, U, detail::binomial_fp_arith_enabler&lt; T, U &gt; &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a5a44533ef3963c6c96f4aca746c92d07" title="Generalised binomial coefficient. ">piranha::math::binomial()</a> functor for floating-point and arithmetic arguments.  
- <a href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdb2bc7c5bfcf0d6683eba94e39b8459ac.html#details">More...</a></p>
+ <a href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1binomial__fp__arith__enabler_3_01_t_00_01_u_01_4_01_4.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="binomial_8hpp_source.html">binomial.hpp</a>&gt;</code></p>
-
-<p>Inherits type.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a0fb17af8465d335a56e2fb01239745c3"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdb2bc7c5bfcf0d6683eba94e39b8459ac.html#a0fb17af8465d335a56e2fb01239745c3">result_type</a> = typename std::common_type&lt; T, U &gt;::type</td></tr>
-<tr class="memdesc:a0fb17af8465d335a56e2fb01239745c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result type for the call operator.  <a href="#a0fb17af8465d335a56e2fb01239745c3">More...</a><br /></td></tr>
-<tr class="separator:a0fb17af8465d335a56e2fb01239745c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf335acd31a281397e808b208f0bc30a"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1binomial__fp__arith__enabler_3_01_t_00_01_u_01_4_01_4.html#acf335acd31a281397e808b208f0bc30a">result_type</a> = typename std::common_type&lt; T, U &gt;::type</td></tr>
+<tr class="memdesc:acf335acd31a281397e808b208f0bc30a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result type for the call operator.  <a href="#acf335acd31a281397e808b208f0bc30a">More...</a><br /></td></tr>
+<tr class="separator:acf335acd31a281397e808b208f0bc30a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7982e146de3422fb99a9d02e85179de4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdb2bc7c5bfcf0d6683eba94e39b8459ac.html#a0fb17af8465d335a56e2fb01239745c3">result_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdb2bc7c5bfcf0d6683eba94e39b8459ac.html#a7982e146de3422fb99a9d02e85179de4">operator()</a> (const T &amp;x, const U &amp;y) const </td></tr>
-<tr class="memdesc:a7982e146de3422fb99a9d02e85179de4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a7982e146de3422fb99a9d02e85179de4">More...</a><br /></td></tr>
-<tr class="separator:a7982e146de3422fb99a9d02e85179de4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3a509142ba1fb82f221d2522e7873ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1binomial__fp__arith__enabler_3_01_t_00_01_u_01_4_01_4.html#acf335acd31a281397e808b208f0bc30a">result_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1binomial__fp__arith__enabler_3_01_t_00_01_u_01_4_01_4.html#ac3a509142ba1fb82f221d2522e7873ab">operator()</a> (const T &amp;x, const U &amp;y) const </td></tr>
+<tr class="memdesc:ac3a509142ba1fb82f221d2522e7873ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#ac3a509142ba1fb82f221d2522e7873ab">More...</a><br /></td></tr>
+<tr class="separator:ac3a509142ba1fb82f221d2522e7873ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T, typename U&gt;<br />
-struct piranha::math::value&lt; T, U &gt;</h3>
+struct piranha::math::binomial_impl&lt; T, U, detail::binomial_fp_arith_enabler&lt; T, U &gt; &gt;</h3>
 
 <p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a5a44533ef3963c6c96f4aca746c92d07" title="Generalised binomial coefficient. ">piranha::math::binomial()</a> functor for floating-point and arithmetic arguments. </p>
 <p>This specialisation is activated when both arguments are C++ arithmetic types and at least one argument is a floating-point type. </p>
 
-<p>Definition at line <a class="el" href="binomial_8hpp_source.html#l00184">184</a> of file <a class="el" href="binomial_8hpp_source.html">binomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="binomial_8hpp_source.html#l00191">191</a> of file <a class="el" href="binomial_8hpp_source.html">binomial.hpp</a>.</p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a class="anchor" id="a0fb17af8465d335a56e2fb01239745c3"></a>
+<a class="anchor" id="acf335acd31a281397e808b208f0bc30a"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T , typename U &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">using piranha::math::value&lt; T, U &gt;::<a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdb2bc7c5bfcf0d6683eba94e39b8459ac.html#a0fb17af8465d335a56e2fb01239745c3">result_type</a> =  typename std::common_type&lt;T,U&gt;::type</td>
+          <td class="memname">using <a class="el" href="structpiranha_1_1math_1_1binomial__impl.html">piranha::math::binomial_impl</a>&lt; T, U, detail::binomial_fp_arith_enabler&lt; T, U &gt; &gt;::<a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1binomial__fp__arith__enabler_3_01_t_00_01_u_01_4_01_4.html#acf335acd31a281397e808b208f0bc30a">result_type</a> =  typename std::common_type&lt;T,U&gt;::type</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -147,12 +145,12 @@ template&lt;typename T , typename U &gt; </div>
 <p>Result type for the call operator. </p>
 <p>The result type is the widest floating-point type among <code>T</code> and <code>U</code>. </p>
 
-<p>Definition at line <a class="el" href="binomial_8hpp_source.html#l00194">194</a> of file <a class="el" href="binomial_8hpp_source.html">binomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="binomial_8hpp_source.html#l00197">197</a> of file <a class="el" href="binomial_8hpp_source.html">binomial.hpp</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a7982e146de3422fb99a9d02e85179de4"></a>
+<a class="anchor" id="ac3a509142ba1fb82f221d2522e7873ab"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -162,7 +160,7 @@ template&lt;typename T , typename U &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdb2bc7c5bfcf0d6683eba94e39b8459ac.html#a0fb17af8465d335a56e2fb01239745c3">result_type</a> piranha::math::value&lt; T, U &gt;::operator() </td>
+          <td class="memname"><a class="el" href="structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1binomial__fp__arith__enabler_3_01_t_00_01_u_01_4_01_4.html#acf335acd31a281397e808b208f0bc30a">result_type</a> <a class="el" href="structpiranha_1_1math_1_1binomial__impl.html">piranha::math::binomial_impl</a>&lt; T, U, detail::binomial_fp_arith_enabler&lt; T, U &gt; &gt;::operator() </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"><em>x</em>, </td>
@@ -203,7 +201,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="binomial_8hpp_source.html#l00209">209</a> of file <a class="el" href="binomial_8hpp_source.html">binomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="binomial_8hpp_source.html#l00212">212</a> of file <a class="el" href="binomial_8hpp_source.html">binomial.hpp</a>.</p>
 
 </div>
 </div>

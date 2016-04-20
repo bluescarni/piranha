@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.11"/>
-<title>piranha: piranha::math::value&lt; T, U &gt; Struct Template Reference</title>
+<title>piranha: piranha::math::pow_impl&lt; T, U, typename std::enable_if&lt; std::is_base_of&lt; detail::rational_function_tag, T &gt;::value &gt;::type &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -91,69 +91,66 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="namespacepiranha_1_1math.html">math</a></li><li class="navelem"><a class="el" href="structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1i12ae383028df1902b0d64674e2b2bdd2.html">value</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="namespacepiranha_1_1math.html">math</a></li><li class="navelem"><a class="el" href="structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1i971c8b8a4c319f80c8915acceb973075.html">pow_impl&lt; T, U, typename std::enable_if&lt; std::is_base_of&lt; detail::rational_function_tag, T &gt;::value &gt;::type &gt;</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1ib0a33ef5488394ed59dc20065510dc71.html">List of all members</a>  </div>
+<a href="structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1i042056f704043a7e80a1537b5aadb27d.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::math::value&lt; T, U &gt; Struct Template Reference</div>  </div>
+<div class="title">piranha::math::pow_impl&lt; T, U, typename std::enable_if&lt; std::is_base_of&lt; detail::rational_function_tag, T &gt;::value &gt;::type &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a> functor for arithmetic and floating-point types.  
- <a href="structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1i12ae383028df1902b0d64674e2b2bdd2.html#details">More...</a></p>
+<p>Specialisation of <a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a> for <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a> bases.  
+ <a href="structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1i971c8b8a4c319f80c8915acceb973075.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="pow_8hpp_source.html">pow.hpp</a>&gt;</code></p>
-
-<p>Inherits type.</p>
+<p><code>#include &lt;<a class="el" href="rational__function_8hpp_source.html">rational_function.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6161e27e3ebc005677980eea7748e738"><td class="memTemplParams" colspan="2">template&lt;typename T2 , typename U2 &gt; </td></tr>
-<tr class="memitem:a6161e27e3ebc005677980eea7748e738"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1i12ae383028df1902b0d64674e2b2bdd2.html#a6161e27e3ebc005677980eea7748e738">operator()</a> (const T2 &amp;x, const U2 &amp;y) const  -&gt; decltype(std::pow(x, y))</td></tr>
-<tr class="memdesc:a6161e27e3ebc005677980eea7748e738"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a6161e27e3ebc005677980eea7748e738">More...</a><br /></td></tr>
-<tr class="separator:a6161e27e3ebc005677980eea7748e738"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac70a1b136d4ae00b6335487fc05c9ab2"><td class="memTemplParams" colspan="2">template&lt;typename V , pow_enabler&lt; V &gt;  = 0&gt; </td></tr>
+<tr class="memitem:ac70a1b136d4ae00b6335487fc05c9ab2"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1i971c8b8a4c319f80c8915acceb973075.html#ac70a1b136d4ae00b6335487fc05c9ab2">operator()</a> (const T &amp;r, const V &amp;n) const </td></tr>
+<tr class="memdesc:ac70a1b136d4ae00b6335487fc05c9ab2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#ac70a1b136d4ae00b6335487fc05c9ab2">More...</a><br /></td></tr>
+<tr class="separator:ac70a1b136d4ae00b6335487fc05c9ab2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T, typename U&gt;<br />
-struct piranha::math::value&lt; T, U &gt;</h3>
+struct piranha::math::pow_impl&lt; T, U, typename std::enable_if&lt; std::is_base_of&lt; detail::rational_function_tag, T &gt;::value &gt;::type &gt;</h3>
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a> functor for arithmetic and floating-point types. </p>
-<p>This specialisation is activated when both arguments are C++ arithmetic types and at least one argument is a floating-point type. </p>
+<p>Specialisation of <a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a> for <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a> bases. </p>
+<p>This specialisation is enabled if <code>T</code> is an instance of <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a>. </p>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00076">76</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="rational__function_8hpp_source.html#l01395">1395</a> of file <a class="el" href="rational__function_8hpp_source.html">rational_function.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a6161e27e3ebc005677980eea7748e738"></a>
+<a class="anchor" id="ac70a1b136d4ae00b6335487fc05c9ab2"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T , typename U &gt; </div>
 <div class="memtemplate">
-template&lt;typename T2 , typename U2 &gt; </div>
+template&lt;typename V , pow_enabler&lt; V &gt;  = 0&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">auto piranha::math::value&lt; T, U &gt;::operator() </td>
+          <td class="memname">T <a class="el" href="structpiranha_1_1math_1_1pow__impl.html">piranha::math::pow_impl</a>&lt; T, U, typename std::enable_if&lt; std::is_base_of&lt; detail::rational_function_tag, T &gt;::value &gt;::type &gt;::operator() </td>
           <td>(</td>
-          <td class="paramtype">const T2 &amp;&#160;</td>
-          <td class="paramname"><em>x</em>, </td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>r</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const U2 &amp;&#160;</td>
-          <td class="paramname"><em>y</em>&#160;</td>
+          <td class="paramtype">const V &amp;&#160;</td>
+          <td class="paramname"><em>n</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const -&gt; decltype(std::pow(x,y))
-	</td>
+          <td></td><td> const</td>
         </tr>
       </table>
   </td>
@@ -164,22 +161,28 @@ template&lt;typename T2 , typename U2 &gt; </div>
 </div><div class="memdoc">
 
 <p>Call operator. </p>
-<p>This operator will compute the exponentiation via one of the overloads of <code>std::pow()</code>.</p>
+<dl class="section note"><dt>Note</dt><dd>The call operator is enabled only if <code>return r.pow(n)</code> is a valid expression.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>base. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">y</td><td>exponent.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">r</td><td>the <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a> base. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>the integral exponent.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><code>x**y</code>. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><code>r.pow(n)</code>.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1rational__function.html#a4be8c7e13943a65b9d7a23f9c450d2cb" title="Exponentiation. ">piranha::rational_function::pow()</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00092">92</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="rational__function_8hpp_source.html#l01415">1415</a> of file <a class="el" href="rational__function_8hpp_source.html">rational_function.hpp</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li><a class="el" href="pow_8hpp_source.html">pow.hpp</a></li>
+<li><a class="el" href="rational__function_8hpp_source.html">rational_function.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

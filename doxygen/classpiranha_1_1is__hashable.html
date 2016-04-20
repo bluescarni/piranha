@@ -121,10 +121,13 @@ class piranha::is_hashable&lt; T, typename &gt;</h3>
 
 <p>Hashable type trait. </p>
 <p>This type trait will be <code>true</code> if the decay type of <code>T</code> is hashable, <code>false</code> otherwise.</p>
-<p>A type <code>T</code> is hashable when supplied with a specialisation of <code>std::hash</code> which satisfies <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a>.</p>
+<p>A type <code>T</code> is hashable when supplied with a specialisation of <code>std::hash</code> which:</p><ul>
+<li>has a call operator complying to the interface specified by the C++ standard,</li>
+<li>satisfies <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a>.</li>
+</ul>
 <p>Note that depending on the implementation of the default <code>std::hash</code> class, using this type trait with a type which does not provide a specialisation for <code>std::hash</code> could result in a compilation error (e.g., if the unspecialised <code>std::hash</code> includes a <code>false</code> <code>static_assert</code>). </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00559">559</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00562">562</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>

@@ -9,5 +9,5 @@ var searchData=
   ['nextprime',['nextprime',['../classpiranha_1_1mp__integer.html#afd09289d3b25e01b4d7c15172a615ed8',1,'piranha::mp_integer']]],
   ['not_5fimplemented_5ferror',['not_implemented_error',['../structpiranha_1_1not__implemented__error.html',1,'piranha']]],
   ['not_5fimplemented_5ferror',['not_implemented_error',['../structpiranha_1_1not__implemented__error.html#a072fe4b33e4313b641786483c8b3f0d6',1,'piranha::not_implemented_error']]],
-  ['num',['num',['../classpiranha_1_1mp__rational.html#ad7c9fb13d0f92611b07c2750be655035',1,'piranha::mp_rational']]]
+  ['num',['num',['../classpiranha_1_1mp__rational.html#ad7c9fb13d0f92611b07c2750be655035',1,'piranha::mp_rational::num()'],['../classpiranha_1_1rational__function.html#aedbf2d4e3160cc981ae52f54f3ca70da',1,'piranha::rational_function::num()']]]
 ];

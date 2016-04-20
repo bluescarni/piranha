@@ -1,31 +1,5 @@
 var searchData=
 [
-  ['_7earray_5fkey',['~array_key',['../classpiranha_1_1array__key.html#adcb34bdf1bab23832d0133dbbc0ef51d',1,'piranha::array_key']]],
-  ['_7ebase_5fexception',['~base_exception',['../classpiranha_1_1base__exception.html#a5396ba963f578870394de91bf2994077',1,'piranha::base_exception']]],
-  ['_7ecache_5faligning_5fallocator',['~cache_aligning_allocator',['../classpiranha_1_1cache__aligning__allocator.html#a7a255316ecca174beb2c1f93d026fcbd',1,'piranha::cache_aligning_allocator']]],
-  ['_7edivisor',['~divisor',['../classpiranha_1_1divisor.html#a20a4c13434e3bb5d65d90dbdb59b4392',1,'piranha::divisor']]],
-  ['_7edivisor_5fseries',['~divisor_series',['../classpiranha_1_1divisor__series.html#accc008197c32fd585461eb5f286f2bc7',1,'piranha::divisor_series']]],
-  ['_7edynamic_5faligning_5fallocator',['~dynamic_aligning_allocator',['../classpiranha_1_1dynamic__aligning__allocator.html#aac6a23100033d4b6d8a9f9cc87e7b204',1,'piranha::dynamic_aligning_allocator']]],
-  ['_7efuture_5flist',['~future_list',['../classpiranha_1_1future__list.html#a029eb558a5d1ad7acff2292dd815344b',1,'piranha::future_list']]],
-  ['_7ehash_5fset',['~hash_set',['../classpiranha_1_1hash__set.html#ac0cccdf7ed4e6a69a2bdd32641b362d1',1,'piranha::hash_set']]],
-  ['_7eipow_5fsubstitutable_5fseries',['~ipow_substitutable_series',['../classpiranha_1_1ipow__substitutable__series.html#af2e1876ad0ca3d1c65c9e202d8f4bbaa',1,'piranha::ipow_substitutable_series']]],
-  ['_7ekronecker_5fmonomial',['~kronecker_monomial',['../classpiranha_1_1kronecker__monomial.html#af2fa2790a5fa0c626b9cfb2809998408',1,'piranha::kronecker_monomial']]],
-  ['_7emonomial',['~monomial',['../classpiranha_1_1monomial.html#a940f491c890f89daa658bb6301affc6c',1,'piranha::monomial']]],
-  ['_7emp_5finteger',['~mp_integer',['../classpiranha_1_1mp__integer.html#a77117a788cf9a8d8ad461102080575de',1,'piranha::mp_integer']]],
-  ['_7emp_5frational',['~mp_rational',['../classpiranha_1_1mp__rational.html#a75f34ad416fda0c0136a9ebccb49ed00',1,'piranha::mp_rational']]],
-  ['_7epoisson_5fseries',['~poisson_series',['../classpiranha_1_1poisson__series.html#add5d9694f2ed8d158be2dfa26b30e24e',1,'piranha::poisson_series']]],
-  ['_7epolynomial',['~polynomial',['../classpiranha_1_1polynomial.html#a7a66434ef5da58fb8d72383107880e3e',1,'piranha::polynomial']]],
-  ['_7epower_5fseries',['~power_series',['../classpiranha_1_1power__series.html#a7d95d21f47fa51a4e9af531f7150a0b5',1,'piranha::power_series']]],
-  ['_7ereal',['~real',['../classpiranha_1_1real.html#a43b4aed23033e71950319483ae9c2ed2',1,'piranha::real']]],
-  ['_7ereal_5ftrigonometric_5fkronecker_5fmonomial',['~real_trigonometric_kronecker_monomial',['../classpiranha_1_1real__trigonometric__kronecker__monomial.html#a20d0151495e3599cdc53e6b89ed4e35b',1,'piranha::real_trigonometric_kronecker_monomial']]],
-  ['_7eseries',['~series',['../classpiranha_1_1series.html#afcb05a89eb377e24251cfd1ea355ccf9',1,'piranha::series']]],
-  ['_7esmall_5fvector',['~small_vector',['../classpiranha_1_1small__vector.html#a39377555e41c414e8b9ebf2eacd1b683',1,'piranha::small_vector']]],
-  ['_7estatic_5fvector',['~static_vector',['../classpiranha_1_1static__vector.html#a52066cd447fd1347a41d2373561c810c',1,'piranha::static_vector']]],
-  ['_7esubstitutable_5fseries',['~substitutable_series',['../classpiranha_1_1substitutable__series.html#a5a50d5888a328f958568c1319591f13c',1,'piranha::substitutable_series']]],
-  ['_7esymbol',['~symbol',['../classpiranha_1_1symbol.html#a6a4eb0f20b3c2104ae55aa44e04260dd',1,'piranha::symbol']]],
-  ['_7esymbol_5fset',['~symbol_set',['../classpiranha_1_1symbol__set.html#a9ca3702604de1afed1f2f42e3e3cafb3',1,'piranha::symbol_set']]],
-  ['_7et_5fsubstitutable_5fseries',['~t_substitutable_series',['../classpiranha_1_1t__substitutable__series.html#a291555ff643996e9da8ee870df291b6d',1,'piranha::t_substitutable_series']]],
-  ['_7eterm',['~term',['../classpiranha_1_1term.html#aa63219c9c9cd7de8fc14f1e4011a5423',1,'piranha::term']]],
-  ['_7ethread_5fbarrier',['~thread_barrier',['../classpiranha_1_1thread__barrier.html#a84e1f19bd8376ba4d4eb057eabea341c',1,'piranha::thread_barrier']]],
-  ['_7etrigonometric_5fseries',['~trigonometric_series',['../classpiranha_1_1trigonometric__series.html#aef920531e6bf2df42129946464e0fbb8',1,'piranha::trigonometric_series']]]
+  ['zero_5fdivision_5ferror',['zero_division_error',['../structpiranha_1_1zero__division__error.html',1,'piranha']]],
+  ['zero_5fdivision_5ferror',['zero_division_error',['../structpiranha_1_1zero__division__error.html#a38882aa0495b251357fc0abc80e1ea3b',1,'piranha::zero_division_error']]]
 ];
