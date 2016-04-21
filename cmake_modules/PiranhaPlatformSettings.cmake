@@ -1,3 +1,5 @@
+include(YACMACompilerLinkerSettings)
+
 # POSIX thread setup. Intended both for UNIX and Windows (the latter when using some sort of
 # pthread emulation/wrapper like pthreads-win32).
 IF(CMAKE_USE_PTHREADS_INIT)
@@ -91,7 +93,7 @@ ENDIF(UNIX OR MINGW)
 
 # OS X setup.
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	IF(CMAKE_COMPILER_IS_CLANGXX)
+	IF(YACMA_COMPILER_IS_CLANGXX)
 		# On OS X with clang we need to use libc++.
 		MESSAGE(STATUS "Clang compiler on OS X detected, using libc++ as standard library.")
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
