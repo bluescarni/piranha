@@ -40,14 +40,21 @@ mark_as_advanced(RUN_ON_VALGRIND)
 # Initialise (empty) list of libraries to link against.
 SET(MANDATORY_LIBRARIES "")
 
-# Initial thread setup.
-FIND_PACKAGE(Threads REQUIRED)
-MESSAGE(STATUS "Thread library: ${CMAKE_THREAD_LIBS_INIT}")
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-
-# Include these macros here as they reference variables defined above.
+# Initial setup of the compilation flags.
 include(PiranhaCompilerLinkerSettings)
+
+# Additional platform-specific setup.
 include(PiranhaPlatformSettings)
+
+# Threading setup.
+include(YACMAThreadingSetup)
+set(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${YACMA_THREADING_CXX_FLAGS}")
+if(YACMA_HAS_PTHREAD_AFFINITY)
+	set(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
+endif()
+
+# Report the CXX flags.
 message(STATUS "Current CXX flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Current CXX debug flags: ${CMAKE_CXX_FLAGS_DEBUG}")
 

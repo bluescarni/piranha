@@ -63,12 +63,8 @@ if(YACMA_COMPILER_IS_GNUCXX)
 	# A problem with MinGW is that we run into a "too many sections" quite often. Recently, MinGW
 	# added a -mbig-obj for the assembler that solves this, but this is available only in recent versions.
 	# Other tentative workarounds include disabling debug information, enabling global inlining, use -Os and others.
-	# The -mthreads flag is apparently needed for thread-safe exception handling.
-	# NOTE: the mthreads part is probably unnecessary or wrong, at least when using
-	# the pthread emulation layer in mingw-builds. Keep it in mind for the future
-	# (also in platform settings, where we also use -mthreads).
 	if(MINGW)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -Wa,-mbig-obj")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
 		# The debug build can run into a "file is too large" error. Work around by
 		# compiling for small size.
 		set(CMAKE_CXX_FLAGS_DEBUG "-Os")
