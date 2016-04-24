@@ -95,31 +95,31 @@ struct is_real_interoperable_type
  * This class represents floating-point ("real") numbers of arbitrary size (i.e., the size is limited only by the available memory).
  * The implementation consists of a C++ wrapper around the \p mpfr_t type from the multiprecision MPFR library. Real numbers
  * are represented in binary format and they consist of an arbitrary-size significand coupled to a fixed-size exponent.
- * 
+ *
  * Unless noted otherwise, this implementation always uses the \p MPFR_RNDN (round to nearest) rounding mode for all operations.
- * 
+ *
  * ## Interoperability with other types ##
- * 
+ *
  * This class interoperates with the same types as piranha::mp_integer and piranha::mp_rational,
  * plus piranha::mp_integer and piranha::mp_rational themselves.
  * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
  * of piranha::mp_integer apply.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless noted otherwise, this class provides the strong exception safety guarantee for all operations.
  * In case of memory allocation errors by GMP/MPFR routines, the program will terminate.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move construction and move assignment will leave the moved-from object in a state that is destructible and assignable.
  *
  * ## Serialization ##
  *
  * This class supports serialization.
- * 
+ *
  * @see http://www.mpfr.org
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // NOTES:
@@ -302,7 +302,7 @@ class real: public detail::real_base<>
 			}
 		}
 		// In-place addition.
-		// NOTE: all sorts of optimisations, here and in binary add, are possible (e.g., steal from rvalue ref, 
+		// NOTE: all sorts of optimisations, here and in binary add, are possible (e.g., steal from rvalue ref,
 		// avoid setting precision twice in binary operators, etc.). For the moment we keep it basic.
 		real &in_place_add(const real &r)
 		{
@@ -686,7 +686,7 @@ class real: public detail::real_base<>
 		/// Copy constructor.
 		/**
 		 * Will deep-copy \p other.
-		 * 
+		 *
 		 * @param[in] other real to be copied.
 		 */
 		real(const real &other)
@@ -715,10 +715,10 @@ class real: public detail::real_base<>
 		/**
 		 * Will use the string \p str and precision \p prec to initialize the number.
 		 * The expected string format, assuming representation in base 10, is described in the MPFR documentation.
-		 * 
+		 *
 		 * @param[in] str string representation of the real number.
 		 * @param[in] prec desired significand precision.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the conversion from string fails or if the requested significand precision
 		 * is not within the range allowed by the MPFR library.
 		 */
@@ -729,10 +729,10 @@ class real: public detail::real_base<>
 		/// Constructor from C++ string.
 		/**
 		 * Equivalent to the constructor from C string.
-		 * 
+		 *
 		 * @param[in] str string representation of the real number.
 		 * @param[in] prec desired significand precision.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the constructor from C string.
 		 */
 		explicit real(const std::string &str, const ::mpfr_prec_t &prec = default_prec)
@@ -742,10 +742,10 @@ class real: public detail::real_base<>
 		/// Copy constructor with different precision.
 		/**
 		 * \p this will be first initialised with precision \p prec, and then \p other will be assigned to \p this.
-		 * 
+		 *
 		 * @param[in] other real to be copied.
 		 * @param[in] prec desired significand precision.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the requested significand precision
 		 * is not within the range allowed by the MPFR library.
 		 */
@@ -759,10 +759,10 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This constructor is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * @param[in] x object used to construct \p this.
 		 * @param[in] prec desired significand precision.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the requested significand precision
 		 * is not within the range allowed by the MPFR library.
 		 */
@@ -781,9 +781,9 @@ class real: public detail::real_base<>
 		/// Copy assignment operator.
 		/**
 		 * The assignment operation will deep-copy \p other (i.e., including its precision).
-		 * 
+		 *
 		 * @param[in] other real to be copied.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		real &operator=(const real &other)
@@ -805,7 +805,7 @@ class real: public detail::real_base<>
 		/// Move assignment operator.
 		/**
 		 * @param[in] other real to be moved.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		real &operator=(real &&other) noexcept
@@ -817,11 +817,11 @@ class real: public detail::real_base<>
 		/// Assignment operator from C++ string.
 		/**
 		 * The implementation is equivalent to the assignment operator from C string.
-		 * 
+		 *
 		 * @param[in] str string representation of the real to be assigned.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the assignment operator from C string.
 		 */
 		real &operator=(const std::string &str)
@@ -834,13 +834,13 @@ class real: public detail::real_base<>
 		 * will not be changed by the assignment operation, unless \p this was the target of a move operation that
 		 * left it in an uninitialised state.
 		 * In that case, \p this will be re-initialised with the default precision.
-		 * 
+		 *
 		 * In case \p str is malformed, before an exception is thrown the value of \p this will be reset to zero.
-		 * 
+		 *
 		 * @param[in] str string representation of the real to be assigned.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the conversion from string fails.
 		 */
 		real &operator=(const char *str)
@@ -858,14 +858,14 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This assignment operator is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * The precision of \p this
 		 * will not be changed by the assignment operation, unless \p this was the target of a move operation that
 		 * left it in an uninitialised state.
 		 * In that case, \p this will be re-initialised with the default precision.
-		 * 
+		 *
 		 * @param[in] x object that will be assigned to \p this.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		template <typename T, typename = generic_ctor_enabler<T>>
@@ -884,23 +884,23 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * Extract an instance of type \p T from \p this.
-		 * 
+		 *
 		 * Conversion to \p bool is always successful, and returns <tt>sign() != 0</tt>.
 		 * Conversion to the other integral types is truncated (i.e., rounded to zero), its success depending on whether or not
 		 * the target type can represent the truncated value.
-		 * 
+		 *
 		 * Conversion to floating point types is exact if the target type can represent exactly the current value.
 		 * If that is not the case, the output value will be the nearest adjacent. If \p this is not finite,
 		 * corresponding non-finite values will be produced if the floating-point type supports them, otherwise
 		 * an error will be produced.
-		 * 
+		 *
 		 * Conversion of finite values to piranha::mp_rational will be exact. Conversion of non-finite values will result in runtime
 		 * errors.
-		 * 
+		 *
 		 * @return result of the conversion to target type T.
-		 * 
+		 *
 		 * @throws std::overflow_error if the conversion fails in one of the ways described above.
 		 */
 		template <typename T, typename = cast_enabler<T>>
@@ -911,7 +911,7 @@ class real: public detail::real_base<>
 		/// Swap.
 		/**
 		 * Swap \p this with \p other.
-		 * 
+		 *
 		 * @param[in] other swap argument.
 		 */
 		void swap(real &other)
@@ -968,9 +968,9 @@ class real: public detail::real_base<>
 		/// Set precision.
 		/**
 		 * Will set the significand precision of \p this to exactly \p prec bits, and reset the value of \p this to NaN.
-		 * 
+		 *
 		 * @param[in] prec desired significand precision.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the requested significand precision
 		 * is not within the range allowed by the MPFR library.
 		 */
@@ -1012,16 +1012,16 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::real.
-		 * 
+		 *
 		 * Add \p x to the current value of the real object.
-		 * 
+		 *
 		 * If the precision \p prec of \p x is greater than the precision of \p this,
 		 * the precision of \p this is changed to \p prec before the operation takes place.
-		 * 
+		 *
 		 * @param[in] x argument for the addition.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the contructor of piranha::mp_integer, if invoked.
 		 */
 		template <typename T>
@@ -1033,15 +1033,15 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Add a piranha::real in-place.
 		 * This method will first compute <tt>r + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] r second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception resulting from the binary operator or by casting piranha::real to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -1057,14 +1057,14 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * The return type is always piranha::real.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x + y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the corresponding in-place operator.
 		 */
 		template <typename T, typename U>
@@ -1083,7 +1083,7 @@ class real: public detail::real_base<>
 		/// Prefix increment.
 		/**
 		 * Increment \p this by one.
-		 * 
+		 *
 		 * @return reference to \p this after the increment.
 		 */
 		real &operator++()
@@ -1093,7 +1093,7 @@ class real: public detail::real_base<>
 		/// Suffix increment.
 		/**
 		 * Increment \p this by one and return a copy of \p this as it was before the increment.
-		 * 
+		 *
 		 * @return copy of \p this before the increment.
 		 */
 		real operator++(int)
@@ -1106,16 +1106,16 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::real.
-		 * 
+		 *
 		 * Subtract \p x from the current value of the real object.
-		 * 
+		 *
 		 * If the precision \p prec of \p x is greater than the precision of \p this,
 		 * the precision of \p this is changed to \p prec before the operation takes place.
-		 * 
+		 *
 		 * @param[in] x argument for the subtraction.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the contructor of piranha::mp_integer, if invoked.
 		 */
 		template <typename T>
@@ -1127,15 +1127,15 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Subtract a piranha::real in-place.
 		 * This method will first compute <tt>x - r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] r second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception resulting from the binary operator or by casting piranha::real to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -1150,14 +1150,14 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * The return type is always piranha::real.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x - y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the corresponding in-place operator.
 		 */
 		template <typename T, typename U>
@@ -1178,7 +1178,7 @@ class real: public detail::real_base<>
 		/// Prefix decrement.
 		/**
 		 * Decrement \p this by one and return.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		real &operator--()
@@ -1188,7 +1188,7 @@ class real: public detail::real_base<>
 		/// Suffix decrement.
 		/**
 		 * Decrement \p this by one and return a copy of \p this as it was before the decrement.
-		 * 
+		 *
 		 * @return copy of \p this before the decrement.
 		 */
 		real operator--(int)
@@ -1201,16 +1201,16 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::real.
-		 * 
+		 *
 		 * Multiply by \p x the current value of the real object.
-		 * 
+		 *
 		 * If the precision \p prec of \p x is greater than the precision of \p this,
 		 * the precision of \p this is changed to \p prec before the operation takes place.
-		 * 
+		 *
 		 * @param[in] x argument for the multiplication.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the contructor of piranha::mp_integer, if invoked.
 		 */
 		template <typename T>
@@ -1222,15 +1222,15 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Multiply by a piranha::real in-place.
 		 * This method will first compute <tt>x * r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] r second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception resulting from the binary operator or by casting piranha::real to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -1245,14 +1245,14 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * The return type is always piranha::real.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x * y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the corresponding in-place operator.
 		 */
 		template <typename T, typename U>
@@ -1264,16 +1264,16 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::real.
-		 * 
+		 *
 		 * Divide by \p x the current value of the real object.
-		 * 
+		 *
 		 * If the precision \p prec of \p x is greater than the precision of \p this,
 		 * the precision of \p this is changed to \p prec before the operation takes place.
-		 * 
+		 *
 		 * @param[in] x argument for the division.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the contructor of piranha::mp_integer, if invoked.
 		 */
 		template <typename T>
@@ -1285,15 +1285,15 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Divide by a piranha::real in-place.
 		 * This method will first compute <tt>x / r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] r second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception resulting from the binary operator or by casting piranha::real to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -1308,14 +1308,14 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * The return type is always piranha::real.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x / y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the corresponding in-place operator.
 		 */
 		template <typename T, typename U>
@@ -1327,10 +1327,10 @@ class real: public detail::real_base<>
 		/**
 		 * Sets \p this to <tt>this + (r1 * r2)</tt>. If the precision of \p this is less than the maximum precision \p max_prec of the two operands
 		 * \p r1 and \p r2, the precision of \p this will be set to \p max_prec before performing the operation.
-		 * 
+		 *
 		 * @param[in] r1 first argument.
 		 * @param[in] r2 second argument.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		real &multiply_accumulate(const real &r1, const real &r2)
@@ -1343,8 +1343,10 @@ class real: public detail::real_base<>
 			// operations. Benchmarks on fateman1 indicate this is indeed the case (3.6 vs 2.7 secs
 			// on 4 threads). Hopefully it will be fixed in the future, for now adopt the workaround.
 			// http://www.loria.fr/~zimmerma/mpfr-mpc-2014.html
-			//::mpfr_fma(m_value,r1.m_value,r2.m_value,m_value,default_rnd);
-			// NOTE: the tmp var needs to be thread local.
+			// NOTE: we cannot employ this optimisation in OSX as it does not provide thread_local yet.
+#if defined(__APPLE__) && defined(__MACH__)
+			::mpfr_fma(m_value,r1.m_value,r2.m_value,m_value,default_rnd);
+#else
 			static thread_local real tmp;
 			// NOTE: set the same precision as this, which is now the max precision of the 3 operands.
 			// If we do not do this, then tmp has an undeterminate precision. Use the raw MPFR function
@@ -1352,6 +1354,7 @@ class real: public detail::real_base<>
 			::mpfr_set_prec(tmp.m_value,mpfr_get_prec(m_value));
 			::mpfr_mul(tmp.m_value,r1.m_value,r2.m_value,MPFR_RNDN);
 			::mpfr_add(m_value,m_value,tmp.m_value,MPFR_RNDN);
+#endif
 			return *this;
 		}
 		/// Generic equality operator involving piranha::real.
@@ -1361,12 +1364,12 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
@@ -1381,12 +1384,12 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
@@ -1401,12 +1404,12 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
@@ -1424,12 +1427,12 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
@@ -1447,12 +1450,12 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
@@ -1470,12 +1473,12 @@ class real: public detail::real_base<>
 		 * - \p T is piranha::real and \p U is an interoperable type,
 		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
-		 * 
+		 *
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
@@ -1489,9 +1492,9 @@ class real: public detail::real_base<>
 		/// Exponentiation.
 		/**
 		 * The operation is carried out with the maximum precision between \p this and \p exp.
-		 * 
+		 *
 		 * @param[in] exp exponent.
-		 * 
+		 *
 		 * @return <tt>this ** exp</tt>.
 		 */
 		real pow(const real &exp) const
@@ -1580,14 +1583,14 @@ class real: public detail::real_base<>
 		/**
 		 * The output format for finite numbers is normalised scientific notation, where the exponent is signalled by the letter 'e'
 		 * and suppressed if null.
-		 * 
+		 *
 		 * For non-finite numbers, the string representation is one of "nan", "inf" or "-inf".
-		 * 
+		 *
 		 * @param[in] os output stream.
 		 * @param[in] r piranha::real to be directed to stream.
-		 * 
+		 *
 		 * @return reference to \p os.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the conversion to string via the MPFR API fails.
 		 * @throws std::overflow_error if the exponent is smaller than an implementation-defined minimum.
 		 * @throws unspecified any exception thrown by memory allocation errors in standard containers.
@@ -1692,7 +1695,7 @@ struct is_zero_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type
 	/// Call operator.
 	/**
 	 * @param[in] r piranha::real to be tested.
-	 * 
+	 *
 	 * @return \p true if \p r is zero, \p false otherwise.
 	 */
 	bool operator()(const T &r) const
@@ -1740,9 +1743,9 @@ struct pow_impl<T,U,detail::real_pow_enabler<T,U>>
 	/**
 	 * @param[in] r base.
 	 * @param[in] x exponent.
-	 * 
+	 *
 	 * @return \p r to the power of \p x.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by piranha::real::pow().
 	 */
 	real operator()(const real &r, const real &x) const
@@ -1753,7 +1756,7 @@ struct pow_impl<T,U,detail::real_pow_enabler<T,U>>
 	/**
 	 * @param[in] r base.
 	 * @param[in] x exponent.
-	 * 
+	 *
 	 * @return \p r to the power of \p x.
 	 *
 	 * @throws unspecified any exception thrown by piranha::real::pow() or by
@@ -1770,9 +1773,9 @@ struct pow_impl<T,U,detail::real_pow_enabler<T,U>>
 	/**
 	 * @param[in] r base.
 	 * @param[in] x exponent.
-	 * 
+	 *
 	 * @return \p r to the power of \p x.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by piranha::real::pow() or by
 	 * the invoked piranha::real constructor.
 	 */
@@ -1790,9 +1793,9 @@ struct sin_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
 	/// Call operator.
 	/**
 	 * The operation will return the output of piranha::real::sin().
-	 * 
+	 *
 	 * @param[in] r argument.
-	 * 
+	 *
 	 * @return sine of \p r.
 	 */
 	real operator()(const T &r) const
@@ -1808,9 +1811,9 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
 	/// Call operator.
 	/**
 	 * The operation will return the output of piranha::real::cos().
-	 * 
+	 *
 	 * @param[in] r argument.
-	 * 
+	 *
 	 * @return cosine of \p r.
 	 */
 	real operator()(const T &r) const
@@ -1826,7 +1829,7 @@ struct abs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
 	/// Call operator.
 	/**
 	 * @param[in] x input parameter.
-	 * 
+	 *
 	 * @return absolute value of \p x.
 	 */
 	T operator()(const T &x) const
@@ -1916,11 +1919,11 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,rea
 	/// Call operator.
  	/**
 	 * This implementation will use piranha::real::multiply_accumulate().
-	 * 
+	 *
 	 * @param[in,out] x target value for accumulation.
 	 * @param[in] y first argument.
 	 * @param[in] z second argument.
-	 * 
+	 *
 	 * @return <tt>x.multiply_accumulate(y,z)</tt>.
 	 */
 	auto operator()(T &x, const T &y, const T &z) const -> decltype(x.multiply_accumulate(y,z))
