@@ -94,17 +94,19 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 #html_theme = 'sphinxdoc'
 try:
-	import sphinx_rtd_theme
-	html_theme = "sphinx_rtd_theme"
-	html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+	import sphinx_bootstrap_theme
+	html_theme = "bootstrap"
+	html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 except ImportError:
-	print('The sphinx RTD theme was not found, using the default \'sphinxdoc\' theme.')
+	print('The sphinx bootstrap theme was not found, using the default \'sphinxdoc\' theme.')
 	html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+	'bootswatch_theme': "flatly"
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []

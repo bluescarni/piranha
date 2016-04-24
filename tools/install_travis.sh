@@ -37,7 +37,7 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
     # Install sphinx and the rtd theme.
     pip install --user sphinx
-    pip install --user sphinx_rtd_theme
+    pip install --user sphinx_bootstrap_theme
     export PATH=$PATH:/home/travis/.local/bin
     cd ../doc/sphinx;
     export SPHINX_OUTPUT=`make html 2>&1 >/dev/null`;
