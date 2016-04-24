@@ -62,8 +62,6 @@ see https://www.gnu.org/licenses/. */
  * \todo pyranha: enable math for numpy's floating point type, and arrays. Also, think about enabling conversion from the numpy float
  * in the from-python converters? -> if we do this last bit, we must make sure that our custom converter does not override any other
  * converter that might be registered in boost python. We need to query the registry and check at runtime.
- * \todo: pyranha tests should test the *exposition* and/or wrapping, not the functionality of the library. For poly/poisson series, add
- * tests for degree/order, plus add in math.py the degree/order methods in order to mirror math.hpp.
  * \todo initializer_list ctors: should they be explicit or not?
  * \todo review usage of new, we probably want to switch to unqualified new() in order to account for possible overloads
  * to be found via ADL -> note that placement new cannot be overloaded:
@@ -160,7 +158,6 @@ see https://www.gnu.org/licenses/. */
  * \todo related to the above: we should probably generalise the integral_combination() in polynomial to deal also with recursively-represented polys,
  * so that, e.g., we can use them as coefficients in poisson series. Also the polynomial's special pow() and integrate() method should be able to deal
  * with recursive polys in the same fashion. This should probably be a bullet point if we ever decide to support recrusive polynomials as first-class citizens.
- * \todo disable test building by default. Remember to update CI for this.
  * \todo the tuning:: class should probably be rolled into settings.
  * \todo think about removing the noexcept requirements for ignorability and compatibility of terms. This makes sense logically as ignorability is anyway
  * gonna call is_zero(), which might throw (see bp_object for instance), we might end up simplifying the logic and we don't lose much (not a big deal

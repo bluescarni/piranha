@@ -19,7 +19,7 @@ endif()
 option(BUILD_MAIN "Build 'main.cpp'." OFF)
 
 # Build option: enable test set.
-option(BUILD_TESTS "Build test set." ON)
+option(BUILD_TESTS "Build test set." OFF)
 
 # Build option: build the C++ tutorial.
 option(BUILD_TUTORIAL "Build the C++ tutorial." OFF)
