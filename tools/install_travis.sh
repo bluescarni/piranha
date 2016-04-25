@@ -24,7 +24,7 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         # include files in /usr/include.
         find ./ -type f -name '*.gcno' -not -path CMakeFiles -exec "${GCOV_EXECUTABLE}" -pb {} +
         find ./ -iname '*usr*include*.gcov' | xargs rm;
-        bash bash -p ./tests -X gcov -g CMakeFiles;
+        bash bash -p ./tests -X gcov -g CMakeFiles || echo "Codecov did not collect coverage reports";
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make;
