@@ -46,7 +46,7 @@ see https://www.gnu.org/licenses/. */
 namespace pyranha
 {
 
-DECLARE_TT_NAMER(piranha::divisor_series,"divisor_series")
+PYRANHA_DECLARE_TT_NAMER(piranha::divisor_series,"divisor_series")
 
 struct divisor_series_descriptor
 {

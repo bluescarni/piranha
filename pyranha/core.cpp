@@ -78,8 +78,8 @@ static inline void cleanup_type_system()
 namespace pyranha
 {
 
-DECLARE_TT_NAMER(piranha::monomial,"monomial")
-DECLARE_TT_NAMER(piranha::divisor,"divisor")
+PYRANHA_DECLARE_TT_NAMER(piranha::monomial,"monomial")
+PYRANHA_DECLARE_TT_NAMER(piranha::divisor,"divisor")
 
 }
 

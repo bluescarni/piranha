@@ -35,6 +35,7 @@ see https://www.gnu.org/licenses/. */
 @PIRANHA_VERSION@
 @PIRANHA_SYSTEM_LOGICAL_PROCESSOR_INFORMATION@
 @PIRANHA_HAVE_UINT128_T@
+@PIRANHA_THREAD_LOCAL@
 // End of defines instantiated by CMake.
 
 #include <cassert>

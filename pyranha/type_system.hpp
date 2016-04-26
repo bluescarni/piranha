@@ -63,7 +63,7 @@ struct tt_namer
 	static_assert(!std::is_same<T,T>::value,"No name defined for this template template class.");
 };
 
-#define DECLARE_TT_NAMER(TT,tt_name) \
+#define PYRANHA_DECLARE_TT_NAMER(TT,tt_name) \
 template <typename ... Args> \
 struct tt_namer<TT<Args...>> \
 { \

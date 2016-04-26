@@ -209,7 +209,6 @@ see https://www.gnu.org/licenses/. */
  * \todo we need to decide if we want to keep the postifx notation for things like eval, subs etc. or just support the math:: versions. It probably does
  * not make much sense to go back and remove the methods in the toolboxes, but for documentation purposes and in python particularly we should just
  * support the math:: overloads (with partial() being the lone exception).
- * \todo the macros in pyranha should probably be prepended with PYRANHA_.
  * \todo it seems like, at least in some cases, it is possible to avoid extra template arguments for enabling purposes
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.

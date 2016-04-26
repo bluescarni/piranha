@@ -1343,10 +1343,8 @@ class real: public detail::real_base<>
 			// operations. Benchmarks on fateman1 indicate this is indeed the case (3.6 vs 2.7 secs
 			// on 4 threads). Hopefully it will be fixed in the future, for now adopt the workaround.
 			// http://www.loria.fr/~zimmerma/mpfr-mpc-2014.html
-			// NOTE: we cannot employ this optimisation in OSX as it does not provide thread_local yet.
-#if defined(__APPLE__) && defined(__MACH__)
-			::mpfr_fma(m_value,r1.m_value,r2.m_value,m_value,default_rnd);
-#else
+			// NOTE: this optimisation requires the thread_local keyword.
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
 			static thread_local real tmp;
 			// NOTE: set the same precision as this, which is now the max precision of the 3 operands.
 			// If we do not do this, then tmp has an undeterminate precision. Use the raw MPFR function
@@ -1354,6 +1352,8 @@ class real: public detail::real_base<>
 			::mpfr_set_prec(tmp.m_value,mpfr_get_prec(m_value));
 			::mpfr_mul(tmp.m_value,r1.m_value,r2.m_value,MPFR_RNDN);
 			::mpfr_add(m_value,m_value,tmp.m_value,MPFR_RNDN);
+#else
+			::mpfr_fma(m_value,r1.m_value,r2.m_value,m_value,default_rnd);
 #endif
 			return *this;
 		}
