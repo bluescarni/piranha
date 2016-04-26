@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "detail/sfinae_types.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -67,13 +68,18 @@ namespace detail
 // and that it returns the proper type.
 template <typename To, typename From>
 using convert_enabler = typename std::enable_if<
-	std::is_same<decltype(convert_to_impl<typename std::decay<To>::type,From>()(std::declval<const From &>())),typename std::decay<To>::type>::value,
+	std::is_same<decltype(convert_to_impl<typename std::decay<To>::type,From>()(std::declval<const From &>())),typename std::decay<To>::type>::value &&
+	is_returnable<typename std::decay<To>::type>::value,
 	int>::type;
 
 }
 
 /// Generic conversion function.
 /**
+ * \note
+ * This function is enabled only if the call operator of piranha::convert_to_impl returns a instance of
+ * the decay type of \p To, and if the decay type of \p To satisfies piranha::is_returnable.
+ *
  * This function is meant to convert an instance of type \p From to an instance of the decay
  * type of \p To. It is intended to be a user-extensible replacement for \p static_cast.
  *
