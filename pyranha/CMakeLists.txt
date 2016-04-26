@@ -1,6 +1,11 @@
-INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
+# NOTE: this is already included from above, but keep it here
+# in case one day we decide to split off Pyranha.
+include(YACMAPythonSetup)
 
-SET(PYRANHA_INSTALL_PATH "${PYTHON_MODULES_PATH}/pyranha")
+# Python version check.
+if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTHON_VERSION_MINOR} LESS 6))
+	message(FATAL_ERROR "Minimum supported Python version is 2.6.")
+endif()
 
 # Tutorial files.
 set(PYRANHA_TUTORIAL_FILES
@@ -10,7 +15,7 @@ set(PYRANHA_TUTORIAL_FILES
 	tutorial/rational.py
 )
 
-ADD_LIBRARY(_core SHARED
+YACMA_PYTHON_MODULE(_core SHARED
 	# General.
 	core.cpp
 	type_system.cpp
@@ -77,43 +82,18 @@ ADD_LIBRARY(_core SHARED
 	${PYRANHA_TUTORIAL_FILES}
 )
 
-# Initial definition of extra compile flags.
-set(PYRANHA_EXTRA_COMPILE_FLAGS "")
-
-# Prefix and suffix setup.
-SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "")
-IF(PYDEXTENSION)
-	SET_TARGET_PROPERTIES(_core PROPERTIES SUFFIX ".pyd")
-ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	# Apparently on OS X Python expects the .so extension for compiled modules.
-	MESSAGE(STATUS "OS X detected, pyranha's module suffix will be '.so'.")
-	SET_TARGET_PROPERTIES(_core PROPERTIES SUFFIX ".so")
-ENDIF()
-
-# Strict aliasing setup.
-# NOTE: Python < 3 is not strict C, as per:
-# http://www.python.org/dev/peps/pep-3123/
-# When using GCC or Clang, we add -fno-strict-aliasing here and when compiling core.cpp to prevent possible problems.
-# Other compilers should probably use similar flags.
-if(${PYTHON_LIBRARY_VERSION} LESS 30 AND (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX))
-	message(STATUS "Python < 3 version detected: Pyranha will be compiled with the '-fno-strict-aliasing' flag.")
-	set(PYRANHA_EXTRA_COMPILE_FLAGS "${PYRANHA_EXTRA_COMPILE_FLAGS} -fno-strict-aliasing")
-	set_target_properties(_core PROPERTIES LINK_FLAGS "-fno-strict-aliasing")
-endif()
-
-# Setup the extra compile flags.
-message(STATUS "Extra compile flags for pyranha: ${PYRANHA_EXTRA_COMPILE_FLAGS}")
-set_target_properties(_core PROPERTIES COMPILE_FLAGS "${PYRANHA_EXTRA_COMPILE_FLAGS}")
+ # Setup the installation path.
+set(PYRANHA_INSTALL_PATH "${YACMA_PYTHON_MODULES_INSTALL_PATH}/pyranha")
 
 # The module needs Boost.Python and the Python libs, plus the mandatory libraries.
-TARGET_LINK_LIBRARIES(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES})
-INSTALL(TARGETS _core
+target_link_libraries(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES})
+install(TARGETS _core
 	RUNTIME DESTINATION ${PYRANHA_INSTALL_PATH}
 	LIBRARY DESTINATION ${PYRANHA_INSTALL_PATH}
 )
 
 # Add the global init file and the additional submodules.
-INSTALL(FILES __init__.py _common.py celmec.py math.py test.py types.py DESTINATION ${PYRANHA_INSTALL_PATH})
+install(FILES __init__.py _common.py celmec.py math.py test.py types.py DESTINATION ${PYRANHA_INSTALL_PATH})
 
 # Install the tutorial files.
 install(FILES ${PYRANHA_TUTORIAL_FILES} DESTINATION "${PYRANHA_INSTALL_PATH}/_tutorial")

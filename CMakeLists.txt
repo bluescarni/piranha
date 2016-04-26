@@ -4,31 +4,31 @@ ENABLE_TESTING()
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules" "${CMAKE_SOURCE_DIR}/cmake_modules/yacma")
 
 MESSAGE(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 
 # Set default build type to "Release".
-IF(NOT CMAKE_BUILD_TYPE)
-	SET(CMAKE_BUILD_TYPE Release CACHE STRING
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Release CACHE STRING
 		"Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
 	FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
+endif()
 
 # Build Option: when active the file main.cpp is built.
-OPTION(BUILD_MAIN "Build 'main.cpp'." OFF)
+option(BUILD_MAIN "Build 'main.cpp'." OFF)
 
 # Build option: enable test set.
-OPTION(BUILD_TESTS "Build test set." ON)
+option(BUILD_TESTS "Build test set." OFF)
 
 # Build option: build the C++ tutorial.
-OPTION(BUILD_TUTORIAL "Build the C++ tutorial." OFF)
+option(BUILD_TUTORIAL "Build the C++ tutorial." OFF)
 
 # Build option: build the Python bindings.
-OPTION(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
+option(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 
 # Use TCMalloc as allocator.
-OPTION(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
+option(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
 
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
@@ -40,20 +40,30 @@ mark_as_advanced(RUN_ON_VALGRIND)
 # Initialise (empty) list of libraries to link against.
 SET(MANDATORY_LIBRARIES "")
 
-# Initial thread setup.
-FIND_PACKAGE(Threads REQUIRED)
-MESSAGE(STATUS "Thread library: ${CMAKE_THREAD_LIBS_INIT}")
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+# Initial setup of the compilation flags.
+include(PiranhaCompilerLinkerSettings)
 
-# Include these macros here as they reference variables defined above.
-INCLUDE(PiranhaCompilerLinkerSettings)
-INCLUDE(PiranhaPlatformSettings)
+# Additional platform-specific setup.
+include(PiranhaPlatformSettings)
+
+# Threading setup.
+include(YACMAThreadingSetup)
+set(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${YACMA_THREADING_CXX_FLAGS}")
+if(YACMA_HAS_PTHREAD_AFFINITY)
+	set(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
+endif()
+
+# Report the CXX flags.
 message(STATUS "Current CXX flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Current CXX debug flags: ${CMAKE_CXX_FLAGS_DEBUG}")
 
-IF(BUILD_PYRANHA)
-	INCLUDE(PyranhaPythonSetup)
-ENDIF(BUILD_PYRANHA)
+# NOTE: ideally we would want this inside the pyranha CMakeLists.txt, however
+# it seems like there's a strange interaction between the code for finding Boost.Python
+# and the CMake FindPythonLibs macro, and it does not work that way.
+if(BUILD_PYRANHA)
+	include(YACMAPythonSetup)
+endif()
 
 # Boost libraries setup.
 # NOTE: apparently, according to the FindBoost.cmake of cmake 3.5, iostreams
@@ -70,7 +80,7 @@ IF(BUILD_TESTS)
 ENDIF()
 IF(BUILD_PYRANHA)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} python)
-ENDIF(BUILD_PYRANHA)
+ENDIF()
 MESSAGE(STATUS "Required Boost libraries: ${REQUIRED_BOOST_LIBS}")
 # Timers are available since 1.48.0.
 FIND_PACKAGE(Boost 1.48.0 REQUIRED COMPONENTS "${REQUIRED_BOOST_LIBS}")
@@ -102,7 +112,7 @@ TRY_COMPILE(MPFR_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_mo
 	CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${MPFR_INCLUDE_DIR};${GMP_INCLUDE_DIR}")
 IF(NOT MPFR_VERSION_CHECK)
 	MESSAGE(FATAL_ERROR "Unsupported MPFR version, please upgrade.")
-ENDIF(NOT MPFR_VERSION_CHECK)
+ENDIF()
 MESSAGE(STATUS "MPFR version is ok.")
 INCLUDE_DIRECTORIES(SYSTEM ${MPFR_INCLUDE_DIR})
 
@@ -122,9 +132,9 @@ IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")
 	FIND_LIBRARY(TCMALLOC_LIBRARY NAMES tcmalloc tcmalloc_minimal)
 	IF(NOT TCMALLOC_LIBRARY)
 		MESSAGE(FATAL_ERROR "TCMalloc use was requested but the library could not be located.")
-	ENDIF(NOT TCMALLOC_LIBRARY)
+	ENDIF()
 	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${TCMALLOC_LIBRARY})
-ENDIF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")
+ENDIF()
 
 FIND_PROGRAM(PIRANHA_GIT_EXECUTABLE "git" DOC "Path to the git binary.")
 IF(PIRANHA_GIT_EXECUTABLE)
@@ -138,7 +148,7 @@ IF(PIRANHA_GIT_EXECUTABLE)
 ELSE(PIRANHA_GIT_EXECUTABLE)
 	MESSAGE(STATUS "Git executable: not found")
 	SET(PIRANHA_VERSION "#define PIRANHA_VERSION \"Undetermined\"")
-ENDIF(PIRANHA_GIT_EXECUTABLE)
+ENDIF()
 
 # Configure config.hpp.
 CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/config.hpp.in" "${CMAKE_SOURCE_DIR}/src/config.hpp")
@@ -150,11 +160,11 @@ ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/src")
 IF(BUILD_MAIN)
 	ADD_EXECUTABLE(main main.cpp)
 	TARGET_LINK_LIBRARIES(main ${MANDATORY_LIBRARIES})
-ENDIF(BUILD_MAIN)
+ENDIF()
 
 IF(BUILD_TESTS)
 	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/tests")
-ENDIF(BUILD_TESTS)
+ENDIF()
 
 if(BUILD_TUTORIAL)
 	add_subdirectory("${CMAKE_SOURCE_DIR}/tutorial")
@@ -162,4 +172,4 @@ endif()
 
 IF(BUILD_PYRANHA)
 	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/pyranha")
-ENDIF(BUILD_PYRANHA)
+ENDIF()

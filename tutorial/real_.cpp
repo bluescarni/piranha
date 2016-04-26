@@ -40,7 +40,7 @@ int main()
 	} catch (const std::overflow_error &) {
 		std::cout << "Overflow!\n";
 	}
-	// Conversion to integer cannot fail, and yields
+	// Conversion to integer cannot fail for finite values, and yields
 	// the truncated value.
 	std::cout << static_cast<integer>(real{10.3}) << '\n';
 
