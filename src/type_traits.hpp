@@ -304,10 +304,11 @@ class is_equality_comparable: detail::sfinae_types
 		template <typename T1, typename U1>
 		static auto test2(const T1 &t, const U1 &u) -> decltype(t != u);
 		static no test2(...);
+		static const bool implementation_defined = std::is_convertible<decltype(test1(std::declval<Td>(),std::declval<Ud>())),bool>::value &&
+			std::is_convertible<decltype(test2(std::declval<Td>(),std::declval<Ud>())),bool>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_convertible<decltype(test1(std::declval<Td>(),std::declval<Ud>())),bool>::value &&
-			std::is_convertible<decltype(test2(std::declval<Td>(),std::declval<Ud>())),bool>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.

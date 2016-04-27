@@ -157,6 +157,9 @@ struct trivial_b
 struct trivial_c
 {};
 
+struct trivial_d
+{};
+
 namespace piranha { namespace math {
 
 template <>
@@ -175,6 +178,12 @@ template <>
 struct is_zero_impl<trivial_c,void>
 {
 	std::string operator()(const trivial_c &);
+};
+
+template <>
+struct is_zero_impl<trivial_d,void>
+{
+	trivial_d operator()(const trivial_d &) const;
 };
 
 }}
@@ -206,6 +215,7 @@ BOOST_AUTO_TEST_CASE(math_is_zero_test)
 	BOOST_CHECK(has_is_zero<trivial_a &>::value);
 	BOOST_CHECK(!has_is_zero<trivial_b>::value);
 	BOOST_CHECK(!has_is_zero<trivial_c>::value);
+	BOOST_CHECK(!has_is_zero<trivial_d>::value);
 }
 
 struct no_fma{};
@@ -508,6 +518,43 @@ BOOST_AUTO_TEST_CASE(math_fp_binomial_test)
 	}
 }
 
+struct b_00
+{
+	b_00() = default;
+	b_00(const b_00 &) = delete;
+	b_00(b_00 &&) = delete;
+};
+
+struct b_01
+{
+	b_01() = default;
+	b_01(const b_01 &) = default;
+	b_01(b_01 &&) = default;
+	~b_01() = delete;
+};
+
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct binomial_impl<b_00,b_00,void>
+{
+	b_00 operator()(const b_00 &, const b_00 &) const;
+};
+
+template <>
+struct binomial_impl<b_01,b_01,void>
+{
+	b_01 operator()(const b_01 &, const b_01 &) const;
+};
+
+}
+
+}
+
 BOOST_AUTO_TEST_CASE(math_binomial_test)
 {
 	BOOST_CHECK((std::is_same<double,decltype(math::binomial(0.,0))>::value));
@@ -532,6 +579,8 @@ BOOST_AUTO_TEST_CASE(math_binomial_test)
 		BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::infinity()),std::invalid_argument);
 		BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
+	BOOST_CHECK((!has_binomial<b_00,b_00>::value));
+	BOOST_CHECK((!has_binomial<b_01,b_01>::value));
 }
 
 BOOST_AUTO_TEST_CASE(math_t_subs_test)

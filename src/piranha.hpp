@@ -214,6 +214,7 @@ see https://www.gnu.org/licenses/. */
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
  * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
+ * \todo is_unitary() should be implemented for real and series as well.
  */
 namespace piranha
 {

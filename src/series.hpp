@@ -3043,14 +3043,12 @@ struct negate_impl<T,typename std::enable_if<is_series<T>::value>::type>
 	/**
 	 * @param[in,out] s piranha::series to be negated.
 	 *
-	 * @return the return value of piranha::series::negate()..
-	 *
 	 * @throws unspecified any exception thrown by piranha::series::negate().
 	 */
 	template <typename U>
-	auto operator()(U &s) const -> decltype(s.negate())
+	void operator()(U &s) const
 	{
-		return s.negate();
+		s.negate();
 	}
 };
 
