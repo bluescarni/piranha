@@ -33,12 +33,14 @@ see https://www.gnu.org/licenses/. */
 #include <cmath>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 #include "config.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "mp_integer.hpp"
 #include "pow.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -215,24 +217,52 @@ struct binomial_impl<T,U,detail::binomial_fp_arith_enabler<T,U>>
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Determination and enabling of the return type for math::binomial().
+template <typename T, typename U>
+using math_binomial_type_ = decltype(piranha::math::binomial_impl<T,U>()(
+	std::declval<const T &>(),std::declval<const U &>()));
+
+template <typename T, typename U>
+using math_binomial_type = typename std::enable_if<is_returnable<math_binomial_type_<T,U>>::value,
+	math_binomial_type_<T,U>>::type;
+
+}
+
+namespace math
+{
+
 /// Generalised binomial coefficient.
 /**
+ * \note
+ * This function is enabled only if <tt>binomial_impl<T,U>()(x,y)</tt> is a valid expression,
+ * returning a type which satisfies piranha::is_returnable.
+ *
  * Will return the generalised binomial coefficient:
  * \f[
  * {x \choose y}.
  * \f]
  *
- * The actual implementation of this function is in the piranha::math::binomial_impl functor.
+ * The actual implementation of this function is in the piranha::math::binomial_impl functor. The body of this
+ * function is equivalent to:
+ * @code
+ * return binomial_impl<T,U>()(x,y);
+ * @endcode
  *
  * @param[in] x top number.
  * @param[in] y bottom number.
  *
  * @return \p x choose \p y.
  *
- * @throws unspecified any exception thrown by the call operator of piranha::math::binomial_impl.
+ * @throws unspecified any exception thrown by the call operator of piranha::math::binomial_impl or by returning
+ * the result.
  */
 template <typename T, typename U>
-inline auto binomial(const T &x, const U &y) -> decltype(binomial_impl<T,U>()(x,y))
+inline detail::math_binomial_type<T,U> binomial(const T &x, const U &y)
 {
 	return binomial_impl<T,U>()(x,y);
 }
@@ -359,9 +389,10 @@ class has_binomial: detail::sfinae_types
 		template <typename T1, typename U1>
 		static auto test(T1 const *t, U1 const *u) -> decltype(math::binomial(*t,*u),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test((T const *)nullptr,(U const *)nullptr)),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test((T const *)nullptr,(U const *)nullptr)),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.
