@@ -108,4 +108,4 @@ types in Python. This means that, for instance, Piranha functions that in C++ re
 when called from Python.
 
 The fundamental numerical types implemented in Piranha and their Python counterparts are the subject of the
-:ref:`next tutorial chapter <fundamental_types>`.
+:doc:`next tutorial chapter <fundamental_types>`.
