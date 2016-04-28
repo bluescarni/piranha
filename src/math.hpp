@@ -341,31 +341,37 @@ inline void negate(T &x)
 template <typename T, typename U, typename V, typename = void>
 struct multiply_accumulate_impl
 {
-	/// Call operator.
-	/**
-	 * \note
-	 * This call operator is enabled only if the arguments support binary multiplication
-	 * and in-place addition.
-	 *
-	 * The body of the operator is equivalent to:
-	 @code
-	 x += y * z;
-	 @endcode
-	 * where \p y and \p z are perfectly forwarded.
-	 *
-	 * @param[in,out] x target value for accumulation.
-	 * @param[in] y first argument.
-	 * @param[in] z second argument.
-	 *
-	 * @return <tt>x += y * z</tt>.
-	 *
-	 * @throws unspecified any exception resulting from in-place addition or binary multiplication on the operands.
-	 */
-	template <typename T2, typename U2, typename V2>
-	auto operator()(T2 &x, U2 &&y, V2 &&z) const -> decltype(x += std::forward<U2>(y) * std::forward<V2>(z))
-	{
-		return x += std::forward<U2>(y) * std::forward<V2>(z);
-	}
+	private:
+		// NOTE: as usual, we check the expression against const ref arguments.
+		template <typename T2, typename U2, typename V2>
+		using enabler = typename std::enable_if<detail::true_tt<
+			decltype(std::declval<T2 &>() += std::declval<const U2 &>() * std::declval<const V2 &>())
+			>::value,int>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This call operator is enabled only if the arguments support binary multiplication
+		 * and in-place addition.
+		 *
+		 * The body of the operator is equivalent to:
+		 * @code
+		 * x += y * z;
+		 * @endcode
+		 * where \p y and \p z are perfectly forwarded.
+		 *
+		 * @param[in,out] x target value for accumulation.
+		 * @param[in] y first argument.
+		 * @param[in] z second argument.
+		 *
+		 * @throws unspecified any exception resulting from in-place addition or
+		 * binary multiplication on the operands.
+		 */
+		template <typename T2, typename U2, typename V2, enabler<T2,U2,V2> = 0>
+		void operator()(T2 &x, U2 &&y, V2 &&z) const
+		{
+			x += std::forward<U2>(y) * std::forward<V2>(z);
+		}
 };
 
 #if defined(FP_FAST_FMA) && defined(FP_FAST_FMAF) && defined(FP_FAST_FMAL)
@@ -379,46 +385,65 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_floating_p
 {
 	/// Call operator.
 	/**
-	 * This implementation will use the \p std::fma function.
+	 * This implementation will use the \p std::fma() function.
 	 *
 	 * @param[in,out] x target value for accumulation.
 	 * @param[in] y first argument.
 	 * @param[in] z second argument.
-	 *
-	 * @return <tt>x = std::fma(y,z,x)</tt>.
 	 */
-	template <typename U>
-	auto operator()(U &x, const U &y, const U &z) const -> decltype(x = std::fma(y,z,x))
+	void operator()(T &x, const T &y, const T &z) const
 	{
-		return x = std::fma(y,z,x);
+		x = std::fma(y,z,x);
 	}
 };
 
 #endif
 
+}
+
+namespace detail
+{
+
+// Enabler for multiply_accumulate.
+template <typename T, typename U, typename V>
+using math_multiply_accumulate_enabler = typename std::enable_if<
+	!std::is_const<T>::value &&
+	true_tt<decltype(math::multiply_accumulate_impl<T,
+	typename std::decay<U>::type,typename std::decay<V>::type>()
+	(std::declval<T &>(),std::declval<const U &>(),std::declval<const V &>()))>::value,int>::type;
+
+}
+
+namespace math
+{
+
 /// Multiply-accumulate.
 /**
  * \note
- * This function is enabled only if \p T is not const.
+ * This function is enabled only if \p T is not const and the expression
+ * <tt>multiply_accumulate_impl<T,Ud,Vd>>()(x,y,z)</tt> is valid (where \p Ud and \p Vd
+ * are the decay types of \p U and \p V).
  *
  * Will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the piranha::math::multiply_accumulate_impl functor's
- * call operator.
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * multiply_accumulate_impl<T,Ud,Vd>()(x,std::forward<U>(y),std::forward<V>(z));
+ * @endcode
+ * (where \p Ud and \p Vd are the decay types of \p U and \p V). The result of the call operator of
+ * piranha::math::multiply_accumulate_impl is ignored.
  *
  * @param[in,out] x target value for accumulation.
  * @param[in] y first argument.
  * @param[in] z second argument.
  *
- * @returns the return value of the call operator of piranha::math::multiply_accumulate_impl.
- *
  * @throws unspecified any exception thrown by the call operator of piranha::math::multiply_accumulate_impl.
  */
-template <typename T, typename U, typename V, typename = typename std::enable_if<
-	!std::is_const<typename std::remove_reference<T>::type>::value>::type>
-inline auto multiply_accumulate(T &x, U &&y, V &&z) -> decltype(multiply_accumulate_impl<typename std::decay<T>::type,
-		typename std::decay<U>::type,typename std::decay<V>::type>()(x,std::forward<U>(y),std::forward<V>(z)))
+template <typename T, typename U, typename V, detail::math_multiply_accumulate_enabler<T,U,V> = 0>
+inline void multiply_accumulate(T &x, U &&y, V &&z)
 {
-	return multiply_accumulate_impl<typename std::decay<T>::type,
-		typename std::decay<U>::type,typename std::decay<V>::type>()(x,std::forward<U>(y),std::forward<V>(z));
+	multiply_accumulate_impl<T,
+		typename std::decay<U>::type,typename std::decay<V>::type>()(x,
+		std::forward<U>(y),std::forward<V>(z));
 }
 
 /// Default functor for the implementation of piranha::math::cos().
