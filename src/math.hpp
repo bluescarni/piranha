@@ -471,7 +471,7 @@ struct cos_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::typ
 	 *
 	 * @return cosine of \p x.
 	 */
-	auto operator()(const T &x) const -> decltype(std::cos(x))
+	T operator()(const T &x) const
 	{
 		return std::cos(x);
 	}
@@ -501,19 +501,45 @@ struct cos_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Type for the result of math::cos().
+template <typename T>
+using math_cos_type_ = decltype(math::cos_impl<T>()(std::declval<const T &>()));
+
+template <typename T>
+using math_cos_type = typename std::enable_if<is_returnable<math_cos_type_<T>>::value,
+	math_cos_type_<T>>::type;
+
+}
+
+namespace math
+{
+
 /// Cosine.
 /**
+ * \note
+ * This function is enabled only if the expression <tt>cos_impl<T>()(x)</tt> is valid, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Returns the cosine of \p x. The actual implementation of this function is in the piranha::math::cos_impl functor's
- * call operator.
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * return cos_impl<T>()(x);
+ * @endcode
  *
  * @param[in] x cosine argument.
  *
  * @return cosine of \p x.
  *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::cos_impl functor.
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::cos_impl functor
+ * or by returning the result.
  */
 template <typename T>
-inline auto cos(const T &x) -> decltype(cos_impl<T>()(x))
+inline detail::math_cos_type<T> cos(const T &x)
 {
 	return cos_impl<T>()(x);
 }
@@ -543,7 +569,7 @@ struct sin_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::typ
 	 *
 	 * @return sine of \p x.
 	 */
-	auto operator()(const T &x) const -> decltype(std::sin(x))
+	T operator()(const T &x) const
 	{
 		return std::sin(x);
 	}
@@ -573,19 +599,45 @@ struct sin_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Type for the result of math::sin().
+template <typename T>
+using math_sin_type_ = decltype(math::sin_impl<T>()(std::declval<const T &>()));
+
+template <typename T>
+using math_sin_type = typename std::enable_if<is_returnable<math_sin_type_<T>>::value,
+	math_sin_type_<T>>::type;
+
+}
+
+namespace math
+{
+
 /// Sine.
 /**
+ * \note
+ * This function is enabled only if the expression <tt>sin_impl<T>()(x)</tt> is valid, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Returns the sine of \p x. The actual implementation of this function is in the piranha::math::sin_impl functor's
- * call operator.
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * return sin_impl<T>()(x);
+ * @endcode
  *
  * @param[in] x sine argument.
  *
  * @return sine of \p x.
  *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::sin_impl functor.
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::sin_impl functor
+ * or by returning the result.
  */
 template <typename T>
-inline auto sin(const T &x) -> decltype(sin_impl<T>()(x))
+inline detail::math_sin_type<T> sin(const T &x)
 {
 	return sin_impl<T>()(x);
 }

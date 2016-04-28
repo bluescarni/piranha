@@ -3342,22 +3342,26 @@ struct sin_impl<Series,detail::series_sin_enabler<Series>>
 template <typename Series>
 struct cos_impl<Series,detail::series_cos_enabler<Series>>
 {
-	/// Call operator.
-	/**
-	 * @param[in] s argument.
-	 *
-	 * @return cosine of \p s.
-	 *
-	 * @throws unspecified any exception thrown by:
-	 * - the <tt>Series::cos()</tt> method,
-	 * - piranha::math::cos(),
-	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert().
-	 */
-	template <typename T>
-	auto operator()(const T &s) const -> decltype(detail::series_cos_impl(s))
-	{
-		return detail::series_cos_impl(s);
-	}
+	private:
+		using result_type = decltype(detail::series_cos_impl(std::declval<const Series &>()));
+	public:
+		/// Call operator.
+		/**
+		 * @param[in] s argument.
+		 *
+		 * @return cosine of \p s.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the <tt>Series::cos()</tt> method,
+		 * - piranha::math::cos(),
+		 * - term, coefficient, and key construction and/or insertion via
+		 *   piranha::series::insert(),
+		 * - returning the result.
+		 */
+		result_type operator()(const Series &s) const
+		{
+			return detail::series_cos_impl(s);
+		}
 };
 
 }
