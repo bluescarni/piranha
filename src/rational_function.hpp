@@ -82,7 +82,7 @@ struct rational_function_tag {};
  * - zero is always represented as <tt>0 / 1</tt>,
  * - the denominator is never zero and its leading term is always positive.
  *
- * This class satisfied the piranha::is_cf type trait.
+ * This class satisfies the piranha::is_cf type trait.
  *
  * ## Interoperability with other types ##
  *
