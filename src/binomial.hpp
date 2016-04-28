@@ -224,7 +224,7 @@ namespace detail
 
 // Determination and enabling of the return type for math::binomial().
 template <typename T, typename U>
-using math_binomial_type_ = decltype(piranha::math::binomial_impl<T,U>()(
+using math_binomial_type_ = decltype(math::binomial_impl<T,U>()(
 	std::declval<const T &>(),std::declval<const U &>()));
 
 template <typename T, typename U>
