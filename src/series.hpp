@@ -3213,10 +3213,10 @@ template <typename T>
 class series_has_sin: sfinae_types
 {
 		template <typename U>
-		static auto test(const U &t) -> decltype(t.sin(),void(),yes());
+		static auto test(const U &t) -> decltype(t.sin());
 		static no test(...);
 	public:
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = is_returnable<decltype(test(std::declval<T>()))>::value;
 };
 
 // Three cases for sin() implementation.
@@ -3237,6 +3237,9 @@ struct series_cf_sin_functor
 };
 
 // 2. coefficient type supports math::sin() with a result equal to the original coefficient type.
+// NOTE: this overload and the one below do not conflict with the one above because it takes a series
+// as input argument: when used on a concrete series type, it will have to go through a to-base
+// conversion in order to be selected.
 template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
 	std::is_same<typename Derived::term_type::cf_type,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
 inline Derived series_sin_impl(const series<Cf,Key,Derived> &s)
@@ -3262,10 +3265,10 @@ template <typename T>
 class series_has_cos: sfinae_types
 {
 		template <typename U>
-		static auto test(const U &t) -> decltype(t.cos(),void(),yes());
+		static auto test(const U &t) -> decltype(t.cos());
 		static no test(...);
 	public:
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = is_returnable<decltype(test(std::declval<T>()))>::value;
 };
 
 template <typename T, typename std::enable_if<is_series<T>::value && series_has_cos<T>::value,int>::type = 0>
@@ -3309,7 +3312,8 @@ namespace math
 /// Specialisation of the piranha::math::sin() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series and:
- * - either the series type provides a const <tt>%sin()</tt> method, or
+ * - either the series type provides a const <tt>%sin()</tt> method returning a type which satisfies
+ *   piranha::is_returnable, or, missing this method,
  * - the series' coefficient type \p Cf supports math::sin() yielding a type \p T and either
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
@@ -3325,10 +3329,10 @@ struct sin_impl<Series,detail::series_sin_enabler<Series>>
 	 * @throws unspecified any exception thrown by:
 	 * - the <tt>Series::sin()</tt> method,
 	 * - piranha::math::sin(),
-	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert().
+	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert(),
+	 * - returning the result.
 	 */
-	template <typename T>
-	auto operator()(const T &s) const -> decltype(detail::series_sin_impl(s))
+	auto operator()(const Series &s) const -> decltype(detail::series_sin_impl(s))
 	{
 		return detail::series_sin_impl(s);
 	}
@@ -3336,32 +3340,31 @@ struct sin_impl<Series,detail::series_sin_enabler<Series>>
 
 /// Specialisation of the piranha::math::cos() functor for piranha::series.
 /**
- * This specialisation acts in exactly the same way as the corresponding specialisation for
- * piranha::math::sin().
+ * This specialisation is activated when \p Series is an instance of piranha::series and:
+ * - either the series type provides a const <tt>%cos()</tt> method returning a type which satisfies
+ *   piranha::is_returnable, or, missing this method,
+ * - the series' coefficient type \p Cf supports math::cos() yielding a type \p T and either
+ *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
 struct cos_impl<Series,detail::series_cos_enabler<Series>>
 {
-	private:
-		using result_type = decltype(detail::series_cos_impl(std::declval<const Series &>()));
-	public:
-		/// Call operator.
-		/**
-		 * @param[in] s argument.
-		 *
-		 * @return cosine of \p s.
-		 *
-		 * @throws unspecified any exception thrown by:
-		 * - the <tt>Series::cos()</tt> method,
-		 * - piranha::math::cos(),
-		 * - term, coefficient, and key construction and/or insertion via
-		 *   piranha::series::insert(),
-		 * - returning the result.
-		 */
-		result_type operator()(const Series &s) const
-		{
-			return detail::series_cos_impl(s);
-		}
+	/// Call operator.
+	/**
+	 * @param[in] s argument.
+	 *
+	 * @return cosine of \p s.
+	 *
+	 * @throws unspecified any exception thrown by:
+	 * - the <tt>Series::cos()</tt> method,
+	 * - piranha::math::cos(),
+	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert(),
+	 * - returning the result.
+	 */
+	auto operator()(const Series &s) const -> decltype(detail::series_cos_impl(s))
+	{
+		return detail::series_cos_impl(s);
+	}
 };
 
 }

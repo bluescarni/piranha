@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/serialization.hpp"
@@ -222,4 +223,44 @@ BOOST_AUTO_TEST_CASE(series_division_test)
 	BOOST_CHECK_THROW(4/s_type1{},zero_division_error);
 	BOOST_CHECK_EQUAL(0/s_type1{-3},0);
 	}
+}
+
+struct nr_00
+{
+	nr_00(const nr_00 &) = delete;
+	nr_00(nr_00 &&) = delete;
+};
+
+template <typename Cf, typename Expo>
+class g_series_type2: public series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>>
+{
+	public:
+		template <typename Cf2>
+		using rebind = g_series_type2<Cf2,Expo>;
+		typedef series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+		g_series_type2() = default;
+		g_series_type2(const g_series_type2 &) = default;
+		g_series_type2(g_series_type2 &&) = default;
+		explicit g_series_type2(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_symbol_set.add(name);
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
+		}
+		g_series_type2 &operator=(const g_series_type2 &) = default;
+		g_series_type2 &operator=(g_series_type2 &&) = default;
+		nr_00 cos() const;
+		nr_00 sin() const;
+		PIRANHA_FORWARDING_CTOR(g_series_type2,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type2,base)
+};
+
+// Check that sin/cos methods that return unreturnable types on a series are disabled.
+BOOST_AUTO_TEST_CASE(series_sin_cos_test)
+{
+	BOOST_CHECK_EQUAL(math::sin(g_series_type2<double,int>{}),math::sin(0.));
+	BOOST_CHECK_EQUAL(math::cos(g_series_type2<double,int>{}),math::cos(0.));
 }
