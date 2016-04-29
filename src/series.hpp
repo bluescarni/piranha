@@ -1582,7 +1582,8 @@ class series: detail::series_tag, series_operators
 			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),std::declval<std::unordered_map<std::string,U> const &>())),
 			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const symbol_set::positions_map<U> &>(),
 			std::declval<const symbol_set &>()))>::value &&
-			std::is_constructible<e_type<Series,U>,int>::value
+			std::is_constructible<e_type<Series,U>,int>::value &&
+			is_returnable<e_type<Series,U>>::value
 			>::type>
 		{
 			using type = e_type<Series,U>;
@@ -2544,7 +2545,7 @@ class series: detail::series_tag, series_operators
 		 * This method is enabled only if:
 		 * - both the coefficient and the key types are evaluable,
 		 * - the evaluated types are suitable for use in piranha::math::multiply_accumulate(),
-		 * - the return type is constructible from \p int.
+		 * - the return type is constructible from \p int and it satisfies piranha::is_returnable.
 		 *
 		 * Series evaluation starts with a zero-initialised instance of the return type, which is determined
 		 * according to the evaluation types of coefficient and key. The return value accumulates the evaluation
@@ -3465,22 +3466,37 @@ struct integrate_impl<Series,detail::series_integrate_enabler<Series>>
 template <typename Series>
 struct evaluate_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 {
-	/// Call operator.
-	/**
-	 * The implementation will use piranha::series::evaluate().
-	 *
-	 * @param[in] s evaluation argument.
-	 * @param[in] dict evaluation dictionary.
-	 *
-	 * @return output of piranha::series::evaluate().
-	 *
-	 * @throws unspecified any exception thrown by piranha::series::evaluate().
-	 */
-	template <typename T>
-	auto operator()(const Series &s, const std::unordered_map<std::string,T> &dict) const -> decltype(s.evaluate(dict))
-	{
-		return s.evaluate(dict);
-	}
+	private:
+		template <typename T>
+		using eval_type_ = decltype(std::declval<const Series &>().evaluate(
+			std::declval<const std::unordered_map<std::string,T> &>()));
+		template <typename T>
+		using eval_type = typename std::enable_if<is_returnable<eval_type_<T>>::value,
+			eval_type_<T>>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This operator is enabled only if the expression <tt>s.evaluate(dict)</tt>
+		 * is valid, returning a type which satisfies piranha::is_returnable..
+		 *
+		 * The body of this operator is equivalent to:
+		 * @code
+		 * return s.evaluate(dict);
+		 * @endcode
+		 *
+		 * @param[in] s evaluation argument.
+		 * @param[in] dict evaluation dictionary.
+		 *
+		 * @return output of piranha::series::evaluate().
+		 *
+		 * @throws unspecified any exception thrown by piranha::series::evaluate().
+		 */
+		template <typename T>
+		eval_type<T> operator()(const Series &s, const std::unordered_map<std::string,T> &dict) const
+		{
+			return s.evaluate(dict);
+		}
 };
 
 }

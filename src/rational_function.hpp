@@ -1570,17 +1570,14 @@ struct evaluate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_
 		template <typename U, typename V>
 		using eval_type_ = decltype(evaluate(std::declval<const U &>().num(),std::declval<const std::unordered_map<std::string,V> &>())
 			/ evaluate(std::declval<const U &>().den(),std::declval<const std::unordered_map<std::string,V> &>()));
-		// NOTE: this requirement is mentioned in piranha.hpp, to be added in general to evaluation functions. We might end up abstracting
-		// it somewhere, in that case we should use the abstraction here as well. This is basically an is_returnable check,
-		// and it is kind of similar to the pmappable check.
 		template <typename U, typename V>
-		using eval_type = typename std::enable_if<(std::is_copy_constructible<eval_type_<U,V>>::value ||
-			std::is_move_constructible<eval_type_<U,V>>::value) && std::is_destructible<eval_type_<U,V>>::value,eval_type_<U,V>>::type;
+		using eval_type = typename std::enable_if<is_returnable<eval_type_<U,V>>::value,eval_type_<U,V>>::type;
 	public:
 		/// Call operator.
 		/**
 		 * \note
-		 * This operator is enabled only if the algorithm described below is supported by the involved types.
+		 * This operator is enabled only if the algorithm described below is supported by the involved types,
+		 * and it returns a type which satisfies piranha::is_returnable.
 		 *
 		 * The evaluation of a rational function is constructed from the ratio of the evaluation of its numerator
 		 * by the evaluation of its denominator. The return type is the type resulting from this operation.

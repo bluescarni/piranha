@@ -733,6 +733,8 @@ struct evaluate_impl
 		 * @param[in] x evaluation argument.
 		 *
 		 * @return copy of \p x.
+		 *
+		 * @throws unspecified any exception thrown by the invoked copy constructor.
 		 */
 		template <typename U, typename V, enabler<U> = 0>
 		U operator()(const U &x, const std::unordered_map<std::string,V> &) const
@@ -741,10 +743,37 @@ struct evaluate_impl
 		}
 };
 
+}
+
+namespace detail
+{
+
+// Return type for math::evaluate().
+template <typename T, typename U>
+using math_evaluate_type_ = decltype(math::evaluate_impl<T>()(std::declval<const T &>(),
+	std::declval<const std::unordered_map<std::string,U> &>()));
+
+template <typename T, typename U>
+using math_evaluate_type = typename std::enable_if<is_returnable<math_evaluate_type_<T,U>>::value,
+	math_evaluate_type_<T,U>>::type;
+
+}
+
+namespace math
+{
+
 /// Evaluation.
 /**
+ * \note
+ * This function is enabled only if <tt>evaluate_impl<T>()(x,dict)</tt> is a valid expression, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary \p dict
  * specifies the quantity (value) that will be susbstituted for each argument (key), here represented as a string.
+ * The body of this method is equivalent to:
+ * @code
+ * return evaluate_impl<T>()(x,dict);
+ * @endcode
  *
  * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
  *
@@ -756,7 +785,7 @@ struct evaluate_impl
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
 template <typename U, typename T>
-inline auto evaluate(const T &x, const std::unordered_map<std::string,U> &dict) -> decltype(evaluate_impl<T>()(x,dict))
+inline detail::math_evaluate_type<T,U> evaluate(const T &x, const std::unordered_map<std::string,U> &dict)
 {
 	return evaluate_impl<T>()(x,dict);
 }

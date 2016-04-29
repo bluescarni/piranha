@@ -33,7 +33,9 @@ see https://www.gnu.org/licenses/. */
 
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
+#include <unordered_map>
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
@@ -254,6 +256,8 @@ class g_series_type2: public series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>>
 		g_series_type2 &operator=(g_series_type2 &&) = default;
 		nr_00 cos() const;
 		nr_00 sin() const;
+		template <typename T>
+		nr_00 evaluate(const std::unordered_map<std::string,T> &) const;
 		PIRANHA_FORWARDING_CTOR(g_series_type2,base)
 		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type2,base)
 };
@@ -263,4 +267,10 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 {
 	BOOST_CHECK_EQUAL(math::sin(g_series_type2<double,int>{}),math::sin(0.));
 	BOOST_CHECK_EQUAL(math::cos(g_series_type2<double,int>{}),math::cos(0.));
+}
+
+// Series not evaluable due to nasty type.
+BOOST_AUTO_TEST_CASE(series_evaluate_test)
+{
+	BOOST_CHECK((!is_evaluable<g_series_type2<double,int>,double>::value));
 }
