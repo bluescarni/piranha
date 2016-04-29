@@ -102,44 +102,6 @@ struct is_zero_impl
 namespace detail
 {
 
-// Enabler for the std complex specialisation of is_zero.
-template <typename T>
-using math_is_zero_std_complex_enabler = typename std::enable_if<std::is_same<T,std::complex<float>>::value ||
-	std::is_same<T,std::complex<double>>::value || std::is_same<T,std::complex<long double>>::value>::type;
-
-}
-
-namespace math
-{
-
-/// Specialisation of the piranha::math::is_zero() functor for C++ complex floating-point types.
-/**
- * This specialisation is enabled if \p T is an <tt>std::complex</tt> of a C++ floating-point type.
- */
-template <typename T>
-struct is_zero_impl<T,detail::math_is_zero_std_complex_enabler<T>>
-{
-	/// Call operator.
-	/**
-	 * The operator will test separately the real and imaginary parts of the complex argument.
-	 *
-	 * @param[in] c argument to be tested.
-	 *
-	 * @return \p true if \p c is zero, \p false otherwise.
-	 */
-	bool operator()(const T &c) const
-	{
-		// NOTE: we need to use the impls here as is_zero() is not available yet.
-		return is_zero_impl<typename T::value_type>()(c.real()) &&
-			is_zero_impl<typename T::value_type>()(c.imag());
-	}
-};
-
-}
-
-namespace detail
-{
-
 // Enabler for math::is_zero().
 template <typename T>
 using math_is_zero_enabler = typename std::enable_if<
@@ -174,6 +136,42 @@ inline bool is_zero(const T &x)
 {
 	return is_zero_impl<T>()(x);
 }
+
+}
+
+namespace detail
+{
+
+// Enabler for the std complex specialisation of is_zero.
+template <typename T>
+using math_is_zero_std_complex_enabler = typename std::enable_if<std::is_same<T,std::complex<float>>::value ||
+	std::is_same<T,std::complex<double>>::value || std::is_same<T,std::complex<long double>>::value>::type;
+
+}
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::is_zero() functor for C++ complex floating-point types.
+/**
+ * This specialisation is enabled if \p T is an <tt>std::complex</tt> of a C++ floating-point type.
+ */
+template <typename T>
+struct is_zero_impl<T,detail::math_is_zero_std_complex_enabler<T>>
+{
+	/// Call operator.
+	/**
+	 * The operator will test separately the real and imaginary parts of the complex argument.
+	 *
+	 * @param[in] c argument to be tested.
+	 *
+	 * @return \p true if \p c is zero, \p false otherwise.
+	 */
+	bool operator()(const T &c) const
+	{
+		return is_zero(c.real()) && is_zero(c.imag());
+	}
+};
 
 /// Default functor for the implementation of piranha::math::is_unitary().
 /**
