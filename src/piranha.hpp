@@ -248,6 +248,7 @@ inline namespace literals {}
 #include "key_is_multipliable.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
+#include "lambdify.hpp"
 #include "math.hpp"
 #include "memory.hpp"
 #include "monomial.hpp"
