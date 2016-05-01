@@ -1213,6 +1213,30 @@ struct is_returnable
 template <typename T>
 const bool is_returnable<T>::value;
 
+/// Detect types that can be used as mapped values in associative containers.
+/**
+ * This type trait is intended to detect whether \p T supports typical operations that can be performed
+ * on the mapped values in associative containers.
+ * Specifically, this trait will be \p true if all the following conditions hold:
+ * - \p T is default constructible,
+ * - \p T is copy constructible and assignable,
+ * - \p T is destructible.
+ *
+ * Otherwise, the value of this trait will be \p false.
+ */
+template <typename T>
+struct is_mappable
+{
+		static const bool implementation_defined = std::is_default_constructible<T>::value &&
+			std::is_copy_constructible<T>::value && std::is_destructible<T>::value && std::is_copy_assignable<T>::value;
+	public:
+		/// Value of the type trait.
+		static const bool value = implementation_defined;
+};
+
+template <typename T>
+const bool is_mappable<T>::value;
+
 }
 
 #endif

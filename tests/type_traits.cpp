@@ -2178,3 +2178,37 @@ BOOST_AUTO_TEST_CASE(type_traits_is_returnable_test)
 	BOOST_CHECK(!is_returnable<unreturnable_01>::value);
 	BOOST_CHECK(is_returnable<unreturnable_01 &>::value);
 }
+
+struct map_00 {};
+
+struct map_01
+{
+	map_01 &operator=(const map_01 &) = default;
+	~map_01() = delete;
+};
+
+struct map_02
+{
+	map_02(const map_02 &) = default;
+	map_02 &operator=(const map_02 &) = delete;
+};
+
+struct map_03
+{
+	map_03() = delete;
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_mappable_test)
+{
+	BOOST_CHECK(is_mappable<int>::value);
+	BOOST_CHECK(!is_mappable<const int>::value);
+	BOOST_CHECK(!is_mappable<const int &>::value);
+	BOOST_CHECK(!is_mappable<int &>::value);
+	BOOST_CHECK(is_mappable<std::string>::value);
+	BOOST_CHECK(is_mappable<std::string const *>::value);
+	BOOST_CHECK(!is_mappable<std::thread>::value);
+	BOOST_CHECK(is_mappable<map_00>::value);
+	BOOST_CHECK(!is_mappable<map_01>::value);
+	BOOST_CHECK(!is_mappable<map_02>::value);
+	BOOST_CHECK(!is_mappable<map_03>::value);
+}
