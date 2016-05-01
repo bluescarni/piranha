@@ -2198,6 +2198,22 @@ struct map_03
 	map_03() = delete;
 };
 
+struct map_04
+{
+	map_04() = default;
+	map_04(const map_04 &) = default;
+	map_04(map_04 &&) = delete;
+};
+
+struct map_05
+{
+	map_05() = default;
+	map_05(const map_05 &) = default;
+	map_05(map_05 &&) = default;
+	map_05 &operator=(const map_05 &) = default;
+	map_05 &operator=(map_05 &&) = delete;
+};
+
 BOOST_AUTO_TEST_CASE(type_traits_is_mappable_test)
 {
 	BOOST_CHECK(is_mappable<int>::value);
@@ -2211,4 +2227,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_mappable_test)
 	BOOST_CHECK(!is_mappable<map_01>::value);
 	BOOST_CHECK(!is_mappable<map_02>::value);
 	BOOST_CHECK(!is_mappable<map_03>::value);
+	BOOST_CHECK(!is_mappable<map_04>::value);
+	BOOST_CHECK(!is_mappable<map_05>::value);
 }
