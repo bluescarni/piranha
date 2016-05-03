@@ -105,6 +105,15 @@ class lambdified
                 m_ptrs.push_back(std::addressof(ret.first->second));
             }
         }
+        /// Evaluation.
+        /**
+         * The call operator will first associate the elements of \p values to the vector of names used to construct \p this,
+         * and it will then call piranha::math::evaluate() on the stored internal copy of the object of type \p T used
+         * during construction.
+         *
+         * @param[in] values the values that will be used for evaluation.
+         * @return [description]
+         */
         eval_type operator()(const std::vector<U> &values)
         {
             if (unlikely(values.size() != m_eval_dict.size())) {
