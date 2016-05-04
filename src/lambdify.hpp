@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -48,49 +49,50 @@ namespace piranha
 namespace detail
 {
 
-// Enabler for lambdify().
+// Requirements for the lambdified template parameters (after decay).
 template <typename T, typename U>
-using lambdify_enabler = typename std::enable_if<is_evaluable<T,U>::value &&
-    is_mappable<U>::value,int>::type;
+using math_lambdified_reqs = std::integral_constant<bool,
+        is_evaluable<T,U>::value && is_mappable<U>::value &&
+        std::is_copy_constructible<T>::value && std::is_move_constructible<T>::value>;
 
 }
 
-/// Function-like evaluation of symbolic objects.
+namespace math
+{
+
+/// Functor interface for piranha::math::evaluate().
 /**
- * This class exposes a function-like interface for the evaluation of instances of type \p T in which
- * symbolic quantities are subtituted with objects of type \p U.
+ * This class exposes a function-like interface for the evaluation of instances of type \p T with objects of type \p U.
+ * The class acts as a small wrapper for piranha::math::evaluate() which replaces the interface
+ * based on \p std::unordered_map with an interface based on vectors and positional arguments.
  *
- * In essence, thic class acts as a small wrapper for piranha::math::evaluate() which replaces the interface
- * based on \p std::unordered_map with an interface based on vectors.
+ * The convenience function piranha::math::lambdify() can be used to easily construct objects of this class.
  *
- * The convenience function piranha::lambdify() can be used to easily construct objects of this class.
+ * ## Type requirements ##
+ *
+ * - \p T and \p U must be the same as their decay types,
+ * - \p T must be evaluable with objects of type \p U,
+ * - \p T must be copy and move constructible,
+ * - \p U must satisfy piranha::is_mappable.
+ *
+ * ## Exception safety guarantee ##
+ *
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
+ *
+ * ## Move semantics ##
+ *
+ * After a move operation, an object of this class is destructible.
  */
-// TODO type requirements.
 template <typename T, typename U>
 class lambdified
 {
-        PIRANHA_TT_CHECK(is_evaluable,T,U);
-        PIRANHA_TT_CHECK(is_mappable,U);
+        static_assert(std::is_same<T,typename std::decay<T>::type>::value,"Invalid type.");
+        static_assert(std::is_same<U,typename std::decay<U>::type>::value,"Invalid type.");
+        static_assert(detail::math_lambdified_reqs<T,U>::value,"Invalid types.");
         using eval_type = decltype(math::evaluate(std::declval<const T &>(),
             std::declval<const std::unordered_map<std::string,U> &>()));
-    public:
-        /// Constructor.
-        /**
-         * This constructor will create an internal copy of \p x, the object that will be used for evaluation.
-         * The vector of string \p names indicates in which order the symbols in \p x are to be considered
-         * in the call to operator()(). That is, the values in the vector passed to operator()() are associated
-         * internally to the symbols in \p names at the corresponding positions.
-         *
-         * @param[in] x the object that will be evaluated by calls to operator()().
-         * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
-         *
-         * @throws std::invalid_argument if \p names contains duplicates.
-         * @throws unspecified any exception thrown by:
-         * - memory errors in standard containers,
-         * - the public interface of std::unordered_map,
-         * - the construction of objects of type \p U.
-         */
-        explicit lambdified(const T &x, const std::vector<std::string> &names):m_x(x)
+        // Constructor implementation.
+        void construct(const std::vector<std::string> &names)
         {
             // Check if there are duplicates.
             auto names_copy(names);
@@ -105,14 +107,74 @@ class lambdified
                 m_ptrs.push_back(std::addressof(ret.first->second));
             }
         }
+    public:
+        /// Constructor.
+        /**
+         * This constructor will create an internal copy of \p x, the object that will be evaluated.
+         * The vector of string \p names establishes the correspondence between symbols and the values
+         * with which the symbols will be replaced when operator()() is called.
+         * That is, the values in the vector passed to operator()() are associated
+         * to the symbols in \p names at the corresponding positions.
+         *
+         * @param[in] x the object that will be evaluated by operator()().
+         * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
+         *
+         * @throws std::invalid_argument if \p names contains duplicates.
+         * @throws unspecified any exception thrown by:
+         * - memory errors in standard containers,
+         * - the public interface of std::unordered_map,
+         * - the copy constructor of \p T,
+         * - the construction of objects of type \p U.
+         */
+        explicit lambdified(const T &x, const std::vector<std::string> &names):m_x(x)
+        {
+            construct(names);
+        }
+        /// Constructor (move overload).
+        /**
+         * This constructor is equivalent to the other constructor, the only difference being that \p x
+         * is used to move-construct (instead of copy-construct) the internal instance of \p T.
+         *
+         * @param[in] x the object that will be evaluated by operator()().
+         * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
+         *
+         * @throws std::invalid_argument if \p names contains duplicates.
+         * @throws unspecified any exception thrown by:
+         * - memory errors in standard containers,
+         * - the public interface of std::unordered_map,
+         * - the move constructor of \p T,
+         * - the construction of objects of type \p U.
+         */
+        explicit lambdified(T &&x, const std::vector<std::string> &names):m_x(std::move(x))
+        {
+            construct(names);
+        }
+        /// Defaulted copy constructor.
+        lambdified(const lambdified &) = default;
+        /// Defaulted move constructor.
+        lambdified(lambdified &&) = default;
+        /// Deleted copy assignment operator.
+        lambdified &operator=(const lambdified &) = delete;
+        /// Deleted move assignment operator.
+        lambdified &operator=(lambdified &&) = delete;
         /// Evaluation.
         /**
          * The call operator will first associate the elements of \p values to the vector of names used to construct \p this,
-         * and it will then call piranha::math::evaluate() on the stored internal copy of the object of type \p T used
+         * and it will then call piranha::math::evaluate() on the stored internal instance of the object of type \p T used
          * during construction.
          *
+         * Note that this function needs to modify the internal state of the object, and thus it is not const and it is
+         * not thread-safe.
+         *
          * @param[in] values the values that will be used for evaluation.
-         * @return [description]
+         *
+         * @return the output of piranha::math::evaluate() called on the instance of type \p T stored internally.
+         *
+         * @throws std::invalid_argument if the size of \p values is not equal to the size of the vector of names
+         * used during construction.
+         * @throws unspecified any exception raised by:
+         * - the copy-assignment operator of \p U,
+         * - math::evaluate().
          */
         eval_type operator()(const std::vector<U> &values)
         {
@@ -131,25 +193,82 @@ class lambdified
         std::vector<U *> m_ptrs;
 };
 
-template <typename U, typename T, detail::lambdify_enabler<T,U> = 0>
-inline lambdified<T,U> lambdify(const T &x, const std::vector<std::string> &names)
-{
-    return lambdified<T,U>(x,names);
 }
 
+namespace detail
+{
+
+// Enabler for lambdify().
+template <typename T, typename U>
+using math_lambdify_type = typename std::enable_if<
+        math_lambdified_reqs<typename std::decay<T>::type,typename std::decay<U>::type>::value,
+        math::lambdified<typename std::decay<T>::type, typename std::decay<U>::type>>::type;
+
+}
+
+namespace math
+{
+
+/// Create a functor interface for piranha::math::evaluate().
+/**
+ * \note
+ * This function is enabled only if the decay types of \p T and \p U can be used as template parameters in
+ * piranha::math::lambdified.
+ *
+ * This utility function will create an object of type piranha::math::lambdified that can be used
+ * to evaluate \p x with a function-like interface. For example:
+ * @code
+ * polynomial x, y, z;
+ * auto l = lambdify<double>(x-2*y+3*z,{"x","y","z"});
+ * @endcode
+ * The object \p l can then be used to evaluate <tt>x-2*y+3*z</tt> in the following way:
+ * @code
+ * l({1.,2.,3.});
+ * @endcode
+ * That is, <tt>x-2*y+3*z</tt> is evaluated with <tt>x=1.</tt>, <tt>y=2.</tt> and <tt>z=3.</tt>.
+ *
+ * The decay types of \p T and \p U are used as template parameters in piranha::math::lambdified.
+ *
+ * @param[in] x object that will be evaluated.
+ * @param[in] names names of the symbols that will be used for evaluation.
+ *
+ * @return an instance of piranha::math::lambdified that can be used to evaluate \p x.
+ *
+ * @throws unspecified any exception thrown by the constructor of piranha::math::lambdified.
+ */
+template <typename U, typename T>
+inline detail::math_lambdify_type<T,U> lambdify(T &&x, const std::vector<std::string> &names)
+{
+    return lambdified<typename std::decay<T>::type, typename std::decay<U>::type>(
+        std::forward<T>(x),names);
+}
+
+}
+
+/// Detect the presence of piranha::math::lambdify().
+/**
+ * This type trait will be \p true if piranha::math::lambdify() can be called with a first argument of type
+ * \p T, and evaluation type \p U.
+ *
+ * The decay types of \p T and \p U are considered by this type trait.
+ */
 template <typename T, typename U>
 class has_lambdify: detail::sfinae_types
 {
         using Td = typename std::decay<T>::type;
         using Ud = typename std::decay<U>::type;
         template <typename T1, typename U1>
-        static auto test(const T1 &x, const U1 &) -> decltype(lambdify<U1>(x,{}),void(),yes());
+        static auto test(const T1 &x, const U1 &) -> decltype(math::lambdify<U1>(x,{}),void(),yes());
         static no test(...);
         static const bool implementation_defined = std::is_same<yes,decltype(test(std::declval<const Td &>(),
             std::declval<const Ud &>()))>::value;
     public:
+        /// Value of the type trait.
         static const bool value = implementation_defined;
 };
+
+template <typename T, typename U>
+const bool has_lambdify<T,U>::value;
 
 }
 

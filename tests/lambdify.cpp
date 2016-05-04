@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/rational_function.hpp"
 
 using namespace piranha;
+using piranha::math::lambdify;
 
 BOOST_AUTO_TEST_CASE(lambdify_test_00)
 {
@@ -55,6 +56,10 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
 	BOOST_CHECK((has_lambdify<p_type,integer>::value));
 	BOOST_CHECK((!has_lambdify<p_type,std::string>::value));
 	auto l0 = lambdify<integer>(x+y+z,{"x","y","z"});
+	BOOST_CHECK(!std::is_copy_assignable<decltype(l0)>::value);
+	BOOST_CHECK(!std::is_move_assignable<decltype(l0)>::value);
+	BOOST_CHECK(std::is_copy_constructible<decltype(l0)>::value);
+	BOOST_CHECK(std::is_move_constructible<decltype(l0)>::value);
 	BOOST_CHECK((std::is_same<decltype(l0({})),integer>::value));
 	BOOST_CHECK_EQUAL(l0({1_z,2_z,3_z}),6);
 	auto l1 = lambdify<integer>(x+2*y+3*z,{"y","z","x"});
@@ -72,6 +77,12 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
 	BOOST_CHECK((has_lambdify<p_type,p_type>::value));
 	auto l4 = lambdify<p_type>(x*x-2*y+3*z*z*z,{"x","y","z"});
 	BOOST_CHECK((std::is_same<decltype(l4({})),p_type>::value));
+	// Try with copy construction as well.
+	auto tmp = x - z;
+	auto l5 = lambdify<double>(tmp,{"x","y","z"});
+	BOOST_CHECK((std::is_same<decltype(l5({})),double>::value));
+	BOOST_CHECK_EQUAL(l5({1.,2.,3.}),1.-3.);
+	BOOST_CHECK_THROW(l5({1.,3.}),std::invalid_argument);
 	}
 	{
 	using r_type = rational_function<k_monomial>;
@@ -88,6 +99,9 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
 	}
 	{
 	BOOST_CHECK((has_lambdify<double,integer>::value));
+	BOOST_CHECK((has_lambdify<double &&,integer>::value));
+	BOOST_CHECK((has_lambdify<double &&,const integer>::value));
+	BOOST_CHECK((has_lambdify<double &&,const integer &>::value));
 	BOOST_CHECK((has_lambdify<double,std::string>::value));
 	BOOST_CHECK((has_lambdify<double,rational>::value));
 	auto l0 = lambdify<integer>(3.4,{});
