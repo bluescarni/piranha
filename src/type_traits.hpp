@@ -68,38 +68,6 @@ struct is_nonconst_rvalue_ref
 template <typename T>
 const bool is_nonconst_rvalue_ref<T>::value;
 
-/// Type is nothrow-destructible.
-/**
- * Placeholder for <tt>std::is_nothrow_destructible</tt>, until it is implemented in GCC.
- */
-template <typename T, typename = void>
-struct is_nothrow_destructible
-{
-	/// Type trait value.
-	static const bool value = noexcept(std::declval<T>().~T());
-};
-
-template <typename T>
-struct is_nothrow_destructible<T,typename std::enable_if<!std::is_destructible<T>::value>::type>
-{
-	static const bool value = false;
-};
-
-template <typename T>
-struct is_nothrow_destructible<T,typename std::enable_if<std::is_reference<T>::value>::type>
-{
-	static const bool value = true;
-};
-
-template <typename T, typename Enable>
-const bool is_nothrow_destructible<T,Enable>::value;
-
-template <typename T>
-const bool is_nothrow_destructible<T,typename std::enable_if<!std::is_destructible<T>::value>::type>::value;
-
-template <typename T>
-const bool is_nothrow_destructible<T,typename std::enable_if<std::is_reference<T>::value>::type>::value;
-
 namespace detail
 {
 
@@ -399,7 +367,7 @@ struct is_container_element
 	static const bool value = std::is_default_constructible<T>::value &&
 				  std::is_copy_constructible<T>::value &&
 				  (!enable_noexcept_checks<T>::value || (
-				  is_nothrow_destructible<T>::value
+				  std::is_nothrow_destructible<T>::value
 // The Intel compiler has troubles with the noexcept versions of these two type traits.
 #if defined(PIRANHA_COMPILER_IS_INTEL)
 				  && std::is_move_constructible<T>::value &&

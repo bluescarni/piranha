@@ -148,25 +148,6 @@ struct nontrivial_dtor
 	int n;
 };
 
-BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible_test)
-{
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<const int>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<trivial>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<const trivial>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor>::value,false);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int *>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int &>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int &&>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int const *>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int const &>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor &>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy &>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor *>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy *>::value,true);
-}
-
 BOOST_AUTO_TEST_CASE(type_traits_is_addable_test)
 {
 	BOOST_CHECK(is_addable<int>::value);
