@@ -1042,6 +1042,7 @@ class rational_function_test_case(_ut.TestCase):
 	def runTest(self):
 		from .types import rational_function, k_monomial, monomial, short, polynomial, integer, rational
 		from fractions import Fraction as F
+		import sys
 		rt = rational_function(k_monomial)()
 		pt = polynomial(integer,k_monomial)()
 		qt = polynomial(rational,k_monomial)()
@@ -1124,6 +1125,12 @@ class rational_function_test_case(_ut.TestCase):
 		self.assertEqual(evaluate(x,{"x":F(3,4)}),F(3,4))
 		self.assertEqual(evaluate(x,{"x":rt(3)}),pt(3))
 		self.assertEqual(evaluate(x,{"x":3.}),3.)
+		# This was an evaluation bug: the overloading in Boost.Python would transform
+		# the evaluation argument into double.
+		if sys.version_info[0] == 2:
+			self.assert_(isinstance(evaluate(x,{"x":2}),(int,long)))
+		else:
+			self.assert_(isinstance(evaluate(x,{"x":2}),int))
 		# Subs.
 		from .math import subs
 		self.assertEqual(subs(x,"x",4),4)
