@@ -213,6 +213,11 @@ see https://www.gnu.org/licenses/. */
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
  * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
+ * \todo we are using std::decay all over the place to, essentially, remove cv and ref qualifiers from types. But decay
+ * also turns arrays into pointers and functions into pointers. Maybe we should have a remove_cvr type trait that just removes
+ * cv and refs instead. Not sure if we care about plain arrays and function pointers enough though.
+ * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
+ * in the type-traits rework.
  */
 namespace piranha
 {
