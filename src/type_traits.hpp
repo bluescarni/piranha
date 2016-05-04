@@ -1228,6 +1228,7 @@ const bool is_returnable<T>::value;
 template <typename T>
 struct is_mappable
 {
+	private:
 		static const bool implementation_defined = std::is_default_constructible<T>::value && std::is_destructible<T>::value &&
 			std::is_copy_constructible<T>::value &&  std::is_copy_assignable<T>::value &&
 			std::is_move_constructible<T>::value &&  std::is_move_assignable<T>::value;
