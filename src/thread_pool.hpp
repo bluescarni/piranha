@@ -307,19 +307,19 @@ class thread_pool_: private detail::thread_pool_base<>
 		/**
 		 * \note
 		 * This function is enabled only if \p Int is an unsigned integer type or piranha::integer.
-		 * 
+		 *
 		 * This function computes the suggested number of threads to use, given an amount of total \p work_size units of work
 		 * and a minimum amount of work units per thread \p min_work_per_thread.
-		 * 
+		 *
 		 * The returned value will always be 1 if the calling thread is not the main thread; otherwise, a number of threads
 		 * such that each thread has at least \p min_work_per_thread units of work to consume will be returned. In any case, the return
 		 * value is always greater than zero.
-		 * 
+		 *
 		 * @param[in] work_size total number of work units.
 		 * @param[in] min_work_per_thread minimum number of work units to be consumed by a thread in the pool.
-		 * 
+		 *
 		 * @return the suggested number of threads to be used, always greater than zero.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p work_size or \p min_work_per_thread are not strictly positive.
 		 * @throws unspecified any exception thrown by threading primitives.
 		 */
@@ -356,6 +356,17 @@ class thread_pool_: private detail::thread_pool_base<>
  */
 using thread_pool = thread_pool_<>;
 
+namespace detail
+{
+
+template <typename T>
+struct is_future: std::integral_constant<bool,false> {};
+
+template <typename T>
+struct is_future<std::future<T>>: std::integral_constant<bool,true> {};
+
+}
+
 /// Class to store a list of futures.
 /**
  * This class is a minimal thin wrapper around an \p std::list of \p std::future objects.
@@ -372,7 +383,7 @@ using thread_pool = thread_pool_<>;
 template <typename F>
 class future_list
 {
-		PIRANHA_TT_CHECK(is_instance_of,F,std::future);
+		PIRANHA_TT_CHECK(detail::is_future,F);
 		// Wait on a valid future, or abort.
 		static void wait_or_abort(const F &fut)
 		{

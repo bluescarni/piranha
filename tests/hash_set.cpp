@@ -656,7 +656,6 @@ struct type_traits_tester
 	void operator()(const T &)
 	{
 		BOOST_CHECK(is_container_element<hash_set<T>>::value);
-		BOOST_CHECK((is_instance_of<hash_set<T>,hash_set>::value));
 		BOOST_CHECK(!is_equality_comparable<hash_set<T>>::value);
 		BOOST_CHECK(!is_addable<hash_set<T>>::value);
 		BOOST_CHECK(!is_ostreamable<hash_set<T>>::value);

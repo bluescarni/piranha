@@ -496,49 +496,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_greater_than_comparable_test)
 template <typename T>
 struct iio_base {};
 
-template <typename T>
-struct iio_derived: iio_base<T> {};
-
-template <typename T>
-struct iio_derived2: iio_base<T>, std::vector<T> {};
-
-template <typename ... Args>
-struct variadic_iio1 {};
-
-template <typename Arg0, typename ... Args>
-struct variadic_iio2 {};
-
-BOOST_AUTO_TEST_CASE(type_traits_is_instance_of_test)
-{
-	BOOST_CHECK((is_instance_of<std::vector<double>,std::vector>::value));
-	BOOST_CHECK((is_instance_of<std::vector<int>,std::vector>::value));
-	BOOST_CHECK((!is_instance_of<std::vector<int>,std::set>::value));
-	BOOST_CHECK((is_instance_of<iio_base<int>,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived<int>,iio_base>::value));
-	BOOST_CHECK((!is_instance_of<iio_base<int>,iio_derived>::value));
-	BOOST_CHECK((is_instance_of<std::ostream,std::basic_ios>::value));
-	BOOST_CHECK((!is_instance_of<iio_base<int>,iio_derived>::value));
-	BOOST_CHECK((!is_instance_of<int,std::list>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int>,std::vector>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int>,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int> &,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int> &&,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
-	BOOST_CHECK((is_instance_of<std::complex<double>,std::complex>::value));
-	BOOST_CHECK((is_instance_of<variadic_iio1<>,variadic_iio1>::value));
-	BOOST_CHECK((is_instance_of<variadic_iio1<int>,variadic_iio1>::value));
-	BOOST_CHECK((is_instance_of<variadic_iio1<int,double>,variadic_iio1>::value));
-	// See the comments in the source.
-#if (defined(PIRANHA_COMPILER_IS_GCC) && \
-	__GNUC__ > 4 || \
-	(__GNUC__ == 4 && __GNUC_MINOR__ > 8) || \
-	(__GNUC__ == 4 && __GNUC_MINOR__ == 8 && __GNUC_PATCHLEVEL__ >= 3)) || defined(PIRANHA_COMPILER_IS_INTEL)
-	BOOST_CHECK((is_instance_of<variadic_iio2<int>,variadic_iio2>::value));
-	BOOST_CHECK((is_instance_of<variadic_iio2<int,double>,variadic_iio2>::value));
-#endif
-}
-
 struct stream1 {};
 
 std::ostream &operator<<(std::ostream &, const stream1 &);

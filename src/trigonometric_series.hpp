@@ -45,45 +45,53 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
+namespace detail
+{
+
+// Tag for trigonometric series.
+struct trigonometric_series_tag {};
+
+}
+
 /// Trigonometric series toolbox.
 /**
  * This toolbox extends a series class with properties of trigonometric series. Specifically, this class will conditionally add methods
  * to query the trigonometric (partial,low) degree and order of a series. This augmentation takes places if either the coefficient or the
  * key satisfy the relevant type traits: piranha::has_t_degree and related for the coefficient type, piranha::key_has_t_degree and related
  * for the key type.
- * 
+ *
  * Note that in order for the trigonometric methods to be enabled, coefficient and key type cannot satisfy these type traits at the same time,
  * and all degree/order type traits need to be satisfied for the coefficient/key type. As an additional requirement, the types returned when
  * querying the degree and order must be constructible from \p int, copy or move constructible, and less-than comparable.
  *
  * If the above requirements are not satisfied, this class will not add any new functionality to the \p Series class and
  * will just provide generic constructors and assignment operators that will forward their arguments to \p Series.
- * 
+ *
  * This class satisfies the piranha::is_series type trait.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the same guarantee as \p Series.
- * 
+ *
  * ## Type requirements ##
  *
  * \p Series must be an instance of piranha::series.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move semantics is equivalent to the move semantics of \p Series.
  *
  * ## Serialization ##
  *
  * This class supports serialization if \p Series does.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series>
-class trigonometric_series: public Series
+class trigonometric_series: public Series, detail::trigonometric_series_tag
 {
+		PIRANHA_TT_CHECK(is_series,Series);
 		typedef Series base;
-		PIRANHA_TT_CHECK(is_instance_of,base,series);
 		// Utilities to detect trigonometric terms.
 		template <typename Cf>
 		struct cf_trig_score
@@ -340,7 +348,7 @@ namespace math
  * The corrsponding method in piranha::trigonometric_series will be used for the computation, if available.
  */
 template <typename Series>
-struct t_degree_impl<Series,typename std::enable_if<is_instance_of<Series,trigonometric_series>::value>::type>
+struct t_degree_impl<Series,typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,Series>::value>::type>
 {
 	/// Trigonometric degree operator.
 	/**
@@ -349,7 +357,7 @@ struct t_degree_impl<Series,typename std::enable_if<is_instance_of<Series,trigon
 	 *
 	 * @param[in] ts input series.
 	 * @param[in] args variadic argument pack.
-	 * 
+	 *
 	 * @return trigonometric degree of \p ts.
 	 *
 	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_degree().
@@ -367,7 +375,7 @@ struct t_degree_impl<Series,typename std::enable_if<is_instance_of<Series,trigon
  * The corrsponding method in piranha::trigonometric_series will be used for the computation, if available.
  */
 template <typename Series>
-struct t_ldegree_impl<Series,typename std::enable_if<is_instance_of<Series,trigonometric_series>::value>::type>
+struct t_ldegree_impl<Series,typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,Series>::value>::type>
 {
 	/// Trigonometric low degree operator.
 	/**
@@ -394,7 +402,7 @@ struct t_ldegree_impl<Series,typename std::enable_if<is_instance_of<Series,trigo
  * The corrsponding method in piranha::trigonometric_series will be used for the computation, if available.
  */
 template <typename Series>
-struct t_order_impl<Series,typename std::enable_if<is_instance_of<Series,trigonometric_series>::value>::type>
+struct t_order_impl<Series,typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,Series>::value>::type>
 {
 	/// Trigonometric order operator.
 	/**
@@ -421,7 +429,7 @@ struct t_order_impl<Series,typename std::enable_if<is_instance_of<Series,trigono
  * The corrsponding method in piranha::trigonometric_series will be used for the computation, if available.
  */
 template <typename Series>
-struct t_lorder_impl<Series,typename std::enable_if<is_instance_of<Series,trigonometric_series>::value>::type>
+struct t_lorder_impl<Series,typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,Series>::value>::type>
 {
 	/// Trigonometric low order operator.
 	/**
