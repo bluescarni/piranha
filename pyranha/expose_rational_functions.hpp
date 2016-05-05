@@ -131,6 +131,8 @@ struct rf_eval_exposer
 	void operator()(const U &) const
 	{
 		bp::def("_evaluate",generic_evaluate_wrapper<T,U>);
+		bp::def("_lambdify",generic_lambdify_wrapper<T,U>);
+		generic_expose_lambdified<T,U>();
 	}
 	bp::class_<T> &m_rf_class;
 };

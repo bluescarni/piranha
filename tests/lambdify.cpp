@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE lambdify_test
 #include <boost/test/unit_test.hpp>
 
+#include <random>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -38,14 +39,20 @@ see https://www.gnu.org/licenses/. */
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
-#include "../src/real.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/rational_function.hpp"
+#include "../src/real.hpp"
 
 using namespace piranha;
-using piranha::math::lambdify;
+using math::lambdify;
+using math::evaluate;
+
+static std::mt19937 rng;
+
+static const int ntrials = 100;
 
 BOOST_AUTO_TEST_CASE(lambdify_test_00)
 {
@@ -108,5 +115,25 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
 	BOOST_CHECK((std::is_same<double,decltype(l0({}))>::value));
 	BOOST_CHECK_EQUAL(l0({}),3.4);
 	BOOST_CHECK_THROW(l0({1_z,2_z,3_z}),std::invalid_argument);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(lambdify_test_01)
+{
+	// A few tests with copies and moves.
+	using p_type = polynomial<integer,k_monomial>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	auto l0 = lambdify<integer>(x+y+z,{"x","y","z"});
+	auto l1(l0);
+	BOOST_CHECK_EQUAL(l0({1_z,2_z,3_z}),l1({1_z,2_z,3_z}));
+	auto l2(std::move(l1));
+	BOOST_CHECK_EQUAL(l0({1_z,2_z,3_z}),l2({1_z,2_z,3_z}));
+	// Random testing.
+	std::uniform_int_distribution<int> dist(-10,10);
+	const auto tmp = x*x-6*y+z*y*x;
+	auto l = lambdify<integer>(tmp,{"y","x","z"});
+	for (int i = 0; i < ntrials; ++i) {
+		auto xn = integer(dist(rng)), yn = integer(dist(rng)), zn = integer(dist(rng));
+		BOOST_CHECK_EQUAL(l({yn,xn,zn}),evaluate<integer>(tmp,{{"x",xn},{"y",yn},{"z",zn}}));
 	}
 }
