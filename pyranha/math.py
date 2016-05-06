@@ -880,7 +880,7 @@ def lambdify(t,x,names):
 
 	This function is a wrapper around :func:`~pyranha.math.evaluate()` which returns a callable object that can be used
 	to evaluate the input argument *x*. The call operator of the returned object takes as input a collection of length
-	``len(names)`` of objects of type *t* and  which, for the purpose of evaluation, are associated to the list of
+	``len(names)`` of objects of type *t* which, for the purpose of evaluation, are associated to the list of
 	symbols *names* at the corresponding positions.
 
 	:param t: the type that will be used for the evaluation of *x*
