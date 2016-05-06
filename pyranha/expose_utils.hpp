@@ -186,9 +186,9 @@ inline auto generic_evaluate_wrapper(const S &s, bp::dict dict, const T &)
 
 // Generic lambdify wrapper.
 template <typename S, typename U>
-inline auto generic_lambdify_wrapper(const S &s, bp::object o, const U &) -> decltype(piranha::math::lambdify<U>(s,{}))
+inline auto generic_lambdify_wrapper(const S &s, bp::list l, const U &) -> decltype(piranha::math::lambdify<U>(s,{}))
 {
-	bp::stl_input_iterator<std::string> it(o), end;
+	bp::stl_input_iterator<std::string> it(l), end;
 	std::vector<std::string> v(it,end);
 	return piranha::math::lambdify<U>(s,v);
 }
@@ -199,6 +199,23 @@ inline auto lambdified_call_operator(piranha::math::lambdified<T,U> &l, bp::obje
 	bp::stl_input_iterator<U> it(o), end;
 	std::vector<U> values(it,end);
 	return l(values);
+}
+
+template <typename T, typename U>
+inline std::string lambdified_repr(const piranha::math::lambdified<T,U> &l)
+{
+	std::ostringstream oss;
+	oss << "Lambdified object: " << l.get_evaluable() << '\n';
+	oss << "Evaluation variables: [";
+	const auto size = l.get_names().size();
+	for (decltype(l.get_names().size()) i = 0u; i < size; ++i) {
+		oss << '"' << l.get_names()[i] << '"';
+		if (i != size - 1u) {
+			oss << ',';
+		}
+	}
+	oss << ']';
+	return oss.str();
 }
 
 // Generic wrapper for the lambdified class.
@@ -214,6 +231,8 @@ inline void generic_expose_lambdified()
 	class_inst.def("__deepcopy__",generic_deepcopy_wrapper<l_type>);
 	// The call operator.
 	class_inst.def("__call__",lambdified_call_operator<S,U>);
+	// The repr.
+	class_inst.def("__repr__",lambdified_repr<S,U>);
 	// Update the exposition counter.
 	++lambdified_counter;
 }

@@ -221,6 +221,14 @@ class lambdified
             }
             return math::evaluate(m_x,m_eval_dict);
         }
+        const T &get_evaluable() const
+        {
+            return m_x;
+        }
+        const std::vector<std::string> &get_names() const
+        {
+            return m_names;
+        }
     private:
         const T m_x;
         const std::vector<std::string> m_names;
