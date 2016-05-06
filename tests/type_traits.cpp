@@ -148,25 +148,6 @@ struct nontrivial_dtor
 	int n;
 };
 
-BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible_test)
-{
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<const int>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<trivial>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<const trivial>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor>::value,false);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int *>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int &>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int &&>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int const *>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<int const &>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor &>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy &>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor *>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy *>::value,true);
-}
-
 BOOST_AUTO_TEST_CASE(type_traits_is_addable_test)
 {
 	BOOST_CHECK(is_addable<int>::value);
@@ -514,49 +495,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_greater_than_comparable_test)
 
 template <typename T>
 struct iio_base {};
-
-template <typename T>
-struct iio_derived: iio_base<T> {};
-
-template <typename T>
-struct iio_derived2: iio_base<T>, std::vector<T> {};
-
-template <typename ... Args>
-struct variadic_iio1 {};
-
-template <typename Arg0, typename ... Args>
-struct variadic_iio2 {};
-
-BOOST_AUTO_TEST_CASE(type_traits_is_instance_of_test)
-{
-	BOOST_CHECK((is_instance_of<std::vector<double>,std::vector>::value));
-	BOOST_CHECK((is_instance_of<std::vector<int>,std::vector>::value));
-	BOOST_CHECK((!is_instance_of<std::vector<int>,std::set>::value));
-	BOOST_CHECK((is_instance_of<iio_base<int>,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived<int>,iio_base>::value));
-	BOOST_CHECK((!is_instance_of<iio_base<int>,iio_derived>::value));
-	BOOST_CHECK((is_instance_of<std::ostream,std::basic_ios>::value));
-	BOOST_CHECK((!is_instance_of<iio_base<int>,iio_derived>::value));
-	BOOST_CHECK((!is_instance_of<int,std::list>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int>,std::vector>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int>,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int> &,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int> &&,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
-	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
-	BOOST_CHECK((is_instance_of<std::complex<double>,std::complex>::value));
-	BOOST_CHECK((is_instance_of<variadic_iio1<>,variadic_iio1>::value));
-	BOOST_CHECK((is_instance_of<variadic_iio1<int>,variadic_iio1>::value));
-	BOOST_CHECK((is_instance_of<variadic_iio1<int,double>,variadic_iio1>::value));
-	// See the comments in the source.
-#if (defined(PIRANHA_COMPILER_IS_GCC) && \
-	__GNUC__ > 4 || \
-	(__GNUC__ == 4 && __GNUC_MINOR__ > 8) || \
-	(__GNUC__ == 4 && __GNUC_MINOR__ == 8 && __GNUC_PATCHLEVEL__ >= 3)) || defined(PIRANHA_COMPILER_IS_INTEL)
-	BOOST_CHECK((is_instance_of<variadic_iio2<int>,variadic_iio2>::value));
-	BOOST_CHECK((is_instance_of<variadic_iio2<int,double>,variadic_iio2>::value));
-#endif
-}
 
 struct stream1 {};
 
@@ -2177,4 +2115,56 @@ BOOST_AUTO_TEST_CASE(type_traits_is_returnable_test)
 	BOOST_CHECK(is_returnable<unreturnable_00 &>::value);
 	BOOST_CHECK(!is_returnable<unreturnable_01>::value);
 	BOOST_CHECK(is_returnable<unreturnable_01 &>::value);
+}
+
+struct map_00 {};
+
+struct map_01
+{
+	map_01 &operator=(const map_01 &) = default;
+	~map_01() = delete;
+};
+
+struct map_02
+{
+	map_02(const map_02 &) = default;
+	map_02 &operator=(const map_02 &) = delete;
+};
+
+struct map_03
+{
+	map_03() = delete;
+};
+
+struct map_04
+{
+	map_04() = default;
+	map_04(const map_04 &) = default;
+	map_04(map_04 &&) = delete;
+};
+
+struct map_05
+{
+	map_05() = default;
+	map_05(const map_05 &) = default;
+	map_05(map_05 &&) = default;
+	map_05 &operator=(const map_05 &) = default;
+	map_05 &operator=(map_05 &&) = delete;
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_mappable_test)
+{
+	BOOST_CHECK(is_mappable<int>::value);
+	BOOST_CHECK(!is_mappable<const int>::value);
+	BOOST_CHECK(!is_mappable<const int &>::value);
+	BOOST_CHECK(!is_mappable<int &>::value);
+	BOOST_CHECK(is_mappable<std::string>::value);
+	BOOST_CHECK(is_mappable<std::string const *>::value);
+	BOOST_CHECK(!is_mappable<std::thread>::value);
+	BOOST_CHECK(is_mappable<map_00>::value);
+	BOOST_CHECK(!is_mappable<map_01>::value);
+	BOOST_CHECK(!is_mappable<map_02>::value);
+	BOOST_CHECK(!is_mappable<map_03>::value);
+	BOOST_CHECK(!is_mappable<map_04>::value);
+	BOOST_CHECK(!is_mappable<map_05>::value);
 }

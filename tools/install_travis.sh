@@ -106,7 +106,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     cd doxygen-1.8.11;
     mkdir build;
     cd build;
-    cmake -DCMAKE_INSTALL_PREFIX=/home/travis/.local ../;
+    cmake -DCMAKE_INSTALL_PREFIX=/home/travis/.local -Duse_libclang=YES ../;
     make -j2;
     make install;
     # Now run it.

@@ -68,38 +68,6 @@ struct is_nonconst_rvalue_ref
 template <typename T>
 const bool is_nonconst_rvalue_ref<T>::value;
 
-/// Type is nothrow-destructible.
-/**
- * Placeholder for <tt>std::is_nothrow_destructible</tt>, until it is implemented in GCC.
- */
-template <typename T, typename = void>
-struct is_nothrow_destructible
-{
-	/// Type trait value.
-	static const bool value = noexcept(std::declval<T>().~T());
-};
-
-template <typename T>
-struct is_nothrow_destructible<T,typename std::enable_if<!std::is_destructible<T>::value>::type>
-{
-	static const bool value = false;
-};
-
-template <typename T>
-struct is_nothrow_destructible<T,typename std::enable_if<std::is_reference<T>::value>::type>
-{
-	static const bool value = true;
-};
-
-template <typename T, typename Enable>
-const bool is_nothrow_destructible<T,Enable>::value;
-
-template <typename T>
-const bool is_nothrow_destructible<T,typename std::enable_if<!std::is_destructible<T>::value>::type>::value;
-
-template <typename T>
-const bool is_nothrow_destructible<T,typename std::enable_if<std::is_reference<T>::value>::type>::value;
-
 namespace detail
 {
 
@@ -399,7 +367,7 @@ struct is_container_element
 	static const bool value = std::is_default_constructible<T>::value &&
 				  std::is_copy_constructible<T>::value &&
 				  (!enable_noexcept_checks<T>::value || (
-				  is_nothrow_destructible<T>::value
+				  std::is_nothrow_destructible<T>::value
 // The Intel compiler has troubles with the noexcept versions of these two type traits.
 #if defined(PIRANHA_COMPILER_IS_INTEL)
 				  && std::is_move_constructible<T>::value &&
@@ -1212,6 +1180,33 @@ struct is_returnable
 
 template <typename T>
 const bool is_returnable<T>::value;
+
+/// Detect types that can be used as mapped values in associative containers.
+/**
+ * This type trait is intended to detect whether \p T supports typical operations that can be performed
+ * on the mapped values in associative containers.
+ * Specifically, this trait will be \p true if all the following conditions hold:
+ * - \p T is default constructible,
+ * - \p T is copy constructible and assignable,
+ * - \p T is move constructible and assignable,
+ * - \p T is destructible.
+ *
+ * Otherwise, the value of this trait will be \p false.
+ */
+template <typename T>
+struct is_mappable
+{
+	private:
+		static const bool implementation_defined = std::is_default_constructible<T>::value && std::is_destructible<T>::value &&
+			std::is_copy_constructible<T>::value &&  std::is_copy_assignable<T>::value &&
+			std::is_move_constructible<T>::value &&  std::is_move_assignable<T>::value;
+	public:
+		/// Value of the type trait.
+		static const bool value = implementation_defined;
+};
+
+template <typename T>
+const bool is_mappable<T>::value;
 
 }
 
