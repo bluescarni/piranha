@@ -170,16 +170,16 @@
 
 <div class="viewcode-block" id="cos"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.cos">[docs]</a><span class="k">def</span> <span class="nf">cos</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Cosine.</span>
-<span class="sd">	</span>
-<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports</span>
+
+<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any symbolic type that supports</span>
 <span class="sd">	the operation.</span>
-<span class="sd">	</span>
+
 <span class="sd">	:param arg: cosine argument</span>
-<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.</span>
+<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported symbolic type.</span>
 <span class="sd">	:returns: cosine of *arg*</span>
 <span class="sd">	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked</span>
 <span class="sd">		low-level function</span>
-<span class="sd">	</span>
+
 <span class="sd">	&gt;&gt;&gt; cos(0)</span>
 <span class="sd">	1</span>
 <span class="sd">	&gt;&gt;&gt; cos(2) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
@@ -188,7 +188,7 @@
 <span class="sd">	ValueError: cannot compute the cosine of a non-zero integer</span>
 <span class="sd">	&gt;&gt;&gt; cos(2.) # doctest: +ELLIPSIS</span>
 <span class="sd">	-0.4161468...</span>
-<span class="sd">	&gt;&gt;&gt; from .types import poisson_series, polynomial, rational, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, short, monomial</span>
 <span class="sd">	&gt;&gt;&gt; t = poisson_series(polynomial(rational,monomial(short)))()</span>
 <span class="sd">	&gt;&gt;&gt; cos(2 * t(&#39;x&#39;))</span>
 <span class="sd">	cos(2*x)</span>
@@ -196,19 +196,19 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: invalid argument type(s)</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_cos</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_cos</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="sin"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.sin">[docs]</a><span class="k">def</span> <span class="nf">sin</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Sine.</span>
-<span class="sd">	</span>
-<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports</span>
+
+<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any symbolic type that supports</span>
 <span class="sd">	the operation.</span>
 
 <span class="sd">	:param arg: sine argument</span>
-<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.</span>
+<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported symbolic type.</span>
 <span class="sd">	:returns: sine of *arg*</span>
 <span class="sd">	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked</span>
 <span class="sd">		low-level function</span>
@@ -221,7 +221,7 @@
 <span class="sd">	ValueError: cannot compute the cosine of a non-zero integer</span>
 <span class="sd">	&gt;&gt;&gt; sin(2.) # doctest: +ELLIPSIS</span>
 <span class="sd">	0.9092974...</span>
-<span class="sd">	&gt;&gt;&gt; from .types import poisson_series, polynomial, rational, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, short, monomial</span>
 <span class="sd">	&gt;&gt;&gt; t = poisson_series(polynomial(rational,monomial(short)))()</span>
 <span class="sd">	&gt;&gt;&gt; sin(2 * t(&#39;x&#39;))</span>
 <span class="sd">	sin(2*x)</span>
@@ -229,18 +229,18 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: invalid argument type(s)</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_sin</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_sin</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="binomial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.binomial">[docs]</a><span class="k">def</span> <span class="nf">binomial</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Binomial coefficient.</span>
-<span class="sd">	</span>
+
 <span class="sd">	This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient :math:`{x \choose y}`,</span>
 <span class="sd">	supporting various combinations of integral, rational, floating-point and arbitrary-precision floating-point types</span>
 <span class="sd">	as input.</span>
-<span class="sd">	</span>
+
 <span class="sd">	:param x: top argument for the binomial coefficient</span>
 <span class="sd">	:type x: ``int``, ``float``, ``Fraction``, ``mpf``</span>
 <span class="sd">	:param y: bottom argument for the binomial coefficient</span>
@@ -248,7 +248,7 @@
 <span class="sd">	:returns: *x* choose *y*</span>
 <span class="sd">	:raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
-<span class="sd">	</span>
+
 <span class="sd">	&gt;&gt;&gt; binomial(3,2)</span>
 <span class="sd">	3</span>
 <span class="sd">	&gt;&gt;&gt; binomial(-6,2)</span>
@@ -262,28 +262,28 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: invalid argument type(s)</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_binomial</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_binomial</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="gcd"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.gcd">[docs]</a><span class="k">def</span> <span class="nf">gcd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Greatest common divisor.</span>
-<span class="sd">	</span>
+
 <span class="sd">	This function is a wrapper around a lower level function. It will calculate the GCD of *x* and *y*,</span>
-<span class="sd">	supporting ``int`` and various series types as input.</span>
-<span class="sd">	</span>
+<span class="sd">	supporting ``int`` and various symbolic types as input.</span>
+
 <span class="sd">	:param x: first argument</span>
-<span class="sd">	:type x: ``int`` or a supported series type</span>
+<span class="sd">	:type x: ``int`` or a supported symbolic type</span>
 <span class="sd">	:param y: second argument</span>
-<span class="sd">	:type y: ``int`` or a supported series type</span>
+<span class="sd">	:type y: ``int`` or a supported symbolic type</span>
 <span class="sd">	:returns: the GCD of *x* and *y*</span>
 <span class="sd">	:raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
-<span class="sd">	</span>
+
 <span class="sd">	&gt;&gt;&gt; gcd(12,9)</span>
 <span class="sd">	3</span>
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, integer, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, integer, k_monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(integer,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; gcd((x**2-y**2)*(x**3+1),(x+1)*(x+2*y)) # doctest: +SKIP</span>
@@ -296,26 +296,26 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: invalid argument type(s)</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_gcd</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_gcd</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="partial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.partial">[docs]</a><span class="k">def</span> <span class="nf">partial</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Partial derivative.</span>
-<span class="sd">	</span>
-<span class="sd">	Compute the partial derivative of *arg* with respect to the variable *name*. *arg* must be a series type and</span>
+
+<span class="sd">	Compute the partial derivative of *arg* with respect to the variable *name*. *arg* must be a symbolic type and</span>
 <span class="sd">	*name* a string.</span>
-<span class="sd">	</span>
+
 <span class="sd">	:param arg: argument for the partial derivative</span>
-<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:type arg: a symbolic type</span>
 <span class="sd">	:param name: name of the variable with respect to which the derivative will be calculated</span>
 <span class="sd">	:type name: string</span>
 <span class="sd">	:returns: partial derivative of *arg* with respect to *name*</span>
 <span class="sd">	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked</span>
 <span class="sd">		low-level function</span>
-<span class="sd">	</span>
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, integer, short, monomial</span>
+
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, integer, short, monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(integer,monomial(short))()</span>
 <span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; partial(x + 2*x*y,&#39;y&#39;)</span>
@@ -324,27 +324,27 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: invalid argument type(s)</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_partial</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_partial</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="integrate"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.integrate">[docs]</a><span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Integration.</span>
-<span class="sd">	</span>
-<span class="sd">	Compute the antiderivative of *arg* with respect to the variable *name*. *arg* must be a series type and</span>
+
+<span class="sd">	Compute the antiderivative of *arg* with respect to the variable *name*. *arg* must be a symbolic type and</span>
 <span class="sd">	*name* a string. The success of the operation is not guaranteed, and depends both on the type and value of</span>
 <span class="sd">	*arg*.</span>
-<span class="sd">	</span>
+
 <span class="sd">	:param arg: argument for the integration</span>
-<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:type arg: a symbolic type</span>
 <span class="sd">	:param name: name of the variable with respect to which the integration will be calculated</span>
 <span class="sd">	:type name: string</span>
 <span class="sd">	:returns: antiderivative of *arg* with respect to *name*</span>
 <span class="sd">	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked</span>
 <span class="sd">		low-level function</span>
-<span class="sd">	</span>
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; integrate(x + 2*x*y,&#39;x&#39;) == x**2/2 + x**2*y</span>
@@ -357,22 +357,22 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: invalid argument type(s)</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_integrate</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_integrate</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="factorial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.factorial">[docs]</a><span class="k">def</span> <span class="nf">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Factorial.</span>
-<span class="sd">	</span>
+
 <span class="sd">	Will compute the factorial of *n*, which must be a non-negative instance of ``int``.</span>
-<span class="sd">	</span>
+
 <span class="sd">	:param n: argument for the factorial</span>
 <span class="sd">	:type n: ``int``</span>
 <span class="sd">	:returns: factorial of *n*</span>
 <span class="sd">	:raises: :exc:`TypeError` if *n* is not an ``int``</span>
 <span class="sd">	:raises: :exc:`ValueError` if *n* is negative or too large</span>
-<span class="sd">	</span>
+
 <span class="sd">	&gt;&gt;&gt; factorial(0)</span>
 <span class="sd">	1</span>
 <span class="sd">	&gt;&gt;&gt; factorial(6)</span>
@@ -385,7 +385,7 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: factorial argument must be an integer</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span>  <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_factorial</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="nb">int</span><span class="p">):</span>
@@ -397,15 +397,15 @@
 
 <div class="viewcode-block" id="pbracket"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.pbracket">[docs]</a><span class="k">def</span> <span class="nf">pbracket</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Poisson bracket.</span>
-<span class="sd">	</span>
+
 <span class="sd">	Compute the Poisson bracket of *f* and *g* with respect to the momenta with names in *p_list*</span>
-<span class="sd">	and coordinates with names in *q_list*. *f* and *g* must be series of the same type, and</span>
+<span class="sd">	and coordinates with names in *q_list*. *f* and *g* must be symbolic objects of the same type, and</span>
 <span class="sd">	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.</span>
-<span class="sd">	</span>
+
 <span class="sd">	:param f: first argument</span>
-<span class="sd">	:type f: a series type</span>
+<span class="sd">	:type f: a symbolic type</span>
 <span class="sd">	:param g: second argument</span>
-<span class="sd">	:type g: a series type</span>
+<span class="sd">	:type g: a symbolic type</span>
 <span class="sd">	:param p_list: list of momenta names</span>
 <span class="sd">	:type p_list: list of strings</span>
 <span class="sd">	:param q_list: list of coordinates names</span>
@@ -414,8 +414,8 @@
 <span class="sd">	:raises: :exc:`ValueError` if *p_list* and *q_list* have different sizes or duplicate entries</span>
 <span class="sd">	:raises: :exc:`TypeError` if the types of the arguments are invalid</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
-<span class="sd">	</span>
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, short, monomial</span>
+
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, short, monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,monomial(short))()</span>
 <span class="sd">	&gt;&gt;&gt; x,v = pt(&#39;x&#39;), pt(&#39;v&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; pbracket(x+v,x+v,[&#39;v&#39;],[&#39;x&#39;]) == 0</span>
@@ -432,25 +432,25 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: invalid argument type(s)</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_pbracket</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_pbracket</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="transformation_is_canonical"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.transformation_is_canonical">[docs]</a><span class="k">def</span> <span class="nf">transformation_is_canonical</span><span class="p">(</span><span class="n">new_p</span><span class="p">,</span><span class="n">new_q</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Test if transformation is canonical.</span>
-<span class="sd">	</span>
+
 <span class="sd">	This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson bracket test.</span>
 <span class="sd">	The transformation is expressed as two separate list of objects, *new_p* and *new_q*, representing the new momenta</span>
 <span class="sd">	and coordinates as functions of the old momenta *p_list* and *q_list*.</span>
-<span class="sd">	</span>
-<span class="sd">	The function requires *new_p* and *new_q* to be lists of series of the same type, and</span>
+
+<span class="sd">	The function requires *new_p* and *new_q* to be lists of symbolic objects of the same type, and</span>
 <span class="sd">	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.</span>
-<span class="sd">	</span>
+
 <span class="sd">	:param new_p: list of objects representing the new momenta</span>
-<span class="sd">	:type new_p: list of series instances</span>
+<span class="sd">	:type new_p: list of symbolic instances</span>
 <span class="sd">	:param new_q: list of objects representing the new coordinates</span>
-<span class="sd">	:type new_q: list of series instances</span>
+<span class="sd">	:type new_q: list of symbolic instances</span>
 <span class="sd">	:param p_list: list of momenta names</span>
 <span class="sd">	:type p_list: list of strings</span>
 <span class="sd">	:param q_list: list of coordinates names</span>
@@ -459,8 +459,8 @@
 <span class="sd">	:raises: :exc:`ValueError` if the size of all input lists is not the same</span>
 <span class="sd">	:raises: :exc:`TypeError` if the types of the arguments are invalid</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
-<span class="sd">	</span>
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; L,G,H,l,g,h = [pt(_) for _ in &#39;LGHlgh&#39;]</span>
 <span class="sd">	&gt;&gt;&gt; transformation_is_canonical([-l],[L],[&#39;L&#39;],[&#39;l&#39;])</span>
@@ -497,7 +497,7 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	TypeError: invalid argument type(s)</span>
-<span class="sd">	</span>
+
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_transformation_is_canonical</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_p</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_q</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
@@ -519,14 +519,14 @@
 	<span class="sd">&quot;&quot;&quot;Degree-based truncation.</span>
 
 <span class="sd">	This function will eliminate from *arg* parts whose degree is greater than *max_degree*. The truncation</span>
-<span class="sd">	operates on series types both by eliminating entire terms and by truncating recursively the coefficients,</span>
+<span class="sd">	operates on symbolic types both by eliminating entire terms and by truncating recursively the coefficients,</span>
 <span class="sd">	if possible.</span>
 
 <span class="sd">	If *names* is ``None``, then the total degree is considered for the truncation. Otherwise, *names* must be</span>
 <span class="sd">	a list of strings enumerating the variables to be considered for the computation of the degree.</span>
 
 <span class="sd">	:param arg: argument for the truncation</span>
-<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:type arg: a symbolic type</span>
 <span class="sd">	:param max_degree: maximum degree that will be kept in *arg*</span>
 <span class="sd">	:type max_degree: a type comparable to the type representing the degree of *arg*</span>
 <span class="sd">	:param names: list of the names of the variables to be considered in the computation of the degree</span>
@@ -535,7 +535,7 @@
 <span class="sd">	:raises: :exc:`TypeError` if *names* is neither ``None`` nor a list of strings</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial, poisson_series</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial, poisson_series</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; truncate_degree(x**2*y+x*y+z,2) # doctest: +SKIP</span>
@@ -576,7 +576,7 @@
 <span class="sd">	and this type needs to support the operations needed to compute the evaluation.</span>
 
 <span class="sd">	:param arg: argument for the evaluation</span>
-<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:type arg: a symbolic type</span>
 <span class="sd">	:param eval_dict: evaluation dictionary</span>
 <span class="sd">	:type eval_dict: a dictionary mapping strings to values, with all values of the same type</span>
 <span class="sd">	:returns: the evaluation of *arg* according to *eval_dict*</span>
@@ -584,7 +584,7 @@
 <span class="sd">	:raises: :exc:`ValueError` if *eval_dict* is empty</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{&#39;x&#39;:3,&#39;y&#39;:-3,&#39;z&#39;:5})</span>
@@ -630,7 +630,7 @@
 <span class="sd">	supports various combinations for the types of *arg* and *x*.</span>
 
 <span class="sd">	:param arg: argument for the substitution</span>
-<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:type arg: a symbolic type</span>
 <span class="sd">	:param name: name of the symbol to be substituted</span>
 <span class="sd">	:type name: a string</span>
 <span class="sd">	:param x: the quantity that will be substituted for *name*</span>
@@ -639,7 +639,7 @@
 <span class="sd">	:raises: :exc:`TypeError` in case the input types are not supported or invalid</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; subs(x/2+1,&#39;x&#39;,3)</span>
@@ -663,7 +663,7 @@
 <span class="sd">	a lower-level C++ routine that supports various combinations for the types of *arg*, *x* and *y*.</span>
 
 <span class="sd">	:param arg: argument for the substitution</span>
-<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:type arg: a symbolic type</span>
 <span class="sd">	:param name: name of the symbol whose cosine and sine will be substituted</span>
 <span class="sd">	:type name: a string</span>
 <span class="sd">	:param x: the quantity that will be substituted for the cosine of *name*</span>
@@ -674,7 +674,7 @@
 <span class="sd">	:raises: :exc:`TypeError` in case the input types are not supported or invalid</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">	&gt;&gt;&gt; from .types import poisson_series, rational, polynomial, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import poisson_series, rational, polynomial, short, monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = poisson_series(polynomial(rational,monomial(short)))()</span>
 <span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; t_subs(cos(x+y),&#39;x&#39;,1,0)</span>
@@ -698,7 +698,7 @@
 <span class="sd">	a lower-level C++ routine that supports various combinations for the types of *arg* and *x*.</span>
 
 <span class="sd">	:param arg: argument for the substitution</span>
-<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:type arg: a symbolic type</span>
 <span class="sd">	:param name: name of the symbol whose power will be substituted</span>
 <span class="sd">	:type name: a string</span>
 <span class="sd">	:param n: power of *name* that will be substituted</span>
@@ -709,7 +709,7 @@
 <span class="sd">	:raises: :exc:`TypeError` in case the input types are not supported or invalid</span>
 <span class="sd">	:raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">	&gt;&gt;&gt; from .types import rational, polynomial, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import rational, polynomial, short, monomial</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,monomial(short))()</span>
 <span class="sd">	&gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; ipow_subs(x**5*y,&#39;x&#39;,2,z)</span>
@@ -733,11 +733,11 @@
 	<span class="sd">&quot;&quot;&quot;Inverse.</span>
 
 <span class="sd">	Compute the multiplicative inverse of the argument.</span>
-<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports</span>
+<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any symbolic type that supports</span>
 <span class="sd">	the operation.</span>
 
 <span class="sd">	:param arg: inversion argument</span>
-<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.</span>
+<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported symbolic type.</span>
 <span class="sd">	:returns: inverse of *arg*</span>
 <span class="sd">	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked</span>
 <span class="sd">		low-level function</span>
@@ -751,7 +751,7 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	ZeroDivisionError: division by zero</span>
-<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, short, monomial, divisor, divisor_series</span>
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, short, monomial, divisor, divisor_series</span>
 <span class="sd">	&gt;&gt;&gt; t = polynomial(rational,monomial(short))()</span>
 <span class="sd">	&gt;&gt;&gt; invert(t(&#39;x&#39;))</span>
 <span class="sd">	x**-1</span>
@@ -992,6 +992,58 @@
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_lorder</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_lorder</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="lambdify"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.lambdify">[docs]</a><span class="k">def</span> <span class="nf">lambdify</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">names</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Turn a symbolic object into a function.</span>
+
+<span class="sd">	This function is a wrapper around :func:`~pyranha.math.evaluate()` which returns a callable object that can be used</span>
+<span class="sd">	to evaluate the input argument *x*. The call operator of the returned object takes as input a collection of length</span>
+<span class="sd">	``len(names)`` of objects of type *t* which, for the purpose of evaluation, are associated to the list of</span>
+<span class="sd">	symbols *names* at the corresponding positions.</span>
+
+<span class="sd">	:param t: the type that will be used for the evaluation of *x*</span>
+<span class="sd">	:type t: a supported type</span>
+<span class="sd">	:param x: symbolic object that will be evaluated</span>
+<span class="sd">	:type x: a supported symbolic type</span>
+<span class="sd">	:param names: the symbols that will be used for evaluation</span>
+<span class="sd">	:type names: a list of strings</span>
+<span class="sd">	:returns: a callable object that can be used to evaluate *x* with objects of type *t*</span>
+<span class="sd">	:raises: :exc:`TypeError` if *t* is not a type, or if *names* is not a list of strings, or any other exception</span>
+<span class="sd">		raised by the invoked low-level function</span>
+<span class="sd">	:raises: :exc:`ValueError` if *names* contains duplicates</span>
+
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">	&gt;&gt;&gt; x,y,z = x,y,z = pt(&#39;x&#39;),pt(&#39;y&#39;),pt(&#39;z&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(int,2*x-y+3*z,[&#39;z&#39;,&#39;y&#39;,&#39;x&#39;])</span>
+<span class="sd">	&gt;&gt;&gt; l([1,2,3])</span>
+<span class="sd">	Fraction(7, 1)</span>
+<span class="sd">	&gt;&gt;&gt; l([1,2,-3])</span>
+<span class="sd">	Fraction(-5, 1)</span>
+<span class="sd">	&gt;&gt;&gt; l([1]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: invalid size of the evaluation vector</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(3,2*x-y+3*z,[&#39;z&#39;,&#39;y&#39;,&#39;x&#39;]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: the &#39;t&#39; argument must be a type</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(int,2*x-y+3*z,[1,2,3]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: the &#39;names&#39; argument must be a list of strings</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(int,2*x-y+3*z,[&#39;z&#39;,&#39;y&#39;,&#39;x&#39;,&#39;z&#39;]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: the &#39;names&#39; argument contains duplicates</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_lambdify</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="nb">type</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the </span><span class="se">\&#39;</span><span class="s1">t</span><span class="se">\&#39;</span><span class="s1"> argument must be a type&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]):</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the </span><span class="se">\&#39;</span><span class="s1">names</span><span class="se">\&#39;</span><span class="s1"> argument must be a list of strings&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_lambdify</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">names</span><span class="p">,</span><span class="n">t</span><span class="p">())</span></div>
 </pre></div>
 
     </div>

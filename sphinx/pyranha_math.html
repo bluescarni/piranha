@@ -184,13 +184,13 @@ as input.</p>
 <dt id="pyranha.math.cos">
 <code class="descclassname">pyranha.math.</code><code class="descname">cos</code><span class="sig-paren">(</span><em>arg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#cos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.cos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cosine.</p>
-<p>The supported types are <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code> and any series type that supports
+<p>The supported types are <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code> and any symbolic type that supports
 the operation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arg</strong> (<code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code>, or a supported series type.) &#8211; cosine argument</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arg</strong> (<code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code>, or a supported symbolic type.) &#8211; cosine argument</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">cosine of <em>arg</em></td>
 </tr>
@@ -207,7 +207,7 @@ low-level function</td>
 <span class="gr">ValueError</span>: <span class="n">cannot compute the cosine of a non-zero integer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span> 
 <span class="go">-0.4161468...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">)))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">))</span>
 <span class="go">cos(2*x)</span>
@@ -276,7 +276,7 @@ and this type needs to support the operations needed to compute the evaluation.<
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arg</strong> (<em>a series type</em>) &#8211; argument for the evaluation</li>
+<li><strong>arg</strong> (<em>a symbolic type</em>) &#8211; argument for the evaluation</li>
 <li><strong>eval_dict</strong> (<em>a dictionary mapping strings to values, with all values of the same type</em>) &#8211; evaluation dictionary</li>
 </ul>
 </td>
@@ -295,7 +295,7 @@ and this type needs to support the operations needed to compute the evaluation.<
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">})</span>
@@ -370,14 +370,14 @@ and this type needs to support the operations needed to compute the evaluation.<
 <code class="descclassname">pyranha.math.</code><code class="descname">gcd</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#gcd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.gcd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Greatest common divisor.</p>
 <p>This function is a wrapper around a lower level function. It will calculate the GCD of <em>x</em> and <em>y</em>,
-supporting <code class="docutils literal"><span class="pre">int</span></code> and various series types as input.</p>
+supporting <code class="docutils literal"><span class="pre">int</span></code> and various symbolic types as input.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<code class="docutils literal"><span class="pre">int</span></code> or a supported series type) &#8211; first argument</li>
-<li><strong>y</strong> (<code class="docutils literal"><span class="pre">int</span></code> or a supported series type) &#8211; second argument</li>
+<li><strong>x</strong> (<code class="docutils literal"><span class="pre">int</span></code> or a supported symbolic type) &#8211; first argument</li>
+<li><strong>y</strong> (<code class="docutils literal"><span class="pre">int</span></code> or a supported symbolic type) &#8211; second argument</li>
 </ul>
 </td>
 </tr>
@@ -394,7 +394,7 @@ supporting <code class="docutils literal"><span class="pre">int</span></code> an
 </table>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">9</span><span class="p">)</span>
 <span class="go">3</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">integer</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">integer</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">integer</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="mi">1</span><span class="p">),(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="p">))</span> 
@@ -415,7 +415,7 @@ supporting <code class="docutils literal"><span class="pre">int</span></code> an
 <dt id="pyranha.math.integrate">
 <code class="descclassname">pyranha.math.</code><code class="descname">integrate</code><span class="sig-paren">(</span><em>arg</em>, <em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#integrate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.integrate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Integration.</p>
-<p>Compute the antiderivative of <em>arg</em> with respect to the variable <em>name</em>. <em>arg</em> must be a series type and
+<p>Compute the antiderivative of <em>arg</em> with respect to the variable <em>name</em>. <em>arg</em> must be a symbolic type and
 <em>name</em> a string. The success of the operation is not guaranteed, and depends both on the type and value of
 <em>arg</em>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -423,7 +423,7 @@ supporting <code class="docutils literal"><span class="pre">int</span></code> an
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arg</strong> (<em>a series type</em>) &#8211; argument for the integration</li>
+<li><strong>arg</strong> (<em>a symbolic type</em>) &#8211; argument for the integration</li>
 <li><strong>name</strong> (<em>string</em>) &#8211; name of the variable with respect to which the integration will be calculated</li>
 </ul>
 </td>
@@ -437,7 +437,7 @@ low-level function</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span>
@@ -459,13 +459,13 @@ low-level function</p>
 <code class="descclassname">pyranha.math.</code><code class="descname">invert</code><span class="sig-paren">(</span><em>arg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#invert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.invert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inverse.</p>
 <p>Compute the multiplicative inverse of the argument.
-The supported types are <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code> and any series type that supports
+The supported types are <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code> and any symbolic type that supports
 the operation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arg</strong> (<code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code>, or a supported series type.) &#8211; inversion argument</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arg</strong> (<code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code>, or a supported symbolic type.) &#8211; inversion argument</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">inverse of <em>arg</em></td>
 </tr>
@@ -483,7 +483,7 @@ low-level function</td>
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
 <span class="gr">ZeroDivisionError</span>: <span class="n">division by zero</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span><span class="p">,</span> <span class="n">divisor</span><span class="p">,</span> <span class="n">divisor_series</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span><span class="p">,</span> <span class="n">divisor</span><span class="p">,</span> <span class="n">divisor_series</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">invert</span><span class="p">(</span><span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">))</span>
 <span class="go">x**-1</span>
@@ -514,7 +514,7 @@ a lower-level C++ routine that supports various combinations for the types of <e
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arg</strong> (<em>a series type</em>) &#8211; argument for the substitution</li>
+<li><strong>arg</strong> (<em>a symbolic type</em>) &#8211; argument for the substitution</li>
 <li><strong>name</strong> (<em>a string</em>) &#8211; name of the symbol whose power will be substituted</li>
 <li><strong>n</strong> (<em>an integer</em>) &#8211; power of <em>name</em> that will be substituted</li>
 <li><strong>x</strong> (<em>any type supported by the low-level C++ routine</em>) &#8211; the quantity that will be substituted for the power of <em>name</em></li>
@@ -532,7 +532,7 @@ a lower-level C++ routine that supports various combinations for the types of <e
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">rational</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">rational</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ipow_subs</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">5</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
@@ -547,6 +547,65 @@ a lower-level C++ routine that supports various combinations for the types of <e
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.math.lambdify">
+<code class="descclassname">pyranha.math.</code><code class="descname">lambdify</code><span class="sig-paren">(</span><em>t</em>, <em>x</em>, <em>names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#lambdify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.lambdify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn a symbolic object into a function.</p>
+<p>This function is a wrapper around <a class="reference internal" href="#pyranha.math.evaluate" title="pyranha.math.evaluate"><code class="xref py py-func docutils literal"><span class="pre">evaluate()</span></code></a> which returns a callable object that can be used
+to evaluate the input argument <em>x</em>. The call operator of the returned object takes as input a collection of length
+<code class="docutils literal"><span class="pre">len(names)</span></code> of objects of type <em>t</em> which, for the purpose of evaluation, are associated to the list of
+symbols <em>names</em> at the corresponding positions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t</strong> (<em>a supported type</em>) &#8211; the type that will be used for the evaluation of <em>x</em></li>
+<li><strong>x</strong> (<em>a supported symbolic type</em>) &#8211; symbolic object that will be evaluated</li>
+<li><strong>names</strong> (<em>a list of strings</em>) &#8211; the symbols that will be used for evaluation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a callable object that can be used to evaluate <em>x</em> with objects of type <em>t</em></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if <em>t</em> is not a type, or if <em>names</em> is not a list of strings, or any other exception
+raised by the invoked low-level function</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> if <em>names</em> contains duplicates</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">z</span><span class="p">,[</span><span class="s1">&#39;z&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">Fraction(7, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">Fraction(-5, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">invalid size of the evaluation vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">z</span><span class="p">,[</span><span class="s1">&#39;z&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">the &#39;t&#39; argument must be a type</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">z</span><span class="p">,[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">the &#39;names&#39; argument must be a list of strings</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">z</span><span class="p">,[</span><span class="s1">&#39;z&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">])</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">the &#39;names&#39; argument contains duplicates</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -598,14 +657,14 @@ low-level function</p>
 <dt id="pyranha.math.partial">
 <code class="descclassname">pyranha.math.</code><code class="descname">partial</code><span class="sig-paren">(</span><em>arg</em>, <em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#partial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.partial" title="Permalink to this definition">¶</a></dt>
 <dd><p>Partial derivative.</p>
-<p>Compute the partial derivative of <em>arg</em> with respect to the variable <em>name</em>. <em>arg</em> must be a series type and
+<p>Compute the partial derivative of <em>arg</em> with respect to the variable <em>name</em>. <em>arg</em> must be a symbolic type and
 <em>name</em> a string.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arg</strong> (<em>a series type</em>) &#8211; argument for the partial derivative</li>
+<li><strong>arg</strong> (<em>a symbolic type</em>) &#8211; argument for the partial derivative</li>
 <li><strong>name</strong> (<em>string</em>) &#8211; name of the variable with respect to which the derivative will be calculated</li>
 </ul>
 </td>
@@ -619,7 +678,7 @@ low-level function</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">integer</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">integer</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">integer</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">partial</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
@@ -637,15 +696,15 @@ low-level function</p>
 <code class="descclassname">pyranha.math.</code><code class="descname">pbracket</code><span class="sig-paren">(</span><em>f</em>, <em>g</em>, <em>p_list</em>, <em>q_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#pbracket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.pbracket" title="Permalink to this definition">¶</a></dt>
 <dd><p>Poisson bracket.</p>
 <p>Compute the Poisson bracket of <em>f</em> and <em>g</em> with respect to the momenta with names in <em>p_list</em>
-and coordinates with names in <em>q_list</em>. <em>f</em> and <em>g</em> must be series of the same type, and
+and coordinates with names in <em>q_list</em>. <em>f</em> and <em>g</em> must be symbolic objects of the same type, and
 <em>p_list</em> and <em>q_list</em> lists of strings with the same size and no duplicate entries.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>f</strong> (<em>a series type</em>) &#8211; first argument</li>
-<li><strong>g</strong> (<em>a series type</em>) &#8211; second argument</li>
+<li><strong>f</strong> (<em>a symbolic type</em>) &#8211; first argument</li>
+<li><strong>g</strong> (<em>a symbolic type</em>) &#8211; second argument</li>
 <li><strong>p_list</strong> (<em>list of strings</em>) &#8211; list of momenta names</li>
 <li><strong>q_list</strong> (<em>list of strings</em>) &#8211; list of coordinates names</li>
 </ul>
@@ -665,7 +724,7 @@ and coordinates with names in <em>q_list</em>. <em>f</em> and <em>g</em> must be
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pbracket</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="n">v</span><span class="p">,[</span><span class="s1">&#39;v&#39;</span><span class="p">],[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
@@ -690,13 +749,13 @@ and coordinates with names in <em>q_list</em>. <em>f</em> and <em>g</em> must be
 <dt id="pyranha.math.sin">
 <code class="descclassname">pyranha.math.</code><code class="descname">sin</code><span class="sig-paren">(</span><em>arg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#sin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.sin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sine.</p>
-<p>The supported types are <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code> and any series type that supports
+<p>The supported types are <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code> and any symbolic type that supports
 the operation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arg</strong> (<code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code>, or a supported series type.) &#8211; sine argument</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arg</strong> (<code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">Fraction</span></code>, <code class="docutils literal"><span class="pre">mpf</span></code>, or a supported symbolic type.) &#8211; sine argument</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">sine of <em>arg</em></td>
 </tr>
@@ -713,7 +772,7 @@ low-level function</td>
 <span class="gr">ValueError</span>: <span class="n">cannot compute the cosine of a non-zero integer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span> 
 <span class="go">0.9092974...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">)))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">))</span>
 <span class="go">sin(2*x)</span>
@@ -737,7 +796,7 @@ supports various combinations for the types of <em>arg</em> and <em>x</em>.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arg</strong> (<em>a series type</em>) &#8211; argument for the substitution</li>
+<li><strong>arg</strong> (<em>a symbolic type</em>) &#8211; argument for the substitution</li>
 <li><strong>name</strong> (<em>a string</em>) &#8211; name of the symbol to be substituted</li>
 <li><strong>x</strong> (<em>any type supported by the low-level C++ routine</em>) &#8211; the quantity that will be substituted for <em>name</em></li>
 </ul>
@@ -754,7 +813,7 @@ supports various combinations for the types of <em>arg</em> and <em>x</em>.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
@@ -953,7 +1012,7 @@ a lower-level C++ routine that supports various combinations for the types of <e
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arg</strong> (<em>a series type</em>) &#8211; argument for the substitution</li>
+<li><strong>arg</strong> (<em>a symbolic type</em>) &#8211; argument for the substitution</li>
 <li><strong>name</strong> (<em>a string</em>) &#8211; name of the symbol whose cosine and sine will be substituted</li>
 <li><strong>x</strong> (<em>any type supported by the low-level C++ routine</em>) &#8211; the quantity that will be substituted for the cosine of <em>name</em></li>
 <li><strong>y</strong> (<em>any type supported by the low-level C++ routine</em>) &#8211; the quantity that will be substituted for the sine of <em>name</em></li>
@@ -971,7 +1030,7 @@ a lower-level C++ routine that supports various combinations for the types of <e
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">poisson_series</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">short</span><span class="p">,</span> <span class="n">monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">poisson_series</span><span class="p">(</span><span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">monomial</span><span class="p">(</span><span class="n">short</span><span class="p">)))()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t_subs</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">),</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
@@ -993,15 +1052,15 @@ a lower-level C++ routine that supports various combinations for the types of <e
 <p>This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson bracket test.
 The transformation is expressed as two separate list of objects, <em>new_p</em> and <em>new_q</em>, representing the new momenta
 and coordinates as functions of the old momenta <em>p_list</em> and <em>q_list</em>.</p>
-<p>The function requires <em>new_p</em> and <em>new_q</em> to be lists of series of the same type, and
+<p>The function requires <em>new_p</em> and <em>new_q</em> to be lists of symbolic objects of the same type, and
 <em>p_list</em> and <em>q_list</em> lists of strings with the same size and no duplicate entries.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>new_p</strong> (<em>list of series instances</em>) &#8211; list of objects representing the new momenta</li>
-<li><strong>new_q</strong> (<em>list of series instances</em>) &#8211; list of objects representing the new coordinates</li>
+<li><strong>new_p</strong> (<em>list of symbolic instances</em>) &#8211; list of objects representing the new momenta</li>
+<li><strong>new_q</strong> (<em>list of symbolic instances</em>) &#8211; list of objects representing the new coordinates</li>
 <li><strong>p_list</strong> (<em>list of strings</em>) &#8211; list of momenta names</li>
 <li><strong>q_list</strong> (<em>list of strings</em>) &#8211; list of coordinates names</li>
 </ul>
@@ -1021,7 +1080,7 @@ and coordinates as functions of the old momenta <em>p_list</em> and <em>q_list</
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">L</span><span class="p">,</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">,</span><span class="n">l</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">h</span> <span class="o">=</span> <span class="p">[</span><span class="n">pt</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="s1">&#39;LGHlgh&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">transformation_is_canonical</span><span class="p">([</span><span class="o">-</span><span class="n">l</span><span class="p">],[</span><span class="n">L</span><span class="p">],[</span><span class="s1">&#39;L&#39;</span><span class="p">],[</span><span class="s1">&#39;l&#39;</span><span class="p">])</span>
@@ -1067,7 +1126,7 @@ and coordinates as functions of the old momenta <em>p_list</em> and <em>q_list</
 <code class="descclassname">pyranha.math.</code><code class="descname">truncate_degree</code><span class="sig-paren">(</span><em>arg</em>, <em>max_degree</em>, <em>names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#truncate_degree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.truncate_degree" title="Permalink to this definition">¶</a></dt>
 <dd><p>Degree-based truncation.</p>
 <p>This function will eliminate from <em>arg</em> parts whose degree is greater than <em>max_degree</em>. The truncation
-operates on series types both by eliminating entire terms and by truncating recursively the coefficients,
+operates on symbolic types both by eliminating entire terms and by truncating recursively the coefficients,
 if possible.</p>
 <p>If <em>names</em> is <code class="docutils literal"><span class="pre">None</span></code>, then the total degree is considered for the truncation. Otherwise, <em>names</em> must be
 a list of strings enumerating the variables to be considered for the computation of the degree.</p>
@@ -1076,7 +1135,7 @@ a list of strings enumerating the variables to be considered for the computation
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arg</strong> (<em>a series type</em>) &#8211; argument for the truncation</li>
+<li><strong>arg</strong> (<em>a symbolic type</em>) &#8211; argument for the truncation</li>
 <li><strong>max_degree</strong> (a type comparable to the type representing the degree of <em>arg</em>) &#8211; maximum degree that will be kept in <em>arg</em></li>
 <li><strong>names</strong> (<code class="docutils literal"><span class="pre">None</span></code> or a list of strings) &#8211; list of the names of the variables to be considered in the computation of the degree</li>
 </ul>
@@ -1093,7 +1152,7 @@ a list of strings enumerating the variables to be considered for the computation
 </tr>
 </tbody>
 </table>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span><span class="p">,</span> <span class="n">poisson_series</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span><span class="p">,</span> <span class="n">poisson_series</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">truncate_degree</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="n">z</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> 
