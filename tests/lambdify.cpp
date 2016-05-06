@@ -137,3 +137,14 @@ BOOST_AUTO_TEST_CASE(lambdify_test_01)
 		BOOST_CHECK_EQUAL(l({yn,xn,zn}),evaluate<integer>(tmp,{{"x",xn},{"y",yn},{"z",zn}}));
 	}
 }
+
+BOOST_AUTO_TEST_CASE(lambdify_test_02)
+{
+	// Test getters.
+	using p_type = polynomial<integer,k_monomial>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	auto l0 = lambdify<integer>(x+y+z,{"z","y","x"});
+	BOOST_CHECK_EQUAL(x+y+z,l0.get_evaluable());
+	const auto v = std::vector<std::string>({"z","y","x"});
+	BOOST_CHECK_EQUAL_COLLECTIONS(v.begin(),v.end(),l0.get_names().begin(),l0.get_names().end());
+}

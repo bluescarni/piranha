@@ -221,10 +221,19 @@ class lambdified
             }
             return math::evaluate(m_x,m_eval_dict);
         }
+        /// Get evaluation object.
+        /**
+         * @return a const reference to the internal copy of the object of type \p T created
+         * upon construction.
+         */
         const T &get_evaluable() const
         {
             return m_x;
         }
+        /// Get evaluation names.
+        /**
+         * @return a const reference to the vector of symbol names used as second construction argument.
+         */
         const std::vector<std::string> &get_names() const
         {
             return m_names;

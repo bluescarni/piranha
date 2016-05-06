@@ -117,7 +117,6 @@ see https://www.gnu.org/licenses/. */
  * system and maybe the list of arguments. Also, what happens if we expose, say, polynomial<double> *and* polynomial<double,k_monomial>,
  * supposing that they are the same type one day?
  * \todo should the print coefficient operator of real print the precision as well or is the number of digits enough hint?
- * \todo pyranha: in the docstrings probably we should change from relative to absolute imports, for clarity.
  * \todo need to review the requirements on all std object we use as members of classes. We often require them to be noexcept
  * but they do not need to be by the standard (e.g., hash, equal_to, vector, ...). Note that in all our classes we mark move
  * operations as noexcept so we don't really need to require std members to be noexcept (if they throw an exception - unlikely
