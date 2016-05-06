@@ -91,6 +91,7 @@ namespace piranha
 namespace detail
 {
 
+// Tag for polynomial instances.
 struct polynomial_tag {};
 
 // Type trait to check the key type in polynomial.
@@ -638,7 +639,7 @@ enum class polynomial_gcd_algorithm
 /**
  * This class represents multivariate polynomials as collections of multivariate polynomial terms.
  * \p Cf represents the ring over which the polynomial is defined, while \p Key represents the monomial type.
- * 
+ *
  * Polynomials support an automatic degree-based truncation mechanism, disabled by default, which comes into play during
  * polynomial multiplication. It allows to discard automatically all those terms, generated during series multiplication,
  * whose total or partial degree is greater than a specified limit. This mechanism can be configured via a set of
@@ -646,30 +647,30 @@ enum class polynomial_gcd_algorithm
  * - the total and partial degree of the series are represented by the same type \p D,
  * - all the truncation-related requirements in piranha::power_series are satsified,
  * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
- * 
+ *
  * This class satisfies the piranha::is_series and piranha::is_cf type traits.
- * 
+ *
  * \warning
  * The division and GCD operations are known to have poor performance, especially with large operands. Performance
  * will be improved in future versions.
  *
  * ## Type requirements ##
- * 
+ *
  * \p Cf must be suitable for use in piranha::series as first template argument,
  * \p Key must be an instance of either piranha::monomial or piranha::kronecker_monomial.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the same guarantee as the base series type it derives from.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move semantics is equivalent to the move semantics of the base series type it derives from.
  *
  * ## Serialization ##
  *
  * This class supports serialization if the underlying coefficient and key types do.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename Key>
@@ -1203,9 +1204,9 @@ class polynomial:
 		 *
 		 * Will construct a univariate polynomial made of a single term with unitary coefficient and exponent, representing
 		 * the symbolic variable \p name. The type of \p name must be a string type (either C or C++).
-		 * 
+		 *
 		 * @param[in] name name of the symbolic variable that the polynomial will represent.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::symbol_set::add(),
 		 * - the constructor of piranha::symbol from string,
@@ -1236,17 +1237,17 @@ class polynomial:
 		 * \note
 		 * This method is enabled only if piranha::series::pow() can be called with exponent \p x
 		 * and the key type can be raised to the power of \p x via its exponentiation method.
-		 * 
+		 *
 		 * This exponentiation override will check if the polynomial consists of a single-term with non-unitary
 		 * key. In that case, the return polynomial will consist of a single term with coefficient computed via
 		 * piranha::math::pow() and key computed via the monomial exponentiation method.
-		 * 
+		 *
 		 * Otherwise, the base (i.e., default) exponentiation method will be used.
-		 * 
+		 *
 		 * @param[in] x exponent.
-		 * 
+		 *
 		 * @return \p this to the power of \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the <tt>is_unitary()</tt> and exponentiation methods of the key type,
 		 * - piranha::math::pow(),
@@ -1276,7 +1277,7 @@ class polynomial:
 		 * \note
 		 * This method is enabled only if <tt>piranha::polynomial::pow(-1)</tt> is a well-formed
 		 * expression.
-		 * 
+		 *
 		 * @return the calling polynomial raised to -1 using piranha::polynomial::pow().
 		 *
 		 * @throws unspecified any exception thrown by piranha::polynomial::pow().
@@ -1294,15 +1295,15 @@ class polynomial:
 		 * This method will attempt to compute the antiderivative of the polynomial term by term. If the term's coefficient does not depend on
 		 * the integration variable, the result will be calculated via the integration of the corresponding monomial.
 		 * Integration with respect to a variable appearing to the power of -1 will fail.
-		 * 
+		 *
 		 * Otherwise, a strategy of integration by parts is attempted, its success depending on the integrability
 		 * of the coefficient and on the value of the exponent of the integration variable. The integration will
 		 * fail if the exponent is negative or non-integral.
-		 * 
+		 *
 		 * @param[in] name integration variable.
-		 * 
+		 *
 		 * @return the antiderivative of \p this with respect to \p name.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the integration procedure fails.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::symbol construction,
@@ -1532,13 +1533,13 @@ class polynomial:
 		 * \note
 		 * This method is enabled only if the coefficient type \p Cf is a polynomial whose key type is \p Key, and which supports
 		 * the expression <tt>a += b * c</tt> where \p a, \p b and \p c are all instances of \p Cf).
-		 * 
+		 *
 		 * This method is the opposite of piranha::polynomial::split(): given a polynomial with polynomial coefficients,
 		 * it will produce a multivariate polynomial in which the arguments of \p this and the arguments of the coefficients
 		 * have been joined.
-		 * 
+		 *
 		 * @return the joined counterpart of \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::series::set_symbol_set() and piranha::series::insert(),
 		 * - term construction,
@@ -1936,12 +1937,12 @@ class polynomial:
 		 * This method is enabled only if the following conditions hold:
 		 * - the coefficient type supports piranha::math::abs(), yielding the type <tt>height_type<T></tt>,
 		 * - <tt>height_type<T></tt> is constructible from \p int, less-than comparable, move-assignable and copy or move constructible.
-		 * 
+		 *
 		 * The height of a polynomial is defined as the maximum of the absolute values of the coefficients. If the polynomial
 		 * is empty, zero will be returned.
-		 * 
+		 *
 		 * @return the height of \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the construction, assignment, comparison, and absolute value calculation
 		 * of <tt>height_type<T></tt>.
 		 */
@@ -2185,13 +2186,13 @@ const bool has_exact_ring_operations<T,detail::poly_ero_enabler<T>>::value;
  * ## Type requirements ##
  *
  * \p Series must be suitable for use in piranha::base_series_multiplier.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the same guarantee as piranha::base_series_multiplier.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move semantics is equivalent to piranha::base_series_multiplier's move semantics.
  */
 template <typename Series>
@@ -2459,10 +2460,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 *   the limits of the integral type.
 		 *
 		 * If any check fails, a runtime error will be produced.
-		 * 
+		 *
 		 * @param[in] s1 first series operand.
 		 * @param[in] s2 second series operand.
-		 * 
+		 *
 		 * @throws std::overflow_error if a bounds check, as described above, fails.
 		 * @throws unspecified any exception thrown by:
 		 * - the base constructor,
@@ -2494,7 +2495,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * the integral arithmetic operations involved in the truncation logic will be checked for overflow.
 		 *
 		 * @return the result of the multiplication of the input series operands.
-		 * 
+		 *
 		 * @throws std::overflow_error in case of overflow errors.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::base_series_multiplier::plain_multiplication(),

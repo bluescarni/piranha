@@ -50,6 +50,9 @@ namespace piranha
 namespace detail
 {
 
+// Tag for power series instances.
+struct power_series_tag {};
+
 // Detect power series terms.
 template <typename T>
 struct ps_term_score
@@ -190,7 +193,7 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Derived>
-class power_series: public Series
+class power_series: public Series, detail::power_series_tag
 {
 		PIRANHA_TT_CHECK(is_series,Series);
 		typedef Series base;
@@ -484,17 +487,17 @@ namespace math
  * does not fulfill the requirements outlined in piranha::power_series, the call operator will be disabled.
  */
 template <typename Series>
-struct degree_impl<Series,typename std::enable_if<is_instance_of<Series,power_series>::value>::type>
+struct degree_impl<Series,typename std::enable_if<std::is_base_of<detail::power_series_tag,Series>::value>::type>
 {
 	/// Call operator.
 	/**
 	 * If available, it will call piranha::power_series::degree().
-	 * 
+	 *
 	 * @param[in] s input power series.
 	 * @param[in] args additional arguments that will be passed to the series' method.
-	 * 
+	 *
 	 * @return the degree of input series \p s.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by the invoked method of the series.
 	 */
 	template <typename ... Args>
@@ -510,17 +513,17 @@ struct degree_impl<Series,typename std::enable_if<is_instance_of<Series,power_se
  * does not fulfill the requirements outlined in piranha::power_series, the call operator will be disabled.
  */
 template <typename Series>
-struct ldegree_impl<Series,typename std::enable_if<is_instance_of<Series,power_series>::value>::type>
+struct ldegree_impl<Series,typename std::enable_if<std::is_base_of<detail::power_series_tag,Series>::value>::type>
 {
 	/// Call operator.
 	/**
 	 * If available, it will call piranha::power_series::ldegree().
-	 * 
+	 *
 	 * @param[in] s input power series.
 	 * @param[in] args additional arguments that will be passed to the series' method.
-	 * 
+	 *
 	 * @return the low degree of input series \p s.
-	 * 
+	 *
 	 * @throws unspecified any exception thrown by the invoked method of the series.
 	 */
 	template <typename ... Args>
@@ -536,7 +539,7 @@ struct ldegree_impl<Series,typename std::enable_if<is_instance_of<Series,power_s
  * does not fulfill the requirements outlined in piranha::power_series, the call operator will be disabled.
  */
 template <typename Series, typename T>
-struct truncate_degree_impl<Series,T,typename std::enable_if<is_instance_of<Series,power_series>::value>::type>
+struct truncate_degree_impl<Series,T,typename std::enable_if<std::is_base_of<detail::power_series_tag,Series>::value>::type>
 {
 	/// Call operator.
 	/**

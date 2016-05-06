@@ -60,6 +60,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/detail/sfinae_types.hpp"
 #include "../src/detail/type_in_tuple.hpp"
 #include "../src/invert.hpp"
+#include "../src/lambdify.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -181,6 +182,59 @@ inline auto generic_evaluate_wrapper(const S &s, bp::dict dict, const T &)
 		cpp_dict[*it] = bp::extract<T>(dict[*it])();
 	}
 	return piranha::math::evaluate(s,cpp_dict);
+}
+
+// Generic lambdify wrapper.
+template <typename S, typename U>
+inline auto generic_lambdify_wrapper(const S &s, bp::list l, const U &) -> decltype(piranha::math::lambdify<U>(s,{}))
+{
+	bp::stl_input_iterator<std::string> it(l), end;
+	std::vector<std::string> v(it,end);
+	return piranha::math::lambdify<U>(s,v);
+}
+
+template <typename T, typename U>
+inline auto lambdified_call_operator(piranha::math::lambdified<T,U> &l, bp::object o) -> decltype(l({}))
+{
+	bp::stl_input_iterator<U> it(o), end;
+	std::vector<U> values(it,end);
+	return l(values);
+}
+
+template <typename T, typename U>
+inline std::string lambdified_repr(const piranha::math::lambdified<T,U> &l)
+{
+	std::ostringstream oss;
+	oss << "Lambdified object: " << l.get_evaluable() << '\n';
+	oss << "Evaluation variables: [";
+	const auto size = l.get_names().size();
+	for (decltype(l.get_names().size()) i = 0u; i < size; ++i) {
+		oss << '"' << l.get_names()[i] << '"';
+		if (i != size - 1u) {
+			oss << ',';
+		}
+	}
+	oss << ']';
+	return oss.str();
+}
+
+// Generic wrapper for the lambdified class.
+extern std::size_t lambdified_counter;
+
+template <typename S, typename U>
+inline void generic_expose_lambdified()
+{
+	using l_type = piranha::math::lambdified<S,U>;
+	bp::class_<l_type> class_inst((std::string("_lambdified_")+std::to_string(lambdified_counter)).c_str(),bp::no_init);
+	// Expose copy/deepcopy.
+	class_inst.def("__copy__",generic_copy_wrapper<l_type>);
+	class_inst.def("__deepcopy__",generic_deepcopy_wrapper<l_type>);
+	// The call operator.
+	class_inst.def("__call__",lambdified_call_operator<S,U>);
+	// The repr.
+	class_inst.def("__repr__",lambdified_repr<S,U>);
+	// Update the exposition counter.
+	++lambdified_counter;
 }
 
 // Generic canonical transformation wrapper.
@@ -461,6 +515,8 @@ class series_exposer
 			{
 				m_series_class.def("_evaluate",generic_evaluate_wrapper<S,T>);
 				bp::def("_evaluate",generic_evaluate_wrapper<S,T>);
+				bp::def("_lambdify",generic_lambdify_wrapper<S,T>);
+				generic_expose_lambdified<S,T>();
 			}
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<!piranha::is_evaluable<S,T>::value>::type * = nullptr) const

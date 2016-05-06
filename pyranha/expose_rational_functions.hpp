@@ -131,6 +131,8 @@ struct rf_eval_exposer
 	void operator()(const U &) const
 	{
 		bp::def("_evaluate",generic_evaluate_wrapper<T,U>);
+		bp::def("_lambdify",generic_lambdify_wrapper<T,U>);
+		generic_expose_lambdified<T,U>();
 	}
 	bp::class_<T> &m_rf_class;
 };
@@ -213,7 +215,7 @@ inline void expose_rational_functions_impl()
 	rf_class.def("__pow__",piranha::math::pow<r_type,piranha::integer>);
 	rf_class.def("clear_pow_cache",r_type::clear_pow_cache).staticmethod("clear_pow_cache");
 	// Evaluation.
-	using eval_types = std::tuple<piranha::integer,piranha::rational,r_type,double,piranha::real>;
+	using eval_types = std::tuple<double,piranha::integer,piranha::rational,r_type,piranha::real>;
 	tuple_for_each(eval_types{},rf_eval_exposer<r_type>(rf_class));
 	// Subs.
 	using subs_types = std::tuple<piranha::integer,piranha::rational,p_type,q_type,r_type>;
