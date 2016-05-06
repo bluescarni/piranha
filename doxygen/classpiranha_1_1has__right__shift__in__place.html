@@ -124,7 +124,7 @@ class piranha::has_right_shift_in_place&lt; T, U &gt;</h3>
 <p>In-place right-shift type trait. </p>
 <p>Will be <code>true</code> if objects of type <code>T</code> can be right-shifted in-place by objects of type <code>U</code>.</p>
 <p>This type trait will strip <code>T</code> and <code>U</code> of reference qualifiers, and it will test the operator in the form </p><div class="fragment"><div class="line">operator&lt;&lt;=(Td &amp;, <span class="keyword">const</span> Ud &amp;)</div></div><!-- fragment --><p> where <code>Td</code> and <code>Ud</code> are <code>T</code> and <code>U</code> after the removal of reference qualifiers. E.g.: </p><div class="fragment"><div class="line"><a class="code" href="classpiranha_1_1has__right__shift__in__place.html#a19e73226a9a9dceb44145d8d4fec7ba3">has_right_shift_in_place&lt;int&gt;::value</a> == <span class="keyword">true</span>;</div><div class="line"><a class="code" href="classpiranha_1_1has__right__shift__in__place.html#a19e73226a9a9dceb44145d8d4fec7ba3">has_right_shift_in_place&lt;int,std::string&gt;::value</a> == <span class="keyword">false</span>;</div></div><!-- fragment --> 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l01168">1168</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l01136">1136</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>

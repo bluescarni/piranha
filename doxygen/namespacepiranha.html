@@ -201,6 +201,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__is__zero.html">has_is_zero</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type trait to detect the presence of the <a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a> function.  <a href="classpiranha_1_1has__is__zero.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__lambdify.html">has_lambdify</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect the presence of <a class="el" href="namespacepiranha_1_1math.html#aa870af867f3bf34a159b99b1f96ee0b4" title="Create a functor interface for piranha::math::evaluate(). ">piranha::math::lambdify()</a>.  <a href="classpiranha_1_1has__lambdify.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__ldegree.html">has_ldegree</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type trait to detect if type has a low degree property.  <a href="classpiranha_1_1has__ldegree.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -342,6 +345,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__less__than__comparable.html">is_less_than_comparable</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Less-than-comparable type trait.  <a href="classpiranha_1_1is__less__than__comparable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__mappable.html">is_mappable</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect types that can be used as mapped values in associative containers.  <a href="structpiranha_1_1is__mappable.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__multipliable.html">is_multipliable</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multipliable type trait.  <a href="classpiranha_1_1is__multipliable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -350,9 +356,6 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__nonconst__rvalue__ref.html">is_nonconst_rvalue_ref</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type is non-const rvalue reference.  <a href="structpiranha_1_1is__nonconst__rvalue__ref.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__nothrow__destructible.html">is_nothrow_destructible</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type is nothrow-destructible.  <a href="structpiranha_1_1is__nothrow__destructible.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__ostreamable.html">is_ostreamable</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type trait for classes that can be output-streamed.  <a href="classpiranha_1_1is__ostreamable.html#details">More...</a><br /></td></tr>
@@ -675,7 +678,7 @@ template&lt;typename T , typename... Args&gt; </div>
 <p>Detect widest integer type. </p>
 <p>This type alias requires <code>T</code> and <code>Args</code> (if any) to be all signed or unsigned integer types. It will be defined as the input type with the widest numerical range. </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00798">798</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00766">766</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>
@@ -694,7 +697,7 @@ template&lt;typename T , typename... Args&gt; </div>
 <p>Detect narrowest integer type. </p>
 <p>This type alias requires <code>T</code> and <code>Args</code> (if any) to be all signed or unsigned integer types. It will be defined as the input type with the narrowest numerical range. </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00790">790</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00758">758</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>
@@ -714,7 +717,7 @@ template&lt;unsigned N, typename Cf , typename Key &gt; </div>
 <p>This is a convenience alias that can be used to define multivariate polynomials as univariate polynomials with univariate polynomials as coefficients.</p>
 <p>For instance, the type </p><div class="fragment"><div class="line">r_polynomial&lt;1,double,k_monomial&gt;;</div></div><!-- fragment --><p> is exactly equivalent to </p><div class="fragment"><div class="line">polynomial&lt;double,k_monomial&gt;;</div></div><!-- fragment --><p> The type </p><div class="fragment"><div class="line">r_polynomial&lt;2,double,k_monomial&gt;;</div></div><!-- fragment --><p> is exactly equivalent to </p><div class="fragment"><div class="line">polynomial&lt;polynomial&lt;double,k_monomial&gt;,<a class="code" href="namespacepiranha.html#a8a41a40472e52a050f1c6a80ee9cf340">k_monomial</a>&gt;;</div></div><!-- fragment --><p> And so on for increasing values of <code>N</code>. <code>N</code> must be nonzero, or a compile-time error will be generated. </p>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02025">2025</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02026">2026</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -874,7 +877,7 @@ template&lt;typename T , typename Cf &gt; </div>
 </td></tr>
 </table>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l00627">627</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l00628">628</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>

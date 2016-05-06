@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.11"/>
-<title>piranha: piranha::math::degree_impl&lt; Series, typename std::enable_if&lt; is_instance_of&lt; Series, power_series &gt;::value &gt;::type &gt; Struct Template Reference</title>
+<title>piranha: piranha::math::ldegree_impl&lt; Series, typename std::enable_if&lt; std::is_base_of&lt; detail::power_series_tag, Series &gt;::value &gt;::type &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -91,40 +91,40 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="namespacepiranha_1_1math.html">math</a></li><li class="navelem"><a class="el" href="structpiranha_1_1math_1_1degree__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01is__inst8fa9c1a068e0a1a327656ae6be6e000b.html">degree_impl&lt; Series, typename std::enable_if&lt; is_instance_of&lt; Series, power_series &gt;::value &gt;::type &gt;</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="namespacepiranha_1_1math.html">math</a></li><li class="navelem"><a class="el" href="structpiranha_1_1math_1_1ldegree__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01std_1_15086bfdce5dabea8afc3c032a7f4debf.html">ldegree_impl&lt; Series, typename std::enable_if&lt; std::is_base_of&lt; detail::power_series_tag, Series &gt;::value &gt;::type &gt;</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="structpiranha_1_1math_1_1degree__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01is__instb6360827139fcb4f5716a893158c987b.html">List of all members</a>  </div>
+<a href="structpiranha_1_1math_1_1ldegree__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01std_1_1ad8154894cefbce7fdd3fc07ed91c2f8.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::math::degree_impl&lt; Series, typename std::enable_if&lt; is_instance_of&lt; Series, power_series &gt;::value &gt;::type &gt; Struct Template Reference</div>  </div>
+<div class="title">piranha::math::ldegree_impl&lt; Series, typename std::enable_if&lt; std::is_base_of&lt; detail::power_series_tag, Series &gt;::value &gt;::type &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a934cd86d1c6bd2c1f40d307a093010bd" title="Total degree. ">piranha::math::degree()</a> functor for instances of <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a>.  
- <a href="structpiranha_1_1math_1_1degree__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01is__inst8fa9c1a068e0a1a327656ae6be6e000b.html#details">More...</a></p>
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a05ad27dfa7dce556237f837c5c317890" title="Total low degree. ">piranha::math::ldegree()</a> functor for instances of <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a>.  
+ <a href="structpiranha_1_1math_1_1ldegree__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01std_1_15086bfdce5dabea8afc3c032a7f4debf.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a62d85a0e68a4b0d4fa1e2621fe208db2"><td class="memTemplParams" colspan="2">template&lt;typename... Args&gt; </td></tr>
-<tr class="memitem:a62d85a0e68a4b0d4fa1e2621fe208db2"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1degree__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01is__inst8fa9c1a068e0a1a327656ae6be6e000b.html#a62d85a0e68a4b0d4fa1e2621fe208db2">operator()</a> (const Series &amp;s, const Args &amp;...args) const  -&gt; decltype(s.degree(args...))</td></tr>
-<tr class="memdesc:a62d85a0e68a4b0d4fa1e2621fe208db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a62d85a0e68a4b0d4fa1e2621fe208db2">More...</a><br /></td></tr>
-<tr class="separator:a62d85a0e68a4b0d4fa1e2621fe208db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfec36f638d5d4ab39eadabcd177df00"><td class="memTemplParams" colspan="2">template&lt;typename... Args&gt; </td></tr>
+<tr class="memitem:adfec36f638d5d4ab39eadabcd177df00"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1ldegree__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01std_1_15086bfdce5dabea8afc3c032a7f4debf.html#adfec36f638d5d4ab39eadabcd177df00">operator()</a> (const Series &amp;s, const Args &amp;...args) const  -&gt; decltype(s.ldegree(args...))</td></tr>
+<tr class="memdesc:adfec36f638d5d4ab39eadabcd177df00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#adfec36f638d5d4ab39eadabcd177df00">More...</a><br /></td></tr>
+<tr class="separator:adfec36f638d5d4ab39eadabcd177df00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Series&gt;<br />
-struct piranha::math::degree_impl&lt; Series, typename std::enable_if&lt; is_instance_of&lt; Series, power_series &gt;::value &gt;::type &gt;</h3>
+struct piranha::math::ldegree_impl&lt; Series, typename std::enable_if&lt; std::is_base_of&lt; detail::power_series_tag, Series &gt;::value &gt;::type &gt;</h3>
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a934cd86d1c6bd2c1f40d307a093010bd" title="Total degree. ">piranha::math::degree()</a> functor for instances of <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a>. </p>
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a05ad27dfa7dce556237f837c5c317890" title="Total low degree. ">piranha::math::ldegree()</a> functor for instances of <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a>. </p>
 <p>This specialisation is activated if <code>Series</code> is an instance of <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a>. If <code>Series</code> does not fulfill the requirements outlined in <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a>, the call operator will be disabled. </p>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00487">487</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00516">516</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a62d85a0e68a4b0d4fa1e2621fe208db2"></a>
+<a class="anchor" id="adfec36f638d5d4ab39eadabcd177df00"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -136,7 +136,7 @@ template&lt;typename... Args&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">auto <a class="el" href="structpiranha_1_1math_1_1degree__impl.html">piranha::math::degree_impl</a>&lt; Series, typename std::enable_if&lt; <a class="el" href="classpiranha_1_1is__instance__of.html">is_instance_of</a>&lt; Series, <a class="el" href="classpiranha_1_1power__series.html">power_series</a> &gt;::value &gt;::type &gt;::operator() </td>
+          <td class="memname">auto <a class="el" href="structpiranha_1_1math_1_1ldegree__impl.html">piranha::math::ldegree_impl</a>&lt; Series, typename std::enable_if&lt; std::is_base_of&lt; detail::power_series_tag, Series &gt;::value &gt;::type &gt;::operator() </td>
           <td>(</td>
           <td class="paramtype">const Series &amp;&#160;</td>
           <td class="paramname"><em>s</em>, </td>
@@ -150,7 +150,7 @@ template&lt;typename... Args&gt; </div>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const -&gt; decltype(s.degree(args...))
+          <td></td><td> const -&gt; decltype(s.ldegree(args...))
 	</td>
         </tr>
       </table>
@@ -162,7 +162,7 @@ template&lt;typename... Args&gt; </div>
 </div><div class="memdoc">
 
 <p>Call operator. </p>
-<p>If available, it will call <a class="el" href="classpiranha_1_1power__series.html#a6ceadbb37c9f10543e8859af0a759814" title="Total degree. ">piranha::power_series::degree()</a>.</p>
+<p>If available, it will call <a class="el" href="classpiranha_1_1power__series.html#a5b69ae8e0fc896120a45464fc59c4cc2" title="Total low degree. ">piranha::power_series::ldegree()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>input power series. </td></tr>
@@ -170,7 +170,7 @@ template&lt;typename... Args&gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the degree of input series <code>s</code>.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the low degree of input series <code>s</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by the invoked method of the series. </td></tr>
@@ -178,7 +178,7 @@ template&lt;typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00501">501</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00530">530</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
