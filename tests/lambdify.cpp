@@ -116,10 +116,71 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
 	BOOST_CHECK_EQUAL(l0({}),3.4);
 	BOOST_CHECK_THROW(l0({1_z,2_z,3_z}),std::invalid_argument);
 	}
+	{
+	// Various checks with the extra symbol map.
+	using p_type = polynomial<integer,k_monomial>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	auto l0 = lambdify<integer>(x+y+z,{"x"},{{"z",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),1u);
+		// z is 3*x.
+		return v[0] * 3_z;
+	}},{"y",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),1u);
+		// y is 2*x.
+		return v[0] * 2_z;
+	}}});
+	BOOST_CHECK_EQUAL(l0({1_z}),6);
+	BOOST_CHECK_EQUAL(l0({2_z}),12);
+	BOOST_CHECK_EQUAL(l0({0_z}),0);
+	BOOST_CHECK_EQUAL(l0({-3_z}),-18);
+	auto l1 = lambdify<integer>(x+y+z,{"x"},{{"z",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),1u);
+		return 3_z;
+	}}});
+	// We cannot evaluate as the y evaluation value is missing.
+	BOOST_CHECK_THROW(l1({1_z}),std::invalid_argument);
+	// Too many values provided.
+	BOOST_CHECK_THROW(l1({1_z,2_z}),std::invalid_argument);
+	// Check an init list that contains duplicates.
+	BOOST_CHECK_EQUAL(lambdify<integer>(x+y,{"x"},{{"y",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),1u);
+		return 4_z;
+	}},{"y",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),1u);
+		return 3_z;
+	}}})({1_z}),5);
+	// Check with extra non-evaluated args.
+	BOOST_CHECK_EQUAL(lambdify<integer>(x+y,{"x","z"},{{"y",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),2u);
+		return 4_z;
+	}},{"t",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),2u);
+		return 3_z;
+	}}})({1_z,123_z}),5);
+	// Check with extra symbol already in positional args.
+	BOOST_CHECK_THROW(lambdify<integer>(x+y,{"x","y"},{{"y",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),2u);
+		return 4_z;
+	}}})({1_z,123_z}),std::invalid_argument);
+	// Another error check.
+	BOOST_CHECK_THROW(lambdify<integer>(x+y,{"x"},{{"y",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),2u);
+		return 4_z;
+	}}})({1_z,123_z}),std::invalid_argument);
+	// A test with only custom symbols.
+	BOOST_CHECK_EQUAL(lambdify<integer>(x+y,{},{{"x",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),0u);
+		return 4_z;
+	}},{"y",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),0u);
+		return 3_z;
+	}}})({}),7);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(lambdify_test_01)
 {
+	{
 	// A few tests with copies and moves.
 	using p_type = polynomial<integer,k_monomial>;
 	p_type x{"x"}, y{"y"}, z{"z"};
@@ -135,6 +196,32 @@ BOOST_AUTO_TEST_CASE(lambdify_test_01)
 	for (int i = 0; i < ntrials; ++i) {
 		auto xn = integer(dist(rng)), yn = integer(dist(rng)), zn = integer(dist(rng));
 		BOOST_CHECK_EQUAL(l({yn,xn,zn}),evaluate<integer>(tmp,{{"x",xn},{"y",yn},{"z",zn}}));
+	}
+	}
+	{
+	using p_type = polynomial<integer,k_monomial>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	auto l0 = lambdify<integer>(x+y+z,{"x","y"},{{"z",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),2u);
+		return v[0]*v[1];
+	}}});
+	auto l1(l0);
+	BOOST_CHECK_EQUAL(l0({1_z,2_z}),l1({1_z,2_z}));
+	BOOST_CHECK_EQUAL(l0({1_z,2_z}),5);
+	auto l2(std::move(l1));
+	BOOST_CHECK_EQUAL(l0({1_z,2_z}),l2({1_z,2_z}));
+	BOOST_CHECK_EQUAL(l0({1_z,2_z}),5);
+	// Random testing.
+	std::uniform_int_distribution<int> dist(-10,10);
+	const auto tmp = x*x-6*y+z*y*x;
+	auto l = lambdify<integer>(tmp,{"y","x"},{{"z",[](const std::vector<integer> &v) -> integer {
+		BOOST_CHECK_EQUAL(v.size(),2u);
+		return v[0]*v[1];
+	}}});
+	for (int i = 0; i < ntrials; ++i) {
+		auto xn = integer(dist(rng)), yn = integer(dist(rng));
+		BOOST_CHECK_EQUAL(l({yn,xn}),evaluate<integer>(tmp,{{"x",xn},{"y",yn},{"z",xn*yn}}));
+	}
 	}
 }
 

@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_LAMBDIFY_HPP
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -89,35 +90,65 @@ class lambdified
         static_assert(std::is_same<T,typename std::decay<T>::type>::value,"Invalid type.");
         static_assert(std::is_same<U,typename std::decay<U>::type>::value,"Invalid type.");
         static_assert(detail::math_lambdified_reqs<T,U>::value,"Invalid types.");
-        using eval_type = decltype(math::evaluate(std::declval<const T &>(),
-            std::declval<const std::unordered_map<std::string,U> &>()));
         // Constructor implementation.
-        void construct(const std::vector<std::string> &names)
+        void construct()
         {
             // Check if there are duplicates.
-            auto names_copy(names);
+            auto names_copy(m_names);
             std::sort(names_copy.begin(),names_copy.end());
             if (std::unique(names_copy.begin(),names_copy.end()) != names_copy.end()) {
                 piranha_throw(std::invalid_argument,"the list of evaluation symbols contains duplicates");
             }
-            // Fill in the eval dict and the vector of pointers.
-            for (const auto &s: names) {
+            // Fill in the eval dict and the vector of pointers, and make sure
+            // that m_extra_map does not contain anything that is already in m_names.
+            for (const auto &s: m_names) {
+                if (m_extra_map.find(s) != m_extra_map.end()) {
+                    piranha_throw(std::invalid_argument,"the extra symbols map contains symbol '"
+                        + s + "', which is already in the symbol list used for the construction "
+                        "of the lambdified object");
+                }
                 const auto ret = m_eval_dict.emplace(std::make_pair(s,U{}));
                 piranha_assert(ret.second);
                 m_ptrs.push_back(std::addressof(ret.first->second));
             }
+            // Fill in the extra symbols.
+            for (const auto &p: m_extra_map) {
+                const auto ret = m_eval_dict.emplace(std::make_pair(p.first,U{}));
+                piranha_assert(ret.second);
+                m_ptrs.push_back(std::addressof(ret.first->second));
+            }
         }
-        // Reconstruct the vector of pointers after a copy or move operation.
+        // Reconstruct the vector of pointers following copy or move construction.
         void reconstruct_ptrs()
         {
+            // m_ptrs must be empty because we assume this method is called only as part of
+            // the copy/move ctors.
             piranha_assert(m_ptrs.empty());
-            piranha_assert(m_names.size() == m_eval_dict.size());
+            piranha_assert(m_eval_dict.size() >= m_extra_map.size() &&
+                m_names.size() == m_eval_dict.size() - m_extra_map.size());
+            // Take care first of the positional argument.
             for (const auto &s: m_names) {
                 piranha_assert(m_eval_dict.count(s) == 1u);
                 m_ptrs.push_back(std::addressof(m_eval_dict.find(s)->second));
             }
+            // The extra symbols.
+            for (const auto &p: m_extra_map) {
+                piranha_assert(m_eval_dict.count(p.first) == 1u);
+                m_ptrs.push_back(std::addressof(m_eval_dict.find(p.first)->second));
+            }
+            // Make sure the sizes are consistent.
+            piranha_assert(m_ptrs.size() == static_cast<decltype(m_ptrs.size())>(m_names.size()) +
+                m_extra_map.size());
         }
     public:
+        /// Evaluation type.
+        /**
+         * This is the type resulting from evaluating objects of type \p T with objects of type \p U
+         * via piranha::math::evaluate().
+         */
+        using eval_type = decltype(math::evaluate(std::declval<const T &>(),
+            std::declval<const std::unordered_map<std::string,U> &>()));
+        using extra_map_type = std::unordered_map<std::string,std::function<U(const std::vector<U> &)>>;
         /// Constructor.
         /**
          * This constructor will create an internal copy of \p x, the object that will be evaluated
@@ -137,9 +168,10 @@ class lambdified
          * - the copy constructor of \p T,
          * - the construction of objects of type \p U.
          */
-        explicit lambdified(const T &x, const std::vector<std::string> &names):m_x(x),m_names(names)
+        explicit lambdified(const T &x, const std::vector<std::string> &names,
+            extra_map_type extra_map = extra_map_type{}):m_x(x),m_names(names),m_extra_map(extra_map)
         {
-            construct(names);
+            construct();
         }
         /// Constructor (move overload).
         /**
@@ -156,9 +188,11 @@ class lambdified
          * - the move constructor of \p T,
          * - the construction of objects of type \p U.
          */
-        explicit lambdified(T &&x, const std::vector<std::string> &names):m_x(std::move(x)),m_names(names)
+        explicit lambdified(T &&x, const std::vector<std::string> &names,
+            extra_map_type extra_map = extra_map_type{}):
+            m_x(std::move(x)),m_names(names),m_extra_map(extra_map)
         {
-            construct(names);
+            construct();
         }
         /// Copy constructor.
         /**
@@ -166,7 +200,8 @@ class lambdified
          *
          * @throws unspecified any exception thrown by the copy constructor of the internal members.
          */
-        lambdified(const lambdified &other):m_x(other.m_x),m_names(other.m_names),m_eval_dict(other.m_eval_dict)
+        lambdified(const lambdified &other):m_x(other.m_x),m_names(other.m_names),m_eval_dict(other.m_eval_dict),
+            m_extra_map(other.m_extra_map)
         {
             reconstruct_ptrs();
         }
@@ -177,7 +212,7 @@ class lambdified
          * @throws unspecified any exception thrown by the move constructor of the internal members.
          */
         lambdified(lambdified &&other):m_x(std::move(other.m_x)),m_names(std::move(other.m_names)),
-            m_eval_dict(std::move(other.m_eval_dict))
+            m_eval_dict(std::move(other.m_eval_dict)),m_extra_map(std::move(other.m_extra_map))
         {
             // NOTE: it looks like we cannot be sure the moved-in pointers are still valid.
             // Let's just make sure.
@@ -208,16 +243,30 @@ class lambdified
          */
         eval_type operator()(const std::vector<U> &values)
         {
-            if (unlikely(values.size() != m_eval_dict.size())) {
+            if (unlikely(values.size() != m_eval_dict.size() - m_extra_map.size())) {
                 piranha_throw(std::invalid_argument,"the size of the vector of evaluation values does not "
                     "match the size of the symbol list used during construction");
             }
             piranha_assert(values.size() == m_names.size());
-            for (decltype(values.size()) i = 0u; i < values.size(); ++i) {
+            decltype(values.size()) i = 0u;
+            for (; i < values.size(); ++i) {
                 auto ptr = m_ptrs[static_cast<decltype(m_ptrs.size())>(i)];
                 piranha_assert(ptr == std::addressof(m_eval_dict.find(
                     m_names[static_cast<decltype(m_names.size())>(i)])->second));
                 *ptr = values[i];
+            }
+            // NOTE: here it is crucial that the iteration order on m_extra_map is the same
+            // as it was during the construction of the m_ptrs vector, otherwise we are associating
+            // values to the wrong symbols. Luckily, it seems like iterating on a const unordered_map
+            // multiple times yields the same order:
+            // http://stackoverflow.com/questions/18301302/is-forauto-i-unordered-map-guaranteed-to-have-the-same-order-every-time
+            // https://groups.google.com/a/isocpp.org/forum/#!topic/std-discussion/kHYFUhsauhU
+            for (const auto &p: m_extra_map) {
+                piranha_assert(i < m_ptrs.size());
+                auto ptr = m_ptrs[static_cast<decltype(m_ptrs.size())>(i)];
+                piranha_assert(ptr == std::addressof(m_eval_dict.find(p.first)->second));
+                *ptr = p.second(values);
+                ++i;
             }
             return math::evaluate(m_x,m_eval_dict);
         }
@@ -239,10 +288,11 @@ class lambdified
             return m_names;
         }
     private:
-        const T m_x;
-        const std::vector<std::string> m_names;
+        T m_x;
+        std::vector<std::string> m_names;
         std::unordered_map<std::string,U> m_eval_dict;
         std::vector<U *> m_ptrs;
+        extra_map_type m_extra_map;
 };
 
 }
@@ -255,6 +305,10 @@ template <typename T, typename U>
 using math_lambdify_type = typename std::enable_if<
         math_lambdified_reqs<typename std::decay<T>::type,typename std::decay<U>::type>::value,
         math::lambdified<typename std::decay<T>::type, typename std::decay<U>::type>>::type;
+
+// Shortcut for the extra symbols map type.
+template <typename T, typename U>
+using math_lambdify_extra_map_type = typename math_lambdify_type<T,U>::extra_map_type;
 
 }
 
@@ -289,10 +343,11 @@ namespace math
  * @throws unspecified any exception thrown by the constructor of piranha::math::lambdified.
  */
 template <typename U, typename T>
-inline detail::math_lambdify_type<T,U> lambdify(T &&x, const std::vector<std::string> &names)
+inline detail::math_lambdify_type<T,U> lambdify(T &&x, const std::vector<std::string> &names,
+    detail::math_lambdify_extra_map_type<T,U> extra_map = detail::math_lambdify_extra_map_type<T,U>{})
 {
     return lambdified<typename std::decay<T>::type, typename std::decay<U>::type>(
-        std::forward<T>(x),names);
+        std::forward<T>(x),names,extra_map);
 }
 
 }
