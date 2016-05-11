@@ -148,6 +148,10 @@ class lambdified
          */
         using eval_type = decltype(math::evaluate(std::declval<const T &>(),
             std::declval<const std::unordered_map<std::string,U> &>()));
+        /// The map type for the custom evaluation of symbols.
+        /**
+         * See the constructor documentation for an explanation of how this type is used.
+         */
         using extra_map_type = std::unordered_map<std::string,std::function<U(const std::vector<U> &)>>;
         /// Constructor.
         /**
@@ -158,10 +162,22 @@ class lambdified
          * That is, the values in the vector passed to operator()() are associated
          * to the symbols in \p names at the corresponding positions.
          *
+         * The optional argument \p extra_map can be used to specify how to evaluate specific symbols.
+         * That is, \p extra_map associates symbol names to functions of signature
+         * @code
+         * U (const std::vector<U> &)
+         * @endcode
+         * When operator()() is called with a vector of values \p v, for each symbol \p s in \p extra_map
+         * the associated function is called with \p v as an argument, and the return value is used as evaluation
+         * value for \p s in the subsequent call to math::evaluate(). \p extra_map must not contain symbol names appearing
+         * in \p names.
+         *
          * @param[in] x the object that will be evaluated by operator()().
          * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
+         * @param[in] extra_map the custom symbol evaluation map.
          *
-         * @throws std::invalid_argument if \p names contains duplicates.
+         * @throws std::invalid_argument if \p names contains duplicates or if \p extra_map contains symbol names
+         * already present in \p names.
          * @throws unspecified any exception thrown by:
          * - memory errors in standard containers,
          * - the public interface of std::unordered_map,
@@ -180,8 +196,10 @@ class lambdified
          *
          * @param[in] x the object that will be evaluated by operator()().
          * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
+         * @param[in] extra_map the custom symbol evaluation map.
          *
-         * @throws std::invalid_argument if \p names contains duplicates.
+         * @throws std::invalid_argument if \p names contains duplicates or if \p extra_map contains symbol names
+         * already present in \p names.
          * @throws unspecified any exception thrown by:
          * - memory errors in standard containers,
          * - the public interface of std::unordered_map,
@@ -228,6 +246,9 @@ class lambdified
          * and it will then call piranha::math::evaluate() on the stored internal instance of the object of type \p T used
          * during construction.
          *
+         * If a non-empty \p extra_map parameter was used during construction, the symbols in it are evaluated according
+         * to the mapped functions before being passed down in the evaluation dictionary to piranha::math::evaluate().
+         *
          * Note that this function needs to modify the internal state of the object, and thus it is not const and it is
          * not thread-safe.
          *
@@ -239,7 +260,8 @@ class lambdified
          * used during construction.
          * @throws unspecified any exception raised by:
          * - the copy-assignment operator of \p U,
-         * - math::evaluate().
+         * - math::evaluate(),
+         * - the call operator of the mapped functions in the \p extra_map parameter used during construction.
          */
         eval_type operator()(const std::vector<U> &values)
         {
@@ -322,7 +344,8 @@ namespace math
  * piranha::math::lambdified.
  *
  * This utility function will create an object of type piranha::math::lambdified that can be used
- * to evaluate \p x with a function-like interface. For example:
+ * to evaluate \p x with a function-like interface. The parameters of this function are passed
+ * to the constructor of the returned piranha::math::lambdified object. For example:
  * @code
  * polynomial<integer,k_monomial> x{"x"}, y{"y"}, z{"z"};
  * auto l = lambdify<double>(x-2*y+3*z,{"z","y","x"});
@@ -333,10 +356,22 @@ namespace math
  * @endcode
  * That is, <tt>x-2*y+3*z</tt> is evaluated with <tt>x=3.</tt>, <tt>y=2.</tt> and <tt>z=1.</tt>.
  *
+ * The optional parameter \p extra_map (of type piranha::math::lambdified::extra_map_type) is a map specifying how
+ * specific symbols should be evaluated. It is most useful when symbols have an implicit dependency on other symbols.
+ * For instance, suppose that the symbol \f$z\f$ is implicitly dependent on the symbols \f$x\f$ and \f$y\f$ via
+ * \f$z\left(x,y\right) = \sqrt{x+y}\f$. Then in order to evaluate \f$x + y + z\f$ we can write:
+ * @code
+ * polynomial<integer,k_monomial> x{"x"}, y{"y"}, z{"z"};
+ * auto l = lambdify<double>(x+y+z,{"x","y"},{{"z",[](const std::vector<double> &v) {return std::sqrt(v[0]+v[1]);}}});
+ * std::cout << l({1.,2.}) << '\n' // This will print 1.+2.+sqrt(1.+2.) = 4.7320508076...
+ * @endcode
+ * See the constructor of piranha::math::lambdified for more details on the \p extra_map argument.
+ *
  * The decay types of \p T and \p U are used as template parameters for the piranha::math::lambdified return type.
  *
  * @param[in] x object that will be evaluated.
  * @param[in] names names of the symbols that will be used for evaluation.
+ * @param[in] extra_map map of type piranha::math::lambdified::extra_map_type for custom symbol evaluation.
  *
  * @return an instance of piranha::math::lambdified that can be used to evaluate \p x.
  *

@@ -875,7 +875,7 @@ def t_lorder(arg,names = None):
 	else:
 		return _cpp_type_catcher(_t_lorder,arg,names)
 
-def lambdify(t,x,names):
+def lambdify(t,x,names,extra_map = {}):
 	"""Turn a symbolic object into a function.
 
 	This function is a wrapper around :func:`~pyranha.math.evaluate()` which returns a callable object that can be used
@@ -925,4 +925,8 @@ def lambdify(t,x,names):
 		raise TypeError('the \'t\' argument must be a type')
 	if not isinstance(names,list) or not all([isinstance(_,str) for _ in names]):
 		raise TypeError('the \'names\' argument must be a list of strings')
-	return _cpp_type_catcher(_lambdify,x,names,t())
+	if not all([isinstance(_,str) for _ in extra_map]):
+		raise TypeError('the \'extra_map\' argument must be a dictionary in which the keys are strings')
+	if not all([callable(extra_map[_]) for _ in extra_map]):
+		raise TypeError('all the values in the \'extra_map\' argument must be callables')
+	return _cpp_type_catcher(_lambdify,x,names,extra_map,t())
