@@ -474,6 +474,26 @@ class math_test_case(_ut.TestCase):
 		self.assertRaises(TypeError,lambda : lambdify(int,3*x**4/2-y/3+z**2,[1,2,3]))
 		self.assertRaises(ValueError,lambda : l([1.2,3.4]))
 		self.assertRaises(ValueError,lambda : l([1.2,3.4,5.6,6.7]))
+		# Try with extra maps.
+		l = lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': lambda _: 5.})
+		self.assertAlmostEqual(l([1.2,3.4]),3*5.**4/2-1.2/3+3.4**2)
+		# Check that a deep copy of the functor is made.
+		class functor(object):
+			def __init__(self):
+				self.n = 42.
+			def __call__(self,a):
+				return self.n
+		f = functor()
+		l = lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': f})
+		f.n = 0.
+		self.assertEqual(f(1),0.)
+		self.assertAlmostEqual(l([1.2,3.4]),3*42.**4/2-1.2/3+3.4**2)
+		# Try various errors.
+		self.assertRaises(TypeError,lambda: lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': 1}))
+		self.assertRaises(TypeError,lambda: lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{3: lambda _ : 3}))
+		l = lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': lambda _: ""})
+		self.assertRaises(TypeError,lambda: l([1.2,3.4]))
+		self.assertRaises(ValueError,lambda: lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'y': lambda _: ""}))
 		# Try with optional modules:
 		try:
 			from mpmath import mpf

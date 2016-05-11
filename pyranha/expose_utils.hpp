@@ -204,9 +204,9 @@ inline auto generic_lambdify_wrapper(const S &s, bp::list l, bp::dict d, const U
 	bp::stl_input_iterator<std::string> it_d(d), end_d;
 	for (; it_d != end_d; ++it_d) {
 		// Get the string.
-		std::string s = *it_d;
+		std::string str = *it_d;
 		// Make a deep copy of the mapped function.
-		bp::object f_copy = deepcopy(bp::object(d[s]));
+		bp::object f_copy = deepcopy(bp::object(d[str]));
 		// Write a wrapper for the copy of the mapped function.
 		auto cpp_func = [f_copy](const std::vector<U> &v) -> U {
 			// We will transform the input vector into a list before
@@ -221,7 +221,7 @@ inline auto generic_lambdify_wrapper(const S &s, bp::list l, bp::dict d, const U
 			return bp::extract<U>(f_copy(tmp));
 		};
 		// Map s to cpp_func.
-		extra_map.emplace(std::move(s),std::move(cpp_func));
+		extra_map.emplace(std::move(str),std::move(cpp_func));
 	}
 	return piranha::math::lambdify<U>(s,names,extra_map);
 }
@@ -709,7 +709,7 @@ class series_exposer
 		static void expose_partial(bp::class_<S> &series_class,
 			typename std::enable_if<piranha::is_differentiable<S>::value>::type * = nullptr)
 		{
-			// NOTE: we need this below in order to specifiy exactly the address of the templated
+			// NOTE: we need this below in order to specify exactly the address of the templated
 			// static method for unregistering the custom derivatives.
 			using partial_type = decltype(piranha::math::partial(std::declval<const S &>(),std::string{}));
 			series_class.def("partial",generic_partial_member_wrapper<S>);
