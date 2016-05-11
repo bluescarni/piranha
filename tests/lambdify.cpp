@@ -54,6 +54,22 @@ static std::mt19937 rng;
 
 static const int ntrials = 100;
 
+struct callable_42
+{
+	double operator()(const std::vector<double> &) const
+	{
+		return 42.;
+	}
+};
+
+struct callable_12
+{
+	double operator()(const std::vector<double> &) const
+	{
+		return 12.;
+	}
+};
+
 BOOST_AUTO_TEST_CASE(lambdify_test_00)
 {
 	environment env;
@@ -175,6 +191,14 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
 		BOOST_CHECK_EQUAL(v.size(),0u);
 		return 3_z;
 	}}})({}),7);
+	// A couple of tests with nothing.
+	BOOST_CHECK_EQUAL(lambdify<integer>(p_type{},{})({}),0);
+	BOOST_CHECK_EQUAL(lambdify<integer>(p_type{},{"x","y"},{{"z",[](const std::vector<integer> &) {return 1_z;}}})
+		({1_z,2_z}),0);
+	// Check with non-lambda callables.
+	BOOST_CHECK_EQUAL(lambdify<double>(x+y,{"x"},{{"y",callable_42{}}})({1.}),43.);
+	BOOST_CHECK_EQUAL(lambdify<double>(x+y,{"x"},{{"y",callable_12{}}})({-1.}),11.);
+	BOOST_CHECK_EQUAL(lambdify<double>(x+y+z,{"x"},{{"y",callable_12{}},{"z",callable_42{}}})({-1.}),-1+42.+12.);
 	}
 }
 
