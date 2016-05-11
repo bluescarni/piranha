@@ -216,6 +216,8 @@ see https://www.gnu.org/licenses/. */
  * cv and refs instead. Not sure if we care about plain arrays and function pointers enough though.
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.
+ * \todo in the pyranha doc improvements, we should probably handle bettere unspecified exceptions and document
+ * the return type as well for consistency (see lambdify docs).
  */
 namespace piranha
 {
