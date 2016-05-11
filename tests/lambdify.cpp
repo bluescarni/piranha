@@ -70,6 +70,16 @@ struct callable_12
 	}
 };
 
+struct callable_generic
+{
+	template <typename T>
+	T operator()(const std::vector<T> &) const
+	{
+		return T{0};
+	}
+};
+
+
 BOOST_AUTO_TEST_CASE(lambdify_test_00)
 {
 	environment env;
@@ -197,6 +207,8 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
 		({1_z,2_z}),0);
 	// Check with non-lambda callables.
 	BOOST_CHECK_EQUAL(lambdify<double>(x+y,{"x"},{{"y",callable_42{}}})({1.}),43.);
+	BOOST_CHECK_EQUAL(lambdify<double>(x+y,{"x"},{{"y",callable_generic{}}})({1.}),1.);
+	BOOST_CHECK_EQUAL(lambdify<integer>(x+y,{"x"},{{"y",callable_generic{}}})({2_z}),2);
 	BOOST_CHECK_EQUAL(lambdify<double>(x+y,{"x"},{{"y",callable_12{}}})({-1.}),11.);
 	BOOST_CHECK_EQUAL(lambdify<double>(x+y+z,{"x"},{{"y",callable_12{}},{"z",callable_42{}}})({-1.}),-1+42.+12.);
 	}
