@@ -33,18 +33,18 @@ see https://www.gnu.org/licenses/. */
 
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/polynomial.hpp"
 #include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
-
-
-#include "../src/polynomial.hpp"
 
 using namespace piranha;
 
@@ -221,5 +221,46 @@ BOOST_AUTO_TEST_CASE(series_division_test)
 	BOOST_CHECK_EQUAL(4/s_type1{-3},-1);
 	BOOST_CHECK_THROW(4/s_type1{},zero_division_error);
 	BOOST_CHECK_EQUAL(0/s_type1{-3},0);
+	}
+}
+
+// Some evaluation tests after we added the improved checking + error message logic in series.
+BOOST_AUTO_TEST_CASE(series_evaluation_test)
+{
+	using math::evaluate;
+	using p_type = polynomial<integer,monomial<int>>;
+	p_type x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL(math::evaluate<integer>(x+y+z,{{"x",1_z},{"y",2_z},{"z",3_z}}),1+2+3);
+	BOOST_CHECK_EQUAL(math::evaluate<integer>(x+y+z,{{"x",1_z},{"y",2_z},{"z",3_z},{"t",4_z}}),1+2+3);
+	BOOST_CHECK_THROW(math::evaluate<integer>(x+y+z,{{"x",1_z},{"y",2_z}}),std::invalid_argument);
+	try {
+		(void)math::evaluate<integer>(x+y+z,{{"x",1_z},{"y",2_z}});
+	} catch (const std::invalid_argument &ia) {
+		BOOST_CHECK(std::string(ia.what()).find("the symbol 'z' is missing from the series evaluation dictionary") !=
+			std::string::npos);
+	}
+	try {
+		(void)math::evaluate<integer>(x+y+z,{{"x",1_z},{"y",2_z},{"a",4_z}});
+	} catch (const std::invalid_argument &ia) {
+		BOOST_CHECK(std::string(ia.what()).find("the symbol 'z' is missing from the series evaluation dictionary") !=
+			std::string::npos);
+	}
+	try {
+		(void)math::evaluate<integer>(x+y+z,{{"y",2_z},{"t",7_z}});
+	} catch (const std::invalid_argument &ia) {
+		BOOST_CHECK(std::string(ia.what()).find("the symbol 'x' is missing from the series evaluation dictionary") !=
+			std::string::npos);
+	}
+	try {
+		(void)math::evaluate<integer>(x+y+z,{{"x",1_z},{"z",2_z}});
+	} catch (const std::invalid_argument &ia) {
+		BOOST_CHECK(std::string(ia.what()).find("the symbol 'y' is missing from the series evaluation dictionary") !=
+			std::string::npos);
+	}
+	try {
+		(void)math::evaluate<integer>(x+y+z,{{"a",2_z},{"b",3_z}});
+	} catch (const std::invalid_argument &ia) {
+		BOOST_CHECK(std::string(ia.what()).find("the symbol 'x' is missing from the series evaluation dictionary") !=
+			std::string::npos);
 	}
 }

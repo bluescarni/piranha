@@ -2520,9 +2520,8 @@ class series: detail::series_tag, series_operators
 		 * - the assignment operator of piranha::symbol_set,
 		 * - term, coefficient, key construction,
 		 * - series multiplication and addition.
-		 *
-		 * \todo require multipliability of cf * Derived and addability of the result to Derived in place.
 		 */
+		// TODO require multipliability of cf * Derived and addability of the result to Derived in place.
 		Derived transform(std::function<std::pair<typename term_type::cf_type,Derived>
 			(const std::pair<typename term_type::cf_type,Derived> &)> func) const
 		{
@@ -2568,16 +2567,30 @@ class series: detail::series_tag, series_operators
 			using return_type = eval_type<Series,T>;
 			// Transform the string dict into symbol dict for use in keys.
 			std::unordered_map<symbol,T> s_dict;
-			for (auto it = dict.begin(); it != dict.end(); ++it) {
-				s_dict[symbol(it->first)] = it->second;
+			for (const auto &p: dict) {
+				s_dict[symbol(p.first)] = p.second;
 			}
 			// Convert to positions map.
 			symbol_set::positions_map<T> pmap(this->m_symbol_set,s_dict);
+			decltype(this->m_symbol_set.size()) i = 0u;
+			piranha_assert(pmap.size() <= this->m_symbol_set.size());
+			// First we iterate over all elements of pmap (which could be fewer than the symbols).
+			for (const auto &p: pmap) {
+				if (unlikely(i != p.first)) {
+					piranha_throw(std::invalid_argument,"the symbol '" + this->m_symbol_set[i].get_name() +
+						"' is missing from the series evaluation dictionary'");
+				}
+				++i;
+			}
+			// It could still happen that pmap is missing symbols at the tail of the symbol set.
+			if (unlikely(i < this->m_symbol_set.size())) {
+				piranha_throw(std::invalid_argument,"the symbol '" + this->m_symbol_set[i].get_name() +
+					"' is missing from the series evaluation dictionary'");
+			}
 			// Init return value and accumulate it.
 			return_type retval = return_type(0);
-			const auto it_f = this->m_container.end();
-			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				math::multiply_accumulate(retval,math::evaluate(it->m_cf,dict),it->m_key.evaluate(pmap,m_symbol_set));
+			for (const auto &t: this->m_container) {
+				math::multiply_accumulate(retval,math::evaluate(t.m_cf,dict),t.m_key.evaluate(pmap,m_symbol_set));
 			}
 			return retval;
 		}
