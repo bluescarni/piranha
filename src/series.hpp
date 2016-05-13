@@ -30,7 +30,6 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_SERIES_HPP
 
 #include <algorithm>
-#include <boost/any.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
