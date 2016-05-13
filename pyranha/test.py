@@ -494,6 +494,12 @@ class math_test_case(_ut.TestCase):
 		l = lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': lambda _: ""})
 		self.assertRaises(TypeError,lambda: l([1.2,3.4]))
 		self.assertRaises(ValueError,lambda: lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'y': lambda _: ""}))
+		# Check the str repr.
+		eobj = 3*x**4/2-y/3+z**2
+		l = lambdify(float,eobj,['y','z'])
+		self.assertEqual(str(l),"Lambdified object: " + str(eobj) + "\nEvaluation variables: [\"y\",\"z\"]\nSymbols in the extra map: []")
+		l = lambdify(float,eobj,['y','z'],{'x': f})
+		self.assertEqual(str(l),"Lambdified object: " + str(eobj) + "\nEvaluation variables: [\"y\",\"z\"]\nSymbols in the extra map: [\"x\"]")
 		# Try with optional modules:
 		try:
 			from mpmath import mpf

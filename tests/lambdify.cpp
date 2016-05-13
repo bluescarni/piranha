@@ -35,6 +35,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
@@ -270,4 +271,13 @@ BOOST_AUTO_TEST_CASE(lambdify_test_02)
 	BOOST_CHECK_EQUAL(x+y+z,l0.get_evaluable());
 	const auto v = std::vector<std::string>({"z","y","x"});
 	BOOST_CHECK_EQUAL_COLLECTIONS(v.begin(),v.end(),l0.get_names().begin(),l0.get_names().end());
+	auto en = l0.get_extra_names();
+	BOOST_CHECK(en.empty());
+	auto l1 = lambdify<integer>(x+y+z,{"z","y","x"},{{"t",[](const std::vector<integer> &) {return 1_z;}}});
+	en = l1.get_extra_names();
+	BOOST_CHECK(en == std::vector<std::string>{"t"});
+	auto l2 = lambdify<integer>(x+y+z,{"z","y","x"},{{"t",[](const std::vector<integer> &) {return 1_z;}},
+		{"a",[](const std::vector<integer> &) {return 1_z;}}});
+	en = l2.get_extra_names();
+	BOOST_CHECK((en == std::vector<std::string>{"t","a"} || en == std::vector<std::string>{"a","t"}));
 }

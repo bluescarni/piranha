@@ -247,6 +247,15 @@ inline std::string lambdified_repr(const piranha::math::lambdified<T,U> &l)
 			oss << ',';
 		}
 	}
+	oss << "]\n";
+	oss << "Symbols in the extra map: [";
+	const auto en = l.get_extra_names();
+	for (decltype(en.size()) i = 0u; i < en.size(); ++i) {
+		oss << '"' << en[i] << '"';
+		if (i != en.size() - 1u) {
+			oss << ',';
+		}
+	}
 	oss << ']';
 	return oss.str();
 }

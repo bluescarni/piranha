@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -308,6 +309,22 @@ class lambdified
         const std::vector<std::string> &get_names() const
         {
             return m_names;
+        }
+        /// Get names of the symbols in the extra map.
+        /**
+         * @return a vector containing the names of the symbols in the \p extra_map used during construction.
+         *
+         * @throws unspecified any exception thrown by memory errors in standard containers.
+         */
+        std::vector<std::string> get_extra_names() const
+        {
+                std::vector<std::string> retval;
+                std::transform(m_extra_map.begin(),m_extra_map.end(),std::back_inserter(retval),
+                        [](const typename extra_map_type::value_type &p)
+                {
+                        return p.first;
+                });
+                return retval;
         }
     private:
         T m_x;
