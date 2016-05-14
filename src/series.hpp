@@ -2798,7 +2798,8 @@ class series: detail::series_tag, series_operators
 			if (unlikely(!(new_ss.size() > m_symbol_set.size()) ||
 				!std::includes(new_ss.begin(),new_ss.end(),m_symbol_set.begin(),m_symbol_set.end())))
 			{
-				piranha_throw(std::invalid_argument,"invalid symbol set passed to extend_symbol_set()");
+				piranha_throw(std::invalid_argument,"invalid symbol set passed to extend_symbol_set(): the new "
+					"symbol set does not include all the symbols in the old symbol set");
 			}
 			return merge_arguments(new_ss);
 		}

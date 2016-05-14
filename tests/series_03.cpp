@@ -297,6 +297,12 @@ BOOST_AUTO_TEST_CASE(series_extend_symbol_set_test)
 	BOOST_CHECK(x.extend_symbol_set(symbol_set{symbol{"x"}}).is_identical(x));
 	BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"y"}}),std::invalid_argument);
 	BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"z"}}),std::invalid_argument);
+	try {
+		x.extend_symbol_set(symbol_set{symbol{"y"}});
+	} catch (const std::invalid_argument &ia) {
+		BOOST_CHECK(std::string(ia.what()).find("invalid symbol set passed to extend_symbol_set(): the new "
+			"symbol set does not include all the symbols in the old symbol set") != std::string::npos);
+	}
 	BOOST_CHECK((x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"}}).get_symbol_set() == symbol_set{symbol{"y"},symbol{"x"}}));
 	BOOST_CHECK((x.extend_symbol_set(symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}}).get_symbol_set() ==
 		symbol_set{symbol{"y"},symbol{"x"},symbol{"z"}}));
