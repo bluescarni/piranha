@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include "debug_access.hpp"
 #include "detail/is_digit.hpp"
 #include "detail/mp_rational_fwd.hpp"
+#include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/ulshift.hpp"
@@ -1227,11 +1228,11 @@ struct is_mp_integer_interoperable_type
  * of static storage. The possible values for \p NBits, supported on all platforms, are 8, 16, and 32.
  * A value of 64 is supported on some platforms. The special
  * default value of 0 is used to automatically select the optimal \p NBits value on the current platform.
- * 
+ *
  * ## Interoperability with other types ##
- * 
+ *
  * Full interoperability with all integral and floating-point C++ types is provided.
- * 
+ *
  * Every function interacting with floating-point types will check that the floating-point values are not
  * non-finite: in case of infinities or NaNs, an <tt>std::invalid_argument</tt> exception will be thrown.
  * It should be noted that interoperability with floating-point types is provided for convenience, and it should
@@ -1627,71 +1628,38 @@ class mp_integer
 		}
 		// Convert to floating-point.
 		template <typename T>
-		T convert_to_impl(typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr) const
+		T convert_to_impl(typename std::enable_if<std::is_same<double,T>::value>::type * = nullptr) const
 		{
-			const int s = sign();
-			// Special case for zero.
-			if (s == 0) {
-				return T(0);
-			}
-			// Extract a GMP mpz to work with.
-			detail::mpz_raii tmp;
-			if (m_int.is_static()) {
-				auto v = m_int.g_st().get_mpz_view();
-				::mpz_set(&tmp.m_mpz,v);
-			} else {
-				::mpz_set(&tmp.m_mpz,&m_int.g_dy());
-			}
-			// Work on absolute value.
-			if (s < 0) {
-				::mpz_neg(&tmp.m_mpz,&tmp.m_mpz);
-			}
-			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
-			// NOTE: radix must be between 2 and 62 for GMP functions to work.
-			if (unlikely(radix < 2u || radix > 62u)) {
-				piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
-			}
-			unsigned long r_size;
-			try {
-				r_size = boost::numeric_cast<unsigned long>(::mpz_sizeinbase(&tmp.m_mpz,static_cast<int>(radix)));
-			} catch (...) {
-				piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
-			}
-			// NOTE: sizeinbase might return the correct value, or increased by one. Check
-			// which one is which.
-			// https://gmplib.org/manual/Miscellaneous-Integer-Functions.html#Miscellaneous-Integer-Functions
-			piranha_assert(r_size >= 1u);
-			detail::mpz_raii tmp2, tmp3;
-			::mpz_ui_pow_ui(&tmp2.m_mpz,static_cast<unsigned long>(radix),r_size - 1ul);
-			::mpz_sub_ui(&tmp2.m_mpz,&tmp2.m_mpz,1ul);
-			if (::mpz_cmp(&tmp2.m_mpz,&tmp.m_mpz) > 0) {
-				--r_size;
-			}
-			// Init return value.
-			T retval(0);
-			int exp = 0;
-			for (unsigned long i = 0u; i < r_size; ++i) {
-				const auto rem = ::mpz_fdiv_q_ui(&tmp.m_mpz,&tmp.m_mpz,static_cast<unsigned long>(radix));
-				const auto exp_val = std::scalbn(static_cast<T>(rem),exp);
-				if (unlikely(exp_val == HUGE_VAL)) {
-					// Return infinity if possible.
-					if (std::numeric_limits<T>::has_infinity) {
-						retval = std::numeric_limits<T>::infinity();
-						break;
-					} else {
-						piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
-					}
-				}
-				retval += exp_val;
-				if (unlikely(exp == std::numeric_limits<int>::max())) {
-					piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
-				}
-				++exp;
-			}
-			// Adjust sign.
-			if (s < 0) {
-				retval = std::copysign(retval,std::numeric_limits<T>::lowest());
-			}
+			// For double, we just use mpz_get_d().
+			auto v = get_mpz_view();
+			return ::mpz_get_d(v);
+		}
+		template <typename T>
+		T convert_to_impl(typename std::enable_if<std::is_same<float,T>::value>::type * = nullptr) const
+		{
+			// Convert to double, then cast back to float.
+			return static_cast<float>(convert_to_impl<double>());
+		}
+		template <typename T>
+		T convert_to_impl(typename std::enable_if<std::is_same<long double,T>::value>::type * = nullptr) const
+		{
+			// For long double, create a temporary mpfr, init it with this, then extract the long double.
+			// NOTE: here we should really use a thread local mpfr_t wrapped into a RAII holder.
+			// Overflow check for the operation below.
+			static_assert(std::numeric_limits<long double>::digits10 < (std::numeric_limits<int>::max() - 10) / 3,
+				"Overflow error.");
+			// This is the number of digits in base 2 needed to represent exactly any long double.
+			// The exact number should be  + 1 instead of + 10, but let's be conservative.
+			// http://en.cppreference.com/w/cpp/types/numeric_limits/digits10
+			constexpr int d2 = std::numeric_limits<long double>::digits10 * 3 + 10;
+			const auto prec = boost::numeric_cast< ::mpfr_prec_t>(d2);
+			auto v = get_mpz_view();
+			// All the rest will be noexcept.
+			::mpfr_t tmp;
+			::mpfr_init2(tmp,prec);
+			::mpfr_set_z(tmp,v,MPFR_RNDN);
+			long double retval = ::mpfr_get_ld(tmp,MPFR_RNDN);
+			::mpfr_clear(tmp);
 			return retval;
 		}
 		// In-place add.
@@ -2334,12 +2302,12 @@ class mp_integer
 		/**
 		 * \note
 		 * This constructor is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * Construction from a floating-point type will result in the truncated
 		 * counterpart of the original value.
-		 * 
+		 *
 		 * @param[in] x object used to construct \p this.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the construction fails (e.g., construction from a non-finite
 		 * floating-point value).
 		 */
@@ -2353,11 +2321,11 @@ class mp_integer
 		 * The string must be a sequence of decimal digits, preceded by a minus sign for
 		 * strictly negative numbers. The first digit of a non-zero number must not be zero. A malformed string will throw an \p std::invalid_argument
 		 * exception.
-		 * 
+		 *
 		 * Note that if the string is not null-terminated, undefined behaviour will occur.
-		 * 
+		 *
 		 * @param[in] str decimal string representation of the number used to initialise the integer object.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the string is malformed.
 		 */
 		explicit mp_integer(const char *str)
@@ -2367,9 +2335,9 @@ class mp_integer
 		/// Constructor from C++ string.
 		/**
 		 * Equivalent to the constructor from C string.
-		 * 
+		 *
 		 * @param[in] str decimal string representation of the number used to initialise the integer object.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the constructor from C string.
 		 */
 		explicit mp_integer(const std::string &str)
@@ -2445,14 +2413,14 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * This assignment operator is equivalent to constructing a temporary instance of mp_integer from \p x
 		 * and then move-assigning it to \p this.
-		 * 
+		 *
 		 * @param[in] x object that will be assigned to \p this.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the generic constructor of mp_integer.
 		 */
 		template <typename T, generic_ctor_enabler<T> = 0>
@@ -2463,11 +2431,11 @@ class mp_integer
 		/// Assignment from C++ string.
 		/**
 		 * Equivalent to the construction and susbequent move to \p this of a temporary mp_integer from \p str.
-		 * 
+		 *
 		 * @param[in] str C++ string that will be assigned to \p this.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the constructor of mp_integer from string.
 		 */
 		mp_integer &operator=(const std::string &str)
@@ -2478,11 +2446,11 @@ class mp_integer
 		/// Assignment from C string.
 		/**
 		 * Equivalent to the construction and susbequent move to \p this of a temporary mp_integer from \p str.
-		 * 
+		 *
 		 * @param[in] str C string that will be assigned to \p this.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the constructor of mp_integer from string.
 		 */
 		mp_integer &operator=(const char *str)
@@ -2530,15 +2498,17 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * Conversion to integral types, if possible, will always be exact. Conversion to \p bool produces
 		 * \p true for nonzero values, \p false for zero. Conversion to floating-point types is performed
 		 * via arithmetic operations and might generate infinities in case the value is too large.
-		 * 
+		 *
 		 * @return the value of \p this converted to type \p T.
-		 * 
+		 *
 		 * @throws std::overflow_error if the conversion fails (e.g., the range of the target integral type
 		 * is insufficient to represent the value of <tt>this</tt>).
+		 * @throws unspecified any exception raised by <tt>boost::numeric_cast()</tt> in case of (unlikely)
+		 * overflow errors while converting between integral types.
 		 */
 		template <typename T, cast_enabler<T> = 0>
 		explicit operator T() const
@@ -2636,18 +2606,18 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_integer.
-		 * 
+		 *
 		 * Add \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
-		 * 
+		 *
 		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p f is added to \p x,
 		 * - the result is assigned back to \p this.
-		 * 
+		 *
 		 * @param[in] x argument for the addition.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
@@ -2659,14 +2629,14 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Add a piranha::mp_integer in-place. This method will first compute <tt>n + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] n second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -2682,17 +2652,17 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_integer.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and added to \p f to generate the return value, which will then be of type \p F.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x + y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
 		 * - the invoked constructor or the conversion operator, if used.
@@ -2713,7 +2683,7 @@ class mp_integer
 		/// Prefix increment.
 		/**
 		 * Increment \p this by one.
-		 * 
+		 *
 		 * @return reference to \p this after the increment.
 		 */
 		mp_integer &operator++()
@@ -2723,7 +2693,7 @@ class mp_integer
 		/// Suffix increment.
 		/**
 		 * Increment \p this by one and return a copy of \p this as it was before the increment.
-		 * 
+		 *
 		 * @return copy of \p this before the increment.
 		 */
 		mp_integer operator++(int)
@@ -2788,18 +2758,18 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_integer.
-		 * 
+		 *
 		 * Subtract \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
-		 * 
+		 *
 		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p x is subtracted from \p f,
 		 * - the result is assigned back to \p this.
-		 * 
+		 *
 		 * @param[in] x argument for the subtraction.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
@@ -2811,14 +2781,14 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Subtract a piranha::mp_integer in-place. This method will first compute <tt>x - n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] n second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -2834,15 +2804,15 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and subtracted from (or to) \p f to generate the return value, which will then be of type \p F.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x - y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
 		 * - the invoked constructor or the conversion operator, if used.
@@ -2865,7 +2835,7 @@ class mp_integer
 		/// Prefix decrement.
 		/**
 		 * Decrement \p this by one and return.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		mp_integer &operator--()
@@ -2875,7 +2845,7 @@ class mp_integer
 		/// Suffix decrement.
 		/**
 		 * Decrement \p this by one and return a copy of \p this as it was before the decrement.
-		 * 
+		 *
 		 * @return copy of \p this before the decrement.
 		 */
 		mp_integer operator--(int)
@@ -2940,18 +2910,18 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_integer.
-		 * 
+		 *
 		 * Multiply by \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
-		 * 
+		 *
 		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p x is multiplied by \p f,
 		 * - the result is assigned back to \p this.
-		 * 
+		 *
 		 * @param[in] x argument for the multiplication.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
@@ -2963,14 +2933,14 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Multiply by a piranha::mp_integer in-place. This method will first compute <tt>x * n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] n second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -2986,15 +2956,15 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and multiplied by \p f to generate the return value, which will then be of type \p F.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x * y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
 		 * - the invoked constructor or the conversion operator, if used.
@@ -3007,10 +2977,10 @@ class mp_integer
 		/// Combined multiply-add.
 		/**
 		 * Sets \p this to <tt>this + (n1 * n2)</tt>.
-		 * 
+		 *
 		 * @param[in] n1 first argument.
 		 * @param[in] n2 second argument.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		mp_integer &multiply_accumulate(const mp_integer &n1, const mp_integer &n2)
@@ -3112,19 +3082,19 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_integer.
-		 * 
+		 *
 		 * Divide by \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be truncated
 		 * (i.e., rounded towards 0). If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
-		 * 
+		 *
 		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p f is divided by \p x,
 		 * - the result is assigned back to \p this.
-		 * 
+		 *
 		 * @param[in] x argument for the division.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 * @throws piranha::zero_division_error if \p T is an integral type and \p x is zero (as established by
 		 * piranha::math::is_zero()).
@@ -3141,14 +3111,14 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Divide by a piranha::mp_integer in-place. This method will first compute <tt>x / n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] n second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -3164,15 +3134,15 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and divided by (or used as a dividend for) \p f to generate the return value, which will then be of type \p F.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x / y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
 		 * - the invoked constructor or the conversion operator, if used.
@@ -3322,14 +3292,14 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if \p T is piranha::mp_integer or an integral type among the interoperable types.
-		 * 
+		 *
 		 * Sets \p this to <tt>this % n</tt>. This operator behaves in the way specified by the C++ standard (specifically,
 		 * the sign of the remainder will be the sign of the numerator).
-		 * 
+		 *
 		 * @param[in] n argument for the modulo operation.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the generic constructor, if used.
 		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
 		 */
@@ -3345,15 +3315,15 @@ class mp_integer
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const integral interoperable type.
-		 * 
+		 *
 		 * Compute the remainder with respect to a piranha::mp_integer in-place. This method will first compute <tt>x % n</tt>,
 		 * cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] n second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
 		template <typename T, generic_in_place_mod_enabler<T> = 0>
@@ -3369,12 +3339,12 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an integral interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an integral interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x % y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
 		 * - the invoked constructor, if used.
@@ -3523,17 +3493,17 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and compared to \p f to generate the return value.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
@@ -3548,14 +3518,14 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * This operator is the negation of operator==().
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by operator==().
 		 */
 		template <typename T, typename U>
@@ -3570,17 +3540,17 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and compared to \p f to generate the return value.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
@@ -3595,17 +3565,17 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and compared to \p f to generate the return value.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
@@ -3620,17 +3590,17 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and compared to \p f to generate the return value.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by operator<().
 		 */
 		template <typename T, typename U>
@@ -3645,17 +3615,17 @@ class mp_integer
 		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
 		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and compared to \p f to generate the return value.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by operator<=().
 		 */
 		template <typename T, typename U>
@@ -3671,14 +3641,14 @@ class mp_integer
 		 * Return <tt>this ** exp</tt>.  Negative
 		 * powers are calculated as <tt>(1 / this) ** exp</tt>. Trying to raise zero to a negative exponent will throw a
 		 * piranha::zero_division_error exception. <tt>this ** 0</tt> will always return 1.
-		 * 
+		 *
 		 * The value of \p exp cannot exceed in absolute value the maximum value representable by the <tt>unsigned long</tt> type, otherwise an
 		 * \p std::invalid_argument exception will be thrown.
-		 * 
+		 *
 		 * @param[in] exp exponent.
-		 * 
+		 *
 		 * @return <tt>this ** exp</tt>.
-		 * 
+		 *
 		 * @throws std::invalid_argument if <tt>exp</tt>'s value is outside the range of the <tt>unsigned long</tt> type.
 		 * @throws piranha::zero_division_error if \p this is zero and \p exp is negative.
 		 * @throws unspecified any exception thrown by the generic constructor, if used.
@@ -3973,7 +3943,7 @@ class mp_integer
 		/**
 		 * This method will return the number of bits necessary to represent the absolute value of \p this.
 		 * If \p this is zero, 1 will be returned.
-		 * 
+		 *
 		 * @return the size in bits of \p this.
 		 */
 		std::size_t bits_size() const
@@ -4087,11 +4057,11 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<detail::is_mp_inte
 	/// Call operator.
 	/**
 	 * This implementation will use piranha::mp_integer::multiply_accumulate().
-	 * 
+	 *
 	 * @param[in,out] x target value for accumulation.
 	 * @param[in] y first argument.
 	 * @param[in] z second argument.
-	 * 
+	 *
 	 * @return <tt>x.multiply_accumulate(y,z)</tt>.
 	 */
 	auto operator()(T &x, const T &y, const T &z) const -> decltype(x.multiply_accumulate(y,z))
@@ -4110,7 +4080,7 @@ struct negate_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::t
 	/// Call operator.
 	/**
 	 * Will use internally piranha::mp_integer::negate().
-	 * 
+	 *
 	 * @param[in,out] n piranha::mp_integer to be negated.
 	 */
 	void operator()(T &n) const
@@ -4129,9 +4099,9 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::
 	/// Call operator.
 	/**
 	 * Will use internally piranha::mp_integer::sign().
-	 * 
+	 *
 	 * @param[in] n piranha::mp_integer to be tested.
-	 * 
+	 *
 	 * @return \p true if \p n is zero, \p false otherwise.
 	 */
 	bool operator()(const T &n) const
@@ -4171,7 +4141,7 @@ struct abs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type
 	/// Call operator.
 	/**
 	 * @param[in] n input parameter.
-	 * 
+	 *
 	 * @return absolute value of \p n.
 	 */
 	T operator()(const T &n) const
@@ -4620,9 +4590,9 @@ inline namespace literals
 /// Literal for arbitrary-precision integers.
 /**
  * @param[in] s literal string.
- * 
+ *
  * @return a piranha::mp_integer constructed from \p s.
- * 
+ *
  * @throws unspecified any exception thrown by the constructor of
  * piranha::mp_integer from string.
  */
@@ -4649,9 +4619,9 @@ struct hash<piranha::mp_integer<NBits>>
 	/// Hash operator.
 	/**
 	 * @param[in] n piranha::mp_integer whose hash value will be returned.
-	 * 
+	 *
 	 * @return <tt>n.hash()</tt>.
-	 * 
+	 *
 	 * @see piranha::mp_integer::hash()
 	 */
 	result_type operator()(const argument_type &n) const
