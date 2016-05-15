@@ -16,6 +16,7 @@ var searchData=
   ['get_5fdefault_5fgcd_5falgorithm',['get_default_gcd_algorithm',['../classpiranha_1_1polynomial.html#a2f8720b75662fd74c3b34dd17174729b',1,'piranha::polynomial']]],
   ['get_5festimate_5fthreshold',['get_estimate_threshold',['../classpiranha_1_1tuning.html#ae52b6a8240816c547472fa5194a48f3b',1,'piranha::tuning']]],
   ['get_5fevaluable',['get_evaluable',['../classpiranha_1_1math_1_1lambdified.html#a1baa26de5212c83c6096f21c832c7c10',1,'piranha::math::lambdified']]],
+  ['get_5fextra_5fnames',['get_extra_names',['../classpiranha_1_1math_1_1lambdified.html#acc58c10c39c29b23577c44243eb7c766',1,'piranha::math::lambdified']]],
   ['get_5fflavour',['get_flavour',['../classpiranha_1_1real__trigonometric__kronecker__monomial.html#aa62aa33c1e95a45e20783c931c7e6a5e',1,'piranha::real_trigonometric_kronecker_monomial']]],
   ['get_5fhardware_5fconcurrency',['get_hardware_concurrency',['../classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b',1,'piranha::runtime_info']]],
   ['get_5fint',['get_int',['../classpiranha_1_1kronecker__monomial.html#a7d5ffe0fcab2e45443176016e8012eaf',1,'piranha::kronecker_monomial::get_int()'],['../classpiranha_1_1real__trigonometric__kronecker__monomial.html#a778e3ebd756a6a543bd1656ba0c33c89',1,'piranha::real_trigonometric_kronecker_monomial::get_int()']]],

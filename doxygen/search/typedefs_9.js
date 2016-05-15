@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['other',['other',['../structpiranha_1_1cache__aligning__allocator_1_1rebind.html#a587f58a40b1bcb5c9f925f3002393ede',1,'piranha::cache_aligning_allocator::rebind']]]
+  ['max_5fint',['max_int',['../namespacepiranha.html#a8ffc5baf86eac1627ad008e5608a9f7c',1,'piranha']]],
+  ['min_5fint',['min_int',['../namespacepiranha.html#afd41e4fdc9e391a963e34667f19e62ad',1,'piranha']]]
 ];
