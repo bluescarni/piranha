@@ -4,4 +4,7 @@ coverage:
     project:
       default:
         target: auto
+  ignore:
+  - tests/.*
 
+comment: off
