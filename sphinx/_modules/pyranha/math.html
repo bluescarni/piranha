@@ -66,7 +66,8 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul>
-<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Quick install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html#id1">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference.html">Complete reference</a></li>
 </ul>
@@ -993,7 +994,7 @@
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_lorder</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="lambdify"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.lambdify">[docs]</a><span class="k">def</span> <span class="nf">lambdify</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">names</span><span class="p">):</span>
+<div class="viewcode-block" id="lambdify"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.lambdify">[docs]</a><span class="k">def</span> <span class="nf">lambdify</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">names</span><span class="p">,</span><span class="n">extra_map</span> <span class="o">=</span> <span class="p">{}):</span>
 	<span class="sd">&quot;&quot;&quot;Turn a symbolic object into a function.</span>
 
 <span class="sd">	This function is a wrapper around :func:`~pyranha.math.evaluate()` which returns a callable object that can be used</span>
@@ -1001,18 +1002,39 @@
 <span class="sd">	``len(names)`` of objects of type *t* which, for the purpose of evaluation, are associated to the list of</span>
 <span class="sd">	symbols *names* at the corresponding positions.</span>
 
+<span class="sd">	The optional argument *extra_map* is a dictionary that maps symbol names to callables, and it used to specify</span>
+<span class="sd">	what values to assign to specific symbols based on the values of the symbols in *names*. For instance, suppose</span>
+<span class="sd">	that :math:`z` depends on :math:`x` and :math:`y` via :math:`z\\left(x,y\\right)=\\sqrt{3x+y}`. We can then evaluate</span>
+<span class="sd">	the expression :math:`x+y+z` as follows:</span>
+
+<span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; from math import sqrt</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">	&gt;&gt;&gt; x,y,z = x,y,z = pt(&#39;x&#39;),pt(&#39;y&#39;),pt(&#39;z&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(float,x+y+z,[&#39;x&#39;,&#39;y&#39;],{&#39;z&#39;: lambda a: sqrt(3.*a[0] + a[1])})</span>
+<span class="sd">	&gt;&gt;&gt; l([1.,2.]) # doctest: +ELLIPSIS</span>
+<span class="sd">	5.236067977...</span>
+
+<span class="sd">	The output value is :math:`1+2+\\sqrt{5}`.</span>
+
 <span class="sd">	:param t: the type that will be used for the evaluation of *x*</span>
-<span class="sd">	:type t: a supported type</span>
+<span class="sd">	:type t: a supported evaluation type</span>
 <span class="sd">	:param x: symbolic object that will be evaluated</span>
 <span class="sd">	:type x: a supported symbolic type</span>
 <span class="sd">	:param names: the symbols that will be used for evaluation</span>
 <span class="sd">	:type names: a list of strings</span>
+<span class="sd">	:param extra_map: a dictionary mapping symbol names to custom evaluation functions</span>
+<span class="sd">	:type extra_map: a dictionary in which the keys are strings and the values are callables</span>
 <span class="sd">	:returns: a callable object that can be used to evaluate *x* with objects of type *t*</span>
-<span class="sd">	:raises: :exc:`TypeError` if *t* is not a type, or if *names* is not a list of strings, or any other exception</span>
-<span class="sd">		raised by the invoked low-level function</span>
-<span class="sd">	:raises: :exc:`ValueError` if *names* contains duplicates</span>
+<span class="sd">	:rtype: the type returned by the invoked low-level function</span>
+<span class="sd">	:raises: :exc:`TypeError` if *t* is not a type, or if *names* is not a list of strings, or if *extra_map* is not</span>
+<span class="sd">		a dictionary of the specified type</span>
+<span class="sd">	:raises: :exc:`ValueError` if *names* contains duplicates or if *extra_map* contains strings already present in *names*</span>
+<span class="sd">	:raises: :exc:`unspecified` any exception raised by the invoked low-level function or by the invoked</span>
+<span class="sd">		callables in *extra_map*</span>
 
 <span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; from math import sqrt</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; x,y,z = x,y,z = pt(&#39;x&#39;),pt(&#39;y&#39;),pt(&#39;z&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; l = lambdify(int,2*x-y+3*z,[&#39;z&#39;,&#39;y&#39;,&#39;x&#39;])</span>
@@ -1020,6 +1042,9 @@
 <span class="sd">	Fraction(7, 1)</span>
 <span class="sd">	&gt;&gt;&gt; l([1,2,-3])</span>
 <span class="sd">	Fraction(-5, 1)</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(float,x+y+z,[&#39;x&#39;,&#39;y&#39;],{&#39;z&#39;: lambda a: sqrt(3.*a[0] + a[1])})</span>
+<span class="sd">	&gt;&gt;&gt; l([1.,2.]) # doctest: +ELLIPSIS</span>
+<span class="sd">	5.236067977...</span>
 <span class="sd">	&gt;&gt;&gt; l([1]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
@@ -1036,6 +1061,10 @@
 <span class="sd">	Traceback (most recent call last):</span>
 <span class="sd">	   ...</span>
 <span class="sd">	ValueError: the &#39;names&#39; argument contains duplicates</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(float,x+y+z,[&#39;x&#39;,&#39;y&#39;],{&#39;z&#39;: 123})</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: all the values in the &#39;extra_map&#39; argument must be callables</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_lambdify</span>
@@ -1043,7 +1072,11 @@
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the </span><span class="se">\&#39;</span><span class="s1">t</span><span class="se">\&#39;</span><span class="s1"> argument must be a type&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]):</span>
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the </span><span class="se">\&#39;</span><span class="s1">names</span><span class="se">\&#39;</span><span class="s1"> argument must be a list of strings&#39;</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_lambdify</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">names</span><span class="p">,</span><span class="n">t</span><span class="p">())</span></div>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">extra_map</span><span class="p">]):</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the </span><span class="se">\&#39;</span><span class="s1">extra_map</span><span class="se">\&#39;</span><span class="s1"> argument must be a dictionary in which the keys are strings&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">callable</span><span class="p">(</span><span class="n">extra_map</span><span class="p">[</span><span class="n">_</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">extra_map</span><span class="p">]):</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;all the values in the </span><span class="se">\&#39;</span><span class="s1">extra_map</span><span class="se">\&#39;</span><span class="s1"> argument must be callables&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_lambdify</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">names</span><span class="p">,</span><span class="n">extra_map</span><span class="p">,</span><span class="n">t</span><span class="p">())</span></div>
 </pre></div>
 
     </div>

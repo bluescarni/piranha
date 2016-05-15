@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Getting started &mdash; Piranha 0.1 documentation</title>
+    <title>Quick install &mdash; Piranha 0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -67,7 +67,8 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#id1">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Complete reference</a></li>
 </ul>
@@ -83,7 +84,8 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Getting started</a><ul>
+<li><a class="reference internal" href="#">Quick install</a></li>
+<li><a class="reference internal" href="#id1">Getting started</a><ul>
 <li><a class="reference internal" href="#supported-platforms">Supported platforms</a></li>
 <li><a class="reference internal" href="#dependencies">Dependencies</a></li>
 <li><a class="reference internal" href="#download">Download</a></li>
@@ -142,22 +144,36 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="getting-started">
-<span id="id1"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="quick-install">
+<span id="getting-started"></span><h1>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">¶</a></h1>
+<p>On a modern GNU/Linux distribution, the following commands will download, configure and install the latest version
+of the Piranha headers in <code class="docutils literal"><span class="pre">/usr/local/include/piranha</span></code>:</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/bluescarni/piranha.git
+<span class="gp">$</span> mkdir piranha/build
+<span class="gp">$</span> <span class="nb">cd</span> piranha/build
+<span class="gp">$</span> cmake ../
+<span class="gp">$</span> sudo make install
+</pre></div>
+</div>
+<p>The commands above assume that Git, a compiler toolchain, CMake and all of Piranha&#8217;s dependencies have already been
+installed on the system. The following sections explain the installation process in detail (including the installation
+of the Python bindings).</p>
+</div>
+<div class="section" id="id1">
+<h1>Getting started<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="supported-platforms">
 <h2>Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this headline">¶</a></h2>
 <p>Piranha requires a recent compiler with robust support for the C++11 standard. The following
 compilers are routinely used to develop and test the library:</p>
 <ul class="simple">
-<li><a class="reference external" href="http://gcc.gnu.org/">GCC</a> 4.8 and later,</li>
-<li><a class="reference external" href="http://clang.llvm.org/">Clang</a> 3.5 (earlier versions up to 3.1 should work as well),</li>
-<li><a class="reference external" href="https://software.intel.com/en-us/c-compilers">Intel C++ compiler</a> 15 (beta support).</li>
+<li><a class="reference external" href="http://gcc.gnu.org/">GCC</a> 4.8 and later versions,</li>
+<li><a class="reference external" href="http://clang.llvm.org/">Clang</a> 3.8 (earlier versions up to 3.1 should work as well).</li>
 </ul>
 <p>The main platform used for the development of Piranha is 64-bit GNU/Linux.
 OSX, Windows (using <a class="reference external" href="http://mingw-w64.sourceforge.net/">MinGW</a>) and BSD flavours are also supported,
 although the library is compiled and tested on these platforms somewhat less frequently.</p>
 <p>Piranha aims to be standard-compliant and any portability issue in the source code
-should be reported as a bug.</p>
+should be <a class="reference external" href="https://github.com/bluescarni/piranha/issues">reported as a bug</a>.</p>
 </div>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
@@ -186,7 +202,7 @@ The <code class="docutils literal"><span class="pre">master</span></code> branch
 <a class="reference external" href="https://github.com/bluescarni/piranha/archive/master.zip">here</a>, or checked out using
 the <a class="reference external" href="http://git-scm.com/">Git</a> version control system. The following Git command will download
 the latest version of the <code class="docutils literal"><span class="pre">master</span></code> branch in a directory called <code class="docutils literal"><span class="pre">piranha</span></code>:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone git@github.com:bluescarni/piranha.git piranha
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/bluescarni/piranha.git
 </pre></div>
 </div>
 <p>You can keep the Piranha source code up-to-date by running periodically the command</p>
@@ -244,10 +260,10 @@ unit tests will be built, in <code class="docutils literal"><span class="pre">Re
 installed on your system, there will be no ambiguity. If, however, you have multiple toolchains installed and want
 to force CMake to pick a specific one, you can set the <code class="docutils literal"><span class="pre">CXX</span></code> environment variable <em>before</em> running CMake. In
 <code class="docutils literal"><span class="pre">bash</span></code>, a possible way of doing this is</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nv">CXX</span><span class="o">=</span>/path/to/other/compiler/icpc cmake ../
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nv">CXX</span><span class="o">=</span>/path/to/other/compiler/clang++ cmake ../
 </pre></div>
 </div>
-<p>This will force CMake to use the Intel C++ compiler <code class="docutils literal"><span class="pre">icpc</span></code> at the location <code class="docutils literal"><span class="pre">/path/to/other/compiler/</span></code>.</p>
+<p>This will force CMake to use the Clang C++ compiler <code class="docutils literal"><span class="pre">clang++</span></code> at the location <code class="docutils literal"><span class="pre">/path/to/other/compiler/</span></code>.</p>
 </div>
 <div class="section" id="building">
 <h3>Building<a class="headerlink" href="#building" title="Permalink to this headline">¶</a></h3>
@@ -306,7 +322,8 @@ large amount of memory. At least 8GB of RAM are suggested for the compilation of
 <span class="go">Total Test time (real) = 675.26 sec</span>
 </pre></div>
 </div>
-<p>A full run of the test suite should take a few minutes on a modern desktop machine. Any failure in the unit tests should be reported as a bug.</p>
+<p>A full run of the test suite should take a few minutes on a modern desktop machine. Any failure in the unit tests should be
+<a class="reference external" href="https://github.com/bluescarni/piranha/issues">reported as a bug</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Some of the performance tests will create extremely large series. It is advisable, at least initially, to run each performance test separately

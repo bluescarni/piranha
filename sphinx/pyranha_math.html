@@ -68,7 +68,8 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Quick install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html#id1">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="reference.html">Complete reference</a></li>
 </ul>
@@ -553,36 +554,59 @@ a lower-level C++ routine that supports various combinations for the types of <e
 
 <dl class="function">
 <dt id="pyranha.math.lambdify">
-<code class="descclassname">pyranha.math.</code><code class="descname">lambdify</code><span class="sig-paren">(</span><em>t</em>, <em>x</em>, <em>names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#lambdify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.lambdify" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyranha.math.</code><code class="descname">lambdify</code><span class="sig-paren">(</span><em>t</em>, <em>x</em>, <em>names</em>, <em>extra_map={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#lambdify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.lambdify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turn a symbolic object into a function.</p>
 <p>This function is a wrapper around <a class="reference internal" href="#pyranha.math.evaluate" title="pyranha.math.evaluate"><code class="xref py py-func docutils literal"><span class="pre">evaluate()</span></code></a> which returns a callable object that can be used
 to evaluate the input argument <em>x</em>. The call operator of the returned object takes as input a collection of length
 <code class="docutils literal"><span class="pre">len(names)</span></code> of objects of type <em>t</em> which, for the purpose of evaluation, are associated to the list of
 symbols <em>names</em> at the corresponding positions.</p>
+<p>The optional argument <em>extra_map</em> is a dictionary that maps symbol names to callables, and it used to specify
+what values to assign to specific symbols based on the values of the symbols in <em>names</em>. For instance, suppose
+that <span class="math">\(z\)</span> depends on <span class="math">\(x\)</span> and <span class="math">\(y\)</span> via <span class="math">\(z\left(x,y\right)=\sqrt{3x+y}\)</span>. We can then evaluate
+the expression <span class="math">\(x+y+z\)</span> as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">+</span><span class="n">z</span><span class="p">,[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">],{</span><span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">sqrt</span><span class="p">(</span><span class="mf">3.</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">])})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span><span class="mf">2.</span><span class="p">])</span> 
+<span class="go">5.236067977...</span>
+</pre></div>
+</div>
+<p>The output value is <span class="math">\(1+2+\sqrt{5}\)</span>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>t</strong> (<em>a supported type</em>) &#8211; the type that will be used for the evaluation of <em>x</em></li>
+<li><strong>t</strong> (<em>a supported evaluation type</em>) &#8211; the type that will be used for the evaluation of <em>x</em></li>
 <li><strong>x</strong> (<em>a supported symbolic type</em>) &#8211; symbolic object that will be evaluated</li>
 <li><strong>names</strong> (<em>a list of strings</em>) &#8211; the symbols that will be used for evaluation</li>
+<li><strong>extra_map</strong> (<em>a dictionary in which the keys are strings and the values are callables</em>) &#8211; a dictionary mapping symbol names to custom evaluation functions</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a callable object that can be used to evaluate <em>x</em> with objects of type <em>t</em></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if <em>t</em> is not a type, or if <em>names</em> is not a list of strings, or any other exception
-raised by the invoked low-level function</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">the type returned by the invoked low-level function</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> if <em>names</em> contains duplicates</p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if <em>t</em> is not a type, or if <em>names</em> is not a list of strings, or if <em>extra_map</em> is not
+a dictionary of the specified type</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> if <em>names</em> contains duplicates or if <em>extra_map</em> contains strings already present in <em>names</em></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">unspecified</span></code> any exception raised by the invoked low-level function or by the invoked
+callables in <em>extra_map</em></p>
 </td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">sqrt</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span><span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span><span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">z</span><span class="p">,[</span><span class="s1">&#39;z&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">])</span>
@@ -590,6 +614,9 @@ raised by the invoked low-level function</p>
 <span class="go">Fraction(7, 1)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
 <span class="go">Fraction(-5, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">+</span><span class="n">z</span><span class="p">,[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">],{</span><span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">sqrt</span><span class="p">(</span><span class="mf">3.</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">])})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span><span class="mf">2.</span><span class="p">])</span> 
+<span class="go">5.236067977...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span> 
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
@@ -606,6 +633,10 @@ raised by the invoked low-level function</p>
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
 <span class="gr">ValueError</span>: <span class="n">the &#39;names&#39; argument contains duplicates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">+</span><span class="n">z</span><span class="p">,[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">],{</span><span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">123</span><span class="p">})</span>
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">all the values in the &#39;extra_map&#39; argument must be callables</span>
 </pre></div>
 </div>
 </dd></dl>
