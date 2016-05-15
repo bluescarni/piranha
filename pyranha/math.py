@@ -875,7 +875,7 @@ def t_lorder(arg,names = None):
 	else:
 		return _cpp_type_catcher(_t_lorder,arg,names)
 
-def lambdify(t,x,names):
+def lambdify(t,x,names,extra_map = {}):
 	"""Turn a symbolic object into a function.
 
 	This function is a wrapper around :func:`~pyranha.math.evaluate()` which returns a callable object that can be used
@@ -883,18 +883,39 @@ def lambdify(t,x,names):
 	``len(names)`` of objects of type *t* which, for the purpose of evaluation, are associated to the list of
 	symbols *names* at the corresponding positions.
 
+	The optional argument *extra_map* is a dictionary that maps symbol names to callables, and it used to specify
+	what values to assign to specific symbols based on the values of the symbols in *names*. For instance, suppose
+	that :math:`z` depends on :math:`x` and :math:`y` via :math:`z\\left(x,y\\right)=\\sqrt{3x+y}`. We can then evaluate
+	the expression :math:`x+y+z` as follows:
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
+	>>> from math import sqrt
+	>>> pt = polynomial(rational,k_monomial)()
+	>>> x,y,z = x,y,z = pt('x'),pt('y'),pt('z')
+	>>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: sqrt(3.*a[0] + a[1])})
+	>>> l([1.,2.]) # doctest: +ELLIPSIS
+	5.236067977...
+
+	The output value is :math:`1+2+\\sqrt{5}`.
+
 	:param t: the type that will be used for the evaluation of *x*
-	:type t: a supported type
+	:type t: a supported evaluation type
 	:param x: symbolic object that will be evaluated
 	:type x: a supported symbolic type
 	:param names: the symbols that will be used for evaluation
 	:type names: a list of strings
+	:param extra_map: a dictionary mapping symbol names to custom evaluation functions
+	:type extra_map: a dictionary in which the keys are strings and the values are callables
 	:returns: a callable object that can be used to evaluate *x* with objects of type *t*
-	:raises: :exc:`TypeError` if *t* is not a type, or if *names* is not a list of strings, or any other exception
-		raised by the invoked low-level function
-	:raises: :exc:`ValueError` if *names* contains duplicates
+	:rtype: the type returned by the invoked low-level function
+	:raises: :exc:`TypeError` if *t* is not a type, or if *names* is not a list of strings, or if *extra_map* is not
+		a dictionary of the specified type
+	:raises: :exc:`ValueError` if *names* contains duplicates or if *extra_map* contains strings already present in *names*
+	:raises: :exc:`unspecified` any exception raised by the invoked low-level function or by the invoked
+		callables in *extra_map*
 
 	>>> from pyranha.types import polynomial, rational, k_monomial
+	>>> from math import sqrt
 	>>> pt = polynomial(rational,k_monomial)()
 	>>> x,y,z = x,y,z = pt('x'),pt('y'),pt('z')
 	>>> l = lambdify(int,2*x-y+3*z,['z','y','x'])
@@ -902,6 +923,9 @@ def lambdify(t,x,names):
 	Fraction(7, 1)
 	>>> l([1,2,-3])
 	Fraction(-5, 1)
+	>>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: sqrt(3.*a[0] + a[1])})
+	>>> l([1.,2.]) # doctest: +ELLIPSIS
+	5.236067977...
 	>>> l([1]) # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
@@ -918,6 +942,10 @@ def lambdify(t,x,names):
 	Traceback (most recent call last):
 	   ...
 	ValueError: the 'names' argument contains duplicates
+	>>> l = lambdify(float,x+y+z,['x','y'],{'z': 123})
+	Traceback (most recent call last):
+	   ...
+	TypeError: all the values in the 'extra_map' argument must be callables
 
 	"""
 	from ._core import _lambdify
@@ -925,4 +953,8 @@ def lambdify(t,x,names):
 		raise TypeError('the \'t\' argument must be a type')
 	if not isinstance(names,list) or not all([isinstance(_,str) for _ in names]):
 		raise TypeError('the \'names\' argument must be a list of strings')
-	return _cpp_type_catcher(_lambdify,x,names,t())
+	if not all([isinstance(_,str) for _ in extra_map]):
+		raise TypeError('the \'extra_map\' argument must be a dictionary in which the keys are strings')
+	if not all([callable(extra_map[_]) for _ in extra_map]):
+		raise TypeError('all the values in the \'extra_map\' argument must be callables')
+	return _cpp_type_catcher(_lambdify,x,names,extra_map,t())
