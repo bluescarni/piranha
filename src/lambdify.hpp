@@ -30,6 +30,8 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_LAMBDIFY_HPP
 
 #include <algorithm>
+#include <functional>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -89,35 +91,69 @@ class lambdified
         static_assert(std::is_same<T,typename std::decay<T>::type>::value,"Invalid type.");
         static_assert(std::is_same<U,typename std::decay<U>::type>::value,"Invalid type.");
         static_assert(detail::math_lambdified_reqs<T,U>::value,"Invalid types.");
-        using eval_type = decltype(math::evaluate(std::declval<const T &>(),
-            std::declval<const std::unordered_map<std::string,U> &>()));
         // Constructor implementation.
-        void construct(const std::vector<std::string> &names)
+        void construct()
         {
             // Check if there are duplicates.
-            auto names_copy(names);
+            auto names_copy(m_names);
             std::sort(names_copy.begin(),names_copy.end());
             if (std::unique(names_copy.begin(),names_copy.end()) != names_copy.end()) {
                 piranha_throw(std::invalid_argument,"the list of evaluation symbols contains duplicates");
             }
-            // Fill in the eval dict and the vector of pointers.
-            for (const auto &s: names) {
+            // Fill in the eval dict and the vector of pointers, and make sure
+            // that m_extra_map does not contain anything that is already in m_names.
+            for (const auto &s: m_names) {
+                if (m_extra_map.find(s) != m_extra_map.end()) {
+                    piranha_throw(std::invalid_argument,"the extra symbols map contains symbol '"
+                        + s + "', which is already in the symbol list used for the construction "
+                        "of the lambdified object");
+                }
                 const auto ret = m_eval_dict.emplace(std::make_pair(s,U{}));
                 piranha_assert(ret.second);
                 m_ptrs.push_back(std::addressof(ret.first->second));
             }
+            // Fill in the extra symbols.
+            for (const auto &p: m_extra_map) {
+                const auto ret = m_eval_dict.emplace(std::make_pair(p.first,U{}));
+                piranha_assert(ret.second);
+                m_ptrs.push_back(std::addressof(ret.first->second));
+            }
         }
-        // Reconstruct the vector of pointers after a copy or move operation.
+        // Reconstruct the vector of pointers following copy or move construction.
         void reconstruct_ptrs()
         {
+            // m_ptrs must be empty because we assume this method is called only as part of
+            // the copy/move ctors.
             piranha_assert(m_ptrs.empty());
-            piranha_assert(m_names.size() == m_eval_dict.size());
+            piranha_assert(m_eval_dict.size() >= m_extra_map.size() &&
+                m_names.size() == m_eval_dict.size() - m_extra_map.size());
+            // Take care first of the positional argument.
             for (const auto &s: m_names) {
                 piranha_assert(m_eval_dict.count(s) == 1u);
                 m_ptrs.push_back(std::addressof(m_eval_dict.find(s)->second));
             }
+            // The extra symbols.
+            for (const auto &p: m_extra_map) {
+                piranha_assert(m_eval_dict.count(p.first) == 1u);
+                m_ptrs.push_back(std::addressof(m_eval_dict.find(p.first)->second));
+            }
+            // Make sure the sizes are consistent.
+            piranha_assert(m_ptrs.size() == static_cast<decltype(m_ptrs.size())>(m_names.size()) +
+                m_extra_map.size());
         }
     public:
+        /// Evaluation type.
+        /**
+         * This is the type resulting from evaluating objects of type \p T with objects of type \p U
+         * via piranha::math::evaluate().
+         */
+        using eval_type = decltype(math::evaluate(std::declval<const T &>(),
+            std::declval<const std::unordered_map<std::string,U> &>()));
+        /// The map type for the custom evaluation of symbols.
+        /**
+         * See the constructor documentation for an explanation of how this type is used.
+         */
+        using extra_map_type = std::unordered_map<std::string,std::function<U(const std::vector<U> &)>>;
         /// Constructor.
         /**
          * This constructor will create an internal copy of \p x, the object that will be evaluated
@@ -127,19 +163,32 @@ class lambdified
          * That is, the values in the vector passed to operator()() are associated
          * to the symbols in \p names at the corresponding positions.
          *
+         * The optional argument \p extra_map can be used to specify how to evaluate specific symbols.
+         * That is, \p extra_map associates symbol names to functions of signature
+         * @code
+         * U (const std::vector<U> &)
+         * @endcode
+         * When operator()() is called with a vector of values \p v, for each symbol \p s in \p extra_map
+         * the associated function is called with \p v as an argument, and the return value is used as evaluation
+         * value for \p s in the subsequent call to math::evaluate(). \p extra_map must not contain symbol names appearing
+         * in \p names.
+         *
          * @param[in] x the object that will be evaluated by operator()().
          * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
+         * @param[in] extra_map the custom symbol evaluation map.
          *
-         * @throws std::invalid_argument if \p names contains duplicates.
+         * @throws std::invalid_argument if \p names contains duplicates or if \p extra_map contains symbol names
+         * already present in \p names.
          * @throws unspecified any exception thrown by:
          * - memory errors in standard containers,
          * - the public interface of std::unordered_map,
          * - the copy constructor of \p T,
          * - the construction of objects of type \p U.
          */
-        explicit lambdified(const T &x, const std::vector<std::string> &names):m_x(x),m_names(names)
+        explicit lambdified(const T &x, const std::vector<std::string> &names,
+            extra_map_type extra_map = extra_map_type{}):m_x(x),m_names(names),m_extra_map(extra_map)
         {
-            construct(names);
+            construct();
         }
         /// Constructor (move overload).
         /**
@@ -148,17 +197,21 @@ class lambdified
          *
          * @param[in] x the object that will be evaluated by operator()().
          * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
+         * @param[in] extra_map the custom symbol evaluation map.
          *
-         * @throws std::invalid_argument if \p names contains duplicates.
+         * @throws std::invalid_argument if \p names contains duplicates or if \p extra_map contains symbol names
+         * already present in \p names.
          * @throws unspecified any exception thrown by:
          * - memory errors in standard containers,
          * - the public interface of std::unordered_map,
          * - the move constructor of \p T,
          * - the construction of objects of type \p U.
          */
-        explicit lambdified(T &&x, const std::vector<std::string> &names):m_x(std::move(x)),m_names(names)
+        explicit lambdified(T &&x, const std::vector<std::string> &names,
+            extra_map_type extra_map = extra_map_type{}):
+            m_x(std::move(x)),m_names(names),m_extra_map(extra_map)
         {
-            construct(names);
+            construct();
         }
         /// Copy constructor.
         /**
@@ -166,7 +219,8 @@ class lambdified
          *
          * @throws unspecified any exception thrown by the copy constructor of the internal members.
          */
-        lambdified(const lambdified &other):m_x(other.m_x),m_names(other.m_names),m_eval_dict(other.m_eval_dict)
+        lambdified(const lambdified &other):m_x(other.m_x),m_names(other.m_names),m_eval_dict(other.m_eval_dict),
+            m_extra_map(other.m_extra_map)
         {
             reconstruct_ptrs();
         }
@@ -177,7 +231,7 @@ class lambdified
          * @throws unspecified any exception thrown by the move constructor of the internal members.
          */
         lambdified(lambdified &&other):m_x(std::move(other.m_x)),m_names(std::move(other.m_names)),
-            m_eval_dict(std::move(other.m_eval_dict))
+            m_eval_dict(std::move(other.m_eval_dict)),m_extra_map(std::move(other.m_extra_map))
         {
             // NOTE: it looks like we cannot be sure the moved-in pointers are still valid.
             // Let's just make sure.
@@ -193,6 +247,9 @@ class lambdified
          * and it will then call piranha::math::evaluate() on the stored internal instance of the object of type \p T used
          * during construction.
          *
+         * If a non-empty \p extra_map parameter was used during construction, the symbols in it are evaluated according
+         * to the mapped functions before being passed down in the evaluation dictionary to piranha::math::evaluate().
+         *
          * Note that this function needs to modify the internal state of the object, and thus it is not const and it is
          * not thread-safe.
          *
@@ -204,20 +261,35 @@ class lambdified
          * used during construction.
          * @throws unspecified any exception raised by:
          * - the copy-assignment operator of \p U,
-         * - math::evaluate().
+         * - math::evaluate(),
+         * - the call operator of the mapped functions in the \p extra_map parameter used during construction.
          */
         eval_type operator()(const std::vector<U> &values)
         {
-            if (unlikely(values.size() != m_eval_dict.size())) {
+            if (unlikely(values.size() != m_eval_dict.size() - m_extra_map.size())) {
                 piranha_throw(std::invalid_argument,"the size of the vector of evaluation values does not "
                     "match the size of the symbol list used during construction");
             }
             piranha_assert(values.size() == m_names.size());
-            for (decltype(values.size()) i = 0u; i < values.size(); ++i) {
+            decltype(values.size()) i = 0u;
+            for (; i < values.size(); ++i) {
                 auto ptr = m_ptrs[static_cast<decltype(m_ptrs.size())>(i)];
                 piranha_assert(ptr == std::addressof(m_eval_dict.find(
                     m_names[static_cast<decltype(m_names.size())>(i)])->second));
                 *ptr = values[i];
+            }
+            // NOTE: here it is crucial that the iteration order on m_extra_map is the same
+            // as it was during the construction of the m_ptrs vector, otherwise we are associating
+            // values to the wrong symbols. Luckily, it seems like iterating on a const unordered_map
+            // multiple times yields the same order:
+            // http://stackoverflow.com/questions/18301302/is-forauto-i-unordered-map-guaranteed-to-have-the-same-order-every-time
+            // https://groups.google.com/a/isocpp.org/forum/#!topic/std-discussion/kHYFUhsauhU
+            for (const auto &p: m_extra_map) {
+                piranha_assert(i < m_ptrs.size());
+                auto ptr = m_ptrs[static_cast<decltype(m_ptrs.size())>(i)];
+                piranha_assert(ptr == std::addressof(m_eval_dict.find(p.first)->second));
+                *ptr = p.second(values);
+                ++i;
             }
             return math::evaluate(m_x,m_eval_dict);
         }
@@ -238,11 +310,28 @@ class lambdified
         {
             return m_names;
         }
+        /// Get names of the symbols in the extra map.
+        /**
+         * @return a vector containing the names of the symbols in the \p extra_map used during construction.
+         *
+         * @throws unspecified any exception thrown by memory errors in standard containers.
+         */
+        std::vector<std::string> get_extra_names() const
+        {
+                std::vector<std::string> retval;
+                std::transform(m_extra_map.begin(),m_extra_map.end(),std::back_inserter(retval),
+                        [](const typename extra_map_type::value_type &p)
+                {
+                        return p.first;
+                });
+                return retval;
+        }
     private:
-        const T m_x;
-        const std::vector<std::string> m_names;
+        T m_x;
+        std::vector<std::string> m_names;
         std::unordered_map<std::string,U> m_eval_dict;
         std::vector<U *> m_ptrs;
+        extra_map_type m_extra_map;
 };
 
 }
@@ -256,6 +345,10 @@ using math_lambdify_type = typename std::enable_if<
         math_lambdified_reqs<typename std::decay<T>::type,typename std::decay<U>::type>::value,
         math::lambdified<typename std::decay<T>::type, typename std::decay<U>::type>>::type;
 
+// Shortcut for the extra symbols map type.
+template <typename T, typename U>
+using math_lambdify_extra_map_type = typename math_lambdify_type<T,U>::extra_map_type;
+
 }
 
 namespace math
@@ -268,7 +361,8 @@ namespace math
  * piranha::math::lambdified.
  *
  * This utility function will create an object of type piranha::math::lambdified that can be used
- * to evaluate \p x with a function-like interface. For example:
+ * to evaluate \p x with a function-like interface. The parameters of this function are passed
+ * to the constructor of the returned piranha::math::lambdified object. For example:
  * @code
  * polynomial<integer,k_monomial> x{"x"}, y{"y"}, z{"z"};
  * auto l = lambdify<double>(x-2*y+3*z,{"z","y","x"});
@@ -279,20 +373,33 @@ namespace math
  * @endcode
  * That is, <tt>x-2*y+3*z</tt> is evaluated with <tt>x=3.</tt>, <tt>y=2.</tt> and <tt>z=1.</tt>.
  *
+ * The optional parameter \p extra_map (of type piranha::math::lambdified::extra_map_type) is a map specifying how
+ * specific symbols should be evaluated. It is most useful when symbols have an implicit dependency on other symbols.
+ * For instance, suppose that the symbol \f$z\f$ is implicitly dependent on the symbols \f$x\f$ and \f$y\f$ via
+ * \f$z\left(x,y\right) = \sqrt{x+y}\f$. Then in order to evaluate \f$x + y + z\f$ we can write:
+ * @code
+ * polynomial<integer,k_monomial> x{"x"}, y{"y"}, z{"z"};
+ * auto l = lambdify<double>(x+y+z,{"x","y"},{{"z",[](const std::vector<double> &v) {return std::sqrt(v[0]+v[1]);}}});
+ * std::cout << l({1.,2.}) << '\n' // This will print 1.+2.+sqrt(1.+2.) = 4.7320508076...
+ * @endcode
+ * See the constructor of piranha::math::lambdified for more details on the \p extra_map argument.
+ *
  * The decay types of \p T and \p U are used as template parameters for the piranha::math::lambdified return type.
  *
  * @param[in] x object that will be evaluated.
  * @param[in] names names of the symbols that will be used for evaluation.
+ * @param[in] extra_map map of type piranha::math::lambdified::extra_map_type for custom symbol evaluation.
  *
  * @return an instance of piranha::math::lambdified that can be used to evaluate \p x.
  *
  * @throws unspecified any exception thrown by the constructor of piranha::math::lambdified.
  */
 template <typename U, typename T>
-inline detail::math_lambdify_type<T,U> lambdify(T &&x, const std::vector<std::string> &names)
+inline detail::math_lambdify_type<T,U> lambdify(T &&x, const std::vector<std::string> &names,
+    detail::math_lambdify_extra_map_type<T,U> extra_map = detail::math_lambdify_extra_map_type<T,U>{})
 {
     return lambdified<typename std::decay<T>::type, typename std::decay<U>::type>(
-        std::forward<T>(x),names);
+        std::forward<T>(x),names,extra_map);
 }
 
 }

@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include "debug_access.hpp"
 #include "detail/is_digit.hpp"
 #include "detail/mp_rational_fwd.hpp"
+#include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/ulshift.hpp"
@@ -1627,71 +1628,38 @@ class mp_integer
 		}
 		// Convert to floating-point.
 		template <typename T>
-		T convert_to_impl(typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr) const
+		T convert_to_impl(typename std::enable_if<std::is_same<double,T>::value>::type * = nullptr) const
 		{
-			const int s = sign();
-			// Special case for zero.
-			if (s == 0) {
-				return T(0);
-			}
-			// Extract a GMP mpz to work with.
-			detail::mpz_raii tmp;
-			if (m_int.is_static()) {
-				auto v = m_int.g_st().get_mpz_view();
-				::mpz_set(&tmp.m_mpz,v);
-			} else {
-				::mpz_set(&tmp.m_mpz,&m_int.g_dy());
-			}
-			// Work on absolute value.
-			if (s < 0) {
-				::mpz_neg(&tmp.m_mpz,&tmp.m_mpz);
-			}
-			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
-			// NOTE: radix must be between 2 and 62 for GMP functions to work.
-			if (unlikely(radix < 2u || radix > 62u)) {
-				piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
-			}
-			unsigned long r_size;
-			try {
-				r_size = boost::numeric_cast<unsigned long>(::mpz_sizeinbase(&tmp.m_mpz,static_cast<int>(radix)));
-			} catch (...) {
-				piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
-			}
-			// NOTE: sizeinbase might return the correct value, or increased by one. Check
-			// which one is which.
-			// https://gmplib.org/manual/Miscellaneous-Integer-Functions.html#Miscellaneous-Integer-Functions
-			piranha_assert(r_size >= 1u);
-			detail::mpz_raii tmp2, tmp3;
-			::mpz_ui_pow_ui(&tmp2.m_mpz,static_cast<unsigned long>(radix),r_size - 1ul);
-			::mpz_sub_ui(&tmp2.m_mpz,&tmp2.m_mpz,1ul);
-			if (::mpz_cmp(&tmp2.m_mpz,&tmp.m_mpz) > 0) {
-				--r_size;
-			}
-			// Init return value.
-			T retval(0);
-			int exp = 0;
-			for (unsigned long i = 0u; i < r_size; ++i) {
-				const auto rem = ::mpz_fdiv_q_ui(&tmp.m_mpz,&tmp.m_mpz,static_cast<unsigned long>(radix));
-				const auto exp_val = std::scalbn(static_cast<T>(rem),exp);
-				if (unlikely(exp_val == HUGE_VAL)) {
-					// Return infinity if possible.
-					if (std::numeric_limits<T>::has_infinity) {
-						retval = std::numeric_limits<T>::infinity();
-						break;
-					} else {
-						piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
-					}
-				}
-				retval += exp_val;
-				if (unlikely(exp == std::numeric_limits<int>::max())) {
-					piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
-				}
-				++exp;
-			}
-			// Adjust sign.
-			if (s < 0) {
-				retval = std::copysign(retval,std::numeric_limits<T>::lowest());
-			}
+			// For double, we just use mpz_get_d().
+			auto v = get_mpz_view();
+			return ::mpz_get_d(v);
+		}
+		template <typename T>
+		T convert_to_impl(typename std::enable_if<std::is_same<float,T>::value>::type * = nullptr) const
+		{
+			// Convert to double, then cast back to float.
+			return static_cast<float>(convert_to_impl<double>());
+		}
+		template <typename T>
+		T convert_to_impl(typename std::enable_if<std::is_same<long double,T>::value>::type * = nullptr) const
+		{
+			// For long double, create a temporary mpfr, init it with this, then extract the long double.
+			// NOTE: here we should really use a thread local mpfr_t wrapped into a RAII holder.
+			// Overflow check for the operation below.
+			static_assert(std::numeric_limits<long double>::digits10 < (std::numeric_limits<int>::max() - 10) / 3,
+				"Overflow error.");
+			// This is the number of digits in base 2 needed to represent exactly any long double.
+			// The exact number should be  + 1 instead of + 10, but let's be conservative.
+			// http://en.cppreference.com/w/cpp/types/numeric_limits/digits10
+			constexpr int d2 = std::numeric_limits<long double>::digits10 * 3 + 10;
+			const auto prec = boost::numeric_cast< ::mpfr_prec_t>(d2);
+			auto v = get_mpz_view();
+			// All the rest will be noexcept.
+			::mpfr_t tmp;
+			::mpfr_init2(tmp,prec);
+			::mpfr_set_z(tmp,v,MPFR_RNDN);
+			long double retval = ::mpfr_get_ld(tmp,MPFR_RNDN);
+			::mpfr_clear(tmp);
 			return retval;
 		}
 		// In-place add.
@@ -2539,6 +2507,8 @@ class mp_integer
 		 *
 		 * @throws std::overflow_error if the conversion fails (e.g., the range of the target integral type
 		 * is insufficient to represent the value of <tt>this</tt>).
+		 * @throws unspecified any exception raised by <tt>boost::numeric_cast()</tt> in case of (unlikely)
+		 * overflow errors while converting between integral types.
 		 */
 		template <typename T, cast_enabler<T> = 0>
 		explicit operator T() const

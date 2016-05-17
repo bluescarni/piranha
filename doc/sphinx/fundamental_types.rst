@@ -227,7 +227,7 @@ On the Python side, C++ ``real`` objects are automatically converted to/from ``m
 
 Whereas in the case of integers and rationals the conversion to/from Python is straightforward and unambiguous, in the case of ``real`` things are slightly
 more complicated. In mpmath, there is a global precision setting which is user-configurable (either via ``mpmath.mp.prec`` or ``mpmath.mp.dps``) and
-one works without specifiying different precisions for different ``mpf`` objects.
+one works without specifying different precisions for different ``mpf`` objects.
 
 The rules of conversion between ``real`` and ``mpf`` are the following:
 

@@ -71,20 +71,20 @@ const bool is_pmappable<T>::value;
 /**
  * This class represents an ordered set of piranha::symbol. The individual piranha::symbol instances
  * can be accessed via iterators or the index operator.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move construction and move assignment will leave the moved-from object in a state equivalent to a
  * default-constructed object.
  *
  * ## Serialization ##
  *
  * This class supports serialization.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 class symbol_set
@@ -305,9 +305,9 @@ class symbol_set
 		/// Constructor from initializer list of piranha::symbol.
 		/**
 		 * Each symbol in the list will be added via add() to the set.
-		 * 
+		 *
 		 * @param[in] l list of symbols used for construction.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by add().
 		 */
 		explicit symbol_set(std::initializer_list<symbol> l)
@@ -334,9 +334,7 @@ class symbol_set
 		 * @throws unspecified any exception thrown by operations on standard containers or by
 		 * the invoked constructor of piranha::symbol.
 		 */
-		// NOTE: the templated Symbol here is apparently necessary to prevent an ICE in the intel
-		// compiler. It should go eventually.
-		template <typename Iterator, typename Symbol = symbol, it_ctor_enabler<Iterator,Symbol> = 0>
+		template <typename Iterator, it_ctor_enabler<Iterator,symbol> = 0>
 		explicit symbol_set(const Iterator &begin, const Iterator &end)
 		{
 			// NOTE: this is one possible way of doing this, probably a sorted vector
@@ -351,9 +349,9 @@ class symbol_set
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other set to be assigned to \p this.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
 		 */
 		symbol_set &operator=(const symbol_set &other)
@@ -367,7 +365,7 @@ class symbol_set
 		/// Move assignment operator.
 		/**
 		 * @param[in] other assignment argument.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		symbol_set &operator=(symbol_set &&other) noexcept
@@ -389,7 +387,7 @@ class symbol_set
 		/// Index operator.
 		/**
 		 * @param[in] n index of the element to be accessed.
-		 * 
+		 *
 		 * @return const reference to the element at index \p n.
 		 */
 		const symbol &operator[](const size_type &n) const
@@ -416,9 +414,9 @@ class symbol_set
 		/// Add symbol to the set.
 		/**
 		 * The insertion of \p s will preserve the order of the set.
-		 * 
+		 *
 		 * @param[in] s piranha::symbol to be inserted.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p s is already present in the set.
 		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
 		 */
@@ -440,9 +438,9 @@ class symbol_set
 		/// Add symbol to the set.
 		/**
 		 * Equivalent to constructing a piranha::symbol from \p name and then invoking the other overload of this method.
-		 * 
+		 *
 		 * @param[in] name name of the piranha::symbol to be inserted.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the other overload of this method or by the construction
 		 * of piranha::symbol from \p std::string.
 		 */
@@ -453,9 +451,9 @@ class symbol_set
 		/// Remove symbol from the set.
 		/**
 		 * The removal of \p s will preserve the order of the set.
-		 * 
+		 *
 		 * @param[in] s piranha::symbol to be removed.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p s is not present in the set.
 		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
 		 */
@@ -474,9 +472,9 @@ class symbol_set
 		/// Remove symbol from the set.
 		/**
 		 * Equivalent to constructing a piranha::symbol from \p name and then invoking the other overload of this method.
-		 * 
+		 *
 		 * @param[in] name name of the piranha::symbol to be removed.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the other overload of this method or by the construction
 		 * of piranha::symbol from \p std::string.
 		 */
@@ -495,9 +493,9 @@ class symbol_set
 		/// Merge with other set.
 		/**
 		 * @param[in] other merge argument.
-		 * 
+		 *
 		 * @return a new set containing the union of the elements present in \p this and \p other.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by \p std::vector::push_back().
 		 */
 		symbol_set merge(const symbol_set &other) const
@@ -512,9 +510,9 @@ class symbol_set
 		/// Set difference.
 		/**
 		 * @param[in] other difference argument.
-		 * 
+		 *
 		 * @return a new set containing the elements of \p this which are not present in \p other.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by \p std::vector::push_back().
 		 */
 		symbol_set diff(const symbol_set &other) const
@@ -528,7 +526,7 @@ class symbol_set
 		/// Equality operator.
 		/**
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return \p true if \p this and \p other contain exactly the same symbols, \p false otherwise.
 		 */
 		bool operator==(const symbol_set &other) const
@@ -538,7 +536,7 @@ class symbol_set
 		/// Inequality operator.
 		/**
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return opposite of operator==().
 		 */
 		bool operator!=(const symbol_set &other) const
