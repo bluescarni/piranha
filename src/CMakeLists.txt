@@ -54,6 +54,7 @@ SET(HEADERS_LIST
 	invert.hpp
 	base_series_multiplier.hpp
 	rational_function.hpp
+	lambdify.hpp
 )
 
 SET(DETAIL_HEADERS_LIST

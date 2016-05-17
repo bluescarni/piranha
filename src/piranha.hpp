@@ -117,8 +117,6 @@ see https://www.gnu.org/licenses/. */
  * system and maybe the list of arguments. Also, what happens if we expose, say, polynomial<double> *and* polynomial<double,k_monomial>,
  * supposing that they are the same type one day?
  * \todo should the print coefficient operator of real print the precision as well or is the number of digits enough hint?
- * \todo pyranha: in the docstrings probably we should change from relative to absolute imports, for clarity.
- * \todo try to minimise the use of is_instance_of, as it is fragile at the moment.
  * \todo need to review the requirements on all std object we use as members of classes. We often require them to be noexcept
  * but they do not need to be by the standard (e.g., hash, equal_to, vector, ...). Note that in all our classes we mark move
  * operations as noexcept so we don't really need to require std members to be noexcept (if they throw an exception - unlikely
@@ -213,6 +211,13 @@ see https://www.gnu.org/licenses/. */
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
  * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
+ * \todo we are using std::decay all over the place to, essentially, remove cv and ref qualifiers from types. But decay
+ * also turns arrays into pointers and functions into pointers. Maybe we should have a remove_cvr type trait that just removes
+ * cv and refs instead. Not sure if we care about plain arrays and function pointers enough though.
+ * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
+ * in the type-traits rework.
+ * \todo in the pyranha doc improvements, we should probably handle bettere unspecified exceptions and document
+ * the return type as well for consistency (see lambdify docs).
  */
 namespace piranha
 {
@@ -248,6 +253,7 @@ inline namespace literals {}
 #include "key_is_multipliable.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
+#include "lambdify.hpp"
 #include "math.hpp"
 #include "memory.hpp"
 #include "monomial.hpp"

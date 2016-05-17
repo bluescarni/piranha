@@ -60,6 +60,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/detail/sfinae_types.hpp"
 #include "../src/detail/type_in_tuple.hpp"
 #include "../src/invert.hpp"
+#include "../src/lambdify.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -181,6 +182,102 @@ inline auto generic_evaluate_wrapper(const S &s, bp::dict dict, const T &)
 		cpp_dict[*it] = bp::extract<T>(dict[*it])();
 	}
 	return piranha::math::evaluate(s,cpp_dict);
+}
+
+// Generic lambdify wrapper.
+// NOTE: need to reason about thread safety here. Lambdified objects are not thread safe,
+// but separate lambdified objects could be used from different threads and we need to protect
+// access to the python interpreter.
+template <typename S, typename U>
+inline auto generic_lambdify_wrapper(const S &s, bp::list l, bp::dict d, const U &) ->
+	// NOTE: the extra map does not contribute to type determination.
+	decltype(piranha::math::lambdify<U>(s,{}))
+{
+	// First extract the names.
+	bp::stl_input_iterator<std::string> it_l(l), end_l;
+	std::vector<std::string> names(it_l,end_l);
+	// Next the extra map.
+	bp::object deepcopy = bp::import("copy").attr("deepcopy");
+	using l_type = decltype(piranha::math::lambdify<U>(s,names));
+	using em_type = typename l_type::extra_map_type;
+	em_type extra_map;
+	bp::stl_input_iterator<std::string> it_d(d), end_d;
+	for (; it_d != end_d; ++it_d) {
+		// Get the string.
+		std::string str = *it_d;
+		// Make a deep copy of the mapped function.
+		bp::object f_copy = deepcopy(bp::object(d[str]));
+		// Write a wrapper for the copy of the mapped function.
+		auto cpp_func = [f_copy](const std::vector<U> &v) -> U {
+			// We will transform the input vector into a list before
+			// feeding it into the Python function.
+			// NOTE: here probably a NumPy array would be better.
+			bp::list tmp;
+			for (const auto &value: v) {
+				tmp.append(value);
+			}
+			// Execute the Python function and try to extract the
+			// return value of type U.
+			return bp::extract<U>(f_copy(tmp));
+		};
+		// Map s to cpp_func.
+		extra_map.emplace(std::move(str),std::move(cpp_func));
+	}
+	return piranha::math::lambdify<U>(s,names,extra_map);
+}
+
+template <typename T, typename U>
+inline auto lambdified_call_operator(piranha::math::lambdified<T,U> &l, bp::object o) -> decltype(l({}))
+{
+	bp::stl_input_iterator<U> it(o), end;
+	std::vector<U> values(it,end);
+	return l(values);
+}
+
+template <typename T, typename U>
+inline std::string lambdified_repr(const piranha::math::lambdified<T,U> &l)
+{
+	std::ostringstream oss;
+	oss << "Lambdified object: " << l.get_evaluable() << '\n';
+	oss << "Evaluation variables: [";
+	const auto size = l.get_names().size();
+	for (decltype(l.get_names().size()) i = 0u; i < size; ++i) {
+		oss << '"' << l.get_names()[i] << '"';
+		if (i != size - 1u) {
+			oss << ',';
+		}
+	}
+	oss << "]\n";
+	oss << "Symbols in the extra map: [";
+	const auto en = l.get_extra_names();
+	for (decltype(en.size()) i = 0u; i < en.size(); ++i) {
+		oss << '"' << en[i] << '"';
+		if (i != en.size() - 1u) {
+			oss << ',';
+		}
+	}
+	oss << ']';
+	return oss.str();
+}
+
+// Generic wrapper for the lambdified class.
+extern std::size_t lambdified_counter;
+
+template <typename S, typename U>
+inline void generic_expose_lambdified()
+{
+	using l_type = piranha::math::lambdified<S,U>;
+	bp::class_<l_type> class_inst((std::string("_lambdified_")+
+		std::to_string(lambdified_counter)).c_str(),bp::no_init);
+	// Expose copy/deepcopy.
+	class_inst.def("__copy__",generic_copy_wrapper<l_type>);
+	class_inst.def("__deepcopy__",generic_deepcopy_wrapper<l_type>);
+	// The call operator.
+	class_inst.def("__call__",lambdified_call_operator<S,U>);
+	// The repr.
+	class_inst.def("__repr__",lambdified_repr<S,U>);
+	// Update the exposition counter.
+	++lambdified_counter;
 }
 
 // Generic canonical transformation wrapper.
@@ -461,6 +558,8 @@ class series_exposer
 			{
 				m_series_class.def("_evaluate",generic_evaluate_wrapper<S,T>);
 				bp::def("_evaluate",generic_evaluate_wrapper<S,T>);
+				bp::def("_lambdify",generic_lambdify_wrapper<S,T>);
+				generic_expose_lambdified<S,T>();
 			}
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<!piranha::is_evaluable<S,T>::value>::type * = nullptr) const
@@ -619,7 +718,7 @@ class series_exposer
 		static void expose_partial(bp::class_<S> &series_class,
 			typename std::enable_if<piranha::is_differentiable<S>::value>::type * = nullptr)
 		{
-			// NOTE: we need this below in order to specifiy exactly the address of the templated
+			// NOTE: we need this below in order to specify exactly the address of the templated
 			// static method for unregistering the custom derivatives.
 			using partial_type = decltype(piranha::math::partial(std::declval<const S &>(),std::string{}));
 			series_class.def("partial",generic_partial_member_wrapper<S>);

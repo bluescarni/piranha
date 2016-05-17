@@ -2033,8 +2033,8 @@ BOOST_AUTO_TEST_CASE(real_t_subs_test)
 
 BOOST_AUTO_TEST_CASE(real_type_traits_test)
 {
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<real>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<const real>::value,true);
+	BOOST_CHECK_EQUAL(std::is_nothrow_destructible<real>::value,true);
+	BOOST_CHECK_EQUAL(std::is_nothrow_destructible<const real>::value,true);
 	BOOST_CHECK(is_differentiable<real>::value);
 	BOOST_CHECK(is_differentiable<real &>::value);
 	BOOST_CHECK(is_differentiable<const real &>::value);

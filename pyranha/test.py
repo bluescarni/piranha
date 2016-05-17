@@ -312,6 +312,7 @@ class math_test_case(_ut.TestCase):
 		self.evaluateTest()
 		self.subsTest()
 		self.invertTest()
+		self.lambdifyTest()
 	def binomialTest(self):
 		from fractions import Fraction as F
 		from .math import binomial
@@ -456,6 +457,70 @@ class math_test_case(_ut.TestCase):
 		self.assertEqual(type(invert(t(F(3,4)))),t)
 		self.assertEqual(str(invert(t('x'))),'1/[(x)]')
 		self.assertEqual(str(t('x')**-1),'x**-1')
+	def lambdifyTest(self):
+		from .math import lambdify
+		from fractions import Fraction as F
+		from .types import polynomial, k_monomial, rational, rational_function
+		pt = polynomial(rational,k_monomial)()
+		x,y,z = [pt(_) for _ in 'xyz']
+		l = lambdify(F,3*x**4/2-y/3+z**2,['y','z','x'])
+		self.assertEqual(l([F(1,2),F(3,4),F(5,6)]),3*F(5,6)**4/2-F(1,2)/3+F(3,4)**2)
+		self.assertEqual(type(l([F(1,2),F(3,4),F(5,6)])),F)
+		l = lambdify(float,3*x**4/2-y/3+z**2,['y','z','x'])
+		self.assertAlmostEqual(l([1.2,3.4,5.6]),3*5.6**4/2-1.2/3+3.4**2)
+		self.assertEqual(type(l([1.2,3.4,5.6])),float)
+		self.assertRaises(TypeError,lambda : lambdify(3,3*x**4/2-y/3+z**2,['y','z','x']))
+		self.assertRaises(ValueError,lambda : lambdify(int,3*x**4/2-y/3+z**2,['y','z','x','y']))
+		self.assertRaises(TypeError,lambda : lambdify(int,3*x**4/2-y/3+z**2,[1,2,3]))
+		self.assertRaises(ValueError,lambda : l([1.2,3.4]))
+		self.assertRaises(ValueError,lambda : l([1.2,3.4,5.6,6.7]))
+		# Try with extra maps.
+		l = lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': lambda _: 5.})
+		self.assertAlmostEqual(l([1.2,3.4]),3*5.**4/2-1.2/3+3.4**2)
+		# Check that a deep copy of the functor is made.
+		class functor(object):
+			def __init__(self):
+				self.n = 42.
+			def __call__(self,a):
+				return self.n
+		f = functor()
+		l = lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': f})
+		f.n = 0.
+		self.assertEqual(f(1),0.)
+		self.assertAlmostEqual(l([1.2,3.4]),3*42.**4/2-1.2/3+3.4**2)
+		# Try various errors.
+		self.assertRaises(TypeError,lambda: lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': 1}))
+		self.assertRaises(TypeError,lambda: lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{3: lambda _ : 3}))
+		l = lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'x': lambda _: ""})
+		self.assertRaises(TypeError,lambda: l([1.2,3.4]))
+		self.assertRaises(ValueError,lambda: lambdify(float,3*x**4/2-y/3+z**2,['y','z'],{'y': lambda _: ""}))
+		# Check the str repr.
+		eobj = 3*x**4/2-y/3+z**2
+		l = lambdify(float,eobj,['y','z'])
+		self.assertEqual(str(l),"Lambdified object: " + str(eobj) + "\nEvaluation variables: [\"y\",\"z\"]\nSymbols in the extra map: []")
+		l = lambdify(float,eobj,['y','z'],{'x': f})
+		self.assertEqual(str(l),"Lambdified object: " + str(eobj) + "\nEvaluation variables: [\"y\",\"z\"]\nSymbols in the extra map: [\"x\"]")
+		# Try with optional modules:
+		try:
+			from mpmath import mpf
+			l = lambdify(mpf,x-y,['x','y'])
+			self.assertEqual(l([mpf(1),mpf(2)]),mpf(1)-mpf(2))
+			self.assertEqual(type(l([mpf(1),mpf(2)])),mpf)
+		except ImportError:
+			pass
+		try:
+			from numpy import array
+			l = lambdify(float,3*x**4/2-y/3+z**2,['y','z','x'])
+			self.assertAlmostEqual(l(array([1.2,3.4,5.6])),3*5.6**4/2-1.2/3+3.4**2)
+			self.assertEqual(type(l(array([1.2,3.4,5.6]))),float)
+		except ImportError:
+			pass
+		# Double check the evaluation bug with rational functions.
+		rt = rational_function(k_monomial)()
+		x,y,z = [rt(_) for _ in 'xyz']
+		l = lambdify(int,x/y,['y','x'])
+		self.assertEqual(type(l([1,2])),int)
+		self.assertEqual(l([2,4]),2)
 
 class polynomial_test_case(_ut.TestCase):
 	""":mod:`polynomial` module test case.
@@ -1042,6 +1107,7 @@ class rational_function_test_case(_ut.TestCase):
 	def runTest(self):
 		from .types import rational_function, k_monomial, monomial, short, polynomial, integer, rational
 		from fractions import Fraction as F
+		import sys
 		rt = rational_function(k_monomial)()
 		pt = polynomial(integer,k_monomial)()
 		qt = polynomial(rational,k_monomial)()
@@ -1124,6 +1190,12 @@ class rational_function_test_case(_ut.TestCase):
 		self.assertEqual(evaluate(x,{"x":F(3,4)}),F(3,4))
 		self.assertEqual(evaluate(x,{"x":rt(3)}),pt(3))
 		self.assertEqual(evaluate(x,{"x":3.}),3.)
+		# This was an evaluation bug: the overloading in Boost.Python would transform
+		# the evaluation argument into double.
+		if sys.version_info[0] == 2:
+			self.assert_(isinstance(evaluate(x,{"x":2}),(int,long)))
+		else:
+			self.assert_(isinstance(evaluate(x,{"x":2}),int))
 		# Subs.
 		from .math import subs
 		self.assertEqual(subs(x,"x",4),4)
