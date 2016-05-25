@@ -533,8 +533,7 @@ namespace math
  *
  * @return cosine of \p x.
  *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::cos_impl functor
- * or by returning the result.
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::cos_impl functor.
  */
 template <typename T>
 inline detail::math_cos_type<T> cos(const T &x)
@@ -631,8 +630,7 @@ namespace math
  *
  * @return sine of \p x.
  *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::sin_impl functor
- * or by returning the result.
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::sin_impl functor.
  */
 template <typename T>
 inline detail::math_sin_type<T> sin(const T &x)

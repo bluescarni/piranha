@@ -258,8 +258,7 @@ namespace math
  *
  * @return \p x choose \p y.
  *
- * @throws unspecified any exception thrown by the call operator of piranha::math::binomial_impl or by returning
- * the result.
+ * @throws unspecified any exception thrown by the call operator of piranha::math::binomial_impl.
  */
 template <typename T, typename U>
 inline detail::math_binomial_type<T,U> binomial(const T &x, const U &y)

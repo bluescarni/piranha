@@ -63,7 +63,7 @@ struct convert_to_impl
 		 *
 		 * @return an instance of type \p To cast from \p x.
 		 *
-		 * @throws unspecified any exception thrown by casting \p x to \p To or by returning the result.
+		 * @throws unspecified any exception thrown by casting \p x to \p To.
 		 */
 		template <typename From2>
 		return_type<From2> operator()(const From2 &x) const
@@ -106,8 +106,7 @@ using convert_to_enabler = typename std::enable_if<
  *
  * @returns an instance of the decay type of \p To converted from \p x.
  *
- * @throws unspecified any exception thrown by the call operator of the piranha::convert_to_impl functor or by returning
- * the result.
+ * @throws unspecified any exception thrown by the call operator of the piranha::convert_to_impl functor.
  */
 template <typename To, typename From, detail::convert_to_enabler<To,From> = 0>
 inline To convert_to(const From &x)
