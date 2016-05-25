@@ -105,7 +105,7 @@ namespace detail
 // Enabler for math::is_zero().
 template <typename T>
 using math_is_zero_enabler = typename std::enable_if<
-	std::is_convertible<decltype(piranha::math::is_zero_impl<T>()(std::declval<const T &>())),bool>::value,int>::type;
+	std::is_convertible<decltype(math::is_zero_impl<T>()(std::declval<const T &>())),bool>::value,int>::type;
 
 }
 
@@ -216,7 +216,7 @@ namespace detail
 // Enabler for piranha::math::is_unitary().
 template <typename T>
 using math_is_unitary_enabler = typename std::enable_if<
-	std::is_convertible<decltype(piranha::math::is_unitary_impl<T>()(std::declval<const T &>())),bool>::value,int>::type;
+	std::is_convertible<decltype(math::is_unitary_impl<T>()(std::declval<const T &>())),bool>::value,int>::type;
 
 }
 
