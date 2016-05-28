@@ -665,10 +665,36 @@ struct partial_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::typ
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Return type for math::partial().
+template <typename T>
+using math_partial_type_ = decltype(math::partial_impl<T>{}(std::declval<const T &>(),
+	std::declval<const std::string &>()));
+
+template <typename T>
+using math_partial_type = typename std::enable_if<is_returnable<math_partial_type_<T>>::value,math_partial_type_<T>>::type;
+
+}
+
+namespace math
+{
+
 /// Partial derivative.
 /**
+ * \note
+ * This function is enabled only if the expression <tt>partial_impl<T>{}(x,str)</tt>, returning a type that satisfies
+ * piranha::is_returnable.
+ *
  * Return the partial derivative of \p x with respect to the symbolic quantity named \p str. The actual
- * implementation of this function is in the piranha::math::partial_impl functor.
+ * implementation of this function is in the piranha::math::partial_impl functor. The body of this function
+ * is equivalent to:
+ * @code
+ * return partial_impl<T>{}(x,str);
+ * @endcode
  *
  * @param[in] x argument for the partial derivative.
  * @param[in] str name of the symbolic quantity with respect to which the derivative will be computed.
@@ -678,9 +704,9 @@ struct partial_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::typ
  * @throws unspecified any exception thrown by the call operator of piranha::math::partial_impl.
  */
 template <typename T>
-inline auto partial(const T &x, const std::string &str) -> decltype(partial_impl<T>()(x,str))
+inline detail::math_partial_type<T> partial(const T &x, const std::string &str)
 {
-	return partial_impl<T>()(x,str);
+	return partial_impl<T>{}(x,str);
 }
 
 /// Default functor for the implementation of piranha::math::integrate().
@@ -1632,9 +1658,10 @@ class is_differentiable: detail::sfinae_types
 		template <typename U>
 		static auto test(const U &u) -> decltype(math::partial(u,""),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.

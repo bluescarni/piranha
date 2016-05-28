@@ -1482,12 +1482,26 @@ struct ipow_subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::ration
 		}
 };
 
+}
+
+namespace detail
+{
+
+// Enabler for the math::partial() specialisation for rf.
+template <typename T>
+using rf_partial_enabler = typename std::enable_if<std::is_base_of<rational_function_tag,T>::value>::type;
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::partial() functor for piranha::rational_function.
 /**
  * This specialisation is activated when \p T is an instance of piranha::rational_function.
  */
 template <typename T>
-struct partial_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+struct partial_impl<T,detail::rf_partial_enabler<T>>
 {
 	/// Call operator.
 	/**

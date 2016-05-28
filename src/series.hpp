@@ -135,7 +135,7 @@ inline RetT apply_cf_functor(const T &s)
 /**
  * This type trait will be true if \p T is an instance of piranha::series which satisfies piranha::is_container_element.
  */
-// TODO: runtime/other requirements:
+// NOTE: runtime/other requirements:
 // - a def cted series is empty (this is used, e.g., in the series multiplier);
 // - typedefs in series should not be overridden.
 template <typename T>
@@ -1716,7 +1716,7 @@ class series: detail::series_tag, series_operators
 		template <typename Series>
 		using key_t = typename Series::term_type::key_type;
 		// We have different implementations, depending on whether the computed derivative type is the same as the original one
-		// (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics). Adopt the usual schema
+		// (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics). Adopt the usual scheme
 		// of providing an unspecialised value that sfinaes out if the enabler condition is malformed, and two specialisations
 		// that implement the logic above.
 		template <typename Series, typename = void>
@@ -1750,7 +1750,8 @@ class series: detail::series_tag, series_operators
 		#undef PIRANHA_SERIES_PARTIAL_ENABLER
 		// The final typedef.
 		template <typename Series>
-		using partial_type = typename partial_type_<Series>::type;
+		using partial_type = typename std::enable_if<is_returnable<typename partial_type_<Series>::type>::value,
+			typename partial_type_<Series>::type>::type;
 		// The implementation of the two partial() algorithms.
 		template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 0,int>::type = 0>
 		partial_type<Series> partial_impl(const std::string &name) const
@@ -3403,8 +3404,8 @@ namespace math
 
 /// Specialisation of the piranha::math::partial() functor for series types.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::series with a \p partial() method
- * with the same signature as piranha::series::partial().
+ * This specialisation is activated when \p Series is an instance of piranha::series with a const \p partial() method
+ * method taking a const <tt>std::string</tt> as parameter.
  */
 template <typename Series>
 struct partial_impl<Series,detail::series_partial_enabler<Series>>
