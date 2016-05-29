@@ -3477,22 +3477,22 @@ struct integrate_impl<Series,detail::series_integrate_enabler<Series>>
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series.
  */
-template <typename Series>
-struct evaluate_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
+template <typename Series, typename T>
+struct evaluate_impl<Series,T,typename std::enable_if<is_series<Series>::value>::type>
 {
 	private:
-		template <typename T>
+		template <typename U>
 		using eval_type_ = decltype(std::declval<const Series &>().evaluate(
-			std::declval<const std::unordered_map<std::string,T> &>()));
-		template <typename T>
-		using eval_type = typename std::enable_if<is_returnable<eval_type_<T>>::value,
-			eval_type_<T>>::type;
+			std::declval<const std::unordered_map<std::string,U> &>()));
+		template <typename U>
+		using eval_type = typename std::enable_if<is_returnable<eval_type_<U>>::value,
+			eval_type_<U>>::type;
 	public:
 		/// Call operator.
 		/**
 		 * \note
 		 * This operator is enabled only if the expression <tt>s.evaluate(dict)</tt>
-		 * is valid, returning a type which satisfies piranha::is_returnable..
+		 * is valid, returning a type which satisfies piranha::is_returnable.
 		 *
 		 * The body of this operator is equivalent to:
 		 * @code
@@ -3506,8 +3506,8 @@ struct evaluate_impl<Series,typename std::enable_if<is_series<Series>::value>::t
 		 *
 		 * @throws unspecified any exception thrown by piranha::series::evaluate().
 		 */
-		template <typename T>
-		eval_type<T> operator()(const Series &s, const std::unordered_map<std::string,T> &dict) const
+		template <typename U>
+		eval_type<U> operator()(const Series &s, const std::unordered_map<std::string,U> &dict) const
 		{
 			return s.evaluate(dict);
 		}

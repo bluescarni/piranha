@@ -1576,16 +1576,16 @@ struct integrate_impl<T,typename std::enable_if<std::is_base_of<detail::rational
 /**
  * This specialisation is enabled if \p T is an instance of piranha::rational_function.
  */
-template <typename T>
-struct evaluate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+template <typename T, typename U>
+struct evaluate_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
 {
 	private:
 		// This is the real eval type.
-		template <typename U, typename V>
-		using eval_type_ = decltype(evaluate(std::declval<const U &>().num(),std::declval<const std::unordered_map<std::string,V> &>())
-			/ evaluate(std::declval<const U &>().den(),std::declval<const std::unordered_map<std::string,V> &>()));
-		template <typename U, typename V>
-		using eval_type = typename std::enable_if<is_returnable<eval_type_<U,V>>::value,eval_type_<U,V>>::type;
+		template <typename V>
+		using eval_type_ = decltype(evaluate(std::declval<const T &>().num(),std::declval<const std::unordered_map<std::string,V> &>())
+			/ evaluate(std::declval<const T &>().den(),std::declval<const std::unordered_map<std::string,V> &>()));
+		template <typename V>
+		using eval_type = typename std::enable_if<is_returnable<eval_type_<V>>::value,eval_type_<V>>::type;
 	public:
 		/// Call operator.
 		/**
@@ -1605,8 +1605,8 @@ struct evaluate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_
 		 * - the evaluation of the numerator and denominator of \p r,
 		 * - the division of the results of the evaluations of numerator and denominator.
 		 */
-		template <typename U, typename V>
-		eval_type<U,V> operator()(const U &r, const std::unordered_map<std::string,V> &m) const
+		template <typename V>
+		eval_type<V> operator()(const T &r, const std::unordered_map<std::string,V> &m) const
 		{
 			return evaluate(r.num(),m) / evaluate(r.den(),m);
 		}

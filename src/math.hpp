@@ -767,17 +767,18 @@ inline detail::math_integrate_type<T> integrate(const T &x, const std::string &s
 /**
  * This functor should be specialised via the \p std::enable_if mechanism.
  */
-template <typename T, typename Enable = void>
+template <typename T, typename U, typename Enable = void>
 struct evaluate_impl
 {
 	private:
-		template <typename U>
-		using enabler = typename std::enable_if<std::is_copy_constructible<U>::value,int>::type;
+		template <typename V>
+		using enabler = typename std::enable_if<std::is_copy_constructible<V>::value &&
+			is_returnable<V>::value,int>::type;
 	public:
 		/// Call operator.
 		/**
 		 * \note
-		 * This operator is enabled only if \p U is copy-constructible.
+		 * This operator is enabled only if \p V is copy-constructible and if it satisfies piranha::is_returnable.
 		 *
 		 * The default behaviour is to return the input value \p x unchanged.
 		 *
@@ -787,8 +788,8 @@ struct evaluate_impl
 		 *
 		 * @throws unspecified any exception thrown by the invoked copy constructor.
 		 */
-		template <typename U, typename V, enabler<U> = 0>
-		U operator()(const U &x, const std::unordered_map<std::string,V> &) const
+		template <typename V, enabler<V> = 0>
+		V operator()(const V &x, const std::unordered_map<std::string,U> &) const
 		{
 			return x;
 		}
@@ -801,7 +802,7 @@ namespace detail
 
 // Return type for math::evaluate().
 template <typename T, typename U>
-using math_evaluate_type_ = decltype(math::evaluate_impl<T>()(std::declval<const T &>(),
+using math_evaluate_type_ = decltype(math::evaluate_impl<T,U>{}(std::declval<const T &>(),
 	std::declval<const std::unordered_map<std::string,U> &>()));
 
 template <typename T, typename U>
@@ -816,17 +817,16 @@ namespace math
 /// Evaluation.
 /**
  * \note
- * This function is enabled only if <tt>evaluate_impl<T>()(x,dict)</tt> is a valid expression, returning
+ * This function is enabled only if <tt>evaluate_impl<T,U>{}(x,dict)</tt> is a valid expression, returning
  * a type which satisfies piranha::is_returnable.
  *
  * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary \p dict
- * specifies the quantity (value) that will be susbstituted for each argument (key), here represented as a string.
+ * specifies the quantity (value) that will be susbstituted for each argument (key), represented as a string.
+ * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
  * The body of this method is equivalent to:
  * @code
- * return evaluate_impl<T>()(x,dict);
+ * return evaluate_impl<T,U>{}(x,dict);
  * @endcode
- *
- * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
  *
  * @param[in] x quantity that will be evaluated.
  * @param[in] dict dictionary that will be used to perform the substitution.
@@ -838,7 +838,7 @@ namespace math
 template <typename U, typename T>
 inline detail::math_evaluate_type<T,U> evaluate(const T &x, const std::unordered_map<std::string,U> &dict)
 {
-	return evaluate_impl<T>()(x,dict);
+	return evaluate_impl<T,U>{}(x,dict);
 }
 
 /// Default functor for the implementation of piranha::math::subs().
@@ -2277,10 +2277,11 @@ class is_evaluable: detail::sfinae_types
 		static auto test(const T2 &t, const std::unordered_map<std::string,U2> &dict) ->
 			decltype(math::evaluate(t,dict),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<T>(),
+			std::declval<std::unordered_map<std::string,U>>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>(),
-			std::declval<std::unordered_map<std::string,U>>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
