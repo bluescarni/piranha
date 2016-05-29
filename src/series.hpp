@@ -3390,7 +3390,7 @@ namespace detail
 // Enabler for the partial() specialisation for series.
 template <typename Series>
 using series_partial_enabler = typename std::enable_if<is_series<Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().partial(std::declval<const std::string &>()))>::value>::type;
+	is_returnable<decltype(std::declval<const Series &>().partial(std::declval<const std::string &>()))>::value>::type;
 
 // Enabler for the integrate() specialisation: type needs to be a series which supports the integration method.
 template <typename Series>
@@ -3405,7 +3405,7 @@ namespace math
 /// Specialisation of the piranha::math::partial() functor for series types.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series with a const \p partial() method
- * method taking a const <tt>std::string</tt> as parameter.
+ * method taking a const <tt>std::string</tt> as parameter and returning a type which satisfies piranha::is_returnable.
  */
 template <typename Series>
 struct partial_impl<Series,detail::series_partial_enabler<Series>>

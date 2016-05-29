@@ -686,8 +686,8 @@ namespace math
 /// Partial derivative.
 /**
  * \note
- * This function is enabled only if the expression <tt>partial_impl<T>{}(x,str)</tt>, returning a type that satisfies
- * piranha::is_returnable.
+ * This function is enabled only if the expression <tt>partial_impl<T>{}(x,str)</tt> is valid, returning a type that
+ * satisfies piranha::is_returnable.
  *
  * Return the partial derivative of \p x with respect to the symbolic quantity named \p str. The actual
  * implementation of this function is in the piranha::math::partial_impl functor. The body of this function
