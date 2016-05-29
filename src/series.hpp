@@ -3395,7 +3395,7 @@ using series_partial_enabler = typename std::enable_if<is_series<Series>::value 
 // Enabler for the integrate() specialisation: type needs to be a series which supports the integration method.
 template <typename Series>
 using series_integrate_enabler = typename std::enable_if<is_series<Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
+	is_returnable<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
 
 }
 
@@ -3452,7 +3452,7 @@ struct partial_impl<Series,detail::series_partial_enabler<Series>>
 /// Specialisation of the piranha::math::integrate() functor for series types.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series with a const \p integrate()
- * method taking a const <tt>std::string</tt> as parameter.
+ * method taking a const <tt>std::string</tt> as parameter and returning a type which satisfies piranha::is_returnable.
  */
 template <typename Series>
 struct integrate_impl<Series,detail::series_integrate_enabler<Series>>

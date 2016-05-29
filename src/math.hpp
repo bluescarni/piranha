@@ -718,10 +718,37 @@ template <typename T, typename Enable = void>
 struct integrate_impl
 {};
 
+}
+
+namespace detail
+{
+
+// Return type for math::integrate().
+template <typename T>
+using math_integrate_type_ = decltype(math::integrate_impl<T>{}(std::declval<const T &>(),
+	std::declval<const std::string &>()));
+
+template <typename T>
+using math_integrate_type = typename std::enable_if<is_returnable<math_integrate_type_<T>>::value,
+	math_integrate_type_<T>>::type;
+
+}
+
+namespace math
+{
+
 /// Integration.
 /**
+* \note
+* This function is enabled only if the expression <tt>integrate_impl<T>{}(x,str)</tt> is valid, returning a type that
+* satisfies piranha::is_returnable.
+ *
  * Return the antiderivative of \p x with respect to the symbolic quantity named \p str. The actual
- * implementation of this function is in the piranha::math::integrate_impl functor.
+ * implementation of this function is in the piranha::math::integrate_impl functor. The body of this function
+ * is equivalent to:
+ * @code
+ * return integrate_impl<T>{}(x,str);
+ * @endcode
  *
  * @param[in] x argument for the integration.
  * @param[in] str name of the symbolic quantity with respect to which the integration will be computed.
@@ -731,9 +758,9 @@ struct integrate_impl
  * @throws unspecified any exception thrown by the call operator of piranha::math::integrate_impl.
  */
 template <typename T>
-inline auto integrate(const T &x, const std::string &str) -> decltype(integrate_impl<T>()(x,str))
+inline detail::math_integrate_type<T> integrate(const T &x, const std::string &str)
 {
-	return integrate_impl<T>()(x,str);
+	return integrate_impl<T>{}(x,str);
 }
 
 /// Default functor for the implementation of piranha::math::evaluate().
@@ -1725,9 +1752,10 @@ class is_integrable: detail::sfinae_types
 		template <typename U>
 		static auto test(const U &u) -> decltype(math::integrate(u,""),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename T>
