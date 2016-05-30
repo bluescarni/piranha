@@ -83,13 +83,9 @@ see https://www.gnu.org/licenses/. */
  * \todo consider bringing back the unroller from the vectorization work into the small_vector class.
  * \todo some versions of mingw want __mingw_aligned_malloc instead of _aligned_malloc, fix this with a check in the build system. Or
  * maybe check whether __mingw_aligned_malloc is available in all mingw versions.
- * \todo pyranha: try to understand what is the best way to have functions which are extensible from the user. E.g., we have math.cos
- * that works on series, mpmath, etc., how can we provide a mechanism for a user to add her own specialisations?
- * http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user
  * \todo check usages of std algorithms against the assumptions on the functors used:
  * http://stackoverflow.com/questions/20119810/parallel-implementations-of-std-algorithms-and-side-effects
  * \todo probably better to remove the thread_management class and use free functions directly for the binding.
- * \todo review the usage of the static keyword for functions: we are header-only now, it's probably not needed (esp. static inline).
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at least to make
  * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
  * and keep lexical_cast only for the conversion of piranha's types to string.
