@@ -87,7 +87,7 @@ struct is_key_impl: sfinae_types
 /**
  * This type trait will be \p true if \p T can be used as a key type, \p false otherwise.
  * The requisites for \p T are the following:
- * 
+ *
  * - it must satisfy piranha::is_container_element,
  * - it must be constructible from a const piranha::symbol_set reference,
  * - it must satisfy piranha::is_equality_comparable,
@@ -123,13 +123,14 @@ class is_key
 template <typename T>
 class is_key<T,typename std::enable_if<detail::is_key_impl<T>::value>::type>
 {
+		static const bool implementation_defined = is_container_element<T>::value &&
+			std::is_constructible<T,const symbol_set &>::value &&
+			is_equality_comparable<T>::value &&
+			is_hashable<T>::value &&
+			noexcept(std::declval<T const &>().is_compatible(std::declval<symbol_set const &>())) &&
+			noexcept(std::declval<T const &>().is_ignorable(std::declval<symbol_set const &>()));
 	public:
-		static const bool value = is_container_element<T>::value &&
-					  std::is_constructible<T,const symbol_set &>::value &&
-					  is_equality_comparable<T>::value &&
-					  is_hashable<T>::value &&
-					  noexcept(std::declval<T const &>().is_compatible(std::declval<symbol_set const &>())) &&
-					  noexcept(std::declval<T const &>().is_ignorable(std::declval<symbol_set const &>()));
+		static const bool value = implementation_defined;
 };
 
 template <typename T, typename Enable>

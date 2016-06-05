@@ -83,13 +83,9 @@ see https://www.gnu.org/licenses/. */
  * \todo consider bringing back the unroller from the vectorization work into the small_vector class.
  * \todo some versions of mingw want __mingw_aligned_malloc instead of _aligned_malloc, fix this with a check in the build system. Or
  * maybe check whether __mingw_aligned_malloc is available in all mingw versions.
- * \todo pyranha: try to understand what is the best way to have functions which are extensible from the user. E.g., we have math.cos
- * that works on series, mpmath, etc., how can we provide a mechanism for a user to add her own specialisations?
- * http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user
  * \todo check usages of std algorithms against the assumptions on the functors used:
  * http://stackoverflow.com/questions/20119810/parallel-implementations-of-std-algorithms-and-side-effects
  * \todo probably better to remove the thread_management class and use free functions directly for the binding.
- * \todo review the usage of the static keyword for functions: we are header-only now, it's probably not needed (esp. static inline).
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at least to make
  * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
  * and keep lexical_cast only for the conversion of piranha's types to string.
@@ -163,9 +159,6 @@ see https://www.gnu.org/licenses/. */
  * where they are used and update the docs for exception specifications.
  * \todo hash_set needs more testing.
  * \todo maybe we should rename is_container_element to is_regular_type.
- * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
- * in generic algorithms - subs, ipow_subs, etc.? This is kind of done in the pmappable requirements. UPDATE: this probably needs to be an
- * is_returnable check, no need to go all the way to is_container_element. NOTE: this also holds for the degree types.
  * \todo the following items still remain to be finished up after the truncation rework:
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes. Right now we are using
  *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be running in some overhead.
@@ -199,11 +192,6 @@ see https://www.gnu.org/licenses/. */
  * \todo again related to the above, there are a couple of instances of use of lterm with potentially zero polynomial due to truncation. Keep in mind,
  * probably it is just best to replace poly multiplications with explicitly untruncated counterparts in rational function.
  * \todo implement the GCD benchmarks from the liao paper as a performance test.
- * \todo the evaluation functor impl should probably take the evaluation type as a parameter too, the same way pow_impl does. Other improvements:
- * - overload for use with init list without explicit template param,
- * - related to the first point, fix the template params order,
- * - improve the error message if not all variables are provided (this should probably be caught in series::evaluate() early rather
- *   than go down all the way to the key).
  * \todo we need to decide if we want to keep the postifx notation for things like eval, subs etc. or just support the math:: versions. It probably does
  * not make much sense to go back and remove the methods in the toolboxes, but for documentation purposes and in python particularly we should just
  * support the math:: overloads (with partial() being the lone exception).
@@ -211,6 +199,7 @@ see https://www.gnu.org/licenses/. */
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
  * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
+ * \todo is_unitary() should be implemented for real and series as well.
  * \todo we are using std::decay all over the place to, essentially, remove cv and ref qualifiers from types. But decay
  * also turns arrays into pointers and functions into pointers. Maybe we should have a remove_cvr type trait that just removes
  * cv and refs instead. Not sure if we care about plain arrays and function pointers enough though.
@@ -218,6 +207,7 @@ see https://www.gnu.org/licenses/. */
  * in the type-traits rework.
  * \todo in the pyranha doc improvements, we should probably handle bettere unspecified exceptions and document
  * the return type as well for consistency (see lambdify docs).
+ * \todo "quick install" should not be the title of the getting started section in sphinx
  */
 namespace piranha
 {

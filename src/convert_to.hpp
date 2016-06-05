@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "detail/sfinae_types.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -41,23 +42,34 @@ namespace piranha
 template <typename To, typename From, typename = void>
 struct convert_to_impl
 {
-	/// Call operator.
-	/**
-	 * \note
-	 * This call operator is enabled only if <tt>static_cast<To>(x)</tt> is a well-formed
-	 * expression.
-	 *
-	 * @param[in] x conversion argument.
-	 *
-	 * @return an instance of type \p To cast from \p x.
-	 *
-	 * @throws unspecified any exception thrown by casting \p x to \p To.
-	 */
-	template <typename From2>
-	auto operator()(const From2 &x) const -> decltype(static_cast<To>(x))
-	{
-		return static_cast<To>(x);
-	}
+	private:
+		template <typename From2>
+		using return_type_ = decltype(static_cast<To>(std::declval<const From2 &>()));
+		template <typename From2>
+		using return_type = typename std::enable_if<is_returnable<return_type_<From2>>::value,return_type_<From2>>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This call operator is enabled only if <tt>static_cast<To>(x)</tt> is a well-formed
+		 * expression, returning a type which satisfies piranha::is_returnable.
+		 *
+		 * The body of this operator is equivalent to:
+		 * @code
+		 * return static_cast<To>(x);
+		 * @endcode
+		 *
+		 * @param[in] x conversion argument.
+		 *
+		 * @return an instance of type \p To cast from \p x.
+		 *
+		 * @throws unspecified any exception thrown by casting \p x to \p To.
+		 */
+		template <typename From2>
+		return_type<From2> operator()(const From2 &x) const
+		{
+			return static_cast<To>(x);
+		}
 };
 
 namespace detail
@@ -66,16 +78,22 @@ namespace detail
 // Enabler for the generic conversion function. We need to check that the impl functor is callable
 // and that it returns the proper type.
 template <typename To, typename From>
-using convert_enabler = typename std::enable_if<
-	std::is_same<decltype(convert_to_impl<typename std::decay<To>::type,From>()(std::declval<const From &>())),typename std::decay<To>::type>::value,
+using convert_to_enabler = typename std::enable_if<
+	std::is_same<decltype(convert_to_impl<typename std::decay<To>::type,From>()(std::declval<const From &>())),typename std::decay<To>::type>::value &&
+	is_returnable<typename std::decay<To>::type>::value,
 	int>::type;
 
 }
 
 /// Generic conversion function.
 /**
+ * \note
+ * This function is enabled only if the call operator of piranha::convert_to_impl returns a instance of
+ * the decay type of \p To, and if the decay type of \p To satisfies piranha::is_returnable.
+ *
  * This function is meant to convert an instance of type \p From to an instance of the decay
- * type of \p To. It is intended to be a user-extensible replacement for \p static_cast.
+ * type of \p To. It is intended to be a user-extensible replacement for \p static_cast
+ * limited to value conversions (that is, the decay types of \p To and \p From are considered).
  *
  * The actual implementation of this function is in the piranha::convert_to_impl functor's
  * call operator. The decay type of \p To is passed as first template parameter of
@@ -90,7 +108,7 @@ using convert_enabler = typename std::enable_if<
  *
  * @throws unspecified any exception thrown by the call operator of the piranha::convert_to_impl functor.
  */
-template <typename To, typename From, detail::convert_enabler<To,From> = 0>
+template <typename To, typename From, detail::convert_to_enabler<To,From> = 0>
 inline To convert_to(const From &x)
 {
 	return convert_to_impl<typename std::decay<To>::type,From>()(x);
@@ -106,16 +124,14 @@ class has_convert_to: detail::sfinae_types
 {
 		using Tod = typename std::decay<To>::type;
 		using Fromd = typename std::decay<From>::type;
-		// NOTE: here we can just reuse the logic from the detail enabler. Note that using
-		// directly the convert_to() function here, as we do elsewhere, will not work on Intel,
-		// due to what looks like a bug when using decltype with an explicit template parameter
-		// in the function.
-		template <typename To1, typename From1, detail::convert_enabler<To1,From1> = 0>
-		static yes test(const To1 &, const From1 &);
+		template <typename To1, typename From1>
+		static auto test(const To1 &, const From1 &x) -> decltype(convert_to<To1>(x),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Tod>(),
+			std::declval<Fromd>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Tod>(),std::declval<Fromd>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.

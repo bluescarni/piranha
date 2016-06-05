@@ -68,63 +68,110 @@ namespace math
 template <typename T, typename = void>
 struct is_zero_impl
 {
-	/// Call operator.
-	/**
-	 * The operator will compare \p x to an instance of \p U constructed from the literal 0. If \p U cannot
-	 * be constructed from the literal 0 or \p U is not equality comparable, the operator will be disabled.
-	 * 
-	 * @param[in] x argument to be tested.
-	 * 
-	 * @return \p true if \p x is zero, \p false otherwise.
-	 *
-	 * @throws unspecified any exception thrown by the construction or comparison of instances of type \p U.
-	 */
-	template <typename U>
-	bool operator()(const U &x, typename std::enable_if<std::is_constructible<U,int>::value &&
-		is_equality_comparable<U>::value>::type * = nullptr) const
-	{
-		// NOTE: construct instance from integral constant 0.
-		// http://groups.google.com/group/comp.lang.c++.moderated/msg/328440a86dae8088?dmode=source
-		return x == U(0);
-	}
+	private:
+		// NOTE: the equality comparable requirement already implies that the return type of
+		// the comparison must be convertible to bool.
+		template <typename U>
+		using enabler = typename std::enable_if<std::is_constructible<U,int>::value &&
+			is_equality_comparable<U>::value,int>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This operator is enabled only if \p U is constructible from \p int and
+		 * equality-comparable.
+		 *
+		 * The operator will compare \p x to an instance of \p U constructed from the literal 0.
+		 *
+		 * @param[in] x argument to be tested.
+		 *
+		 * @return \p true if \p x is zero, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by the construction or comparison of instances of type \p U, or
+		 * by the conversion of the result of the comparison to \p bool.
+		 */
+		template <typename U, enabler<U> = 0>
+		bool operator()(const U &x) const
+		{
+			return x == U(0);
+		}
 };
 
-/// Specialisation of the piranha::math::is_zero() functor for C++ complex floating-point types.
+}
+
+namespace detail
+{
+
+// Enabler for math::is_zero().
 template <typename T>
-struct is_zero_impl<T,typename std::enable_if<std::is_same<T,std::complex<float>>::value ||
-	std::is_same<T,std::complex<double>>::value || std::is_same<T,std::complex<long double>>::value>::type>
+using math_is_zero_enabler = typename std::enable_if<
+	std::is_convertible<decltype(math::is_zero_impl<T>()(std::declval<const T &>())),bool>::value,int>::type;
+
+}
+
+namespace math
+{
+
+/// Zero test.
+/**
+ * \note
+ * This function is enabled only if <tt>is_zero_impl<T>()(x)</tt> is a well-formed expression returning
+ * a type implicitly convertible to \p bool.
+ *
+ * Test if value is zero. The actual implementation of this function is in the piranha::math::is_zero_impl functor's
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * return is_zero_impl<T>()(x);
+ * @endcode
+ *
+ * @param[in] x value to be tested.
+ *
+ * @return \p true if value is zero, \p false otherwise.
+ *
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::is_zero_impl functor or by
+ * the conversion of the result to \p bool.
+ */
+template <typename T, detail::math_is_zero_enabler<T> = 0>
+inline bool is_zero(const T &x)
+{
+	return is_zero_impl<T>()(x);
+}
+
+}
+
+namespace detail
+{
+
+// Enabler for the std complex specialisation of is_zero.
+template <typename T>
+using math_is_zero_std_complex_enabler = typename std::enable_if<std::is_same<T,std::complex<float>>::value ||
+	std::is_same<T,std::complex<double>>::value || std::is_same<T,std::complex<long double>>::value>::type;
+
+}
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::is_zero() functor for C++ complex floating-point types.
+/**
+ * This specialisation is enabled if \p T is an <tt>std::complex</tt> of a C++ floating-point type.
+ */
+template <typename T>
+struct is_zero_impl<T,detail::math_is_zero_std_complex_enabler<T>>
 {
 	/// Call operator.
 	/**
 	 * The operator will test separately the real and imaginary parts of the complex argument.
-	 * 
+	 *
 	 * @param[in] c argument to be tested.
-	 * 
+	 *
 	 * @return \p true if \p c is zero, \p false otherwise.
 	 */
 	bool operator()(const T &c) const
 	{
-		return is_zero_impl<typename T::value_type>()(c.real()) &&
-			is_zero_impl<typename T::value_type>()(c.imag());
+		return is_zero(c.real()) && is_zero(c.imag());
 	}
 };
-
-/// Zero test.
-/**
- * Test if value is zero. The actual implementation of this function is in the piranha::math::is_zero_impl functor's
- * call operator.
- * 
- * @param[in] x value to be tested.
- * 
- * @return \p true if value is zero, \p false otherwise.
- * 
- * @throws unspecified any exception thrown by the call operator of the piranha::math::is_zero_impl functor.
- */
-template <typename T>
-inline auto is_zero(const T &x) -> decltype(is_zero_impl<T>()(x))
-{
-	return is_zero_impl<T>()(x);
-}
 
 /// Default functor for the implementation of piranha::math::is_unitary().
 /**
@@ -151,7 +198,8 @@ struct is_unitary_impl
 		 *
 		 * @return \p true if \p x is equal to 1, \p false otherwise.
 		 *
-		 * @throws unspecified any exception thrown by the construction or comparison of instances of type \p U.
+		 * @throws unspecified any exception thrown by the construction or comparison of instances of type \p U or by
+		 * the conversion of the result to \p bool.
 		 */
 		template <typename U, enabler<U> = 0>
 		bool operator()(const U &x) const
@@ -160,19 +208,42 @@ struct is_unitary_impl
 		}
 };
 
+}
+
+namespace detail
+{
+
+// Enabler for piranha::math::is_unitary().
+template <typename T>
+using math_is_unitary_enabler = typename std::enable_if<
+	std::is_convertible<decltype(math::is_unitary_impl<T>()(std::declval<const T &>())),bool>::value,int>::type;
+
+}
+
+namespace math
+{
+
 /// Unitary test.
 /**
+ * \note
+ * This function is enabled only if <tt>is_unitary_impl<T>()(x)</tt> is a valid expression, returning a type
+ * which is implicitly convertible to \p bool.
+ *
  * Test if value is equal to 1. The actual implementation of this function is in the piranha::math::is_unitary_impl functor's
- * call operator.
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * return is_unitary_impl<T>()(x);
+ * @endcode
  *
  * @param[in] x value to be tested.
  *
  * @return \p true if value is equal to 1, \p false otherwise.
  *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::is_unitary_impl functor.
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::is_unitary_impl functor, or by
+ * the conversion of the result to \p bool.
  */
-template <typename T>
-inline auto is_unitary(const T &x) -> decltype(is_unitary_impl<T>()(x))
+template <typename T, detail::math_is_unitary_enabler<T> = 0>
+inline bool is_unitary(const T &x)
 {
 	return is_unitary_impl<T>()(x);
 }
@@ -185,55 +256,80 @@ inline auto is_unitary(const T &x) -> decltype(is_unitary_impl<T>()(x))
 template <typename T, typename = void>
 struct negate_impl
 {
-	/// Generic call operator.
-	/**
-	 * \note
-	 * This operator is enabled only if the expression <tt>x = -x</tt> is well-formed.
-	 * 
-	 * The body of the operator is equivalent to:
-	 @code
-	 return x = -x;
-	 @endcode
-	 * 
-	 * @param[in,out] x value to be negated.
-	 * 
-	 * @return the value returned by the assignment operator of \p x.
-	 * 
-	 * @throws unspecified any exception resulting from the in-place negation or assignment of \p x.
-	 */
-	template <typename U>
-	auto operator()(U &x, typename std::enable_if<!std::is_integral<U>::value>::type * = nullptr) const -> decltype(x = -x)
-	{
-		return x = -x;
-	}
-	/// Call operator specialised for integral types.
-	template <typename U>
-	U &operator()(U &x, typename std::enable_if<std::is_integral<U>::value>::type * = nullptr) const
-	{
-		// NOTE: here we use the explicit static_cast to cope with integral promotions
-		// (e.g., in case of char).
-		return x = static_cast<U>(-x);
-	}
+	private:
+		// NOTE: inside this type trait, U is always a non-const non-reference type.
+		template <typename U>
+		using generic_enabler = typename std::enable_if<!std::is_integral<U>::value &&
+			detail::true_tt<decltype(std::declval<U &>() = -std::declval<U &>())>::value,int>::type;
+		template <typename U>
+		using integral_enabler = typename std::enable_if<std::is_integral<U>::value,int>::type;
+	public:
+		/// Generic call operator.
+		/**
+		 * \note
+		 * This operator is enabled only if the expression <tt>x = -x</tt> is well-formed and
+		 * \p U is not a C++ integral type.
+		 *
+		 * The body of the operator is equivalent to:
+		 * @code
+		 * x = -x;
+		 * @endcode
+		 * The other overload of this operator is specialised for C++ integral types, and it behaves identically.
+		 *
+		 * @param[in,out] x value to be negated.
+		 *
+		 * @throws unspecified any exception resulting from the in-place negation or assignment of \p x.
+		 */
+		template <typename U, generic_enabler<U> = 0>
+		void operator()(U &x) const
+		{
+			x = -x;
+		}
+		/// Call operator specialised for integral types.
+		template <typename U, integral_enabler<U> = 0>
+		void operator()(U &x) const
+		{
+			// NOTE: here we use the explicit static_cast to cope with integral promotions
+			// (e.g., in case of char).
+			x = static_cast<U>(-x);
+		}
 };
+
+}
+
+namespace detail
+{
+
+// Enabler for math::negate().
+template <typename T>
+using math_negate_enabler = typename std::enable_if<!std::is_const<T>::value &&
+	true_tt<decltype(math::negate_impl<T>()(std::declval<T &>()))>::value,int>::type;
+
+}
+
+namespace math
+{
 
 /// In-place negation.
 /**
  * \note
- * This function is enabled only if \p T is not const.
+ * This function is enabled only if \p T is not const and if the expression <tt>negate_impl<T>()(x)</tt> is valid.
  *
  * Negate value in-place. The actual implementation of this function is in the piranha::math::negate_impl functor's
- * call operator.
- * 
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * negate_impl<T>()(x);
+ * @endcode
+ * The result of the call operator of piranha::math::negate_impl is ignored.
+ *
  * @param[in,out] x value to be negated.
- * 
- * @return the value returned by the call operator of piranha::math::negate_impl.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::negate_impl.
  */
-template <typename T, typename = typename std::enable_if<!std::is_const<typename std::remove_reference<T>::type>::value>::type>
-inline auto negate(T &x) -> decltype(negate_impl<T>()(x))
+template <typename T, detail::math_negate_enabler<T> = 0>
+inline void negate(T &x)
 {
-	return negate_impl<T>()(x);
+	negate_impl<T>()(x);
 }
 
 /// Default functor for the implementation of piranha::math::multiply_accumulate().
@@ -243,31 +339,37 @@ inline auto negate(T &x) -> decltype(negate_impl<T>()(x))
 template <typename T, typename U, typename V, typename = void>
 struct multiply_accumulate_impl
 {
-	/// Call operator.
-	/**
-	 * \note
-	 * This call operator is enabled only if the arguments support binary multiplication
-	 * and in-place addition.
-	 *
-	 * The body of the operator is equivalent to:
-	 @code
-	 x += y * z;
-	 @endcode
-	 * where \p y and \p z are perfectly forwarded.
-	 * 
-	 * @param[in,out] x target value for accumulation.
-	 * @param[in] y first argument.
-	 * @param[in] z second argument.
-	 * 
-	 * @return <tt>x += y * z</tt>.
-	 * 
-	 * @throws unspecified any exception resulting from in-place addition or binary multiplication on the operands.
-	 */
-	template <typename T2, typename U2, typename V2>
-	auto operator()(T2 &x, U2 &&y, V2 &&z) const -> decltype(x += std::forward<U2>(y) * std::forward<V2>(z))
-	{
-		return x += std::forward<U2>(y) * std::forward<V2>(z);
-	}
+	private:
+		// NOTE: as usual, we check the expression against const ref arguments.
+		template <typename T2, typename U2, typename V2>
+		using enabler = typename std::enable_if<detail::true_tt<
+			decltype(std::declval<T2 &>() += std::declval<const U2 &>() * std::declval<const V2 &>())
+			>::value,int>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This call operator is enabled only if the arguments support binary multiplication
+		 * and in-place addition.
+		 *
+		 * The body of the operator is equivalent to:
+		 * @code
+		 * x += y * z;
+		 * @endcode
+		 * where \p y and \p z are perfectly forwarded.
+		 *
+		 * @param[in,out] x target value for accumulation.
+		 * @param[in] y first argument.
+		 * @param[in] z second argument.
+		 *
+		 * @throws unspecified any exception resulting from in-place addition or
+		 * binary multiplication on the operands.
+		 */
+		template <typename T2, typename U2, typename V2, enabler<T2,U2,V2> = 0>
+		void operator()(T2 &x, U2 &&y, V2 &&z) const
+		{
+			x += std::forward<U2>(y) * std::forward<V2>(z);
+		}
 };
 
 #if defined(FP_FAST_FMA) && defined(FP_FAST_FMAF) && defined(FP_FAST_FMAL)
@@ -281,46 +383,65 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_floating_p
 {
 	/// Call operator.
 	/**
-	 * This implementation will use the \p std::fma function.
-	 * 
+	 * This implementation will use the \p std::fma() function.
+	 *
 	 * @param[in,out] x target value for accumulation.
 	 * @param[in] y first argument.
 	 * @param[in] z second argument.
-	 * 
-	 * @return <tt>x = std::fma(y,z,x)</tt>.
 	 */
-	template <typename U>
-	auto operator()(U &x, const U &y, const U &z) const -> decltype(x = std::fma(y,z,x))
+	void operator()(T &x, const T &y, const T &z) const
 	{
-		return x = std::fma(y,z,x);
+		x = std::fma(y,z,x);
 	}
 };
 
 #endif
 
+}
+
+namespace detail
+{
+
+// Enabler for multiply_accumulate.
+template <typename T, typename U, typename V>
+using math_multiply_accumulate_enabler = typename std::enable_if<
+	!std::is_const<T>::value &&
+	true_tt<decltype(math::multiply_accumulate_impl<T,
+	typename std::decay<U>::type,typename std::decay<V>::type>()
+	(std::declval<T &>(),std::declval<const U &>(),std::declval<const V &>()))>::value,int>::type;
+
+}
+
+namespace math
+{
+
 /// Multiply-accumulate.
 /**
  * \note
- * This function is enabled only if \p T is not const.
+ * This function is enabled only if \p T is not const and the expression
+ * <tt>multiply_accumulate_impl<T,Ud,Vd>>()(x,y,z)</tt> is valid (where \p Ud and \p Vd
+ * are the decay types of \p U and \p V).
  *
  * Will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the piranha::math::multiply_accumulate_impl functor's
- * call operator.
- * 
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * multiply_accumulate_impl<T,Ud,Vd>()(x,std::forward<U>(y),std::forward<V>(z));
+ * @endcode
+ * (where \p Ud and \p Vd are the decay types of \p U and \p V). The result of the call operator of
+ * piranha::math::multiply_accumulate_impl is ignored.
+ *
  * @param[in,out] x target value for accumulation.
  * @param[in] y first argument.
  * @param[in] z second argument.
- * 
- * @returns the return value of the call operator of piranha::math::multiply_accumulate_impl.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::multiply_accumulate_impl.
  */
-template <typename T, typename U, typename V, typename = typename std::enable_if<
-	!std::is_const<typename std::remove_reference<T>::type>::value>::type>
-inline auto multiply_accumulate(T &x, U &&y, V &&z) -> decltype(multiply_accumulate_impl<typename std::decay<T>::type,
-		typename std::decay<U>::type,typename std::decay<V>::type>()(x,std::forward<U>(y),std::forward<V>(z)))
+template <typename T, typename U, typename V, detail::math_multiply_accumulate_enabler<T,U,V> = 0>
+inline void multiply_accumulate(T &x, U &&y, V &&z)
 {
-	return multiply_accumulate_impl<typename std::decay<T>::type,
-		typename std::decay<U>::type,typename std::decay<V>::type>()(x,std::forward<U>(y),std::forward<V>(z));
+	multiply_accumulate_impl<T,
+		typename std::decay<U>::type,typename std::decay<V>::type>()(x,
+		std::forward<U>(y),std::forward<V>(z));
 }
 
 /// Default functor for the implementation of piranha::math::cos().
@@ -343,12 +464,12 @@ struct cos_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::typ
 	/// Call operator.
 	/**
 	 * The cosine will be computed via <tt>std::cos()</tt>.
-	 * 
+	 *
 	 * @param[in] x argument.
-	 * 
+	 *
 	 * @return cosine of \p x.
 	 */
-	auto operator()(const T &x) const -> decltype(std::cos(x))
+	T operator()(const T &x) const
 	{
 		return std::cos(x);
 	}
@@ -378,19 +499,44 @@ struct cos_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Type for the result of math::cos().
+template <typename T>
+using math_cos_type_ = decltype(math::cos_impl<T>()(std::declval<const T &>()));
+
+template <typename T>
+using math_cos_type = typename std::enable_if<is_returnable<math_cos_type_<T>>::value,
+	math_cos_type_<T>>::type;
+
+}
+
+namespace math
+{
+
 /// Cosine.
 /**
+ * \note
+ * This function is enabled only if the expression <tt>cos_impl<T>()(x)</tt> is valid, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Returns the cosine of \p x. The actual implementation of this function is in the piranha::math::cos_impl functor's
- * call operator.
- * 
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * return cos_impl<T>()(x);
+ * @endcode
+ *
  * @param[in] x cosine argument.
- * 
+ *
  * @return cosine of \p x.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of the piranha::math::cos_impl functor.
  */
 template <typename T>
-inline auto cos(const T &x) -> decltype(cos_impl<T>()(x))
+inline detail::math_cos_type<T> cos(const T &x)
 {
 	return cos_impl<T>()(x);
 }
@@ -415,12 +561,12 @@ struct sin_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::typ
 	/// Call operator.
 	/**
 	 * The sine will be computed via <tt>std::sin()</tt>.
-	 * 
+	 *
 	 * @param[in] x argument.
-	 * 
+	 *
 	 * @return sine of \p x.
 	 */
-	auto operator()(const T &x) const -> decltype(std::sin(x))
+	T operator()(const T &x) const
 	{
 		return std::sin(x);
 	}
@@ -450,19 +596,44 @@ struct sin_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Type for the result of math::sin().
+template <typename T>
+using math_sin_type_ = decltype(math::sin_impl<T>()(std::declval<const T &>()));
+
+template <typename T>
+using math_sin_type = typename std::enable_if<is_returnable<math_sin_type_<T>>::value,
+	math_sin_type_<T>>::type;
+
+}
+
+namespace math
+{
+
 /// Sine.
 /**
+ * \note
+ * This function is enabled only if the expression <tt>sin_impl<T>()(x)</tt> is valid, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Returns the sine of \p x. The actual implementation of this function is in the piranha::math::sin_impl functor's
- * call operator.
- * 
+ * call operator. The body of this function is equivalent to:
+ * @code
+ * return sin_impl<T>()(x);
+ * @endcode
+ *
  * @param[in] x sine argument.
- * 
+ *
  * @return sine of \p x.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of the piranha::math::sin_impl functor.
  */
 template <typename T>
-inline auto sin(const T &x) -> decltype(sin_impl<T>()(x))
+inline detail::math_sin_type<T> sin(const T &x)
 {
 	return sin_impl<T>()(x);
 }
@@ -494,22 +665,48 @@ struct partial_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::typ
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Return type for math::partial().
+template <typename T>
+using math_partial_type_ = decltype(math::partial_impl<T>{}(std::declval<const T &>(),
+	std::declval<const std::string &>()));
+
+template <typename T>
+using math_partial_type = typename std::enable_if<is_returnable<math_partial_type_<T>>::value,math_partial_type_<T>>::type;
+
+}
+
+namespace math
+{
+
 /// Partial derivative.
 /**
+ * \note
+ * This function is enabled only if the expression <tt>partial_impl<T>{}(x,str)</tt> is valid, returning a type that
+ * satisfies piranha::is_returnable.
+ *
  * Return the partial derivative of \p x with respect to the symbolic quantity named \p str. The actual
- * implementation of this function is in the piranha::math::partial_impl functor.
- * 
+ * implementation of this function is in the piranha::math::partial_impl functor. The body of this function
+ * is equivalent to:
+ * @code
+ * return partial_impl<T>{}(x,str);
+ * @endcode
+ *
  * @param[in] x argument for the partial derivative.
  * @param[in] str name of the symbolic quantity with respect to which the derivative will be computed.
- * 
+ *
  * @return partial derivative of \p x with respect to \p str.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::partial_impl.
  */
 template <typename T>
-inline auto partial(const T &x, const std::string &str) -> decltype(partial_impl<T>()(x,str))
+inline detail::math_partial_type<T> partial(const T &x, const std::string &str)
 {
-	return partial_impl<T>()(x,str);
+	return partial_impl<T>{}(x,str);
 }
 
 /// Default functor for the implementation of piranha::math::integrate().
@@ -521,71 +718,127 @@ template <typename T, typename Enable = void>
 struct integrate_impl
 {};
 
+}
+
+namespace detail
+{
+
+// Return type for math::integrate().
+template <typename T>
+using math_integrate_type_ = decltype(math::integrate_impl<T>{}(std::declval<const T &>(),
+	std::declval<const std::string &>()));
+
+template <typename T>
+using math_integrate_type = typename std::enable_if<is_returnable<math_integrate_type_<T>>::value,
+	math_integrate_type_<T>>::type;
+
+}
+
+namespace math
+{
+
 /// Integration.
 /**
+* \note
+* This function is enabled only if the expression <tt>integrate_impl<T>{}(x,str)</tt> is valid, returning a type that
+* satisfies piranha::is_returnable.
+ *
  * Return the antiderivative of \p x with respect to the symbolic quantity named \p str. The actual
- * implementation of this function is in the piranha::math::integrate_impl functor.
- * 
+ * implementation of this function is in the piranha::math::integrate_impl functor. The body of this function
+ * is equivalent to:
+ * @code
+ * return integrate_impl<T>{}(x,str);
+ * @endcode
+ *
  * @param[in] x argument for the integration.
  * @param[in] str name of the symbolic quantity with respect to which the integration will be computed.
- * 
+ *
  * @return antiderivative of \p x with respect to \p str.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::integrate_impl.
  */
 template <typename T>
-inline auto integrate(const T &x, const std::string &str) -> decltype(integrate_impl<T>()(x,str))
+inline detail::math_integrate_type<T> integrate(const T &x, const std::string &str)
 {
-	return integrate_impl<T>()(x,str);
+	return integrate_impl<T>{}(x,str);
 }
 
 /// Default functor for the implementation of piranha::math::evaluate().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism.
  */
-template <typename T, typename Enable = void>
+template <typename T, typename U, typename Enable = void>
 struct evaluate_impl
 {
 	private:
-		template <typename U>
-		using enabler = typename std::enable_if<std::is_copy_constructible<U>::value,int>::type;
+		template <typename V>
+		using enabler = typename std::enable_if<std::is_copy_constructible<V>::value &&
+			is_returnable<V>::value,int>::type;
 	public:
 		/// Call operator.
 		/**
 		 * \note
-		 * This operator is enabled only if \p U is copy-constructible.
+		 * This operator is enabled only if \p V is copy-constructible and if it satisfies piranha::is_returnable.
 		 *
 		 * The default behaviour is to return the input value \p x unchanged.
 		 *
 		 * @param[in] x evaluation argument.
 		 *
 		 * @return copy of \p x.
+		 *
+		 * @throws unspecified any exception thrown by the invoked copy constructor.
 		 */
-		template <typename U, typename V, enabler<U> = 0>
-		U operator()(const U &x, const std::unordered_map<std::string,V> &) const
+		template <typename V, enabler<V> = 0>
+		V operator()(const V &x, const std::unordered_map<std::string,U> &) const
 		{
 			return x;
 		}
 };
 
+}
+
+namespace detail
+{
+
+// Return type for math::evaluate().
+template <typename T, typename U>
+using math_evaluate_type_ = decltype(math::evaluate_impl<T,U>{}(std::declval<const T &>(),
+	std::declval<const std::unordered_map<std::string,U> &>()));
+
+template <typename T, typename U>
+using math_evaluate_type = typename std::enable_if<is_returnable<math_evaluate_type_<T,U>>::value,
+	math_evaluate_type_<T,U>>::type;
+
+}
+
+namespace math
+{
+
 /// Evaluation.
 /**
+ * \note
+ * This function is enabled only if <tt>evaluate_impl<T,U>{}(x,dict)</tt> is a valid expression, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary \p dict
- * specifies the quantity (value) that will be susbstituted for each argument (key), here represented as a string.
- * 
+ * specifies the quantity (value) that will be susbstituted for each argument (key), represented as a string.
  * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
- * 
+ * The body of this method is equivalent to:
+ * @code
+ * return evaluate_impl<T,U>{}(x,dict);
+ * @endcode
+ *
  * @param[in] x quantity that will be evaluated.
  * @param[in] dict dictionary that will be used to perform the substitution.
- * 
+ *
  * @return \p x evaluated according to \p dict.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
 template <typename U, typename T>
-inline auto evaluate(const T &x, const std::unordered_map<std::string,U> &dict) -> decltype(evaluate_impl<T>()(x,dict))
+inline detail::math_evaluate_type<T,U> evaluate(const T &x, const std::unordered_map<std::string,U> &dict)
 {
-	return evaluate_impl<T>()(x,dict);
+	return evaluate_impl<T,U>{}(x,dict);
 }
 
 /// Default functor for the implementation of piranha::math::subs().
@@ -597,23 +850,50 @@ template <typename T, typename U, typename Enable = void>
 struct subs_impl
 {};
 
+}
+
+namespace detail
+{
+
+// Return type for math::subs().
+template <typename T, typename U>
+using math_subs_type_ = decltype(math::subs_impl<T,U>{}(std::declval<const T &>(),
+	std::declval<const std::string &>(), std::declval<const U &>()));
+
+template <typename T, typename U>
+using math_subs_type = typename std::enable_if<is_returnable<math_subs_type_<T,U>>::value,
+	math_subs_type_<T,U>>::type;
+
+}
+
+namespace math
+{
+
 /// Substitution.
 /**
+ * \note
+ * This function is enabled only if <tt>subs_impl<T,U>{}(x,name,y)</tt> is a valid expression, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Substitute a symbolic variable with a generic object.
  * The actual implementation of this function is in the piranha::math::subs_impl functor.
- * 
+ * The body of this method is equivalent to:
+ * @code
+ * return subs_impl<T,U>{}(x,name,y);
+ * @endcode
+ *
  * @param[in] x quantity that will be subject to substitution.
  * @param[in] name name of the symbolic variable that will be substituted.
  * @param[in] y object that will substitute the variable.
- * 
+ *
  * @return \p x after substitution  of \p name with \p y.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
  */
 template <typename T, typename U>
-inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(subs_impl<T,U>()(x,name,y))
+inline detail::math_subs_type<T,U> subs(const T &x, const std::string &name, const U &y)
 {
-	return subs_impl<T,U>()(x,name,y);
+	return subs_impl<T,U>{}(x,name,y);
 }
 
 /// Default functor for the implementation of piranha::math::t_subs().
@@ -629,14 +909,14 @@ struct t_subs_impl
 /**
  * Substitute the cosine and sine of a symbolic variable with generic objects.
  * The actual implementation of this function is in the piranha::math::t_subs_impl functor.
- * 
+ *
  * @param[in] x quantity that will be subject to substitution.
  * @param[in] name name of the symbolic variable that will be substituted.
  * @param[in] c object that will substitute the cosine of the variable.
  * @param[in] s object that will substitute the sine of the variable.
- * 
+ *
  * @return \p x after substitution of cosine and sine of \p name with \p c and \p s.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_subs_impl.
  */
 template <typename T, typename U, typename V>
@@ -702,7 +982,7 @@ struct abs_impl<T,detail::abs_arith_enabler<T>>
 		/// Call operator.
 		/**
 		 * @param[in] x input parameter.
-		 * 
+		 *
 		 * @return absolute value of \p x.
 		 */
 		auto operator()(const T &x) const -> decltype(impl(x))
@@ -714,11 +994,11 @@ struct abs_impl<T,detail::abs_arith_enabler<T>>
 /// Absolute value.
 /**
  * The actual implementation of this function is in the piranha::math::abs_impl functor.
- * 
+ *
  * @param[in] x quantity whose absolute value will be calculated.
- * 
+ *
  * @return absolute value of \p x.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::abs_impl.
  */
 template <typename T>
@@ -731,19 +1011,19 @@ inline auto abs(const T &x) -> decltype(abs_impl<T>()(x))
 
 /// Type trait to detect the presence of the piranha::math::is_zero() function.
 /**
- * The type trait will be \p true if piranha::math::is_zero() can be successfully called on instances of \p T, returning
- * an instance of a type implicitly convertible \p bool.
+ * The type trait will be \p true if piranha::math::is_zero() can be successfully called on instances of \p T.
  */
 template <typename T>
 class has_is_zero: detail::sfinae_types
 {
 		typedef typename std::decay<T>::type Td;
 		template <typename T1>
-		static auto test(const T1 &t) -> decltype(math::is_zero(t));
+		static auto test(const T1 &t) -> decltype(math::is_zero(t),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_convertible<decltype(test(std::declval<Td>())),bool>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -761,9 +1041,10 @@ class has_negate: detail::sfinae_types
 		template <typename T1>
 		static auto test(T1 &t) -> decltype(math::negate(t),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<T &>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T &>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -820,14 +1101,14 @@ namespace math
  * \right],
  * \f]
  * where \f$ p_i \f$ and \f$ q_i \f$ are the elements of \p p_list and \p q_list.
- * 
+ *
  * @param[in] f first argument.
  * @param[in] g second argument.
  * @param[in] p_list list of the names of momenta.
  * @param[in] q_list list of the names of coordinates.
- * 
+ *
  * @return the poisson bracket of \p f and \p g with respect to \p p_list and \p q_list.
- * 
+ *
  * @throws std::invalid_argument if the sizes of \p p_list and \p q_list differ or if
  * \p p_list or \p q_list contain duplicate entries.
  * @throws unspecified any exception thrown by piranha::math::partial() or by the invoked arithmetic operators,
@@ -943,14 +1224,14 @@ namespace math
  * This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson bracket test.
  * The transformation is expressed as two separate collections of objects, \p new_p and \p new_q, representing the new momenta
  * and coordinates as functions of the old momenta \p p_list and \p q_list.
- * 
+ *
  * @param[in] new_p list of objects representing the new momenta.
  * @param[in] new_q list of objects representing the new coordinates.
  * @param[in] p_list list of names of the old momenta.
  * @param[in] q_list list of names of the old coordinates.
- * 
+ *
  * @return \p true if the transformation is canonical, \p false otherwise.
- * 
+ *
  * @throws std::invalid_argument if the sizes of the four input arguments are not the same or if either \p p_list or \p q_list
  * contain duplicate entries.
  * @throws unspecified any exception thrown by:
@@ -984,7 +1265,7 @@ inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::ini
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
- * 
+ *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::degree() (the total degree), the other for the binary form of piranha::math::degree()
  * (the partial degree).
@@ -996,13 +1277,13 @@ struct degree_impl
 /// Total degree.
 /**
  * Return the total degree (as in polynomial degree).
- * 
+ *
  * The actual implementation of this function is in the piranha::math::degree_impl functor.
- * 
+ *
  * @param[in] x object whose degree will be computed.
- * 
+ *
  * @return total degree.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
  */
 template <typename T>
@@ -1014,14 +1295,14 @@ inline auto degree(const T &x) -> decltype(degree_impl<T>()(x))
 /// Partial degree.
 /**
  * Return the partial degree (as in polynomial degree, but only a set of variables is considered in the computation).
- * 
+ *
  * The actual implementation of this function is in the piranha::math::degree_impl functor.
- * 
+ *
  * @param[in] x object whose partial degree will be computed.
  * @param[in] names names of the variables that will be considered in the computation.
- * 
+ *
  * @return partial degree.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
  */
 template <typename T>
@@ -1084,7 +1365,7 @@ inline auto ldegree(const T &x, const std::vector<std::string> &names) -> declty
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
- * 
+ *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_degree() (the total trigonometric degree), the other for the binary form of piranha::math::t_degree()
  * (the partial trigonometric degree).
@@ -1101,13 +1382,13 @@ struct t_degree_impl
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
  * has a trigonometric degree of 3+1=4.
- * 
+ *
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
- * 
+ *
  * @param[in] x object whose trigonometric degree will be computed.
- * 
+ *
  * @return total trigonometric degree.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_degree_impl.
  */
 template <typename T>
@@ -1120,16 +1401,16 @@ inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>()(x))
 /**
  * The partial trigonometric degree is the trigonometric degree when only certain variables are considered in
  * the computation.
- * 
+ *
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
- * 
+ *
  * @param[in] x object whose trigonometric degree will be computed.
  * @param[in] names names of the variables that will be considered in the computation of the degree.
- * 
+ *
  * @return partial trigonometric degree.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_degree_impl.
- * 
+ *
  * @see piranha::math::t_degree().
  */
 template <typename T>
@@ -1142,7 +1423,7 @@ inline auto t_degree(const T &x, const std::vector<std::string> &names) -> declt
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
- * 
+ *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_ldegree() (the total trigonometric low degree), the other for the binary form of piranha::math::t_ldegree()
  * (the partial trigonometric low degree).
@@ -1159,13 +1440,13 @@ struct t_ldegree_impl
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
  * has a trigonometric low degree of 2-1=1.
- * 
+ *
  * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
- * 
+ *
  * @param[in] x object whose trigonometric low degree will be computed.
- * 
+ *
  * @return total trigonometric low degree.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_ldegree_impl.
  */
 template <typename T>
@@ -1178,16 +1459,16 @@ inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>()(x))
 /**
  * The partial trigonometric low degree is the trigonometric low degree when only certain variables are considered in
  * the computation.
- * 
+ *
  * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
- * 
+ *
  * @param[in] x object whose trigonometric low degree will be computed.
  * @param[in] names names of the variables that will be considered in the computation of the degree.
- * 
+ *
  * @return partial trigonometric low degree.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_ldegree_impl.
- * 
+ *
  * @see piranha::math::t_ldegree().
  */
 template <typename T>
@@ -1200,7 +1481,7 @@ inline auto t_ldegree(const T &x, const std::vector<std::string> &names) -> decl
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
- * 
+ *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_order() (the total trigonometric order), the other for the binary form of piranha::math::t_order()
  * (the partial trigonometric order).
@@ -1218,13 +1499,13 @@ struct t_order_impl
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
  * has a trigonometric order of abs(3)+abs(1)=4.
- * 
+ *
  * The actual implementation of this function is in the piranha::math::t_order_impl functor.
- * 
+ *
  * @param[in] x object whose trigonometric order will be computed.
- * 
+ *
  * @return total trigonometric order.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_order_impl.
  */
 template <typename T>
@@ -1237,16 +1518,16 @@ inline auto t_order(const T &x) -> decltype(t_order_impl<T>()(x))
 /**
  * The partial trigonometric order is the trigonometric order when only certain variables are considered in
  * the computation.
- * 
+ *
  * The actual implementation of this function is in the piranha::math::t_order_impl functor.
- * 
+ *
  * @param[in] x object whose trigonometric order will be computed.
  * @param[in] names names of the variables that will be considered in the computation of the order.
- * 
+ *
  * @return partial trigonometric order.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_order_impl.
- * 
+ *
  * @see piranha::math::t_order().
  */
 template <typename T>
@@ -1259,7 +1540,7 @@ inline auto t_order(const T &x, const std::vector<std::string> &names) -> declty
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
- * 
+ *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_lorder() (the total trigonometric low order), the other for the binary form of piranha::math::t_lorder()
  * (the partial trigonometric low order).
@@ -1277,13 +1558,13 @@ struct t_lorder_impl
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
  * has a trigonometric low order of abs(2)+abs(1)=3.
- * 
+ *
  * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
- * 
+ *
  * @param[in] x object whose trigonometric low order will be computed.
- * 
+ *
  * @return total trigonometric low order.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_lorder_impl.
  */
 template <typename T>
@@ -1296,16 +1577,16 @@ inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>()(x))
 /**
  * The partial trigonometric low order is the trigonometric low order when only certain variables are considered in
  * the computation.
- * 
+ *
  * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
- * 
+ *
  * @param[in] x object whose trigonometric low order will be computed.
  * @param[in] names names of the variables that will be considered in the computation of the order.
- * 
+ *
  * @return partial trigonometric low order.
- * 
+ *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_lorder_impl.
- * 
+ *
  * @see piranha::math::t_lorder().
  */
 template <typename T>
@@ -1431,9 +1712,10 @@ class is_differentiable: detail::sfinae_types
 		template <typename U>
 		static auto test(const U &u) -> decltype(math::partial(u,""),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -1497,9 +1779,10 @@ class is_integrable: detail::sfinae_types
 		template <typename U>
 		static auto test(const U &u) -> decltype(math::integrate(u,""),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -1680,7 +1963,7 @@ const bool has_t_lorder<T>::value;
  * The type trait has the same meaning as piranha::has_degree, but it's meant for use with key types.
  * It will test the presence of two <tt>degree()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
- * 
+ *
  * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
@@ -1711,7 +1994,7 @@ const bool key_has_degree<Key>::value;
  * The type trait has the same meaning as piranha::has_ldegree, but it's meant for use with key types.
  * It will test the presence of two <tt>ldegree()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
- * 
+ *
  * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
@@ -1738,7 +2021,7 @@ const bool key_has_ldegree<Key>::value;
  * The type trait has the same meaning as piranha::has_t_degree, but it's meant for use with key types.
  * It will test the presence of two <tt>t_degree()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
- * 
+ *
  * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
@@ -1766,7 +2049,7 @@ const bool key_has_t_degree<T>::value;
  * The type trait has the same meaning as piranha::has_t_ldegree, but it's meant for use with key types.
  * It will test the presence of two <tt>t_ldegree()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
- * 
+ *
  * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
@@ -1794,7 +2077,7 @@ const bool key_has_t_ldegree<T>::value;
  * The type trait has the same meaning as piranha::has_t_order, but it's meant for use with key types.
  * It will test the presence of two <tt>t_order()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
- * 
+ *
  * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
@@ -1822,7 +2105,7 @@ const bool key_has_t_order<T>::value;
  * The type trait has the same meaning as piranha::has_t_lorder, but it's meant for use with key types.
  * It will test the presence of two <tt>t_lorder()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
- * 
+ *
  * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
@@ -1847,19 +2130,19 @@ const bool key_has_t_lorder<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::is_unitary() function.
 /**
- * The type trait will be \p true if piranha::math::is_unitary() can be successfully called on instances of \p T, returning
- * an instance of a type implicitly convertible \p bool.
+ * The type trait will be \p true if piranha::math::is_unitary() can be successfully called on instances of \p T.
  */
 template <typename T>
 class has_is_unitary: detail::sfinae_types
 {
 		typedef typename std::decay<T>::type Td;
 		template <typename T1>
-		static auto test(const T1 &t) -> decltype(math::is_unitary(t));
+		static auto test(const T1 &t) -> decltype(math::is_unitary(t),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_convertible<decltype(test(std::declval<Td>())),bool>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -1878,9 +2161,10 @@ class has_subs: detail::sfinae_types
 		template <typename T1, typename U1>
 		static auto test(const T1 &t, const U1 &u) -> decltype(math::subs(t,std::declval<std::string const &>(),u),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -1916,7 +2200,7 @@ const bool has_t_subs<T,U,V>::value;
  * an instance of \p T, an instance of \p U and an instance of piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
  * of pairs in which the second type must be \p Key itself. The <tt>t_subs()</tt> represents the substitution of a symbol with its cosine
  * and sine passed as instances of \p T and \p U respectively.
- * 
+ *
  * The decay type of \p Key must satisfy piranha::is_key.
  */
 template <typename Key, typename T, typename U>
@@ -2021,10 +2305,11 @@ class is_evaluable: detail::sfinae_types
 		static auto test(const T2 &t, const std::unordered_map<std::string,U2> &dict) ->
 			decltype(math::evaluate(t,dict),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<T>(),
+			std::declval<std::unordered_map<std::string,U>>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>(),
-			std::declval<std::unordered_map<std::string,U>>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>

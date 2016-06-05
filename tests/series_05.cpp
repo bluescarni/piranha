@@ -35,6 +35,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
@@ -224,9 +225,53 @@ BOOST_AUTO_TEST_CASE(series_division_test)
 	}
 }
 
+struct nr_00
+{
+	nr_00(const nr_00 &) = delete;
+	nr_00(nr_00 &&) = delete;
+};
+
+template <typename Cf, typename Expo>
+class g_series_type2: public series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>>
+{
+	public:
+		template <typename Cf2>
+		using rebind = g_series_type2<Cf2,Expo>;
+		typedef series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+		g_series_type2() = default;
+		g_series_type2(const g_series_type2 &) = default;
+		g_series_type2(g_series_type2 &&) = default;
+		explicit g_series_type2(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_symbol_set.add(name);
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
+		}
+		g_series_type2 &operator=(const g_series_type2 &) = default;
+		g_series_type2 &operator=(g_series_type2 &&) = default;
+		nr_00 cos() const;
+		nr_00 sin() const;
+		template <typename T>
+		nr_00 evaluate(const std::unordered_map<std::string,T> &) const;
+		PIRANHA_FORWARDING_CTOR(g_series_type2,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type2,base)
+};
+
+// Check that sin/cos methods that return unreturnable types on a series are disabled.
+BOOST_AUTO_TEST_CASE(series_sin_cos_test)
+{
+	BOOST_CHECK_EQUAL(math::sin(g_series_type2<double,int>{}),math::sin(0.));
+	BOOST_CHECK_EQUAL(math::cos(g_series_type2<double,int>{}),math::cos(0.));
+}
+
 // Some evaluation tests after we added the improved checking + error message logic in series.
 BOOST_AUTO_TEST_CASE(series_evaluation_test)
 {
+	// Series not evaluable due to nasty type.
+	BOOST_CHECK((!is_evaluable<g_series_type2<double,int>,double>::value));
 	using math::evaluate;
 	using p_type = polynomial<integer,monomial<int>>;
 	p_type x{"x"}, y{"y"}, z{"z"};

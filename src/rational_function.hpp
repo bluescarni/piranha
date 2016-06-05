@@ -1482,12 +1482,26 @@ struct ipow_subs_impl<T,U,typename std::enable_if<std::is_base_of<detail::ration
 		}
 };
 
+}
+
+namespace detail
+{
+
+// Enabler for the math::partial() specialisation for rf.
+template <typename T>
+using rf_partial_enabler = typename std::enable_if<std::is_base_of<rational_function_tag,T>::value>::type;
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::partial() functor for piranha::rational_function.
 /**
  * This specialisation is activated when \p T is an instance of piranha::rational_function.
  */
 template <typename T>
-struct partial_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+struct partial_impl<T,detail::rf_partial_enabler<T>>
 {
 	/// Call operator.
 	/**
@@ -1562,25 +1576,22 @@ struct integrate_impl<T,typename std::enable_if<std::is_base_of<detail::rational
 /**
  * This specialisation is enabled if \p T is an instance of piranha::rational_function.
  */
-template <typename T>
-struct evaluate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
+template <typename T, typename U>
+struct evaluate_impl<T,U,typename std::enable_if<std::is_base_of<detail::rational_function_tag,T>::value>::type>
 {
 	private:
 		// This is the real eval type.
-		template <typename U, typename V>
-		using eval_type_ = decltype(evaluate(std::declval<const U &>().num(),std::declval<const std::unordered_map<std::string,V> &>())
-			/ evaluate(std::declval<const U &>().den(),std::declval<const std::unordered_map<std::string,V> &>()));
-		// NOTE: this requirement is mentioned in piranha.hpp, to be added in general to evaluation functions. We might end up abstracting
-		// it somewhere, in that case we should use the abstraction here as well. This is basically an is_returnable check,
-		// and it is kind of similar to the pmappable check.
-		template <typename U, typename V>
-		using eval_type = typename std::enable_if<(std::is_copy_constructible<eval_type_<U,V>>::value ||
-			std::is_move_constructible<eval_type_<U,V>>::value) && std::is_destructible<eval_type_<U,V>>::value,eval_type_<U,V>>::type;
+		template <typename V>
+		using eval_type_ = decltype(evaluate(std::declval<const T &>().num(),std::declval<const std::unordered_map<std::string,V> &>())
+			/ evaluate(std::declval<const T &>().den(),std::declval<const std::unordered_map<std::string,V> &>()));
+		template <typename V>
+		using eval_type = typename std::enable_if<is_returnable<eval_type_<V>>::value,eval_type_<V>>::type;
 	public:
 		/// Call operator.
 		/**
 		 * \note
-		 * This operator is enabled only if the algorithm described below is supported by the involved types.
+		 * This operator is enabled only if the algorithm described below is supported by the involved types,
+		 * and it returns a type which satisfies piranha::is_returnable.
 		 *
 		 * The evaluation of a rational function is constructed from the ratio of the evaluation of its numerator
 		 * by the evaluation of its denominator. The return type is the type resulting from this operation.
@@ -1594,8 +1605,8 @@ struct evaluate_impl<T,typename std::enable_if<std::is_base_of<detail::rational_
 		 * - the evaluation of the numerator and denominator of \p r,
 		 * - the division of the results of the evaluations of numerator and denominator.
 		 */
-		template <typename U, typename V>
-		eval_type<U,V> operator()(const U &r, const std::unordered_map<std::string,V> &m) const
+		template <typename V>
+		eval_type<V> operator()(const T &r, const std::unordered_map<std::string,V> &m) const
 		{
 			return evaluate(r.num(),m) / evaluate(r.den(),m);
 		}
