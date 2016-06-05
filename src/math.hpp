@@ -850,10 +850,37 @@ template <typename T, typename U, typename Enable = void>
 struct subs_impl
 {};
 
+}
+
+namespace detail
+{
+
+// Return type for math::subs().
+template <typename T, typename U>
+using math_subs_type_ = decltype(math::subs_impl<T,U>{}(std::declval<const T &>(),
+	std::declval<const std::string &>(), std::declval<const U &>()));
+
+template <typename T, typename U>
+using math_subs_type = typename std::enable_if<is_returnable<math_subs_type_<T,U>>::value,
+	math_subs_type_<T,U>>::type;
+
+}
+
+namespace math
+{
+
 /// Substitution.
 /**
+ * \note
+ * This function is enabled only if <tt>subs_impl<T,U>{}(x,name,y)</tt> is a valid expression, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Substitute a symbolic variable with a generic object.
  * The actual implementation of this function is in the piranha::math::subs_impl functor.
+ * The body of this method is equivalent to:
+ * @code
+ * return subs_impl<T,U>{}(x,name,y);
+ * @endcode
  *
  * @param[in] x quantity that will be subject to substitution.
  * @param[in] name name of the symbolic variable that will be substituted.
@@ -864,9 +891,9 @@ struct subs_impl
  * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
  */
 template <typename T, typename U>
-inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(subs_impl<T,U>()(x,name,y))
+inline detail::math_subs_type<T,U> subs(const T &x, const std::string &name, const U &y)
 {
-	return subs_impl<T,U>()(x,name,y);
+	return subs_impl<T,U>{}(x,name,y);
 }
 
 /// Default functor for the implementation of piranha::math::t_subs().
@@ -2134,9 +2161,10 @@ class has_subs: detail::sfinae_types
 		template <typename T1, typename U1>
 		static auto test(const T1 &t, const U1 &u) -> decltype(math::subs(t,std::declval<std::string const &>(),u),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.

@@ -76,8 +76,6 @@ struct substitutable_series_tag {};
  * ## Serialization ##
  *
  * This class supports serialization if \p Series does.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Derived>
 class substitutable_series: public Series, detail::substitutable_series_tag
@@ -153,10 +151,13 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 		template <typename T>
 		using subs_type_ = decltype(subs_term_impl(std::declval<typename Series::term_type const &>(),std::declval<std::string const &>(),
 			std::declval<const T &>(),std::declval<symbol_set const &>()));
-		// Enable conditionally based on the common requirements in the subs() method.
+		// Enable conditionally based on the common requirements in the subs() method, plus on the fact that
+		// the subs type must be returnable.
+		// NOTE: the returnable check here should be enough, as the functions above will not be called if the check
+		// here is not passed.
 		template <typename T>
-		using subs_type = typename std::enable_if<std::is_constructible<subs_type_<T>,int>::value && is_addable_in_place<subs_type_<T>>::value,
-			subs_type_<T>>::type;
+		using subs_type = typename std::enable_if<std::is_constructible<subs_type_<T>,int>::value && is_addable_in_place<subs_type_<T>>::value &&
+			is_returnable<subs_type_<T>>::value,subs_type_<T>>::type;
 	public:
 		/// Defaulted default constructor.
 		substitutable_series() = default;
@@ -165,10 +166,6 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 		/// Defaulted move constructor.
 		substitutable_series(substitutable_series &&) = default;
 		PIRANHA_FORWARDING_CTOR(substitutable_series,base)
-		/// Defaulted copy assignment operator.
-		substitutable_series &operator=(const substitutable_series &) = default;
-		/// Defaulted move assignment operator.
-		substitutable_series &operator=(substitutable_series &&) = default;
 		/// Trivial destructor.
 		~substitutable_series()
 		{
@@ -176,13 +173,17 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 			PIRANHA_TT_CHECK(is_series,Derived);
 			PIRANHA_TT_CHECK(std::is_base_of,substitutable_series,Derived);
 		}
+		/// Defaulted copy assignment operator.
+		substitutable_series &operator=(const substitutable_series &) = default;
+		/// Defaulted move assignment operator.
+		substitutable_series &operator=(substitutable_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(substitutable_series,base)
 		/// Substitution.
 		/**
 		 * \note
 		 * This method is enabled only if the coefficient and/or key types support substitution,
 		 * and if the types involved in the substitution support the necessary arithmetic operations
-		 * to compute the result.
+		 * to compute the result. Also, the return type must satisfy piranha::is_constructible.
 		 *
 		 * This method will return an object resulting from the substitution of the symbol called \p name
 		 * in \p this with the generic object \p x.
@@ -215,7 +216,7 @@ namespace detail
 template <typename Series, typename T>
 using subs_impl_subs_series_enabler = typename std::enable_if<
 	std::is_base_of<substitutable_series_tag,Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().subs(std::declval<const std::string &>(),std::declval<const T &>()))>::value
+	is_returnable<decltype(std::declval<const Series &>().subs(std::declval<const std::string &>(),std::declval<const T &>()))>::value
 >::type;
 
 }
@@ -226,7 +227,7 @@ namespace math
 /// Specialisation of the piranha::math::subs_impl functor for instances of piranha::substitutable_series.
 /**
  * This specialisation is activated if \p Series is an instance of piranha::substitutable_series which supports
- * the substitution method.
+ * the substitution method, returning a type which satisfies piranha::is_returnable.
  */
 template <typename Series, typename T>
 struct subs_impl<Series,T,detail::subs_impl_subs_series_enabler<Series,T>>
