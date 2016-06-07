@@ -41,11 +41,13 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 static const int ntries = 1000;
 std::mt19937 rng;
@@ -262,4 +264,33 @@ struct serialization_tester
 BOOST_AUTO_TEST_CASE(term_serialization_test)
 {
 	boost::mpl::for_each<cf_types>(serialization_tester());
+}
+
+namespace piranha
+{
+
+// Disable the noexcept checks for a few types.
+template <>
+struct enable_noexcept_checks<double,void>: std::false_type {};
+
+template <>
+struct enable_noexcept_checks<float,void>: std::false_type {};
+
+template <>
+struct enable_noexcept_checks<k_monomial,void>: std::false_type {};
+
+}
+
+BOOST_AUTO_TEST_CASE(term_noexcept_spec_test)
+{
+	BOOST_CHECK((!enable_noexcept_checks<term<double,monomial<int>>>::value));
+	BOOST_CHECK((!enable_noexcept_checks<term<float,monomial<int>>>::value));
+	BOOST_CHECK((enable_noexcept_checks<term<long double,monomial<int>>>::value));
+	BOOST_CHECK((!enable_noexcept_checks<term<long double,k_monomial>>::value));
+	BOOST_CHECK((!enable_noexcept_checks<term<float,k_monomial>>::value));
+	BOOST_CHECK((is_container_element<term<long double,monomial<int>>>::value));
+	BOOST_CHECK((is_container_element<term<double,monomial<int>>>::value));
+	BOOST_CHECK((is_container_element<term<float,monomial<int>>>::value));
+	BOOST_CHECK((is_container_element<term<long double,k_monomial>>::value));
+	BOOST_CHECK((is_container_element<term<float,k_monomial>>::value));
 }
