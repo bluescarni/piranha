@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE(invert_test_00)
 	BOOST_CHECK(is_invertible<float>::value);
 	BOOST_CHECK(is_invertible<double>::value);
 	BOOST_CHECK(is_invertible<long double>::value);
-	BOOST_CHECK_EQUAL(pow(1.5f,-1),invert(1.5f));
+	BOOST_CHECK_EQUAL(math::pow(1.5f,-1),invert(1.5f));
 	BOOST_CHECK((std::is_same<double,decltype(invert(1.5f))>::value));
-	BOOST_CHECK_EQUAL(pow(1.5,-1),invert(1.5));
+	BOOST_CHECK_EQUAL(math::pow(1.5,-1),invert(1.5));
 	BOOST_CHECK((std::is_same<double,decltype(invert(1.5))>::value));
-	BOOST_CHECK_EQUAL(pow(1.5l,-1),invert(1.5l));
+	BOOST_CHECK_EQUAL(math::pow(1.5l,-1),invert(1.5l));
 	BOOST_CHECK((std::is_same<long double,decltype(invert(1.5l))>::value));
 	BOOST_CHECK(!is_invertible<std::string>::value);
 	// Test with piranha's scalar types.

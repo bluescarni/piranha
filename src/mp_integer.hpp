@@ -586,7 +586,8 @@ struct static_integer
 	}
 	bool operator<(const static_integer &other) const
 	{
-		const auto size0 = _mp_size, size1 = other._mp_size;
+		const auto size0 = _mp_size;
+		const auto size1 = other._mp_size;
 		if (size0 < size1) {
 			return true;
 		} else if (size1 < size0) {
@@ -599,7 +600,8 @@ struct static_integer
 	}
 	bool operator>(const static_integer &other) const
 	{
-		const auto size0 = _mp_size, size1 = other._mp_size;
+		const auto size0 = _mp_size;
+		const auto size1 = other._mp_size;
 		if (size0 < size1) {
 			return false;
 		} else if (size1 < size0) {
