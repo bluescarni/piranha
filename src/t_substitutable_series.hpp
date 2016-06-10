@@ -57,27 +57,27 @@ struct t_substitutable_series_tag {};
  * and sine of a symbolic variable). These methods are enabled only if either the coefficient or the key supports trigonometric
  * substitution, as established by the piranha::has_t_subs and piranha::key_has_t_subs type traits, and if
  * the types involved in the computation of the substitution are constructible from \p int and support basic arithmetics.
- * 
+ *
  * This class satisfies the piranha::is_series type trait.
- * 
+ *
  * ## Type requirements ##
  *
  * - \p Series must be an instance of piranha::series,
  * - \p Derived must satisfy the piranha::is_series type trait, and derive
  *    from t_substitutable_series of \p Series and \p Derived.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the same guarantee as \p Series.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move semantics is equivalent to the move semantics of \p Series.
  *
  * ## Serialization ##
  *
  * This class supports serialization if \p Series does.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Derived>
@@ -182,15 +182,15 @@ class t_substitutable_series: public Series, detail::t_substitutable_series_tag
 		/**
 		 * \note
 		 * This method is available only if the requirements outlined in piranha::t_substitutable_series are satisfied.
-		 * 
+		 *
 		 * Trigonometric substitution is the substitution of the cosine and sine of \p name for \p c and \p s.
-		 * 
+		 *
 		 * @param[in] name name of the symbol that will be subject to substitution.
 		 * @param[in] c cosine of \p name.
 		 * @param[in] s sine of \p name.
-		 * 
+		 *
 		 * @return the result of the trigonometric substitution.
-		 * 
+		 *
 		 * @throws unspecified any exception resulting from:
 		 * - construction of the return type,
 		 * - the assignment operator of piranha::symbol_set,
@@ -217,7 +217,8 @@ namespace detail
 template <typename Series, typename U, typename V>
 using t_subs_impl_t_subs_series_enabler = typename std::enable_if<
 	std::is_base_of<t_substitutable_series_tag,Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().t_subs(std::declval<const std::string &>(),std::declval<const U &>(),std::declval<const V &>()))>::value
+	is_returnable<decltype(std::declval<const Series &>().t_subs(std::declval<const std::string &>(),
+	std::declval<const U &>(),std::declval<const V &>()))>::value
 >::type;
 
 }
@@ -228,7 +229,7 @@ namespace math
 /// Specialisation of the piranha::math::t_subs() functor for instances of piranha::t_substitutable_series.
 /**
  * This specialisation is activated if \p Series is an instance of piranha::t_substitutable_series which supports
- * the substitution method.
+ * the substitution method, returning a type which satisfies piranha::is_returnable.
  */
 template <typename Series, typename U, typename V>
 struct t_subs_impl<Series,U,V,detail::t_subs_impl_t_subs_series_enabler<Series,U,V>>

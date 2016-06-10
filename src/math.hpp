@@ -823,7 +823,7 @@ namespace math
  * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary \p dict
  * specifies the quantity (value) that will be susbstituted for each argument (key), represented as a string.
  * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
- * The body of this method is equivalent to:
+ * The body of this function is equivalent to:
  * @code
  * return evaluate_impl<T,U>{}(x,dict);
  * @endcode
@@ -877,7 +877,7 @@ namespace math
  *
  * Substitute a symbolic variable with a generic object.
  * The actual implementation of this function is in the piranha::math::subs_impl functor.
- * The body of this method is equivalent to:
+ * The body of this function is equivalent to:
  * @code
  * return subs_impl<T,U>{}(x,name,y);
  * @endcode
@@ -905,10 +905,37 @@ template <typename T, typename U, typename V, typename = void>
 struct t_subs_impl
 {};
 
+}
+
+namespace detail
+{
+
+// Return type for math::t_subs().
+template <typename T, typename U, typename V>
+using math_t_subs_type_ = decltype(math::t_subs_impl<T,U,V>{}(std::declval<const T &>(),std::declval<const std::string &>(),
+	std::declval<const U &>(),std::declval<const V &>()));
+
+template <typename T, typename U, typename V>
+using math_t_subs_type = typename std::enable_if<is_returnable<math_t_subs_type_<T,U,V>>::value,
+	math_t_subs_type_<T,U,V>>::type;
+
+}
+
+namespace math
+{
+
 /// Trigonometric substitution.
 /**
+ * \note
+ * This function is enabled only if <tt>t_subs_impl<T,U,V>{}(x,name,c,s)</tt> is a valid expression, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Substitute the cosine and sine of a symbolic variable with generic objects.
  * The actual implementation of this function is in the piranha::math::t_subs_impl functor.
+ * The body of this function is equivalent to:
+ * @code
+ * return t_subs_impl<T,U,V>{}(x,name,c,s);
+ * @endcode
  *
  * @param[in] x quantity that will be subject to substitution.
  * @param[in] name name of the symbolic variable that will be substituted.
@@ -920,9 +947,9 @@ struct t_subs_impl
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_subs_impl.
  */
 template <typename T, typename U, typename V>
-inline auto t_subs(const T &x, const std::string &name, const U &c, const V &s) -> decltype(t_subs_impl<T,U,V>()(x,name,c,s))
+inline detail::math_t_subs_type<T,U,V> t_subs(const T &x, const std::string &name, const U &c, const V &s)
 {
-	return t_subs_impl<T,U,V>()(x,name,c,s);
+	return t_subs_impl<T,U,V>{}(x,name,c,s);
 }
 
 /// Default functor for the implementation of piranha::math::abs().
@@ -2185,9 +2212,10 @@ class has_t_subs: detail::sfinae_types
 		template <typename T1, typename U1, typename V1>
 		static auto test(const T1 &t, const U1 &u, const V1 &v) -> decltype(math::t_subs(t,std::declval<std::string const &>(),u,v),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>(),std::declval<Vd>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>(),std::declval<Vd>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.
