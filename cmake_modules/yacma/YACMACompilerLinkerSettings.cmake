@@ -98,10 +98,6 @@ macro(YACMA_SETUP_CXX_FLAGS)
         YACMA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wodr)
         YACMA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wsuggest-final-types)
         YACMA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wsuggest-final-methods)
-        # Attribute suggestion.
-        YACMA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wsuggest-attribute=pure)
-        YACMA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wsuggest-attribute=const)
-        YACMA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wsuggest-attribute=noreturn)
     endif()
 
     # MSVC setup.
