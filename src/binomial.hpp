@@ -224,7 +224,7 @@ namespace detail
 
 // Determination and enabling of the return type for math::binomial().
 template <typename T, typename U>
-using math_binomial_type_ = decltype(math::binomial_impl<T,U>()(
+using math_binomial_type_ = decltype(math::binomial_impl<T,U>{}(
 	std::declval<const T &>(),std::declval<const U &>()));
 
 template <typename T, typename U>
@@ -239,7 +239,7 @@ namespace math
 /// Generalised binomial coefficient.
 /**
  * \note
- * This function is enabled only if <tt>binomial_impl<T,U>()(x,y)</tt> is a valid expression,
+ * This function is enabled only if <tt>binomial_impl<T,U>{}(x,y)</tt> is a valid expression,
  * returning a type which satisfies piranha::is_returnable.
  *
  * Will return the generalised binomial coefficient:
@@ -250,7 +250,7 @@ namespace math
  * The actual implementation of this function is in the piranha::math::binomial_impl functor. The body of this
  * function is equivalent to:
  * @code
- * return binomial_impl<T,U>()(x,y);
+ * return binomial_impl<T,U>{}(x,y);
  * @endcode
  *
  * @param[in] x top number.
@@ -263,7 +263,7 @@ namespace math
 template <typename T, typename U>
 inline detail::math_binomial_type<T,U> binomial(const T &x, const U &y)
 {
-	return binomial_impl<T,U>()(x,y);
+	return binomial_impl<T,U>{}(x,y);
 }
 
 /// Specialisation of the piranha::math::binomial() functor for piranha::mp_integer.
