@@ -364,7 +364,8 @@ class poisson_series:
 		};
 		// The final typedef.
 		template <typename T>
-		using integrate_type = typename integrate_type_<T>::type;
+		using integrate_type = typename std::enable_if<is_returnable<typename integrate_type_<T>::type>::value,
+			typename integrate_type_<T>::type>::type;
 		template <typename T = poisson_series>
 		integrate_type<T> integrate_impl(const symbol &s, const typename base::term_type &term,
 			const std::true_type &) const

@@ -86,7 +86,7 @@ std::atomic_ullong base_settings<T>::s_min_work_per_thread(base_settings<T>::s_d
  *
  * This class stores the global settings of piranha's runtime environment.
  * The methods of this class are thread-safe.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename = void>
@@ -112,7 +112,7 @@ class settings_: private detail::base_settings<>
 		 *
 		 * @param[in] n the desired number of threads.
 		 *
-		 * @throws unspecfied any exception thrown by piranha::thread_pool::resize().
+		 * @throws unspecified any exception thrown by piranha::thread_pool::resize().
 		 */
 		static void set_n_threads(unsigned n)
 		{
@@ -122,7 +122,7 @@ class settings_: private detail::base_settings<>
 		/**
 		 * Will set the number of threads to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
 		 *
-		 * @throws unspecfied any exception thrown by set_n_threads().
+		 * @throws unspecified any exception thrown by set_n_threads().
 		 */
 		static void reset_n_threads()
 		{

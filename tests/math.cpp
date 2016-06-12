@@ -157,6 +157,9 @@ struct trivial_b
 struct trivial_c
 {};
 
+struct trivial_d
+{};
+
 namespace piranha { namespace math {
 
 template <>
@@ -175,6 +178,12 @@ template <>
 struct is_zero_impl<trivial_c,void>
 {
 	std::string operator()(const trivial_c &);
+};
+
+template <>
+struct is_zero_impl<trivial_d,void>
+{
+	trivial_d operator()(const trivial_d &) const;
 };
 
 }}
@@ -206,6 +215,7 @@ BOOST_AUTO_TEST_CASE(math_is_zero_test)
 	BOOST_CHECK(has_is_zero<trivial_a &>::value);
 	BOOST_CHECK(!has_is_zero<trivial_b>::value);
 	BOOST_CHECK(!has_is_zero<trivial_c>::value);
+	BOOST_CHECK(!has_is_zero<trivial_d>::value);
 }
 
 struct no_fma{};
@@ -282,6 +292,56 @@ BOOST_AUTO_TEST_CASE(math_pow_test)
 	BOOST_CHECK((is_exponentiable<float,char>::value));
 }
 
+struct cos_00 {};
+
+struct cos_01
+{
+	cos_01(const cos_01 &) = delete;
+	cos_01(cos_01 &&) = delete;
+};
+
+struct sin_00 {};
+
+struct sin_01
+{
+	sin_01(const sin_01 &) = delete;
+	sin_01(sin_01 &&) = delete;
+};
+
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct cos_impl<cos_00,void>
+{
+	cos_00 operator()(const cos_00 &) const;
+};
+
+template <>
+struct cos_impl<cos_01,void>
+{
+	cos_01 operator()(const cos_01 &) const;
+};
+
+template <>
+struct sin_impl<sin_00,void>
+{
+	sin_00 operator()(const sin_00 &) const;
+};
+
+template <>
+struct sin_impl<sin_01,void>
+{
+	sin_01 operator()(const sin_01 &) const;
+};
+
+}
+
+}
+
 BOOST_AUTO_TEST_CASE(math_sin_cos_test)
 {
 	BOOST_CHECK(math::sin(1.f) == std::sin(1.f));
@@ -296,6 +356,10 @@ BOOST_AUTO_TEST_CASE(math_sin_cos_test)
 	BOOST_CHECK_THROW(math::cos(1),std::invalid_argument);
 	BOOST_CHECK((std::is_same<unsigned short,decltype(math::sin((unsigned short)0))>::value));
 	BOOST_CHECK((std::is_same<unsigned short,decltype(math::cos((unsigned short)0))>::value));
+	BOOST_CHECK(has_cosine<cos_00>::value);
+	BOOST_CHECK(!has_cosine<cos_01>::value);
+	BOOST_CHECK(has_sine<sin_00>::value);
+	BOOST_CHECK(!has_sine<sin_01>::value);
 }
 
 BOOST_AUTO_TEST_CASE(math_partial_test)
@@ -508,6 +572,43 @@ BOOST_AUTO_TEST_CASE(math_fp_binomial_test)
 	}
 }
 
+struct b_00
+{
+	b_00() = default;
+	b_00(const b_00 &) = delete;
+	b_00(b_00 &&) = delete;
+};
+
+struct b_01
+{
+	b_01() = default;
+	b_01(const b_01 &) = default;
+	b_01(b_01 &&) = default;
+	~b_01() = delete;
+};
+
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct binomial_impl<b_00,b_00,void>
+{
+	b_00 operator()(const b_00 &, const b_00 &) const;
+};
+
+template <>
+struct binomial_impl<b_01,b_01,void>
+{
+	b_01 operator()(const b_01 &, const b_01 &) const;
+};
+
+}
+
+}
+
 BOOST_AUTO_TEST_CASE(math_binomial_test)
 {
 	BOOST_CHECK((std::is_same<double,decltype(math::binomial(0.,0))>::value));
@@ -532,6 +633,8 @@ BOOST_AUTO_TEST_CASE(math_binomial_test)
 		BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::infinity()),std::invalid_argument);
 		BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
+	BOOST_CHECK((!has_binomial<b_00,b_00>::value));
+	BOOST_CHECK((!has_binomial<b_01,b_01>::value));
 }
 
 BOOST_AUTO_TEST_CASE(math_t_subs_test)

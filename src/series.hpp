@@ -135,7 +135,7 @@ inline RetT apply_cf_functor(const T &s)
 /**
  * This type trait will be true if \p T is an instance of piranha::series which satisfies piranha::is_container_element.
  */
-// TODO: runtime/other requirements:
+// NOTE: runtime/other requirements:
 // - a def cted series is empty (this is used, e.g., in the series multiplier);
 // - typedefs in series should not be overridden.
 template <typename T>
@@ -1581,7 +1581,8 @@ class series: detail::series_tag, series_operators
 			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),std::declval<std::unordered_map<std::string,U> const &>())),
 			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const symbol_set::positions_map<U> &>(),
 			std::declval<const symbol_set &>()))>::value &&
-			std::is_constructible<e_type<Series,U>,int>::value
+			std::is_constructible<e_type<Series,U>,int>::value &&
+			is_returnable<e_type<Series,U>>::value
 			>::type>
 		{
 			using type = e_type<Series,U>;
@@ -1715,7 +1716,7 @@ class series: detail::series_tag, series_operators
 		template <typename Series>
 		using key_t = typename Series::term_type::key_type;
 		// We have different implementations, depending on whether the computed derivative type is the same as the original one
-		// (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics). Adopt the usual schema
+		// (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics). Adopt the usual scheme
 		// of providing an unspecialised value that sfinaes out if the enabler condition is malformed, and two specialisations
 		// that implement the logic above.
 		template <typename Series, typename = void>
@@ -1749,7 +1750,8 @@ class series: detail::series_tag, series_operators
 		#undef PIRANHA_SERIES_PARTIAL_ENABLER
 		// The final typedef.
 		template <typename Series>
-		using partial_type = typename partial_type_<Series>::type;
+		using partial_type = typename std::enable_if<is_returnable<typename partial_type_<Series>::type>::value,
+			typename partial_type_<Series>::type>::type;
 		// The implementation of the two partial() algorithms.
 		template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 0,int>::type = 0>
 		partial_type<Series> partial_impl(const std::string &name) const
@@ -2542,7 +2544,7 @@ class series: detail::series_tag, series_operators
 		 * This method is enabled only if:
 		 * - both the coefficient and the key types are evaluable,
 		 * - the evaluated types are suitable for use in piranha::math::multiply_accumulate(),
-		 * - the return type is constructible from \p int.
+		 * - the return type is constructible from \p int and it satisfies piranha::is_returnable.
 		 *
 		 * Series evaluation starts with a zero-initialised instance of the return type, which is determined
 		 * according to the evaluation types of coefficient and key. The return value accumulates the evaluation
@@ -3056,14 +3058,12 @@ struct negate_impl<T,typename std::enable_if<is_series<T>::value>::type>
 	/**
 	 * @param[in,out] s piranha::series to be negated.
 	 *
-	 * @return the return value of piranha::series::negate()..
-	 *
 	 * @throws unspecified any exception thrown by piranha::series::negate().
 	 */
 	template <typename U>
-	auto operator()(U &s) const -> decltype(s.negate())
+	void operator()(U &s) const
 	{
-		return s.negate();
+		s.negate();
 	}
 };
 
@@ -3228,10 +3228,10 @@ template <typename T>
 class series_has_sin: sfinae_types
 {
 		template <typename U>
-		static auto test(const U &t) -> decltype(t.sin(),void(),yes());
+		static auto test(const U &t) -> decltype(t.sin());
 		static no test(...);
 	public:
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = is_returnable<decltype(test(std::declval<T>()))>::value;
 };
 
 // Three cases for sin() implementation.
@@ -3252,6 +3252,9 @@ struct series_cf_sin_functor
 };
 
 // 2. coefficient type supports math::sin() with a result equal to the original coefficient type.
+// NOTE: this overload and the one below do not conflict with the one above because it takes a series
+// as input argument: when used on a concrete series type, it will have to go through a to-base
+// conversion in order to be selected.
 template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
 	std::is_same<typename Derived::term_type::cf_type,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
 inline Derived series_sin_impl(const series<Cf,Key,Derived> &s)
@@ -3277,10 +3280,10 @@ template <typename T>
 class series_has_cos: sfinae_types
 {
 		template <typename U>
-		static auto test(const U &t) -> decltype(t.cos(),void(),yes());
+		static auto test(const U &t) -> decltype(t.cos());
 		static no test(...);
 	public:
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		static const bool value = is_returnable<decltype(test(std::declval<T>()))>::value;
 };
 
 template <typename T, typename std::enable_if<is_series<T>::value && series_has_cos<T>::value,int>::type = 0>
@@ -3324,7 +3327,8 @@ namespace math
 /// Specialisation of the piranha::math::sin() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series and:
- * - either the series type provides a const <tt>%sin()</tt> method, or
+ * - either the series type provides a const <tt>%sin()</tt> method returning a type which satisfies
+ *   piranha::is_returnable, or, missing this method,
  * - the series' coefficient type \p Cf supports math::sin() yielding a type \p T and either
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
@@ -3340,10 +3344,10 @@ struct sin_impl<Series,detail::series_sin_enabler<Series>>
 	 * @throws unspecified any exception thrown by:
 	 * - the <tt>Series::sin()</tt> method,
 	 * - piranha::math::sin(),
-	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert().
+	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert(),
+	 * - returning the result.
 	 */
-	template <typename T>
-	auto operator()(const T &s) const -> decltype(detail::series_sin_impl(s))
+	auto operator()(const Series &s) const -> decltype(detail::series_sin_impl(s))
 	{
 		return detail::series_sin_impl(s);
 	}
@@ -3351,8 +3355,11 @@ struct sin_impl<Series,detail::series_sin_enabler<Series>>
 
 /// Specialisation of the piranha::math::cos() functor for piranha::series.
 /**
- * This specialisation acts in exactly the same way as the corresponding specialisation for
- * piranha::math::sin().
+ * This specialisation is activated when \p Series is an instance of piranha::series and:
+ * - either the series type provides a const <tt>%cos()</tt> method returning a type which satisfies
+ *   piranha::is_returnable, or, missing this method,
+ * - the series' coefficient type \p Cf supports math::cos() yielding a type \p T and either
+ *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
 struct cos_impl<Series,detail::series_cos_enabler<Series>>
@@ -3366,10 +3373,10 @@ struct cos_impl<Series,detail::series_cos_enabler<Series>>
 	 * @throws unspecified any exception thrown by:
 	 * - the <tt>Series::cos()</tt> method,
 	 * - piranha::math::cos(),
-	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert().
+	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert(),
+	 * - returning the result.
 	 */
-	template <typename T>
-	auto operator()(const T &s) const -> decltype(detail::series_cos_impl(s))
+	auto operator()(const Series &s) const -> decltype(detail::series_cos_impl(s))
 	{
 		return detail::series_cos_impl(s);
 	}
@@ -3383,12 +3390,12 @@ namespace detail
 // Enabler for the partial() specialisation for series.
 template <typename Series>
 using series_partial_enabler = typename std::enable_if<is_series<Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().partial(std::declval<const std::string &>()))>::value>::type;
+	is_returnable<decltype(std::declval<const Series &>().partial(std::declval<const std::string &>()))>::value>::type;
 
 // Enabler for the integrate() specialisation: type needs to be a series which supports the integration method.
 template <typename Series>
 using series_integrate_enabler = typename std::enable_if<is_series<Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
+	is_returnable<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
 
 }
 
@@ -3397,8 +3404,8 @@ namespace math
 
 /// Specialisation of the piranha::math::partial() functor for series types.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::series with a \p partial() method
- * with the same signature as piranha::series::partial().
+ * This specialisation is activated when \p Series is an instance of piranha::series with a const \p partial() method
+ * method taking a const <tt>std::string</tt> as parameter and returning a type which satisfies piranha::is_returnable.
  */
 template <typename Series>
 struct partial_impl<Series,detail::series_partial_enabler<Series>>
@@ -3445,7 +3452,7 @@ struct partial_impl<Series,detail::series_partial_enabler<Series>>
 /// Specialisation of the piranha::math::integrate() functor for series types.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series with a const \p integrate()
- * method taking a const <tt>std::string</tt> as parameter.
+ * method taking a const <tt>std::string</tt> as parameter and returning a type which satisfies piranha::is_returnable.
  */
 template <typename Series>
 struct integrate_impl<Series,detail::series_integrate_enabler<Series>>
@@ -3470,25 +3477,40 @@ struct integrate_impl<Series,detail::series_integrate_enabler<Series>>
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series.
  */
-template <typename Series>
-struct evaluate_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
+template <typename Series, typename T>
+struct evaluate_impl<Series,T,typename std::enable_if<is_series<Series>::value>::type>
 {
-	/// Call operator.
-	/**
-	 * The implementation will use piranha::series::evaluate().
-	 *
-	 * @param[in] s evaluation argument.
-	 * @param[in] dict evaluation dictionary.
-	 *
-	 * @return output of piranha::series::evaluate().
-	 *
-	 * @throws unspecified any exception thrown by piranha::series::evaluate().
-	 */
-	template <typename T>
-	auto operator()(const Series &s, const std::unordered_map<std::string,T> &dict) const -> decltype(s.evaluate(dict))
-	{
-		return s.evaluate(dict);
-	}
+	private:
+		template <typename U>
+		using eval_type_ = decltype(std::declval<const Series &>().evaluate(
+			std::declval<const std::unordered_map<std::string,U> &>()));
+		template <typename U>
+		using eval_type = typename std::enable_if<is_returnable<eval_type_<U>>::value,
+			eval_type_<U>>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This operator is enabled only if the expression <tt>s.evaluate(dict)</tt>
+		 * is valid, returning a type which satisfies piranha::is_returnable.
+		 *
+		 * The body of this operator is equivalent to:
+		 * @code
+		 * return s.evaluate(dict);
+		 * @endcode
+		 *
+		 * @param[in] s evaluation argument.
+		 * @param[in] dict evaluation dictionary.
+		 *
+		 * @return output of piranha::series::evaluate().
+		 *
+		 * @throws unspecified any exception thrown by piranha::series::evaluate().
+		 */
+		template <typename U>
+		eval_type<U> operator()(const Series &s, const std::unordered_map<std::string,U> &dict) const
+		{
+			return s.evaluate(dict);
+		}
 };
 
 }

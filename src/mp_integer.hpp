@@ -4063,12 +4063,10 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<detail::is_mp_inte
 	 * @param[in,out] x target value for accumulation.
 	 * @param[in] y first argument.
 	 * @param[in] z second argument.
-	 *
-	 * @return <tt>x.multiply_accumulate(y,z)</tt>.
 	 */
-	auto operator()(T &x, const T &y, const T &z) const -> decltype(x.multiply_accumulate(y,z))
+	void operator()(T &x, const T &y, const T &z) const
 	{
-		return x.multiply_accumulate(y,z);
+		x.multiply_accumulate(y,z);
 	}
 };
 
