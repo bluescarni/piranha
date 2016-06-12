@@ -102,60 +102,49 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a7ec2303772eab00a1ca75c11106c60b9" title="In-place negation. ">piranha::math::negate()</a>.  
+<p>Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a>.  
  <a href="structpiranha_1_1math_1_1negate__impl.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="math_8hpp_source.html">math.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7c5bc27d0dea0009538328638079686d"><td class="memTemplParams" colspan="2">template&lt;typename U &gt; </td></tr>
-<tr class="memitem:a7c5bc27d0dea0009538328638079686d"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1negate__impl.html#a7c5bc27d0dea0009538328638079686d">operator()</a> (U &amp;x, typename std::enable_if&lt;!std::is_integral&lt; U &gt;::value &gt;::type *=nullptr) const  -&gt; decltype(x=-x)</td></tr>
-<tr class="memdesc:a7c5bc27d0dea0009538328638079686d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic call operator.  <a href="#a7c5bc27d0dea0009538328638079686d">More...</a><br /></td></tr>
-<tr class="separator:a7c5bc27d0dea0009538328638079686d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afdb27b2dc2cf3e0a30a431ca0a276288"><td class="memTemplParams" colspan="2"><a class="anchor" id="afdb27b2dc2cf3e0a30a431ca0a276288"></a>
-template&lt;typename U &gt; </td></tr>
-<tr class="memitem:afdb27b2dc2cf3e0a30a431ca0a276288"><td class="memTemplItemLeft" align="right" valign="top">U &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1negate__impl.html#afdb27b2dc2cf3e0a30a431ca0a276288">operator()</a> (U &amp;x, typename std::enable_if&lt; std::is_integral&lt; U &gt;::value &gt;::type *=nullptr) const </td></tr>
-<tr class="memdesc:afdb27b2dc2cf3e0a30a431ca0a276288"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator specialised for integral types. <br /></td></tr>
-<tr class="separator:afdb27b2dc2cf3e0a30a431ca0a276288"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44eb4ca467cbae1146511f51208fbe2c"><td class="memTemplParams" colspan="2">template&lt;typename U , generic_enabler&lt; U &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a44eb4ca467cbae1146511f51208fbe2c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1negate__impl.html#a44eb4ca467cbae1146511f51208fbe2c">operator()</a> (U &amp;x) const </td></tr>
+<tr class="memdesc:a44eb4ca467cbae1146511f51208fbe2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic call operator.  <a href="#a44eb4ca467cbae1146511f51208fbe2c">More...</a><br /></td></tr>
+<tr class="separator:a44eb4ca467cbae1146511f51208fbe2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44eb4ca467cbae1146511f51208fbe2c"><td class="memTemplParams" colspan="2"><a class="anchor" id="a44eb4ca467cbae1146511f51208fbe2c"></a>
+template&lt;typename U , integral_enabler&lt; U &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a44eb4ca467cbae1146511f51208fbe2c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1negate__impl.html#a44eb4ca467cbae1146511f51208fbe2c">operator()</a> (U &amp;x) const </td></tr>
+<tr class="memdesc:a44eb4ca467cbae1146511f51208fbe2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator specialised for integral types. <br /></td></tr>
+<tr class="separator:a44eb4ca467cbae1146511f51208fbe2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T, typename = void&gt;<br />
 struct piranha::math::negate_impl&lt; T, typename &gt;</h3>
 
-<p>Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a7ec2303772eab00a1ca75c11106c60b9" title="In-place negation. ">piranha::math::negate()</a>. </p>
+<p>Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a>. </p>
 <p>This functor should be specialised via the <code>std::enable_if</code> mechanism. Default implementation will assign to the input value its negation. </p>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00186">186</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00257">257</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a7c5bc27d0dea0009538328638079686d"></a>
+<a class="anchor" id="a44eb4ca467cbae1146511f51208fbe2c"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T , typename  = void&gt; </div>
 <div class="memtemplate">
-template&lt;typename U &gt; </div>
+template&lt;typename U , generic_enabler&lt; U &gt;  = 0&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">auto <a class="el" href="structpiranha_1_1math_1_1negate__impl.html">piranha::math::negate_impl</a>&lt; T, typename &gt;::operator() </td>
+          <td class="memname">void <a class="el" href="structpiranha_1_1math_1_1negate__impl.html">piranha::math::negate_impl</a>&lt; T, typename &gt;::operator() </td>
           <td>(</td>
           <td class="paramtype">U &amp;&#160;</td>
-          <td class="paramname"><em>x</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">typename std::enable_if&lt;!std::is_integral&lt; U &gt;::value &gt;::type *&#160;</td>
-          <td class="paramname"> = <code>nullptr</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const -&gt; decltype(x = -x)
-	</td>
+          <td class="paramname"><em>x</em></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -166,14 +155,14 @@ template&lt;typename U &gt; </div>
 </div><div class="memdoc">
 
 <p>Generic call operator. </p>
-<dl class="section note"><dt>Note</dt><dd>This operator is enabled only if the expression <code>x = -x</code> is well-formed.</dd></dl>
-<p>The body of the operator is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> x = -x;</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
+<dl class="section note"><dt>Note</dt><dd>This operator is enabled only if the expression <code>x = -x</code> is well-formed and <code>U</code> is not a C++ integral type.</dd></dl>
+<p>The body of the operator is equivalent to: </p><div class="fragment"><div class="line">x = -x;</div></div><!-- fragment --><p> The other overload of this operator is specialised for C++ integral types, and it behaves identically.</p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">x</td><td>value to be negated.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the value returned by the assignment operator of <code>x</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception resulting from the in-place negation or assignment of <code>x</code>. </td></tr>
@@ -181,7 +170,7 @@ template&lt;typename U &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00205">205</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00284">284</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>

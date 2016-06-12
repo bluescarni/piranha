@@ -1206,7 +1206,7 @@ template&lt;typename Key &gt; </div>
 </div><div class="memdoc">
 
 <p>Partial derivative. </p>
-<p>The result is computed via the quotient rule. Internally, this method will call <a class="el" href="namespacepiranha_1_1math.html#ac3959494f64044823fd4c4545a5f3e4a" title="Partial derivative. ">piranha::math::partial()</a> on the numerator and denominator of <code>this</code>.</p>
+<p>The result is computed via the quotient rule. Internally, this method will call <a class="el" href="namespacepiranha_1_1math.html#a90685f4074f56de82b6e4683227243d6" title="Partial derivative. ">piranha::math::partial()</a> on the numerator and denominator of <code>this</code>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>name of the variable with respect to which to differentiate.</td></tr>
@@ -1368,7 +1368,7 @@ template&lt;typename F , custom_partial_enabler&lt; F &gt;  = 0&gt; </div>
 
 <p>Register custom partial derivative. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is enabled only if <code>F</code> is a type that can be used to construct <code>std::function&lt;<a class="el" href="classpiranha_1_1rational__function.html#a135f93451af766c430f922c796d9a42b" title="Defaulted copy constructor. ">rational_function(const rational_function &amp;)</a></code>.</dd></dl>
-<p>Register a copy of a callable <code>func</code> associated to the symbol called <code>name</code> for use by <a class="el" href="namespacepiranha_1_1math.html#ac3959494f64044823fd4c4545a5f3e4a" title="Partial derivative. ">piranha::math::partial()</a>. <code>func</code> will be used to compute the partial derivative of <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a> with respect to <code>name</code> in place of the default partial differentiation algorithm.</p>
+<p>Register a copy of a callable <code>func</code> associated to the symbol called <code>name</code> for use by <a class="el" href="namespacepiranha_1_1math.html#a90685f4074f56de82b6e4683227243d6" title="Partial derivative. ">piranha::math::partial()</a>. <code>func</code> will be used to compute the partial derivative of <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a> with respect to <code>name</code> in place of the default partial differentiation algorithm.</p>
 <p>It is safe to call this method from multiple threads.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1435,7 +1435,7 @@ template&lt;typename T &gt; </div>
 <li>the expression <code>math::subs(num(),name,x) / math::subs(den(),name,x)</code> is well-formed, yielding a type that satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</li>
 </ul>
 </dd></dl>
-<p>If <code>T</code> is an interoperable type or <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a>, the body of this method is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> <a class="code" href="classpiranha_1_1rational__function.html#a286751b04c4f1447388c40cf00b8e57b">rational_function</a>{<a class="code" href="namespacepiranha_1_1math.html#a5a6cafb8a41a9d777debf7213a7f6da4">math::subs</a>(<a class="code" href="classpiranha_1_1rational__function.html#aedbf2d4e3160cc981ae52f54f3ca70da">num</a>(),name,x),<a class="code" href="namespacepiranha_1_1math.html#a5a6cafb8a41a9d777debf7213a7f6da4">math::subs</a>(<a class="code" href="classpiranha_1_1rational__function.html#a005b345e03fe092864f76961587ea9cb">den</a>(),name,x)};</div></div><!-- fragment --><p> Otherwise, the body of this method is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> <a class="code" href="namespacepiranha_1_1math.html#a5a6cafb8a41a9d777debf7213a7f6da4">math::subs</a>(<a class="code" href="classpiranha_1_1rational__function.html#aedbf2d4e3160cc981ae52f54f3ca70da">num</a>(),name,x) / <a class="code" href="namespacepiranha_1_1math.html#a5a6cafb8a41a9d777debf7213a7f6da4">math::subs</a>(<a class="code" href="classpiranha_1_1rational__function.html#a005b345e03fe092864f76961587ea9cb">den</a>(),name,x);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
+<p>If <code>T</code> is an interoperable type or <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a>, the body of this method is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> <a class="code" href="classpiranha_1_1rational__function.html#a286751b04c4f1447388c40cf00b8e57b">rational_function</a>{<a class="code" href="namespacepiranha_1_1math.html#a7c23fdb9384605978825d384fd92f49d">math::subs</a>(<a class="code" href="classpiranha_1_1rational__function.html#aedbf2d4e3160cc981ae52f54f3ca70da">num</a>(),name,x),<a class="code" href="namespacepiranha_1_1math.html#a7c23fdb9384605978825d384fd92f49d">math::subs</a>(<a class="code" href="classpiranha_1_1rational__function.html#a005b345e03fe092864f76961587ea9cb">den</a>(),name,x)};</div></div><!-- fragment --><p> Otherwise, the body of this method is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> <a class="code" href="namespacepiranha_1_1math.html#a7c23fdb9384605978825d384fd92f49d">math::subs</a>(<a class="code" href="classpiranha_1_1rational__function.html#aedbf2d4e3160cc981ae52f54f3ca70da">num</a>(),name,x) / <a class="code" href="namespacepiranha_1_1math.html#a7c23fdb9384605978825d384fd92f49d">math::subs</a>(<a class="code" href="classpiranha_1_1rational__function.html#a005b345e03fe092864f76961587ea9cb">den</a>(),name,x);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>name of the variable to be substituted. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>substitution argument.</td></tr>
@@ -1446,7 +1446,7 @@ template&lt;typename T &gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="namespacepiranha_1_1math.html#a5a6cafb8a41a9d777debf7213a7f6da4" title="Substitution. ">piranha::math::subs()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a7c23fdb9384605978825d384fd92f49d" title="Substitution. ">piranha::math::subs()</a>,</li>
 <li>the binary constructor of <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a>,</li>
 <li>the division operator on the type resulting from the substitution in the numerator and denominator. </li>
 </ul>

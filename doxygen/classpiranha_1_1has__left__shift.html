@@ -123,7 +123,7 @@ class piranha::has_left_shift&lt; T, U &gt;</h3>
 <p>Left-shift type trait. </p>
 <p>Will be <code>true</code> if objects of type <code>T</code> can be left-shifted by objects of type <code>U</code>.</p>
 <p>This type trait will strip <code>T</code> and <code>U</code> of reference qualifiers, and it will test the operator in the form </p><div class="fragment"><div class="line">operator&lt;&lt;(<span class="keyword">const</span> Td &amp;, <span class="keyword">const</span> Ud &amp;)</div></div><!-- fragment --><p> where <code>Td</code> and <code>Ud</code> are <code>T</code> and <code>U</code> after the removal of reference qualifiers. E.g.: </p><div class="fragment"><div class="line"><a class="code" href="classpiranha_1_1has__left__shift.html#a1f6d83acac06f6d68417c8621da60cc7">has_left_shift&lt;int&gt;::value</a> == <span class="keyword">true</span>;</div><div class="line"><a class="code" href="classpiranha_1_1has__left__shift.html#a1f6d83acac06f6d68417c8621da60cc7">has_left_shift&lt;int,std::string&gt;::value</a> == <span class="keyword">false</span>;</div></div><!-- fragment --> 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l01049">1049</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l01050">1050</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>

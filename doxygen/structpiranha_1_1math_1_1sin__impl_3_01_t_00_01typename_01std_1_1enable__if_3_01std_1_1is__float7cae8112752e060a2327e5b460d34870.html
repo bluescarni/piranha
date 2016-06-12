@@ -102,27 +102,27 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a> functor for floating-point types.  
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a> functor for floating-point types.  
  <a href="structpiranha_1_1math_1_1sin__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__float7cae8112752e060a2327e5b460d34870.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="math_8hpp_source.html">math.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac548b6f345f758e75d63c2228c7e87ba"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1sin__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__float7cae8112752e060a2327e5b460d34870.html#ac548b6f345f758e75d63c2228c7e87ba">operator()</a> (const T &amp;x) const  -&gt; decltype(std::sin(x))</td></tr>
-<tr class="memdesc:ac548b6f345f758e75d63c2228c7e87ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#ac548b6f345f758e75d63c2228c7e87ba">More...</a><br /></td></tr>
-<tr class="separator:ac548b6f345f758e75d63c2228c7e87ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3438538ffb29c01d58b722a224089f4"><td class="memItemLeft" align="right" valign="top">T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1sin__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__float7cae8112752e060a2327e5b460d34870.html#ae3438538ffb29c01d58b722a224089f4">operator()</a> (const T &amp;x) const </td></tr>
+<tr class="memdesc:ae3438538ffb29c01d58b722a224089f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#ae3438538ffb29c01d58b722a224089f4">More...</a><br /></td></tr>
+<tr class="separator:ae3438538ffb29c01d58b722a224089f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T&gt;<br />
 struct piranha::math::sin_impl&lt; T, typename std::enable_if&lt; std::is_floating_point&lt; T &gt;::value &gt;::type &gt;</h3>
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a> functor for floating-point types. </p>
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a> functor for floating-point types. </p>
 <p>This specialisation is activated when <code>T</code> is a C++ floating-point type. The result will be computed via the standard <code>std::sin()</code> function. </p>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00413">413</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00559">559</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="ac548b6f345f758e75d63c2228c7e87ba"></a>
+<a class="anchor" id="ae3438538ffb29c01d58b722a224089f4"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -132,12 +132,11 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">auto <a class="el" href="structpiranha_1_1math_1_1sin__impl.html">piranha::math::sin_impl</a>&lt; T, typename std::enable_if&lt; std::is_floating_point&lt; T &gt;::value &gt;::type &gt;::operator() </td>
+          <td class="memname">T <a class="el" href="structpiranha_1_1math_1_1sin__impl.html">piranha::math::sin_impl</a>&lt; T, typename std::enable_if&lt; std::is_floating_point&lt; T &gt;::value &gt;::type &gt;::operator() </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"><em>x</em></td><td>)</td>
-          <td> const -&gt; decltype(std::sin(x))
-	</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -157,7 +156,7 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>sine of <code>x</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00423">423</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00569">569</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>

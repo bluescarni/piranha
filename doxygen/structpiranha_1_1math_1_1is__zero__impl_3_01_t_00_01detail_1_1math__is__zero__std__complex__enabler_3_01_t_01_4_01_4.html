@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.11"/>
-<title>piranha: piranha::math::is_zero_impl&lt; T, typename std::enable_if&lt; std::is_same&lt; T, std::complex&lt; float &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; double &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; long double &gt; &gt;::value &gt;::type &gt; Struct Template Reference</title>
+<title>piranha: piranha::math::is_zero_impl&lt; T, detail::math_is_zero_std_complex_enabler&lt; T &gt; &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -90,38 +90,39 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="namespacepiranha_1_1math.html">math</a></li><li class="navelem"><a class="el" href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__c2a594b30a383849deb284bec036738e.html">is_zero_impl&lt; T, typename std::enable_if&lt; std::is_same&lt; T, std::complex&lt; float &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; double &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; long double &gt; &gt;::value &gt;::type &gt;</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="namespacepiranha_1_1math.html">math</a></li><li class="navelem"><a class="el" href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01detail_1_1math__is__zero__std__complex__enabler_3_01_t_01_4_01_4.html">is_zero_impl&lt; T, detail::math_is_zero_std_complex_enabler&lt; T &gt; &gt;</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__963d8fd0c7987de1e41ec43c4786b6cc.html">List of all members</a>  </div>
+<a href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01detail_1_1math__is__zero__std__complex__enabler_3_01_t_01_4_01_4-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::math::is_zero_impl&lt; T, typename std::enable_if&lt; std::is_same&lt; T, std::complex&lt; float &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; double &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; long double &gt; &gt;::value &gt;::type &gt; Struct Template Reference</div>  </div>
+<div class="title">piranha::math::is_zero_impl&lt; T, detail::math_is_zero_std_complex_enabler&lt; T &gt; &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a> functor for C++ complex floating-point types.  
- <a href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__c2a594b30a383849deb284bec036738e.html#details">More...</a></p>
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a> functor for C++ complex floating-point types.  
+ <a href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01detail_1_1math__is__zero__std__complex__enabler_3_01_t_01_4_01_4.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="math_8hpp_source.html">math.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae4ff5a76f958800c9e23fb4107d2554e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__c2a594b30a383849deb284bec036738e.html#ae4ff5a76f958800c9e23fb4107d2554e">operator()</a> (const T &amp;c) const </td></tr>
-<tr class="memdesc:ae4ff5a76f958800c9e23fb4107d2554e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#ae4ff5a76f958800c9e23fb4107d2554e">More...</a><br /></td></tr>
-<tr class="separator:ae4ff5a76f958800c9e23fb4107d2554e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8428b6bc8c30e5ff19bbaae374dc51bd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01detail_1_1math__is__zero__std__complex__enabler_3_01_t_01_4_01_4.html#a8428b6bc8c30e5ff19bbaae374dc51bd">operator()</a> (const T &amp;c) const </td></tr>
+<tr class="memdesc:a8428b6bc8c30e5ff19bbaae374dc51bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a8428b6bc8c30e5ff19bbaae374dc51bd">More...</a><br /></td></tr>
+<tr class="separator:a8428b6bc8c30e5ff19bbaae374dc51bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T&gt;<br />
-struct piranha::math::is_zero_impl&lt; T, typename std::enable_if&lt; std::is_same&lt; T, std::complex&lt; float &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; double &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; long double &gt; &gt;::value &gt;::type &gt;</h3>
+struct piranha::math::is_zero_impl&lt; T, detail::math_is_zero_std_complex_enabler&lt; T &gt; &gt;</h3>
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a> functor for C++ complex floating-point types. </p>
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a> functor for C++ complex floating-point types. </p>
+<p>This specialisation is enabled if <code>T</code> is an <code>std::complex</code> of a C++ floating-point type. </p>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00094">94</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00160">160</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="ae4ff5a76f958800c9e23fb4107d2554e"></a>
+<a class="anchor" id="a8428b6bc8c30e5ff19bbaae374dc51bd"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -131,7 +132,7 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="structpiranha_1_1math_1_1is__zero__impl.html">piranha::math::is_zero_impl</a>&lt; T, typename std::enable_if&lt; std::is_same&lt; T, std::complex&lt; float &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; double &gt; &gt;::value||std::is_same&lt; T, std::complex&lt; long double &gt; &gt;::value &gt;::type &gt;::operator() </td>
+          <td class="memname">bool <a class="el" href="structpiranha_1_1math_1_1is__zero__impl.html">piranha::math::is_zero_impl</a>&lt; T, detail::math_is_zero_std_complex_enabler&lt; T &gt; &gt;::operator() </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"><em>c</em></td><td>)</td>
@@ -155,7 +156,7 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> if <code>c</code> is zero, <code>false</code> otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00105">105</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00170">170</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>

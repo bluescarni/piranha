@@ -102,27 +102,27 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382" title="Cosine. ">piranha::math::cos()</a> functor for floating-point types.  
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f" title="Cosine. ">piranha::math::cos()</a> functor for floating-point types.  
  <a href="structpiranha_1_1math_1_1cos__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__floatf4f236ad8bf40cd7845fb14616d6f642.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="math_8hpp_source.html">math.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac6cbcefecea2012f2abf42bfdf72366b"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1cos__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__floatf4f236ad8bf40cd7845fb14616d6f642.html#ac6cbcefecea2012f2abf42bfdf72366b">operator()</a> (const T &amp;x) const  -&gt; decltype(std::cos(x))</td></tr>
-<tr class="memdesc:ac6cbcefecea2012f2abf42bfdf72366b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#ac6cbcefecea2012f2abf42bfdf72366b">More...</a><br /></td></tr>
-<tr class="separator:ac6cbcefecea2012f2abf42bfdf72366b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af49c6b38d7cdb77c139d21d75cef8da5"><td class="memItemLeft" align="right" valign="top">T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1cos__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__floatf4f236ad8bf40cd7845fb14616d6f642.html#af49c6b38d7cdb77c139d21d75cef8da5">operator()</a> (const T &amp;x) const </td></tr>
+<tr class="memdesc:af49c6b38d7cdb77c139d21d75cef8da5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#af49c6b38d7cdb77c139d21d75cef8da5">More...</a><br /></td></tr>
+<tr class="separator:af49c6b38d7cdb77c139d21d75cef8da5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T&gt;<br />
 struct piranha::math::cos_impl&lt; T, typename std::enable_if&lt; std::is_floating_point&lt; T &gt;::value &gt;::type &gt;</h3>
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382" title="Cosine. ">piranha::math::cos()</a> functor for floating-point types. </p>
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f" title="Cosine. ">piranha::math::cos()</a> functor for floating-point types. </p>
 <p>This specialisation is activated when <code>T</code> is a C++ floating-point type. The result will be computed via the standard <code>std::cos()</code> function. </p>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00341">341</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00462">462</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="ac6cbcefecea2012f2abf42bfdf72366b"></a>
+<a class="anchor" id="af49c6b38d7cdb77c139d21d75cef8da5"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -132,12 +132,11 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">auto <a class="el" href="structpiranha_1_1math_1_1cos__impl.html">piranha::math::cos_impl</a>&lt; T, typename std::enable_if&lt; std::is_floating_point&lt; T &gt;::value &gt;::type &gt;::operator() </td>
+          <td class="memname">T <a class="el" href="structpiranha_1_1math_1_1cos__impl.html">piranha::math::cos_impl</a>&lt; T, typename std::enable_if&lt; std::is_floating_point&lt; T &gt;::value &gt;::type &gt;::operator() </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"><em>x</em></td><td>)</td>
-          <td> const -&gt; decltype(std::cos(x))
-	</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -157,7 +156,7 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>cosine of <code>x</code>. </dd></dl>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00351">351</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00472">472</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>

@@ -707,7 +707,7 @@ template&lt;typename U &gt; </div>
 
 <p>Evaluation. </p>
 <dl class="section note"><dt>Note</dt><dd>This template method is activated only if <code>U</code> supports the mathematical operations needed to compute the return type, and if it is suitable for use in <a class="el" href="classpiranha_1_1symbol__set_1_1positions__map.html" title="Positions map class. ">piranha::symbol_set::positions_map</a>.</dd></dl>
-<p>The return value will be built by applying <a class="el" href="namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382" title="Cosine. ">piranha::math::cos()</a> or <a class="el" href="namespacepiranha_1_1math.html" title="Math namespace. ">piranha::math</a>:sin() to the linear combination of the values in <code>pmap</code> with the multipliers. If the size of the monomial is zero, 1 will be returned if the monomial is a cosine, 0 otherwise. If the positions in <code>pmap</code> do not reference only and all the multipliers in the monomial, an error will be thrown.</p>
+<p>The return value will be built by applying <a class="el" href="namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f" title="Cosine. ">piranha::math::cos()</a> or <a class="el" href="namespacepiranha_1_1math.html" title="Math namespace. ">piranha::math</a>:sin() to the linear combination of the values in <code>pmap</code> with the multipliers. If the size of the monomial is zero, 1 will be returned if the monomial is a cosine, 0 otherwise. If the positions in <code>pmap</code> do not reference only and all the multipliers in the monomial, an error will be thrown.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pmap</td><td><a class="el" href="classpiranha_1_1symbol__set_1_1positions__map.html" title="Positions map class. ">piranha::symbol_set::positions_map</a> that will be used for substitution. </td></tr>
@@ -722,7 +722,7 @@ template&lt;typename U &gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#ac35a4cbef24675f861b0b5b2c8793ad1" title="Unpack internal integer instance. ">unpack()</a>,</li>
 <li>construction of the return type,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382" title="Cosine. ">piranha::math::cos()</a>, <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a>, or the in-place addition and binary multiplication operators of the types involved in the computation. </li>
+<li><a class="el" href="namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f" title="Cosine. ">piranha::math::cos()</a>, <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a>, or the in-place addition and binary multiplication operators of the types involved in the computation. </li>
 </ul>
 </td></tr>
   </table>
@@ -871,7 +871,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#ac35a4cbef24675f861b0b5b2c8793ad1" title="Unpack internal integer instance. ">unpack()</a>,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>,</li>
 <li>monomial construction,</li>
 <li>the cast operator of <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>. </li>
 </ul>
@@ -1144,7 +1144,7 @@ template&lt;typename Cf , multiply_enabler&lt; Cf &gt;  = 0&gt; </div>
 <li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>,</li>
 <li><a class="el" href="namespacepiranha_1_1math.html#a4e861376c8a922cae01bcd27ee757d39" title="Ternary multiplication. ">piranha::math::mul3()</a>,</li>
 <li>copy-assignment on the coefficient type,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a7ec2303772eab00a1ca75c11106c60b9" title="In-place negation. ">piranha::math::negate()</a>. </li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a>. </li>
 </ul>
 </td></tr>
   </table>
@@ -1316,7 +1316,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
     <tr><td class="paramname">std::invalid_argument</td><td>if <code>p</code> is incompatible with <code>args</code> or it has a size greater than one. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#ac35a4cbef24675f861b0b5b2c8793ad1" title="Unpack internal integer instance. ">unpack()</a>,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>. </li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>. </li>
 </ul>
 </td></tr>
   </table>
@@ -1551,8 +1551,8 @@ template&lt;typename U &gt; </div>
 
 <p>Substitution. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is enabled only if:<ul>
-<li>the value type can be multiplied by <code>U</code>, and the result can be passed to <a class="el" href="namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382" title="Cosine. ">piranha::math::cos()</a> or <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a>, yielding a type <code>subs_type</code>,</li>
-<li><code>subs_type</code> is constructible from <code>int</code>, assignable and it supports <a class="el" href="namespacepiranha_1_1math.html#a7ec2303772eab00a1ca75c11106c60b9" title="In-place negation. ">piranha::math::negate()</a>.</li>
+<li>the value type can be multiplied by <code>U</code>, and the result can be passed to <a class="el" href="namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f" title="Cosine. ">piranha::math::cos()</a> or <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a>, yielding a type <code>subs_type</code>,</li>
+<li><code>subs_type</code> is constructible from <code>int</code>, assignable and it supports <a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a>.</li>
 </ul>
 </dd></dl>
 <p>Substitute the symbol called <code>s</code> in the monomial with quantity <code>x</code>. The return value is a vector of two pairs computed according to the standard angle sum identities. That is, given a monomial of the form </p><p class="formulaDsp">
@@ -1561,7 +1561,7 @@ template&lt;typename U &gt; </div>
 <p> in which the symbol \( a \) is to be substituted with \( x \), the result of the substitution will be one of </p><p class="formulaDsp">
 \[ \begin{array}{c} \left[\left(\sin nx,\cos b \right),\left(\cos nx,\sin b \right)\right], \\ \left[\left(\cos nx,\cos b \right),\left(-\sin nx,\sin b \right)\right], \end{array} \]
 </p>
-<p> where \( \cos b \) and \( \sin b \) are returned as monomials, and \( \cos nx \) and \( \sin nx \) as the return values of <a class="el" href="namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382" title="Cosine. ">piranha::math::cos()</a> and <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a>. If <code>s</code> is not in <code>args</code>, \( \cos nx \) will be initialised to 1 and \( \sin nx \) to 0. If, after the substitution, the first nonzero multiplier in \( b \) is negative, \( b \) will be negated and the other signs changed accordingly.</p>
+<p> where \( \cos b \) and \( \sin b \) are returned as monomials, and \( \cos nx \) and \( \sin nx \) as the return values of <a class="el" href="namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f" title="Cosine. ">piranha::math::cos()</a> and <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a>. If <code>s</code> is not in <code>args</code>, \( \cos nx \) will be initialised to 1 and \( \sin nx \) to 0. If, after the substitution, the first nonzero multiplier in \( b \) is negative, \( b \) will be negated and the other signs changed accordingly.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>name of the symbol that will be substituted. </td></tr>
@@ -1576,7 +1576,7 @@ template&lt;typename U &gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#ac35a4cbef24675f861b0b5b2c8793ad1" title="Unpack internal integer instance. ">unpack()</a>,</li>
 <li>construction and assignment of the return value,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382" title="Cosine. ">piranha::math::cos()</a>, <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a> and <a class="el" href="namespacepiranha_1_1math.html#a7ec2303772eab00a1ca75c11106c60b9" title="In-place negation. ">piranha::math::negate()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f" title="Cosine. ">piranha::math::cos()</a>, <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a> and <a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a>,</li>
 <li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>,</li>
 <li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>. </li>
 </ul>
@@ -1844,7 +1844,7 @@ template&lt;typename U &gt; </div>
 </div><div class="memdoc">
 
 <p>Trigonometric substitution. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is enabled only if <code>U</code> supports the mathematical operations needed to compute the result. In particular, the implementation uses <a class="el" href="namespacepiranha_1_1math.html#a5a44533ef3963c6c96f4aca746c92d07" title="Generalised binomial coefficient. ">piranha::math::binomial()</a> internally (thus, <code>U</code> must be interoperable with <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>).</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This method is enabled only if <code>U</code> supports the mathematical operations needed to compute the result. In particular, the implementation uses <a class="el" href="namespacepiranha_1_1math.html#a96bf584acb1ab4f07bc4b6766cb0f66a" title="Generalised binomial coefficient. ">piranha::math::binomial()</a> internally (thus, <code>U</code> must be interoperable with <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>).</dd></dl>
 <p>This method works in the same way as the <a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#a5602e38b00eb2ec261d7193f026eb733" title="Substitution. ">subs()</a> method, but the cosine <code>c</code> and sine <code>s</code> of <code>name</code> will be substituted (instead of a direct substitution of <code>name</code>). The substitution is performed using standard trigonometric formulae, and it will result in a list of two (substitution result,new monomial) pairs.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1861,7 +1861,7 @@ template&lt;typename U &gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#ac35a4cbef24675f861b0b5b2c8793ad1" title="Unpack internal integer instance. ">unpack()</a>,</li>
 <li>construction, assignment and arithmetics on the return value and on the intermediary values invovled in the computation,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a7ec2303772eab00a1ca75c11106c60b9" title="In-place negation. ">piranha::math::negate()</a> and <a class="el" href="namespacepiranha_1_1math.html#a5a44533ef3963c6c96f4aca746c92d07" title="Generalised binomial coefficient. ">piranha::math::binomial()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a> and <a class="el" href="namespacepiranha_1_1math.html#a96bf584acb1ab4f07bc4b6766cb0f66a" title="Generalised binomial coefficient. ">piranha::math::binomial()</a>,</li>
 <li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>,</li>
 <li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>. </li>
 </ul>
@@ -1980,7 +1980,7 @@ template&lt;typename T  = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#ac35a4cbef24675f861b0b5b2c8793ad1" title="Unpack internal integer instance. ">unpack()</a>,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>,</li>
 <li><a class="el" href="classpiranha_1_1symbol__set.html#ad9713d112f97ddd466f8a84c4598f6f6" title="Remove symbol from the set. ">piranha::symbol_set::remove()</a>. </li>
 </ul>
 </td></tr>

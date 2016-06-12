@@ -103,14 +103,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Functor interface for <a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">piranha::math::evaluate()</a>.  
+<p>Functor interface for <a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">piranha::math::evaluate()</a>.  
  <a href="classpiranha_1_1math_1_1lambdified.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="lambdify_8hpp_source.html">lambdify.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a9792812b5ab19b805d579c7cc3ae848e"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1math_1_1lambdified.html#a9792812b5ab19b805d579c7cc3ae848e">eval_type</a> = decltype(<a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf">math::evaluate</a>(std::declval&lt; const T &amp; &gt;(), std::declval&lt; const std::unordered_map&lt; std::string, U &gt; &amp; &gt;()))</td></tr>
+<tr class="memitem:a9792812b5ab19b805d579c7cc3ae848e"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1math_1_1lambdified.html#a9792812b5ab19b805d579c7cc3ae848e">eval_type</a> = decltype(<a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989">math::evaluate</a>(std::declval&lt; const T &amp; &gt;(), std::declval&lt; const std::unordered_map&lt; std::string, U &gt; &amp; &gt;()))</td></tr>
 <tr class="memdesc:a9792812b5ab19b805d579c7cc3ae848e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluation type.  <a href="#a9792812b5ab19b805d579c7cc3ae848e">More...</a><br /></td></tr>
 <tr class="separator:a9792812b5ab19b805d579c7cc3ae848e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2dd56acfecdcd2248655fc7299b404a6"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1math_1_1lambdified.html#a2dd56acfecdcd2248655fc7299b404a6">extra_map_type</a> = std::unordered_map&lt; std::string, std::function&lt; U(const std::vector&lt; U &gt; &amp;)&gt;&gt;</td></tr>
@@ -156,8 +156,8 @@ Public Member Functions</h2></td></tr>
 <div class="textblock"><h3>template&lt;typename T, typename U&gt;<br />
 class piranha::math::lambdified&lt; T, U &gt;</h3>
 
-<p>Functor interface for <a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">piranha::math::evaluate()</a>. </p>
-<p>This class exposes a function-like interface for the evaluation of instances of type <code>T</code> with objects of type <code>U</code>. The class acts as a small wrapper for <a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">piranha::math::evaluate()</a> which replaces the interface based on <code>std::unordered_map</code> with an interface based on vectors and positional arguments.</p>
+<p>Functor interface for <a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">piranha::math::evaluate()</a>. </p>
+<p>This class exposes a function-like interface for the evaluation of instances of type <code>T</code> with objects of type <code>U</code>. The class acts as a small wrapper for <a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">piranha::math::evaluate()</a> which replaces the interface based on <code>std::unordered_map</code> with an interface based on vectors and positional arguments.</p>
 <p>The convenience function <a class="el" href="namespacepiranha_1_1math.html#a452ee0cab57fe66b8af36e9d9c6c0641" title="Create a functor interface for piranha::math::evaluate(). ">piranha::math::lambdify()</a> can be used to easily construct objects of this class.</p>
 <h2>Type requirements</h2>
 <ul>
@@ -180,13 +180,13 @@ class piranha::math::lambdified&lt; T, U &gt;</h3>
 template&lt;typename T, typename U&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="classpiranha_1_1math_1_1lambdified.html">piranha::math::lambdified</a>&lt; T, U &gt;::<a class="el" href="classpiranha_1_1math_1_1lambdified.html#a9792812b5ab19b805d579c7cc3ae848e">eval_type</a> =  decltype(<a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf">math::evaluate</a>(std::declval&lt;const T &amp;&gt;(), std::declval&lt;const std::unordered_map&lt;std::string,U&gt; &amp;&gt;()))</td>
+          <td class="memname">using <a class="el" href="classpiranha_1_1math_1_1lambdified.html">piranha::math::lambdified</a>&lt; T, U &gt;::<a class="el" href="classpiranha_1_1math_1_1lambdified.html#a9792812b5ab19b805d579c7cc3ae848e">eval_type</a> =  decltype(<a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989">math::evaluate</a>(std::declval&lt;const T &amp;&gt;(), std::declval&lt;const std::unordered_map&lt;std::string,U&gt; &amp;&gt;()))</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Evaluation type. </p>
-<p>This is the type resulting from evaluating objects of type <code>T</code> with objects of type <code>U</code> via <a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">piranha::math::evaluate()</a>. </p>
+<p>This is the type resulting from evaluating objects of type <code>T</code> with objects of type <code>U</code> via <a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">piranha::math::evaluate()</a>. </p>
 
 <p>Definition at line <a class="el" href="lambdify_8hpp_source.html#l00151">151</a> of file <a class="el" href="lambdify_8hpp_source.html">lambdify.hpp</a>.</p>
 
@@ -254,7 +254,7 @@ template&lt;typename T, typename U&gt; </div>
 
 <p>Constructor. </p>
 <p>This constructor will create an internal copy of <code>x</code>, the object that will be evaluated by successive calls to <a class="el" href="classpiranha_1_1math_1_1lambdified.html#a79eb9d39ce5604b2a872f3eee470660a" title="Evaluation. ">operator()()</a>. The vector of string <code>names</code> establishes the correspondence between symbols and the values with which the symbols will be replaced when <a class="el" href="classpiranha_1_1math_1_1lambdified.html#a79eb9d39ce5604b2a872f3eee470660a" title="Evaluation. ">operator()()</a> is called. That is, the values in the vector passed to <a class="el" href="classpiranha_1_1math_1_1lambdified.html#a79eb9d39ce5604b2a872f3eee470660a" title="Evaluation. ">operator()()</a> are associated to the symbols in <code>names</code> at the corresponding positions.</p>
-<p>The optional argument <code>extra_map</code> can be used to specify how to evaluate specific symbols. That is, <code>extra_map</code> associates symbol names to functions of signature </p><div class="fragment"><div class="line">U (<span class="keyword">const</span> std::vector&lt;U&gt; &amp;)</div></div><!-- fragment --><p> When <a class="el" href="classpiranha_1_1math_1_1lambdified.html#a79eb9d39ce5604b2a872f3eee470660a" title="Evaluation. ">operator()()</a> is called with a vector of values <code>v</code>, for each symbol <code>s</code> in <code>extra_map</code> the associated function is called with <code>v</code> as an argument, and the return value is used as evaluation value for <code>s</code> in the subsequent call to <a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">math::evaluate()</a>. <code>extra_map</code> must not contain symbol names appearing in <code>names</code>.</p>
+<p>The optional argument <code>extra_map</code> can be used to specify how to evaluate specific symbols. That is, <code>extra_map</code> associates symbol names to functions of signature </p><div class="fragment"><div class="line">U (<span class="keyword">const</span> std::vector&lt;U&gt; &amp;)</div></div><!-- fragment --><p> When <a class="el" href="classpiranha_1_1math_1_1lambdified.html#a79eb9d39ce5604b2a872f3eee470660a" title="Evaluation. ">operator()()</a> is called with a vector of values <code>v</code>, for each symbol <code>s</code> in <code>extra_map</code> the associated function is called with <code>v</code> as an argument, and the return value is used as evaluation value for <code>s</code> in the subsequent call to <a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">math::evaluate()</a>. <code>extra_map</code> must not contain symbol names appearing in <code>names</code>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>the object that will be evaluated by <a class="el" href="classpiranha_1_1math_1_1lambdified.html#a79eb9d39ce5604b2a872f3eee470660a" title="Evaluation. ">operator()()</a>. </td></tr>
@@ -555,8 +555,8 @@ template&lt;typename T, typename U&gt; </div>
 </div><div class="memdoc">
 
 <p>Evaluation. </p>
-<p>The call operator will first associate the elements of <code>values</code> to the vector of names used to construct <code>this</code>, and it will then call <a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">piranha::math::evaluate()</a> on the stored internal instance of the object of type <code>T</code> used during construction.</p>
-<p>If a non-empty <code>extra_map</code> parameter was used during construction, the symbols in it are evaluated according to the mapped functions before being passed down in the evaluation dictionary to <a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">piranha::math::evaluate()</a>.</p>
+<p>The call operator will first associate the elements of <code>values</code> to the vector of names used to construct <code>this</code>, and it will then call <a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">piranha::math::evaluate()</a> on the stored internal instance of the object of type <code>T</code> used during construction.</p>
+<p>If a non-empty <code>extra_map</code> parameter was used during construction, the symbols in it are evaluated according to the mapped functions before being passed down in the evaluation dictionary to <a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">piranha::math::evaluate()</a>.</p>
 <p>Note that this function needs to modify the internal state of the object, and thus it is not const and it is not thread-safe.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -564,13 +564,13 @@ template&lt;typename T, typename U&gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the output of <a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">piranha::math::evaluate()</a> called on the instance of type <code>T</code> stored internally.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the output of <a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">piranha::math::evaluate()</a> called on the instance of type <code>T</code> stored internally.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the size of <code>values</code> is not equal to the size of the vector of names used during construction. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception raised by:<ul>
 <li>the copy-assignment operator of <code>U</code>,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a4fd50fafb56550387b3b2dab67cdffcf" title="Evaluation. ">math::evaluate()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#ac2031ab908fc52d404a643fa7f582989" title="Evaluation. ">math::evaluate()</a>,</li>
 <li>the call operator of the mapped functions in the <code>extra_map</code> parameter used during construction. </li>
 </ul>
 </td></tr>

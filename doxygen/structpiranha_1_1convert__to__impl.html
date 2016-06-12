@@ -109,10 +109,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad665af852977026442d65d15af134358"><td class="memTemplParams" colspan="2">template&lt;typename From2 &gt; </td></tr>
-<tr class="memitem:ad665af852977026442d65d15af134358"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1convert__to__impl.html#ad665af852977026442d65d15af134358">operator()</a> (const From2 &amp;x) const  -&gt; decltype(static_cast&lt; To &gt;(x))</td></tr>
-<tr class="memdesc:ad665af852977026442d65d15af134358"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#ad665af852977026442d65d15af134358">More...</a><br /></td></tr>
-<tr class="separator:ad665af852977026442d65d15af134358"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a853e5d8bc99baeb1e2740e5e095224c1"><td class="memTemplParams" colspan="2">template&lt;typename From2 &gt; </td></tr>
+<tr class="memitem:a853e5d8bc99baeb1e2740e5e095224c1"><td class="memTemplItemLeft" align="right" valign="top">return_type&lt; From2 &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1convert__to__impl.html#a853e5d8bc99baeb1e2740e5e095224c1">operator()</a> (const From2 &amp;x) const </td></tr>
+<tr class="memdesc:a853e5d8bc99baeb1e2740e5e095224c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a853e5d8bc99baeb1e2740e5e095224c1">More...</a><br /></td></tr>
+<tr class="separator:a853e5d8bc99baeb1e2740e5e095224c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename To, typename From, typename = void&gt;<br />
@@ -120,13 +120,13 @@ struct piranha::convert_to_impl&lt; To, From, typename &gt;</h3>
 
 <p>Default functor for the implementation of <a class="el" href="namespacepiranha.html#a8740bbc3e472de1f0acebc18c416c35d" title="Generic conversion function. ">piranha::convert_to()</a>. </p>
 
-<p>Definition at line <a class="el" href="convert__to_8hpp_source.html#l00042">42</a> of file <a class="el" href="convert__to_8hpp_source.html">convert_to.hpp</a>.</p>
+<p>Definition at line <a class="el" href="convert__to_8hpp_source.html#l00043">43</a> of file <a class="el" href="convert__to_8hpp_source.html">convert_to.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="ad665af852977026442d65d15af134358"></a>
+<a class="anchor" id="a853e5d8bc99baeb1e2740e5e095224c1"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename To, typename From, typename  = void&gt; </div>
+template&lt;typename To , typename From , typename  = void&gt; </div>
 <div class="memtemplate">
 template&lt;typename From2 &gt; </div>
 <table class="mlabels">
@@ -134,12 +134,11 @@ template&lt;typename From2 &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">auto <a class="el" href="structpiranha_1_1convert__to__impl.html">piranha::convert_to_impl</a>&lt; To, From, typename &gt;::operator() </td>
+          <td class="memname">return_type&lt;From2&gt; <a class="el" href="structpiranha_1_1convert__to__impl.html">piranha::convert_to_impl</a>&lt; To, From, typename &gt;::operator() </td>
           <td>(</td>
           <td class="paramtype">const From2 &amp;&#160;</td>
           <td class="paramname"><em>x</em></td><td>)</td>
-          <td> const -&gt; decltype(static_cast&lt;To&gt;(x))
-	</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -150,8 +149,8 @@ template&lt;typename From2 &gt; </div>
 </div><div class="memdoc">
 
 <p>Call operator. </p>
-<dl class="section note"><dt>Note</dt><dd>This call operator is enabled only if <code>static_cast&lt;To&gt;(x)</code> is a well-formed expression.</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
+<dl class="section note"><dt>Note</dt><dd>This call operator is enabled only if <code>static_cast&lt;To&gt;(x)</code> is a well-formed expression, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<p>The body of this operator is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>To<span class="keyword">&gt;</span>(x);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>conversion argument.</td></tr>
   </table>
@@ -165,7 +164,7 @@ template&lt;typename From2 &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="convert__to_8hpp_source.html#l00057">57</a> of file <a class="el" href="convert__to_8hpp_source.html">convert_to.hpp</a>.</p>
+<p>Definition at line <a class="el" href="convert__to_8hpp_source.html#l00069">69</a> of file <a class="el" href="convert__to_8hpp_source.html">convert_to.hpp</a>.</p>
 
 </div>
 </div>

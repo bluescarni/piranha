@@ -7,5 +7,5 @@ var searchData=
   ['construct',['construct',['../classpiranha_1_1cache__aligning__allocator.html#a2fdeb193b56207db7f5b1f123f44b31e',1,'piranha::cache_aligning_allocator']]],
   ['content',['content',['../classpiranha_1_1polynomial.html#adb0f51aff4ecbe31a8f9111ae744ce4b',1,'piranha::polynomial']]],
   ['convert_5fto',['convert_to',['../namespacepiranha.html#a8740bbc3e472de1f0acebc18c416c35d',1,'piranha']]],
-  ['cos',['cos',['../classpiranha_1_1poisson__series.html#a361423bb8229089adeb8404dcb9a7a1b',1,'piranha::poisson_series::cos()'],['../classpiranha_1_1real.html#a565829d0039a3301314f78340268637b',1,'piranha::real::cos()'],['../namespacepiranha_1_1math.html#a88eb0469177875f0133594816a8ba382',1,'piranha::math::cos()']]]
+  ['cos',['cos',['../classpiranha_1_1poisson__series.html#a361423bb8229089adeb8404dcb9a7a1b',1,'piranha::poisson_series::cos()'],['../classpiranha_1_1real.html#a565829d0039a3301314f78340268637b',1,'piranha::real::cos()'],['../namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f',1,'piranha::math::cos()']]]
 ];

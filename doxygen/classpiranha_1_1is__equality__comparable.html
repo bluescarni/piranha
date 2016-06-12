@@ -111,8 +111,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:af259e7e377696c1311fc1fd42ac37e85"><td class="memItemLeft" align="right" valign="top">static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__equality__comparable.html#af259e7e377696c1311fc1fd42ac37e85">value</a></td></tr>
-<tr class="memdesc:af259e7e377696c1311fc1fd42ac37e85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait.  <a href="#af259e7e377696c1311fc1fd42ac37e85">More...</a><br /></td></tr>
+<tr class="memitem:af259e7e377696c1311fc1fd42ac37e85"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af259e7e377696c1311fc1fd42ac37e85"></a>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__equality__comparable.html#af259e7e377696c1311fc1fd42ac37e85">value</a> = implementation_defined</td></tr>
+<tr class="memdesc:af259e7e377696c1311fc1fd42ac37e85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
 <tr class="separator:af259e7e377696c1311fc1fd42ac37e85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -123,34 +124,7 @@ class piranha::is_equality_comparable&lt; T, U &gt;</h3>
 <p>This type trait is <code>true</code> if instances if type <code>T</code> can be compared for equality and inequality to instances of type <code>U</code>. The operators must be non-mutable (i.e., implemented using pass-by-value or const references) and must return a type implicitly convertible to <code>bool</code>. </p>
 
 <p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00265">265</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
-<a class="anchor" id="af259e7e377696c1311fc1fd42ac37e85"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , typename U  = T&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const bool <a class="el" href="classpiranha_1_1is__equality__comparable.html">piranha::is_equality_comparable</a>&lt; T, U &gt;::value</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= std::is_convertible&lt;decltype(test1(std::declval&lt;Td&gt;(),std::declval&lt;Ud&gt;())),<span class="keywordtype">bool</span>&gt;<a class="code" href="classpiranha_1_1is__equality__comparable.html#af259e7e377696c1311fc1fd42ac37e85">::value</a> &amp;&amp;</div><div class="line">                        std::is_convertible&lt;decltype(test2(std::declval&lt;Td&gt;(),std::declval&lt;Ud&gt;())),<span class="keywordtype">bool</span>&gt;<a class="code" href="classpiranha_1_1is__equality__comparable.html#af259e7e377696c1311fc1fd42ac37e85">::value</a></div></div><!-- fragment -->
-<p>Value of the type trait. </p>
-
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00277">277</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-
-</div>
-</div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>
 </div><!-- contents -->

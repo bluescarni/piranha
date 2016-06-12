@@ -127,7 +127,7 @@ struct piranha::is_container_element&lt; T &gt;</h3>
 </ul>
 <p>If the <a class="el" href="structpiranha_1_1enable__noexcept__checks.html" title="Enable noexcept checks. ">piranha::enable_noexcept_checks</a> trait is <code>false</code> for <code>T</code>, then the nothrow checks will be discarded. </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00362">362</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00363">363</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a class="anchor" id="af27fac0ef9c0a6111997c5eed0b64e23"></a>
 <div class="memitem">
@@ -151,7 +151,7 @@ template&lt;typename T&gt; </div>
 <b>Initial value:</b><div class="fragment"><div class="line">= std::is_default_constructible&lt;T&gt;::value &amp;&amp;</div><div class="line">                                  std::is_copy_constructible&lt;T&gt;::value &amp;&amp;</div><div class="line">                                  (!<a class="code" href="structpiranha_1_1enable__noexcept__checks.html#ae07809c8d8408076b1027e38a7b57098">enable_noexcept_checks&lt;T&gt;::value</a> || (</div><div class="line">                                  std::is_nothrow_destructible&lt;T&gt;::value</div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line">                                  &amp;&amp; std::is_nothrow_move_constructible&lt;T&gt;::value &amp;&amp;</div><div class="line">                                  std::is_nothrow_move_assignable&lt;T&gt;::value</div><div class="line"></div><div class="line">                                  ))</div></div><!-- fragment -->
 <p>Value of the type trait. </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00367">367</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00368">368</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>

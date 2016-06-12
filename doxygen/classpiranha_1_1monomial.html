@@ -1087,7 +1087,7 @@ template&lt;typename U  = T, integrate_enabler&lt; U &gt;  = 0&gt; </div>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the sizes of <code>args</code> and <code>this</code> differ, if the exponent associated to <code>s</code> is -1, or if the computation on integral exponents results in an overflow error. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>,</li>
 <li>exponent construction,</li>
 <li><a class="el" href="classpiranha_1_1array__key.html#aa5a80146f0f863be9d85407b2d7eb26c" title="Move-add element at the end. ">push_back()</a>,</li>
 <li>the exponent type's addition and assignment operators. </li>
@@ -1289,7 +1289,7 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&
 </div><div class="memdoc">
 
 <p>Check if monomial is unitary. </p>
-<p>A monomial is unitary if, for all its elements, <a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a> returns <code>true</code>.</p>
+<p>A monomial is unitary if, for all its elements, <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a> returns <code>true</code>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">args</td><td>reference set of <a class="el" href="classpiranha_1_1symbol.html" title="Literal symbol class. ">piranha::symbol</a>.</td></tr>
@@ -1300,7 +1300,7 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the sizes of <code>args</code> and <code>this</code> differ. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1820,7 +1820,7 @@ template&lt;typename U  = T, partial_enabler&lt; U &gt;  = 0&gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>monomial and exponent construction,</li>
 <li>the exponent type's subtraction operator,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>. </li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>. </li>
 </ul>
 </td></tr>
   </table>
@@ -1998,7 +1998,7 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t,0u&
     <tr><td class="paramname">std::invalid_argument</td><td>if the sizes of <code>args</code> and <code>this</code> differ. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception resulting from:<ul>
 <li>construction, comparison and assignment of exponents,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a7ec2303772eab00a1ca75c11106c60b9" title="In-place negation. ">piranha::math::negate()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a>,</li>
 <li>streaming to <code>os</code>. </li>
 </ul>
 </td></tr>
@@ -2436,7 +2436,7 @@ template&lt;typename U &gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the size of <code>this</code> differs from the size of <code>args</code>. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a> or <a class="el" href="classpiranha_1_1symbol__set.html#ad9713d112f97ddd466f8a84c4598f6f6" title="Remove symbol from the set. ">piranha::symbol_set::remove()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a> or <a class="el" href="classpiranha_1_1symbol__set.html#ad9713d112f97ddd466f8a84c4598f6f6" title="Remove symbol from the set. ">piranha::symbol_set::remove()</a>. </td></tr>
   </table>
   </dd>
 </dl>

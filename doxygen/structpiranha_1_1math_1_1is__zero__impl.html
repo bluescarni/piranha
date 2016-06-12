@@ -102,34 +102,34 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>.  
+<p>Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>.  
  <a href="structpiranha_1_1math_1_1is__zero__impl.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="math_8hpp_source.html">math.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0dc7c49bbb5a73fa277e563eb5f92830"><td class="memTemplParams" colspan="2">template&lt;typename U &gt; </td></tr>
-<tr class="memitem:a0dc7c49bbb5a73fa277e563eb5f92830"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1is__zero__impl.html#a0dc7c49bbb5a73fa277e563eb5f92830">operator()</a> (const U &amp;x, typename std::enable_if&lt; std::is_constructible&lt; U, int &gt;::value &amp;&amp;<a class="el" href="classpiranha_1_1is__equality__comparable.html">is_equality_comparable</a>&lt; U &gt;::value &gt;::type *=nullptr) const </td></tr>
-<tr class="memdesc:a0dc7c49bbb5a73fa277e563eb5f92830"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a0dc7c49bbb5a73fa277e563eb5f92830">More...</a><br /></td></tr>
-<tr class="separator:a0dc7c49bbb5a73fa277e563eb5f92830"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56c69b3f8fb11ff413a95cb3d19413f7"><td class="memTemplParams" colspan="2">template&lt;typename U , enabler&lt; U &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a56c69b3f8fb11ff413a95cb3d19413f7"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1is__zero__impl.html#a56c69b3f8fb11ff413a95cb3d19413f7">operator()</a> (const U &amp;x) const </td></tr>
+<tr class="memdesc:a56c69b3f8fb11ff413a95cb3d19413f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a56c69b3f8fb11ff413a95cb3d19413f7">More...</a><br /></td></tr>
+<tr class="separator:a56c69b3f8fb11ff413a95cb3d19413f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T, typename = void&gt;<br />
 struct piranha::math::is_zero_impl&lt; T, typename &gt;</h3>
 
-<p>Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a00db2c62bd93a48258dd8545c6fb468c" title="Zero test. ">piranha::math::is_zero()</a>. </p>
+<p>Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>. </p>
 <p>This functor should be specialised via the <code>std::enable_if</code> mechanism. The default implementation defines a call operator which is enabled only if the argument type is constructible from the C++ <code>int</code> type and <code>T</code> is equality comparable. </p>
 
 <p>Definition at line <a class="el" href="math_8hpp_source.html#l00069">69</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a0dc7c49bbb5a73fa277e563eb5f92830"></a>
+<a class="anchor" id="a56c69b3f8fb11ff413a95cb3d19413f7"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T , typename  = void&gt; </div>
 <div class="memtemplate">
-template&lt;typename U &gt; </div>
+template&lt;typename U , enabler&lt; U &gt;  = 0&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -138,18 +138,8 @@ template&lt;typename U &gt; </div>
           <td class="memname">bool <a class="el" href="structpiranha_1_1math_1_1is__zero__impl.html">piranha::math::is_zero_impl</a>&lt; T, typename &gt;::operator() </td>
           <td>(</td>
           <td class="paramtype">const U &amp;&#160;</td>
-          <td class="paramname"><em>x</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">typename std::enable_if&lt; std::is_constructible&lt; U, int &gt;::value &amp;&amp;<a class="el" href="classpiranha_1_1is__equality__comparable.html">is_equality_comparable</a>&lt; U &gt;::value &gt;::type *&#160;</td>
-          <td class="paramname"> = <code>nullptr</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
+          <td class="paramname"><em>x</em></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -160,7 +150,8 @@ template&lt;typename U &gt; </div>
 </div><div class="memdoc">
 
 <p>Call operator. </p>
-<p>The operator will compare <code>x</code> to an instance of <code>U</code> constructed from the literal 0. If <code>U</code> cannot be constructed from the literal 0 or <code>U</code> is not equality comparable, the operator will be disabled.</p>
+<dl class="section note"><dt>Note</dt><dd>This operator is enabled only if <code>U</code> is constructible from <code>int</code> and equality-comparable.</dd></dl>
+<p>The operator will compare <code>x</code> to an instance of <code>U</code> constructed from the literal 0.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>argument to be tested.</td></tr>
@@ -170,12 +161,12 @@ template&lt;typename U &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> if <code>x</code> is zero, <code>false</code> otherwise.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by the construction or comparison of instances of type <code>U</code>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by the construction or comparison of instances of type <code>U</code>, or by the conversion of the result of the comparison to <code>bool</code>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="math_8hpp_source.html#l00083">83</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p>Definition at line <a class="el" href="math_8hpp_source.html#l00094">94</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>

@@ -102,37 +102,34 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a> functor for <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a>.  
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a> functor for <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a>.  
  <a href="structpiranha_1_1math_1_1sin__impl_3_01_series_00_01detail_1_1series__sin__enabler_3_01_series_01_4_01_4.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="series_8hpp_source.html">series.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a55a0d296c11a43160c0502f522042c79"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a55a0d296c11a43160c0502f522042c79"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1sin__impl_3_01_series_00_01detail_1_1series__sin__enabler_3_01_series_01_4_01_4.html#a55a0d296c11a43160c0502f522042c79">operator()</a> (const T &amp;s) const  -&gt; decltype(detail::series_sin_impl(s))</td></tr>
-<tr class="memdesc:a55a0d296c11a43160c0502f522042c79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a55a0d296c11a43160c0502f522042c79">More...</a><br /></td></tr>
-<tr class="separator:a55a0d296c11a43160c0502f522042c79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e3f8e9de834b8405d77ab556ca41002"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1sin__impl_3_01_series_00_01detail_1_1series__sin__enabler_3_01_series_01_4_01_4.html#a1e3f8e9de834b8405d77ab556ca41002">operator()</a> (const Series &amp;s) const  -&gt; decltype(detail::series_sin_impl(s))</td></tr>
+<tr class="memdesc:a1e3f8e9de834b8405d77ab556ca41002"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a1e3f8e9de834b8405d77ab556ca41002">More...</a><br /></td></tr>
+<tr class="separator:a1e3f8e9de834b8405d77ab556ca41002"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Series&gt;<br />
 struct piranha::math::sin_impl&lt; Series, detail::series_sin_enabler&lt; Series &gt; &gt;</h3>
 
-<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a> functor for <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a>. </p>
+<p>Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a> functor for <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a>. </p>
 <p>This specialisation is activated when <code>Series</code> is an instance of <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a> and:</p><ul>
-<li>either the series type provides a const <code>sin()</code> method, or</li>
-<li>the series' coefficient type <code>Cf</code> supports <a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">math::sin()</a> yielding a type <code>T</code> and either <code>T</code> is the same as <code>Cf</code>, or the series type can be rebound to the type <code>T</code>. </li>
+<li>either the series type provides a const <code>sin()</code> method returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>, or, missing this method,</li>
+<li>the series' coefficient type <code>Cf</code> supports <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">math::sin()</a> yielding a type <code>T</code> and either <code>T</code> is the same as <code>Cf</code>, or the series type can be rebound to the type <code>T</code>. </li>
 </ul>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l03332">3332</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l03336">3336</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a55a0d296c11a43160c0502f522042c79"></a>
+<a class="anchor" id="a1e3f8e9de834b8405d77ab556ca41002"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename Series &gt; </div>
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -140,7 +137,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname">auto <a class="el" href="structpiranha_1_1math_1_1sin__impl.html">piranha::math::sin_impl</a>&lt; Series, detail::series_sin_enabler&lt; Series &gt; &gt;::operator() </td>
           <td>(</td>
-          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramtype">const Series &amp;&#160;</td>
           <td class="paramname"><em>s</em></td><td>)</td>
           <td> const -&gt; decltype(detail::series_sin_impl(s))
 	</td>
@@ -165,15 +162,16 @@ template&lt;typename T &gt; </div>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>the <code>Series::sin()</code> method,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#afbe681443ac448d0eec22376992be475" title="Sine. ">piranha::math::sin()</a>,</li>
-<li>term, coefficient, and key construction and/or insertion via <a class="el" href="classpiranha_1_1series.html#ac049565106ddee1881fedf6481de9458" title="Insert term. ">piranha::series::insert()</a>. </li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a>,</li>
+<li>term, coefficient, and key construction and/or insertion via <a class="el" href="classpiranha_1_1series.html#ac049565106ddee1881fedf6481de9458" title="Insert term. ">piranha::series::insert()</a>,</li>
+<li>returning the result. </li>
 </ul>
 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l03346">3346</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l03350">3350</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>

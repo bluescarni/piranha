@@ -230,7 +230,7 @@ class piranha::series_multiplier&lt; Series, detail::poly_multiplier_enabler&lt;
 <h2>Move semantics</h2>
 <p>Move semantics is equivalent to <a class="el" href="classpiranha_1_1base__series__multiplier.html" title="Base series multiplier. ">piranha::base_series_multiplier</a>'s move semantics. </p>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02199">2199</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02200">2200</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a84d6a7a6aec422b96bcfafc491e5953f"></a>
 <div class="memitem">
@@ -294,7 +294,7 @@ template&lt;typename Series &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02475">2475</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02476">2476</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -648,7 +648,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02623">2623</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02624">2624</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -680,7 +680,7 @@ template&lt;typename T  = Series, call_enabler&lt; T &gt;  = 0&gt; </div>
 <p>Perform multiplication. </p>
 <dl class="section note"><dt>Note</dt><dd>This template operator is enabled only if:<ul>
 <li>the coefficient and key type of <code>Series</code> satisfy <a class="el" href="classpiranha_1_1key__is__multipliable.html" title="Type trait for multipliable key. ">piranha::key_is_multipliable</a>,</li>
-<li>the coefficient type of <code>Series</code> supports <a class="el" href="namespacepiranha_1_1math.html#a4e861376c8a922cae01bcd27ee757d39" title="Ternary multiplication. ">piranha::math::mul3()</a> and <a class="el" href="namespacepiranha_1_1math.html#a904f85d9a1ef8c95384bcb89ff0795e7" title="Multiply-accumulate. ">piranha::math::multiply_accumulate()</a>.</li>
+<li>the coefficient type of <code>Series</code> supports <a class="el" href="namespacepiranha_1_1math.html#a4e861376c8a922cae01bcd27ee757d39" title="Ternary multiplication. ">piranha::math::mul3()</a> and <a class="el" href="namespacepiranha_1_1math.html#a7abf171a94492501ed8ab4b62fc3e58c" title="Multiply-accumulate. ">piranha::math::multiply_accumulate()</a>.</li>
 </ul>
 </dd></dl>
 <p>This method will perform the multiplication of the series operands passed to the constructor. Depending on the key type of <code>Series</code>, the implementation will use either <a class="el" href="classpiranha_1_1base__series__multiplier.html#a2e94e0bc33877a380e9a2f19e0956455" title="A plain series multiplication routine. ">base_series_multiplier::plain_multiplication()</a> with <a class="el" href="classpiranha_1_1base__series__multiplier_1_1plain__multiplier.html" title="A plain multiplier functor. ">base_series_multiplier::plain_multiplier</a> or a different algorithm.</p>
@@ -699,7 +699,7 @@ template&lt;typename T  = Series, call_enabler&lt; T &gt;  = 0&gt; </div>
 <li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li>memory errors in standard containers,</li>
 <li><a class="el" href="namespacepiranha_1_1math.html#a4e861376c8a922cae01bcd27ee757d39" title="Ternary multiplication. ">piranha::math::mul3()</a>,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a904f85d9a1ef8c95384bcb89ff0795e7" title="Multiply-accumulate. ">piranha::math::multiply_accumulate()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a7abf171a94492501ed8ab4b62fc3e58c" title="Multiply-accumulate. ">piranha::math::multiply_accumulate()</a>,</li>
 <li><a class="el" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8" title="Append task. ">thread_pool::enqueue()</a>,</li>
 <li><a class="el" href="classpiranha_1_1future__list.html#a2e80f33417eef5cb4ac2ecf6d7c5c942" title="Move-insert a future. ">future_list::push_back()</a>,</li>
 <li><a class="el" href="classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html#aed51197974851c172334d3fa809e4f43" title="Truncated multiplication. ">truncated_multiplication()</a>,</li>
@@ -710,7 +710,7 @@ template&lt;typename T  = Series, call_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02517">2517</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02518">2518</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -946,7 +946,7 @@ template&lt;typename T , typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02552">2552</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02553">2553</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
