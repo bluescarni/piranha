@@ -5,7 +5,7 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     - boost-latest
-    - llvm-toolchain-precise-3.8
+    #- llvm-toolchain-precise-3.8
     - george-edison55-precise-backports
     packages:
     - libgmp-dev
@@ -22,7 +22,7 @@ addons:
     - python3-numpy
     - python-pip
     - g++-4.8
-    - clang-3.8
+    #- clang-3.8
     - doxygen
     - graphviz
     - graphviz-dev
@@ -52,19 +52,19 @@ matrix:
       env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="1"
     - compiler: gcc
       env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="2"
-    - compiler: clang
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
-    - compiler: clang
+    # - compiler: clang
+    #   env: BUILD_TYPE="Release"
+    # - compiler: clang
+    #   env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+    # - compiler: clang
+    #   env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+    # - compiler: clang
+    #   env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+    - compiler: gcc
       env: BUILD_TYPE="Python2"
-    - compiler: clang
+    - compiler: gcc
       env: BUILD_TYPE="Python3"
-    - compiler: clang
+    - compiler: gcc
       env: BUILD_TYPE="Tutorial"
     - compiler: gcc
       env: BUILD_TYPE="Doxygen"

@@ -79,7 +79,7 @@ namespace detail
 // and that it returns the proper type.
 template <typename To, typename From>
 using convert_to_enabler = typename std::enable_if<
-	std::is_same<decltype(convert_to_impl<typename std::decay<To>::type,From>()(std::declval<const From &>())),typename std::decay<To>::type>::value &&
+	std::is_same<decltype(convert_to_impl<typename std::decay<To>::type,From>{}(std::declval<const From &>())),typename std::decay<To>::type>::value &&
 	is_returnable<typename std::decay<To>::type>::value,
 	int>::type;
 
@@ -97,7 +97,11 @@ using convert_to_enabler = typename std::enable_if<
  *
  * The actual implementation of this function is in the piranha::convert_to_impl functor's
  * call operator. The decay type of \p To is passed as first template parameter of
- * piranha::convert_to_impl, whereas \p From is passed as-is.
+ * piranha::convert_to_impl, whereas \p From is passed as-is. The body of this function
+ * is equivalent to:
+ * @code
+ * return convert_to_impl<typename std::decay<To>::type,From>{}(x);
+ * @endcode
  *
  * Any specialisation of piranha::convert_to_impl must have a call operator returning
  * an instance of the decay type of \p To, otherwise this function will be disabled.
@@ -111,7 +115,7 @@ using convert_to_enabler = typename std::enable_if<
 template <typename To, typename From, detail::convert_to_enabler<To,From> = 0>
 inline To convert_to(const From &x)
 {
-	return convert_to_impl<typename std::decay<To>::type,From>()(x);
+	return convert_to_impl<typename std::decay<To>::type,From>{}(x);
 }
 
 /// Type trait to detect piranha::convert_to().

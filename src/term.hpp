@@ -44,32 +44,40 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
+namespace detail
+{
+
+// Tag for piranha::term.
+struct term_tag {};
+
+}
+
 /// Term class.
 /**
  * This class represents series terms, which are parametrised over a coefficient type \p Cf and a key type
  * \p Key. One mutable coefficient instance and one key instance are the only data members and they can be accessed directly.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * - \p Cf must satisfy piranha::is_cf.
  * - \p Key must satisfy piranha::is_key.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move semantics is equivalent to its data members' move semantics.
  *
  * ## Serialization ##
  *
  * This class supports serialization if the coefficient and key types support it.
- * 
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename Key>
-class term
+class term: detail::term_tag
 {
 		PIRANHA_TT_CHECK(is_cf,Cf);
 		PIRANHA_TT_CHECK(is_key,Key);
@@ -107,7 +115,7 @@ class term
 		/// Default constructor.
 		/**
 		 * Will explicitly call the default constructors of <tt>Cf</tt> and <tt>Key</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the default constructors of \p Cf and \p Key.
 		 */
 		term():m_cf(),m_key() {}
@@ -124,10 +132,10 @@ class term
 		 * This constructor is activated only if coefficient and key are constructible from \p T and \p U.
 		 *
 		 * This constructor will forward perfectly \p cf and \p key to construct coefficient and key.
-		 * 
+		 *
 		 * @param[in] cf argument used for the construction of the coefficient.
 		 * @param[in] key argument used for the construction of the key.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the constructors of \p Cf and \p Key.
 		 */
 		template <typename T, typename U, binary_ctor_enabler<T,U> = 0>
@@ -140,9 +148,9 @@ class term
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other assignment argument.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
 		 */
 		term &operator=(const term &other)
@@ -156,7 +164,7 @@ class term
 		/// Trivial move-assignment operator.
 		/**
 		 * @param[in] other assignment argument.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		term &operator=(term &&other) noexcept
@@ -170,11 +178,11 @@ class term
 		/// Equality operator.
 		/**
 		 * Equivalence of terms is defined by the equivalence of their keys.
-		 * 
+		 *
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return <tt>m_key == other.m_key</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the equality operators of \p Key.
 		 */
 		bool operator==(const term &other) const
@@ -184,7 +192,7 @@ class term
 		/// Hash value.
 		/**
 		 * The term's hash value is given by its key's hash value.
-		 * 
+		 *
 		 * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
 		 *
 		 * @throws unspecified any exception thrown by the hash functor of \p Key.
@@ -196,7 +204,7 @@ class term
 		/// Compatibility test.
 		/**
 		 * @param[in] args reference arguments set.
-		 * 
+		 *
 		 * @return the key's <tt>is_compatible()</tt> method's return value.
 		 */
 		bool is_compatible(const symbol_set &args) const noexcept
@@ -209,9 +217,9 @@ class term
 		/**
 		 * Note that this method is not allowed to throw, so any exception thrown by calling piranha::math::is_zero() on the coefficient
 		 * will result in the termination of the program.
-		 * 
+		 *
 		 * @param[in] args reference arguments set.
-		 * 
+		 *
 		 * @return \p true if either the key's <tt>is_ignorable()</tt> method or piranha::math::is_zero() on the coefficient return \p true,
 		 * \p false otherwise.
 		 */
@@ -224,6 +232,36 @@ class term
 		/// Key member.
 		Key		m_key;
 };
+
+namespace detail
+{
+
+// Enabler for the enable_noexcept_checks specialisation for terms.
+template <typename T>
+using term_enc_enabler = typename std::enable_if<std::is_base_of<detail::term_tag,T>::value>::type;
+
+}
+
+/// Specialisation of piranha::enable_noexcept_checks for piranha::term.
+/**
+ * This specialisation is activated when \p T is an instance of piranha::term. The value of the type trait
+ * is set to \p true if both the coefficient and key types satisfy piranha::enable_noexcept_checks. Otherwise,
+ * the value of the type trait is set to \p false.
+ */
+template <typename T>
+struct enable_noexcept_checks<T,detail::term_enc_enabler<T>>
+{
+	private:
+		static const bool implementation_defined = enable_noexcept_checks<typename T::cf_type>::value &&
+			enable_noexcept_checks<typename T::key_type>::value;
+	public:
+		/// Value of the type trait.
+		static const bool value = implementation_defined;
+};
+
+template <typename T>
+const bool enable_noexcept_checks<T,
+	typename std::enable_if<std::is_base_of<detail::term_tag,T>::value>::type>::value;
 
 }
 

@@ -105,7 +105,7 @@ namespace detail
 // Enabler for math::is_zero().
 template <typename T>
 using math_is_zero_enabler = typename std::enable_if<
-	std::is_convertible<decltype(math::is_zero_impl<T>()(std::declval<const T &>())),bool>::value,int>::type;
+	std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())),bool>::value,int>::type;
 
 }
 
@@ -115,13 +115,13 @@ namespace math
 /// Zero test.
 /**
  * \note
- * This function is enabled only if <tt>is_zero_impl<T>()(x)</tt> is a well-formed expression returning
+ * This function is enabled only if <tt>is_zero_impl<T>{}(x)</tt> is a well-formed expression returning
  * a type implicitly convertible to \p bool.
  *
  * Test if value is zero. The actual implementation of this function is in the piranha::math::is_zero_impl functor's
  * call operator. The body of this function is equivalent to:
  * @code
- * return is_zero_impl<T>()(x);
+ * return is_zero_impl<T>{}(x);
  * @endcode
  *
  * @param[in] x value to be tested.
@@ -134,7 +134,7 @@ namespace math
 template <typename T, detail::math_is_zero_enabler<T> = 0>
 inline bool is_zero(const T &x)
 {
-	return is_zero_impl<T>()(x);
+	return is_zero_impl<T>{}(x);
 }
 
 }
@@ -216,7 +216,7 @@ namespace detail
 // Enabler for piranha::math::is_unitary().
 template <typename T>
 using math_is_unitary_enabler = typename std::enable_if<
-	std::is_convertible<decltype(math::is_unitary_impl<T>()(std::declval<const T &>())),bool>::value,int>::type;
+	std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())),bool>::value,int>::type;
 
 }
 
@@ -226,13 +226,13 @@ namespace math
 /// Unitary test.
 /**
  * \note
- * This function is enabled only if <tt>is_unitary_impl<T>()(x)</tt> is a valid expression, returning a type
+ * This function is enabled only if <tt>is_unitary_impl<T>{}(x)</tt> is a valid expression, returning a type
  * which is implicitly convertible to \p bool.
  *
  * Test if value is equal to 1. The actual implementation of this function is in the piranha::math::is_unitary_impl functor's
  * call operator. The body of this function is equivalent to:
  * @code
- * return is_unitary_impl<T>()(x);
+ * return is_unitary_impl<T>{}(x);
  * @endcode
  *
  * @param[in] x value to be tested.
@@ -245,7 +245,7 @@ namespace math
 template <typename T, detail::math_is_unitary_enabler<T> = 0>
 inline bool is_unitary(const T &x)
 {
-	return is_unitary_impl<T>()(x);
+	return is_unitary_impl<T>{}(x);
 }
 
 /// Default functor for the implementation of piranha::math::negate().
@@ -303,7 +303,7 @@ namespace detail
 // Enabler for math::negate().
 template <typename T>
 using math_negate_enabler = typename std::enable_if<!std::is_const<T>::value &&
-	true_tt<decltype(math::negate_impl<T>()(std::declval<T &>()))>::value,int>::type;
+	true_tt<decltype(math::negate_impl<T>{}(std::declval<T &>()))>::value,int>::type;
 
 }
 
@@ -313,12 +313,12 @@ namespace math
 /// In-place negation.
 /**
  * \note
- * This function is enabled only if \p T is not const and if the expression <tt>negate_impl<T>()(x)</tt> is valid.
+ * This function is enabled only if \p T is not const and if the expression <tt>negate_impl<T>{}(x)</tt> is valid.
  *
  * Negate value in-place. The actual implementation of this function is in the piranha::math::negate_impl functor's
  * call operator. The body of this function is equivalent to:
  * @code
- * negate_impl<T>()(x);
+ * negate_impl<T>{}(x);
  * @endcode
  * The result of the call operator of piranha::math::negate_impl is ignored.
  *
@@ -329,7 +329,7 @@ namespace math
 template <typename T, detail::math_negate_enabler<T> = 0>
 inline void negate(T &x)
 {
-	negate_impl<T>()(x);
+	negate_impl<T>{}(x);
 }
 
 /// Default functor for the implementation of piranha::math::multiply_accumulate().
@@ -407,7 +407,7 @@ template <typename T, typename U, typename V>
 using math_multiply_accumulate_enabler = typename std::enable_if<
 	!std::is_const<T>::value &&
 	true_tt<decltype(math::multiply_accumulate_impl<T,
-	typename std::decay<U>::type,typename std::decay<V>::type>()
+	typename std::decay<U>::type,typename std::decay<V>::type>{}
 	(std::declval<T &>(),std::declval<const U &>(),std::declval<const V &>()))>::value,int>::type;
 
 }
@@ -419,13 +419,13 @@ namespace math
 /**
  * \note
  * This function is enabled only if \p T is not const and the expression
- * <tt>multiply_accumulate_impl<T,Ud,Vd>>()(x,y,z)</tt> is valid (where \p Ud and \p Vd
+ * <tt>multiply_accumulate_impl<T,Ud,Vd>>{}(x,y,z)</tt> is valid (where \p Ud and \p Vd
  * are the decay types of \p U and \p V).
  *
  * Will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the piranha::math::multiply_accumulate_impl functor's
  * call operator. The body of this function is equivalent to:
  * @code
- * multiply_accumulate_impl<T,Ud,Vd>()(x,std::forward<U>(y),std::forward<V>(z));
+ * multiply_accumulate_impl<T,Ud,Vd>{}(x,std::forward<U>(y),std::forward<V>(z));
  * @endcode
  * (where \p Ud and \p Vd are the decay types of \p U and \p V). The result of the call operator of
  * piranha::math::multiply_accumulate_impl is ignored.
@@ -440,7 +440,7 @@ template <typename T, typename U, typename V, detail::math_multiply_accumulate_e
 inline void multiply_accumulate(T &x, U &&y, V &&z)
 {
 	multiply_accumulate_impl<T,
-		typename std::decay<U>::type,typename std::decay<V>::type>()(x,
+		typename std::decay<U>::type,typename std::decay<V>::type>{}(x,
 		std::forward<U>(y),std::forward<V>(z));
 }
 
@@ -506,7 +506,7 @@ namespace detail
 
 // Type for the result of math::cos().
 template <typename T>
-using math_cos_type_ = decltype(math::cos_impl<T>()(std::declval<const T &>()));
+using math_cos_type_ = decltype(math::cos_impl<T>{}(std::declval<const T &>()));
 
 template <typename T>
 using math_cos_type = typename std::enable_if<is_returnable<math_cos_type_<T>>::value,
@@ -520,13 +520,13 @@ namespace math
 /// Cosine.
 /**
  * \note
- * This function is enabled only if the expression <tt>cos_impl<T>()(x)</tt> is valid, returning
+ * This function is enabled only if the expression <tt>cos_impl<T>{}(x)</tt> is valid, returning
  * a type which satisfies piranha::is_returnable.
  *
  * Returns the cosine of \p x. The actual implementation of this function is in the piranha::math::cos_impl functor's
  * call operator. The body of this function is equivalent to:
  * @code
- * return cos_impl<T>()(x);
+ * return cos_impl<T>{}(x);
  * @endcode
  *
  * @param[in] x cosine argument.
@@ -538,7 +538,7 @@ namespace math
 template <typename T>
 inline detail::math_cos_type<T> cos(const T &x)
 {
-	return cos_impl<T>()(x);
+	return cos_impl<T>{}(x);
 }
 
 /// Default functor for the implementation of piranha::math::sin().
@@ -603,7 +603,7 @@ namespace detail
 
 // Type for the result of math::sin().
 template <typename T>
-using math_sin_type_ = decltype(math::sin_impl<T>()(std::declval<const T &>()));
+using math_sin_type_ = decltype(math::sin_impl<T>{}(std::declval<const T &>()));
 
 template <typename T>
 using math_sin_type = typename std::enable_if<is_returnable<math_sin_type_<T>>::value,
@@ -617,13 +617,13 @@ namespace math
 /// Sine.
 /**
  * \note
- * This function is enabled only if the expression <tt>sin_impl<T>()(x)</tt> is valid, returning
+ * This function is enabled only if the expression <tt>sin_impl<T>{}(x)</tt> is valid, returning
  * a type which satisfies piranha::is_returnable.
  *
  * Returns the sine of \p x. The actual implementation of this function is in the piranha::math::sin_impl functor's
  * call operator. The body of this function is equivalent to:
  * @code
- * return sin_impl<T>()(x);
+ * return sin_impl<T>{}(x);
  * @endcode
  *
  * @param[in] x sine argument.
@@ -635,7 +635,7 @@ namespace math
 template <typename T>
 inline detail::math_sin_type<T> sin(const T &x)
 {
-	return sin_impl<T>()(x);
+	return sin_impl<T>{}(x);
 }
 
 /// Default functor for the implementation of piranha::math::partial().
@@ -823,7 +823,7 @@ namespace math
  * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary \p dict
  * specifies the quantity (value) that will be susbstituted for each argument (key), represented as a string.
  * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
- * The body of this method is equivalent to:
+ * The body of this function is equivalent to:
  * @code
  * return evaluate_impl<T,U>{}(x,dict);
  * @endcode
@@ -877,7 +877,7 @@ namespace math
  *
  * Substitute a symbolic variable with a generic object.
  * The actual implementation of this function is in the piranha::math::subs_impl functor.
- * The body of this method is equivalent to:
+ * The body of this function is equivalent to:
  * @code
  * return subs_impl<T,U>{}(x,name,y);
  * @endcode
@@ -905,10 +905,37 @@ template <typename T, typename U, typename V, typename = void>
 struct t_subs_impl
 {};
 
+}
+
+namespace detail
+{
+
+// Return type for math::t_subs().
+template <typename T, typename U, typename V>
+using math_t_subs_type_ = decltype(math::t_subs_impl<T,U,V>{}(std::declval<const T &>(),std::declval<const std::string &>(),
+	std::declval<const U &>(),std::declval<const V &>()));
+
+template <typename T, typename U, typename V>
+using math_t_subs_type = typename std::enable_if<is_returnable<math_t_subs_type_<T,U,V>>::value,
+	math_t_subs_type_<T,U,V>>::type;
+
+}
+
+namespace math
+{
+
 /// Trigonometric substitution.
 /**
+ * \note
+ * This function is enabled only if <tt>t_subs_impl<T,U,V>{}(x,name,c,s)</tt> is a valid expression, returning
+ * a type which satisfies piranha::is_returnable.
+ *
  * Substitute the cosine and sine of a symbolic variable with generic objects.
  * The actual implementation of this function is in the piranha::math::t_subs_impl functor.
+ * The body of this function is equivalent to:
+ * @code
+ * return t_subs_impl<T,U,V>{}(x,name,c,s);
+ * @endcode
  *
  * @param[in] x quantity that will be subject to substitution.
  * @param[in] name name of the symbolic variable that will be substituted.
@@ -920,9 +947,9 @@ struct t_subs_impl
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_subs_impl.
  */
 template <typename T, typename U, typename V>
-inline auto t_subs(const T &x, const std::string &name, const U &c, const V &s) -> decltype(t_subs_impl<T,U,V>()(x,name,c,s))
+inline detail::math_t_subs_type<T,U,V> t_subs(const T &x, const std::string &name, const U &c, const V &s)
 {
-	return t_subs_impl<T,U,V>()(x,name,c,s);
+	return t_subs_impl<T,U,V>{}(x,name,c,s);
 }
 
 /// Default functor for the implementation of piranha::math::abs().
@@ -2185,9 +2212,10 @@ class has_t_subs: detail::sfinae_types
 		template <typename T1, typename U1, typename V1>
 		static auto test(const T1 &t, const U1 &u, const V1 &v) -> decltype(math::t_subs(t,std::declval<std::string const &>(),u,v),void(),yes());
 		static no test(...);
+		static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>(),std::declval<Vd>())),yes>::value;
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>(),std::declval<Vd>())),yes>::value;
+		static const bool value = implementation_defined;
 };
 
 // Static init.
