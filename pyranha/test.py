@@ -1009,10 +1009,13 @@ class doctests_test_case(_ut.TestCase):
 		import doctest
 		import pyranha
 		from . import celmec, math, test
-		doctest.testmod(pyranha)
-		doctest.testmod(celmec)
-		doctest.testmod(math)
-		doctest.testmod(test)
+		try:
+			doctest.testmod(pyranha,raise_on_error=True)
+			doctest.testmod(celmec,raise_on_error=True)
+			doctest.testmod(math,raise_on_error=True)
+			doctest.testmod(test,raise_on_error=True)
+		except Exception as e:
+			self.fail(str(e))
 
 class tutorial_test_case(_ut.TestCase):
 	"""Test case that will check the tutorial files.
