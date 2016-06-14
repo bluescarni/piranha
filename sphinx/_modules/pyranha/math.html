@@ -1008,10 +1008,9 @@
 <span class="sd">	the expression :math:`x+y+z` as follows:</span>
 
 <span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">	&gt;&gt;&gt; from math import sqrt</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; x,y,z = x,y,z = pt(&#39;x&#39;),pt(&#39;y&#39;),pt(&#39;z&#39;)</span>
-<span class="sd">	&gt;&gt;&gt; l = lambdify(float,x+y+z,[&#39;x&#39;,&#39;y&#39;],{&#39;z&#39;: lambda a: sqrt(3.*a[0] + a[1])})</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(float,x+y+z,[&#39;x&#39;,&#39;y&#39;],{&#39;z&#39;: lambda a: (3.*a[0] + a[1])**.5})</span>
 <span class="sd">	&gt;&gt;&gt; l([1.,2.]) # doctest: +ELLIPSIS</span>
 <span class="sd">	5.236067977...</span>
 
@@ -1034,7 +1033,6 @@
 <span class="sd">		callables in *extra_map*</span>
 
 <span class="sd">	&gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">	&gt;&gt;&gt; from math import sqrt</span>
 <span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
 <span class="sd">	&gt;&gt;&gt; x,y,z = x,y,z = pt(&#39;x&#39;),pt(&#39;y&#39;),pt(&#39;z&#39;)</span>
 <span class="sd">	&gt;&gt;&gt; l = lambdify(int,2*x-y+3*z,[&#39;z&#39;,&#39;y&#39;,&#39;x&#39;])</span>
@@ -1042,7 +1040,7 @@
 <span class="sd">	Fraction(7, 1)</span>
 <span class="sd">	&gt;&gt;&gt; l([1,2,-3])</span>
 <span class="sd">	Fraction(-5, 1)</span>
-<span class="sd">	&gt;&gt;&gt; l = lambdify(float,x+y+z,[&#39;x&#39;,&#39;y&#39;],{&#39;z&#39;: lambda a: sqrt(3.*a[0] + a[1])})</span>
+<span class="sd">	&gt;&gt;&gt; l = lambdify(float,x+y+z,[&#39;x&#39;,&#39;y&#39;],{&#39;z&#39;: lambda a: (3.*a[0] + a[1])**.5})</span>
 <span class="sd">	&gt;&gt;&gt; l([1.,2.]) # doctest: +ELLIPSIS</span>
 <span class="sd">	5.236067977...</span>
 <span class="sd">	&gt;&gt;&gt; l([1]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
@@ -1091,7 +1089,7 @@
     </p>
     <p>
         &copy; Copyright 2009-2016, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.3.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.4.<br/>
     </p>
   </div>
 </footer>
