@@ -889,10 +889,9 @@ def lambdify(t,x,names,extra_map = {}):
 	the expression :math:`x+y+z` as follows:
 
 	>>> from pyranha.types import polynomial, rational, k_monomial
-	>>> from math import sqrt
 	>>> pt = polynomial(rational,k_monomial)()
 	>>> x,y,z = x,y,z = pt('x'),pt('y'),pt('z')
-	>>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: sqrt(3.*a[0] + a[1])})
+	>>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: (3.*a[0] + a[1])**.5})
 	>>> l([1.,2.]) # doctest: +ELLIPSIS
 	5.236067977...
 
@@ -915,7 +914,6 @@ def lambdify(t,x,names,extra_map = {}):
 		callables in *extra_map*
 
 	>>> from pyranha.types import polynomial, rational, k_monomial
-	>>> from math import sqrt
 	>>> pt = polynomial(rational,k_monomial)()
 	>>> x,y,z = x,y,z = pt('x'),pt('y'),pt('z')
 	>>> l = lambdify(int,2*x-y+3*z,['z','y','x'])
@@ -923,7 +921,7 @@ def lambdify(t,x,names,extra_map = {}):
 	Fraction(7, 1)
 	>>> l([1,2,-3])
 	Fraction(-5, 1)
-	>>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: sqrt(3.*a[0] + a[1])})
+	>>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: (3.*a[0] + a[1])**.5})
 	>>> l([1.,2.]) # doctest: +ELLIPSIS
 	5.236067977...
 	>>> l([1]) # doctest: +IGNORE_EXCEPTION_DETAIL
