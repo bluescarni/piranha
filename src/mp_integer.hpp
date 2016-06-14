@@ -4029,11 +4029,7 @@ class mp_integer
 };
 
 /// Alias for piranha::mp_integer with default bit size.
-#if defined(PIRANHA_DOXYGEN_INVOKED)
-typedef mp_integer<> integer;
-#else
 using integer = mp_integer<>;
-#endif
 
 namespace detail
 {
