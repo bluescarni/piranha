@@ -1,10 +1,10 @@
 .. _reference:
 
-Complete reference
-==================
+Reference
+=========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   piranha_reference.rst
-   pyranha_reference.rst
+   reference/piranha
+   reference/pyranha
