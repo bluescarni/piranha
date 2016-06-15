@@ -13,11 +13,12 @@ Fundamental numerical types
    piranha/rational
    piranha/real
 
-Concrete series types
----------------------
+Series types
+------------
 
 .. toctree::
    :maxdepth: 1
 
+   piranha/series
    piranha/polynomial
    piranha/divisor_series
