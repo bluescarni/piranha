@@ -3,5 +3,7 @@
 Real
 ====
 
+.. doxygenfunction:: piranha::literals::operator""_r
+
 .. doxygenclass:: piranha::real
    :members:
