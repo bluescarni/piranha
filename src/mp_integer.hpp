@@ -2479,23 +2479,6 @@ class mp_integer
 		{
 			return mpz_view(*this);
 		}
-		/// Get an non-const \p mpz_ptr to dynamic storage of \p this.
-		/**
-		 * This method will return a pointer to the dynamic storage, mpz_struct_t. If \p this is currently stored in static
-		 * storage, \p this will be promoted to dynamic storage first
-		 *
-		 * Note that \p this will remain stored in dynamic storage even if after operations on \p this, value of \p this can
-		 * be stored in static storage.
-		 *
-		 * @return an non-const \p mpz_ptr to dynamic storage of \p this.
-		 */
-		mpz_ptr _get_mpz_ptr()
-		{
-			if (is_static()) {
-				promote();
-			}
-			return &m_int.g_dy();
-		}
 		/// Conversion operator.
 		/**
 		 * \note
@@ -4022,6 +4005,23 @@ class mp_integer
 				case 3u:
 					::mpz_divexact(&out.m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
 			}
+		}
+		/// Get an non-const \p mpz_ptr to dynamic storage of \p this.
+		/**
+		 * This method will return a pointer to the dynamic storage, mpz_struct_t. If \p this is currently stored in static
+		 * storage, \p this will be promoted to dynamic storage first
+		 *
+		 * Note that \p this will remain stored in dynamic storage even if after operations on \p this, value of \p this can
+		 * be stored in static storage.
+		 *
+		 * @return an non-const \p mpz_ptr to dynamic storage of \p this.
+		 */
+		mpz_ptr _get_mpz_ptr()
+		{
+			if (is_static()) {
+				promote();
+			}
+			return &m_int.g_dy();
 		}
 		//@}
 	private:
