@@ -50,7 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/detail/prepare_for_print.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/safe_cast.hpp"
@@ -342,7 +342,7 @@ struct dynamic_tester
 
 BOOST_AUTO_TEST_CASE(small_vector_dynamic_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<value_types>(dynamic_tester());
 }
 

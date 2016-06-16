@@ -42,8 +42,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "detail/symbol_set_fwd.hpp"
-#include "environment.hpp"
 #include "exceptions.hpp"
+#include "init.hpp"
 #include "serialization.hpp"
 #include "symbol.hpp"
 #include "type_traits.hpp"
@@ -574,7 +574,7 @@ class symbol_set
 		bool run_destruction_checks() const
 		{
 			// Run destruction checks only if we are not in the shutdown phase.
-			if (environment::shutdown()) {
+			if (detail::shutdown()) {
 				return true;
 			}
 			return check();

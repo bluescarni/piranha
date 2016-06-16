@@ -7,7 +7,7 @@ using namespace piranha;
 
 int main()
 {
-	environment env;
+	init();
 
 	// Various ways of constructing an integer.
 	std::cout << integer{42} << '\n';

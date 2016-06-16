@@ -33,12 +33,12 @@ see https://www.gnu.org/licenses/. */
 
 #include <functional>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/thread_pool.hpp"
 
 BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
 {
-	piranha::environment env;
+	piranha::init();
 	const unsigned n_threads = 100;
 	piranha::thread_barrier tb(n_threads);
 	piranha::thread_pool::resize(n_threads);

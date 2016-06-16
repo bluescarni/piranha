@@ -52,8 +52,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/binomial.hpp"
 #include "../src/config.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
@@ -224,7 +224,7 @@ struct static_lshift_tester
 
 BOOST_AUTO_TEST_CASE(mp_integer_static_integer_lshift_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<size_types>(static_lshift_tester());
 }
 

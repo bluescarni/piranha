@@ -31,7 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/timer/timer.hpp>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -41,7 +41,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(evaluate_test)
 {
-	environment env;
+	init();
 	{
 	std::cout << "Timing multiplication, integer:\n";
 	auto ret1 = pearce1<integer,kronecker_monomial<>>();

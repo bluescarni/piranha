@@ -42,7 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include "../src/config.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 
 struct foo {};
 
@@ -94,7 +94,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(safe_cast_main_test)
 {
-	environment env;
+	init();
 	BOOST_CHECK((has_safe_cast<int,int>::value));
 	BOOST_CHECK((has_safe_cast<int,char>::value));
 	BOOST_CHECK((has_safe_cast<char,unsigned long long>::value));

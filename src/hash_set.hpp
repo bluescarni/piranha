@@ -45,8 +45,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "debug_access.hpp"
-#include "environment.hpp"
 #include "exceptions.hpp"
+#include "init.hpp"
 #include "serialization.hpp"
 #include "thread_pool.hpp"
 #include "type_traits.hpp"
@@ -571,7 +571,7 @@ class hash_set
 		bool sanity_check() const
 		{
 			// Ignore sanity checks on shutdown.
-			if (environment::shutdown()) {
+			if (detail::shutdown()) {
 				return true;
 			}
 			size_type count = 0u;

@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
@@ -42,7 +42,7 @@ using namespace piranha::detail;
 
 BOOST_AUTO_TEST_CASE(pvt_test_00)
 {
-	environment env;
+	init();
 	// First check the throwing conditions.
 	{
 	std::vector<int> v1, v2;

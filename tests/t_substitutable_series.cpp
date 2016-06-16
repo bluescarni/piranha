@@ -40,8 +40,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -105,7 +105,7 @@ class g_series_type: public t_substitutable_series<series<Cf,Key,g_series_type<C
 
 BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 {
-	environment env;
+	init();
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK((has_t_subs<p_type1,p_type1,p_type1>::value));

@@ -38,8 +38,8 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <tuple>
 
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -95,7 +95,7 @@ struct split_tester
 
 BOOST_AUTO_TEST_CASE(polynomial_split_join_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(split_tester());
 }
 

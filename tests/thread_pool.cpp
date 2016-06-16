@@ -40,7 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/real.hpp"
 #include "../src/runtime_info.hpp"
@@ -60,7 +60,7 @@ struct noncopyable
 
 BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 {
-	environment env;
+	init();
 	auto slow_task = [](){std::this_thread::sleep_for(std::chrono::milliseconds(250));};
 	auto fast_task = [](int n) -> int {std::this_thread::sleep_for(std::chrono::milliseconds(1)); return n;};
 	auto instant_task = [](){};

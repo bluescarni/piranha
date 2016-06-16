@@ -33,6 +33,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <string>
 
+#include "../src/init.hpp"
+
 using namespace piranha;
 
 struct custom_exception0: public base_exception
@@ -68,6 +70,7 @@ struct custom_exception4: public base_exception
 
 BOOST_AUTO_TEST_CASE(exception_main_test)
 {
+	init();
 	BOOST_CHECK_THROW(piranha_throw(custom_exception0,),custom_exception0);
 	BOOST_CHECK_THROW(piranha_throw(custom_exception1,),custom_exception1);
 	BOOST_CHECK_THROW(piranha_throw(custom_exception1,std::string("")),custom_exception1);

@@ -33,8 +33,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <mutex>
 
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
 #include "../src/thread_barrier.hpp"
@@ -56,7 +56,7 @@ static inline void test_function()
 
 BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
-	piranha::environment env;
+	piranha::init();
 	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		auto f = piranha::thread_pool::enqueue(i,[](){test_function();});
 		f.wait();

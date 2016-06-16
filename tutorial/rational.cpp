@@ -7,7 +7,7 @@ using namespace piranha;
 
 int main()
 {
-	environment env;
+	init();
 
 	// Various ways of constructing a rational.
 	std::cout << rational{42} << '\n';

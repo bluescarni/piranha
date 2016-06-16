@@ -44,7 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/config.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
 
@@ -55,7 +55,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
 {
-	environment env;
+	init();
 	symbol_set ss;
 	BOOST_CHECK(ss.size() == 0u);
 	BOOST_CHECK(ss.begin() == ss.end());
