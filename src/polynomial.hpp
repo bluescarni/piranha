@@ -669,8 +669,6 @@ enum class polynomial_gcd_algorithm
  * ## Serialization ##
  *
  * This class supports serialization if the underlying coefficient and key types do.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename Key>
 class polynomial:

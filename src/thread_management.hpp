@@ -71,8 +71,6 @@ namespace piranha
 /**
  * This class contains static methods to manage thread behaviour. The methods of this class, unless otherwise
  * specified, are thread-safe.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 class thread_management
 {

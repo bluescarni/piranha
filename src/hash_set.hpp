@@ -94,8 +94,6 @@ namespace piranha
  *
  * This class supports serialization if the contained type supports it. Note that the hasher and the comparator
  * are not serialised and they are recreated from scratch upon deserialization.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
  /* Some improvement NOTEs:
  * - tests for low-level methods

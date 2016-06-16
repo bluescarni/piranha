@@ -86,8 +86,6 @@ std::atomic_ullong base_settings<T>::s_min_work_per_thread(base_settings<T>::s_d
  *
  * This class stores the global settings of piranha's runtime environment.
  * The methods of this class are thread-safe.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename = void>
 class settings_: private detail::base_settings<>

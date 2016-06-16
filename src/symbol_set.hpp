@@ -84,8 +84,6 @@ const bool is_pmappable<T>::value;
  * ## Serialization ##
  *
  * This class supports serialization.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 class symbol_set
 {

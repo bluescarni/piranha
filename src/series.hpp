@@ -1246,8 +1246,6 @@ enum class file_compression
  * ## Serialization ##
  *
  * This class supports serialization if its term type does.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
  /* TODO:
  * \todo cast operator, to series and non-series types.

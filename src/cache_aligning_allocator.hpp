@@ -43,10 +43,8 @@ namespace piranha
 /// Allocator that tries to align memory to the cache line size.
 /**
  * This allocator will try to allocate memory aligned to the cache line size (as reported by piranha::settings).
- * 
+ *
  * Exception safety and move semantics are equivalent to piranha::dynamic_aligning_allocator.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T>
 class cache_aligning_allocator: public dynamic_aligning_allocator<T>
