@@ -34,7 +34,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
-#include <future>
 #include <iterator>
 #include <limits>
 #include <mutex>
@@ -125,7 +124,7 @@ struct base_series_multiplier_impl
 			using vv_size_t = typename vv_t::size_type;
 			vv_t vv(safe_cast<vv_size_t>(n_threads));
 			// Go with the threads.
-			future_list<std::future<void>> ff_list;
+			future_list<void> ff_list;
 			try {
 				for (unsigned i = 0u; i < n_threads; ++i) {
 					ff_list.push_back(thread_pool::enqueue(i,thread_func,i,c,&(vv[static_cast<vv_size_t>(i)])));
@@ -297,7 +296,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				}
 			};
 			// Go with the threads.
-			future_list<decltype(thread_pool::enqueue(0u,thread_func,0u))> ff_list;
+			future_list<decltype(thread_func(0u))> ff_list;
 			try {
 				for (unsigned i = 0u; i < m_n_threads; ++i) {
 					ff_list.push_back(thread_pool::enqueue(i,thread_func,i));
@@ -654,7 +653,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			if (n_threads == 1u) {
 				estimator(0u);
 			} else {
-				future_list<std::future<void>> f_list;
+				future_list<void> f_list;
 				try {
 					for (unsigned i = 0u; i < n_threads; ++i) {
 						f_list.push_back(thread_pool::enqueue(i,estimator,i));
@@ -871,7 +870,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				std::lock_guard<std::mutex> lock(m);
 				global_count += count;
 			};
-			future_list<decltype(thread_pool::enqueue(0u,eraser,bucket_size_type(),bucket_size_type()))> f_list;
+			future_list<decltype(eraser(bucket_size_type(),bucket_size_type()))> f_list;
 			try {
 				for (unsigned i = 0u; i < n_threads; ++i) {
 					const auto start = static_cast<bucket_size_type>((b_count / n_threads) * i),
@@ -990,7 +989,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Init the vector of spinlocks.
 			detail::atomic_flag_array sl_array(safe_cast<std::size_t>(retval._container().bucket_count()));
 			// Init the future list.
-			future_list<std::future<void>> f_list;
+			future_list<void> f_list;
 			// Thread block size.
 			const auto block_size = size1 / n_threads;
 			try {

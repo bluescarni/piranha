@@ -356,42 +356,24 @@ class thread_pool_: private detail::thread_pool_base<>
  */
 using thread_pool = thread_pool_<>;
 
-namespace detail
-{
-
-template <typename T>
-struct is_future: std::integral_constant<bool,false> {};
-
-template <typename T>
-struct is_future<std::future<T>>: std::integral_constant<bool,true> {};
-
-}
-
 /// Class to store a list of futures.
 /**
- * This class is a minimal thin wrapper around an \p std::list of \p std::future objects.
+ * This class is a minimal thin wrapper around an \p std::list of \p std::future<T> objects.
  * The class provides convenience methods to interact with the set of futures in an exception-safe manner.
- *
- * ## Type requirements ##
- *
- * \p F must be an instance of \p std::future.
  */
-// \todo provide method to retrieve future values from get_all() using a vector (in case the future type
+// NOTE: we could provide method to retrieve future values from get_all() using a vector (in case the future type
 // is not void or a reference, in which case the get_all() method stays as it is).
-// NOTE: is it really needed that this is parameterisd over F, instead of - say, T - and force it to be
-// future<T> instead?
-template <typename F>
+template <typename T>
 class future_list
 {
-		PIRANHA_TT_CHECK(detail::is_future,F);
 		// Wait on a valid future, or abort.
-		static void wait_or_abort(const F &fut)
+		static void wait_or_abort(const std::future<T> &fut)
 		{
 			piranha_assert(fut.valid());
 			try {
 				fut.wait();
 			} catch (...) {
-				// TODO logging candidate, with info from exception.
+				// NOTE: logging candidate, with info from exception.
 				std::abort();
 			}
 		}
@@ -427,7 +409,7 @@ class future_list
 		 *
 		 * @throws unspecified any exception thrown by memory allocation errors.
 		 */
-		void push_back(F &&f)
+		void push_back(std::future<T> &&f)
 		{
 			// Push back empty future.
 			try {
@@ -473,7 +455,7 @@ class future_list
 			}
 		}
 	private:
-		std::list<F> m_list;
+		std::list<std::future<T>> m_list;
 };
 
 }

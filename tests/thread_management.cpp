@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE thread_management_test
 #include <boost/test/unit_test.hpp>
 
-#include <future>
 #include <mutex>
 
 #include "../src/environment.hpp"
@@ -73,7 +72,7 @@ BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 // Check thread-safe binding using thread_pool.
 BOOST_AUTO_TEST_CASE(thread_management_task_group_bind)
 {
-	piranha::future_list<std::future<void>> f_list;
+	piranha::future_list<void> f_list;
 	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		f_list.push_back(piranha::thread_pool::enqueue(0,[](){test_function();}));
 	}

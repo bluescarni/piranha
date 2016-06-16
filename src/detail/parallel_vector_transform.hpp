@@ -57,7 +57,7 @@ inline void parallel_vector_transform(unsigned n_threads, const std::vector<T> &
 	auto local_transform = [&op](T const *b, T const *e, U *o) {
 		std::transform(b,e,o,op);
 	};
-	future_list<decltype(thread_pool::enqueue(0u,local_transform,ic.data(),ic.data(),oc.data()))> ff_list;
+	future_list<decltype(local_transform(ic.data(),ic.data(),oc.data()))> ff_list;
 	try {
 		for (unsigned i = 0u; i < n_threads; ++i) {
 			auto b = ic.data() + i * block_size;

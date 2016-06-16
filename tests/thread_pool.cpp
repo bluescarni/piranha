@@ -222,13 +222,13 @@ BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
 {
 	thread_pool::resize(10u);
 	auto null_task = [](){};
-	future_list<decltype(thread_pool::enqueue(0,null_task))> f1;
+	future_list<decltype(null_task())> f1;
 	f1.wait_all();
 	f1.wait_all();
 	f1.get_all();
 	f1.get_all();
 	auto fast_task = [](){std::this_thread::sleep_for(std::chrono::milliseconds(1));};
-	future_list<decltype(thread_pool::enqueue(0,fast_task))> f2;
+	future_list<decltype(fast_task())> f2;
 	for (unsigned i = 0u; i < 10u; ++i) {
 		for (unsigned j = 0u; j < 100u; ++j) {
 			f2.push_back(thread_pool::enqueue(i,fast_task));
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
 	f2.get_all();
 	f2.get_all();
 	auto thrower = [](){throw std::runtime_error("");};
-	future_list<decltype(thread_pool::enqueue(0,thrower))> f3;
+	future_list<decltype(thrower())> f3;
 	for (unsigned i = 0u; i < 10u; ++i) {
 		for (unsigned j = 0u; j < 100u; ++j) {
 			f3.push_back(thread_pool::enqueue(i,thrower));
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
 	BOOST_CHECK_THROW(f3.get_all(),std::runtime_error);
 	BOOST_CHECK_THROW(f3.get_all(),std::runtime_error);
 	// Try with empty futures.
-	future_list<decltype(thread_pool::enqueue(0,thrower))> f4;
+	future_list<decltype(thrower())> f4;
 	for (unsigned i = 0u; i < 100u; ++i) {
 		f4.push_back(decltype(thread_pool::enqueue(0,thrower))());
 	}

@@ -248,19 +248,19 @@ inline bool alignment_check(const std::size_t &alignment)
 /**
  * \note
  * This function is enabled only if \p T satisfies the piranha::is_container_element type trait.
- * 
+ *
  * This function will value-initialise in parallel the array \p ptr
  * of size \p size. The routine will use the first \p n_threads from piranha::thread_pool to perform
  * the operation concurrently. If \p n_threads is 1 or 0, the operation will be performed in the
  * calling thread. If \p ptr is null, this function will be a no-op.
- * 
+ *
  * This function provides the strong exception safety guarantee: in case of errors, any constructed
  * instance of \p T will be destroyed before the error is re-thrown.
- * 
+ *
  * @param[in] ptr pointer to the array.
  * @param[in] size size of the array.
  * @param[in] n_threads number of threads to use.
- * 
+ *
  * @throws std::bad_alloc in case of memory allocation errors in multithreaded mode.
  * @throws unspecified any exception thrown by:
  * - the value initialisation of instances of type \p T,
@@ -307,7 +307,7 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
 		}
 		// Work per thread.
 		const auto wpt = static_cast<std::size_t>(size / n_threads);
-		future_list<decltype(thread_pool::enqueue(0u,init_function,ptr,ptr,0u,&inited_ranges))> f_list;
+		future_list<decltype(init_function(ptr,ptr,0u,&inited_ranges))> f_list;
 		try {
 			for (auto i = 0u; i < n_threads; ++i) {
 				auto start = ptr + i * wpt, end = (i == n_threads - 1u) ? ptr + size : ptr + (i + 1u) * wpt;
@@ -332,13 +332,13 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
 /**
  * \note
  * This function is enabled only if \p T satisfies the piranha::is_container_element type trait.
- * 
+ *
  * This function will destroy in parallel the element of an array \p ptr of size \p size. If \p n_threads
  * is 0 or 1, the operation will be performed in the calling thread, otherwise the first \p n_threads in piranha::thread_pool
  * will be used to perform the operation concurrently.
- * 
+ *
  * The function is a no-op if \p ptr is null or if \p T has a trivial destructor.
- * 
+ *
  * @param[in] ptr pointer to the array.
  * @param[in] size size of the array.
  * @param[in] n_threads number of threads to use.
@@ -370,7 +370,7 @@ inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_
 		// A vector of ranges representing elements yet to be destroyed in case something goes wrong
 		// in the multithreaded part.
 		ranges_vector d_ranges;
-		future_list<decltype(thread_pool::enqueue(0u,destroy_function,ptr,ptr))> f_list;
+		future_list<decltype(destroy_function(ptr,ptr))> f_list;
 		try {
 			d_ranges.resize(static_cast<rv_size_type>(n_threads),std::make_pair(ptr,ptr));
 			if (unlikely(d_ranges.size() != n_threads)) {
@@ -440,7 +440,7 @@ class parallel_deleter
 /**
  * \note
  * This function is enabled only if \p T satisfies the piranha::is_container_element type trait.
- * 
+ *
  * This function will create an array whose values will be initialised in parallel using piranha::parallel_value_init().
  * The pointer to the array is returned wrapped inside an \p std::unique_ptr that will take care of
  * destroying the array elements (also in parallel using piranha::parallel_destroy()) and deallocating the memory when the
@@ -452,9 +452,9 @@ class parallel_deleter
  *
  * @param[in] size size of the array.
  * @param[in] n_threads number of threads to use.
- * 
+ *
  * @return an \p std::unique_ptr wrapping the array.
- * 
+ *
  * @throws std::bad_alloc if \p size is greater than an implementation-defined value.
  * @throws unspecified any exception thrown by:
  * - piranha::aligned_palloc() (called with an alignment value of 0),
