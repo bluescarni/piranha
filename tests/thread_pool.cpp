@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 	// Check the binding.
 	const unsigned hc = runtime_info::get_hardware_concurrency();
 	auto bind_checker = [](unsigned n) {
-		auto res = thread_management::bound_proc();
+		auto res = bound_proc();
 		if (!res.first || res.second != n) {
 			throw std::runtime_error("");
 		}
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 	BOOST_CHECK(thread_pool::enqueue(0,adder,4,-5).get() == -1);
 	BOOST_CHECK_THROW(thread_pool::enqueue(initial_size,adder,4,-5),std::invalid_argument);
 #if !defined(__APPLE_CC__)
-	BOOST_CHECK(thread_pool::enqueue(0,[](){return thread_management::bound_proc();}).get() == std::make_pair(true,0u));
+	BOOST_CHECK(thread_pool::enqueue(0,[](){return bound_proc();}).get() == std::make_pair(true,0u));
 #endif
 	BOOST_CHECK_THROW(thread_pool::enqueue(0,[](){throw std::runtime_error("");}).get(),std::runtime_error);
 	auto fast_task = [](int n) -> int {std::this_thread::sleep_for(std::chrono::milliseconds(1)); return n;};
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 #if !defined(__APPLE_CC__)
 	if (initial_size != boost::integer_traits<unsigned>::const_max) {
 		thread_pool::resize(initial_size + 1u);
-		auto func = [](){return thread_management::bound_proc();};
+		auto func = [](){return bound_proc();};
 		std::vector<decltype(thread_pool::enqueue(0u,func))> list;
 		for (unsigned i = 0; i < initial_size + 1u; ++i) {
 			list.push_back(thread_pool::enqueue(i,func));

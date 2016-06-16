@@ -85,7 +85,6 @@ see https://www.gnu.org/licenses/. */
  * maybe check whether __mingw_aligned_malloc is available in all mingw versions.
  * \todo check usages of std algorithms against the assumptions on the functors used:
  * http://stackoverflow.com/questions/20119810/parallel-implementations-of-std-algorithms-and-side-effects
- * \todo probably better to remove the thread_management class and use free functions directly for the binding.
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at least to make
  * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
  * and keep lexical_cast only for the conversion of piranha's types to string.

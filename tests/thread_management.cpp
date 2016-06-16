@@ -45,8 +45,8 @@ std::mutex mutex;
 static inline void test_function()
 {
 	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
-		piranha::thread_management::bind_to_proc(i);
-		const auto retval = piranha::thread_management::bound_proc();
+		piranha::bind_to_proc(i);
+		const auto retval = piranha::bound_proc();
 		// Lock because Boost unit test is not thread-safe.
 		std::lock_guard<std::mutex> lock(mutex);
 		BOOST_CHECK_EQUAL(retval.first,true);

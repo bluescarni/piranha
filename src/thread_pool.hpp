@@ -69,7 +69,7 @@ class task_queue
 			{
 				// Don't stop if we cannot bind.
 				try {
-					thread_management::bind_to_proc(m_n);
+					bind_to_proc(m_n);
 				} catch (...) {
 					// NOTE: logging candidate.
 				}
