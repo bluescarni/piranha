@@ -41,7 +41,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/divisor.hpp"
 #include "../src/divisor_series.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_rational.hpp"
@@ -80,7 +80,7 @@ static inline bool check_limits()
 
 BOOST_AUTO_TEST_CASE(perminov1_test)
 {
-	environment env;
+	init();
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}

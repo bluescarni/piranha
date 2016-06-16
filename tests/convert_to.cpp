@@ -36,7 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "../src/config.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
@@ -109,7 +109,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(convert_to_main_test)
 {
-	environment env;
+	init();
 	BOOST_CHECK_EQUAL(convert_to<int>(3.5),3);
 	BOOST_CHECK((std::is_same<int,decltype(convert_to<int>(3.5))>::value));
 	BOOST_CHECK_EQUAL(convert_to<std::string>("asdasd"),"asdasd");

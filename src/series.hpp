@@ -59,9 +59,9 @@ see https://www.gnu.org/licenses/. */
 #include "debug_access.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/series_fwd.hpp"
-#include "environment.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
+#include "init.hpp"
 #include "invert.hpp"
 #include "is_cf.hpp"
 #include "key_is_convertible.hpp"
@@ -1246,8 +1246,6 @@ enum class file_compression
  * ## Serialization ##
  *
  * This class supports serialization if its term type does.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
  /* TODO:
  * \todo cast operator, to series and non-series types.
@@ -1675,7 +1673,7 @@ class series: detail::series_tag, series_operators
 		bool destruction_checks() const
 		{
 			// Run destruction checks only if we are not in shutdown.
-			if (environment::shutdown()) {
+			if (detail::shutdown()) {
 				return true;
 			}
 			for (auto it = m_container.begin(); it != m_container.end(); ++it) {

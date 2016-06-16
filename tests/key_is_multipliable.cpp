@@ -36,7 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <functional>
 #include <iostream>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/is_key.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -137,7 +137,7 @@ struct hash<mock_key_01>
 
 BOOST_AUTO_TEST_CASE(key_is_multipliable_test_00)
 {
-	environment env;
+	init();
 	BOOST_CHECK(is_key<mock_key>::value);
 	BOOST_CHECK(!(key_is_multipliable<double,mock_key>::value));
 	BOOST_CHECK(is_key<mock_key_00>::value);

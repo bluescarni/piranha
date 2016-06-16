@@ -39,7 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <utility>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
 
@@ -76,7 +76,7 @@ class custom_string: public std::string
 
 BOOST_AUTO_TEST_CASE(memory_parallel_array_test)
 {
-	environment env;
+	init();
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}

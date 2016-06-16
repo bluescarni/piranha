@@ -81,32 +81,29 @@ namespace piranha
  * are packed in a signed integer using Kronecker substitution, using the facilities provided
  * by piranha::kronecker_array. The boolean <em>flavour</em> of the monomial indicates whether it represents
  * a cosine (<tt>true</tt>) or sine (<tt>false</tt>).
- * 
+ *
  * Similarly to an ordinary monomial, this class provides methods to query the <em>trigonometric</em> (partial) (low) degree, defined
  * as if the multipliers were exponents of a regular monomial (e.g., the total trigonometric degree is the sum of the multipliers).
  * Closely related is the concept of trigonometric order, calculated by adding the absolute values of the multipliers.
- * 
+ *
  * This class satisfies the piranha::is_key, piranha::key_has_t_degree, piranha::key_has_t_ldegree,
  * piranha::key_has_t_order, piranha::key_has_t_lorder and piranha::key_is_differentiable type traits.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * \p T must be suitable for use in piranha::kronecker_array. The default type for \p T is the signed counterpart of \p std::size_t.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
  *
  * ## Serialization ##
  *
  * This class supports serialization.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
- * 
  */
 // NOTES:
 // - it might make sense, for canonicalisation and is_compatible(), to provide a method in kronecker_array to get only
@@ -270,9 +267,9 @@ class real_trigonometric_kronecker_monomial
 		 * they will be safely converted to type \p T (if \p T and \p U are not the same type),
 		 * encoded using piranha::kronecker_array::encode() and the result assigned to the internal integer instance.
 		 * The flavour will be set to \p true.
-		 * 
+		 *
 		 * @param[in] list initializer list representing the multipliers.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
 		 * - piranha::safe_cast(),
@@ -296,10 +293,10 @@ class real_trigonometric_kronecker_monomial
 		 * Will build internally a vector of values from the input iterators, encode it and assign the result
 		 * to the internal integer instance. The value type of the iterator is converted to \p T using
 		 * piranha::safe_cast(). The flavour will be set to \p true.
-		 * 
+		 *
 		 * @param[in] start beginning of the range.
 		 * @param[in] end end of the range.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
 		 * - piranha::safe_cast(),
@@ -316,9 +313,9 @@ class real_trigonometric_kronecker_monomial
 		/// Constructor from set of symbols.
 		/**
 		 * After construction all multipliers will be zero and the flavour will be set to \p true.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
 		 * - piranha::static_vector::push_back().
@@ -335,7 +332,7 @@ class real_trigonometric_kronecker_monomial
 		/**
 		 * This constructor will initialise the internal integer instance
 		 * to \p n and the flavour to \p f.
-		 * 
+		 *
 		 * @param[in] n initializer for the internal integer instance.
 		 * @param[in] f desired flavour.
 		 */
@@ -345,10 +342,10 @@ class real_trigonometric_kronecker_monomial
 		 * This constructor is for use when converting from one term type to another in piranha::series. It will
 		 * set the internal integer instance and flavour to the same value of \p other, after having checked that
 		 * \p other is compatible with \p args.
-		 * 
+		 *
 		 * @param[in] other construction argument.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p other is not compatible with \p args.
 		 */
 		explicit real_trigonometric_kronecker_monomial(const real_trigonometric_kronecker_monomial &other, const symbol_set &args):
@@ -390,7 +387,7 @@ class real_trigonometric_kronecker_monomial
 		}
 		/// Get flavour.
 		/**
-		 * @return flavour of the monomial. 
+		 * @return flavour of the monomial.
 		 */
 		bool get_flavour() const
 		{
@@ -398,7 +395,7 @@ class real_trigonometric_kronecker_monomial
 		}
 		/// Set flavour.
 		/**
-		 * @param[in] f value to which the flavour will be set. 
+		 * @param[in] f value to which the flavour will be set.
 		 */
 		void set_flavour(bool f)
 		{
@@ -410,11 +407,11 @@ class real_trigonometric_kronecker_monomial
 		 * If \p this is not in canonical form, the method will canonicalise \p this by switching
 		 * the signs of all multipliers and return \p true.
 		 * Otherwise, \p this will not be modified and \p false will be returned.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return \p true if the monomial was canonicalised, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::kronecker_array::encode().
@@ -431,16 +428,16 @@ class real_trigonometric_kronecker_monomial
 		/// Compatibility check.
 		/**
 		 * A monomial is considered incompatible if any of these conditions holds:
-		 * 
+		 *
 		 * - the size of \p args is zero and the internal integer is not zero,
 		 * - the size of \p args is equal to or larger than the size of the output of piranha::kronecker_array::get_limits(),
 		 * - the internal integer is not within the limits reported by piranha::kronecker_array::get_limits(),
 		 * - the first nonzero element of the vector of multipliers represented by the internal integer is negative.
-		 * 
+		 *
 		 * Otherwise, the monomial is considered to be compatible for insertion.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return compatibility flag for the monomial.
 		 */
 		bool is_compatible(const symbol_set &args) const noexcept
@@ -478,7 +475,7 @@ class real_trigonometric_kronecker_monomial
 		/// Ignorability check.
 		/**
 		 * A monomial is considered ignorable if all multipliers are zero and the flavour is \p false.
-		 * 
+		 *
 		 * @return ignorability flag.
 		 */
 		bool is_ignorable(const symbol_set &) const noexcept
@@ -492,12 +489,12 @@ class real_trigonometric_kronecker_monomial
 		/**
 		 * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
 		 * \p orig_args.
-		 * 
+		 *
 		 * @param[in] orig_args original arguments set.
 		 * @param[in] new_args new arguments set.
-		 * 
+		 *
 		 * @return monomial with merged arguments.
-		 * 
+		 *
 		 * @throws std::invalid_argument if at least one of these conditions is true:
 		 * - the size of \p new_args is not greater than the size of \p orig_args,
 		 * - not all elements of \p orig_args are included in \p new_args.
@@ -514,9 +511,9 @@ class real_trigonometric_kronecker_monomial
 		/// Check if monomial is unitary.
 		/**
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return \p true if all the multipliers are zero and the flavour is \p true, \p false otherwise.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p this is not compatible with \p args.
 		 */
 		bool is_unitary(const symbol_set &args) const
@@ -532,9 +529,9 @@ class real_trigonometric_kronecker_monomial
 		 * of \p T.
 		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return trigonometric degree of the monomial.
-		 * 
+		 *
 		 * @throws std::overflow_error if the computation of the degree overflows.
 		 * @throws unspecified any exception thrown by unpack().
 		 */
@@ -561,13 +558,13 @@ class real_trigonometric_kronecker_monomial
 		 *
 		 * The type returned by this method is the type resulting from the addition of two instances
 		 * of \p T.
-		 * 
+		 *
 		 * @param[in] p positions of the symbols to be considered.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the summation of all the multipliers of the monomial corresponding to the symbols at the positions in
 		 * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p p is not compatible with \p args.
 		 * @throws std::overflow_error if the computation of the degree overflows.
 		 * @throws unspecified any exception thrown by unpack().
@@ -597,9 +594,9 @@ class real_trigonometric_kronecker_monomial
 		 * values of two instances of \p T.
 		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return trigonometric order of the monomial.
-		 * 
+		 *
 		 * @throws std::overflow_error if the computation of the degree overflows.
 		 * @throws unspecified any exception thrown by unpack().
 		 */
@@ -624,16 +621,16 @@ class real_trigonometric_kronecker_monomial
 		/**
 		 * Partial trigonometric order of the monomial. The \p p argument is used to indicate which multipliers are to be taken into account when
 		 * computing the partial order. Multipliers not in \p p will be discarded during the computation of the partial order.
-		 * 
+		 *
 		 * The type returned by this method is the type resulting from the addition of the absolute
 		 * values of two instances of \p T.
 		 *
 		 * @param[in] p positions of the symbols to be considered.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the summation of the absolute values of all the multipliers of the monomial corresponding to the symbols at the positions in
 		 * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p p is not compatible with \p args.
 		 * @throws std::overflow_error if the computation of the degree overflows.
 		 * @throws unspecified any exception thrown by unpack().
@@ -665,7 +662,7 @@ class real_trigonometric_kronecker_monomial
 		 * - \p Cf satisfies piranha::has_mul3,
 		 * - \p Cf is divisible in-place by \p int,
 		 * - \p Cf is copy-assignable and it satisfies piranha::has_negate.
-		 * 
+		 *
 		 * This method will compute the result of the multiplication of the two terms \p t1 and \p t2 with trigonometric key.
 		 * The result is stored in the two terms of \p res and it is computed using basic trigonometric formulae.
 		 * Note however that this method will **not** perform the division by two implied by Werner's formulae. Also, in case
@@ -675,7 +672,7 @@ class real_trigonometric_kronecker_monomial
 		 * @param[in] t1 first argument.
 		 * @param[in] t2 second argument.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws std::overflow_error if the computation of the result overflows type \p value_type.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
@@ -752,7 +749,7 @@ class real_trigonometric_kronecker_monomial
 		/// Equality operator.
 		/**
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return \p true if the internal integral instance and the flavour of \p this are the same of \p other,
 		 * \p false otherwise.
 		 */
@@ -763,7 +760,7 @@ class real_trigonometric_kronecker_monomial
 		/// Inequality operator.
 		/**
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return the opposite of operator==().
 		 */
 		bool operator!=(const real_trigonometric_kronecker_monomial &other) const
@@ -773,12 +770,12 @@ class real_trigonometric_kronecker_monomial
 		/// Unpack internal integer instance.
 		/**
 		 * Will decode the internal integral instance into a piranha::static_vector of size equal to the size of \p args.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return piranha::static_vector containing the result of decoding the internal integral instance via
 		 * piranha::kronecker_array.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the size of \p args is larger than the maximum size of piranha::static_vector.
 		 * @throws unspecified any exception thrown by piranha::kronecker_array::decode().
 		 */
@@ -789,10 +786,10 @@ class real_trigonometric_kronecker_monomial
 		/// Print.
 		/**
 		 * Will print to stream a human-readable representation of the monomial.
-		 * 
+		 *
 		 * @param[in] os target stream.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
 		 */
 		void print(std::ostream &os, const symbol_set &args) const
@@ -833,10 +830,10 @@ class real_trigonometric_kronecker_monomial
 		/// Print in TeX mode.
 		/**
 		 * Will print to stream a TeX representation of the monomial.
-		 * 
+		 *
 		 * @param[in] os target stream.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
 		 */
 		void print_tex(std::ostream &os, const symbol_set &args) const
@@ -931,12 +928,12 @@ class real_trigonometric_kronecker_monomial
 		 * integration formulas for elementary trigonometric functions.
 		 * If \p s is not in \p args or if the multiplier associated to it is zero,
 		 * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{})</tt>.
-		 * 
+		 *
 		 * @param[in] s symbol with respect to which the integration will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return result of the integration.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::math::is_zero(),
@@ -973,12 +970,12 @@ class real_trigonometric_kronecker_monomial
 		 * If the size of the monomial is zero, 1 will be returned if the monomial is a cosine, 0 otherwise.
 		 * If the positions in \p pmap do not reference
 		 * only and all the multipliers in the monomial, an error will be thrown.
-		 * 
+		 *
 		 * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the result of evaluating \p this with the values provided in \p pmap.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p pmap is not compatible with \p args.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
@@ -1047,13 +1044,13 @@ class real_trigonometric_kronecker_monomial
 		 * as the return values of piranha::math::cos() and piranha::math::sin(). If \p s is not in \p args,
 		 * \f$ \cos nx \f$ will be initialised to 1 and \f$ \sin nx \f$ to 0. If, after the substitution, the first nonzero multiplier
 		 * in \f$ b \f$ is negative, \f$ b \f$ will be negated and the other signs changed accordingly.
-		 * 
+		 *
 		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the result of substituting \p x for \p s.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - construction and assignment of the return value,
@@ -1110,14 +1107,14 @@ class real_trigonometric_kronecker_monomial
 		 * This method works in the same way as the subs() method, but the cosine \p c and sine \p s of \p name will be substituted (instead of a direct
 		 * substitution of \p name).
 		 * The substitution is performed using standard trigonometric formulae, and it will result in a list of two (substitution result,new monomial) pairs.
-		 * 
+		 *
 		 * @param[in] name symbol whose cosine and sine will be substituted.
 		 * @param[in] c cosine of \p name.
 		 * @param[in] s sine of \p name.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the result of substituting \p c and \p s for the cosine and sine of \p name.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - construction, assignment and arithmetics on the return value and on the intermediary values invovled in the computation,
@@ -1198,10 +1195,10 @@ class real_trigonometric_kronecker_monomial
 		 * This method is used in piranha::series::trim(). The input parameter \p candidates
 		 * contains a set of symbols that are candidates for elimination. The method will remove
 		 * from \p candidates those symbols whose multiplier in \p this is not zero.
-		 * 
+		 *
 		 * @param[in] candidates set of candidates for elimination.
 		 * @param[in] args reference arguments set.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::math::is_zero(),
@@ -1215,12 +1212,12 @@ class real_trigonometric_kronecker_monomial
 		/**
 		 * This method will return a copy of \p this with the multipliers associated to the symbols
 		 * in \p trim_args removed.
-		 * 
+		 *
 		 * @param[in] trim_args arguments whose multipliers will be removed.
 		 * @param[in] orig_args original arguments set.
-		 * 
+		 *
 		 * @return trimmed copy of \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::static_vector::push_back().
@@ -1275,7 +1272,7 @@ struct hash<piranha::real_trigonometric_kronecker_monomial<T>>
 	/// Hash operator.
 	/**
 	 * @param[in] a argument whose hash value will be computed.
-	 * 
+	 *
 	 * @return hash value of \p a computed via piranha::real_trigonometric_kronecker_monomial::hash().
 	 */
 	result_type operator()(const argument_type &a) const

@@ -66,23 +66,21 @@ std::set<std::string> base_symbol<T>::m_symbol_list;
  * This class represents a symbolic variable uniquely identified by its name. Symbol instances
  * are tracked in a global list for the duration of the program, so that different instances of symbols with the same name are always
  * referring to the same underlying object.
- * 
+ *
  * The methods of this class, unless specified otherwise, are thread-safe: it is possible to create, access and operate on objects of this class
  * concurrently from multiple threads
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move construction and move assignment will not alter the original object.
  *
  * ## Serialization ##
  *
  * This class supports serialization.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 class symbol: private detail::base_symbol<>
 {
@@ -90,9 +88,9 @@ class symbol: private detail::base_symbol<>
 		/// Constructor from name.
 		/**
 		 * Construct a symbol with name \p name.
-		 * 
+		 *
 		 * @param[in] name name of the symbol.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by <tt>std::set::insert()</tt>.
 		 */
 		explicit symbol(const std::string &name):m_ptr(get_pointer(name)) {}
@@ -108,7 +106,7 @@ class symbol: private detail::base_symbol<>
 		~symbol() = default;
 		/// Name getter.
 		/**
-		 * @return const reference to the name of the symbol. 
+		 * @return const reference to the name of the symbol.
 		 */
 		const std::string &get_name() const
 		{
@@ -117,7 +115,7 @@ class symbol: private detail::base_symbol<>
 		/// Equality operator.
 		/**
 		 * @param[in] other equality argument.
-		 * 
+		 *
 		 * @return true if \p other refers to the same underlying object as \p this, false otherwise.
 		 */
 		bool operator==(const symbol &other) const
@@ -127,7 +125,7 @@ class symbol: private detail::base_symbol<>
 		/// Inequality operator.
 		/**
 		 * @param[in] other inequality argument.
-		 * 
+		 *
 		 * @return negation of operator==().
 		 */
 		bool operator!=(const symbol &other) const
@@ -137,9 +135,9 @@ class symbol: private detail::base_symbol<>
 		/// Less-than comparison.
 		/**
 		 * Will compare lexicographically the names of the two symbols.
-		 * 
+		 *
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return <tt>this->get_name() < other.get_name()</tt>.
 		 */
 		bool operator<(const symbol &other) const
@@ -157,10 +155,10 @@ class symbol: private detail::base_symbol<>
 		/// Overload output stream operator for piranha::symbol.
 		/**
 		 * Will direct to \p os a human-readable description of \p s.
-		 * 
+		 *
 		 * @param[in,out] os output stream.
 		 * @param[in] s piranha::symbol to be sent to stream.
-		 * 
+		 *
 		 * @return reference to \p os.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const symbol &s)
@@ -221,7 +219,7 @@ struct hash<piranha::symbol>
 	/// Hash operator.
 	/**
 	 * @param[in] s piranha::symbol whose hash value will be returned.
-	 * 
+	 *
 	 * @return piranha::symbol::hash().
 	 */
 	result_type operator()(const argument_type &s) const

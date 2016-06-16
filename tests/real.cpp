@@ -50,7 +50,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/binomial.hpp"
 #include "../src/detail/mpfr.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -87,7 +87,7 @@ struct check_integral_construction
 
 BOOST_AUTO_TEST_CASE(real_constructors_test)
 {
-	environment env;
+	init();
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{}),"0.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"1.23"}),"1.22999999999999999999999999999999998");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"1.23",4}),"1.25");

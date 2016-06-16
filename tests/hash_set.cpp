@@ -51,8 +51,8 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <tuple>
 
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/serialization.hpp"
 #include "../src/thread_pool.hpp"
@@ -254,7 +254,7 @@ struct hash<random_failure>
 
 BOOST_AUTO_TEST_CASE(hash_set_constructors_test)
 {
-	environment env;
+	init();
 	// Def ctor.
 	hash_set<custom_string> ht;
 	BOOST_CHECK(ht.begin() == ht.end());

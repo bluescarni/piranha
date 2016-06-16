@@ -52,8 +52,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/is_cf.hpp"
 #include "../src/math.hpp"
 #include "../src/pow.hpp"
@@ -236,7 +236,7 @@ struct addmul_tester
 
 BOOST_AUTO_TEST_CASE(mp_integer_addmul_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<size_types>(addmul_tester());
 }
 

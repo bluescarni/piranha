@@ -38,8 +38,8 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <utility>
 
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -201,7 +201,7 @@ struct division_tester
 
 BOOST_AUTO_TEST_CASE(polynomial_division_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<key_types>(division_tester());
 	BOOST_CHECK((!has_exact_ring_operations<polynomial<double,k_monomial>>::value));
 	BOOST_CHECK((!has_exact_division<polynomial<double,k_monomial>>::value));

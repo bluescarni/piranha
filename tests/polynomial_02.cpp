@@ -42,9 +42,9 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_map>
 
 #include "../src/base_series_multiplier.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/invert.hpp"
 #include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
@@ -206,7 +206,7 @@ struct multiplication_tester
 
 BOOST_AUTO_TEST_CASE(polynomial_multiplier_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(multiplication_tester());
 }
 

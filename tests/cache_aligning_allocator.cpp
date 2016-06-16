@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
@@ -44,7 +44,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(cache_aligning_allocator_constructor_test)
 {
-	environment env;
+	init();
 	cache_aligning_allocator<char> caa1;
 	BOOST_CHECK_EQUAL(caa1.alignment(),runtime_info::get_cache_line_size());
 	cache_aligning_allocator<integer> caa2;

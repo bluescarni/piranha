@@ -7,7 +7,7 @@ using namespace piranha;
 
 int main()
 {
-	environment env;
+	init();
 
 	// Various ways of constructing a real.
 	std::cout << real{42} << '\n';
