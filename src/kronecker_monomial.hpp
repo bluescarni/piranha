@@ -75,26 +75,24 @@ namespace piranha
  * This class represents a multivariate monomial with integral exponents.
  * The values of the exponents are packed in a signed integer using Kronecker substitution, using the facilities provided
  * by piranha::kronecker_array.
- * 
+ *
  * This class satisfies the piranha::is_key, piranha::key_has_degree, piranha::key_has_ldegree and piranha::key_is_differentiable type traits.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * \p T must be suitable for use in piranha::kronecker_array. The default type for \p T is the signed counterpart of \p std::size_t.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
  *
  * ## Serialization ##
  *
  * This class supports serialization.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // TODO:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
@@ -304,9 +302,9 @@ class kronecker_monomial
 		/// Constructor from set of symbols.
 		/**
 		 * After construction all exponents in the monomial will be zero.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
 		 * - piranha::static_vector::push_back().
@@ -327,10 +325,10 @@ class kronecker_monomial
 		 * This constructor is for use when converting from one term type to another in piranha::series. It will
 		 * set the internal integer instance to the same value of \p other, after having checked that
 		 * \p other is compatible with \p args.
-		 * 
+		 *
 		 * @param[in] other construction argument.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p other is not compatible with \p args.
 		 */
 		explicit kronecker_monomial(const kronecker_monomial &other, const symbol_set &args):m_value(other.m_value)
@@ -343,7 +341,7 @@ class kronecker_monomial
 		/**
 		 * This constructor will initialise the internal integer instance
 		 * to \p n.
-		 * 
+		 *
 		 * @param[in] n initializer for the internal integer instance.
 		 */
 		explicit kronecker_monomial(const value_type &n):m_value(n) {}
@@ -378,15 +376,15 @@ class kronecker_monomial
 		/// Compatibility check.
 		/**
 		 * Monomial is considered incompatible if any of these conditions holds:
-		 * 
+		 *
 		 * - the size of \p args is zero and the internal integer is not zero,
 		 * - the size of \p args is equal to or larger than the size of the output of piranha::kronecker_array::get_limits(),
 		 * - the internal integer is not within the limits reported by piranha::kronecker_array::get_limits().
-		 * 
+		 *
 		 * Otherwise, the monomial is considered to be compatible for insertion.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return compatibility flag for the monomial.
 		 */
 		bool is_compatible(const symbol_set &args) const noexcept
@@ -411,7 +409,7 @@ class kronecker_monomial
 		/// Ignorability check.
 		/**
 		 * A monomial is never considered ignorable.
-		 * 
+		 *
 		 * @return \p false.
 		 */
 		bool is_ignorable(const symbol_set &) const noexcept
@@ -422,12 +420,12 @@ class kronecker_monomial
 		/**
 		 * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
 		 * \p orig_args.
-		 * 
+		 *
 		 * @param[in] orig_args original arguments set.
 		 * @param[in] new_args new arguments set.
-		 * 
+		 *
 		 * @return monomial with merged arguments.
-		 * 
+		 *
 		 * @throws std::invalid_argument if at least one of these conditions is true:
 		 * - the size of \p new_args is not greater than the size of \p orig_args,
 		 * - not all elements of \p orig_args are included in \p new_args.
@@ -443,9 +441,9 @@ class kronecker_monomial
 		/// Check if monomial is unitary.
 		/**
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return \p true if all the exponents are zero, \p false otherwise.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p this is not compatible with \p args.
 		 */
 		bool is_unitary(const symbol_set &args) const
@@ -585,7 +583,7 @@ class kronecker_monomial
 		/// Equality operator.
 		/**
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return \p true if the internal integral instance of \p this is equal to the integral instance of \p other,
 		 * \p false otherwise.
 		 */
@@ -596,7 +594,7 @@ class kronecker_monomial
 		/// Inequality operator.
 		/**
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return the opposite of operator==().
 		 */
 		bool operator!=(const kronecker_monomial &other) const
@@ -607,11 +605,11 @@ class kronecker_monomial
 		/**
 		 * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
 		 * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return name of the linear variable.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the monomial is not linear.
 		 * @throws unspecified any exception thrown by unpack().
 		 */
@@ -645,12 +643,12 @@ class kronecker_monomial
 		 * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
 		 * is computed via the multiplication of the exponents promoted to piranha::integer by \p x. The result will
 		 * be cast back to \p T via piranha::safe_cast().
-		 * 
+		 *
 		 * @param[in] x exponent.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return \p this to the power of \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::safe_cast(),
@@ -671,12 +669,12 @@ class kronecker_monomial
 		/// Unpack internal integer instance.
 		/**
 		 * Will decode the internal integral instance into a piranha::static_vector of size equal to the size of \p args.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return piranha::static_vector containing the result of decoding the internal integral instance via
 		 * piranha::kronecker_array.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the size of \p args is larger than the maximum size of piranha::static_vector.
 		 * @throws unspecified any exception thrown by piranha::kronecker_array::decode().
 		 */
@@ -687,10 +685,10 @@ class kronecker_monomial
 		/// Print.
 		/**
 		 * Will print to stream a human-readable representation of the monomial.
-		 * 
+		 *
 		 * @param[in] os target stream.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
 		 */
 		void print(std::ostream &os, const symbol_set &args) const
@@ -715,10 +713,10 @@ class kronecker_monomial
 		/// Print in TeX mode.
 		/**
 		 * Will print to stream a TeX representation of the monomial.
-		 * 
+		 *
 		 * @param[in] os target stream.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
 		 */
 		void print_tex(std::ostream &os, const symbol_set &args) const
@@ -756,9 +754,9 @@ class kronecker_monomial
 		 *
 		 * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return result of the differentiation.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the computation of the derivative causes a negative overflow,
 		 * or if \p p is incompatible with \p args or it has a size greater than one.
 		 * @throws unspecified any exception thrown by:
@@ -800,14 +798,14 @@ class kronecker_monomial
 		 * consisting of the exponent associated to \p s increased by one and the monomial itself
 		 * after integration. If \p s is not in \p args, the returned monomial will have an extra exponent
 		 * set to 1 in the same position \p s would have if it were added to \p args.
-		 * 
+		 *
 		 * If the exponent corresponding to \p s is -1, an error will be produced.
-		 * 
+		 *
 		 * @param[in] s symbol with respect to which the integration will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return result of the integration.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the exponent associated to \p s is -1 or if the value of an exponent overflows.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
@@ -856,17 +854,17 @@ class kronecker_monomial
 		 * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
 		 * - \p eval_type is constructible from \p int,
 		 * - \p eval_type is multipliable in place.
-		 * 
+		 *
 		 * The return value will be built by iteratively applying piranha::math::pow() using the values provided
 		 * by \p pmap as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
 		 * returned. If the positions in \p pmap do not reference
 		 * only and all the exponents in the monomial, an error will be thrown.
-		 * 
+		 *
 		 * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the result of evaluating \p this with the values provided in \p pmap.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p pmap is not compatible with \p args.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
@@ -900,13 +898,13 @@ class kronecker_monomial
 		 * - \p subs_type can be constructed from \p int and it is assignable.
 		 *
 		 * The algorithm is equivalent to the one implemented in piranha::monomial::subs().
-		 * 
+		 *
 		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the result of substituting \p x for \p s.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - construction and assignment of the return value,
@@ -942,14 +940,14 @@ class kronecker_monomial
 		 * - \p subs_type is constructible from \p int and assignable.
 		 *
 		 * This method works in the same way as piranha::monomial::ipow_subs().
-		 * 
+		 *
 		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] n power of \p s that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s to the power of \p n.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the result of substituting \p x for \p s to the power of \p n.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - construction and assignment of the return value,
@@ -987,10 +985,10 @@ class kronecker_monomial
 		 * This method is used in piranha::series::trim(). The input parameter \p candidates
 		 * contains a set of symbols that are candidates for elimination. The method will remove
 		 * from \p candidates those symbols whose exponent in \p this is not zero.
-		 * 
+		 *
 		 * @param[in] candidates set of candidates for elimination.
 		 * @param[in] args reference arguments set.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::math::is_zero(),
@@ -1004,12 +1002,12 @@ class kronecker_monomial
 		/**
 		 * This method will return a copy of \p this with the exponents associated to the symbols
 		 * in \p trim_args removed.
-		 * 
+		 *
 		 * @param[in] trim_args arguments whose exponents will be removed.
 		 * @param[in] orig_args original arguments set.
-		 * 
+		 *
 		 * @return trimmed copy of \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::static_vector::push_back().
@@ -1033,10 +1031,10 @@ class kronecker_monomial
 		/**
 		 * This method will write into \p out the content of \p this. If necessary, \p out will
 		 * be resized to match the size of \p args.
-		 * 
+		 *
 		 * @param[out] out vector into which the exponents will be copied.
 		 * @param[in] args reference set of arguments.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::safe_cast(),
 		 * - the resizing of \p out,
@@ -1112,7 +1110,7 @@ struct hash<piranha::kronecker_monomial<T>>
 	/// Hash operator.
 	/**
 	 * @param[in] a argument whose hash value will be computed.
-	 * 
+	 *
 	 * @return hash value of \p a computed via piranha::kronecker_monomial::hash().
 	 */
 	result_type operator()(const argument_type &a) const

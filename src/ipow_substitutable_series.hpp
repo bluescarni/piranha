@@ -75,8 +75,6 @@ struct ipow_substitutable_series_tag {};
  * ## Serialization ##
  *
  * This class supports serialization if \p Series does.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Derived>
 class ipow_substitutable_series: public Series, detail::ipow_substitutable_series_tag

@@ -100,8 +100,6 @@ struct poisson_series_tag {};
  * ## Serialization ##
  *
  * This class supports serialization if the underlying coefficient type does.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // TODO:
 // - make this more general, make the key type selectable;
