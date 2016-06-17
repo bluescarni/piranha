@@ -37,8 +37,8 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -83,7 +83,7 @@ struct callable_generic
 
 BOOST_AUTO_TEST_CASE(lambdify_test_00)
 {
-	environment env;
+	init();
 	{
 	using p_type = polynomial<integer,k_monomial>;
 	p_type x{"x"}, y{"y"}, z{"z"};

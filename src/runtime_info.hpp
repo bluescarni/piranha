@@ -101,8 +101,6 @@ const std::thread::id base_runtime_info<T>::m_main_thread_id = std::this_thread:
 /// Runtime information.
 /**
  * This class allows to query information about the runtime environment.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 class runtime_info: private detail::base_runtime_info<>
 {

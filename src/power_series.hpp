@@ -189,8 +189,6 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  * ## Serialization ##
  *
  * This class supports serialization if \p Series does.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Derived>
 class power_series: public Series, detail::power_series_tag

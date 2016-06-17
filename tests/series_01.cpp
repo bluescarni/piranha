@@ -46,9 +46,9 @@ see https://www.gnu.org/licenses/. */
 #include "../src/base_series_multiplier.hpp"
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -344,7 +344,7 @@ typedef debug_access<construction_tag> constructor_tester;
 
 BOOST_AUTO_TEST_CASE(series_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(constructor_tester());
 }
 

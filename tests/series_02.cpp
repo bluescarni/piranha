@@ -46,9 +46,9 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/base_series_multiplier.hpp"
 #include "../src/debug_access.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -221,7 +221,7 @@ struct mock_cf
 
 BOOST_AUTO_TEST_CASE(series_partial_test)
 {
-	environment env;
+	init();
 	{
 	typedef g_series_type<rational,int> p_type1;
 	p_type1 x1{"x"};

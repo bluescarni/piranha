@@ -47,7 +47,7 @@ namespace piranha
 // David Moore, William E. Kempf
 // Copyright (C) 2007-8 Anthony Williams
 //
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 /// Thread barrier.
@@ -56,12 +56,10 @@ namespace piranha
  * The barrier is configured for a particular number of threads \p n, and as threads reach the barrier
  * they must wait until all \p n threads have arrived. Once the <tt>n</tt>-th thread has reached the barrier,
  * all the waiting threads can proceed, and the barrier is reset.
- * 
+ *
  * This class has been minimally adapted from the barrier class available from the Boost libraries.
- * 
+ *
  * @see http://www.boost.org/doc/libs/release/doc/html/thread/synchronization.html
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 class thread_barrier
 {

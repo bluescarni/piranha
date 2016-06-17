@@ -43,7 +43,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/divisor.hpp"
 #include "../src/divisor_series.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/invert.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -53,6 +53,8 @@ see https://www.gnu.org/licenses/. */
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/series.hpp"
+
+struct foo {};
 
 using namespace piranha;
 
@@ -72,9 +74,9 @@ struct constructor_tester
 		BOOST_CHECK(p2 == p_type{"x"} + p_type{"y"} - p_type{"y"});
 		BOOST_CHECK((std::is_constructible<p_type,std::string>::value));
 		BOOST_CHECK((std::is_constructible<p_type,const char *>::value));
-		BOOST_CHECK((!std::is_constructible<p_type,environment>::value));
+		BOOST_CHECK((!std::is_constructible<p_type,foo>::value));
 		BOOST_CHECK((std::is_assignable<p_type,std::string>::value));
-		BOOST_CHECK((!std::is_assignable<p_type,environment>::value));
+		BOOST_CHECK((!std::is_assignable<p_type,foo>::value));
 	}
 	template <typename Cf>
 	void poly_ctor_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
@@ -84,8 +86,8 @@ struct constructor_tester
 			BOOST_CHECK((!std::is_constructible<p_type,std::string>::value));
 			BOOST_CHECK((!std::is_constructible<p_type,const char *>::value));
 		}
-		BOOST_CHECK((!std::is_constructible<p_type,environment>::value));
-		BOOST_CHECK((!std::is_assignable<p_type,environment>::value));
+		BOOST_CHECK((!std::is_constructible<p_type,foo>::value));
+		BOOST_CHECK((!std::is_assignable<p_type,foo>::value));
 		BOOST_CHECK((std::is_assignable<p_type,int>::value));
 	}
 	template <typename Cf>
@@ -125,7 +127,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(poisson_series_constructors_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(constructor_tester());
 }
 

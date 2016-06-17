@@ -38,7 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <type_traits>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -95,7 +95,7 @@ struct st_vs_mt_tester
 
 BOOST_AUTO_TEST_CASE(polynomial_multiplier_st_vs_mt_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(st_vs_mt_tester());
 	settings::reset_n_threads();
 }

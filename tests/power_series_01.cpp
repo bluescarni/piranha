@@ -37,7 +37,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -228,6 +228,6 @@ struct degree_tester
 
 BOOST_AUTO_TEST_CASE(power_series_test_01)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(degree_tester());
 }

@@ -90,30 +90,28 @@ struct is_mp_rational_interoperable_type<T,Rational,typename std::enable_if<!is_
  * in terms of a numerator and a denominator.
  * The meaning of the \p NBits template parameter is the same as in piranha::mp_integer, that is, it represents the
  * bit width of the two limbs stored statically in the numerator and in the denominator.
- * 
+ *
  * Unless otherwise specified, rational numbers are always kept in the usual canonical form in which numerator and denominator
  * are coprime, and the denominator is always positive. Zero is uniquely represented by 0/1.
- * 
+ *
  * ## Interoperability with other types ##
- * 
+ *
  * This class interoperates with the same types as piranha::mp_integer, plus piranha::mp_integer itself.
  * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
  * of piranha::mp_integer apply.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP routines,
  * the program will terminate.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
  *
  * ## Serialization ##
  *
  * This class supports serialization.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <int NBits = 0>
 class mp_rational
@@ -703,10 +701,10 @@ class mp_rational
 		/**
 		 * \note
 		 * This constructor is enabled only if \p I0 and \p I1 are either integral types or piranha::integer.
-		 * 
+		 *
 		 * @param[in] n numerator.
 		 * @param[in] d denominator.
-		 * 
+		 *
 		 * @throws piranha::zero_division_error if the denominator is zero.
 		 * @throws unspecified any exception thrown by the invoked constructor of piranha::mp_integer.
 		 */
@@ -722,9 +720,9 @@ class mp_rational
 		/**
 		 * \note
 		 * This constructor is enabled only if \p T is an interoperable type.
-		 * 
+		 *
 		 * @param[in] x object used to construct \p this.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the construction fails (e.g., construction from a non-finite
 		 * floating-point value).
 		 */
@@ -737,11 +735,11 @@ class mp_rational
 		/**
 		 * The string must represent either a valid single piranha::mp_integer, or two valid piranha::mp_integer
 		 * separated by "/". The rational will be put in canonical form by this constructor.
-		 * 
+		 *
 		 * Note that if the string is not null-terminated, undefined behaviour will occur.
-		 * 
+		 *
 		 * @param[in] str C string used for construction.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the string is not formatted correctly.
 		 * @throws piranha::zero_division_error if the denominator, if present, is zero.
 		 * @throws unspecified any exception thrown by the constructor from string of piranha::mp_integer
@@ -777,9 +775,9 @@ class mp_rational
 		/// Constructor from C++ string.
 		/**
 		 * Equivalent to the constructor from C string.
-		 * 
+		 *
 		 * @param[in] str C string used for construction.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the constructor from C string.
 		 */
 		explicit mp_rational(const std::string &str):mp_rational(str.c_str()) {}
@@ -858,12 +856,12 @@ class mp_rational
 		 * The printing format is as follows:
 		 * - only the numerator is printed if the denominator is 1,
 		 * - otherwise, numerator and denominator are printed separated by a '/' sign.
-		 * 
+		 *
 		 * @param[in,out] os target stream.
 		 * @param[in] q rational to be printed.
-		 * 
+		 *
 		 * @return reference to \p os.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the streaming operator of piranha::mp_integer.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const mp_rational &q)
@@ -926,9 +924,9 @@ class mp_rational
 		/**
 		 * A rational number is in canonical form when numerator and denominator
 		 * are coprime. A zero numerator must be paired to a 1 denominator.
-		 * 
+		 *
 		 * If low-level methods are not used, this function will always return \p true.
-		 * 
+		 *
 		 * @return \p true if \p this is in canonical form, \p false otherwise.
 		 */
 		bool is_canonical() const
@@ -945,7 +943,7 @@ class mp_rational
 		/// Canonicalise.
 		/**
 		 * This method will convert \p this to the canonical form, if needed.
-		 * 
+		 *
 		 * @see piranha::mp_rational::is_canonical().
 		 */
 		void canonicalise()
@@ -1028,9 +1026,9 @@ class mp_rational
 		/// Set denominator.
 	        /**
 	         * This method will set the denominator to \p den without canonicalising the rational.
-	         * 
+	         *
 	         * @param[in] den desired value for the denominator.
-	         * 
+	         *
 	         * @throws std::invalid_argument if \p den is not positive.
 	         */
 		void _set_den(const int_type &den)
@@ -1052,7 +1050,7 @@ class mp_rational
 		/// Pre-increment operator.
 		/**
 		 * @return reference to \p this after the increment.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by in-place addition.
 		 */
 		mp_rational &operator++()
@@ -1062,7 +1060,7 @@ class mp_rational
 		/// Post-increment operator.
 		/**
 		 * @return copy of \p this before the increment.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the pre-increment operator.
 		 */
 		mp_rational operator++(int)
@@ -1075,18 +1073,18 @@ class mp_rational
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_rational.
-		 * 
+		 *
 		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
-		 * 
+		 *
 		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p f is added to \p x,
 		 * - the result is assigned back to \p this.
-		 * 
+		 *
 		 * @param[in] x argument for the addition.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the conversion operator, the generic constructor of piranha::mp_integer,
 		 * or the generic assignment operator, if used.
 		 */
@@ -1099,14 +1097,14 @@ class mp_rational
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Add a piranha::mp_rational in-place. This method will first compute <tt>q + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] q second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -1121,17 +1119,17 @@ class mp_rational
 		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
 		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and added to \p f to generate the return value, which will then be of type \p F.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x + y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
 		 * - the invoked constructor or the conversion operator, if used.
@@ -1159,7 +1157,7 @@ class mp_rational
 		/// Pre-decrement operator.
 		/**
 		 * @return reference to \p this after the decrement.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by in-place subtraction.
 		 */
 		mp_rational &operator--()
@@ -1169,7 +1167,7 @@ class mp_rational
 		/// Post-decrement operator.
 		/**
 		 * @return copy of \p this before the decrement.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the pre-decrement operator.
 		 */
 		mp_rational operator--(int)
@@ -1182,18 +1180,18 @@ class mp_rational
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_rational.
-		 * 
+		 *
 		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
-		 * 
+		 *
 		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p x is subtracted from \p f,
 		 * - the result is assigned back to \p this.
-		 * 
+		 *
 		 * @param[in] x argument for the subtraction.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the conversion operator, the generic constructor of piranha::mp_integer,
 		 * or the generic assignment operator, if used.
 		 */
@@ -1206,14 +1204,14 @@ class mp_rational
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Subtract a piranha::mp_rational in-place. This method will first compute <tt>x - q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] q second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -1228,17 +1226,17 @@ class mp_rational
 		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
 		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and subtracted from (or to) \p f to generate the return value, which will then be of type \p F.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x - y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
 		 * - the invoked constructor or the conversion operator, if used.
@@ -1252,18 +1250,18 @@ class mp_rational
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_rational.
-		 * 
+		 *
 		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
-		 * 
+		 *
 		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p f is multiplied by \p x,
 		 * - the result is assigned back to \p this.
-		 * 
+		 *
 		 * @param[in] x argument for the multiplication.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the conversion operator, the generic constructor of piranha::mp_integer,
 		 * or the generic assignment operator, if used.
 		 */
@@ -1276,14 +1274,14 @@ class mp_rational
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Multiply by a piranha::mp_rational in-place. This method will first compute <tt>x * q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] q second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -1298,17 +1296,17 @@ class mp_rational
 		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
 		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and multiplied by \p f to generate the return value, which will then be of type \p F.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x * y</tt>.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
 		 * - the invoked constructor or the conversion operator, if used.
@@ -1322,18 +1320,18 @@ class mp_rational
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_rational.
-		 * 
+		 *
 		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
-		 * 
+		 *
 		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p f is divided by \p x,
 		 * - the result is assigned back to \p this.
-		 * 
+		 *
 		 * @param[in] x argument for the division.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws piranha::zero_division_error if \p x is zero.
 		 * @throws unspecified any exception thrown by the conversion operator, the generic constructor of piranha::mp_integer,
 		 * or the generic assignment operator, if used.
@@ -1350,14 +1348,14 @@ class mp_rational
 		/**
 		 * \note
 		 * This operator is enabled only if \p T is a non-const interoperable type.
-		 * 
+		 *
 		 * Divide by a piranha::mp_rational in-place. This method will first compute <tt>x / q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
-		 * 
+		 *
 		 * @param[in,out] x first argument.
 		 * @param[in] q second argument.
-		 * 
+		 *
 		 * @return reference to \p x.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
@@ -1372,17 +1370,17 @@ class mp_rational
 		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
 		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
-		 * 
+		 *
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
-		 * 
+		 *
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
 		 * and divided by \p f (or viceversa) to generate the return value, which will then be of type \p F.
-		 * 
+		 *
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
-		 * 
+		 *
 		 * @return <tt>x / y</tt>.
-		 * 
+		 *
 		 * @throws piranha::zero_division_error in case of division by zero.
 		 * @throws unspecified any exception thrown by:
 		 * - the corresponding in-place operator,
@@ -1661,9 +1659,9 @@ inline namespace literals
 /// Literal for arbitrary-precision rationals.
 /**
  * @param[in] s literal string.
- * 
+ *
  * @return a piranha::mp_rational constructed from \p s.
- * 
+ *
  * @throws unspecified any exception thrown by the constructor of
  * piranha::mp_rational from string.
  */
@@ -1746,7 +1744,7 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>:
 	/// Call operator.
 	/**
 	 * @param[in] q piranha::mp_rational to be tested.
-	 * 
+	 *
 	 * @return \p true if \p q is zero, \p false otherwise.
 	 */
 	bool operator()(const T &q) const

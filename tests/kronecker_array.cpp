@@ -42,7 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 
 using namespace piranha;
 
@@ -83,7 +83,7 @@ struct limits_tester
 
 BOOST_AUTO_TEST_CASE(kronecker_array_limits_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<int_types>(limits_tester());
 }
 

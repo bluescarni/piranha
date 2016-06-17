@@ -39,7 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
@@ -166,7 +166,7 @@ struct bounds_tester
 
 BOOST_AUTO_TEST_CASE(polynomial_multiplier_bounds_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(bounds_tester());
 }
 

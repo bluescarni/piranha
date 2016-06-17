@@ -545,8 +545,6 @@ union small_vector_union
  * ## Serialization ##
  *
  * This class supports serialization if the value type is serializable.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // NOTE: some possible improvements:
 // - the m_size member of dynamic and static could be made a signed integer, the sign establishing the storage type

@@ -44,14 +44,14 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/config.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(memory_aligned_malloc_test)
 {
-	environment env;
+	init();
 	// Test the common codepath.
 	auto ptr = aligned_palloc(0,0);
 	BOOST_CHECK(ptr == nullptr);

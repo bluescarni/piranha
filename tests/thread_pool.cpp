@@ -40,7 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/real.hpp"
 #include "../src/runtime_info.hpp"
@@ -60,7 +60,7 @@ struct noncopyable
 
 BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 {
-	environment env;
+	init();
 	auto slow_task = [](){std::this_thread::sleep_for(std::chrono::milliseconds(250));};
 	auto fast_task = [](int n) -> int {std::this_thread::sleep_for(std::chrono::milliseconds(1)); return n;};
 	auto instant_task = [](){};
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 	// Check the binding.
 	const unsigned hc = runtime_info::get_hardware_concurrency();
 	auto bind_checker = [](unsigned n) {
-		auto res = thread_management::bound_proc();
+		auto res = bound_proc();
 		if (!res.first || res.second != n) {
 			throw std::runtime_error("");
 		}
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 	BOOST_CHECK(thread_pool::enqueue(0,adder,4,-5).get() == -1);
 	BOOST_CHECK_THROW(thread_pool::enqueue(initial_size,adder,4,-5),std::invalid_argument);
 #if !defined(__APPLE_CC__)
-	BOOST_CHECK(thread_pool::enqueue(0,[](){return thread_management::bound_proc();}).get() == std::make_pair(true,0u));
+	BOOST_CHECK(thread_pool::enqueue(0,[](){return bound_proc();}).get() == std::make_pair(true,0u));
 #endif
 	BOOST_CHECK_THROW(thread_pool::enqueue(0,[](){throw std::runtime_error("");}).get(),std::runtime_error);
 	auto fast_task = [](int n) -> int {std::this_thread::sleep_for(std::chrono::milliseconds(1)); return n;};
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 #if !defined(__APPLE_CC__)
 	if (initial_size != boost::integer_traits<unsigned>::const_max) {
 		thread_pool::resize(initial_size + 1u);
-		auto func = [](){return thread_management::bound_proc();};
+		auto func = [](){return bound_proc();};
 		std::vector<decltype(thread_pool::enqueue(0u,func))> list;
 		for (unsigned i = 0; i < initial_size + 1u; ++i) {
 			list.push_back(thread_pool::enqueue(i,func));
@@ -222,13 +222,13 @@ BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
 {
 	thread_pool::resize(10u);
 	auto null_task = [](){};
-	future_list<decltype(thread_pool::enqueue(0,null_task))> f1;
+	future_list<decltype(null_task())> f1;
 	f1.wait_all();
 	f1.wait_all();
 	f1.get_all();
 	f1.get_all();
 	auto fast_task = [](){std::this_thread::sleep_for(std::chrono::milliseconds(1));};
-	future_list<decltype(thread_pool::enqueue(0,fast_task))> f2;
+	future_list<decltype(fast_task())> f2;
 	for (unsigned i = 0u; i < 10u; ++i) {
 		for (unsigned j = 0u; j < 100u; ++j) {
 			f2.push_back(thread_pool::enqueue(i,fast_task));
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
 	f2.get_all();
 	f2.get_all();
 	auto thrower = [](){throw std::runtime_error("");};
-	future_list<decltype(thread_pool::enqueue(0,thrower))> f3;
+	future_list<decltype(thrower())> f3;
 	for (unsigned i = 0u; i < 10u; ++i) {
 		for (unsigned j = 0u; j < 100u; ++j) {
 			f3.push_back(thread_pool::enqueue(i,thrower));
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
 	BOOST_CHECK_THROW(f3.get_all(),std::runtime_error);
 	BOOST_CHECK_THROW(f3.get_all(),std::runtime_error);
 	// Try with empty futures.
-	future_list<decltype(thread_pool::enqueue(0,thrower))> f4;
+	future_list<decltype(thrower())> f4;
 	for (unsigned i = 0u; i < 100u; ++i) {
 		f4.push_back(decltype(thread_pool::enqueue(0,thrower))());
 	}

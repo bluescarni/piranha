@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -49,7 +49,7 @@ using math::invert;
 
 BOOST_AUTO_TEST_CASE(invert_test_00)
 {
-	environment env;
+	init();
 	// Some tests with non-piranha types.
 	BOOST_CHECK(is_invertible<float>::value);
 	BOOST_CHECK(is_invertible<double>::value);

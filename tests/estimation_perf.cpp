@@ -40,7 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/pow.hpp"
@@ -115,7 +115,7 @@ struct multiplier: base_series_multiplier<p_type>
 
 BOOST_AUTO_TEST_CASE(initial_setup)
 {
-	environment env;
+	init();
 	std::cout << "Max number of threads: " << max_nt() << '\n';
 	settings::set_min_work_per_thread(1u);
 }

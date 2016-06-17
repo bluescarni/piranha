@@ -119,8 +119,6 @@ namespace piranha
 /// Base exception class.
 /**
  * All piranha exceptions derive from this class.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 class base_exception: public std::exception
 {

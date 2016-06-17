@@ -48,7 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_map>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/key_is_convertible.hpp"
 #include "../src/key_is_multipliable.hpp"
 #include "../src/kronecker_array.hpp"
@@ -182,7 +182,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<int_types>(constructor_tester());
 }
 

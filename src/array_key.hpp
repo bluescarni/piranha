@@ -58,9 +58,9 @@ namespace piranha
  * mimic those of \p std::vector. The underlying container used to store the elements is piranha::small_vector.
  * The template argument \p S is passed down as second argument to piranha::small_vector in the definition
  * of the internal container.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * - \p T must satisfy the following requirements:
  *   - it must be suitable for use in piranha::small_vector as a value type,
  *   - it must be constructible from \p int,
@@ -69,20 +69,18 @@ namespace piranha
  * - \p Derived must derive from piranha::array_key of \p T and \p Derived,
  * - \p Derived must satisfy the piranha::is_container_element type trait,
  * - \p S must be suitable as second template argument to piranha::small_vector.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move semantics is equivalent to the move semantics of piranha::small_vector.
  *
  * ## Serialization ##
  *
  * This class supports serialization if the internal piranha::small_vector is serializable.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, typename Derived, typename S = std::integral_constant<std::size_t,0u>>
 class array_key
@@ -146,9 +144,9 @@ class array_key
 		 * This constructor is enabled only if piranha::small_vector is constructible from \p list.
 		 *
 		 * \p list will be forwarded to construct the internal piranha::small_vector.
-		 * 
+		 *
 		 * @param[in] list initializer list.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the corresponding constructor of piranha::small_vector.
 		 */
 		template <typename U, init_list_enabler<U> = 0>
@@ -157,9 +155,9 @@ class array_key
 		/**
 		 * The key will be created with a number of variables equal to <tt>args.size()</tt>
 		 * and filled with elements constructed from the integral constant 0.
-		 * 
+		 *
 		 * @param[in] args piranha::symbol_set used for construction.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::small_vector::push_back(),
 		 * - the construction of instances of type \p value_type from the integral constant 0.
@@ -180,7 +178,7 @@ class array_key
 		 * contents of the internal container of \p x (possibly converting the individual contained values through piranha::safe_cast(),
 		 * if the values are of different type). If the size of \p x is different from the size of \p args, a runtime error will
 		 * be produced.
-		 * 
+		 *
 		 * @param[in] other construction argument.
 		 * @param[in] args reference piranha::symbol_set.
 		 *
@@ -258,9 +256,9 @@ class array_key
 		/// Resize the internal array container.
 		/**
 		 * Equivalent to piranha::small_vector::resize().
-		 * 
+		 *
 		 * @param[in] new_size desired new size for the internal container.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by piranha::small_vector::resize().
 		 */
 		void resize(const size_type &new_size)
@@ -270,7 +268,7 @@ class array_key
 		/// Element access.
 		/**
 		 * @param[in] i index of the element to be accessed.
-		 * 
+		 *
 		 * @return reference to the element of the container at index \p i.
 		 */
 		value_type &operator[](const size_type &i)
@@ -281,7 +279,7 @@ class array_key
 		/// Const element access.
 		/**
 		 * @param[in] i index of the element to be accessed.
-		 * 
+		 *
 		 * @return const reference to the element of the container at index \p i.
 		 */
 		const value_type &operator[](const size_type &i) const
@@ -300,9 +298,9 @@ class array_key
 		/// Move-add element at the end.
 		/**
 		 * Move-add \p x at the end of the internal container.
-		 * 
+		 *
 		 * @param[in] x element to be added to the internal container.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by piranha::small_vector::push_back().
 		 */
 		void push_back(value_type &&x)
@@ -312,9 +310,9 @@ class array_key
 		/// Copy-add element at the end.
 		/**
 		 * Copy-add \p x at the end of the internal container.
-		 * 
+		 *
 		 * @param[in] x element to be added to the internal container.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by piranha::small_vector::push_back().
 		 */
 		void push_back(const value_type &x)
@@ -324,9 +322,9 @@ class array_key
 		/// Equality operator.
 		/**
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return the result of piranha::small_vector::operator==().
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by piranha::small_vector::operator==().
 		 */
 		bool operator==(const array_key &other) const
@@ -336,9 +334,9 @@ class array_key
 		/// Inequality operator.
 		/**
 		 * @param[in] other comparison argument.
-		 * 
+		 *
 		 * @return negation of operator==().
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the equality operator.
 		 */
 		bool operator!=(const array_key &other) const
@@ -350,10 +348,10 @@ class array_key
 		 * This method is used in piranha::series::trim(). The input parameter \p candidates
 		 * contains a set of symbols that are candidates for elimination. The method will remove
 		 * from \p candidates those symbols whose element in \p this is not zero.
-		 * 
+		 *
 		 * @param[in] candidates set of candidates for elimination.
 		 * @param[in] args reference arguments set.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
 		 * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::symbol_set::remove().
 		 */
@@ -374,12 +372,12 @@ class array_key
 		/**
 		 * This method will return a copy of \p this with the elements associated to the symbols
 		 * in \p trim_args removed.
-		 * 
+		 *
 		 * @param[in] trim_args arguments whose elements will be removed.
 		 * @param[in] orig_args original arguments set.
-		 * 
+		 *
 		 * @return trimmed copy of \p this.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the size of \p this differs from the size of \p orig_args.
 		 * @throws unspecified any exception thrown by push_back().
 		 */
@@ -441,12 +439,12 @@ class array_key
 		 * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
 		 * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the internal container,
 		 * with the corresponding values constructed from the integral constant 0.
-		 * 
+		 *
 		 * @param[in] orig_args current reference arguments set for \p this.
 		 * @param[in] new_args new arguments set.
-		 * 
+		 *
 		 * @return a \p Derived instance resulting from merging \p new_args into \p this.
-		 * 
+		 *
 		 * @throws std::invalid_argument in the following cases:
 		 * - the size of \p this is different from the size of \p orig_args,
 		 * - the size of \p new_args is not greater than the size of \p orig_args,
@@ -501,7 +499,7 @@ struct hash<piranha::array_key<T,Derived,S>>
 	/// Hash operator.
 	/**
 	 * @param[in] a piranha::array_key whose hash value will be returned.
-	 * 
+	 *
 	 * @return piranha::array_key::hash().
 	 */
 	result_type operator()(const argument_type &a) const

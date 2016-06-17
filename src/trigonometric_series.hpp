@@ -84,8 +84,6 @@ struct trigonometric_series_tag {};
  * ## Serialization ##
  *
  * This class supports serialization if \p Series does.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series>
 class trigonometric_series: public Series, detail::trigonometric_series_tag

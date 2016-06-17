@@ -26,13 +26,12 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 
-#define BOOST_TEST_MODULE environment_test
+#define BOOST_TEST_MODULE init_test
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
-
+#include "../src/config.hpp"
 #include "../src/settings.hpp"
 #include "../src/thread_pool.hpp"
 
@@ -42,21 +41,23 @@ struct dummy
 {
 	~dummy()
 	{
-		std::cout << "Shutdown flag is: " << environment::shutdown() << '\n';
+		// NOTE: cannot use BOOST_CHECK here because this gets invoked outside the test case.
+		piranha_assert(detail::shutdown());
 	}
 };
 
 static dummy d;
 
-BOOST_AUTO_TEST_CASE(environment_main_test)
+BOOST_AUTO_TEST_CASE(init_main_test)
 {
 	settings::set_n_threads(3);
 	// Multiple concurrent constructions.
-	auto f0 = thread_pool::enqueue(0,[]() {environment env;});
-	auto f1 = thread_pool::enqueue(1,[]() {environment env;});
-	auto f2 = thread_pool::enqueue(2,[]() {environment env;});
+	auto f0 = thread_pool::enqueue(0,[]() {init();});
+	auto f1 = thread_pool::enqueue(1,[]() {init();});
+	auto f2 = thread_pool::enqueue(2,[]() {init();});
 	f0.wait();
 	f1.wait();
 	f2.wait();
-	BOOST_CHECK(!environment::shutdown());
+	BOOST_CHECK(!detail::shutdown());
+	BOOST_CHECK_EQUAL(detail::piranha_init_statics<>::s_failed.load(),2u);
 }

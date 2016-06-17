@@ -54,8 +54,8 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/binomial.hpp"
-#include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -108,7 +108,7 @@ struct yes_negate
 
 BOOST_AUTO_TEST_CASE(math_negate_test)
 {
-	environment env;
+	init();
 	boost::fusion::for_each(arithmetic_values,check_negate());
 	BOOST_CHECK(!has_negate<no_negate>::value);
 	BOOST_CHECK(!has_negate<no_negate2>::value);

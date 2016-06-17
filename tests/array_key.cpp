@@ -42,7 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include "../src/debug_access.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
@@ -154,7 +154,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(array_key_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<value_types>(constructor_tester());
 }
 

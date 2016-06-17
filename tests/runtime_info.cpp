@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <thread>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/memory.hpp"
 #include "../src/settings.hpp"
 
@@ -43,7 +43,7 @@ using namespace piranha;
 // Simple check on the thread id.
 BOOST_AUTO_TEST_CASE(runtime_info_thread_id_test)
 {
-	environment env;
+	init();
 	BOOST_CHECK_EQUAL(runtime_info::get_main_thread_id(),std::this_thread::get_id());
 }
 

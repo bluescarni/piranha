@@ -119,8 +119,6 @@ struct is_real_interoperable_type
  * This class supports serialization.
  *
  * @see http://www.mpfr.org
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // NOTES:
 // - if we overhaul the tests, put random precision values as well.
