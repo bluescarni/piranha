@@ -6,7 +6,7 @@ var searchData=
   ['_7edivisor',['~divisor',['../classpiranha_1_1divisor.html#a20a4c13434e3bb5d65d90dbdb59b4392',1,'piranha::divisor']]],
   ['_7edivisor_5fseries',['~divisor_series',['../classpiranha_1_1divisor__series.html#accc008197c32fd585461eb5f286f2bc7',1,'piranha::divisor_series']]],
   ['_7edynamic_5faligning_5fallocator',['~dynamic_aligning_allocator',['../classpiranha_1_1dynamic__aligning__allocator.html#aac6a23100033d4b6d8a9f9cc87e7b204',1,'piranha::dynamic_aligning_allocator']]],
-  ['_7efuture_5flist',['~future_list',['../classpiranha_1_1future__list.html#a029eb558a5d1ad7acff2292dd815344b',1,'piranha::future_list']]],
+  ['_7efuture_5flist',['~future_list',['../classpiranha_1_1future__list.html#abf290db2f29baec9e2ea0a9982cfd5bc',1,'piranha::future_list']]],
   ['_7ehash_5fset',['~hash_set',['../classpiranha_1_1hash__set.html#ac0cccdf7ed4e6a69a2bdd32641b362d1',1,'piranha::hash_set']]],
   ['_7eipow_5fsubstitutable_5fseries',['~ipow_substitutable_series',['../classpiranha_1_1ipow__substitutable__series.html#af2e1876ad0ca3d1c65c9e202d8f4bbaa',1,'piranha::ipow_substitutable_series']]],
   ['_7ekronecker_5fmonomial',['~kronecker_monomial',['../classpiranha_1_1kronecker__monomial.html#af2fa2790a5fa0c626b9cfb2809998408',1,'piranha::kronecker_monomial']]],

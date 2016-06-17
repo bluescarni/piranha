@@ -30,7 +30,6 @@ var searchData=
   ['text',['text',['../namespacepiranha.html#ad989ea04229f3fdb6883ba350eabe60ea1cb251ec0d568de6a929b520c4aed8d1',1,'piranha']]],
   ['thread_5fbarrier',['thread_barrier',['../classpiranha_1_1thread__barrier.html',1,'piranha']]],
   ['thread_5fbarrier',['thread_barrier',['../classpiranha_1_1thread__barrier.html#a2dff2ed70538493faf744154baab508f',1,'piranha::thread_barrier::thread_barrier(unsigned count)'],['../classpiranha_1_1thread__barrier.html#af705d7970bdc0f0839ec5b8b738dd65a',1,'piranha::thread_barrier::thread_barrier(const thread_barrier &amp;)=delete'],['../classpiranha_1_1thread__barrier.html#abb5df343a810c2fc3b30b4b2e138237c',1,'piranha::thread_barrier::thread_barrier(thread_barrier &amp;&amp;)=delete']]],
-  ['thread_5fmanagement',['thread_management',['../classpiranha_1_1thread__management.html',1,'piranha']]],
   ['thread_5fpool',['thread_pool',['../namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6',1,'piranha']]],
   ['thread_5fpool_5f',['thread_pool_',['../classpiranha_1_1thread__pool__.html',1,'piranha']]],
   ['transform',['transform',['../classpiranha_1_1series.html#a4d2be8f9cd018cea990d8d33ff74b34e',1,'piranha::series']]],
