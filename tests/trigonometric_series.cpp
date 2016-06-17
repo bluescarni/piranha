@@ -39,8 +39,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_rational.hpp"
@@ -54,7 +54,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 {
-	environment env;
+	init();
 	using math::sin;
 	using math::cos;
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;

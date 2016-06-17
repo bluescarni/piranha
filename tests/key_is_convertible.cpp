@@ -35,7 +35,7 @@ see https://www.gnu.org/licenses/. */
 #include <functional>
 #include <iostream>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/symbol_set.hpp"
 
 using namespace piranha;
@@ -102,7 +102,7 @@ struct hash<mock_key_00>
 
 BOOST_AUTO_TEST_CASE(key_is_convertible_test_00)
 {
-	environment env;
+	init();
 	BOOST_CHECK(is_key<mock_key>::value);
 	BOOST_CHECK((!key_is_convertible<mock_key,mock_key>::value));
 	BOOST_CHECK((!key_is_convertible<const mock_key,mock_key &>::value));

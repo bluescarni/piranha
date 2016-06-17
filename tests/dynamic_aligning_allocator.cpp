@@ -44,7 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/type_traits.hpp"
 
 typedef boost::mpl::vector<double,std::string> types;
@@ -53,7 +53,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(dynamic_aligning_allocator_general_test)
 {
-	environment env;
+	init();
 	dynamic_aligning_allocator<int> daa1, daa2;
 	BOOST_CHECK(daa1 == daa2);
 	BOOST_CHECK(!(daa1 != daa2));

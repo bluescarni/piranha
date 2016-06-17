@@ -36,8 +36,8 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <type_traits>
 
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -70,7 +70,7 @@ struct hash_tester
 
 BOOST_AUTO_TEST_CASE(rational_function_ctor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<key_types>(hash_tester());
 }
 

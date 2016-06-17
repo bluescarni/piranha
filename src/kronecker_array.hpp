@@ -62,23 +62,21 @@ using ka_type_reqs = std::integral_constant<bool,std::is_integral<T>::value && s
 /**
  * This class offers static methods to encode (and decode) arrays of integral values as instances of \p SignedInteger type,
  * using a technique known as "Kronecker substitution".
- * 
+ *
  * Depending on the bit width and numerical limits of \p SignedInteger, the class will be able to operate on vectors of integers up to a certain
  * dimension and within certain bounds on the vector's components. Such limits can be queried with the get_limits() static method.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * \p SignedInteger must be a C++ signed integral type.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * This class does not have any non-static data members, hence it has trivial move semantics.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // NOTE: we should optimise the decodification with only one element, there should be no need to do divisions
 // and modulo operations.
@@ -232,17 +230,17 @@ class kronecker_array
 		 * codification of arrays of integer. The indices in this vector correspond to the dimension of the array to be encoded,
 		 * so that the object at index \f$i\f$ in the returned vector describes the limits for the codification of \f$i\f$-dimensional arrays
 		 * of integers.
-		 * 
+		 *
 		 * Each element of the returned vector is an \p std::tuple of 4 elements built as follows:
-		 * 
+		 *
 		 * - position 0: a vector containing the absolute value of the lower/upper bounds for each component,
 		 * - position 1: \f$h_\textnormal{min}\f$, the minimum value for the integer encoding the array,
 		 * - position 2: \f$h_\textnormal{max}\f$, the maximum value for the integer encoding the array,
 		 * - position 3: \f$h_\textnormal{max}-h_\textnormal{min}\f$.
-		 * 
+		 *
 		 * The tuple at index 0 of the returned vector is filled with zeroes. The size of the returned vector determines the maximum
 		 * dimension of the vectors to be encoded.
-		 * 
+		 *
 		 * @return const reference to an \p std::vector of limits for the Kronecker codification of arrays of integers.
 		 */
 		static const limits_type &get_limits()
@@ -258,16 +256,16 @@ class kronecker_array
 		 * Encode input vector \p v into an instance of \p SignedInteger. If the value type of \p Vector
 		 * is not \p SignedInteger, the values of \p v will be converted to \p SignedInteger using <tt>boost::numeric_cast</tt>.
 		 * A vector of size 0 is always encoded as 0.
-		 * 
+		 *
 		 * @param[in] v vector to be encoded.
-		 * 
+		 *
 		 * @return \p v encoded as a \p SignedInteger using Kronecker substitution.
-		 * 
+		 *
 		 * @throws std::invalid_argument if any of these conditions hold:
 		 * - the size of \p v is equal to or greater than the size of the output of get_limits(),
 		 * - one of the components of \p v is outside the bounds reported by get_limits().
 		 * @throws unspecified any exception thrown by <tt>boost::numeric_cast</tt> in case the value type of
-		 * \p Vector is not \p SignedInteger. 
+		 * \p Vector is not \p SignedInteger.
 		 */
 		template <typename Vector>
 		static int_type encode(const Vector &v)
@@ -310,12 +308,12 @@ class kronecker_array
 		 * Decode input code \p n into \p retval. If the value type of \p Vector
 		 * is not \p SignedInteger, the components decoded from \p n will be converted to the value type of \p Vector
 		 * using <tt>boost::numeric_cast</tt>.
-		 * 
+		 *
 		 * In case of exceptions, \p retval will be left in a valid but undefined state.
-		 * 
+		 *
 		 * @param[out] retval object that will store the decoded vector.
 		 * @param[in] n code to be decoded.
-		 * 
+		 *
 		 * @throws std::invalid_argument if any of these conditions hold:
 		 * - the size of \p retval is equal to or greater than the size of the output of get_limits(),
 		 * - the size of \p retval is zero and \p n is not zero,

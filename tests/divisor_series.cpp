@@ -40,8 +40,8 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include "../src/divisor.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/invert.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
@@ -94,7 +94,7 @@ struct test_00_tester
 
 BOOST_AUTO_TEST_CASE(divisor_series_test_00)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(test_00_tester());
 }
 

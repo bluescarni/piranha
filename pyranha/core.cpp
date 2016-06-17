@@ -47,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/binomial.hpp"
 #include "../src/divisor.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/invert.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
@@ -96,8 +97,8 @@ BOOST_PYTHON_MODULE(_core)
 	// to roll back the initialisation, and if the user tries again the init probably a lot of things would
 	// go haywire. Like this, we will not re-run any init code in a successive attempt at loading the module.
 	inited = true;
-	// Piranha environment setup.
-	piranha::environment env;
+	// Piranha init.
+	piranha::init();
 	// Docstring options setup.
 	bp::docstring_options doc_options(true,true,false);
 	// Type generator class.

@@ -43,9 +43,9 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/base_series_multiplier.hpp"
 #include "../src/config.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/is_key.hpp"
 #include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
@@ -157,7 +157,7 @@ struct hash<new_monomial<T>>
 
 BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 {
-	environment env;
+	init();
 	// Substitution on key only.
 	using stype0 = g_series_type<rational,monomial<int>>;
 	// Type trait checks.

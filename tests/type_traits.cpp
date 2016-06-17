@@ -48,7 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/config.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/is_cf.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -87,7 +87,7 @@ struct bar_t: foo_t<T>
 
 BOOST_AUTO_TEST_CASE(type_traits_has_typedef_test)
 {
-	environment env;
+	init();
 	BOOST_CHECK(has_typedef_foo_type<foo>::value);
 	BOOST_CHECK(!has_typedef_foo_type<bar>::value);
 	BOOST_CHECK(!has_typedef_foo_type<int>::value);

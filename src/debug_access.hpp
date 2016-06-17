@@ -35,8 +35,6 @@ namespace piranha
 /// Debug class.
 /**
  * Used to access private and protected class members for debug purposes.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T>
 class debug_access {};

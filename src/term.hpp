@@ -73,8 +73,6 @@ struct term_tag {};
  * ## Serialization ##
  *
  * This class supports serialization if the coefficient and key types support it.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename Key>
 class term: detail::term_tag

@@ -45,7 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -148,7 +148,7 @@ struct m_checker: public base_series_multiplier<Series>
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
 {
-	environment env;
+	init();
 	{
 	// Check with empty series.
 	using pt = p_type<rational>;

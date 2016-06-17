@@ -47,8 +47,8 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/detail/vector_hasher.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/key_is_convertible.hpp"
 #include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
@@ -131,7 +131,7 @@ struct ctor_tester
 
 BOOST_AUTO_TEST_CASE(divisor_ctor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<value_types>(ctor_tester());
 }
 

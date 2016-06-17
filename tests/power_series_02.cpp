@@ -43,7 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -124,7 +124,7 @@ struct hash<fake_int>
 
 BOOST_AUTO_TEST_CASE(power_series_test_02)
 {
-	environment env;
+	init();
 	// Check the rational degree.
 	typedef g_series_type<double,rational> stype0;
 	BOOST_CHECK((has_degree<stype0>::value));

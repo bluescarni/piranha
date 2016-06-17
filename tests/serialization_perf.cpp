@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <string>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/serialization.hpp"
 #include "pearce1.hpp"
@@ -65,7 +65,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(serialization_test_00)
 {
-	environment env;
+	init();
 	std::stringstream ss;
 	std::cout << "Timing double multiplication:\n";
 	auto ret1 = pearce1<double,k_monomial>();

@@ -39,7 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include "../src/detail/safe_integral_adder.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -178,7 +178,7 @@ struct main_tester
 
 BOOST_AUTO_TEST_CASE(polynomial_truncation_main_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(main_tester());
 }
 

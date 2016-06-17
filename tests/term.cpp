@@ -40,7 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -100,7 +100,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(term_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<cf_types>(constructor_tester());
 }
 

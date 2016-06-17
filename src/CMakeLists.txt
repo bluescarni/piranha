@@ -31,7 +31,7 @@ SET(HEADERS_LIST
 	mp_integer.hpp
 	mp_rational.hpp
 	math.hpp
-	environment.hpp
+	init.hpp
 	print_tex_coefficient.hpp
 	cache_aligning_allocator.hpp
 	trigonometric_series.hpp

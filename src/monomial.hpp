@@ -77,25 +77,23 @@ namespace piranha
  * The type \p T represents the type of the exponents \f$ y_i \f$, which are stored in a flat array.
  *
  * This class satisfies the piranha::is_key type trait.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * \p T and \p S must be suitable for use as first and third template arguments in piranha::array_key. Additionally,
  * \p T must satisfy the piranha::has_is_zero type trait, and it must be copy-assignable.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless noted otherwise, this class provides the same exception safety guarantee as piranha::array_key.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move semantics is equivalent to piranha::array_key's move semantics.
- * 
+ *
  * ## Serialization ##
  *
  * This class supports serialization if the base class supports it.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class monomial: public array_key<T,monomial<T,S>,S>
@@ -334,9 +332,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Compatibility check
 		/**
 		 * A monomial and a set of arguments are compatible if their sizes coincide.
-		 * 
+		 *
 		 * @param[in] args reference arguments set.
-		 * 
+		 *
 		 * @return <tt>this->size() == args.size()</tt>.
 		 */
 		bool is_compatible(const symbol_set &args) const noexcept
@@ -346,9 +344,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Ignorability check.
 		/**
 		 * A monomial is never ignorable by definition.
-		 * 
+		 *
 		 * @param[in] args reference arguments set.
-		 * 
+		 *
 		 * @return \p false.
 		 */
 		bool is_ignorable(const symbol_set &args) const noexcept
@@ -360,11 +358,11 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Check if monomial is unitary.
 		/**
 		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return \p true if the monomial is unitary, \p false otherwise.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by piranha::math::is_zero().
 		 */
@@ -462,11 +460,11 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 *
 		 * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
 		 * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
-		 * 
+		 *
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return name of the linear variable.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the monomial is not linear or if the sizes of \p args and \p this differ.
 		 */
 		template <typename U = T, linarg_enabler<U> = 0>
@@ -509,12 +507,12 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * is computed via the multiplication of the exponents by \p x. If the exponent type is a C++
 		 * integral type, each exponent will be promoted to piranha::integer before the exponentiation
 		 * takes place.
-		 * 
+		 *
 		 * @param[in] x exponent.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return \p this to the power of \p x.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by monomial copy construction
 		 * or in-place multiplication of exponents by \p x, and by the invoked
@@ -548,12 +546,12 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 *
 		 * If the exponent type is an integral type, then the decrement-by-one operation on the affected exponent is checked
 		 * for negative overflow.
-		 * 
+		 *
 		 * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return result of the differentiation.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ, if the size of \p p is
 		 * greater than one, if the position specified by \p p is invalid or if the computation on integral exponents
 		 * results in an overflow error.
@@ -599,17 +597,17 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * consisting of the exponent associated to \p s increased by one and the monomial itself
 		 * after integration. If \p s is not in \p args, the returned monomial will have an extra exponent
 		 * set to 1 in the same position \p s would have if it were added to \p args.
-		 * 
+		 *
 		 * If the exponent corresponding to \p s is -1, an error will be produced.
 		 *
 		 * If the exponent type is an integral type, then the increment-by-one operation on the affected exponent is checked
 		 * for negative overflow.
-		 * 
+		 *
 		 * @param[in] s symbol with respect to which the integration will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return result of the integration.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ,
 		 * if the exponent associated to \p s is -1, or if the computation on integral exponents
 		 * results in an overflow error.
@@ -657,10 +655,10 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Print.
 		/**
 		 * Will print to stream a human-readable representation of the monomial.
-		 * 
+		 *
 		 * @param[in] os target stream.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception resulting from:
 		 * - construction of the exponent type from \p int,
@@ -692,10 +690,10 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Print in TeX mode.
 		/**
 		 * Will print to stream a TeX representation of the monomial.
-		 * 
+		 *
 		 * @param[in] os target stream.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception resulting from:
 		 * - construction, comparison and assignment of exponents,
@@ -789,13 +787,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * to \p s), and the second element the monomial after the substitution has been performed (i.e., with the exponent
 		 * corresponding to \p s set to zero). If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
 		 * monomial is unchanged and the substitution yields 1).
-		 * 
+		 *
 		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the result of substituting \p x for \p s.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of the return value,
@@ -838,18 +836,18 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * element is the result of the substitution, and the second element the monomial after the substitution has been performed.
 		 * If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
 		 * monomial is unchanged and the substitution yields 1).
-		 * 
+		 *
 		 * The method will substitute also \p s to powers higher than \p n in absolute value.
 		 * For instance, substitution of <tt>y**2</tt> with \p a in <tt>y**7</tt> will produce <tt>a**3 * y</tt>, and
 		 * substitution of <tt>y**-2</tt> with \p a in <tt>y**-7</tt> will produce <tt>a**3 * y**-1</tt>.
-		 * 
+		 *
 		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] n power of \p s that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s to the power of \p n.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return the result of substituting \p x for \p s to the power of \p n.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of the return value,
@@ -996,13 +994,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/**
 		 * This method will write into \p out the content of \p this. If necessary, \p out will
 		 * be resized to match the size of \p this.
-		 * 
+		 *
 		 * Note that this method does not offer a strong exception safety guarantee, as it uses
 		 * <tt>std::copy()</tt> internally to copy the exponents to \p out.
-		 * 
+		 *
 		 * @param[out] out vector into which the exponents will be copied.
 		 * @param[in] args reference set of arguments.
-		 * 
+		 *
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::safe_cast(),

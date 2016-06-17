@@ -55,7 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/binomial.hpp"
 #include "../src/config.hpp"
 #include "../src/exceptions.hpp"
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/pow.hpp"
@@ -370,7 +370,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(mp_rational_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<size_types>(constructor_tester());
 	// Test we are not gobbling in mp_ints with different bit widths.
 	BOOST_CHECK((!std::is_constructible<mp_rational<16>,mp_integer<32>>::value));

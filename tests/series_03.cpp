@@ -36,8 +36,8 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 
-#include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/invert.hpp"
 #include "../src/monomial.hpp"
 #include "../src/polynomial.hpp"
@@ -202,7 +202,7 @@ class g_series_type4: public null_toolbox2<series<Cf,monomial<Expo>,g_series_typ
 
 BOOST_AUTO_TEST_CASE(series_generic_ctor_forwarding_test)
 {
-	environment env;
+	init();
 	using st0 = g_series_type<mock_cf,int>;
 	BOOST_CHECK(is_series<st0>::value);
 	// Test we are using copy ctor and copy assignment.

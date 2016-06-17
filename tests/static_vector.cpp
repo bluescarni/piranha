@@ -45,7 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/type_traits.hpp"
 
@@ -168,7 +168,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(static_vector_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<value_types>(constructor_tester());
 }
 

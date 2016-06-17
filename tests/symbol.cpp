@@ -39,7 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <unordered_set>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
@@ -50,7 +50,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(symbol_constructor_test)
 {
-	environment env;
+	init();
 	symbol x("x");
 	BOOST_CHECK_EQUAL(x.get_name(),"x");
 	symbol y("y");

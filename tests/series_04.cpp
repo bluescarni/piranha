@@ -43,8 +43,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "../src/base_series_multiplier.hpp"
-#include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -254,7 +254,7 @@ class series_multiplier<g_series_type4<Cf,Key>,void> : public base_series_multip
 
 BOOST_AUTO_TEST_CASE(series_is_single_coefficient_test)
 {
-	environment env;
+	init();
 	typedef g_series_type<integer,int> p_type;
 	BOOST_CHECK(p_type{}.is_single_coefficient());
 	BOOST_CHECK(p_type{1}.is_single_coefficient());

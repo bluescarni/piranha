@@ -841,7 +841,7 @@ class series_multiplier<Series,detail::ps_series_multiplier_enabler<Series>> : p
 				// Buckets per thread.
 				const auto bpt = static_cast<bucket_size_type>(container.bucket_count() / this->m_n_threads);
 				// Go with the threads.
-				future_list<decltype(thread_pool::enqueue(0u,divider,0u,0u))> ff_list;
+				future_list<decltype(divider(0u,0u))> ff_list;
 				try {
 					for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 						const auto start_idx = static_cast<bucket_size_type>(bpt * i);

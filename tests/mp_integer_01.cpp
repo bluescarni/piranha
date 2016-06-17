@@ -54,8 +54,8 @@ see https://www.gnu.org/licenses/. */
 #include "../src/config.hpp"
 #include "../src/convert_to.hpp"
 #include "../src/debug_access.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/safe_cast.hpp"
 
@@ -201,7 +201,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(mp_integer_static_integer_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<size_types>(constructor_tester());
 }
 

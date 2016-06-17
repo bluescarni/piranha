@@ -50,8 +50,8 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_set>
 #include <vector>
 
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/is_key.hpp"
 #include "../src/key_is_convertible.hpp"
 #include "../src/key_is_multipliable.hpp"
@@ -189,7 +189,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<int_types>(constructor_tester());
 }
 

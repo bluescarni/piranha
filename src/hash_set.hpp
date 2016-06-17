@@ -45,8 +45,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "debug_access.hpp"
-#include "environment.hpp"
 #include "exceptions.hpp"
+#include "init.hpp"
 #include "serialization.hpp"
 #include "thread_pool.hpp"
 #include "type_traits.hpp"
@@ -58,35 +58,35 @@ namespace piranha
 /**
  * Hash set class with interface similar to \p std::unordered_set. The main points of difference with respect to
  * \p std::unordered_set are the following:
- * 
+ *
  * - the exception safety guarantee is weaker (see below),
  * - iterators and iterator invalidation: after a rehash operation, all iterators will be invalidated and existing
  *   references/pointers to the elements will also be invalid; after an insertion/erase operation, all existing iterators, pointers
  *   and references to the elements in the destination bucket will be invalid,
  * - the complexity of iterator traversal depends on the load factor of the table.
- * 
+ *
  * The implementation employs a separate chaining strategy consisting of an array of buckets, each one a singly linked list with the first node
  * stored directly within the array (so that the first insertion in a bucket does not require any heap allocation).
- * 
+ *
  * An additional set of low-level methods is provided: such methods are suitable for use in high-performance and multi-threaded contexts,
  * and, if misused, could lead to data corruption and other unpredictable errors.
- * 
+ *
  * Note that for performance reasons the implementation employs sizes that are powers of two. Hence, particular care should be taken
  * that the hash function does not exhibit commensurabilities with powers of 2.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * - \p T must satisfy piranha::is_container_element,
  * - \p Hash must satisfy piranha::is_hash_function_object,
  * - \p Pred must satisfy piranha::is_equality_function_object.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * This class provides the strong exception safety guarantee for all operations apart from methods involving insertion,
  * which provide the basic guarantee (after a failed insertion, the set will be left in an unspecified but valid state).
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * Move construction and move assignment will leave the moved-from object equivalent to an empty set whose hasher and
  * equality predicate have been moved-from.
  *
@@ -94,8 +94,6 @@ namespace piranha
  *
  * This class supports serialization if the contained type supports it. Note that the hasher and the comparator
  * are not serialised and they are recreated from scratch upon deserialization.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
  /* Some improvement NOTEs:
  * - tests for low-level methods
@@ -489,7 +487,7 @@ class hash_set
 				};
 				// Work per thread.
 				const auto wpt = size / n_threads;
-				future_list<decltype(thread_pool::enqueue(0u,thread_function,0u,0u,0u))> f_list;
+				future_list<decltype(thread_function(0u,0u,0u))> f_list;
 				try {
 					for (unsigned i = 0u; i < n_threads; ++i) {
 						const auto start = static_cast<size_type>(wpt * i),
@@ -573,7 +571,7 @@ class hash_set
 		bool sanity_check() const
 		{
 			// Ignore sanity checks on shutdown.
-			if (environment::shutdown()) {
+			if (detail::shutdown()) {
 				return true;
 			}
 			size_type count = 0u;
@@ -642,10 +640,10 @@ class hash_set
 		/**
 		 * If not specified, it will default-initialise the hasher and the equality predicate. The resulting
 		 * hash set will be empty.
-		 * 
+		 *
 		 * @param[in] h hasher functor.
 		 * @param[in] k equality predicate.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		hash_set(const hasher &h = hasher{}, const key_equal &k = key_equal{}):
@@ -655,12 +653,12 @@ class hash_set
 		 * Will construct a set whose number of buckets is at least equal to \p n_buckets. If \p n_threads is not 1,
 		 * then the first \p n_threads threads from piranha::thread_pool will be used concurrently for the initialisation
 		 * of the set.
-		 * 
+		 *
 		 * @param[in] n_buckets desired number of buckets.
 		 * @param[in] h hasher functor.
 		 * @param[in] k equality predicate.
 		 * @param[in] n_threads number of threads to use during initialisation.
-		 * 
+		 *
 		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum, or in case
 		 * of memory errors.
 		 * @throws std::invalid_argument if \p n_threads is zero.
@@ -678,7 +676,7 @@ class hash_set
 		 * The hasher, the equality comparator and the allocator will also be copied.
 		 *
 		 * @param[in] other piranha::hash_set that will be copied into \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by memory allocation errors,
 		 * the copy constructor of the stored type, <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
@@ -719,7 +717,7 @@ class hash_set
 		/**
 		 * After the move, \p other will have zero buckets and zero elements, and its hasher and equality predicate
 		 * will have been used to move-construct their counterparts in \p this.
-		 * 
+		 *
 		 * @param[in] other set to be moved.
 		 */
 		hash_set(hash_set &&other) noexcept : m_pack(std::move(other.m_pack)),m_log2_size(other.m_log2_size),
@@ -733,13 +731,13 @@ class hash_set
 		/// Constructor from range.
 		/**
 		 * Create a set with a copy of a range.
-		 * 
+		 *
 		 * @param[in] begin begin of range.
 		 * @param[in] end end of range.
 		 * @param[in] n_buckets number of initial buckets.
 		 * @param[in] h hash functor.
 		 * @param[in] k key equality predicate.
-		 * 
+		 *
 		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum.
 		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>, or arising from
 		 * calling insert() on the elements of the range.
@@ -758,9 +756,9 @@ class hash_set
 		/**
 		 * Will insert() all the elements of the initializer list, ignoring the return value of the operation.
 		 * Hash functor and equality predicate will be default-constructed.
-		 * 
+		 *
 		 * @param[in] list initializer list of elements to be inserted.
-		 * 
+		 *
 		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum.
 		 * @throws unspecified any exception thrown by either insert() or of the default constructor of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
@@ -786,9 +784,9 @@ class hash_set
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other assignment argument.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		hash_set &operator=(const hash_set &other)
@@ -802,7 +800,7 @@ class hash_set
 		/// Move assignment operator.
 		/**
 		 * @param[in] other set to be moved into \p this.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		hash_set &operator=(hash_set &&other) noexcept
@@ -904,11 +902,11 @@ class hash_set
 		/**
 		 * Index to which \p k would belong, were it to be inserted into the set. The index of the
 		 * destination bucket is the hash value reduced modulo the bucket count.
-		 * 
+		 *
 		 * @param[in] k input argument.
-		 * 
+		 *
 		 * @return index of the destination bucket for \p k.
-		 * 
+		 *
 		 * @throws piranha::zero_division_error if bucket_count() returns zero.
 		 * @throws unspecified any exception thrown by _bucket().
 		 */
@@ -922,9 +920,9 @@ class hash_set
 		/// Find element.
 		/**
 		 * @param[in] k element to be located.
-		 * 
+		 *
 		 * @return hash_set::const_iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by _find() or by _bucket().
 		 */
 		const_iterator find(const key_type &k) const
@@ -937,9 +935,9 @@ class hash_set
 		/// Find element.
 		/**
 		 * @param[in] k element to be located.
-		 * 
+		 *
 		 * @return hash_set::iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by _find().
 		 */
 		iterator find(const key_type &k)
@@ -964,12 +962,12 @@ class hash_set
 		 * If no other key equivalent to \p k exists in the set, the insertion is successful and returns the <tt>(it,true)</tt>
 		 * pair - where \p it is the position in the set into which the object has been inserted. Otherwise, the return value
 		 * will be <tt>(it,false)</tt> - where \p it is the position of the existing equivalent object.
-		 * 
+		 *
 		 * @param[in] k object that will be inserted into the set.
-		 * 
+		 *
 		 * @return <tt>(hash_set::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or its existing
 		 * equivalent) and the result of the operation.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - hash_set::key_type's copy constructor,
 		 * - _find(),
@@ -1013,14 +1011,14 @@ class hash_set
 		/**
 		 * Erase the element to which \p it points. \p it must be a valid iterator
 		 * pointing to an element of the set.
-		 * 
+		 *
 		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
 		 * as the erased element.
-		 * 
+		 *
 		 * After the operation has taken place, the size() of the set will be decreased by one.
-		 * 
+		 *
 		 * @param[in] it iterator to the element of the set to be removed.
-		 * 
+		 *
 		 * @return iterator pointing to the element following \p it prior to the element being erased, or end() if
 		 * no such element exists.
 		 */
@@ -1076,9 +1074,9 @@ class hash_set
 		/// Swap content.
 		/**
 		 * Will use \p std::swap to swap hasher and equality predicate.
-		 * 
+		 *
 		 * @param[in] other swap argument.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by swapping hasher or equality predicate via \p std::swap.
 		 */
 		void swap(hash_set &other)
@@ -1093,10 +1091,10 @@ class hash_set
 		 * if rehashing would lead to exceeding the maximum load factor. If \p n_threads is not 1,
 		 * then the first \p n_threads threads from piranha::thread_pool will be used concurrently during
 		 * the rehash operation.
-		 * 
+		 *
 		 * @param[in] new_size new desired number of buckets.
 		 * @param[in] n_threads number of threads to use.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p n_threads is zero.
 		 * @throws unspecified any exception thrown by the constructor from number of buckets,
 		 * _unique_insert() or _bucket().
@@ -1142,7 +1140,7 @@ class hash_set
 		/**
 		 * @return an <tt>std::map<size_type,size_type></tt> in which the key is the number of elements
 		 * stored in a bucket and the mapped type the number of buckets containing those many elements.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by memory errors in standard containers.
 		 */
 		std::map<size_type,size_type> evaluate_sparsity() const
@@ -1211,17 +1209,17 @@ class hash_set
 		 * The parameter \p bucket_idx is the index of the destination bucket for \p k and, for a
 		 * set with a nonzero number of buckets, must be equal to the output
 		 * of bucket() before the insertion.
-		 * 
+		 *
 		 * This method will not check if a key equivalent to \p k already exists in the set, it will not
 		 * update the number of elements present in the set after the insertion, it will not resize
 		 * the set in case the maximum load factor is exceeded, nor it will check
 		 * if the value of \p bucket_idx is correct.
-		 * 
+		 *
 		 * @param[in] k object that will be inserted into the set.
 		 * @param[in] bucket_idx destination bucket for \p k.
-		 * 
+		 *
 		 * @return iterator pointing to the newly-inserted element.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor of hash_set::key_type or by memory allocation
 		 * errors.
 		 */
@@ -1240,10 +1238,10 @@ class hash_set
 		 * Locate element in the set. The parameter \p bucket_idx is the index of the destination bucket for \p k and, for
 		 * a set with a nonzero number of buckets, must be equal to the output
 		 * of bucket() before the insertion. This method will not check if the value of \p bucket_idx is correct.
-		 * 
+		 *
 		 * @param[in] k element to be located.
 		 * @param[in] bucket_idx index of the destination bucket for \p k.
-		 * 
+		 *
 		 * @return hash_set::iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
 		 *
 		 * @throws unspecified any exception thrown by calling the equality predicate.
@@ -1267,9 +1265,9 @@ class hash_set
 		/// Index of destination bucket from hash value.
 		/**
 		 * Note that this method will not check if the number of buckets is zero.
-		 * 
+		 *
 		 * @param[in] hash input hash value.
-		 * 
+		 *
 		 * @return index of the destination bucket for an object with hash value \p hash.
 		 */
 		size_type _bucket_from_hash(const std::size_t &hash) const
@@ -1281,9 +1279,9 @@ class hash_set
 		/**
 		 * Equivalent to bucket(), with the exception that this method will not check
 		 * if the number of buckets is zero.
-		 * 
+		 *
 		 * @param[in] k input argument.
-		 * 
+		 *
 		 * @return index of the destination bucket for \p k.
 		 *
 		 * @throws unspecified any exception thrown by the call operator of the hasher.
@@ -1295,7 +1293,7 @@ class hash_set
 		/// Force update of the number of elements.
 		/**
 		 * After this call, size() will return \p new_size regardless of the true number of elements in the set.
-		 * 
+		 *
 		 * @param[in] new_size new set size.
 		 */
 		void _update_size(const size_type &new_size)
@@ -1305,7 +1303,7 @@ class hash_set
 		/// Increase bucket count.
 		/**
 		 * Increase the number of buckets to the next implementation-defined value.
-		 * 
+		 *
 		 * @throws std::bad_alloc if the operation results in a resize of the set past an implementation-defined
 		 * maximum number of buckets.
 		 * @throws unspecified any exception thrown by rehash().
@@ -1325,7 +1323,7 @@ class hash_set
 		/// Const reference to list in bucket.
 		/**
 		 * @param[in] idx index of the bucket whose list will be returned.
-		 * 
+		 *
 		 * @return a const reference to the list of items contained in the bucket positioned
 		 * at index \p idx.
 		 */
@@ -1338,15 +1336,15 @@ class hash_set
 		/**
 		 * Erase the element to which \p it points. \p it must be a valid iterator
 		 * pointing to an element of the set.
-		 * 
+		 *
 		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
 		 * as the erased element.
-		 * 
+		 *
 		 * This method will not update the number of elements in the set, nor it will try to access elements
 		 * outside the bucket to which \p it refers.
-		 * 
+		 *
 		 * @param[in] it iterator to the element of the set to be removed.
-		 * 
+		 *
 		 * @return local iterator pointing to the element following \p it prior to the element being erased, or local end() if
 		 * no such element exists.
 		 */

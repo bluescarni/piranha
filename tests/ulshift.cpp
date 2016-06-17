@@ -34,10 +34,13 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <type_traits>
 
+#include "../src/init.hpp"
+
 using namespace piranha::detail;
 
 BOOST_AUTO_TEST_CASE(ulshift_test_00)
 {
+	piranha::init();
 	using utype = unsigned short;
 	constexpr unsigned nbits = std::numeric_limits<utype>::digits;
 	utype n0(1);

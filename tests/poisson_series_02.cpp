@@ -41,8 +41,8 @@ see https://www.gnu.org/licenses/. */
 #include "../src/detail/polynomial_fwd.hpp"
 #include "../src/divisor.hpp"
 #include "../src/divisor_series.hpp"
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/init.hpp"
 #include "../src/invert.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -82,7 +82,7 @@ struct mock_cf
 
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 {
-	environment env;
+	init();
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
 	{
 	BOOST_CHECK((has_ipow_subs<p_type1,p_type1>::value));

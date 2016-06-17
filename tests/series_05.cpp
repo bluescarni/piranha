@@ -37,9 +37,9 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
-#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/init.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -98,7 +98,7 @@ struct mock_cf
 // A few extra tests for division after the recent changes in implementation.
 BOOST_AUTO_TEST_CASE(series_division_test)
 {
-	environment env;
+	init();
 	{
 	// Equal rec index, no type changes.
 	using s_type = g_series_type<integer,int>;

@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/lexical_cast.hpp>
 #include <limits>
 
-#include "../src/environment.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
@@ -47,7 +47,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(fateman1_test)
 {
-	environment env;
+	init();
 	using limb_t = typename detail::integer_union<0>::s_storage::limb_t;
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));

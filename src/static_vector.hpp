@@ -78,23 +78,21 @@ struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<sta
  * This class represents a dynamic array that avoids runtime memory allocation. Memory storage is provided by
  * a contiguous memory block stored within the class. The size of the internal storage is enough to fit
  * at least \p MaxSize objects.
- * 
+ *
  * The interface of this class mimics part of the interface of \p std::vector.
- * 
+ *
  * ## Type requirements ##
- * 
+ *
  * - \p T must satisfy piranha::is_container_element.
  * - \p MaxSize must be non-null.
- * 
+ *
  * ## Exception safety guarantee ##
- * 
+ *
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
- * 
+ *
  * ## Move semantics ##
- * 
+ *
  * After a move operation, the container will be left in a state equivalent to a default-constructed instance.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, std::size_t MaxSize>
 class static_vector
@@ -163,7 +161,7 @@ class static_vector
 		/// Copy constructor.
 		/**
 		 * @param[in] other target of the copy operation.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor of \p T.
 		 */
 		static_vector(const static_vector &other):m_tag(1u),m_size(0u)
@@ -210,10 +208,10 @@ class static_vector
 		/// Constructor from multiple copies.
 		/**
 		 * Will construct a vector containing \p n copies of \p x.
-		 * 
+		 *
 		 * @param[in] n number of copies of \p x that will be inserted in the vector.
 		 * @param[in] x element whose copies will be inserted in the vector.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by push_back().
 		 */
 		explicit static_vector(const size_type &n, const value_type &x):m_tag(1u),m_size(0u)
@@ -242,9 +240,9 @@ class static_vector
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other target of the copy assignment operation.
-		 * 
+		 *
 		 * @return reference to \p this.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the copy constructor of \p T.
 		 */
 		static_vector &operator=(const static_vector &other)
@@ -263,7 +261,7 @@ class static_vector
 		/// Move assignment operator.
 		/**
 		 * @param[in] other target of the move assignment operation.
-		 * 
+		 *
 		 * @return reference to \p this.
 		 */
 		static_vector &operator=(static_vector &&other) noexcept
@@ -303,7 +301,7 @@ class static_vector
 		/// Const index operator.
 		/**
 		 * @param[in] n index of the desired element.
-		 * 
+		 *
 		 * @return const reference to the element contained at index \p n;
 		 */
 		const value_type &operator[](const size_type &n) const
@@ -314,7 +312,7 @@ class static_vector
 		/// Index operator.
 		/**
 		 * @param[in] n index of the desired element.
-		 * 
+		 *
 		 * @return reference to the element contained at index \p n;
 		 */
 		value_type &operator[](const size_type &n)
@@ -357,10 +355,10 @@ class static_vector
 		/// Equality operator.
 		/**
 		 * @param[in] other argument for the comparison.
-		 * 
+		 *
 		 * @return \p true if the sizes of the vectors are the same and all elements of \p this compare as equal
 		 * to the elements in \p other, \p false otherwise.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by the comparison operator of the value type.
 		 */
 		bool operator==(const static_vector &other) const
@@ -370,9 +368,9 @@ class static_vector
 		/// Inequality operator.
 		/**
 		 * @param[in] other argument for the comparison.
-		 * 
+		 *
 		 * @return the opposite of operator==().
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by operator==().
 		 */
 		bool operator!=(const static_vector &other) const
@@ -382,9 +380,9 @@ class static_vector
 		/// Copy-add element at the end of the vector.
 		/**
 		 * \p x is copy-inserted at the end of the container.
-		 * 
+		 *
 		 * @param[in] x element to be inserted.
-		 * 
+		 *
 		 * @throws std::bad_alloc if the insertion of \p x would lead to a size greater than \p MaxSize.
 		 * @throws unspecified any exception thrown by the copy constructor of \p T.
 		 */
@@ -399,9 +397,9 @@ class static_vector
 		/// Move-add element at the end of the vector.
 		/**
 		 * \p x is move-inserted at the end of the container.
-		 * 
+		 *
 		 * @param[in] x element to be inserted.
-		 * 
+		 *
 		 * @throws std::bad_alloc if the insertion of \p x would lead to a size greater than \p MaxSize.
 		 */
 		void push_back(value_type &&x)
@@ -418,9 +416,9 @@ class static_vector
 		 * This method is enabled only if \p value_type is constructible from the variadic arguments pack.
 		 *
 		 * Input parameters will be used to construct an instance of \p T at the end of the container.
-		 * 
+		 *
 		 * @param[in] params arguments that will be used to construct the new element.
-		 * 
+		 *
 		 * @throws std::bad_alloc if the insertion of the new element would lead to a size greater than \p MaxSize.
 		 * @throws unspecified any exception thrown by the constructor of \p T from the input parameters.
 		 */
@@ -455,9 +453,9 @@ class static_vector
 		 * the size of the object before the operation, the new elements will be value-initialized and placed at the end of the container.
 		 * If \p new_size is smaller than the size of the object before the operation, the first \p new_size
 		 * object in the vector will be preserved.
-		 * 
+		 *
 		 * @param[in] new_size new size for the vector.
-		 * 
+		 *
 		 * @throws std::bad_alloc if \p new_size is greater than \p MaxSize.
 		 * @throws unspecified any exception thrown by the default constructor of \p T.
 		 */
@@ -570,12 +568,12 @@ class static_vector
 		/// Stream operator overload for piranha::static_vector.
 		/**
 		 * Will print to stream a human-readable representation of \p v.
-		 * 
+		 *
 		 * @param[in] os target stream.
 		 * @param[in] v vector to be streamed.
-		 * 
+		 *
 		 * @return reference to \p os.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by printing to stream instances of the value type of \p v.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const static_vector &v)

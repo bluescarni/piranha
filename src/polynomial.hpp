@@ -34,7 +34,6 @@ see https://www.gnu.org/licenses/. */
 #include <cmath> // For std::ceil.
 #include <cstddef>
 #include <functional>
-#include <future>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
@@ -670,8 +669,6 @@ enum class polynomial_gcd_algorithm
  * ## Serialization ##
  *
  * This class supports serialization if the underlying coefficient and key types do.
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename Key>
 class polynomial:
@@ -2400,7 +2397,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			} else {
 				// Series 1.
 				{
-				future_list<std::future<void>> ff_list;
+				future_list<void> ff_list;
 				try {
 					for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 						ff_list.push_back(thread_pool::enqueue(i,thread_func,i,&(this->m_v1),&minmax_values1));
@@ -2416,7 +2413,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				}
 				// Series 2.
 				{
-				future_list<std::future<void>> ff_list;
+				future_list<void> ff_list;
 				try {
 					for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 						ff_list.push_back(thread_pool::enqueue(i,thread_func,i,&(this->m_v2),&minmax_values2));
@@ -2992,7 +2989,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				}
 			};
 			// Go with the threads to fill the task table.
-			future_list<decltype(thread_pool::enqueue(0u,table_filler,0u))> ff_list;
+			future_list<decltype(table_filler(0u))> ff_list;
 			try {
 				for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 					ff_list.push_back(thread_pool::enqueue(i,table_filler,i));
@@ -3071,7 +3068,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				}
 			};
 			// Go with the multiplication threads.
-			future_list<decltype(thread_pool::enqueue(0u,thread_functor,0u))> ft_list;
+			future_list<decltype(thread_functor(0u))> ft_list;
 			try {
 				for (unsigned i = 0u; i < this->m_n_threads; ++i) {
 					ft_list.push_back(thread_pool::enqueue(i,thread_functor,i));
