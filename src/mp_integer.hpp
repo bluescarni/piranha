@@ -1260,8 +1260,6 @@ struct is_mp_integer_interoperable_type
  * This class supports serialization.
  *
  * @see http://gmplib.org/
- *
- * @author Francesco Biscani (bluescarni@gmail.com)
  */
 /*
  * NOTES:
