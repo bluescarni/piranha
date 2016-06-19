@@ -255,7 +255,7 @@ struct mpz_raii
 	mpz_raii()
 	{
 		::mpz_init(&m_mpz);
-		piranha_assert(m_mpz._mp_alloc > 0);
+		piranha_assert(m_mpz._mp_alloc >= 0);
 	}
 	mpz_raii(const mpz_raii &) = delete;
 	mpz_raii(mpz_raii &&) = delete;
@@ -298,7 +298,7 @@ struct static_integer
 	// Check: we need to be able to address all bits in the 2 limbs using limb_t.
 	static_assert(limb_bits < std::numeric_limits<limb_t>::max() / 2u,"Overflow error.");
 	// NOTE: init everything otherwise zero is gonna be represented by undefined values in lo/hi.
-	static_integer():_mp_alloc(0),_mp_size(0),m_limbs() {}
+	static_integer():_mp_alloc(-1),_mp_size(0),m_limbs() {}
 	template <typename T, typename std::enable_if<std::is_signed<T>::value && std::is_integral<T>::value,int>::type = 0>
 	bool attempt_direct_construction(T n)
 	{
@@ -373,7 +373,7 @@ struct static_integer
 		fix_sign_ctor(orig_n);
 	}
 	template <typename Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>::type>
-	explicit static_integer(Integer n):_mp_alloc(0),_mp_size(0),m_limbs()
+	explicit static_integer(Integer n):_mp_alloc(-1),_mp_size(0),m_limbs()
 	{
 		construct_from_integral(n);
 	}
@@ -431,7 +431,7 @@ struct static_integer
 	}
 	bool consistency_checks() const
 	{
-		return _mp_alloc == 0 && _mp_size <= 2 && _mp_size >= -2 &&
+		return _mp_alloc == mpz_alloc_t(-1) && _mp_size <= 2 && _mp_size >= -2 &&
 			// Excess bits must be zero for consistency.
 			!(static_cast<dlimb_t>(m_limbs[0u]) >> limb_bits) &&
 			!(static_cast<dlimb_t>(m_limbs[1u]) >> limb_bits) &&
@@ -453,12 +453,16 @@ struct static_integer
 			// Check the conversion below.
 			static_assert(max_tot_nbits / unsigned(GMP_NUMB_BITS) + 1u <= std::numeric_limits<std::size_t>::max(),
 				"Overflow error.");
-			// Number of GMP limbs to use.
+			// Maximum number of GMP limbs to use. This will define the size of the static
+			// storage below, m_limbs. The number of actual limbs needed to represent
+			// the static integer will never be greater than this number.
 			static const std::size_t max_n_gmp_limbs = static_cast<std::size_t>(
 				max_tot_nbits % unsigned(GMP_NUMB_BITS) == 0u ?
 				max_tot_nbits / unsigned(GMP_NUMB_BITS) :
 				max_tot_nbits / unsigned(GMP_NUMB_BITS) + 1u);
 			static_assert(max_n_gmp_limbs >= 1u,"Invalid number of GMP limbs.");
+			// NOTE: this is needed when we have the variant view in the integer class: if the active view
+			// is the dynamic one, we need to def construct a static view that we will never use.
 			static_mpz_view(): m_mpz(),m_limbs() {}
 			explicit static_mpz_view(const static_integer &n)
 			{
@@ -493,7 +497,7 @@ struct static_integer
 				static_assert(max_n_gmp_limbs <= static_cast<std::make_unsigned<mpz_alloc_t>::type>
 					(std::numeric_limits<mpz_alloc_t>::max()),
 					"Overflow error.");
-				// There should always be some space allocated in a proper mpz struct.
+				// The allocated size of the fictitious mpz struct will be the size of the static storage.
 				m_mpz._mp_alloc = static_cast<mpz_alloc_t>(max_n_gmp_limbs);
 				static_assert(max_n_gmp_limbs <=
 					static_cast<std::make_unsigned<mpz_size_t>::type>(detail::safe_abs_sint<mpz_size_t>::value),
@@ -1076,7 +1080,7 @@ union integer_union
 			} else {
 				::new (static_cast<void *>(&m_dy)) d_storage;
 				::mpz_init_set(&m_dy,&other.g_dy());
-				piranha_assert(m_dy._mp_alloc > 0);
+				piranha_assert(m_dy._mp_alloc >= 0);
 			}
 		}
 		integer_union(integer_union &&other) noexcept
@@ -1114,7 +1118,7 @@ union integer_union
 				::new (static_cast<void *>(&m_dy)) d_storage;
 				// Init + assign the mpz.
 				::mpz_init_set(&m_dy,&other.g_dy());
-				piranha_assert(m_dy._mp_alloc > 0);
+				piranha_assert(m_dy._mp_alloc >= 0);
 			} else if (!s1 && s2) {
 				// Destroy the dynamic this.
 				destroy_dynamic();
@@ -1154,7 +1158,7 @@ union integer_union
 		}
 		bool is_static() const
 		{
-			return m_st._mp_alloc == 0;
+			return m_st._mp_alloc == mpz_alloc_t(-1);
 		}
 		static bool fits_in_static(const mpz_struct_t &mpz)
 		{
@@ -1164,7 +1168,7 @@ union integer_union
 		void destroy_dynamic()
 		{
 			piranha_assert(!is_static());
-			piranha_assert(g_dy()._mp_alloc > 0);
+			piranha_assert(g_dy()._mp_alloc >= 0);
 			piranha_assert(g_dy()._mp_d != nullptr);
 			::mpz_clear(&g_dy());
 			m_dy.~d_storage();
@@ -1392,7 +1396,7 @@ class mp_integer
 			} catch (const std::overflow_error &) {
 				// Check that everything was cleaned properly, in case the exception was triggered,
 				// and continue.
-				piranha_assert(m_int.g_st()._mp_alloc == 0);
+				piranha_assert(m_int.g_st()._mp_alloc == detail::mpz_alloc_t(-1));
 				piranha_assert(m_int.g_st()._mp_size == 0);
 				piranha_assert(m_int.g_st().m_limbs[0u] == 0u);
 				piranha_assert(m_int.g_st().m_limbs[1u] == 0u);
