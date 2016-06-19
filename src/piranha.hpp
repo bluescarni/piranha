@@ -205,8 +205,10 @@ see https://www.gnu.org/licenses/. */
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.
  * \todo in the pyranha doc improvements, we should probably handle bettere unspecified exceptions and document
- * the return type as well for consistency (see lambdify docs).
+ * the return type as well for consistency (see lambdify docs) -> actually start using sphinx napoleon
  * \todo "quick install" should not be the title of the getting started section in sphinx
+ * \todo consider poly::udivrem(5*x**2,2*x). This throws an inexact division error triggered by inexact integral cf
+ * division, but maybe it should just return (0,5*x**2).
  */
 namespace piranha
 {
