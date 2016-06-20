@@ -84,8 +84,8 @@ struct mpq_raii
 	mpq_raii()
 	{
 		::mpq_init(&m_mpq);
-		piranha_assert(mpq_numref(&m_mpq)->_mp_alloc > 0);
-		piranha_assert(mpq_denref(&m_mpq)->_mp_alloc > 0);
+		piranha_assert(mpq_numref(&m_mpq)->_mp_alloc >= 0);
+		piranha_assert(mpq_denref(&m_mpq)->_mp_alloc >= 0);
 	}
 	mpq_raii(const mpq_raii &) = delete;
 	mpq_raii(mpq_raii &&) = delete;
