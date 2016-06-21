@@ -35,7 +35,6 @@ see https://www.gnu.org/licenses/. */
  * This header contains custom exceptions used within piranha and related utilities.
  */
 
-#include <boost/lexical_cast.hpp>
 #include <exception>
 #include <string>
 #include <type_traits>
@@ -50,28 +49,27 @@ template <typename Exception>
 struct ex_thrower
 {
 	// Determine the type of the __LINE__ macro.
-	typedef std::decay<decltype(__LINE__)>::type line_type;
+	using line_type = std::decay<decltype(__LINE__)>::type;
 	explicit ex_thrower(const char *file, line_type line, const char *func):m_file(file),m_line(line),m_func(func)
 	{}
 	template <typename ... Args, typename = typename std::enable_if<std::is_constructible<Exception,Args...>::value>::type>
-	void operator()(Args && ... args) const
+	[[ noreturn ]] void operator()(Args && ... args) const
 	{
-		Exception e(std::forward<Args>(args)...);
-		throw e;
+		throw Exception(std::forward<Args>(args)...);
 	}
 	template <typename Str, typename ... Args, typename = typename std::enable_if<
 		std::is_constructible<Exception,std::string,Args...>::value && (
 		std::is_same<typename std::decay<Str>::type,std::string>::value ||
 		std::is_same<typename std::decay<Str>::type,char *>::value ||
 		std::is_same<typename std::decay<Str>::type,const char *>::value)>::type>
-	void operator()(Str &&desc, Args && ... args) const
+	[[ noreturn ]] void operator()(Str &&desc, Args && ... args) const
 	{
 		std::string msg("\nfunction: ");
 		msg += m_func;
 		msg += "\nwhere: ";
 		msg += m_file;
 		msg += ", ";
-		msg += boost::lexical_cast<std::string>(m_line);
+		msg += std::to_string(m_line);
 		msg += "\nwhat: ";
 		msg += desc;
 		msg += "\n";
@@ -111,7 +109,10 @@ struct ex_thrower
  @endcode
  * is correct.
  */
-#define piranha_throw(exception_type,...) piranha::detail::ex_thrower<exception_type>(__FILE__,__LINE__,__func__)(__VA_ARGS__);throw
+// NOTE: we need the struct here because we need to split off the __VA_ARGS__ into a separate function call, otherwise
+// there could be situations in which the throwing function would be called with a set of arguments (a,b,c,), which
+// would be invalid syntax.
+#define piranha_throw(exception_type,...) piranha::detail::ex_thrower<exception_type>(__FILE__,__LINE__,__func__)(__VA_ARGS__)
 
 namespace piranha
 {
