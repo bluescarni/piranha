@@ -36,22 +36,21 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-template <typename Cf,typename Key>
-inline polynomial<Cf,Key> fateman2()
+template <typename Cf, typename Key>
+inline polynomial<Cf, Key> fateman2()
 {
-	typedef polynomial<Cf,Key> p_type;
-	p_type x("x"), y("y"), z("z"), t("t");
-	auto f = x + y + z + t + 1;
-	auto tmp(f);
-	for (auto i = 1; i < 30; ++i) {
-		f *= tmp;
-	}
-	{
-	boost::timer::auto_cpu_timer t;
-	return f * (f + 1);
-	}
+    typedef polynomial<Cf, Key> p_type;
+    p_type x("x"), y("y"), z("z"), t("t");
+    auto f = x + y + z + t + 1;
+    auto tmp(f);
+    for (auto i = 1; i < 30; ++i) {
+        f *= tmp;
+    }
+    {
+        boost::timer::auto_cpu_timer t;
+        return f * (f + 1);
+    }
 }
-
 }
 
 #endif

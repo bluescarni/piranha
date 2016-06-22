@@ -48,22 +48,24 @@ namespace detail
 {
 
 template <typename Cf, typename Key, typename = void>
-struct key_is_multipliable_impl
-{
-	static const bool value = false;
+struct key_is_multipliable_impl {
+    static const bool value = false;
 };
 
 template <typename Cf, typename Key>
-struct key_is_multipliable_impl<Cf,Key,typename std::enable_if<std::is_same<const std::size_t,decltype(Key::multiply_arity)>::value &&
-	(Key::multiply_arity > 0u)>::type>: detail::sfinae_types
-{
-	template <typename Cf1, typename Key1>
-	static auto test(const Cf1 &, const Key1 &) -> decltype(Key1::multiply(std::declval<std::array<term<Cf1,Key1>,Key1::multiply_arity> &>(),
-		std::declval<const term<Cf1,Key1> &>(),std::declval<const term<Cf1,Key1> &>(),std::declval<const symbol_set &>()),void(),yes());
-	static no test(...);
-	static const bool value = std::is_same<yes,decltype(test(std::declval<Cf>(),std::declval<Key>()))>::value;
+struct key_is_multipliable_impl<Cf, Key, typename std::enable_if<std::is_same<const std::size_t,
+                                                                              decltype(Key::multiply_arity)>::value
+                                                                 && (Key::multiply_arity > 0u)>::type>
+    : detail::sfinae_types {
+    template <typename Cf1, typename Key1>
+    static auto test(const Cf1 &, const Key1 &)
+        -> decltype(Key1::multiply(std::declval<std::array<term<Cf1, Key1>, Key1::multiply_arity> &>(),
+                                   std::declval<const term<Cf1, Key1> &>(), std::declval<const term<Cf1, Key1> &>(),
+                                   std::declval<const symbol_set &>()),
+                    void(), yes());
+    static no test(...);
+    static const bool value = std::is_same<yes, decltype(test(std::declval<Cf>(), std::declval<Key>()))>::value;
 };
-
 }
 
 /// Type trait for multipliable key.
@@ -81,18 +83,18 @@ struct key_is_multipliable_impl<Cf,Key,typename std::enable_if<std::is_same<cons
 template <typename Cf, typename Key>
 class key_is_multipliable
 {
-		using Cfd = typename std::decay<Cf>::type;
-		using Keyd = typename std::decay<Key>::type;
-		PIRANHA_TT_CHECK(is_cf,Cfd);
-		PIRANHA_TT_CHECK(is_key,Keyd);
-	public:
-		/// Value of the type trait.
-		static const bool value = detail::key_is_multipliable_impl<Cfd,Keyd>::value;
+    using Cfd = typename std::decay<Cf>::type;
+    using Keyd = typename std::decay<Key>::type;
+    PIRANHA_TT_CHECK(is_cf, Cfd);
+    PIRANHA_TT_CHECK(is_key, Keyd);
+
+public:
+    /// Value of the type trait.
+    static const bool value = detail::key_is_multipliable_impl<Cfd, Keyd>::value;
 };
 
 template <typename Cf, typename Key>
-const bool key_is_multipliable<Cf,Key>::value;
-
+const bool key_is_multipliable<Cf, Key>::value;
 }
 
 #endif

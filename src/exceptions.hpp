@@ -46,41 +46,44 @@ namespace detail
 {
 
 template <typename Exception>
-struct ex_thrower
-{
-	// Determine the type of the __LINE__ macro.
-	using line_type = std::decay<decltype(__LINE__)>::type;
-	explicit ex_thrower(const char *file, line_type line, const char *func):m_file(file),m_line(line),m_func(func)
-	{}
-	template <typename ... Args, typename = typename std::enable_if<std::is_constructible<Exception,Args...>::value>::type>
-	[[ noreturn ]] void operator()(Args && ... args) const
-	{
-		throw Exception(std::forward<Args>(args)...);
-	}
-	template <typename Str, typename ... Args, typename = typename std::enable_if<
-		std::is_constructible<Exception,std::string,Args...>::value && (
-		std::is_same<typename std::decay<Str>::type,std::string>::value ||
-		std::is_same<typename std::decay<Str>::type,char *>::value ||
-		std::is_same<typename std::decay<Str>::type,const char *>::value)>::type>
-	[[ noreturn ]] void operator()(Str &&desc, Args && ... args) const
-	{
-		std::string msg("\nfunction: ");
-		msg += m_func;
-		msg += "\nwhere: ";
-		msg += m_file;
-		msg += ", ";
-		msg += std::to_string(m_line);
-		msg += "\nwhat: ";
-		msg += desc;
-		msg += "\n";
-		throw Exception(msg,std::forward<Args>(args)...);
-	}
-	const char	*m_file;
-	const line_type	m_line;
-	const char	*m_func;
+struct ex_thrower {
+    // Determine the type of the __LINE__ macro.
+    using line_type = std::decay<decltype(__LINE__)>::type;
+    explicit ex_thrower(const char *file, line_type line, const char *func) : m_file(file), m_line(line), m_func(func)
+    {
+    }
+    template <typename... Args,
+              typename = typename std::enable_if<std::is_constructible<Exception, Args...>::value>::type>
+    [[noreturn]] void operator()(Args &&... args) const
+    {
+        throw Exception(std::forward<Args>(args)...);
+    }
+    template <
+        typename Str, typename... Args,
+        typename
+        = typename std::enable_if<std::is_constructible<Exception, std::string, Args...>::value
+                                  && (std::is_same<typename std::decay<Str>::type, std::string>::value
+                                      || std::is_same<typename std::decay<Str>::type, char *>::value
+                                      || std::is_same<typename std::decay<Str>::type, const char *>::value)>::type>
+    [[noreturn]] void operator()(Str &&desc, Args &&... args) const
+    {
+        std::string msg("\nfunction: ");
+        msg += m_func;
+        msg += "\nwhere: ";
+        msg += m_file;
+        msg += ", ";
+        msg += std::to_string(m_line);
+        msg += "\nwhat: ";
+        msg += desc;
+        msg += "\n";
+        throw Exception(msg, std::forward<Args>(args)...);
+    }
+    const char *m_file;
+    const line_type m_line;
+    const char *m_func;
 };
-
-}}
+}
+}
 
 /// Exception-throwing macro.
 /**
@@ -94,7 +97,8 @@ struct ex_thrower
  * - and if the exception can be constructed from the set of arguments <tt>[str,arg1,...]</tt>,
  *   where \p str is an instance of \p std::string,
  *
- * then the first argument \p arg0 is interpreted as the error message associated to the exception object, and it will be decorated
+ * then the first argument \p arg0 is interpreted as the error message associated to the exception object, and it will
+ be decorated
  * with information about the context in which the exception was thrown (file, line, function) before being
  * passed on for construction.
  *
@@ -112,7 +116,8 @@ struct ex_thrower
 // NOTE: we need the struct here because we need to split off the __VA_ARGS__ into a separate function call, otherwise
 // there could be situations in which the throwing function would be called with a set of arguments (a,b,c,), which
 // would be invalid syntax.
-#define piranha_throw(exception_type,...) piranha::detail::ex_thrower<exception_type>(__FILE__,__LINE__,__func__)(__VA_ARGS__)
+#define piranha_throw(exception_type, ...)                                                                             \
+    piranha::detail::ex_thrower<exception_type>(__FILE__, __LINE__, __func__)(__VA_ARGS__)
 
 namespace piranha
 {
@@ -121,60 +126,66 @@ namespace piranha
 /**
  * All piranha exceptions derive from this class.
  */
-class base_exception: public std::exception
+class base_exception : public std::exception
 {
-        public:
-		/// Constructor.
-		/**
-		 * The string parameter is an error message that will be stored intenally.
-		 *
-		 * @param[in] s std::string representing an error message.
-		 *
-		 * @throws unspecified any exception thrown by the copy constructor of \p std::string.
-		 */
-		explicit base_exception(const std::string &s):m_what(s) {}
-		/// Defaulted copy constructor.
-		base_exception(const base_exception &) = default;
-		/// Defaulted move constructor.
-		base_exception(base_exception &&) = default;
-		/// Error description.
-		/**
-		 * @return const pointer to the internal error message.
-		 */
-		virtual const char *what() const noexcept override
-		{
-			return m_what.c_str();
-		}
-		/// Trivial destructor.
-		virtual ~base_exception() {}
-	private:
-		const std::string m_what;
+public:
+    /// Constructor.
+    /**
+     * The string parameter is an error message that will be stored intenally.
+     *
+     * @param[in] s std::string representing an error message.
+     *
+     * @throws unspecified any exception thrown by the copy constructor of \p std::string.
+     */
+    explicit base_exception(const std::string &s) : m_what(s)
+    {
+    }
+    /// Defaulted copy constructor.
+    base_exception(const base_exception &) = default;
+    /// Defaulted move constructor.
+    base_exception(base_exception &&) = default;
+    /// Error description.
+    /**
+     * @return const pointer to the internal error message.
+     */
+    virtual const char *what() const noexcept override
+    {
+        return m_what.c_str();
+    }
+    /// Trivial destructor.
+    virtual ~base_exception()
+    {
+    }
+
+private:
+    const std::string m_what;
 };
 
 /// Exception for functionality not implemented or not available on the current platform.
-struct not_implemented_error: public base_exception
-{
-	/// Constructor.
-	/**
-	 * @param[in] s std::string representing an error message.
-	 *
-	 * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
-	 */
-	explicit not_implemented_error(const std::string &s): base_exception(s) {}
+struct not_implemented_error : public base_exception {
+    /// Constructor.
+    /**
+     * @param[in] s std::string representing an error message.
+     *
+     * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
+     */
+    explicit not_implemented_error(const std::string &s) : base_exception(s)
+    {
+    }
 };
 
 /// Exception for signalling division by zero.
-struct zero_division_error: public base_exception
-{
-	/// Constructor.
-	/**
-	 * @param[in] s std::string representing an error message.
-	 *
-	 * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
-	 */
-	explicit zero_division_error(const std::string &s): base_exception(s) {}
+struct zero_division_error : public base_exception {
+    /// Constructor.
+    /**
+     * @param[in] s std::string representing an error message.
+     *
+     * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
+     */
+    explicit zero_division_error(const std::string &s) : base_exception(s)
+    {
+    }
 };
-
 }
 
 #endif

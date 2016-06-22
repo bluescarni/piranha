@@ -39,31 +39,33 @@ namespace detail
 
 // Helper to print char types without displaying garbage.
 template <typename T>
-struct pfp_special
-{
-	static const bool value = std::is_same<T,char>::value || std::is_same<T,unsigned char>::value || std::is_same<T,signed char>::value;
+struct pfp_special {
+    static const bool value
+        = std::is_same<T, char>::value || std::is_same<T, unsigned char>::value || std::is_same<T, signed char>::value;
 };
 
 template <typename T>
 inline const T &prepare_for_print(const T &x, typename std::enable_if<!pfp_special<T>::value>::type * = nullptr)
 {
-	return x;
+    return x;
 }
 
 template <typename T>
-inline int prepare_for_print(const T &n, typename std::enable_if<pfp_special<T>::value && std::is_signed<T>::value>::type * = nullptr)
+inline int
+prepare_for_print(const T &n,
+                  typename std::enable_if<pfp_special<T>::value && std::is_signed<T>::value>::type * = nullptr)
 {
-	return static_cast<int>(n);
+    return static_cast<int>(n);
 }
 
 template <typename T>
-inline unsigned prepare_for_print(const T &n, typename std::enable_if<pfp_special<T>::value && std::is_unsigned<T>::value>::type * = nullptr)
+inline unsigned
+prepare_for_print(const T &n,
+                  typename std::enable_if<pfp_special<T>::value && std::is_unsigned<T>::value>::type * = nullptr)
 {
-	return static_cast<unsigned>(n);
+    return static_cast<unsigned>(n);
 }
-
 }
-
 }
 
 #endif
