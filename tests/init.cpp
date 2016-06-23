@@ -37,27 +37,26 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-struct dummy
-{
-	~dummy()
-	{
-		// NOTE: cannot use BOOST_CHECK here because this gets invoked outside the test case.
-		piranha_assert(detail::shutdown());
-	}
+struct dummy {
+    ~dummy()
+    {
+        // NOTE: cannot use BOOST_CHECK here because this gets invoked outside the test case.
+        piranha_assert(detail::shutdown());
+    }
 };
 
 static dummy d;
 
 BOOST_AUTO_TEST_CASE(init_main_test)
 {
-	settings::set_n_threads(3);
-	// Multiple concurrent constructions.
-	auto f0 = thread_pool::enqueue(0,[]() {init();});
-	auto f1 = thread_pool::enqueue(1,[]() {init();});
-	auto f2 = thread_pool::enqueue(2,[]() {init();});
-	f0.wait();
-	f1.wait();
-	f2.wait();
-	BOOST_CHECK(!detail::shutdown());
-	BOOST_CHECK_EQUAL(detail::piranha_init_statics<>::s_failed.load(),2u);
+    settings::set_n_threads(3);
+    // Multiple concurrent constructions.
+    auto f0 = thread_pool::enqueue(0, []() { init(); });
+    auto f1 = thread_pool::enqueue(1, []() { init(); });
+    auto f2 = thread_pool::enqueue(2, []() { init(); });
+    f0.wait();
+    f1.wait();
+    f2.wait();
+    BOOST_CHECK(!detail::shutdown());
+    BOOST_CHECK_EQUAL(detail::piranha_init_statics<>::s_failed.load(), 2u);
 }

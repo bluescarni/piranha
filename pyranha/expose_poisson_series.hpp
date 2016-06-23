@@ -45,43 +45,42 @@ namespace pyranha
 namespace bp = boost::python;
 
 // Custom hook for Poisson series.
-struct ps_custom_hook
-{
-	// Detect and enable t_integrate() conditionally.
-	template <typename T>
-	struct has_t_integrate: piranha::detail::sfinae_types
-	{
-		template <typename T1>
-		static auto test(const T1 &x) -> decltype(x.t_integrate(),void(),yes());
-		static no test(...);
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
-	};
-	template <typename S>
-	static auto t_integrate_wrapper(const S &s) -> decltype(s.t_integrate())
-	{
-		return s.t_integrate();
-	}
-	// NOTE: here the return type is the same as returned by the other overload of t_integrate().
-	template <typename S>
-	static auto t_integrate_names_wrapper(const S &s, bp::list l) -> decltype(s.t_integrate())
-	{
-		bp::stl_input_iterator<std::string> begin_p(l), end_p;
-		return s.t_integrate(std::vector<std::string>(begin_p,end_p));
-	}
-	template <typename S, typename std::enable_if<has_t_integrate<S>::value,int>::type = 0>
-	static void expose_t_integrate(bp::class_<S> &series_class)
-	{
-		series_class.def("t_integrate",t_integrate_wrapper<S>);
-		series_class.def("t_integrate",t_integrate_names_wrapper<S>);
-	}
-	template <typename S, typename std::enable_if<!has_t_integrate<S>::value,int>::type = 0>
-	static void expose_t_integrate(bp::class_<S> &)
-	{}
-	template <typename T>
-	void operator()(bp::class_<T> &series_class) const
-	{
-		expose_t_integrate(series_class);
-	}
+struct ps_custom_hook {
+    // Detect and enable t_integrate() conditionally.
+    template <typename T>
+    struct has_t_integrate : piranha::detail::sfinae_types {
+        template <typename T1>
+        static auto test(const T1 &x) -> decltype(x.t_integrate(), void(), yes());
+        static no test(...);
+        static const bool value = std::is_same<decltype(test(std::declval<T>())), yes>::value;
+    };
+    template <typename S>
+    static auto t_integrate_wrapper(const S &s) -> decltype(s.t_integrate())
+    {
+        return s.t_integrate();
+    }
+    // NOTE: here the return type is the same as returned by the other overload of t_integrate().
+    template <typename S>
+    static auto t_integrate_names_wrapper(const S &s, bp::list l) -> decltype(s.t_integrate())
+    {
+        bp::stl_input_iterator<std::string> begin_p(l), end_p;
+        return s.t_integrate(std::vector<std::string>(begin_p, end_p));
+    }
+    template <typename S, typename std::enable_if<has_t_integrate<S>::value, int>::type = 0>
+    static void expose_t_integrate(bp::class_<S> &series_class)
+    {
+        series_class.def("t_integrate", t_integrate_wrapper<S>);
+        series_class.def("t_integrate", t_integrate_names_wrapper<S>);
+    }
+    template <typename S, typename std::enable_if<!has_t_integrate<S>::value, int>::type = 0>
+    static void expose_t_integrate(bp::class_<S> &)
+    {
+    }
+    template <typename T>
+    void operator()(bp::class_<T> &series_class) const
+    {
+        expose_t_integrate(series_class);
+    }
 };
 
 void expose_poisson_series_0();
@@ -100,7 +99,6 @@ void expose_poisson_series_12();
 void expose_poisson_series_13();
 void expose_poisson_series_14();
 void expose_poisson_series_15();
-
 }
 
 #endif

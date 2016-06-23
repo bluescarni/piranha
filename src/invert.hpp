@@ -47,26 +47,26 @@ namespace math
  * if integral exponentiation is supported by the argument type.
  */
 template <typename T, typename = void>
-struct invert_impl
-{
-	/// Call operator.
-	/**
-	 * @param[in] x argument for the inversion,
-	 *
-	 * @return piranha::math::pow(x,-1).
-	 *
-	 * @throws unspecified any exception thrown by piranha::math::pow().
-	 */
-	template <typename U>
-	auto operator()(const U &x) const -> decltype(math::pow(x,-1))
-	{
-		return math::pow(x,-1);
-	}
+struct invert_impl {
+    /// Call operator.
+    /**
+     * @param[in] x argument for the inversion,
+     *
+     * @return piranha::math::pow(x,-1).
+     *
+     * @throws unspecified any exception thrown by piranha::math::pow().
+     */
+    template <typename U>
+    auto operator()(const U &x) const -> decltype(math::pow(x, -1))
+    {
+        return math::pow(x, -1);
+    }
 };
 
 /// Compute the inverse.
 /**
- * Return the multiplicative inverse of \p x. The actual implementation of this function is in the piranha::math::invert_impl functor's
+ * Return the multiplicative inverse of \p x. The actual implementation of this function is in the
+ * piranha::math::invert_impl functor's
  * call operator.
  *
  * @param[in] x argument.
@@ -78,9 +78,8 @@ struct invert_impl
 template <typename T>
 inline auto invert(const T &x) -> decltype(invert_impl<T>()(x))
 {
-	return invert_impl<T>()(x);
+    return invert_impl<T>()(x);
 }
-
 }
 
 /// Type trait for invertible types.
@@ -90,20 +89,20 @@ inline auto invert(const T &x) -> decltype(invert_impl<T>()(x))
  * The call to piranha::math::invert() will be tested with const reference arguments.
  */
 template <typename T>
-class is_invertible: detail::sfinae_types
+class is_invertible : detail::sfinae_types
 {
-		template <typename T1>
-		static auto test(const T1 &x) -> decltype(math::invert(x),void(),yes());
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+    template <typename T1>
+    static auto test(const T1 &x) -> decltype(math::invert(x), void(), yes());
+    static no test(...);
+
+public:
+    /// Value of the type trait.
+    static const bool value = std::is_same<decltype(test(std::declval<T>())), yes>::value;
 };
 
 // Static init.
 template <typename T>
 const bool is_invertible<T>::value;
-
 }
 
 #endif

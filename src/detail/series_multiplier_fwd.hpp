@@ -35,7 +35,6 @@ namespace piranha
 // Forward-declaration of series_multiplier.
 template <typename, typename>
 class series_multiplier;
-
 }
 
 #endif

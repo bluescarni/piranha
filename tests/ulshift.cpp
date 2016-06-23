@@ -40,27 +40,27 @@ using namespace piranha::detail;
 
 BOOST_AUTO_TEST_CASE(ulshift_test_00)
 {
-	piranha::init();
-	using utype = unsigned short;
-	constexpr unsigned nbits = std::numeric_limits<utype>::digits;
-	utype n0(1);
-	n0 = static_cast<utype>(n0 << (nbits - 1u));
-	BOOST_CHECK((std::is_same<decltype(ulshift(n0,1u)),utype>::value));
-	BOOST_CHECK_EQUAL(ulshift(n0,1u),0u);
-	BOOST_CHECK_EQUAL(ulshift(n0,2u),0u);
-	BOOST_CHECK_EQUAL(ulshift(n0,3u),0u);
-	BOOST_CHECK_EQUAL(ulshift(utype(2),nbits - 1u),0u);
+    piranha::init();
+    using utype = unsigned short;
+    constexpr unsigned nbits = std::numeric_limits<utype>::digits;
+    utype n0(1);
+    n0 = static_cast<utype>(n0 << (nbits - 1u));
+    BOOST_CHECK((std::is_same<decltype(ulshift(n0, 1u)), utype>::value));
+    BOOST_CHECK_EQUAL(ulshift(n0, 1u), 0u);
+    BOOST_CHECK_EQUAL(ulshift(n0, 2u), 0u);
+    BOOST_CHECK_EQUAL(ulshift(n0, 3u), 0u);
+    BOOST_CHECK_EQUAL(ulshift(utype(2), nbits - 1u), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(ulshift_test_10)
 {
-	using utype = unsigned;
-	constexpr unsigned nbits = std::numeric_limits<utype>::digits;
-	utype n0(1);
-	n0 = static_cast<utype>(n0 << (nbits - 1u));
-	BOOST_CHECK((std::is_same<decltype(ulshift(n0,1u)),utype>::value));
-	BOOST_CHECK_EQUAL(ulshift(n0,1u),0u);
-	BOOST_CHECK_EQUAL(ulshift(n0,2u),0u);
-	BOOST_CHECK_EQUAL(ulshift(n0,3u),0u);
-	BOOST_CHECK_EQUAL(ulshift(utype(2),nbits - 1u),0u);
+    using utype = unsigned;
+    constexpr unsigned nbits = std::numeric_limits<utype>::digits;
+    utype n0(1);
+    n0 = static_cast<utype>(n0 << (nbits - 1u));
+    BOOST_CHECK((std::is_same<decltype(ulshift(n0, 1u)), utype>::value));
+    BOOST_CHECK_EQUAL(ulshift(n0, 1u), 0u);
+    BOOST_CHECK_EQUAL(ulshift(n0, 2u), 0u);
+    BOOST_CHECK_EQUAL(ulshift(n0, 3u), 0u);
+    BOOST_CHECK_EQUAL(ulshift(utype(2), nbits - 1u), 0u);
 }

@@ -41,47 +41,50 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(evaluate_test)
 {
-	init();
-	{
-	std::cout << "Timing multiplication, integer:\n";
-	auto ret1 = pearce1<integer,kronecker_monomial<>>();
-	{
-	std::cout << "Timing evaluation, integer: ";
-	boost::timer::auto_cpu_timer t;
-	std::cout << math::evaluate<integer>(ret1,{{"x",1_z},{"y",1_z},{"z",1_z},{"t",1_z},{"u",1_z}}) << '\n';
-	}
-	{
-	std::cout << "Timing evaluation, double: ";
-	boost::timer::auto_cpu_timer t;
-	std::cout << math::evaluate<double>(ret1,{{"x",1.},{"y",1.},{"z",1.},{"t",1.},{"u",1.}}) << '\n';
-	}
-	}
-	{
-	std::cout << "Timing multiplication, double:\n";
-	auto ret1 = pearce1<double,kronecker_monomial<>>();
-	{
-	std::cout << "Timing evaluation, double: ";
-	boost::timer::auto_cpu_timer t;
-	std::cout << math::evaluate<double>(ret1,{{"x",1.},{"y",1.},{"z",1.},{"t",1.},{"u",1.}}) << '\n';
-	}
-	}
-	{
-	std::cout << "Timing multiplication, rational:\n";
-	auto ret1 = pearce1<rational,kronecker_monomial<>>();
-	{
-	std::cout << "Timing evaluation, double: ";
-	boost::timer::auto_cpu_timer t;
-	std::cout << math::evaluate<double>(ret1,{{"x",1.},{"y",1.},{"z",1.},{"t",1.},{"u",1.}}) << '\n';
-	}
-	{
-	std::cout << "Timing evaluation, integer: ";
-	boost::timer::auto_cpu_timer t;
-	std::cout << math::evaluate<integer>(ret1,{{"x",1_z},{"y",1_z},{"z",1_z},{"t",1_z},{"u",1_z}}) << '\n';
-	}
-	{
-	std::cout << "Timing evaluation, rational: ";
-	boost::timer::auto_cpu_timer t;
-	std::cout << math::evaluate<rational>(ret1,{{"x",1_q},{"y",1_q},{"z",1_q},{"t",1_q},{"u",1_q}}) << '\n';
-	}
-	}
+    init();
+    {
+        std::cout << "Timing multiplication, integer:\n";
+        auto ret1 = pearce1<integer, kronecker_monomial<>>();
+        {
+            std::cout << "Timing evaluation, integer: ";
+            boost::timer::auto_cpu_timer t;
+            std::cout << math::evaluate<integer>(ret1, {{"x", 1_z}, {"y", 1_z}, {"z", 1_z}, {"t", 1_z}, {"u", 1_z}})
+                      << '\n';
+        }
+        {
+            std::cout << "Timing evaluation, double: ";
+            boost::timer::auto_cpu_timer t;
+            std::cout << math::evaluate<double>(ret1, {{"x", 1.}, {"y", 1.}, {"z", 1.}, {"t", 1.}, {"u", 1.}}) << '\n';
+        }
+    }
+    {
+        std::cout << "Timing multiplication, double:\n";
+        auto ret1 = pearce1<double, kronecker_monomial<>>();
+        {
+            std::cout << "Timing evaluation, double: ";
+            boost::timer::auto_cpu_timer t;
+            std::cout << math::evaluate<double>(ret1, {{"x", 1.}, {"y", 1.}, {"z", 1.}, {"t", 1.}, {"u", 1.}}) << '\n';
+        }
+    }
+    {
+        std::cout << "Timing multiplication, rational:\n";
+        auto ret1 = pearce1<rational, kronecker_monomial<>>();
+        {
+            std::cout << "Timing evaluation, double: ";
+            boost::timer::auto_cpu_timer t;
+            std::cout << math::evaluate<double>(ret1, {{"x", 1.}, {"y", 1.}, {"z", 1.}, {"t", 1.}, {"u", 1.}}) << '\n';
+        }
+        {
+            std::cout << "Timing evaluation, integer: ";
+            boost::timer::auto_cpu_timer t;
+            std::cout << math::evaluate<integer>(ret1, {{"x", 1_z}, {"y", 1_z}, {"z", 1_z}, {"t", 1_z}, {"u", 1_z}})
+                      << '\n';
+        }
+        {
+            std::cout << "Timing evaluation, rational: ";
+            boost::timer::auto_cpu_timer t;
+            std::cout << math::evaluate<rational>(ret1, {{"x", 1_q}, {"y", 1_q}, {"z", 1_q}, {"t", 1_q}, {"u", 1_q}})
+                      << '\n';
+        }
+    }
 }

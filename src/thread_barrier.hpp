@@ -63,89 +63,89 @@ namespace piranha
  */
 class thread_barrier
 {
-	public:
-		/// Constructor.
-		/**
-		 * Construct a barrier for \p count threads.
-		 *
-		 * @param[in] count number of threads for which the barrier is configured.
-		 *
-		 * @throws std::invalid_argument if <tt>count == 0</tt>.
-		 * @throws std::system_error in case of failure(s) by threading primitives.
-		 */
-		explicit thread_barrier(unsigned count):m_mutex(),m_cond(),m_threshold(count),m_count(count),m_generation(0)
-		{
-			if (count == 0) {
-				piranha_throw(std::invalid_argument,"count cannot be zero");
-			}
-		}
-		/// Deleted copy constructor.
-		thread_barrier(const thread_barrier &) = delete;
-		/// Deleted move constructor.
-		thread_barrier(thread_barrier &&) = delete;
-		/// Deleted assignment operator.
-		thread_barrier &operator=(const thread_barrier &) = delete;
-		/// Deleted move assignment operator.
-		thread_barrier &operator=(thread_barrier &&) = delete;
-		/// Default destructor.
-		/**
-		 * No threads must be waiting on this when the destructor is called, otherwise the program will abort.
-		 */
-		~thread_barrier()
-		{
-			try {
-				std::unique_lock<std::mutex> lock(m_mutex);
-				if (m_count != m_threshold) {
-					// NOTE: logging candidate.
-					std::abort();
-				}
-			} catch (...) {
-				// NOTE: logging candidate.
-				std::abort();
-			}
-		}
-		/// Wait method.
-		/**
-		 * Block until \p count threads have called wait() on this. When the <tt>count</tt>-th thread calls
-		 * wait(), all waiting threads are unblocked, and the barrier is reset.
-		 *
-		 * @return \p true for exactly one thread from each batch of waiting threads, \p false otherwise.
-		 */
-		bool wait()
-		{
-			try {
-				std::unique_lock<std::mutex> lock(m_mutex);
-				unsigned gen = m_generation;
-				if (--m_count == 0) {
-					// This is the last thread, update generation count
-					// and reset the count to the initial value, then
-					// notify the other threads.
-					++m_generation;
-					m_count = m_threshold;
-					// NOTE: this is noexcept.
-					m_cond.notify_all();
-					return true;
-				}
-				// This is not the last thread, wait for the other threads
-				// to clear the barrier.
-				while (gen == m_generation) {
-					// NOTE: this will be noexcept in C++14.
-					m_cond.wait(lock);
-				}
-				return false;
-			} catch (...) {
-				// NOTE: logging candidate.
-				std::abort();
-			}
-		}
-	private:
-		std::mutex		m_mutex;
-		std::condition_variable	m_cond;
-		const unsigned		m_threshold;
-		unsigned		m_count;
-		unsigned		m_generation;
-};
+public:
+    /// Constructor.
+    /**
+     * Construct a barrier for \p count threads.
+     *
+     * @param[in] count number of threads for which the barrier is configured.
+     *
+     * @throws std::invalid_argument if <tt>count == 0</tt>.
+     * @throws std::system_error in case of failure(s) by threading primitives.
+     */
+    explicit thread_barrier(unsigned count) : m_mutex(), m_cond(), m_threshold(count), m_count(count), m_generation(0)
+    {
+        if (count == 0) {
+            piranha_throw(std::invalid_argument, "count cannot be zero");
+        }
+    }
+    /// Deleted copy constructor.
+    thread_barrier(const thread_barrier &) = delete;
+    /// Deleted move constructor.
+    thread_barrier(thread_barrier &&) = delete;
+    /// Deleted assignment operator.
+    thread_barrier &operator=(const thread_barrier &) = delete;
+    /// Deleted move assignment operator.
+    thread_barrier &operator=(thread_barrier &&) = delete;
+    /// Default destructor.
+    /**
+     * No threads must be waiting on this when the destructor is called, otherwise the program will abort.
+     */
+    ~thread_barrier()
+    {
+        try {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            if (m_count != m_threshold) {
+                // NOTE: logging candidate.
+                std::abort();
+            }
+        } catch (...) {
+            // NOTE: logging candidate.
+            std::abort();
+        }
+    }
+    /// Wait method.
+    /**
+     * Block until \p count threads have called wait() on this. When the <tt>count</tt>-th thread calls
+     * wait(), all waiting threads are unblocked, and the barrier is reset.
+     *
+     * @return \p true for exactly one thread from each batch of waiting threads, \p false otherwise.
+     */
+    bool wait()
+    {
+        try {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            unsigned gen = m_generation;
+            if (--m_count == 0) {
+                // This is the last thread, update generation count
+                // and reset the count to the initial value, then
+                // notify the other threads.
+                ++m_generation;
+                m_count = m_threshold;
+                // NOTE: this is noexcept.
+                m_cond.notify_all();
+                return true;
+            }
+            // This is not the last thread, wait for the other threads
+            // to clear the barrier.
+            while (gen == m_generation) {
+                // NOTE: this will be noexcept in C++14.
+                m_cond.wait(lock);
+            }
+            return false;
+        } catch (...) {
+            // NOTE: logging candidate.
+            std::abort();
+        }
+    }
 
+private:
+    std::mutex m_mutex;
+    std::condition_variable m_cond;
+    const unsigned m_threshold;
+    unsigned m_count;
+    unsigned m_generation;
+};
 }
 
 #endif

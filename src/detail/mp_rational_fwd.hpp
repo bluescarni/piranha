@@ -35,7 +35,6 @@ namespace piranha
 // Forward-declaration of mp_rational.
 template <int>
 class mp_rational;
-
 }
 
 #endif

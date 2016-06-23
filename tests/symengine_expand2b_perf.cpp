@@ -48,16 +48,17 @@ using math::pow;
 
 BOOST_AUTO_TEST_CASE(symengine_expand2b_test)
 {
-	init();
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
-	}
-	using p_type = polynomial<integer,k_monomial>;
-	auto x = p_type{"x"}, y = p_type{"y"}, z = p_type{"z"}, w = p_type{"w"};
-	auto f = pow(x+y+z+w,15);
-	auto g = f + w;
-	{
-	boost::timer::auto_cpu_timer t;
-	BOOST_CHECK_EQUAL((f * g).size(),6272u);
-	}
+    init();
+    if (boost::unit_test::framework::master_test_suite().argc > 1) {
+        settings::set_n_threads(
+            boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+    }
+    using p_type = polynomial<integer, k_monomial>;
+    auto x = p_type{"x"}, y = p_type{"y"}, z = p_type{"z"}, w = p_type{"w"};
+    auto f = pow(x + y + z + w, 15);
+    auto g = f + w;
+    {
+        boost::timer::auto_cpu_timer t;
+        BOOST_CHECK_EQUAL((f * g).size(), 6272u);
+    }
 }

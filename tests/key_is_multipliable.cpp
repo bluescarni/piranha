@@ -43,106 +43,99 @@ see https://www.gnu.org/licenses/. */
 using namespace piranha;
 
 // Mock key with no method.
-struct mock_key
-{
-	mock_key() = default;
-	mock_key(const mock_key &) = default;
-	mock_key(mock_key &&) noexcept;
-	mock_key &operator=(const mock_key &) = default;
-	mock_key &operator=(mock_key &&) noexcept;
-	mock_key(const symbol_set &);
-	bool operator==(const mock_key &) const;
-	bool operator!=(const mock_key &) const;
-	bool is_compatible(const symbol_set &) const noexcept;
-	bool is_ignorable(const symbol_set &) const noexcept;
-	mock_key merge_args(const symbol_set &, const symbol_set &) const;
-	bool is_unitary(const symbol_set &) const;
-	void print(std::ostream &, const symbol_set &) const;
-	void print_tex(std::ostream &, const symbol_set &) const;
-	void trim_identify(symbol_set &, const symbol_set &) const;
-	mock_key trim(const symbol_set &, const symbol_set &) const;
+struct mock_key {
+    mock_key() = default;
+    mock_key(const mock_key &) = default;
+    mock_key(mock_key &&) noexcept;
+    mock_key &operator=(const mock_key &) = default;
+    mock_key &operator=(mock_key &&) noexcept;
+    mock_key(const symbol_set &);
+    bool operator==(const mock_key &) const;
+    bool operator!=(const mock_key &) const;
+    bool is_compatible(const symbol_set &) const noexcept;
+    bool is_ignorable(const symbol_set &) const noexcept;
+    mock_key merge_args(const symbol_set &, const symbol_set &) const;
+    bool is_unitary(const symbol_set &) const;
+    void print(std::ostream &, const symbol_set &) const;
+    void print_tex(std::ostream &, const symbol_set &) const;
+    void trim_identify(symbol_set &, const symbol_set &) const;
+    mock_key trim(const symbol_set &, const symbol_set &) const;
 };
 
 // Mock key with wrong method.
-struct mock_key_00
-{
-	static const std::size_t multiply_arity = 1u;
-	mock_key_00() = default;
-	mock_key_00(const mock_key_00 &) = default;
-	mock_key_00(mock_key_00 &&) noexcept;
-	mock_key_00 &operator=(const mock_key_00 &) = default;
-	mock_key_00 &operator=(mock_key_00 &&) noexcept;
-	mock_key_00(const symbol_set &);
-	bool operator==(const mock_key_00 &) const;
-	bool operator!=(const mock_key_00 &) const;
-	bool is_compatible(const symbol_set &) const noexcept;
-	bool is_ignorable(const symbol_set &) const noexcept;
-	mock_key_00 merge_args(const symbol_set &, const symbol_set &) const;
-	bool is_unitary(const symbol_set &) const;
-	void print(std::ostream &, const symbol_set &) const;
-	void print_tex(std::ostream &, const symbol_set &) const;
-	template <typename Cf>
-	static void multiply(std::array<term<Cf,mock_key_00>,1u> &, term<Cf,mock_key_00> &, const term<Cf,mock_key_00> &,
-		const symbol_set &);
-	void trim_identify(symbol_set &, const symbol_set &) const;
-	mock_key_00 trim(const symbol_set &, const symbol_set &) const;
+struct mock_key_00 {
+    static const std::size_t multiply_arity = 1u;
+    mock_key_00() = default;
+    mock_key_00(const mock_key_00 &) = default;
+    mock_key_00(mock_key_00 &&) noexcept;
+    mock_key_00 &operator=(const mock_key_00 &) = default;
+    mock_key_00 &operator=(mock_key_00 &&) noexcept;
+    mock_key_00(const symbol_set &);
+    bool operator==(const mock_key_00 &) const;
+    bool operator!=(const mock_key_00 &) const;
+    bool is_compatible(const symbol_set &) const noexcept;
+    bool is_ignorable(const symbol_set &) const noexcept;
+    mock_key_00 merge_args(const symbol_set &, const symbol_set &) const;
+    bool is_unitary(const symbol_set &) const;
+    void print(std::ostream &, const symbol_set &) const;
+    void print_tex(std::ostream &, const symbol_set &) const;
+    template <typename Cf>
+    static void multiply(std::array<term<Cf, mock_key_00>, 1u> &, term<Cf, mock_key_00> &,
+                         const term<Cf, mock_key_00> &, const symbol_set &);
+    void trim_identify(symbol_set &, const symbol_set &) const;
+    mock_key_00 trim(const symbol_set &, const symbol_set &) const;
 };
 
 // Good one, depending on coefficient.
-struct mock_key_01
-{
-	static const std::size_t multiply_arity = 4u;
-	mock_key_01() = default;
-	mock_key_01(const mock_key_01 &) = default;
-	mock_key_01(mock_key_01 &&) noexcept;
-	mock_key_01 &operator=(const mock_key_01 &) = default;
-	mock_key_01 &operator=(mock_key_01 &&) noexcept;
-	mock_key_01(const symbol_set &);
-	bool operator==(const mock_key_01 &) const;
-	bool operator!=(const mock_key_01 &) const;
-	bool is_compatible(const symbol_set &) const noexcept;
-	bool is_ignorable(const symbol_set &) const noexcept;
-	mock_key_01 merge_args(const symbol_set &, const symbol_set &) const;
-	bool is_unitary(const symbol_set &) const;
-	void print(std::ostream &, const symbol_set &) const;
-	void print_tex(std::ostream &, const symbol_set &) const;
-	static void multiply(std::array<term<double,mock_key_01>,4u> &, const term<double,mock_key_01> &, const term<double,mock_key_01> &,
-		const symbol_set &);
-	void trim_identify(symbol_set &, const symbol_set &) const;
-	mock_key_01 trim(const symbol_set &, const symbol_set &) const;
+struct mock_key_01 {
+    static const std::size_t multiply_arity = 4u;
+    mock_key_01() = default;
+    mock_key_01(const mock_key_01 &) = default;
+    mock_key_01(mock_key_01 &&) noexcept;
+    mock_key_01 &operator=(const mock_key_01 &) = default;
+    mock_key_01 &operator=(mock_key_01 &&) noexcept;
+    mock_key_01(const symbol_set &);
+    bool operator==(const mock_key_01 &) const;
+    bool operator!=(const mock_key_01 &) const;
+    bool is_compatible(const symbol_set &) const noexcept;
+    bool is_ignorable(const symbol_set &) const noexcept;
+    mock_key_01 merge_args(const symbol_set &, const symbol_set &) const;
+    bool is_unitary(const symbol_set &) const;
+    void print(std::ostream &, const symbol_set &) const;
+    void print_tex(std::ostream &, const symbol_set &) const;
+    static void multiply(std::array<term<double, mock_key_01>, 4u> &, const term<double, mock_key_01> &,
+                         const term<double, mock_key_01> &, const symbol_set &);
+    void trim_identify(symbol_set &, const symbol_set &) const;
+    mock_key_01 trim(const symbol_set &, const symbol_set &) const;
 };
 
 namespace std
 {
 
 template <>
-struct hash<mock_key>
-{
-	std::size_t operator()(const mock_key &) const;
+struct hash<mock_key> {
+    std::size_t operator()(const mock_key &) const;
 };
 
 template <>
-struct hash<mock_key_00>
-{
-	std::size_t operator()(const mock_key_00 &) const;
+struct hash<mock_key_00> {
+    std::size_t operator()(const mock_key_00 &) const;
 };
 
 template <>
-struct hash<mock_key_01>
-{
-	std::size_t operator()(const mock_key_01 &) const;
+struct hash<mock_key_01> {
+    std::size_t operator()(const mock_key_01 &) const;
 };
-
 }
 
 BOOST_AUTO_TEST_CASE(key_is_multipliable_test_00)
 {
-	init();
-	BOOST_CHECK(is_key<mock_key>::value);
-	BOOST_CHECK(!(key_is_multipliable<double,mock_key>::value));
-	BOOST_CHECK(is_key<mock_key_00>::value);
-	BOOST_CHECK(!(key_is_multipliable<double,mock_key_00>::value));
-	BOOST_CHECK(is_key<mock_key_01>::value);
-	BOOST_CHECK((key_is_multipliable<double,mock_key_01>::value));
-	BOOST_CHECK(!(key_is_multipliable<float,mock_key_01>::value));
+    init();
+    BOOST_CHECK(is_key<mock_key>::value);
+    BOOST_CHECK(!(key_is_multipliable<double, mock_key>::value));
+    BOOST_CHECK(is_key<mock_key_00>::value);
+    BOOST_CHECK(!(key_is_multipliable<double, mock_key_00>::value));
+    BOOST_CHECK(is_key<mock_key_01>::value);
+    BOOST_CHECK((key_is_multipliable<double, mock_key_01>::value));
+    BOOST_CHECK(!(key_is_multipliable<float, mock_key_01>::value));
 }

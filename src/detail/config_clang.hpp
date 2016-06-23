@@ -30,11 +30,11 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_CONFIG_CLANG_HPP
 
 #if __clang_major__ < 3 || (__clang_major__ == 3 && __clang_minor__ < 1)
-	#error Minimum Clang version supported is 3.1.
+#error Minimum Clang version supported is 3.1.
 #endif
 
-#define likely(x) __builtin_expect(!!(x),1)
-#define unlikely(x) __builtin_expect(!!(x),0)
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 
 #define PIRANHA_COMPILER_IS_CLANG
 

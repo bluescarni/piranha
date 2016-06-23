@@ -37,8 +37,9 @@ namespace piranha
  * Used to access private and protected class members for debug purposes.
  */
 template <typename T>
-class debug_access {};
-
+class debug_access
+{
+};
 }
 
 #endif

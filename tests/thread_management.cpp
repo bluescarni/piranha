@@ -44,40 +44,41 @@ std::mutex mutex;
 
 static inline void test_function()
 {
-	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
-		piranha::bind_to_proc(i);
-		const auto retval = piranha::bound_proc();
-		// Lock because Boost unit test is not thread-safe.
-		std::lock_guard<std::mutex> lock(mutex);
-		BOOST_CHECK_EQUAL(retval.first,true);
-		BOOST_CHECK_EQUAL(retval.second,i);
-	}
+    for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
+        piranha::bind_to_proc(i);
+        const auto retval = piranha::bound_proc();
+        // Lock because Boost unit test is not thread-safe.
+        std::lock_guard<std::mutex> lock(mutex);
+        BOOST_CHECK_EQUAL(retval.first, true);
+        BOOST_CHECK_EQUAL(retval.second, i);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
-	piranha::init();
-	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
-		auto f = piranha::thread_pool::enqueue(i,[](){test_function();});
-		f.wait();
-		try {
-			f.get();
-		} catch (const piranha::not_implemented_error &) {
-			// If we are getting a NIE it's good, it means the platform does not
-			// support binding.
-		}
-	}
+    piranha::init();
+    for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
+        auto f = piranha::thread_pool::enqueue(i, []() { test_function(); });
+        f.wait();
+        try {
+            f.get();
+        } catch (const piranha::not_implemented_error &) {
+            // If we are getting a NIE it's good, it means the platform does not
+            // support binding.
+        }
+    }
 }
 
 // Check thread-safe binding using thread_pool.
 BOOST_AUTO_TEST_CASE(thread_management_task_group_bind)
 {
-	piranha::future_list<void> f_list;
-	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
-		f_list.push_back(piranha::thread_pool::enqueue(0,[](){test_function();}));
-	}
-	f_list.wait_all();
-	try {
-		f_list.get_all();
-	} catch (const piranha::not_implemented_error &) {}
+    piranha::future_list<void> f_list;
+    for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
+        f_list.push_back(piranha::thread_pool::enqueue(0, []() { test_function(); }));
+    }
+    f_list.wait_all();
+    try {
+        f_list.get_all();
+    } catch (const piranha::not_implemented_error &) {
+    }
 }

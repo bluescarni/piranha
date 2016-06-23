@@ -47,20 +47,20 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(audi_test)
 {
-	init();
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
-	}
-	using p_type = polynomial<double,k_monomial>;
-	p_type::set_auto_truncate_degree(10);
-	p_type x1{"x1"}, x2{"x2"}, x3{"x3"}, x4{"x4"}, x5{"x5"}, x6{"x6"}, x7{"x7"},
-		x8{"x8"}, x9{"x9"}, x10{"x10"};
-	auto f = math::pow(1+x1+x2+x3+x4+x5+x6+x7+x8+x9+x10,10);
-	auto g = math::pow(1-x1-x2-x3-x4-x5-x6-x7-x8-x9-x10,10);
-	p_type h;
-	{
-	boost::timer::auto_cpu_timer r;
-	h = f*g;
-	}
-	BOOST_CHECK_EQUAL(h.size(),122464u);
+    init();
+    if (boost::unit_test::framework::master_test_suite().argc > 1) {
+        settings::set_n_threads(
+            boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+    }
+    using p_type = polynomial<double, k_monomial>;
+    p_type::set_auto_truncate_degree(10);
+    p_type x1{"x1"}, x2{"x2"}, x3{"x3"}, x4{"x4"}, x5{"x5"}, x6{"x6"}, x7{"x7"}, x8{"x8"}, x9{"x9"}, x10{"x10"};
+    auto f = math::pow(1 + x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10, 10);
+    auto g = math::pow(1 - x1 - x2 - x3 - x4 - x5 - x6 - x7 - x8 - x9 - x10, 10);
+    p_type h;
+    {
+        boost::timer::auto_cpu_timer r;
+        h = f * g;
+    }
+    BOOST_CHECK_EQUAL(h.size(), 122464u);
 }

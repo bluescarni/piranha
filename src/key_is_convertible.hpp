@@ -50,18 +50,18 @@ namespace piranha
 template <typename To, typename From>
 class key_is_convertible
 {
-		using Tod = typename std::decay<To>::type;
-		using Fromd = typename std::decay<From>::type;
-		PIRANHA_TT_CHECK(is_key,Tod);
-		PIRANHA_TT_CHECK(is_key,Fromd);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_constructible<Tod,const Fromd &, const symbol_set &>::value;
+    using Tod = typename std::decay<To>::type;
+    using Fromd = typename std::decay<From>::type;
+    PIRANHA_TT_CHECK(is_key, Tod);
+    PIRANHA_TT_CHECK(is_key, Fromd);
+
+public:
+    /// Value of the type trait.
+    static const bool value = std::is_constructible<Tod, const Fromd &, const symbol_set &>::value;
 };
 
 template <typename To, typename From>
-const bool key_is_convertible<To,From>::value;
-
+const bool key_is_convertible<To, From>::value;
 }
 
 #endif

@@ -47,10 +47,14 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(fateman1_test)
 {
-	init();
-	using limb_t = typename detail::integer_union<0>::s_storage::limb_t;
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
-	}
-	BOOST_CHECK_EQUAL((fateman1<integer,kronecker_monomial<>>(static_cast<unsigned long long>(std::numeric_limits<limb_t>::max())).size()),135751u);
+    init();
+    using limb_t = typename detail::integer_union<0>::s_storage::limb_t;
+    if (boost::unit_test::framework::master_test_suite().argc > 1) {
+        settings::set_n_threads(
+            boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+    }
+    BOOST_CHECK_EQUAL(
+        (fateman1<integer, kronecker_monomial<>>(static_cast<unsigned long long>(std::numeric_limits<limb_t>::max()))
+             .size()),
+        135751u);
 }

@@ -26,6 +26,10 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
+#include "python_includes.hpp"
+
+#include <cstddef>
+
 #include "expose_utils.hpp"
 
 namespace pyranha
@@ -34,5 +38,4 @@ namespace pyranha
 std::size_t exposed_types_counter = 0u;
 
 std::size_t lambdified_counter = 0u;
-
 }

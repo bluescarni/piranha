@@ -42,37 +42,40 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-struct trivial {};
+struct trivial {
+};
 
-struct trivial_with_stream {};
+struct trivial_with_stream {
+};
 
 std::ostream &operator<<(std::ostream &, const trivial_with_stream &);
 
-struct trivial_with_stream_wrong {};
+struct trivial_with_stream_wrong {
+};
 
 std::ostream &operator<<(std::ostream &, trivial_with_stream &);
 
 BOOST_AUTO_TEST_CASE(print_coefficient_main_test)
 {
-	init();
-	std::ostringstream oss;
-	print_coefficient(oss,0);
-	BOOST_CHECK_EQUAL(oss.str(),"0");
-	oss.str("");
-	print_coefficient(oss,integer(-5));
-	BOOST_CHECK_EQUAL(oss.str(),"-5");
-	oss.str("");
-	print_coefficient(oss,real("1.2345"));
-	BOOST_CHECK_EQUAL(oss.str(),boost::lexical_cast<std::string>(real("1.2345")));
-	BOOST_CHECK((std::is_same<decltype(print_coefficient(oss,42)),std::ostream &>::value));
-	BOOST_CHECK((std::is_same<decltype(print_coefficient(oss,integer(-5))),std::ostream &>::value));
+    init();
+    std::ostringstream oss;
+    print_coefficient(oss, 0);
+    BOOST_CHECK_EQUAL(oss.str(), "0");
+    oss.str("");
+    print_coefficient(oss, integer(-5));
+    BOOST_CHECK_EQUAL(oss.str(), "-5");
+    oss.str("");
+    print_coefficient(oss, real("1.2345"));
+    BOOST_CHECK_EQUAL(oss.str(), boost::lexical_cast<std::string>(real("1.2345")));
+    BOOST_CHECK((std::is_same<decltype(print_coefficient(oss, 42)), std::ostream &>::value));
+    BOOST_CHECK((std::is_same<decltype(print_coefficient(oss, integer(-5))), std::ostream &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(print_coefficient_has_print_coefficient_test)
 {
-	BOOST_CHECK(has_print_coefficient<int>::value);
-	BOOST_CHECK(has_print_coefficient<std::string>::value);
-	BOOST_CHECK(!has_print_coefficient<trivial>::value);
-	BOOST_CHECK(has_print_coefficient<trivial_with_stream>::value);
-	BOOST_CHECK(!has_print_coefficient<trivial_with_stream_wrong>::value);
+    BOOST_CHECK(has_print_coefficient<int>::value);
+    BOOST_CHECK(has_print_coefficient<std::string>::value);
+    BOOST_CHECK(!has_print_coefficient<trivial>::value);
+    BOOST_CHECK(has_print_coefficient<trivial_with_stream>::value);
+    BOOST_CHECK(!has_print_coefficient<trivial_with_stream_wrong>::value);
 }
