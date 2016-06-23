@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['q_5ftype',['q_type',['../classpiranha_1_1rational__function.html#ab70a2587cb3c0c8398c9aa8336514302',1,'piranha::rational_function']]]
+  ['q_5ftype',['q_type',['../classpiranha_1_1rational__function.html#a3264891b27d2ab4a1c2164b744b0c174',1,'piranha::rational_function']]]
 ];

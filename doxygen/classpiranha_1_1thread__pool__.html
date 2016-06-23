@@ -111,10 +111,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ace98a230b3be7e60053190ee1abe4fb8"><td class="memTemplParams" colspan="2">template&lt;typename F , typename... Args&gt; </td></tr>
-<tr class="memitem:ace98a230b3be7e60053190ee1abe4fb8"><td class="memTemplItemLeft" align="right" valign="top">static auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8">enqueue</a> (unsigned n, F &amp;&amp;f, Args &amp;&amp;...args) -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt; F &gt;(f), std::forward&lt; Args &gt;(args)...))</td></tr>
-<tr class="memdesc:ace98a230b3be7e60053190ee1abe4fb8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append task.  <a href="#ace98a230b3be7e60053190ee1abe4fb8">More...</a><br /></td></tr>
-<tr class="separator:ace98a230b3be7e60053190ee1abe4fb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a337660be948aa370137def37d542318b"><td class="memTemplParams" colspan="2">template&lt;typename F , typename... Args&gt; </td></tr>
+<tr class="memitem:a337660be948aa370137def37d542318b"><td class="memTemplItemLeft" align="right" valign="top">static auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a337660be948aa370137def37d542318b">enqueue</a> (unsigned n, F &amp;&amp;f, Args &amp;&amp;...args) -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt; F &gt;(f), std::forward&lt; Args &gt;(args)...))        </td></tr>
+<tr class="memdesc:a337660be948aa370137def37d542318b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append task.  <a href="#a337660be948aa370137def37d542318b">More...</a><br /></td></tr>
+<tr class="separator:a337660be948aa370137def37d542318b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a2a1765622d427968dba7e49ffa5da0"><td class="memItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">size</a> ()</td></tr>
 <tr class="memdesc:a4a2a1765622d427968dba7e49ffa5da0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size.  <a href="#a4a2a1765622d427968dba7e49ffa5da0">More...</a><br /></td></tr>
 <tr class="separator:a4a2a1765622d427968dba7e49ffa5da0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,9 +135,9 @@ class piranha::thread_pool_&lt; typename &gt;</h3>
 <p>This class manages, via a set of static methods, a pool of threads created at program startup. The number of threads created initially is equal to <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>, and, if possible, each thread is bound to a different processor. If the hardware concurrency cannot be determined, the size of the thread pool will be one.</p>
 <p>This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool and resize the pool. All methods, unless otherwise specified, are thread-safe, and they provide the strong exception safety guarantee. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00218">218</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00219">219</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="ace98a230b3be7e60053190ee1abe4fb8"></a>
+<a class="anchor" id="a337660be948aa370137def37d542318b"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -169,8 +169,8 @@ template&lt;typename F , typename... Args&gt; </div>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt;F&gt;(f),std::forward&lt;Args&gt;(args)...))
-		</td>
+          <td></td><td> -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt;F&gt;(f), std::forward&lt;Args&gt;(args)...))
+    </td>
         </tr>
       </table>
   </td>
@@ -205,7 +205,7 @@ template&lt;typename F , typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00248">248</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00251">251</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -253,7 +253,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00284">284</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00287">287</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -289,7 +289,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00264">264</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00267">267</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -349,7 +349,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00327">327</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00332">332</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>

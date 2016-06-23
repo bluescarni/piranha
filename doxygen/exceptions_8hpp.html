@@ -186,9 +186,9 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a2327080f0dc9f806bae763f2c28dd301"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="exceptions_8hpp.html#a2327080f0dc9f806bae763f2c28dd301">piranha_throw</a>(exception_type, ...)&#160;&#160;&#160;piranha::detail::ex_thrower&lt;exception_type&gt;(__FILE__,__LINE__,__func__)(__VA_ARGS__)</td></tr>
-<tr class="memdesc:a2327080f0dc9f806bae763f2c28dd301"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exception-throwing macro.  <a href="#a2327080f0dc9f806bae763f2c28dd301">More...</a><br /></td></tr>
-<tr class="separator:a2327080f0dc9f806bae763f2c28dd301"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a531878785ff85667028ecfde9d700723"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="exceptions_8hpp.html#a531878785ff85667028ecfde9d700723">piranha_throw</a>(exception_type, ...)                                                                                                                                                      &#160;&#160;&#160;piranha::detail::ex_thrower&lt;exception_type&gt;(__FILE__, __LINE__, __func__)(__VA_ARGS__)</td></tr>
+<tr class="memdesc:a531878785ff85667028ecfde9d700723"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exception-throwing macro.  <a href="#a531878785ff85667028ecfde9d700723">More...</a><br /></td></tr>
+<tr class="separator:a531878785ff85667028ecfde9d700723"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Exceptions. </p>
@@ -196,7 +196,7 @@ Macros</h2></td></tr>
 
 <p>Definition in file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="a2327080f0dc9f806bae763f2c28dd301"></a>
+<a class="anchor" id="a531878785ff85667028ecfde9d700723"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -215,7 +215,7 @@ Macros</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;piranha::detail::ex_thrower&lt;exception_type&gt;(__FILE__,__LINE__,__func__)(__VA_ARGS__)</td>
+          <td></td><td>&#160;&#160;&#160;piranha::detail::ex_thrower&lt;exception_type&gt;(__FILE__, __LINE__, __func__)(__VA_ARGS__)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -230,7 +230,7 @@ Macros</h2></td></tr>
 <p>then the first argument <code>arg0</code> is interpreted as the error message associated to the exception object, and it will be decorated with information about the context in which the exception was thrown (file, line, function) before being passed on for construction.</p>
 <p>Note that, in order to be fully standard-compliant, for use with exceptions that take no arguments on construction the invocation must include a closing comma. E.g., </p><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;piranha_throw(std::bad_alloc);</div></div><!-- fragment --><p> is not correct, whereas </p><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;piranha_throw(std::bad_alloc,);</div></div><!-- fragment --><p> is correct. </p>
 
-<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00115">115</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
+<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00119">119</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
 
 </div>
 </div>

@@ -1,7 +1,7 @@
 var searchData=
 [
   ['gamma',['gamma',['../classpiranha_1_1real.html#aaf96fa457f06e9027b710f799f5b7ce3',1,'piranha::real']]],
-  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../classpiranha_1_1polynomial.html#aa2bbd407e2c9a60fd37a2c7d5f956b3a',1,'piranha::polynomial::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
+  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../classpiranha_1_1polynomial.html#a9dd3cf150972e0e3fe5a6524466f0f2d',1,'piranha::polynomial::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
   ['gcd3',['gcd3',['../namespacepiranha_1_1math.html#aed326292eae1eeef5a46fd472a6e3165',1,'piranha::math']]],
   ['gcd3_5fimpl',['gcd3_impl',['../structpiranha_1_1math_1_1gcd3__impl.html',1,'piranha::math']]],
   ['gcd3_5fimpl_3c_20t_2c_20typename_20std_3a_3aenable_5fif_3c_20detail_3a_3ais_5fmp_5finteger_3c_20t_20_3e_3a_3avalue_20_3e_3a_3atype_20_3e',['gcd3_impl&lt; T, typename std::enable_if&lt; detail::is_mp_integer&lt; T &gt;::value &gt;::type &gt;',['../structpiranha_1_1math_1_1gcd3__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01detail_1_1is__m05ed6880bf0f93b1704b1c189bc7ce42.html',1,'piranha::math']]],
@@ -11,7 +11,7 @@ var searchData=
   ['gcd_5fimpl_3c_20t_2c_20u_2c_20detail_3a_3amp_5finteger_5fgcd_5fenabler_3c_20t_2c_20u_20_3e_20_3e',['gcd_impl&lt; T, U, detail::mp_integer_gcd_enabler&lt; T, U &gt; &gt;',['../structpiranha_1_1math_1_1gcd__impl_3_01_t_00_01_u_00_01detail_1_1mp__integer__gcd__enabler_3_01_t_00_01_u_01_4_01_4.html',1,'piranha::math']]],
   ['gcd_5fimpl_3c_20t_2c_20u_2c_20typename_20std_3a_3aenable_5fif_3c_20std_3a_3ais_5fintegral_3c_20t_20_3e_3a_3avalue_20_26_26std_3a_3ais_5fintegral_3c_20u_20_3e_3a_3avalue_20_3e_3a_3atype_20_3e',['gcd_impl&lt; T, U, typename std::enable_if&lt; std::is_integral&lt; T &gt;::value &amp;&amp;std::is_integral&lt; U &gt;::value &gt;::type &gt;',['../structpiranha_1_1math_1_1gcd__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01std_1_1i966278f0bd674b55ba6e4db6232660ac.html',1,'piranha::math']]],
   ['get_5fall',['get_all',['../classpiranha_1_1future__list.html#a24702db33f17b26d7e43b378ba2a27ac',1,'piranha::future_list']]],
-  ['get_5fauto_5ftruncate_5fdegree',['get_auto_truncate_degree',['../classpiranha_1_1polynomial.html#aca50ba865f88f3313084108e7ee5ce0a',1,'piranha::polynomial']]],
+  ['get_5fauto_5ftruncate_5fdegree',['get_auto_truncate_degree',['../classpiranha_1_1polynomial.html#a1448978bc7f49ee46d3099cd8580dd1a',1,'piranha::polynomial']]],
   ['get_5fcache_5fline_5fsize',['get_cache_line_size',['../classpiranha_1_1runtime__info.html#aac7510b135cddd7cdb28a9bea7e6d889',1,'piranha::runtime_info::get_cache_line_size()'],['../classpiranha_1_1settings__.html#a7416d94ce5d919f7f1bd1c80e95a24fe',1,'piranha::settings_::get_cache_line_size()']]],
   ['get_5fdefault_5fgcd_5falgorithm',['get_default_gcd_algorithm',['../classpiranha_1_1polynomial.html#a2f8720b75662fd74c3b34dd17174729b',1,'piranha::polynomial']]],
   ['get_5festimate_5fthreshold',['get_estimate_threshold',['../classpiranha_1_1tuning.html#ae52b6a8240816c547472fa5194a48f3b',1,'piranha::tuning']]],
@@ -24,7 +24,7 @@ var searchData=
   ['get_5fmain_5fthread_5fid',['get_main_thread_id',['../classpiranha_1_1runtime__info.html#a22dc7ca3be0fcaa901702c5cd48291a6',1,'piranha::runtime_info']]],
   ['get_5fmax_5fterm_5foutput',['get_max_term_output',['../classpiranha_1_1settings__.html#a511786ba228e56986e36b1d2b85c48f7',1,'piranha::settings_']]],
   ['get_5fmin_5fwork_5fper_5fthread',['get_min_work_per_thread',['../classpiranha_1_1settings__.html#a8151c49aeea4abf6ca892f7862aa06f4',1,'piranha::settings_']]],
-  ['get_5fmpfr_5ft',['get_mpfr_t',['../classpiranha_1_1real.html#a97a62798e1bd04a5822d84c1f9e20961',1,'piranha::real::get_mpfr_t()'],['../classpiranha_1_1real.html#af07c948af3a05ec4522899e9c27eff6a',1,'piranha::real::get_mpfr_t() const ']]],
+  ['get_5fmpfr_5ft',['get_mpfr_t',['../classpiranha_1_1real.html#ad3786478cf5ee88f7a3a83a75c7515c0',1,'piranha::real::get_mpfr_t()'],['../classpiranha_1_1real.html#a93aedfa7266c1ba6bc29d3be98d162ac',1,'piranha::real::get_mpfr_t() const ']]],
   ['get_5fmpq_5fview',['get_mpq_view',['../classpiranha_1_1mp__rational.html#adeb9b398c705c8e14d6d169d6b85dcc7',1,'piranha::mp_rational']]],
   ['get_5fmpz_5fview',['get_mpz_view',['../classpiranha_1_1mp__integer.html#a814eae22e8d7763795bf0a34612266f7',1,'piranha::mp_integer']]],
   ['get_5fmultiplication_5fblock_5fsize',['get_multiplication_block_size',['../classpiranha_1_1tuning.html#ab18605a560b5b816de8eb508ca922b49',1,'piranha::tuning']]],

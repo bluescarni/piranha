@@ -209,7 +209,7 @@ class piranha::series_multiplier&lt; Series, detail::ps_series_multiplier_enable
 
 <p>Specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a> for <a class="el" href="classpiranha_1_1poisson__series.html" title="Poisson series class. ">piranha::poisson_series</a>. </p>
 
-<p>Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00796">796</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00840">840</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a15898dc7c787588c4e6a5a0e0c1d9e8d"></a>
 <div class="memitem">
@@ -262,7 +262,7 @@ template&lt;typename MultFunctor , typename LimitFunctor &gt; </div>
 <p>Blocked multiplication. </p>
 <dl class="section note"><dt>Note</dt><dd>If <code>MultFunctor</code> or <code>LimitFunctor</code> do not satisfy the requirements outlined below, a compile-time error will be produced.</dd></dl>
 <p>This method is logically equivalent to the following double loop:</p>
-<div class="fragment"><div class="line"><span class="keywordflow">for</span> (<a class="code" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40">size_type</a> i = start1; i &lt; end1; ++i) {</div><div class="line">     <span class="keyword">const</span> <a class="code" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40">size_type</a> limit = std::min(lf(i),<a class="code" href="classpiranha_1_1base__series__multiplier.html#a2ed07a1857607d4b72c237f7b88d4568">m_v2</a>.size());</div><div class="line">     <span class="keywordflow">for</span> (<a class="code" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40">size_type</a> j = 0; j &lt; limit; ++j) {</div><div class="line">        mf(i,j);</div><div class="line">     }</div><div class="line">}</div></div><!-- fragment --><p><code>mf</code> must be a function object with a call operator accepting two instances of <a class="el" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40" title="The size type of base_series_multiplier::v_ptr. ">base_series_multiplier::size_type</a> and returning <code>void</code>. <code>lf</code> must be a function object with a call operator accepting and returning a <a class="el" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40" title="The size type of base_series_multiplier::v_ptr. ">base_series_multiplier::size_type</a>.</p>
+<div class="fragment"><div class="line"><span class="keywordflow">for</span> (<a class="code" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40">size_type</a> i = start1; i &lt; end1; ++i) {</div><div class="line">     <span class="keyword">const</span> <a class="code" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40">size_type</a> limit = std::min(lf(i),<a class="code" href="classpiranha_1_1base__series__multiplier.html#a2ed07a1857607d4b72c237f7b88d4568">m_v2</a>.size());</div><div class="line">       <span class="keywordflow">for</span> (<a class="code" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40">size_type</a> j = 0; j &lt; limit; ++j) {</div><div class="line">               mf(i,j);</div><div class="line">       }</div><div class="line">}</div></div><!-- fragment --><p><code>mf</code> must be a function object with a call operator accepting two instances of <a class="el" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40" title="The size type of base_series_multiplier::v_ptr. ">base_series_multiplier::size_type</a> and returning <code>void</code>. <code>lf</code> must be a function object with a call operator accepting and returning a <a class="el" href="classpiranha_1_1base__series__multiplier.html#a7a0c9276a36bdcbfe91ec70aa1929c40" title="The size type of base_series_multiplier::v_ptr. ">base_series_multiplier::size_type</a>.</p>
 <p>Internally, the double loops is decomposed in blocks of size <a class="el" href="classpiranha_1_1tuning.html#ab18605a560b5b816de8eb508ca922b49" title="Get the multiplication block size. ">tuning::get_multiplication_block_size()</a> in an attempt to optimise cache memory access patterns.</p>
 <p>This method is meant to be used for series multiplication. <code>mf</code> is intended to be a function object that multiplies the <code>i</code>-th term of the first series by the <code>j</code>-th term of the second series. <code>lf</code> is intended to be a functor that establishes how many terms in the second series have to be multiplied by the <code>i</code>-th term of the first series.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -282,7 +282,7 @@ template&lt;typename MultFunctor , typename LimitFunctor &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00407">407</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00425">425</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -345,7 +345,7 @@ template&lt;typename MultFunctor &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00474">474</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00492">492</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -397,7 +397,7 @@ template&lt;std::size_t MultArity, typename MultFunctor , typename LimitFunctor 
 <li>memory errors in standard containers,</li>
 <li>the conversion operator of <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>,</li>
 <li>standard threading primitives,</li>
-<li><a class="el" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8" title="Append task. ">thread_pool::enqueue()</a>,</li>
+<li><a class="el" href="classpiranha_1_1thread__pool__.html#a337660be948aa370137def37d542318b" title="Append task. ">thread_pool::enqueue()</a>,</li>
 <li><a class="el" href="classpiranha_1_1future__list.html#a52161ce8fcc55a22299c9164a2ca4bd3" title="Move-insert a future. ">future_list::push_back()</a>. </li>
 </ul>
 </td></tr>
@@ -405,7 +405,7 @@ template&lt;std::size_t MultArity, typename MultFunctor , typename LimitFunctor 
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00519">519</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00544">544</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -443,7 +443,7 @@ template&lt;std::size_t MultArity, typename MultFunctor &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00682">682</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00708">708</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -482,7 +482,7 @@ template&lt;typename Series &gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8" title="Append task. ">thread_pool::enqueue()</a>,</li>
+<li><a class="el" href="classpiranha_1_1thread__pool__.html#a337660be948aa370137def37d542318b" title="Append task. ">thread_pool::enqueue()</a>,</li>
 <li><a class="el" href="classpiranha_1_1future__list.html#a52161ce8fcc55a22299c9164a2ca4bd3" title="Move-insert a future. ">future_list::push_back()</a>. </li>
 </ul>
 </td></tr>
@@ -490,7 +490,7 @@ template&lt;typename Series &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01069">1069</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01112">1112</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -530,7 +530,7 @@ template&lt;typename T  = Series, call_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00883">883</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00930">930</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -581,7 +581,7 @@ template&lt;typename LimitFunctor &gt; </div>
 <li><a class="el" href="classpiranha_1_1base__series__multiplier.html#a15898dc7c787588c4e6a5a0e0c1d9e8d" title="Blocked multiplication. ">base_series_multiplier::blocked_multiplication()</a>,</li>
 <li><a class="el" href="classpiranha_1_1base__series__multiplier.html#a97a2a9458cf1f78bc0fe33b70b867367" title="Sanitise series. ">base_series_multiplier::sanitise_series()</a>,</li>
 <li>the <code>multiply()</code> method of the key type of <code>Series</code>,</li>
-<li><a class="el" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8" title="Append task. ">thread_pool::enqueue()</a>,</li>
+<li><a class="el" href="classpiranha_1_1thread__pool__.html#a337660be948aa370137def37d542318b" title="Append task. ">thread_pool::enqueue()</a>,</li>
 <li><a class="el" href="classpiranha_1_1future__list.html#a52161ce8fcc55a22299c9164a2ca4bd3" title="Move-insert a future. ">future_list::push_back()</a>,</li>
 <li>the construction of terms,</li>
 <li>in-place addition of coefficients. </li>
@@ -591,7 +591,7 @@ template&lt;typename LimitFunctor &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00927">927</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00970">970</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -627,7 +627,7 @@ template&lt;typename Series &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01052">1052</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01092">1092</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -687,7 +687,7 @@ template&lt;typename Series &gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>the cast operator of <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>,</li>
 <li>standard threading primitives,</li>
-<li><a class="el" href="classpiranha_1_1thread__pool__.html#ace98a230b3be7e60053190ee1abe4fb8" title="Append task. ">thread_pool::enqueue()</a>,</li>
+<li><a class="el" href="classpiranha_1_1thread__pool__.html#a337660be948aa370137def37d542318b" title="Append task. ">thread_pool::enqueue()</a>,</li>
 <li><a class="el" href="classpiranha_1_1future__list.html#a52161ce8fcc55a22299c9164a2ca4bd3" title="Move-insert a future. ">future_list::push_back()</a>. </li>
 </ul>
 </td></tr>
@@ -695,7 +695,7 @@ template&lt;typename Series &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00801">801</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00837">837</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -723,7 +723,7 @@ template&lt;typename Series &gt; </div>
 <p>Number of threads. </p>
 <p>This value will be set by the constructor, and it represents the number of threads that will be used by the multiplier. The value is always at least 1 and it is calculated via <a class="el" href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b" title="Compute number of threads to use. ">thread_pool::use_threads()</a>. </p>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01086">1086</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01130">1130</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>

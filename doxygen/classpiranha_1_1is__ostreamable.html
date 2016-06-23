@@ -111,8 +111,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a08d01e33b048df39b247a962d7b17dbf"><td class="memItemLeft" align="right" valign="top">static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__ostreamable.html#a08d01e33b048df39b247a962d7b17dbf">value</a></td></tr>
-<tr class="memdesc:a08d01e33b048df39b247a962d7b17dbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait.  <a href="#a08d01e33b048df39b247a962d7b17dbf">More...</a><br /></td></tr>
+<tr class="memitem:a08d01e33b048df39b247a962d7b17dbf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a08d01e33b048df39b247a962d7b17dbf"></a>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__ostreamable.html#a08d01e33b048df39b247a962d7b17dbf">value</a> = std::is_same&lt;decltype(test(*(std::ostream *)nullptr, std::declval&lt;T&gt;())), std::ostream &amp;&gt;::value</td></tr>
+<tr class="memdesc:a08d01e33b048df39b247a962d7b17dbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
 <tr class="separator:a08d01e33b048df39b247a962d7b17dbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -121,35 +122,8 @@ class piranha::is_ostreamable&lt; T &gt;</h3>
 
 <p>Type trait for classes that can be output-streamed. </p>
 <p>This type trait will be <code>true</code> if instances of type <code>T</code> can be directed to instances of <code>std::ostream</code> via the insertion operator. The operator must have a signature compatible with </p><div class="fragment"><div class="line">std::ostream &amp;operator&lt;&lt;(std::ostream &amp;, <span class="keyword">const</span> T &amp;)</div></div><!-- fragment --> 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00486">486</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
-<a class="anchor" id="a08d01e33b048df39b247a962d7b17dbf"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const bool <a class="el" href="classpiranha_1_1is__ostreamable.html">piranha::is_ostreamable</a>&lt; T &gt;::value</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= std::is_same&lt;decltype(test(*(std::ostream *)<span class="keyword">nullptr</span>,</div><div class="line">                        std::declval&lt;T&gt;())),std::ostream &amp;&gt;<a class="code" href="classpiranha_1_1is__ostreamable.html#a08d01e33b048df39b247a962d7b17dbf">::value</a></div></div><!-- fragment -->
-<p>Value of the type trait. </p>
-
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00493">493</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-
-</div>
-</div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00491">491</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>
 </div><!-- contents -->

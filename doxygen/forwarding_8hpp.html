@@ -126,12 +126,12 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a99ac727e953e50fbfbfe48a6fdc03332"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="forwarding_8hpp.html#a99ac727e953e50fbfbfe48a6fdc03332">PIRANHA_FORWARDING_CTOR</a>(Derived,  Base)</td></tr>
-<tr class="memdesc:a99ac727e953e50fbfbfe48a6fdc03332"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor-forwarding macro.  <a href="#a99ac727e953e50fbfbfe48a6fdc03332">More...</a><br /></td></tr>
-<tr class="separator:a99ac727e953e50fbfbfe48a6fdc03332"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9653075820a3bb5836bb65fb7ff94968"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="forwarding_8hpp.html#a9653075820a3bb5836bb65fb7ff94968">PIRANHA_FORWARDING_ASSIGNMENT</a>(Derived,  Base)</td></tr>
-<tr class="memdesc:a9653075820a3bb5836bb65fb7ff94968"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assignment-forwarding macro.  <a href="#a9653075820a3bb5836bb65fb7ff94968">More...</a><br /></td></tr>
-<tr class="separator:a9653075820a3bb5836bb65fb7ff94968"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44fbc8d6efb5f51c5461881155f73036"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="forwarding_8hpp.html#a44fbc8d6efb5f51c5461881155f73036">PIRANHA_FORWARDING_CTOR</a>(Derived,  Base)                                                                                                                                              </td></tr>
+<tr class="memdesc:a44fbc8d6efb5f51c5461881155f73036"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor-forwarding macro.  <a href="#a44fbc8d6efb5f51c5461881155f73036">More...</a><br /></td></tr>
+<tr class="separator:a44fbc8d6efb5f51c5461881155f73036"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74eef81d08f1af915348fcca528ab349"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="forwarding_8hpp.html#a74eef81d08f1af915348fcca528ab349">PIRANHA_FORWARDING_ASSIGNMENT</a>(Derived,  Base)                                                                                                                                  </td></tr>
+<tr class="memdesc:a74eef81d08f1af915348fcca528ab349"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assignment-forwarding macro.  <a href="#a74eef81d08f1af915348fcca528ab349">More...</a><br /></td></tr>
+<tr class="separator:a74eef81d08f1af915348fcca528ab349"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Forwarding macros. </p>
@@ -139,7 +139,7 @@ Macros</h2></td></tr>
 
 <p>Definition in file <a class="el" href="forwarding_8hpp_source.html">forwarding.hpp</a>.</p>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="a9653075820a3bb5836bb65fb7ff94968"></a>
+<a class="anchor" id="a74eef81d08f1af915348fcca528ab349"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -162,15 +162,15 @@ Macros</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T_&gt; \</div><div class="line">typename std::enable_if&lt;std::is_assignable&lt;Base &amp;,T_ &amp;&amp;&gt;::value &amp;&amp; \</div><div class="line">        !std::is_base_of&lt;Derived,typename std::decay&lt;T_&gt;::type&gt;::value, \</div><div class="line">        Derived &amp;&gt;::type operator=(T_ &amp;&amp;arg) \</div><div class="line">{ \</div><div class="line">        Base::operator=(std::forward&lt;T_&gt;(arg)); \</div><div class="line">        return *<span class="keyword">this</span>; \</div><div class="line">}</div></div><!-- fragment -->
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T_&gt;                                                                                             \</div><div class="line">    typename std::enable_if&lt;std::is_assignable&lt;Base &amp;, T_ &amp;&amp;&gt;::value                                                   \</div><div class="line">                                &amp;&amp; !std::is_base_of&lt;Derived, typename std::decay&lt;T_&gt;::type&gt;::value,                    \</div><div class="line">                            Derived &amp;&gt;::type                                                                           \</div><div class="line">    operator=(T_ &amp;&amp;arg)                                                                                                \</div><div class="line">    {                                                                                                                  \</div><div class="line">        Base::operator=(std::forward&lt;T_&gt;(arg));                                                                        \</div><div class="line">        return *<span class="keyword">this</span>;                                                                                                  \</div><div class="line">    }</div></div><!-- fragment -->
 <p>Assignment-forwarding macro. </p>
 <p>This macro will declare and define a generic assignment operator for class <code>Derived</code>. The operator will perfectly forward the argument to the base class <code>Base</code>, and it is enabled only if the base class is assignable from the generic argument. In order to avoid clashes with copy/move assignment operators, in case the argument derives from <code>Derived</code> the operator will be disabled. </p>
 
-<p>Definition at line <a class="el" href="forwarding_8hpp_source.html#l00064">64</a> of file <a class="el" href="forwarding_8hpp_source.html">forwarding.hpp</a>.</p>
+<p>Definition at line <a class="el" href="forwarding_8hpp_source.html#l00069">69</a> of file <a class="el" href="forwarding_8hpp_source.html">forwarding.hpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a99ac727e953e50fbfbfe48a6fdc03332"></a>
+<a class="anchor" id="a44fbc8d6efb5f51c5461881155f73036"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -193,7 +193,7 @@ Macros</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T_, <span class="keyword">typename</span> ... Args_,<span class="keyword">typename</span> = <span class="keyword">typename</span> std::enable_if&lt; \</div><div class="line">        std::is_constructible&lt;Base,T_ &amp;&amp;,Args_ &amp;&amp; ...&gt;::value &amp;&amp; \</div><div class="line">        (<span class="keyword">sizeof</span>...(Args_) || !std::is_base_of&lt;Derived,<span class="keyword">typename</span> std::decay&lt;T_&gt;::type&gt;::value)&gt;::type&gt; \</div><div class="line">        explicit Derived(T_ &amp;&amp;arg0, Args_ &amp;&amp; ... args):Base(<a class="code" href="namespacestd.html">std</a>::forward&lt;T_&gt;(arg0),<a class="code" href="namespacestd.html">std</a>::forward&lt;Args_&gt;(args)...) {}</div><div class="ttc" id="namespacestd_html"><div class="ttname"><a href="namespacestd.html">std</a></div><div class="ttdoc">STL namespace. </div></div>
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;                                                                                                         \</div><div class="line">        typename T_, <span class="keyword">typename</span>... Args_,                                                                                \</div><div class="line">        typename =                                                                                                     \</div><div class="line">            typename std::enable_if&lt;std::is_constructible&lt;Base, T_ &amp;&amp;, Args_ &amp;&amp;...&gt;::value                             \</div><div class="line">                                    &amp;&amp; (<span class="keyword">sizeof</span>...(Args_)                                                               \</div><div class="line">                                        || !std::is_base_of&lt;Derived, <span class="keyword">typename</span> std::decay&lt;T_&gt;::type&gt;::value)&gt;::type&gt;    \</div><div class="line">    explicit Derived(T_ &amp;&amp;arg0, Args_ &amp;&amp;... args) : Base(<a class="code" href="namespacestd.html">std</a>::forward&lt;T_&gt;(arg0), <a class="code" href="namespacestd.html">std</a>::forward&lt;Args_&gt;(args)...)         \</div><div class="line">    {                                                                                                                  \</div><div class="line">    }</div><div class="ttc" id="namespacestd_html"><div class="ttname"><a href="namespacestd.html">std</a></div><div class="ttdoc">STL namespace. </div></div>
 </div><!-- fragment -->
 <p>Constructor-forwarding macro. </p>
 <p>This macro will declare and define an explicit constructor for class <code>Derived</code> that accepts a variadic set of arguments whose size is greater than zero. The constructor will perfectly forward the arguments to the base class <code>Base</code>, and it is enabled only if the base class is constructible from the set of arguments. In order to avoid clashes with copy/move constructors, in case the only argument derives from <code>Derived</code> the constructor will be disabled. </p>

@@ -117,7 +117,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a6d0af6d50c4c7f70286ed025d37fe6c8"><td class="memTemplItemLeft" align="right" valign="top">To2&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1safe__cast__impl_3_01_to_00_01_from_00_01detail_1_1sc__int__float__enabler_3_01_to_00_01_from_01_4_01_4.html#a6d0af6d50c4c7f70286ed025d37fe6c8">operator()</a> (const From2 &amp;f) const </td></tr>
 <tr class="memdesc:a6d0af6d50c4c7f70286ed025d37fe6c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator, float to <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> overload.  <a href="#a6d0af6d50c4c7f70286ed025d37fe6c8">More...</a><br /></td></tr>
 <tr class="separator:a6d0af6d50c4c7f70286ed025d37fe6c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d0af6d50c4c7f70286ed025d37fe6c8"><td class="memTemplParams" colspan="2">template&lt;typename From2 , typename To2  = To, typename std::enable_if&lt; (detail::is_mp_integer&lt; To2 &gt;::value &amp;&amp;std::is_integral&lt; From2 &gt;::value)||(detail::is_mp_integer&lt; From2 &gt;::value &amp;&amp;std::is_integral&lt; To2 &gt;::value), int &gt;::type  = 0&gt; </td></tr>
+<tr class="memitem:a6d0af6d50c4c7f70286ed025d37fe6c8"><td class="memTemplParams" colspan="2">template&lt;typename From2 , typename To2  = To, typename std::enable_if&lt;(detail::is_mp_integer&lt; To2 &gt;::value &amp;&amp;std::is_integral&lt; From2 &gt;::value)                                                                                                                                                               ||(detail::is_mp_integer&lt; From2 &gt;::value &amp;&amp;std::is_integral&lt; To2 &gt;::value),                                                                                                                                               int &gt;::type  = 0&gt; </td></tr>
 <tr class="memitem:a6d0af6d50c4c7f70286ed025d37fe6c8"><td class="memTemplItemLeft" align="right" valign="top">To2&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1safe__cast__impl_3_01_to_00_01_from_00_01detail_1_1sc__int__float__enabler_3_01_to_00_01_from_01_4_01_4.html#a6d0af6d50c4c7f70286ed025d37fe6c8">operator()</a> (const From2 &amp;f) const </td></tr>
 <tr class="memdesc:a6d0af6d50c4c7f70286ed025d37fe6c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator, integral to <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> and <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> to integral overload.  <a href="#a6d0af6d50c4c7f70286ed025d37fe6c8">More...</a><br /></td></tr>
 <tr class="separator:a6d0af6d50c4c7f70286ed025d37fe6c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -132,7 +132,7 @@ struct piranha::safe_cast_impl&lt; To, From, detail::sc_int_float_enabler&lt; To
 <li>one type is a C++ integral type and the other <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>. </li>
 </ul>
 
-<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00121">121</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
+<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00116">116</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a6d0af6d50c4c7f70286ed025d37fe6c8"></a>
 <div class="memitem">
@@ -178,7 +178,7 @@ template&lt;typename From2 , typename To2  = To, typename std::enable_if&lt; std
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00141">141</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
+<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00136">136</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
 
 </div>
 </div>
@@ -226,7 +226,7 @@ template&lt;typename From2 , typename To2  = To, typename std::enable_if&lt; det
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00164">164</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
+<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00161">161</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
 
 </div>
 </div>
@@ -236,7 +236,7 @@ template&lt;typename From2 , typename To2  = To, typename std::enable_if&lt; det
 <div class="memtemplate">
 template&lt;typename To , typename From &gt; </div>
 <div class="memtemplate">
-template&lt;typename From2 , typename To2  = To, typename std::enable_if&lt; (detail::is_mp_integer&lt; To2 &gt;::value &amp;&amp;std::is_integral&lt; From2 &gt;::value)||(detail::is_mp_integer&lt; From2 &gt;::value &amp;&amp;std::is_integral&lt; To2 &gt;::value), int &gt;::type  = 0&gt; </div>
+template&lt;typename From2 , typename To2  = To, typename std::enable_if&lt;(detail::is_mp_integer&lt; To2 &gt;::value &amp;&amp;std::is_integral&lt; From2 &gt;::value)                                                                                                                                                               ||(detail::is_mp_integer&lt; From2 &gt;::value &amp;&amp;std::is_integral&lt; To2 &gt;::value),                                                                                                                                               int &gt;::type  = 0&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -272,7 +272,7 @@ template&lt;typename From2 , typename To2  = To, typename std::enable_if&lt; (de
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00183">183</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
+<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00182">182</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
 
 </div>
 </div>

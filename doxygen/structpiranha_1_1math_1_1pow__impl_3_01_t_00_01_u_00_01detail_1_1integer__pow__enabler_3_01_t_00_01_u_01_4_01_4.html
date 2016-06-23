@@ -144,12 +144,12 @@ struct piranha::math::pow_impl&lt; T, U, detail::integer_pow_enabler&lt; T, U &g
 <li>both arguments are integral types.</li>
 </ul>
 <p>The implementation follows these rules:</p><ul>
-<li>if the arguments are both <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>, or a <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> and an integral type, then <a class="el" href="classpiranha_1_1mp__integer.html#afa6cc7c8582eb4144399a3ff5879625e" title="Exponentiation. ">piranha::mp_integer::pow()</a> is used to compute the result (after any necessary conversion),</li>
-<li>if both arguments are integral types, <a class="el" href="classpiranha_1_1mp__integer.html#afa6cc7c8582eb4144399a3ff5879625e" title="Exponentiation. ">piranha::mp_integer::pow()</a> is used after the conversion of the base to <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>,</li>
+<li>if the arguments are both <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>, or a <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> and an integral type, then <a class="el" href="classpiranha_1_1mp__integer.html#a0acf8a3ab8e1e0056f6357fa9f01b36d" title="Exponentiation. ">piranha::mp_integer::pow()</a> is used to compute the result (after any necessary conversion),</li>
+<li>if both arguments are integral types, <a class="el" href="classpiranha_1_1mp__integer.html#a0acf8a3ab8e1e0056f6357fa9f01b36d" title="Exponentiation. ">piranha::mp_integer::pow()</a> is used after the conversion of the base to <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>,</li>
 <li>otherwise, the <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> argument is converted to the floating-point type and <code><a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a></code> is used to compute the result. </li>
 </ul>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00138">138</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00136">136</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a788a938fc72e8dbb18ae624f4bbcc9e0"></a>
 <div class="memitem">
@@ -198,12 +198,12 @@ template&lt;typename T2 , typename U2 , typename std::enable_if&lt; std::is_inte
 <dl class="section return"><dt>Returns</dt><dd><code>b**e</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#afa6cc7c8582eb4144399a3ff5879625e" title="Exponentiation. ">piranha::mp_integer::pow()</a> or by the constructor of <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> from integral type. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#a0acf8a3ab8e1e0056f6357fa9f01b36d" title="Exponentiation. ">piranha::mp_integer::pow()</a> or by the constructor of <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> from integral type. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00152">152</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00149">149</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
 
 </div>
 </div>
@@ -254,12 +254,12 @@ template&lt;int NBits&gt; </div>
 <dl class="section return"><dt>Returns</dt><dd><code>b**e</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#afa6cc7c8582eb4144399a3ff5879625e" title="Exponentiation. ">piranha::mp_integer::pow()</a> or by the constructor of <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> from integral type. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#a0acf8a3ab8e1e0056f6357fa9f01b36d" title="Exponentiation. ">piranha::mp_integer::pow()</a> or by the constructor of <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a> from integral type. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00167">167</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00164">164</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
 
 </div>
 </div>
@@ -310,12 +310,12 @@ template&lt;int NBits, typename T2 , typename std::enable_if&lt; std::is_integra
 <dl class="section return"><dt>Returns</dt><dd><code>b**e</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#afa6cc7c8582eb4144399a3ff5879625e" title="Exponentiation. ">piranha::mp_integer::pow()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#a0acf8a3ab8e1e0056f6357fa9f01b36d" title="Exponentiation. ">piranha::mp_integer::pow()</a>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00181">181</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00178">178</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
 
 </div>
 </div>
@@ -371,7 +371,7 @@ template&lt;int NBits, typename T2 , typename std::enable_if&lt; std::is_floatin
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00195">195</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00192">192</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
 
 </div>
 </div>
@@ -422,12 +422,12 @@ template&lt;int NBits, typename T2 , typename std::enable_if&lt; std::is_integra
 <dl class="section return"><dt>Returns</dt><dd><code>b**e</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#afa6cc7c8582eb4144399a3ff5879625e" title="Exponentiation. ">piranha::mp_integer::pow()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#a0acf8a3ab8e1e0056f6357fa9f01b36d" title="Exponentiation. ">piranha::mp_integer::pow()</a>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00209">209</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00206">206</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
 
 </div>
 </div>
@@ -483,7 +483,7 @@ template&lt;int NBits, typename T2 , typename std::enable_if&lt; std::is_floatin
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00223">223</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
+<p>Definition at line <a class="el" href="pow_8hpp_source.html#l00220">220</a> of file <a class="el" href="pow_8hpp_source.html">pow.hpp</a>.</p>
 
 </div>
 </div>
