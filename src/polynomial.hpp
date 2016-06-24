@@ -1970,44 +1970,6 @@ public:
         // The general multivariate case.
         return wrap_gcd_cofactors(detail::gcd_prs_sr(real_a->split(), real_b->split()).join(), *real_a, *real_b,
                                   with_cofactors);
-        // NOTE: an older implementation that replaces the recursive call in the line immediately
-        // above. Let's keep it around for a while for debugging purposes.
-        /*
-        // Check for zero args.
-        if (real_a->size() == 0u && real_b->size() == 0u) {
-            polynomial retval;
-            retval.set_symbol_set(args);
-            return retval;
-        }
-        if (real_a->size() == 0u) {
-            return *real_b;
-        }
-        if (real_b->size() == 0u) {
-            return *real_a;
-        }
-        // Primitive euclidean algorithm (Geddes 2.3).
-        auto as = real_a->split(), bs = real_b->split();
-        if (detail::poly_lterm(as)->m_key.degree(as.get_symbol_set()) <
-        detail::poly_lterm(bs)->m_key.degree(as.get_symbol_set())) {
-            std::swap(as,bs);
-        }
-        using s_type = decltype(as);
-        auto c = as.primitive_part(), d = bs.primitive_part();
-        while (true) {
-            // NOTE: at the first iteration, d is not null as
-            // it is the primitive part of b (which is not zero). The
-            // following iterations, d is always set to r, but when r
-            // is zero we stop.
-            auto r = s_type::uprem(c,d);
-            c = d;
-            if (r.size() == 0u) {
-                break;
-            }
-            d = r.primitive_part();
-        }
-        auto gamma = math::gcd(as.content(),bs.content());
-        return (gamma * c).join();
-        */
     }
     /// Height.
     /**
@@ -2038,6 +2000,14 @@ public:
             }
         }
         return retval;
+    }
+    template <typename T = polynomial, um_enabler<T> = 0>
+    static polynomial untruncated_multiplication(const polynomial &p1, const polynomial &p2)
+    {
+    }
+    template <typename T = polynomial, tm_enabler<T> = 0>
+    static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2)
+    {
     }
 
 private:
