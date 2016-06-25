@@ -28,7 +28,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
-#include <boost/core/demangle.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/python/errors.hpp>
 #include <boost/python/object.hpp>
@@ -42,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/config.hpp"
+#include "../src/detail/demangle.hpp"
 #include "type_system.hpp"
 
 namespace pyranha
@@ -54,18 +54,13 @@ std::unordered_map<std::type_index, bp::object> et_map;
 std::unordered_map<std::string, std::unordered_map<std::vector<std::type_index>, std::type_index, v_idx_hasher>>
     gtg_map;
 
-std::string demangled_type_name(const std::type_index &t_idx)
-{
-    return boost::core::demangle(t_idx.name());
-}
-
 bp::object type_generator::operator()() const
 {
     const auto it = et_map.find(m_t_idx);
     if (it == et_map.end()) {
         ::PyErr_SetString(
             PyExc_TypeError,
-            (std::string("the type '") + demangled_type_name(m_t_idx) + "' has not been exposed").c_str());
+            (std::string("the type '") + detail::demangle(m_t_idx) + "' has not been exposed").c_str());
         bp::throw_error_already_set();
     }
     return it->second;
@@ -73,7 +68,7 @@ bp::object type_generator::operator()() const
 
 std::string type_generator::repr() const
 {
-    return std::string("Type generator for the C++ type '") + demangled_type_name(m_t_idx) + "'";
+    return std::string("Type generator for the C++ type '") + detail::demangle(m_t_idx) + "'";
 }
 
 std::size_t v_idx_hasher::operator()(const std::vector<std::type_index> &v) const
@@ -117,7 +112,7 @@ std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t_idx)
 {
     std::string tv_name = "[";
     for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
-        tv_name += demangled_type_name(v_t_idx[i]);
+        tv_name += detail::demangle(v_t_idx[i]);
         if (i != v_t_idx.size() - 1u) {
             tv_name += ",";
         }
