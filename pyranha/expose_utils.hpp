@@ -120,7 +120,7 @@ inline bp::class_<T> expose_class()
         // string object.
         ::PyErr_SetString(
             PyExc_RuntimeError,
-            (std::string("the C++ type '") + detail::demangle(t_idx) + "' has already been exposed").c_str());
+            (std::string("the C++ type '") + piranha::detail::demangle(t_idx) + "' has already been exposed").c_str());
         bp::throw_error_already_set();
     }
     bp::class_<T> class_inst((std::string("_exposed_type_") + std::to_string(exposed_types_counter)).c_str(),

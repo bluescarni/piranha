@@ -60,7 +60,7 @@ bp::object type_generator::operator()() const
     if (it == et_map.end()) {
         ::PyErr_SetString(
             PyExc_TypeError,
-            (std::string("the type '") + detail::demangle(m_t_idx) + "' has not been exposed").c_str());
+            (std::string("the type '") + piranha::detail::demangle(m_t_idx) + "' has not been exposed").c_str());
         bp::throw_error_already_set();
     }
     return it->second;
@@ -68,7 +68,7 @@ bp::object type_generator::operator()() const
 
 std::string type_generator::repr() const
 {
-    return std::string("Type generator for the C++ type '") + detail::demangle(m_t_idx) + "'";
+    return std::string("Type generator for the C++ type '") + piranha::detail::demangle(m_t_idx) + "'";
 }
 
 std::size_t v_idx_hasher::operator()(const std::vector<std::type_index> &v) const
@@ -112,7 +112,7 @@ std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t_idx)
 {
     std::string tv_name = "[";
     for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
-        tv_name += detail::demangle(v_t_idx[i]);
+        tv_name += piranha::detail::demangle(v_t_idx[i]);
         if (i != v_t_idx.size() - 1u) {
             tv_name += ",";
         }
