@@ -83,6 +83,7 @@ SET(DETAIL_HEADERS_LIST
 	detail/safe_integral_adder.hpp
 	detail/parallel_vector_transform.hpp
 	detail/ulshift.hpp
+	detail/demangle.hpp
 )
 
 # NOTE: this dummy cpp file is here with the sole purpose of getting the headers

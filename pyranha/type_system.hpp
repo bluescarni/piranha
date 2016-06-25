@@ -41,7 +41,6 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
@@ -53,8 +52,6 @@ namespace pyranha
 
 // Namespace alias for Boost.Python.
 namespace bp = boost::python;
-
-std::string demangled_type_name(const std::type_index &);
 
 // Meta/macro programming to connect a template template class to a name expressed as a string.
 template <typename T>
