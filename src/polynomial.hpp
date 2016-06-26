@@ -2001,14 +2001,14 @@ public:
         }
         return retval;
     }
-    template <typename T = polynomial, um_enabler<T> = 0>
-    static polynomial untruncated_multiplication(const polynomial &p1, const polynomial &p2)
-    {
-    }
-    template <typename T = polynomial, tm_enabler<T> = 0>
-    static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2)
-    {
-    }
+    // template <typename T = polynomial, um_enabler<T> = 0>
+    // static polynomial untruncated_multiplication(const polynomial &p1, const polynomial &p2)
+    // {
+    // }
+    // template <typename T = polynomial, tm_enabler<T> = 0>
+    // static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2)
+    // {
+    // }
 
 private:
     // Static data for auto_truncate_degree.
@@ -2501,6 +2501,21 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
         detail::safe_integral_subber(retval, b);
         return retval;
     }
+    // Dispatch of untruncated multiplication.
+    template <typename T = Series,
+              typename std::enable_if<detail::is_kronecker_monomial<typename T::term_type::key_type>::value, int>::type
+              = 0>
+    Series um_impl() const
+    {
+        return untruncated_kronecker_mult();
+    }
+    template <typename T = Series,
+              typename std::enable_if<!detail::is_kronecker_monomial<typename T::term_type::key_type>::value, int>::type
+              = 0>
+    Series um_impl() const
+    {
+        return this->plain_multiplication();
+    }
 
 public:
     /// Constructor.
@@ -2576,6 +2591,35 @@ public:
      * Low-level methods, on top of which the call operator is implemented.
      */
     //@{
+    /// Untruncated multiplication.
+    /**
+     * \note
+     * This method can be used only if operator()() can be called.
+     *
+     * This method will return the result of multiplying the two polynomials used as input arguments
+     * in the class' constructor. The multiplication will be untruncated, regardless of the current global
+     * truncation settings.
+     *
+     * @return the result of the untruncated multiplication of the two operands used in the construction of \p this.
+     *
+     * @throws unspecified any exception thrown by:
+     * - piranha::base_series_multiplier::plain_multiplication(),
+     * - piranha::base_series_multiplier::estimate_final_series_size(),
+     * - piranha::base_series_multiplier::sanitise_series(),
+     * - piranha::base_series_multiplier::finalise_series(),
+     * - <tt>boost::numeric_cast()</tt>,
+     * - the public interface of piranha::hash_set,
+     * - piranha::safe_cast(),
+     * - memory errors in standard containers,
+     * - piranha::math::mul3(),
+     * - piranha::math::multiply_accumulate(),
+     * - thread_pool::enqueue(),
+     * - future_list::push_back().
+     */
+    Series _untruncated_multiplication() const
+    {
+        return um_impl();
+    }
     /// Truncated multiplication.
     /**
      * \note
@@ -2828,6 +2872,13 @@ private:
         if (check_truncation()) {
             return plain_multiplication_wrapper();
         }
+        return untruncated_kronecker_mult();
+    }
+    template <typename T = Series,
+              typename std::enable_if<detail::is_kronecker_monomial<typename T::term_type::key_type>::value, int>::type
+              = 0>
+    Series untruncated_kronecker_mult() const
+    {
         // Cache the sizes.
         const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
         // Determine whether we want to estimate or not. We check the threshold, and
