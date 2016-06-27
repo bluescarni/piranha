@@ -641,9 +641,8 @@ enum class polynomial_gcd_algorithm {
  *
  * Polynomials support an automatic degree-based truncation mechanism, disabled by default, which comes into play during
  * polynomial multiplication. It allows to discard automatically all those terms, generated during series
- * multiplication,
- * whose total or partial degree is greater than a specified limit. This mechanism can be configured via a set of
- * thread-safe static methods, and it is enabled if:
+ * multiplication, whose total or partial degree is greater than a specified limit. This mechanism can be configured via
+ * a set of thread-safe static methods, and it is enabled if:
  * - the total and partial degree of the series are represented by the same type \p D,
  * - all the truncation-related requirements in piranha::power_series are satsified,
  * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
@@ -2001,14 +2000,93 @@ public:
         }
         return retval;
     }
-    // template <typename T = polynomial, um_enabler<T> = 0>
-    // static polynomial untruncated_multiplication(const polynomial &p1, const polynomial &p2)
-    // {
-    // }
-    // template <typename T = polynomial, tm_enabler<T> = 0>
-    // static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2)
-    // {
-    // }
+    // Enabler for untruncated multiplication.
+    template <typename T>
+    using um_enabler =
+        typename std::enable_if<std::is_same<T, decltype(std::declval<const T &>() * std::declval<const T &>())>::value,
+                                int>::type;
+    // Common bits for truncated/untruncated multiplication. Will do the usual merging of the symbol sets
+    // before calling the runner functor, which performs the actual multiplication.
+    template <typename Functor>
+    static polynomial um_tm_implementation(const polynomial &p1, const polynomial &p2, const Functor &runner)
+    {
+        const auto &ss1 = p1.get_symbol_set(), &ss2 = p2.get_symbol_set();
+        if (ss1 == ss2) {
+            return runner(p1, p2);
+        }
+        // If the symbol sets are not the same, we need to merge them and make
+        // copies of the original operands as needed.
+        auto merge = ss1.merge(ss2);
+        const bool need_copy_1 = (merge != ss1), need_copy_2 = (merge != ss2);
+        if (need_copy_1) {
+            polynomial copy_1(p1.extend_symbol_set(merge));
+            if (need_copy_2) {
+                polynomial copy_2(p2.extend_symbol_set(merge));
+                return runner(copy_1, copy_2);
+            }
+            return runner(copy_1, p2);
+        } else {
+            polynomial copy_2(p2.extend_symbol_set(merge));
+            return runner(p1, copy_2);
+        }
+    }
+    /// Untruncated multiplication.
+    /**
+     * \note
+     * This function template is enabled only if the calling piranha::polynomial satisfies piranha::is_multipliable,
+     * returning the calling piranha::polynomial as return type.
+     *
+     * This function will return the product of \p p1 and \p p2, computed without truncation (regardless
+     * of the current automatic truncation settings). Note that this function is
+     * available only if the operands are of the same type and no type promotions affect the coefficient types
+     * during multiplication.
+     *
+     * @param[in] p1 the first operand.
+     * @param[in] p2 the second operand.
+     *
+     * @return the product of \p p1 and \p p2.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of the specialisation of piranha::series_multiplier for piranha::polynomial,
+     * - the public interface of piranha::symbol_set,
+     * - the public interface of piranha::series.
+     */
+    template <typename T = polynomial, um_enabler<T> = 0>
+    static polynomial untruncated_multiplication(const polynomial &p1, const polynomial &p2)
+    {
+        auto runner = [](const polynomial &p1, const polynomial &p2) {
+            return series_multiplier<polynomial>(p1, p2)._untruncated_multiplication();
+        };
+        return um_tm_implementation(p1, p2, runner);
+    }
+    template <typename T, typename U>
+    using tm_enabler =
+        typename std::enable_if<std::is_same<T, decltype(std::declval<const T &>() * std::declval<const T &>())>::value
+                                    && has_safe_cast<degree_t<T>,U>::value,
+                                int>::type;
+    template <typename T, typename U = polynomial, tm_enabler<T, U> = 0>
+    static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2, const U &max_degree)
+    {
+        // NOTE: these 2 implementations may be rolled into one once we can safely capture variadic arguments
+        // in lambdas.
+        using degree_type = decltype(p1.degree());
+        auto runner = [&max_degree](const polynomial &p1, const polynomial &p2) {
+            return series_multiplier<polynomial>(p1, p2).truncated_multiplication(safe_cast<degree_type>(max_degree));
+        };
+        return um_tm_implementation(p1, p2, runner);
+    }
+    template <typename T, typename U = polynomial, tm_enabler<T, U> = 0>
+    static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2, const U &max_degree,
+                                               const std::vector<std::string> &names)
+    {
+        // NOTE: total and partial degree must be the same.
+        using degree_type = decltype(p1.degree());
+        auto runner = [&max_degree, &names](const polynomial &p1, const polynomial &p2) {
+            return series_multiplier<polynomial>(p1, p2).truncated_multiplication(safe_cast<degree_type>(max_degree),
+                                                                                  names);
+        };
+        return um_tm_implementation(p1, p2, runner);
+    }
 
 private:
     // Static data for auto_truncate_degree.
@@ -2310,8 +2388,8 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
             ++start;
             for (; start != end; ++start) {
                 piranha_assert(monomial_checker(**start));
-                // NOTE: std::transform is allowed to do transformations in-place - i.e., here the output range is the
-                // same as the first or second input range:
+                // NOTE: std::transform is allowed to do transformations in-place - i.e., here the output range is
+                // the same as the first or second input range:
                 // http://stackoverflow.com/questions/19200528/is-it-safe-for-the-input-iterator-and-output-iterator-in-stdtransform-to-be-fr
                 // The important part is that the functor *itself* must not mutate the elements.
                 std::transform(minmax_values.begin(), minmax_values.end(), (*start)->m_key.begin(),
@@ -2521,12 +2599,10 @@ public:
     /// Constructor.
     /**
      * The constructor will call the base constructor and run these additional checks:
-     * - if the key is a piranha::kronecker_monomial, it will be checked that the result of the multiplication does not
-     * overflow
-     *   the representation limits of piranha::kronecker_monomial;
+     * - if the key is a piranha::kronecker_monomial, it will be checked that the result of the multiplication does
+     *   not overflow the representation limits of piranha::kronecker_monomial;
      * - if the key is a piranha::monomial of a C++ integral type, it will be checked that the result of the
-     * multiplication does not overflow
-     *   the limits of the integral type.
+     *   multiplication does not overflow the limits of the integral type.
      *
      * If any check fails, a runtime error will be produced.
      *
@@ -2650,8 +2726,8 @@ public:
     Series truncated_multiplication(const T &max_degree, const Args &... args) const
     {
         // NOTE: a possible optimisation here is the following: if the sum degrees of the arguments is less than
-        // or equal to the max truncation degree, just do the normal multiplication - which can also then take advantage
-        // of faster Kronecker multiplication, if the series are suitable.
+        // or equal to the max truncation degree, just do the normal multiplication - which can also then take
+        // advantage of faster Kronecker multiplication, if the series are suitable.
         using term_type = typename Series::term_type;
         // NOTE: degree type is the same in total and partial.
         using degree_type = decltype(detail::ps_get_degree(term_type{}, this->m_ss));
@@ -2701,16 +2777,13 @@ public:
      * \p T is the same type as the degree type.
      *
      * This method assumes that \p v_d1 and \p v_d2 are vectors containing the degrees of each term in the first and
-     * second series
-     * respectively, and that \p v_d2 is sorted in ascending order.
-     * It will return a vector \p v of indices in the second series such that, given an index \p i in the first series,
-     * the term of index <tt>v[i]</tt> in the second series is the first term such that the term-by-term multiplication
-     * with
-     * the <tt>i</tt>-th term in the first series produces a term of degree greater than \p max_degree. That is, terms
-     * of index
-     * equal to or greater than <tt>v[i]</tt> in the second series will produce terms with degree greater than \p
-     * max_degree
-     * when multiplied by the <tt>i</tt>-th term in the first series.
+     * second series respectively, and that \p v_d2 is sorted in ascending order.
+     * It will return a vector \p v of indices in the second series such that, given an index \p i in the first
+     * series, the term of index <tt>v[i]</tt> in the second series is the first term such that the term-by-term
+     * multiplication with the <tt>i</tt>-th term in the first series produces a term of degree greater than
+     * \p max_degree. That is, terms of index equal to or greater than <tt>v[i]</tt> in the second series
+     * will produce terms with degree greater than \p max_degree when multiplied by the <tt>i</tt>-th term in the first
+     * series.
      *
      * @param[in] v_d1 a vector containing the degrees of the terms in the first series.
      * @param[in] v_d2 a sorted vector containing the degrees of the terms in the second series.
@@ -2862,8 +2935,8 @@ private:
     {
         return false;
     }
-    // Case 2: Kronecker mult, do the special multiplication unless a truncation is active. In that case, run the plain
-    // mult.
+    // Case 2: Kronecker mult, do the special multiplication unless a truncation is active. In that case, run the
+    // plain mult.
     template <typename T = Series,
               typename std::enable_if<detail::is_kronecker_monomial<typename T::term_type::key_type>::value, int>::type
               = 0>
@@ -3039,9 +3112,9 @@ private:
         task_table.resize(safe_cast<decltype(task_table.size())>(n_zones));
         // Lower bound implementation. Adapted from:
         // http://en.cppreference.com/w/cpp/algorithm/lower_bound
-        // Given the [first,last[ index range in v2, find the first index idx in the v2 range such that the i-th term in
-        // v1
-        // multiplied by the idx-th term in v2 will be written into retval at a bucket index not less than zb.
+        // Given the [first,last[ index range in v2, find the first index idx in the v2 range such that the i-th
+        // term in v1 multiplied by the idx-th term in v2 will be written into retval at a bucket index not less than
+        // zb.
         auto l_bound = [&v1, &v2, &r_bucket, &task_split](size_type first, size_type last, bucket_size_type zb,
                                                           size_type i) -> size_type {
             piranha_assert(first <= last);
