@@ -2099,7 +2099,7 @@ public:
         // NOTE: these 2 implementations may be rolled into one once we can safely capture variadic arguments
         // in lambdas.
         auto runner = [&max_degree](const polynomial &p1, const polynomial &p2) {
-            return series_multiplier<polynomial>(p1, p2).truncated_multiplication(
+            return series_multiplier<polynomial>(p1, p2)._truncated_multiplication(
                 safe_cast<degree_type<T>>(max_degree));
         };
         return um_tm_implementation(p1, p2, runner);
@@ -2139,7 +2139,7 @@ public:
         // NOTE: total and partial degree must be the same.
         auto runner = [&max_degree, &names](const polynomial &p1, const polynomial &p2) -> polynomial {
             const symbol_set::positions pos(p1.get_symbol_set(), symbol_set(names.begin(), names.end()));
-            return series_multiplier<polynomial>(p1, p2).truncated_multiplication(safe_cast<degree_type<T>>(max_degree),
+            return series_multiplier<polynomial>(p1, p2)._truncated_multiplication(safe_cast<degree_type<T>>(max_degree),
                                                                                   names, pos);
         };
         return um_tm_implementation(p1, p2, runner);
@@ -2712,7 +2712,7 @@ public:
      * - piranha::math::multiply_accumulate(),
      * - thread_pool::enqueue(),
      * - future_list::push_back(),
-     * - truncated_multiplication(),
+     * - _truncated_multiplication(),
      * - polynomial::get_auto_truncate_degree().
      */
     template <typename T = Series, call_enabler<T> = 0>
@@ -2760,7 +2760,7 @@ public:
      * - the conditions for truncated multiplication outlined in piranha::polynomial are satisfied,
      * - the type \p T is the same as the degree type of the polynomial,
      * - the number and types of \p Args is as specified below,
-     * - piranha::base_series_multiplier::plain_multiplication() and get_skip_limits() can be called.
+     * - piranha::base_series_multiplier::plain_multiplication() and _get_skip_limits() can be called.
      *
      * This method will perform the truncated multiplication of the series operands passed to the constructor.
      * The truncation degree is set to \p max_degree, and it is either:
@@ -2783,10 +2783,10 @@ public:
      * - piranha::safe_cast(),
      * - arithmetic and other operations on the degree type,
      * - base_series_multiplier::plain_multiplication(),
-     * - get_skip_limits().
+     * - _get_skip_limits().
      */
     template <typename T, typename... Args>
-    Series truncated_multiplication(const T &max_degree, const Args &... args) const
+    Series _truncated_multiplication(const T &max_degree, const Args &... args) const
     {
         // NOTE: a possible optimisation here is the following: if the sum degrees of the arguments is less than
         // or equal to the max truncation degree, just do the normal multiplication - which can also then take
@@ -2826,7 +2826,7 @@ public:
         this->m_v2 = std::move(v2_copy);
         v_d2 = std::move(v_d2_copy);
         // Now get the skip limits and we build the limits functor.
-        const auto sl = get_skip_limits(v_d1, v_d2, max_degree);
+        const auto sl = _get_skip_limits(v_d1, v_d2, max_degree);
         auto lf = [&sl](const size_type &idx1) {
             return sl[static_cast<typename std::vector<size_type>::size_type>(idx1)];
         };
@@ -2860,7 +2860,7 @@ public:
      * - operations on the degree type.
      */
     template <typename T>
-    std::vector<typename base::size_type> get_skip_limits(const std::vector<T> &v_d1, const std::vector<T> &v_d2,
+    std::vector<typename base::size_type> _get_skip_limits(const std::vector<T> &v_d1, const std::vector<T> &v_d2,
                                                           const T &max_degree) const
     {
         // NOTE: this can be parallelised, but we need to check the heuristic
@@ -2948,15 +2948,15 @@ private:
         // Truncation is active.
         if (std::get<0u>(t) == 1) {
             // Total degree truncation.
-            return truncated_multiplication(std::get<1u>(t));
+            return _truncated_multiplication(std::get<1u>(t));
         }
         piranha_assert(std::get<0u>(t) == 2);
         // Partial degree truncation.
         const symbol_set::positions pos(this->m_ss, symbol_set(std::get<2u>(t).begin(), std::get<2u>(t).end()));
-        return truncated_multiplication(std::get<1u>(t), std::get<2u>(t), pos);
+        return _truncated_multiplication(std::get<1u>(t), std::get<2u>(t), pos);
     }
     // NOTE: the existence of these functors is because GCC 4.8 has troubles capturing variadic arguments in lambdas
-    // in truncated_multiplication, and we need to use std::bind instead. Once we switch to 4.9, we can revert
+    // in _truncated_multiplication, and we need to use std::bind instead. Once we switch to 4.9, we can revert
     // to lambdas and drop the <functional> header.
     struct term_degree_sorter {
         using term_type = typename Series::term_type;
