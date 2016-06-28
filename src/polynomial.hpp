@@ -2763,7 +2763,7 @@ public:
      * - piranha::base_series_multiplier::plain_multiplication() and get_skip_limits() can be called.
      *
      * This method will perform the truncated multiplication of the series operands passed to the constructor.
-     * The truncation degree is set to \p max degree, and it is either:
+     * The truncation degree is set to \p max_degree, and it is either:
      * - the total maximum degree, if the number of \p Args is zero, or
      * - the partial degree, if the number of \p Args is two.
      *
