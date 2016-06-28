@@ -2061,8 +2061,8 @@ public:
     template <typename T = polynomial, um_enabler<T> = 0>
     static polynomial untruncated_multiplication(const polynomial &p1, const polynomial &p2)
     {
-        auto runner = [](const polynomial &p1, const polynomial &p2) {
-            return series_multiplier<polynomial>(p1, p2)._untruncated_multiplication();
+        auto runner = [](const polynomial &a, const polynomial &b) {
+            return series_multiplier<polynomial>(a, b)._untruncated_multiplication();
         };
         return um_tm_implementation(p1, p2, runner);
     }
@@ -2098,9 +2098,8 @@ public:
     {
         // NOTE: these 2 implementations may be rolled into one once we can safely capture variadic arguments
         // in lambdas.
-        auto runner = [&max_degree](const polynomial &p1, const polynomial &p2) {
-            return series_multiplier<polynomial>(p1, p2)._truncated_multiplication(
-                safe_cast<degree_type<T>>(max_degree));
+        auto runner = [&max_degree](const polynomial &a, const polynomial &b) {
+            return series_multiplier<polynomial>(a, b)._truncated_multiplication(safe_cast<degree_type<T>>(max_degree));
         };
         return um_tm_implementation(p1, p2, runner);
     }
@@ -2137,10 +2136,10 @@ public:
                                                const std::vector<std::string> &names)
     {
         // NOTE: total and partial degree must be the same.
-        auto runner = [&max_degree, &names](const polynomial &p1, const polynomial &p2) -> polynomial {
-            const symbol_set::positions pos(p1.get_symbol_set(), symbol_set(names.begin(), names.end()));
-            return series_multiplier<polynomial>(p1, p2)._truncated_multiplication(
-                safe_cast<degree_type<T>>(max_degree), names, pos);
+        auto runner = [&max_degree, &names](const polynomial &a, const polynomial &b) -> polynomial {
+            const symbol_set::positions pos(a.get_symbol_set(), symbol_set(names.begin(), names.end()));
+            return series_multiplier<polynomial>(a, b)._truncated_multiplication(safe_cast<degree_type<T>>(max_degree),
+                                                                                 names, pos);
         };
         return um_tm_implementation(p1, p2, runner);
     }

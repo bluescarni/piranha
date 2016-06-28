@@ -54,7 +54,7 @@ constexpr bool has_untruncated_multiplication()
 }
 
 template <typename T, typename... Args>
-constexpr bool has_untruncated_multiplication(Args &&... args)
+constexpr bool has_untruncated_multiplication(Args &&...)
 {
     return false;
 }
@@ -67,7 +67,7 @@ constexpr bool has_truncated_multiplication()
 }
 
 template <typename T, typename... Args>
-constexpr bool has_truncated_multiplication(Args &&... args)
+constexpr bool has_truncated_multiplication(Args &&...)
 {
     return false;
 }
