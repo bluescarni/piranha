@@ -2139,8 +2139,8 @@ public:
         // NOTE: total and partial degree must be the same.
         auto runner = [&max_degree, &names](const polynomial &p1, const polynomial &p2) -> polynomial {
             const symbol_set::positions pos(p1.get_symbol_set(), symbol_set(names.begin(), names.end()));
-            return series_multiplier<polynomial>(p1, p2)._truncated_multiplication(safe_cast<degree_type<T>>(max_degree),
-                                                                                  names, pos);
+            return series_multiplier<polynomial>(p1, p2)._truncated_multiplication(
+                safe_cast<degree_type<T>>(max_degree), names, pos);
         };
         return um_tm_implementation(p1, p2, runner);
     }
@@ -2861,7 +2861,7 @@ public:
      */
     template <typename T>
     std::vector<typename base::size_type> _get_skip_limits(const std::vector<T> &v_d1, const std::vector<T> &v_d2,
-                                                          const T &max_degree) const
+                                                           const T &max_degree) const
     {
         // NOTE: this can be parallelised, but we need to check the heuristic
         // for selecting the number of threads as it is pretty fast wrt the multiplication.

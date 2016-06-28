@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <stdexcept>
 
 #include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
@@ -143,42 +144,38 @@ struct tm_tester {
             using p_type = polynomial<Cf, Key>;
             BOOST_CHECK(has_truncated_multiplication<p_type>());
             p_type x{"x"}, y{"y"};
-            // auto s1 = x + y, s2 = x - y;
-            // const auto ret = s1 * s2, ret2 = (x + y) * x, ret3 = x * y, ret4 = x * x;
+            const auto res1 = x * y + y * y, res2 = x * x, res3 = y * y;
             BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1), 0);
-            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 2), x * y + y * y);
-            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 2), x * y + y * y);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 2), res1);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 2), res1);
             BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x, y, 1), 0);
-            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1, {"y"}), x * x);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1, {"y"}), res2);
             BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 1, {"x", "y"}), 0);
-            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 0, {"x"}), y * y);
-// BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x,y,1,{}),x*y);
-
-#if 0
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x + y, x - y), ret);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x + y, x), ret2);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x, x + y), ret2);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x, y), ret3);
-            p_type::set_auto_truncate_degree(1);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x + y, x - y), ret);
-            BOOST_CHECK_EQUAL((x + y) * (x - y), 0);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x + y, x), ret2);
-            BOOST_CHECK_EQUAL((x + y) * x, 0);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x, x + y), ret2);
-            BOOST_CHECK_EQUAL(x * (x + y), 0);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x, y), ret3);
-            BOOST_CHECK_EQUAL(x * y, 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 0, {"x"}), res3);
+            p_type::set_auto_truncate_degree(0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 2), res1);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 2), res1);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x, y, 1), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1, {"y"}), res2);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 1, {"x", "y"}), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 0, {"x"}), res3);
             p_type::set_auto_truncate_degree(1, {"y"});
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x + y, x - y), ret);
-            BOOST_CHECK_EQUAL((x + y) * (x - y), ret4);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x + y, x), ret2);
-            BOOST_CHECK_EQUAL((x + y) * x, ret2);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x, x + y), ret2);
-            BOOST_CHECK_EQUAL(x * (x + y), ret2);
-            BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x, y), ret3);
-            BOOST_CHECK_EQUAL(x * y, ret3);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 2), res1);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 2), res1);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x, y, 1), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1, {"y"}), res2);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 1, {"x", "y"}), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 0, {"x"}), res3);
             p_type::unset_auto_truncate_degree();
-#endif
+            // Test for the safe_cast failure.
+            using dtype = decltype(x.degree());
+            if (!std::is_same<dtype, rational>::value) {
+                BOOST_CHECK_THROW(p_type::truncated_multiplication(x + y, x - y, 1 / 2_q), std::invalid_argument);
+                BOOST_CHECK_THROW(p_type::truncated_multiplication(x + y, x - y, 1 / 2_q, {"x", "y"}),
+                                  std::invalid_argument);
+            }
         }
     };
     template <typename Cf>
