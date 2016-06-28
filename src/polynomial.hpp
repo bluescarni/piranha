@@ -1246,6 +1246,43 @@ class polynomial
             return std::make_tuple(std::forward<U>(gcd), T{}, T{});
         }
     }
+    // Enabler for untruncated multiplication.
+    template <typename T>
+    using um_enabler =
+        typename std::enable_if<std::is_same<T, decltype(std::declval<const T &>() * std::declval<const T &>())>::value,
+                                int>::type;
+    // Enabler for truncated multiplication.
+    template <typename T, typename U>
+    using tm_enabler =
+        typename std::enable_if<std::is_same<T, decltype(std::declval<const T &>() * std::declval<const T &>())>::value
+                                    && has_safe_cast<degree_type<T>, U>::value
+                                    && detail::true_tt<at_degree_enabler<T>>::value,
+                                int>::type;
+    // Common bits for truncated/untruncated multiplication. Will do the usual merging of the symbol sets
+    // before calling the runner functor, which performs the actual multiplication.
+    template <typename Functor>
+    static polynomial um_tm_implementation(const polynomial &p1, const polynomial &p2, const Functor &runner)
+    {
+        const auto &ss1 = p1.get_symbol_set(), &ss2 = p2.get_symbol_set();
+        if (ss1 == ss2) {
+            return runner(p1, p2);
+        }
+        // If the symbol sets are not the same, we need to merge them and make
+        // copies of the original operands as needed.
+        auto merge = ss1.merge(ss2);
+        const bool need_copy_1 = (merge != ss1), need_copy_2 = (merge != ss2);
+        if (need_copy_1) {
+            polynomial copy_1(p1.extend_symbol_set(merge));
+            if (need_copy_2) {
+                polynomial copy_2(p2.extend_symbol_set(merge));
+                return runner(copy_1, copy_2);
+            }
+            return runner(copy_1, p2);
+        } else {
+            polynomial copy_2(p2.extend_symbol_set(merge));
+            return runner(p1, copy_2);
+        }
+    }
 
 public:
     /// Series rebind alias.
@@ -2000,36 +2037,6 @@ public:
         }
         return retval;
     }
-    // Enabler for untruncated multiplication.
-    template <typename T>
-    using um_enabler =
-        typename std::enable_if<std::is_same<T, decltype(std::declval<const T &>() * std::declval<const T &>())>::value,
-                                int>::type;
-    // Common bits for truncated/untruncated multiplication. Will do the usual merging of the symbol sets
-    // before calling the runner functor, which performs the actual multiplication.
-    template <typename Functor>
-    static polynomial um_tm_implementation(const polynomial &p1, const polynomial &p2, const Functor &runner)
-    {
-        const auto &ss1 = p1.get_symbol_set(), &ss2 = p2.get_symbol_set();
-        if (ss1 == ss2) {
-            return runner(p1, p2);
-        }
-        // If the symbol sets are not the same, we need to merge them and make
-        // copies of the original operands as needed.
-        auto merge = ss1.merge(ss2);
-        const bool need_copy_1 = (merge != ss1), need_copy_2 = (merge != ss2);
-        if (need_copy_1) {
-            polynomial copy_1(p1.extend_symbol_set(merge));
-            if (need_copy_2) {
-                polynomial copy_2(p2.extend_symbol_set(merge));
-                return runner(copy_1, copy_2);
-            }
-            return runner(copy_1, p2);
-        } else {
-            polynomial copy_2(p2.extend_symbol_set(merge));
-            return runner(p1, copy_2);
-        }
-    }
     /// Untruncated multiplication.
     /**
      * \note
@@ -2059,31 +2066,81 @@ public:
         };
         return um_tm_implementation(p1, p2, runner);
     }
-    template <typename T, typename U>
-    using tm_enabler =
-        typename std::enable_if<std::is_same<T, decltype(std::declval<const T &>() * std::declval<const T &>())>::value
-                                    && has_safe_cast<degree_t<T>,U>::value,
-                                int>::type;
-    template <typename T, typename U = polynomial, tm_enabler<T, U> = 0>
+    /// Truncated multiplication (total degree).
+    /**
+     * \note
+     * This function template is enabled only if the following conditions hold:
+     * - the calling piranha::polynomial satisfies piranha::is_multipliable, returning the calling piranha::polynomial
+     *   as return type,
+     * - the requirements for truncated multiplication outlined in piranha::polynomial are satisfied,
+     * - \p U can be safely cast to the degree type of the calling piranha::polynomial.
+     *
+     * This function will return the product of \p p1 and \p p2, truncated to the maximum total degree
+     * of \p max_degree (regardless of the current automatic truncation settings).
+     * Note that this function is
+     * available only if the operands are of the same type and no type promotions affect the coefficient types
+     * during multiplication.
+     *
+     * @param[in] p1 the first operand.
+     * @param[in] p2 the second operand.
+     * @param[in] max_degree the maximum total degree in the result.
+     *
+     * @return the truncated product of \p p1 and \p p2.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of the specialisation of piranha::series_multiplier for piranha::polynomial,
+     * - the public interface of piranha::symbol_set,
+     * - the public interface of piranha::series,
+     * - piranha::safe_cast().
+     */
+    template <typename U, typename T = polynomial, tm_enabler<T, U> = 0>
     static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2, const U &max_degree)
     {
         // NOTE: these 2 implementations may be rolled into one once we can safely capture variadic arguments
         // in lambdas.
-        using degree_type = decltype(p1.degree());
         auto runner = [&max_degree](const polynomial &p1, const polynomial &p2) {
-            return series_multiplier<polynomial>(p1, p2).truncated_multiplication(safe_cast<degree_type>(max_degree));
+            return series_multiplier<polynomial>(p1, p2).truncated_multiplication(
+                safe_cast<degree_type<T>>(max_degree));
         };
         return um_tm_implementation(p1, p2, runner);
     }
-    template <typename T, typename U = polynomial, tm_enabler<T, U> = 0>
+    /// Truncated multiplication (partial degree).
+    /**
+     * \note
+     * This function template is enabled only if the following conditions hold:
+     * - the calling piranha::polynomial satisfies piranha::is_multipliable, returning the calling piranha::polynomial
+     *   as return type,
+     * - the requirements for truncated multiplication outlined in piranha::polynomial are satisfied,
+     * - \p U can be safely cast to the degree type of the calling piranha::polynomial.
+     *
+     * This function will return the product of \p p1 and \p p2, truncated to the maximum partial degree
+     * of \p max_degree (regardless of the current automatic truncation settings).
+     * Note that this function is
+     * available only if the operands are of the same type and no type promotions affect the coefficient types
+     * during multiplication.
+     *
+     * @param[in] p1 the first operand.
+     * @param[in] p2 the second operand.
+     * @param[in] max_degree the maximum total degree in the result.
+     * @param[in] names names of the variables that will be considered in the computation of the degree.
+     *
+     * @return the truncated product of \p p1 and \p p2.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of the specialisation of piranha::series_multiplier for piranha::polynomial,
+     * - the public interface of piranha::symbol_set,
+     * - the public interface of piranha::series,
+     * - piranha::safe_cast().
+     */
+    template <typename U, typename T = polynomial, tm_enabler<T, U> = 0>
     static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2, const U &max_degree,
                                                const std::vector<std::string> &names)
     {
         // NOTE: total and partial degree must be the same.
-        using degree_type = decltype(p1.degree());
-        auto runner = [&max_degree, &names](const polynomial &p1, const polynomial &p2) {
-            return series_multiplier<polynomial>(p1, p2).truncated_multiplication(safe_cast<degree_type>(max_degree),
-                                                                                  names);
+        auto runner = [&max_degree, &names](const polynomial &p1, const polynomial &p2) -> polynomial {
+            const symbol_set::positions pos(p1.get_symbol_set(), symbol_set(names.begin(), names.end()));
+            return series_multiplier<polynomial>(p1, p2).truncated_multiplication(safe_cast<degree_type<T>>(max_degree),
+                                                                                  names, pos);
         };
         return um_tm_implementation(p1, p2, runner);
     }

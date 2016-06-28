@@ -143,18 +143,18 @@ struct tm_tester {
             using p_type = polynomial<Cf, Key>;
             BOOST_CHECK(has_truncated_multiplication<p_type>());
             p_type x{"x"}, y{"y"};
-            auto s1 = x + y, s2 = x - y;
-            const auto ret = s1 * s2, ret2 = (x + y) * x, ret3 = x * y, ret4 = x * x;
-            series_multiplier<p_type> sm0(s1, s2);
-            BOOST_CHECK_EQUAL(sm0._untruncated_multiplication(), (x + y) * (x - y));
-            p_type::set_auto_truncate_degree(1);
-            BOOST_CHECK_EQUAL(sm0._untruncated_multiplication(), ret);
-            BOOST_CHECK_EQUAL(s1 * s2, 0);
-            p_type::set_auto_truncate_degree(1, {"y"});
-            BOOST_CHECK_EQUAL(sm0._untruncated_multiplication(), ret);
-            BOOST_CHECK_EQUAL(s1 * s2, x * x);
-            p_type::unset_auto_truncate_degree();
-            // Now the static mult method.
+            // auto s1 = x + y, s2 = x - y;
+            // const auto ret = s1 * s2, ret2 = (x + y) * x, ret3 = x * y, ret4 = x * x;
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 2), x * y + y * y);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 2), x * y + y * y);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x, y, 1), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, x - y, 1, {"y"}), x * x);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x + y, y, 1, {"x", "y"}), 0);
+            BOOST_CHECK_EQUAL(p_type::truncated_multiplication(y, x + y, 0, {"x"}), y * y);
+// BOOST_CHECK_EQUAL(p_type::truncated_multiplication(x,y,1,{}),x*y);
+
+#if 0
             BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x + y, x - y), ret);
             BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x + y, x), ret2);
             BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x, x + y), ret2);
@@ -178,6 +178,7 @@ struct tm_tester {
             BOOST_CHECK_EQUAL(p_type::untruncated_multiplication(x, y), ret3);
             BOOST_CHECK_EQUAL(x * y, ret3);
             p_type::unset_auto_truncate_degree();
+#endif
         }
     };
     template <typename Cf>
