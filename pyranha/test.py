@@ -924,6 +924,26 @@ class truncate_degree_test_case(_ut.TestCase):
 		pt.unset_auto_truncate_degree()
 		pt.clear_pow_cache()
 		self.assertEqual(pt.get_auto_truncate_degree(),(0,0,[]))
+		# Explicit truncated/untruncated multiplication methods.
+		pt = polynomial(rational,monomial(short))()
+		x,y = pt('x'), pt('y')
+		pt.clear_pow_cache()
+		res = x**2-y**2
+		res2 = -y*y
+		res3 = x*x
+		pt.set_auto_truncate_degree(1)
+		self.assertEqual(pt.untruncated_multiplication(x+y,x-y),res)
+		pt.set_auto_truncate_degree(5)
+		self.assertEqual(pt.truncated_multiplication(x+y,x-y,1),0)
+		self.assertEqual(pt.truncated_multiplication(x+y,x-y,F(1)),0)
+		self.assertRaises(ValueError,lambda: pt.truncated_multiplication(x+y,x-y,F(1,2)))
+		self.assertEqual(pt.truncated_multiplication(x+y,x-y,1,["x"]),res2)
+		self.assertEqual(pt.truncated_multiplication(x+1,x,1,["x","y"]),x)
+		self.assertRaises(ValueError,lambda: pt.truncated_multiplication(x+y,x-y,F(3,2),["x"]))
+		self.assertRaises(TypeError,lambda: pt.truncated_multiplication(x+y,x-y,3,["x",3]))
+		# Reset before finishing.
+		pt.unset_auto_truncate_degree()
+		pt.clear_pow_cache()
 
 class integrate_test_case(_ut.TestCase):
 	"""Test case for the integration functionality.
