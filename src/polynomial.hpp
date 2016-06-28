@@ -2763,12 +2763,18 @@ public:
      * - piranha::base_series_multiplier::plain_multiplication() and get_skip_limits() can be called.
      *
      * This method will perform the truncated multiplication of the series operands passed to the constructor.
-     * The truncation degree is set to \p max degree, and it is either the total maximum degree (if the number
-     * of \p Args is zero) or the partial degree (if \p Args is a single symbol_set::positions parameter
-     * representing the positions of the arguments to be considered for the computation of the degree).
+     * The truncation degree is set to \p max degree, and it is either:
+     * - the total maximum degree, if the number of \p Args is zero, or
+     * - the partial degree, if the number of \p Args is two.
+     *
+     * In the latter case, the two arguments must be:
+     * - an \p std::vector of \p std::string representing the names of the variables which will be taken
+     *   into account when computing the partial degree,
+     * - a piranha::symbol_set::positions referring to the positions of the variables of the first argument
+     *   in the merged symbol set of the two operands.
      *
      * @param[in] max_degree the maximum degree of the result of the multiplication.
-     * @param[in] args either an empty argument, or a single symbol_set::positions argument.
+     * @param[in] args either an empty argument, or a pair of arguments as described above.
      *
      * @return the result of the truncated multiplication of the operands used for construction.
      *
