@@ -52,21 +52,24 @@ static bool phbd_defined =
     false;
 #endif
 
-struct base_foo
-{
+struct base_foo {
     virtual void f() const
-    {}
-    virtual ~base_foo() {}
+    {
+    }
+    virtual ~base_foo()
+    {
+    }
 };
 
-struct foo : base_foo{};
+struct foo : base_foo {
+};
 
 namespace myns
 {
 
 template <typename T>
-struct bar {};
-
+struct bar {
+};
 }
 
 BOOST_AUTO_TEST_CASE(demangle_test)
@@ -89,5 +92,6 @@ BOOST_AUTO_TEST_CASE(demangle_test)
     std::cout << demangle<myns::bar<int>>() << '\n';
     // Check with dynamic polymorphism.
     std::unique_ptr<base_foo> foo_ptr(new foo{});
-    BOOST_CHECK_EQUAL(demangle(typeid(*foo_ptr.get())),demangle<foo>());
+    auto ptr = foo_ptr.get();
+    BOOST_CHECK_EQUAL(demangle(typeid(*ptr)), demangle<foo>());
 }
