@@ -33,6 +33,5 @@ var searchData=
   ['get_5fnames',['get_names',['../classpiranha_1_1math_1_1lambdified.html#a1dffb37193386e86a10730002435f1ab',1,'piranha::math::lambdified']]],
   ['get_5fparallel_5fmemory_5fset',['get_parallel_memory_set',['../classpiranha_1_1tuning.html#a0332c484abd2cffbb81df0ff847019bd',1,'piranha::tuning']]],
   ['get_5fprec',['get_prec',['../classpiranha_1_1real.html#a97ea26ec55d8bbde80dfd9e9a6e9e1ed',1,'piranha::real']]],
-  ['get_5fskip_5flimits',['get_skip_limits',['../classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html#ac73c7df64a122459072490789ef0a56e',1,'piranha::series_multiplier&lt; Series, detail::poly_multiplier_enabler&lt; Series &gt; &gt;']]],
   ['get_5fsymbol_5fset',['get_symbol_set',['../classpiranha_1_1series.html#a7c4a9e7100d9842f3dbc6e7fdd04ee49',1,'piranha::series']]]
 ];

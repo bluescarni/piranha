@@ -405,6 +405,18 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a9dd3cf150972e0e3fe5a6524466f0f2d"><td class="memTemplItemLeft" align="right" valign="top">static std::tuple&lt; <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>, <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>, <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1polynomial.html#a9dd3cf150972e0e3fe5a6524466f0f2d">gcd</a> (const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &amp;a, const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &amp;b, bool with_cofactors=false, <a class="el" href="namespacepiranha.html#a10eca18731adffdf7043d601309e6866">polynomial_gcd_algorithm</a> algo=<a class="el" href="classpiranha_1_1polynomial.html#a2f8720b75662fd74c3b34dd17174729b">get_default_gcd_algorithm</a>())</td></tr>
 <tr class="memdesc:a9dd3cf150972e0e3fe5a6524466f0f2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Polynomial GCD.  <a href="#a9dd3cf150972e0e3fe5a6524466f0f2d">More...</a><br /></td></tr>
 <tr class="separator:a9dd3cf150972e0e3fe5a6524466f0f2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21081b40280606724ea27daa12cc70a8"><td class="memTemplParams" colspan="2">template&lt;typename T  = polynomial, um_enabler&lt; T &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a21081b40280606724ea27daa12cc70a8"><td class="memTemplItemLeft" align="right" valign="top">static <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1polynomial.html#a21081b40280606724ea27daa12cc70a8">untruncated_multiplication</a> (const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &amp;p1, const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &amp;p2)</td></tr>
+<tr class="memdesc:a21081b40280606724ea27daa12cc70a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Untruncated multiplication.  <a href="#a21081b40280606724ea27daa12cc70a8">More...</a><br /></td></tr>
+<tr class="separator:a21081b40280606724ea27daa12cc70a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47978f79b8e7da4572cb459565ce6f5d"><td class="memTemplParams" colspan="2">template&lt;typename U , typename T  = polynomial, tm_enabler&lt; T, U &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a47978f79b8e7da4572cb459565ce6f5d"><td class="memTemplItemLeft" align="right" valign="top">static <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1polynomial.html#a47978f79b8e7da4572cb459565ce6f5d">truncated_multiplication</a> (const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &amp;p1, const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &amp;p2, const U &amp;max_degree)</td></tr>
+<tr class="memdesc:a47978f79b8e7da4572cb459565ce6f5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Truncated multiplication (total degree).  <a href="#a47978f79b8e7da4572cb459565ce6f5d">More...</a><br /></td></tr>
+<tr class="separator:a47978f79b8e7da4572cb459565ce6f5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e5fda495bf7488930d5188d57908678"><td class="memTemplParams" colspan="2">template&lt;typename U , typename T  = polynomial, tm_enabler&lt; T, U &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a2e5fda495bf7488930d5188d57908678"><td class="memTemplItemLeft" align="right" valign="top">static <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1polynomial.html#a2e5fda495bf7488930d5188d57908678">truncated_multiplication</a> (const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &amp;p1, const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> &amp;p2, const U &amp;max_degree, const std::vector&lt; std::string &gt; &amp;names)</td></tr>
+<tr class="memdesc:a2e5fda495bf7488930d5188d57908678"><td class="mdescLeft">&#160;</td><td class="mdescRight">Truncated multiplication (partial degree).  <a href="#a2e5fda495bf7488930d5188d57908678">More...</a><br /></td></tr>
+<tr class="separator:a2e5fda495bf7488930d5188d57908678"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae7da3b838cc92a235785ae4e339a1e97"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1series.html#ae7da3b838cc92a235785ae4e339a1e97">clear_pow_cache</a> ()</td></tr>
 <tr class="memdesc:ae7da3b838cc92a235785ae4e339a1e97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear the internal cache of natural powers.  <a href="#ae7da3b838cc92a235785ae4e339a1e97">More...</a><br /></td></tr>
 <tr class="separator:ae7da3b838cc92a235785ae4e339a1e97"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -499,7 +511,7 @@ class piranha::polynomial&lt; Cf, Key &gt;</h3>
 <h2>Serialization</h2>
 <p>This class supports serialization if the underlying coefficient and key types do. </p>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l00675">675</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l00674">674</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
 <a class="anchor" id="a9e56e9552fe250c2032580e2b7b9b722"></a>
 <div class="memitem">
@@ -632,7 +644,7 @@ template&lt;typename Str , str_enabler&lt; Str &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01283">1283</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01319">1319</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -805,7 +817,7 @@ template&lt;typename T  = polynomial, content_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01645">1645</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01681">1681</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1169,7 +1181,7 @@ template&lt;typename T , find_cf_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01539">1539</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01575">1575</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1216,7 +1228,7 @@ template&lt;typename T , find_cf_init_list_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01559">1559</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01595">1595</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1305,7 +1317,7 @@ template&lt;typename T  = polynomial, gcd_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01919">1919</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01955">1955</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1349,7 +1361,7 @@ template&lt;typename T  = polynomial, at_degree_enabler&lt; T &gt;  = 0&gt; </di
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01512">1512</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01548">1548</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1380,7 +1392,7 @@ template&lt;typename Cf, typename Key&gt; </div>
 <p>The default value initialised on startup is <a class="el" href="namespacepiranha.html#a10eca18731adffdf7043d601309e6866a2bd9c0ed00116be1258e0cc66617d7c8" title="Automatic selection. ">polynomial_gcd_algorithm::automatic</a>. This method is thread-safe.</p>
 <dl class="section return"><dt>Returns</dt><dd>the current default algorithm to be used for GCD computations. </dd></dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01851">1851</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01887">1887</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1488,7 +1500,7 @@ template&lt;typename T  = polynomial&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02031">2031</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02029">2029</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1653,7 +1665,7 @@ template&lt;typename T  = polynomial&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01385">1385</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01421">1421</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1692,7 +1704,7 @@ template&lt;typename Series  = polynomial&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01350">1350</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01386">1386</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1942,7 +1954,7 @@ template&lt;typename T  = polynomial, join_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01617">1617</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01653">1653</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2306,7 +2318,7 @@ template&lt;typename T , typename Series  = polynomial&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01323">1323</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01359">1359</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2351,7 +2363,7 @@ template&lt;typename T  = polynomial, pp_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01668">1668</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01704">1704</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2489,7 +2501,7 @@ template&lt;typename Cf, typename Key&gt; </div>
 <p>Reset the default algorithm to be used for GCD computations. </p>
 <p>This method will set the default algorithm to be used for GCD computations to <a class="el" href="namespacepiranha.html#a10eca18731adffdf7043d601309e6866a2bd9c0ed00116be1258e0cc66617d7c8" title="Automatic selection. ">polynomial_gcd_algorithm::automatic</a>. This method is thread-safe. </p>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01871">1871</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01907">1907</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2607,7 +2619,7 @@ template&lt;typename U , typename T  = polynomial, at_degree_set_enabler&lt; T, 
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01429">1429</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01465">1465</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2670,7 +2682,7 @@ template&lt;typename U , typename T  = polynomial, at_degree_set_enabler&lt; T, 
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01462">1462</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01498">1498</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2707,7 +2719,7 @@ template&lt;typename Cf, typename Key&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01861">1861</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01897">1897</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2821,7 +2833,7 @@ template&lt;typename Cf, typename Key&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01579">1579</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01615">1615</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3555,6 +3567,165 @@ template&lt;typename Cf, typename Key&gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a47978f79b8e7da4572cb459565ce6f5d"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Cf, typename Key&gt; </div>
+<div class="memtemplate">
+template&lt;typename U , typename T  = polynomial, tm_enabler&lt; T, U &gt;  = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> <a class="el" href="classpiranha_1_1polynomial.html">piranha::polynomial</a>&lt; Cf, Key &gt;::truncated_multiplication </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&lt; Cf, Key &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&lt; Cf, Key &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const U &amp;&#160;</td>
+          <td class="paramname"><em>max_degree</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Truncated multiplication (total degree). </p>
+<dl class="section note"><dt>Note</dt><dd>This function template is enabled only if the following conditions hold:<ul>
+<li>the calling <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> satisfies <a class="el" href="classpiranha_1_1is__multipliable.html" title="Multipliable type trait. ">piranha::is_multipliable</a>, returning the calling <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> as return type,</li>
+<li>the requirements for truncated multiplication outlined in <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> are satisfied,</li>
+<li><code>U</code> can be safely cast to the degree type of the calling <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a>.</li>
+</ul>
+</dd></dl>
+<p>This function will return the product of <code>p1</code> and <code>p2</code>, truncated to the maximum total degree of <code>max_degree</code> (regardless of the current automatic truncation settings). Note that this function is available only if the operands are of the same type and no type promotions affect the coefficient types during multiplication.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p1</td><td>the first operand. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">p2</td><td>the second operand. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">max_degree</td><td>the maximum total degree in the result.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the truncated product of <code>p1</code> and <code>p2</code>.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
+<li>the public interface of the specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a> for <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a>,</li>
+<li>the public interface of <a class="el" href="classpiranha_1_1symbol__set.html" title="Symbol set. ">piranha::symbol_set</a>,</li>
+<li>the public interface of <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>. </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02097">2097</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a2e5fda495bf7488930d5188d57908678"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Cf, typename Key&gt; </div>
+<div class="memtemplate">
+template&lt;typename U , typename T  = polynomial, tm_enabler&lt; T, U &gt;  = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> <a class="el" href="classpiranha_1_1polynomial.html">piranha::polynomial</a>&lt; Cf, Key &gt;::truncated_multiplication </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&lt; Cf, Key &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&lt; Cf, Key &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const U &amp;&#160;</td>
+          <td class="paramname"><em>max_degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>names</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Truncated multiplication (partial degree). </p>
+<dl class="section note"><dt>Note</dt><dd>This function template is enabled only if the following conditions hold:<ul>
+<li>the calling <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> satisfies <a class="el" href="classpiranha_1_1is__multipliable.html" title="Multipliable type trait. ">piranha::is_multipliable</a>, returning the calling <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> as return type,</li>
+<li>the requirements for truncated multiplication outlined in <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> are satisfied,</li>
+<li><code>U</code> can be safely cast to the degree type of the calling <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a>.</li>
+</ul>
+</dd></dl>
+<p>This function will return the product of <code>p1</code> and <code>p2</code>, truncated to the maximum partial degree of <code>max_degree</code> (regardless of the current automatic truncation settings). Note that this function is available only if the operands are of the same type and no type promotions affect the coefficient types during multiplication.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p1</td><td>the first operand. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">p2</td><td>the second operand. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">max_degree</td><td>the maximum total degree in the result. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">names</td><td>names of the variables that will be considered in the computation of the degree.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the truncated product of <code>p1</code> and <code>p2</code>.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
+<li>the public interface of the specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a> for <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a>,</li>
+<li>the public interface of <a class="el" href="classpiranha_1_1symbol__set.html" title="Symbol set. ">piranha::symbol_set</a>,</li>
+<li>the public interface of <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>. </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02135">2135</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="abd1279cde49e13efb7b78a8505a1f7ac"></a>
 <div class="memitem">
 <div class="memproto">
@@ -3626,7 +3797,7 @@ template&lt;typename T  = polynomial, poly_div_enabler&lt; T &gt;  = 0&gt; </div
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01708">1708</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01744">1744</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3752,7 +3923,70 @@ template&lt;typename T  = polynomial, at_degree_enabler&lt; T &gt;  = 0&gt; </di
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01486">1486</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01522">1522</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a21081b40280606724ea27daa12cc70a8"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Cf, typename Key&gt; </div>
+<div class="memtemplate">
+template&lt;typename T  = polynomial, um_enabler&lt; T &gt;  = 0&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a> <a class="el" href="classpiranha_1_1polynomial.html">piranha::polynomial</a>&lt; Cf, Key &gt;::untruncated_multiplication </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&lt; Cf, Key &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classpiranha_1_1polynomial.html">polynomial</a>&lt; Cf, Key &gt; &amp;&#160;</td>
+          <td class="paramname"><em>p2</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Untruncated multiplication. </p>
+<dl class="section note"><dt>Note</dt><dd>This function template is enabled only if the calling <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> satisfies <a class="el" href="classpiranha_1_1is__multipliable.html" title="Multipliable type trait. ">piranha::is_multipliable</a>, returning the calling <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> as return type.</dd></dl>
+<p>This function will return the product of <code>p1</code> and <code>p2</code>, computed without truncation (regardless of the current automatic truncation settings). Note that this function is available only if the operands are of the same type and no type promotions affect the coefficient types during multiplication.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p1</td><td>the first operand. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">p2</td><td>the second operand.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the product of <code>p1</code> and <code>p2</code>.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
+<li>the public interface of the specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a> for <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a>,</li>
+<li>the public interface of <a class="el" href="classpiranha_1_1symbol__set.html" title="Symbol set. ">piranha::symbol_set</a>,</li>
+<li>the public interface of <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a>. </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02062">2062</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3823,7 +4057,7 @@ template&lt;typename T  = polynomial, uprem_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01745">1745</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01781">1781</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3895,7 +4129,7 @@ template&lt;typename T , typename U , poly_div_enabler&lt; T, U &gt;  = 0&gt; </
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01803">1803</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01839">1839</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3952,7 +4186,7 @@ template&lt;typename T , typename U , poly_in_place_div_enabler&lt; T, U &gt;  =
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01840">1840</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01876">1876</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>

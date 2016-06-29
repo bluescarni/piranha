@@ -9,12 +9,15 @@ var searchData=
   ['_5ffind',['_find',['../classpiranha_1_1hash__set.html#aa747b430fe16e4cf93455d89eb715eb1',1,'piranha::hash_set']]],
   ['_5fget_5fbucket_5flist',['_get_bucket_list',['../classpiranha_1_1hash__set.html#af6f8ebcae6d7453d73599fe92c37f43b',1,'piranha::hash_set']]],
   ['_5fget_5fmpz_5fptr',['_get_mpz_ptr',['../classpiranha_1_1mp__integer.html#a88fb3b60aa00d3f9a416729384db07b7',1,'piranha::mp_integer']]],
+  ['_5fget_5fskip_5flimits',['_get_skip_limits',['../classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html#a8aa4a09d828353d0e1b1c3fdfcc69b7e',1,'piranha::series_multiplier&lt; Series, detail::poly_multiplier_enabler&lt; Series &gt; &gt;']]],
   ['_5fincrease_5fsize',['_increase_size',['../classpiranha_1_1hash__set.html#a8cae073bdb82fa916c9a1e55590cd927',1,'piranha::hash_set']]],
   ['_5fm_5fbegin',['_m_begin',['../classpiranha_1_1hash__set.html#abb51f373c6a699f629cea1a895ec17cd',1,'piranha::hash_set']]],
   ['_5fm_5fend',['_m_end',['../classpiranha_1_1hash__set.html#ae47fe9d9b519f2cfd56549479b1d000c',1,'piranha::hash_set']]],
   ['_5fm_5fiterator',['_m_iterator',['../classpiranha_1_1hash__set.html#a2e2a6bd3afbc8afd369bd45f5efa9b5f',1,'piranha::hash_set']]],
   ['_5fnum',['_num',['../classpiranha_1_1mp__rational.html#a617ce9d7aa7fcec2b365f7ec32c964e5',1,'piranha::mp_rational::_num()'],['../classpiranha_1_1rational__function.html#a1e003d5beb1722bb0be6bba790b1ee00',1,'piranha::rational_function::_num()']]],
   ['_5fset_5fden',['_set_den',['../classpiranha_1_1mp__rational.html#a1cf79eaf4d77d5efb15d49e321225a93',1,'piranha::mp_rational']]],
+  ['_5ftruncated_5fmultiplication',['_truncated_multiplication',['../classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html#a80ad3a0f62756d7922fa41c28ba50f80',1,'piranha::series_multiplier&lt; Series, detail::poly_multiplier_enabler&lt; Series &gt; &gt;']]],
   ['_5funique_5finsert',['_unique_insert',['../classpiranha_1_1hash__set.html#a1752c5aac05d700579558811ae8a9d1c',1,'piranha::hash_set']]],
+  ['_5funtruncated_5fmultiplication',['_untruncated_multiplication',['../classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html#a828d8cd4533a927627dd64b4c2b09d72',1,'piranha::series_multiplier&lt; Series, detail::poly_multiplier_enabler&lt; Series &gt; &gt;']]],
   ['_5fupdate_5fsize',['_update_size',['../classpiranha_1_1hash__set.html#a435316baaf709ace4479a6e5f2db2227',1,'piranha::hash_set']]]
 ];
