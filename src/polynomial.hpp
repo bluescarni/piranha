@@ -901,8 +901,7 @@ class polynomial
     using pdegree_type
         = decltype(math::degree(std::declval<const T &>(), std::declval<const std::vector<std::string> &>()));
     // Enablers for auto-truncation: degree and partial degree must be the same, series must support
-    // math::truncate_degree(), degree type
-    // must be subtractable and yield the same type.
+    // math::truncate_degree(), degree type must be subtractable and yield the same type.
     template <typename T>
     using at_degree_enabler =
         typename std::enable_if<std::is_same<degree_type<T>, pdegree_type<T>>::value
@@ -918,17 +917,12 @@ class polynomial
                                 int>::type;
     // This needs to be separate from the other static inits because we don't have anything to init
     // if the series does not support degree computation.
-    // NOTE: here the important thing is that this method does not
-    // return the same object for different series types, as the intent of the truncation mechanism is that each
-    // polynomial type
-    // has its own settings.
+    // NOTE: here the important thing is that this method does not return the same object for different series types,
+    // as the intent of the truncation mechanism is that each polynomial type has its own settings.
     // We need to keep this in mind if we need static resources that must be unique for the series type, sometimes
-    // adding the Derived
-    // series as template argument in a toolbox might actually be necessary because of this. Note that, contrary to the,
-    // e.g., custom
-    // derivatives map in series.hpp here we don't care about the type of T - we just need to be able to extract the
-    // term type
-    // from it.
+    // adding the Derived series as template argument in a toolbox might actually be necessary because of this. Note
+    // that, contrary to the, e.g., custom derivatives map in series.hpp here we don't care about the type of T - we
+    // just need to be able to extract the term type from it.
     template <typename T = polynomial>
     static degree_type<T> &get_at_degree_max()
     {
@@ -1472,6 +1466,7 @@ public:
         auto &at_dm = get_at_degree_max();
         std::lock_guard<std::mutex> lock(s_at_degree_mutex);
         s_at_degree_mode = 1;
+        // NOTE: the degree type of polys satisfies is_container_element, so move assignment is noexcept.
         at_dm = std::move(new_degree);
         // This should not throw (a vector of strings, destructors and deallocation should be noexcept).
         s_at_degree_names.clear();
