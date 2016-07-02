@@ -14,6 +14,11 @@ New
 Changes
 ~~~~~~~
 
+- Setting a global truncation limit in polynomials now resets the cache
+  of natural powers. [Francesco Biscani]
+
+  With this change, the behaviour of polynomial exponentiation should always be consistent with the currently active truncation level.
+
 - Use Boost's demangler instead of our own. [Francesco Biscani]
 
 Fix
