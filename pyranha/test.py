@@ -944,6 +944,19 @@ class truncate_degree_test_case(_ut.TestCase):
 		# Reset before finishing.
 		pt.unset_auto_truncate_degree()
 		pt.clear_pow_cache()
+		# Test the new behaviour of pow cache clearing.
+		pt = polynomial(rational,monomial(short))()
+		x,y = pt('x'), pt('y')
+		self.assertEqual((x+y+1)**2,2*x+1+2*y+x*x+y*y+2*x*y)
+		pt.set_auto_truncate_degree(1)
+		self.assertEqual((x+y+1)**2,2*x+1+2*y)
+		pt.set_auto_truncate_degree(1,['x'])
+		self.assertEqual((x+y+1)**2,2*x+1+2*y+y*y+2*x*y)
+		pt.set_auto_truncate_degree(1,['y'])
+		self.assertEqual((x+y+1)**2,2*x+1+2*y+x*x+2*x*y)
+		# Reset before finishing.
+		pt.unset_auto_truncate_degree()
+		pt.clear_pow_cache()
 
 class integrate_test_case(_ut.TestCase):
 	"""Test case for the integration functionality.

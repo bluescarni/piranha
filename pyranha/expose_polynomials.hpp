@@ -307,8 +307,9 @@ struct poly_custom_hook {
         expose_degree_auto_truncation_get_unset(series_class);
         expose_degree_auto_truncation_set(series_class);
         // This is always available.
-        series_class.def("untruncated_multiplication", +[](const T &p1, const T &p2) {
-            return T::untruncated_multiplication(p1,p2);})
+        series_class
+            .def("untruncated_multiplication",
+                 +[](const T &p1, const T &p2) { return T::untruncated_multiplication(p1, p2); })
             .staticmethod("untruncated_multiplication");
         // find_cf().
         series_class.def("find_cf", find_cf_wrapper<T>);
