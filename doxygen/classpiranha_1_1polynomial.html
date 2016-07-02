@@ -498,7 +498,7 @@ class piranha::polynomial&lt; Cf, Key &gt;</h3>
 <p>Polynomials support an automatic degree-based truncation mechanism, disabled by default, which comes into play during polynomial multiplication. It allows to discard automatically all those terms, generated during series multiplication, whose total or partial degree is greater than a specified limit. This mechanism can be configured via a set of thread-safe static methods, and it is enabled if:</p><ul>
 <li>the total and partial degree of the series are represented by the same type <code>D</code>,</li>
 <li>all the truncation-related requirements in <a class="el" href="classpiranha_1_1power__series.html" title="Power series toolbox. ">piranha::power_series</a> are satsified,</li>
-<li>the type <code>D</code> is subtractable and the type resulting from the subtraction is still <code>D</code>.</li>
+<li>the type <code>D</code> is equality-comparable, subtractable and the type resulting from the subtraction is still <code>D</code>.</li>
 </ul>
 <p>This class satisfies the <a class="el" href="classpiranha_1_1is__series.html" title="Type trait to detect series types. ">piranha::is_series</a> and <a class="el" href="classpiranha_1_1is__cf.html" title="Type trait to detect coefficient types. ">piranha::is_cf</a> type traits.</p>
 <dl class="section warning"><dt>Warning</dt><dd>The division and GCD operations are known to have poor performance, especially with large operands. Performance will be improved in future versions.</dd></dl>
@@ -644,7 +644,7 @@ template&lt;typename Str , str_enabler&lt; Str &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01319">1319</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01323">1323</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -817,7 +817,7 @@ template&lt;typename T  = polynomial, content_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01681">1681</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01694">1694</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -859,7 +859,7 @@ template&lt;typename T  = polynomial, content_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00413">413</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00406">406</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -908,7 +908,7 @@ template&lt;typename T  = polynomial, content_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00467">467</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00460">460</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -1181,7 +1181,7 @@ template&lt;typename T , find_cf_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01575">1575</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01588">1588</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1228,7 +1228,7 @@ template&lt;typename T , find_cf_init_list_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01595">1595</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01608">1608</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1317,7 +1317,7 @@ template&lt;typename T  = polynomial, gcd_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01955">1955</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01968">1968</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1361,7 +1361,7 @@ template&lt;typename T  = polynomial, at_degree_enabler&lt; T &gt;  = 0&gt; </di
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01548">1548</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01561">1561</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1392,7 +1392,7 @@ template&lt;typename Cf, typename Key&gt; </div>
 <p>The default value initialised on startup is <a class="el" href="namespacepiranha.html#a10eca18731adffdf7043d601309e6866a2bd9c0ed00116be1258e0cc66617d7c8" title="Automatic selection. ">polynomial_gcd_algorithm::automatic</a>. This method is thread-safe.</p>
 <dl class="section return"><dt>Returns</dt><dd>the current default algorithm to be used for GCD computations. </dd></dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01887">1887</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01900">1900</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1500,7 +1500,7 @@ template&lt;typename T  = polynomial&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02029">2029</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02042">2042</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1665,7 +1665,7 @@ template&lt;typename T  = polynomial&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01421">1421</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01425">1425</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1704,7 +1704,7 @@ template&lt;typename Series  = polynomial&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01386">1386</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01390">1390</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1954,7 +1954,7 @@ template&lt;typename T  = polynomial, join_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01653">1653</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01666">1666</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1996,7 +1996,7 @@ template&lt;typename T  = polynomial, join_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00439">439</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00432">432</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -2045,7 +2045,7 @@ template&lt;typename T  = polynomial, join_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00498">498</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00491">491</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -2318,7 +2318,7 @@ template&lt;typename T , typename Series  = polynomial&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01359">1359</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01363">1363</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2363,7 +2363,7 @@ template&lt;typename T  = polynomial, pp_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01704">1704</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01717">1717</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2501,7 +2501,7 @@ template&lt;typename Cf, typename Key&gt; </div>
 <p>Reset the default algorithm to be used for GCD computations. </p>
 <p>This method will set the default algorithm to be used for GCD computations to <a class="el" href="namespacepiranha.html#a10eca18731adffdf7043d601309e6866a2bd9c0ed00116be1258e0cc66617d7c8" title="Automatic selection. ">polynomial_gcd_algorithm::automatic</a>. This method is thread-safe. </p>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01907">1907</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01920">1920</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2600,7 +2600,7 @@ template&lt;typename U , typename T  = polynomial, at_degree_set_enabler&lt; T, 
 
 <p>Set total-degree-based auto-truncation. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is available only if the requisites outlined in <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> are satisfied and if <code>U</code> can be safely cast to the degree type.</dd></dl>
-<p>Setup the degree-based auto-truncation mechanism to truncate according to the total maximum degree.</p>
+<p>Setup the degree-based auto-truncation mechanism to truncate according to the total maximum degree. If the new auto truncation settings are different from the currently active ones, the natural power cache defined in <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a> will be cleared.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">max_degree</td><td>maximum total degree that will be retained during automatic truncation.</td></tr>
@@ -2619,7 +2619,7 @@ template&lt;typename U , typename T  = polynomial, at_degree_set_enabler&lt; T, 
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01465">1465</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01471">1471</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2661,7 +2661,7 @@ template&lt;typename U , typename T  = polynomial, at_degree_set_enabler&lt; T, 
 
 <p>Set partial-degree-based auto-truncation. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is available only if the requisites outlined in <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> are satisfied and if <code>U</code> can be safely cast to the degree type.</dd></dl>
-<p>Setup the degree-based auto-truncation mechanism to truncate according to the partial degree.</p>
+<p>Setup the degree-based auto-truncation mechanism to truncate according to the partial degree. If the new auto truncation settings are different from the currently active ones, the natural power cache defined in <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a> will be cleared.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">max_degree</td><td>maximum partial degree that will be retained during automatic truncation. </td></tr>
@@ -2682,7 +2682,7 @@ template&lt;typename U , typename T  = polynomial, at_degree_set_enabler&lt; T, 
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01498">1498</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01510">1510</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2719,7 +2719,7 @@ template&lt;typename Cf, typename Key&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01897">1897</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01910">1910</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2833,7 +2833,7 @@ template&lt;typename Cf, typename Key&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01615">1615</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01628">1628</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3503,7 +3503,7 @@ template&lt;typename Cf, typename Key&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00534">534</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00527">527</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -3563,7 +3563,7 @@ template&lt;typename Cf, typename Key&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00567">567</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00560">560</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -3639,7 +3639,7 @@ template&lt;typename U , typename T  = polynomial, tm_enabler&lt; T, U &gt;  = 0
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02097">2097</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02110">2110</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3722,7 +3722,7 @@ template&lt;typename U , typename T  = polynomial, tm_enabler&lt; T, U &gt;  = 0
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02135">2135</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02148">2148</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3797,7 +3797,7 @@ template&lt;typename T  = polynomial, poly_div_enabler&lt; T &gt;  = 0&gt; </div
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01744">1744</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01757">1757</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3923,7 +3923,7 @@ template&lt;typename T  = polynomial, at_degree_enabler&lt; T &gt;  = 0&gt; </di
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01522">1522</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01535">1535</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -3986,7 +3986,7 @@ template&lt;typename T  = polynomial, um_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02062">2062</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02075">2075</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -4057,7 +4057,7 @@ template&lt;typename T  = polynomial, uprem_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01781">1781</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01794">1794</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -4129,7 +4129,7 @@ template&lt;typename T , typename U , poly_div_enabler&lt; T, U &gt;  = 0&gt; </
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01839">1839</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01852">1852</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -4186,7 +4186,7 @@ template&lt;typename T , typename U , poly_in_place_div_enabler&lt; T, U &gt;  =
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01876">1876</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l01889">1889</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>

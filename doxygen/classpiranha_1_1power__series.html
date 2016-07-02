@@ -166,7 +166,7 @@ class piranha::power_series&lt; Series, Derived &gt;</h3>
 
 <p>Power series toolbox. </p>
 <p>This toolbox is intended to extend the <code>Series</code> type with properties of formal power series.</p>
-<p>Specifically, the toolbox will conditionally augment a <code>Series</code> type by adding methods to query the total and partial (low) degree of a <code>Series</code> object. Such augmentation takes place if the series' coefficient and/or key types expose methods to query their degree properties (as established by the <a class="el" href="classpiranha_1_1has__degree.html" title="Type trait to detect if type has a degree property. ">piranha::has_degree</a>, <a class="el" href="classpiranha_1_1key__has__degree.html" title="Type trait to detect if a key type has a degree property. ">piranha::key_has_degree</a> and similar type traits), and if the necessary arithmetic operations are supported by the involved types. As an additional requirement, the types returned when querying the degree must be constructible from <code>int</code>, less-than comparable and they must satisfy <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a>. If the computation of the degree of a single term involves only C++ integral types, then the computation will be checked for overflow.</p>
+<p>Specifically, the toolbox will conditionally augment a <code>Series</code> type by adding methods to query the total and partial (low) degree * of a <code>Series</code> object. Such augmentation takes place if the series' coefficient and/or key types expose methods to query their degree properties (as established by the <a class="el" href="classpiranha_1_1has__degree.html" title="Type trait to detect if type has a degree property. ">piranha::has_degree</a>, <a class="el" href="classpiranha_1_1key__has__degree.html" title="Type trait to detect if a key type has a degree property. ">piranha::key_has_degree</a> and similar type traits), and if the necessary arithmetic operations are supported by the involved types. As an additional requirement, the types returned when querying the degree must be constructible from <code>int</code>, less-than comparable and they must satisfy <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a>. If the computation of the degree of a single term involves only C++ integral types, then the computation will be checked for overflow.</p>
 <p>This toolbox provides also support for truncation based on the total or partial degree. In addition to the requirements of the degree-querying methods, the truncation methods also require the supplied degree limit to be comparable to the type returned by the degree-querying methods. The truncation methods will recursively truncate the coefficients of the series via the <a class="el" href="namespacepiranha_1_1math.html#ab529e82af5b6a2f2a87d7c4f2c4268a8" title="Truncation based on the total degree. ">piranha::math::truncate_degree()</a> function.</p>
 <p>If the requirements outlined above are not satisfied, the degree-querying and the truncation methods will be disabled.</p>
 <p>This class satisfies the <a class="el" href="classpiranha_1_1is__series.html" title="Type trait to detect series types. ">piranha::is_series</a> type trait.</p>
@@ -182,7 +182,7 @@ class piranha::power_series&lt; Series, Derived &gt;</h3>
 <h2>Serialization</h2>
 <p>This class supports serialization if <code>Series</code> does. </p>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00238">238</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00231">231</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a6ceadbb37c9f10543e8859af0a759814"></a>
 <div class="memitem">
@@ -226,7 +226,7 @@ template&lt;typename T  = power_series&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00413">413</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00406">406</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -279,7 +279,7 @@ template&lt;typename T  = power_series&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00467">467</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00460">460</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -325,7 +325,7 @@ template&lt;typename T  = power_series&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00439">439</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00432">432</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -378,7 +378,7 @@ template&lt;typename T  = power_series&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00498">498</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00491">491</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -431,7 +431,7 @@ template&lt;typename T , typename U  = power_series, truncate_degree_enabler&lt;
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00534">534</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00527">527</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -495,7 +495,7 @@ template&lt;typename T , typename U  = power_series, truncate_pdegree_enabler&lt
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00567">567</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="power__series_8hpp_source.html#l00560">560</a> of file <a class="el" href="power__series_8hpp_source.html">power_series.hpp</a>.</p>
 
 </div>
 </div>
