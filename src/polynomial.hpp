@@ -645,7 +645,7 @@ enum class polynomial_gcd_algorithm {
  * a set of thread-safe static methods, and it is enabled if:
  * - the total and partial degree of the series are represented by the same type \p D,
  * - all the truncation-related requirements in piranha::power_series are satsified,
- * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
+ * - the type \p D is equality-comparable, subtractable and the type resulting from the subtraction is still \p D.
  *
  * This class satisfies the piranha::is_series and piranha::is_cf type traits.
  *
@@ -908,7 +908,8 @@ class polynomial
                                     && has_truncate_degree<T, degree_type<T>>::value
                                     && std::is_same<decltype(std::declval<const degree_type<T> &>()
                                                              - std::declval<const degree_type<T> &>()),
-                                                    degree_type<T>>::value,
+                                                    degree_type<T>>::value
+                                    && is_equality_comparable<degree_type<T>>::value,
                                 int>::type;
     // For the setter, we need the above plus we need to be able to convert safely U to the degree type.
     template <typename T, typename U>
@@ -1277,6 +1278,15 @@ class polynomial
             return runner(p1, copy_2);
         }
     }
+    // Helper function to clear the pow cache when a new auto truncation limit is set.
+    template <typename T>
+    static void truncation_clear_pow_cache(int mode, const T &max_degree, const std::vector<std::string> &names)
+    {
+        // The pow cache is cleared only if we are actually changing the truncation settings.
+        if (s_at_degree_mode != mode || get_at_degree_max() != max_degree || names != s_at_degree_names) {
+            polynomial::clear_pow_cache();
+        }
+    }
 
 public:
     /// Series rebind alias.
@@ -1447,6 +1457,8 @@ public:
      * and if \p U can be safely cast to the degree type.
      *
      * Setup the degree-based auto-truncation mechanism to truncate according to the total maximum degree.
+     * If the new auto truncation settings are different from the currently active ones, the natural power cache
+     * defined in piranha::series will be cleared.
      *
      * @param[in] max_degree maximum total degree that will be retained during automatic truncation.
      *
@@ -1459,12 +1471,15 @@ public:
     static void set_auto_truncate_degree(const U &max_degree)
     {
         // Init out for exception safety.
-        auto new_degree(safe_cast<degree_type<T>>(max_degree));
+        auto new_degree = safe_cast<degree_type<T>>(max_degree);
         // Initialisation of function-level statics is thread-safe, no need to lock. We get
         // a ref before the lock because the initialisation of the static could throw in principle,
         // and we want the section after the lock to be exception-free.
         auto &at_dm = get_at_degree_max();
         std::lock_guard<std::mutex> lock(s_at_degree_mutex);
+        // NOTE: here in principle there could be an exception thrown as a consequence of the degree comparison.
+        // This is not a problem as at this stage no setting has been modified.
+        truncation_clear_pow_cache(1, new_degree, {});
         s_at_degree_mode = 1;
         // NOTE: the degree type of polys satisfies is_container_element, so move assignment is noexcept.
         at_dm = std::move(new_degree);
@@ -1478,6 +1493,8 @@ public:
      * and if \p U can be safely cast to the degree type.
      *
      * Setup the degree-based auto-truncation mechanism to truncate according to the partial degree.
+     * If the new auto truncation settings are different from the currently active ones, the natural power cache
+     * defined in piranha::series will be cleared.
      *
      * @param[in] max_degree maximum partial degree that will be retained during automatic truncation.
      * @param[in] names names of the variables that will be considered during the computation of the
@@ -1493,10 +1510,11 @@ public:
     static void set_auto_truncate_degree(const U &max_degree, const std::vector<std::string> &names)
     {
         // Copy+move for exception safety.
-        auto new_degree(safe_cast<degree_type<T>>(max_degree));
-        auto new_names(names);
+        auto new_degree = safe_cast<degree_type<T>>(max_degree);
+        auto new_names = names;
         auto &at_dm = get_at_degree_max();
         std::lock_guard<std::mutex> lock(s_at_degree_mutex);
+        truncation_clear_pow_cache(2, new_degree, new_names);
         s_at_degree_mode = 2;
         at_dm = std::move(new_degree);
         s_at_degree_names = std::move(new_names);
