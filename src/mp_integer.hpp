@@ -2494,11 +2494,15 @@ public:
      * can also be retrieved via the <tt>get()</tt> method of the \p mpz_view class.
      * The pointee will represent a GMP integer whose value is equal to \p this.
      *
-     * Note that the returned \p mpz_view instance can only be move-constructed (the other constructors and the
-     * assignment operators
-     * are disabled). Additionally, the returned object and the pointer might reference internal data belonging to
-     * \p this, and they can thus be used safely only during the lifetime of \p this.
-     * Any modification to \p this will also invalidate the view and the pointer.
+     * It is important to keep in mind the following facts about the returned \p mpz_view object:
+     * - \p mpz_view objects can only be move-constructed (the other constructors and the assignment operators
+     *   are disabled);
+     * - the returned object and the pointer returned by its <tt>get()</tt> method might reference internal data
+     *   belonging to \p this, and they can thus be used safely only during the lifetime of \p this;
+     * - the lifetime of the pointer returned by the <tt>get()</tt> method is tied to the lifetime of the \p mpz_view
+     *   object (that is, if the \p mpz_view object is destroyed, any pointer previously returned by <tt>get()</tt>
+     *   becomes invalid);
+     * - any modification to \p this will also invalidate the view and the pointer.
      *
      * @return an \p mpz view of \p this.
      */
