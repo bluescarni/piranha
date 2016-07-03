@@ -290,9 +290,16 @@ see https://www.gnu.org/licenses/. */
  * cv and refs instead. Not sure if we care about plain arrays and function pointers enough though.
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.
- * \todo in the pyranha doc improvements, we should probably handle bettere unspecified exceptions and document
- * the return type as well for consistency (see lambdify docs).
+ * \todo in the pyranha doc improvements, we should probably handle better unspecified exceptions and document
+ * the return type as well for consistency (see lambdify docs) -> actually start using sphinx napoleon
  * \todo "quick install" should not be the title of the getting started section in sphinx
+ * \todo consider poly::udivrem(5*x**2,2*x). This throws an inexact division error triggered by inexact integral cf
+ * division, but maybe it should just return (0,5*x**2).
+ * \todo might want to put a recursion limit on the recursive algorithms for GCD/division, in order to avoid
+ * crashing from Python due to stack overflow.
+ * \todo it seems like in C++17 we can finally have an automatically inited global class in which to tuck the init
+ * code (and probably the thread pool as well), via inline variables. Probably we will need to define it in a separate
+ * header and then make sure to include that header in every piranha public header.
  */
 namespace piranha
 {

@@ -192,24 +192,17 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  * This toolbox is intended to extend the \p Series type with properties of formal power series.
  *
  * Specifically, the toolbox will conditionally augment a \p Series type by adding methods to query the total and
- * partial (low) degree
- * of a \p Series object. Such augmentation takes place if the series' coefficient and/or key types expose methods to
- * query
- * their degree properties (as established by the piranha::has_degree, piranha::key_has_degree and similar type traits),
- * and if the necessary
- * arithmetic operations are supported by the involved types.
- * As an additional requirement, the types returned when querying the degree must be constructible from \p int,
- * less-than comparable and they must satisfy piranha::is_container_element. If the computation of the degree of a
- * single term involves
- * only C++ integral types, then the computation will be checked for overflow.
+ * partial (low) degree  * of a \p Series object. Such augmentation takes place if the series' coefficient and/or key
+ * types expose methods to query their degree properties (as established by the piranha::has_degree,
+ * piranha::key_has_degree and similar type traits), and if the necessary arithmetic operations are supported by the
+ * involved types. As an additional requirement, the types returned when querying the degree must be constructible from
+ * \p int, less-than comparable and they must satisfy piranha::is_container_element. If the computation of the degree of
+ * a single term involves only C++ integral types, then the computation will be checked for overflow.
  *
  * This toolbox provides also support for truncation based on the total or partial degree. In addition to the
- * requirements
- * of the degree-querying methods, the truncation methods also require the supplied degree limit to be comparable to the
- * type
- * returned by the degree-querying methods. The truncation methods will recursively truncate the coefficients of the
- * series
- * via the piranha::math::truncate_degree() function.
+ * requirements of the degree-querying methods, the truncation methods also require the supplied degree limit to be
+ * comparable to the type returned by the degree-querying methods. The truncation methods will recursively truncate the
+ * coefficients of the series via the piranha::math::truncate_degree() function.
  *
  * If the requirements outlined above are not satisfied, the degree-querying and the truncation methods will be
  * disabled.

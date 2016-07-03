@@ -100,6 +100,8 @@ using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integ
 #endif
                                       >;
 
+using detail::mpz_alloc_t;
+
 // Constructors and assignments.
 struct constructor_tester {
     template <typename T>
@@ -110,31 +112,31 @@ struct constructor_tester {
         std::cout << "Size of " << T::value << ": " << sizeof(int_type) << '\n';
         std::cout << "Alignment of " << T::value << ": " << alignof(int_type) << '\n';
         int_type n;
-        BOOST_CHECK(n._mp_alloc == 0);
+        BOOST_CHECK(n._mp_alloc == mpz_alloc_t(-1));
         BOOST_CHECK(n._mp_size == 0);
         BOOST_CHECK(n.m_limbs == limbs_type());
         n.m_limbs[0u] = 4;
         n._mp_size = 1;
         int_type m;
         m = n;
-        BOOST_CHECK(m._mp_alloc == 0);
+        BOOST_CHECK(m._mp_alloc == mpz_alloc_t(-1));
         BOOST_CHECK(m._mp_size == 1);
         BOOST_CHECK(m.m_limbs[1u] == 0);
         BOOST_CHECK(m.m_limbs[0u] == 4);
         n.m_limbs[0u] = 5;
         n._mp_size = -1;
         m = std::move(n);
-        BOOST_CHECK(m._mp_alloc == 0);
+        BOOST_CHECK(m._mp_alloc == mpz_alloc_t(-1));
         BOOST_CHECK(m._mp_size == -1);
         BOOST_CHECK(m.m_limbs[1u] == 0);
         BOOST_CHECK(m.m_limbs[0u] == 5);
         int_type o(m);
-        BOOST_CHECK(o._mp_alloc == 0);
+        BOOST_CHECK(o._mp_alloc == mpz_alloc_t(-1));
         BOOST_CHECK(o._mp_size == -1);
         BOOST_CHECK(o.m_limbs[1u] == 0);
         BOOST_CHECK(o.m_limbs[0u] == 5);
         int_type p(std::move(o));
-        BOOST_CHECK(p._mp_alloc == 0);
+        BOOST_CHECK(p._mp_alloc == mpz_alloc_t(-1));
         BOOST_CHECK(p._mp_size == -1);
         BOOST_CHECK(p.m_limbs[1u] == 0);
         BOOST_CHECK(p.m_limbs[0u] == 5);
@@ -2517,7 +2519,8 @@ struct union_ctor_tester {
         BOOST_CHECK(n.is_static());
         n.promote();
         BOOST_CHECK(!n.is_static());
-        BOOST_CHECK(n.g_dy()._mp_alloc > 0);
+        // NOTE: in recent GMP versions this could be zero (lazy init).
+        BOOST_CHECK(n.g_dy()._mp_alloc >= 0);
         BOOST_CHECK(n.g_dy()._mp_d != nullptr);
         // Copy ctor tests.
         int_type n1;

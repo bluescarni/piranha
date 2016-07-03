@@ -108,6 +108,16 @@ struct poly_custom_hook {
         {
             m_series_class.def("set_auto_truncate_degree", set_auto_truncate_degree_wrapper<T>);
             m_series_class.def("set_auto_truncate_degree", set_auto_truncate_pdegree_wrapper<T>);
+            // NOTE: let's expose here the truncated mult static methods, as they share the same requirements
+            // (more or less).
+            m_series_class.def("truncated_multiplication", +[](const S &p1, const S &p2, const T &max_degree) {
+                return S::truncated_multiplication(p1, p2, max_degree);
+            });
+            m_series_class.def(
+                "truncated_multiplication", +[](const S &p1, const S &p2, const T &max_degree, bp::list l) -> S {
+                    bp::stl_input_iterator<std::string> begin(l), end;
+                    return S::truncated_multiplication(p1, p2, max_degree, std::vector<std::string>(begin, end));
+                });
             set_auto_truncate_degree_exposed() = true;
         }
         template <typename T>
@@ -137,6 +147,7 @@ struct poly_custom_hook {
         tuple_for_each(dt, auto_truncate_set_exposer<S>(series_class));
         if (auto_truncate_set_exposer<S>::set_auto_truncate_degree_exposed()) {
             series_class.staticmethod("set_auto_truncate_degree");
+            series_class.staticmethod("truncated_multiplication");
         }
     }
     template <typename S, typename T = Descriptor,
@@ -295,6 +306,11 @@ struct poly_custom_hook {
         // type requirements.
         expose_degree_auto_truncation_get_unset(series_class);
         expose_degree_auto_truncation_set(series_class);
+        // This is always available.
+        series_class
+            .def("untruncated_multiplication",
+                 +[](const T &p1, const T &p2) { return T::untruncated_multiplication(p1, p2); })
+            .staticmethod("untruncated_multiplication");
         // find_cf().
         series_class.def("find_cf", find_cf_wrapper<T>);
         // Division.
