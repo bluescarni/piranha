@@ -364,7 +364,7 @@ struct constructor_tester {
             BOOST_CHECK(static_cast<v_type const &>(v1).begin() == v1.end());
             BOOST_CHECK(v1.is_static());
             int n = 0;
-            std::generate_n(std::back_inserter(v1), integer(v_type::max_static_size) * 8 + 3,
+            std::generate_n(std::back_inserter(v1), safe_cast<int>(integer(v_type::max_static_size) * 8 + 3),
                             [&n]() { return T(n++); });
             BOOST_CHECK(!v1.is_static());
             v_type v2(v1);
@@ -374,7 +374,7 @@ struct constructor_tester {
             BOOST_CHECK(std::equal(v1.begin(), v1.end(), v3.begin()));
             n = 0;
             v_type v4;
-            std::generate_n(std::back_inserter(v4), integer(v_type::max_static_size), [&n]() { return T(n++); });
+            std::generate_n(std::back_inserter(v4), safe_cast<int>(integer(v_type::max_static_size)), [&n]() { return T(n++); });
             BOOST_CHECK(v4.is_static());
             v_type v5(v4);
             BOOST_CHECK(v5.is_static());
@@ -427,7 +427,7 @@ struct assignment_tester {
             BOOST_CHECK(v2[0] == v1[0]);
             // Push enough into v1 to make it dynamic.
             int n = 0;
-            std::generate_n(std::back_inserter(v1), integer(v_type::max_static_size), [&n]() { return T(n++); });
+            std::generate_n(std::back_inserter(v1), safe_cast<int>(integer(v_type::max_static_size)), [&n]() { return T(n++); });
             BOOST_CHECK(!v1.is_static());
             BOOST_CHECK(v2.is_static());
             // Static vs dynamic.
@@ -542,7 +542,7 @@ struct equality_tester {
             BOOST_CHECK(!(v1 != v2));
             // Push enough into v1 to make it dynamic.
             int n = 0;
-            std::generate_n(std::back_inserter(v1), integer(v_type::max_static_size), [&n]() { return T(n++); });
+            std::generate_n(std::back_inserter(v1), safe_cast<int>(integer(v_type::max_static_size)), [&n]() { return T(n++); });
             BOOST_CHECK(v2 != v1);
             BOOST_CHECK(!(v2 == v1));
             BOOST_CHECK(v1 != v2);
@@ -584,7 +584,7 @@ struct hash_tester {
             BOOST_CHECK(v1.hash() == std::hash<T>()(T(2)));
             // Push enough into v1 to make it dynamic.
             int n = 0;
-            std::generate_n(std::back_inserter(v1), integer(v_type::max_static_size), [&n]() { return T(n++); });
+            std::generate_n(std::back_inserter(v1), safe_cast<int>(integer(v_type::max_static_size)), [&n]() { return T(n++); });
             std::hash<T> hasher;
             std::size_t retval = hasher(v1[0u]);
             for (decltype(v1.size()) i = 1u; i < v1.size(); ++i) {
@@ -867,7 +867,7 @@ struct move_tester {
             BOOST_CHECK(v1.is_static());
             v1 = v_type();
             int n = 0;
-            std::generate_n(std::back_inserter(v1), integer(v_type::max_static_size) + 1, [&n]() { return T(n++); });
+            std::generate_n(std::back_inserter(v1), safe_cast<int>(integer(v_type::max_static_size) + 1), [&n]() { return T(n++); });
             BOOST_CHECK(!v1.is_static());
             v_type v3(std::move(v1));
             BOOST_CHECK_EQUAL(integer(v3.size()), integer(v_type::max_static_size) + 1);
@@ -969,7 +969,7 @@ struct empty_tester {
             BOOST_CHECK(!v1.empty());
             BOOST_CHECK(v1.is_static());
             int n = 0;
-            std::generate_n(std::back_inserter(v1), integer(v_type::max_static_size) + 1, [&n]() { return T(n++); });
+            std::generate_n(std::back_inserter(v1), safe_cast<int>(integer(v_type::max_static_size) + 1), [&n]() { return T(n++); });
             BOOST_CHECK(!v1.is_static());
             BOOST_CHECK(!v1.empty());
             v1.resize(0u);
@@ -1008,7 +1008,7 @@ struct erase_tester {
             BOOST_CHECK(v1.empty());
             BOOST_CHECK(v1.is_static());
             int n = 0;
-            std::generate_n(std::back_inserter(v1), integer(v_type::max_static_size) + 1, [&n]() { return T(n++); });
+            std::generate_n(std::back_inserter(v1), safe_cast<int>(integer(v_type::max_static_size) + 1), [&n]() { return T(n++); });
             BOOST_CHECK(!v1.is_static());
             BOOST_CHECK(!v1.empty());
             it = v1.erase(v1.begin());
@@ -1062,7 +1062,7 @@ struct size_be_tester {
             BOOST_CHECK(std::get<2>(t1) == static_cast<const v_type &>(v1).end());
             // Switch to dynamic.
             int n = 0;
-            std::generate_n(std::back_inserter(v1), integer(v_type::max_static_size) + 1, [&n]() { return T(n++); });
+            std::generate_n(std::back_inserter(v1), safe_cast<int>(integer(v_type::max_static_size) + 1), [&n]() { return T(n++); });
             t0 = v1.size_begin_end();
             BOOST_CHECK_EQUAL(std::get<0>(t0), integer(v_type::max_static_size) + 1);
             BOOST_CHECK(std::get<1>(t0) == v1.begin());
