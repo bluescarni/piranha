@@ -668,8 +668,6 @@ struct type_traits_tester {
             BOOST_CHECK(is_equality_comparable<p_type11>::value);
             BOOST_CHECK((is_equality_comparable<p_type11, p_type1>::value));
             BOOST_CHECK((is_equality_comparable<p_type1, p_type11>::value));
-            BOOST_CHECK((is_instance_of<p_type1, series>::value));
-            BOOST_CHECK((is_instance_of<p_type11, series>::value));
             BOOST_CHECK(is_ostreamable<p_type1>::value);
             BOOST_CHECK(is_ostreamable<p_type11>::value);
             BOOST_CHECK(is_container_element<p_type1>::value);
