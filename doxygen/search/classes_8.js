@@ -31,7 +31,6 @@ var searchData=
   ['is_5fhash_5ffunction_5fobject',['is_hash_function_object',['../classpiranha_1_1is__hash__function__object.html',1,'piranha']]],
   ['is_5fhashable',['is_hashable',['../classpiranha_1_1is__hashable.html',1,'piranha']]],
   ['is_5finput_5fiterator',['is_input_iterator',['../structpiranha_1_1is__input__iterator.html',1,'piranha']]],
-  ['is_5finstance_5fof',['is_instance_of',['../classpiranha_1_1is__instance__of.html',1,'piranha']]],
   ['is_5fintegrable',['is_integrable',['../classpiranha_1_1is__integrable.html',1,'piranha']]],
   ['is_5finvertible',['is_invertible',['../classpiranha_1_1is__invertible.html',1,'piranha']]],
   ['is_5fiterator',['is_iterator',['../structpiranha_1_1is__iterator.html',1,'piranha']]],
