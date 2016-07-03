@@ -43,25 +43,23 @@ namespace detail
 {
 
 // Overload if the coefficient is a rational.
-template <typename Cf, typename std::enable_if<detail::is_mp_rational<Cf>::value,int>::type = 0>
+template <typename Cf, typename std::enable_if<detail::is_mp_rational<Cf>::value, int>::type = 0>
 inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
 {
-	math::mul3(out_cf._num(),cf1.num(),cf2.num());
+    math::mul3(out_cf._num(), cf1.num(), cf2.num());
 }
 
 // Overload if the coefficient is not a rational.
-template <typename Cf, typename std::enable_if<!detail::is_mp_rational<Cf>::value,int>::type = 0>
+template <typename Cf, typename std::enable_if<!detail::is_mp_rational<Cf>::value, int>::type = 0>
 inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
 {
-	math::mul3(out_cf,cf1,cf2);
+    math::mul3(out_cf, cf1, cf2);
 }
 
 // Enabler for the functions above.
 template <typename Cf>
 using cf_mult_enabler = typename std::enable_if<is_cf<Cf>::value && has_mul3<Cf>::value>::type;
-
 }
-
 }
 
 #endif

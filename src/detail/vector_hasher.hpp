@@ -33,31 +33,32 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <functional>
 
-namespace piranha { namespace detail {
+namespace piranha
+{
+namespace detail
+{
 
 template <typename Vector>
 inline std::size_t vector_hasher(const Vector &v)
 {
-	using value_type = typename Vector::value_type;
-	const auto size = v.size();
-	switch (size)
-	{
-		case 0u:
-			return 0u;
-		case 1u:
-		{
-			std::hash<value_type> hasher;
-			return hasher(v[0u]);
-		}
-	}
-	std::hash<value_type> hasher;
-	std::size_t retval = hasher(v[0u]);
-	for (decltype(v.size()) i = 1u; i < size; ++i) {
-		boost::hash_combine(retval,hasher(v[i]));
-	}
-	return retval;
+    using value_type = typename Vector::value_type;
+    const auto size = v.size();
+    switch (size) {
+        case 0u:
+            return 0u;
+        case 1u: {
+            std::hash<value_type> hasher;
+            return hasher(v[0u]);
+        }
+    }
+    std::hash<value_type> hasher;
+    std::size_t retval = hasher(v[0u]);
+    for (decltype(v.size()) i = 1u; i < size; ++i) {
+        boost::hash_combine(retval, hasher(v[i]));
+    }
+    return retval;
 }
-
-}}
+}
+}
 
 #endif

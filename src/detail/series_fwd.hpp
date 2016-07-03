@@ -36,8 +36,8 @@ namespace detail
 {
 
 // Tag structure for series.
-struct series_tag {};
-
+struct series_tag {
+};
 }
 
 // Forward-declaration of series.
@@ -47,7 +47,6 @@ class series;
 // Fwd declaration of type trait.
 template <typename>
 class is_series;
-
 }
 
 #endif

@@ -48,9 +48,10 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(pearce1_test)
 {
-	init();
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
-	}
-	BOOST_CHECK_EQUAL((pearce1<rational,kronecker_monomial<>>().size()),5821335u);
+    init();
+    if (boost::unit_test::framework::master_test_suite().argc > 1) {
+        settings::set_n_threads(
+            boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+    }
+    BOOST_CHECK_EQUAL((pearce1<rational, kronecker_monomial<>>().size()), 5821335u);
 }

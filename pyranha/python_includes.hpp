@@ -33,15 +33,15 @@ see https://www.gnu.org/licenses/. */
 // http://mail.python.org/pipermail/python-list/2004-March/907592.html
 // http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
 #if defined(_WIN32)
-#include <cmath>
 #include <Python.h>
+#include <cmath>
 #else
 #include <Python.h>
 #include <cmath>
 #endif
 
 #if PY_MAJOR_VERSION < 2 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6)
-	#error Minimum supported Python version is 2.6.
+#error Minimum supported Python version is 2.6.
 #endif
 
 #endif

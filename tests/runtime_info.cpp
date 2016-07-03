@@ -43,24 +43,26 @@ using namespace piranha;
 // Simple check on the thread id.
 BOOST_AUTO_TEST_CASE(runtime_info_thread_id_test)
 {
-	init();
-	BOOST_CHECK_EQUAL(runtime_info::get_main_thread_id(),std::this_thread::get_id());
+    init();
+    BOOST_CHECK_EQUAL(runtime_info::get_main_thread_id(), std::this_thread::get_id());
 }
 
 BOOST_AUTO_TEST_CASE(runtime_info_print_test)
 {
-	std::cout << "Concurrency: " << runtime_info::get_hardware_concurrency() << '\n';
-	std::cout << "Cache line size: " << runtime_info::get_cache_line_size() << '\n';
-	std::cout << "Memory alignment primitives: " <<
+    std::cout << "Concurrency: " << runtime_info::get_hardware_concurrency() << '\n';
+    std::cout << "Cache line size: " << runtime_info::get_cache_line_size() << '\n';
+    std::cout << "Memory alignment primitives: "
+              <<
 #if defined(PIRANHA_HAVE_MEMORY_ALIGNMENT_PRIMITIVES)
-		"available\n";
+        "available\n";
 #else
-		"not available\n";
+        "not available\n";
 #endif
 }
 
 BOOST_AUTO_TEST_CASE(runtime_info_settings_test)
 {
-	BOOST_CHECK(runtime_info::get_hardware_concurrency() == settings::get_n_threads() || runtime_info::get_hardware_concurrency() == 0u);
-	BOOST_CHECK_EQUAL(runtime_info::get_cache_line_size(),settings::get_cache_line_size());
+    BOOST_CHECK(runtime_info::get_hardware_concurrency() == settings::get_n_threads()
+                || runtime_info::get_hardware_concurrency() == 0u);
+    BOOST_CHECK_EQUAL(runtime_info::get_cache_line_size(), settings::get_cache_line_size());
 }

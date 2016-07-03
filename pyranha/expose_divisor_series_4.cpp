@@ -29,16 +29,15 @@ see https://www.gnu.org/licenses/. */
 #include "python_includes.hpp"
 
 #include "../src/divisor_series.hpp"
+#include "divisor_series_descriptor.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_utils.hpp"
-#include "divisor_series_descriptor.hpp"
 
 namespace pyranha
 {
 
 void expose_divisor_series_4()
 {
-	series_exposer<piranha::divisor_series,divisor_series_descriptor,4u,5u> ds_exposer;
+    series_exposer<piranha::divisor_series, divisor_series_descriptor, 4u, 5u> ds_exposer;
 }
-
 }

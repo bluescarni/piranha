@@ -35,13 +35,14 @@ namespace piranha
 /// Series multiplier.
 /**
  * This class is used by the multiplication operators involving two series operands. The class works as follows:
- * 
+ *
  * - an instance of series multiplier is created using two series as construction arguments;
  * - when operator()() is called, an instance of \p Series is returned, representing
  *   the result of the multiplication of the two series used for construction.
- * 
+ *
  * Any specialisation of this class must respect the protocol described above (i.e., construction from series
- * instances and operator()() to compute the result). Note that this class is guaranteed to be used after the symbolic arguments of the series used for construction
+ * instances and operator()() to compute the result). Note that this class is guaranteed to be used after the symbolic
+ * arguments of the series used for construction
  * have been merged (in other words, the two series have identical symbolic arguments sets).
  *
  * The default implementation of this class does not define any call operator: any use of this class will thus result in
@@ -49,8 +50,8 @@ namespace piranha
  */
 template <typename Series, typename Enable = void>
 class series_multiplier
-{};
-
+{
+};
 }
 
 #endif

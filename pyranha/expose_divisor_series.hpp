@@ -41,7 +41,6 @@ void expose_divisor_series_5();
 void expose_divisor_series_6();
 void expose_divisor_series_7();
 void expose_divisor_series_8();
-
 }
 
 #endif

@@ -33,7 +33,6 @@ namespace piranha
 {
 
 class symbol_set;
-
 }
 
 #endif

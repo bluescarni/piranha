@@ -30,12 +30,14 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_CONFIG_HPP
 
 // Start of defines instantiated by CMake.
+// clang-format off
 @PIRANHA_PTHREAD_AFFINITY@
 @PIRANHA_POSIX_MEMALIGN@
 @PIRANHA_VERSION@
 @PIRANHA_SYSTEM_LOGICAL_PROCESSOR_INFORMATION@
 @PIRANHA_HAVE_UINT128_T@
 @PIRANHA_THREAD_LOCAL@
+// clang-format on
 // End of defines instantiated by CMake.
 
 #include <cassert>
@@ -45,15 +47,15 @@ see https://www.gnu.org/licenses/. */
 // NOTE: clang has to go first, as it might define __GNUC__ internally.
 // Same thing could happen with ICC.
 #if defined(__clang__)
-	#include "detail/config_clang.hpp"
+#include "detail/config_clang.hpp"
 #elif defined(__INTEL_COMPILER)
-	#include "detail/config_intel.hpp"
+#include "detail/config_intel.hpp"
 #elif defined(__GNUC__)
-	#include "detail/config_gcc.hpp"
+#include "detail/config_gcc.hpp"
 #else
-	// NOTE: addidtional compiler configurations go here or in separate file as above.
-	#define likely(x) (x)
-	#define unlikely(x) (x)
+// NOTE: addidtional compiler configurations go here or in separate file as above.
+#define likely(x) (x)
+#define unlikely(x) (x)
 #endif
 
 #endif

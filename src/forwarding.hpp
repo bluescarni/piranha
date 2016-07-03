@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 /** \file forwarding.hpp
  * \brief Forwarding macros.
- * 
+ *
  * This header contains macros to forward constructors and assignment operators to a base class.
  */
 
@@ -47,11 +47,16 @@ see https://www.gnu.org/licenses/. */
  * In order to avoid clashes with copy/move constructors, in case the only argument derives from \p Derived
  * the constructor will be disabled.
  */
-#define PIRANHA_FORWARDING_CTOR(Derived,Base) \
-template <typename T_, typename ... Args_,typename = typename std::enable_if< \
-	std::is_constructible<Base,T_ &&,Args_ && ...>::value && \
-	(sizeof...(Args_) || !std::is_base_of<Derived,typename std::decay<T_>::type>::value)>::type> \
-	explicit Derived(T_ &&arg0, Args_ && ... args):Base(std::forward<T_>(arg0),std::forward<Args_>(args)...) {}
+#define PIRANHA_FORWARDING_CTOR(Derived, Base)                                                                         \
+    template <                                                                                                         \
+        typename T_, typename... Args_,                                                                                \
+        typename =                                                                                                     \
+            typename std::enable_if<std::is_constructible<Base, T_ &&, Args_ &&...>::value                             \
+                                    && (sizeof...(Args_)                                                               \
+                                        || !std::is_base_of<Derived, typename std::decay<T_>::type>::value)>::type>    \
+    explicit Derived(T_ &&arg0, Args_ &&... args) : Base(std::forward<T_>(arg0), std::forward<Args_>(args)...)         \
+    {                                                                                                                  \
+    }
 
 /// Assignment-forwarding macro.
 /**
@@ -61,15 +66,15 @@ template <typename T_, typename ... Args_,typename = typename std::enable_if< \
  * In order to avoid clashes with copy/move assignment operators, in case the argument derives from \p Derived
  * the operator will be disabled.
  */
-#define PIRANHA_FORWARDING_ASSIGNMENT(Derived,Base) \
-template <typename T_> \
-typename std::enable_if<std::is_assignable<Base &,T_ &&>::value && \
-	!std::is_base_of<Derived,typename std::decay<T_>::type>::value, \
-	Derived &>::type operator=(T_ &&arg) \
-{ \
-	Base::operator=(std::forward<T_>(arg)); \
-	return *this; \
-}
+#define PIRANHA_FORWARDING_ASSIGNMENT(Derived, Base)                                                                   \
+    template <typename T_>                                                                                             \
+    typename std::enable_if<std::is_assignable<Base &, T_ &&>::value                                                   \
+                                && !std::is_base_of<Derived, typename std::decay<T_>::type>::value,                    \
+                            Derived &>::type                                                                           \
+    operator=(T_ &&arg)                                                                                                \
+    {                                                                                                                  \
+        Base::operator=(std::forward<T_>(arg));                                                                        \
+        return *this;                                                                                                  \
+    }
 
 #endif
-

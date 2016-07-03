@@ -47,12 +47,10 @@ namespace detail
 // It should be possible to implement this with a binary search.
 inline bool is_digit(char c)
 {
-	const char digits[] = "0123456789";
-	return std::find(digits,digits + 10,c) != (digits + 10);
+    const char digits[] = "0123456789";
+    return std::find(digits, digits + 10, c) != (digits + 10);
 }
-
 }
-
 }
 
 #endif

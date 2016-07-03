@@ -34,7 +34,6 @@ namespace piranha
 
 // Forward-declaration of real.
 class real;
-
 }
 
 #endif

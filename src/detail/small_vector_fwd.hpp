@@ -38,13 +38,11 @@ namespace detail
 // Fwd declaration of the small vector union.
 template <typename, typename>
 union small_vector_union;
-
 }
 
 // Fwd declaration of small_vector.
 template <typename, typename>
 class small_vector;
-
 }
 
 #endif

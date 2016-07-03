@@ -43,8 +43,7 @@ namespace detail
 
 // Global variables for init/shutdown.
 template <typename = void>
-struct piranha_init_statics
-{
+struct piranha_init_statics {
     static std::atomic_flag s_init_flag;
     static std::atomic<bool> s_shutdown_flag;
     static std::atomic<unsigned> s_failed;
@@ -74,7 +73,6 @@ inline bool shutdown()
 {
     return piranha_init_statics<>::s_shutdown_flag.load();
 }
-
 }
 
 /// Main initialisation function.
@@ -106,7 +104,6 @@ inline void init()
         std::cerr.flush();
     }
 }
-
 }
 
 #endif
