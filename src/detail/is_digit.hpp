@@ -31,9 +31,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 
-namespace piranha {
+namespace piranha
+{
 
-namespace detail {
+namespace detail
+{
 
 // NOTE: check this answer:
 // http://stackoverflow.com/questions/13827180/char-ascii-relation
@@ -43,11 +45,14 @@ namespace detail {
 // (i.e., '1' - '0' == 1, ... '9' - '0' == 9)
 // """
 // It should be possible to implement this with a binary search.
-inline bool is_digit(char c) {
-  const char digits[] = "0123456789";
-  return std::find(digits, digits + 10, c) != (digits + 10);
+inline bool is_digit(char c)
+{
+	const char digits[] = "0123456789";
+	return std::find(digits,digits + 10,c) != (digits + 10);
 }
+
 }
+
 }
 
 #endif

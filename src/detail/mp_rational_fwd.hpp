@@ -29,10 +29,13 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_MP_RATIONAL_FWD_HPP
 #define PIRANHA_MP_RATIONAL_FWD_HPP
 
-namespace piranha {
+namespace piranha
+{
 
 // Forward-declaration of mp_rational.
-template <int> class mp_rational;
+template <int>
+class mp_rational;
+
 }
 
 #endif

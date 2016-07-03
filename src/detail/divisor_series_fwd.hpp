@@ -29,16 +29,21 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_DIVISOR_SERIES_FWD_HPP
 #define PIRANHA_DIVISOR_SERIES_FWD_HPP
 
-namespace piranha {
+namespace piranha
+{
 
-namespace detail {
+namespace detail
+{
 
 // Divisor series tag.
 struct divisor_series_tag;
+
 }
 
 // Fwd declaration of divisor series.
-template <typename, typename> class divisor_series;
+template <typename, typename>
+class divisor_series;
+
 }
 
 #endif

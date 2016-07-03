@@ -33,11 +33,12 @@ see https://www.gnu.org/licenses/. */
 #include "expose_utils.hpp"
 #include "poisson_series_descriptor.hpp"
 
-namespace pyranha {
+namespace pyranha
+{
 
-void expose_poisson_series_10() {
-  series_exposer<piranha::poisson_series, poisson_series_descriptor, 10u, 11u,
-                 ps_custom_hook>
-      ps_exposer;
+void expose_poisson_series_10()
+{
+	series_exposer<piranha::poisson_series,poisson_series_descriptor,10u,11u,ps_custom_hook> ps_exposer;
 }
+
 }

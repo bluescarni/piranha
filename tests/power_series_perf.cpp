@@ -39,29 +39,30 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(pearce1_test) {
-  init();
-  std::cout << "Timing multiplication:\n";
-  auto ret1 = pearce1<integer, kronecker_monomial<>>();
-  decltype(ret1) ret2;
-  {
-    std::cout << "Timing degree computation: ";
-    boost::timer::auto_cpu_timer t;
-    std::cout << ret1.degree() << '\n';
-  }
-  {
-    std::cout << "Timing degree truncation:\n";
-    boost::timer::auto_cpu_timer t;
-    ret2 = ret1.truncate_degree(30);
-  }
-  {
-    std::cout << "Timing new degree computation: ";
-    boost::timer::auto_cpu_timer t;
-    std::cout << ret2.degree() << '\n';
-  }
-  {
-    std::cout << "Timing partial degree truncation:\n";
-    boost::timer::auto_cpu_timer t;
-    ret2 = ret1.truncate_degree(30, {"u", "z"});
-  }
+BOOST_AUTO_TEST_CASE(pearce1_test)
+{
+	init();
+	std::cout << "Timing multiplication:\n";
+	auto ret1 = pearce1<integer,kronecker_monomial<>>();
+	decltype(ret1) ret2;
+	{
+	std::cout << "Timing degree computation: ";
+	boost::timer::auto_cpu_timer t;
+	std::cout << ret1.degree() << '\n';
+	}
+	{
+	std::cout << "Timing degree truncation:\n";
+	boost::timer::auto_cpu_timer t;
+	ret2 = ret1.truncate_degree(30);
+	}
+	{
+	std::cout << "Timing new degree computation: ";
+	boost::timer::auto_cpu_timer t;
+	std::cout << ret2.degree() << '\n';
+	}
+	{
+	std::cout << "Timing partial degree truncation:\n";
+	boost::timer::auto_cpu_timer t;
+	ret2 = ret1.truncate_degree(30,{"u","z"});
+	}
 }

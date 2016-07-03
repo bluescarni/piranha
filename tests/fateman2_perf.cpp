@@ -44,12 +44,11 @@ using namespace piranha;
 // f * (f+1)
 // where f = (1+x+y+z+t)**30
 
-BOOST_AUTO_TEST_CASE(fateman2_test) {
-  init();
-  if (boost::unit_test::framework::master_test_suite().argc > 1) {
-    settings::set_n_threads(boost::lexical_cast<unsigned>(
-        boost::unit_test::framework::master_test_suite().argv[1u]));
-  }
-  BOOST_CHECK_EQUAL((fateman2<integer, kronecker_monomial<>>().size()),
-                    635376u);
+BOOST_AUTO_TEST_CASE(fateman2_test)
+{
+	init();
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+	}
+	BOOST_CHECK_EQUAL((fateman2<integer,kronecker_monomial<>>().size()),635376u);
 }

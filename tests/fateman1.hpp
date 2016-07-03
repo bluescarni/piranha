@@ -33,25 +33,28 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/polynomial.hpp"
 
-namespace piranha {
+namespace piranha
+{
 
-template <typename Cf, typename Key>
-inline polynomial<Cf, Key> fateman1(unsigned long long factor = 1u) {
-  typedef polynomial<Cf, Key> p_type;
-  p_type x("x"), y("y"), z("z"), t("t");
-  auto f = x + y + z + t + 1;
-  auto tmp(f);
-  for (auto i = 1; i < 20; ++i) {
-    f *= tmp;
-  }
-  if (factor > 1u) {
-    f *= factor;
-  }
-  {
-    boost::timer::auto_cpu_timer t;
-    return f * (f + 1);
-  }
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> fateman1(unsigned long long factor = 1u)
+{
+	typedef polynomial<Cf,Key> p_type;
+	p_type x("x"), y("y"), z("z"), t("t");
+	auto f = x + y + z + t + 1;
+	auto tmp(f);
+	for (auto i = 1; i < 20; ++i) {
+		f *= tmp;
+	}
+	if (factor > 1u) {
+	    f *= factor;
+	}
+	{
+	boost::timer::auto_cpu_timer t;
+	return f * (f + 1);
+	}
 }
+
 }
 
 #endif

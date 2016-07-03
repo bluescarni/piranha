@@ -43,19 +43,16 @@ using namespace piranha;
 
 // Fateman's polynomial multiplication test number 1. Calculate:
 // f * (f+1)
-// where f = (1+x+y+z+t)**20, using unpacked monomials. Truncate the result to
-// degree 20 and 30.
+// where f = (1+x+y+z+t)**20, using unpacked monomials. Truncate the result to degree 20 and 30.
 
-BOOST_AUTO_TEST_CASE(fateman1_unpacked_test) {
-  init();
-  if (boost::unit_test::framework::master_test_suite().argc > 1) {
-    settings::set_n_threads(boost::lexical_cast<unsigned>(
-        boost::unit_test::framework::master_test_suite().argv[1u]));
-  }
-  polynomial<integer, monomial<signed char>>::set_auto_truncate_degree(20);
-  BOOST_CHECK_EQUAL((fateman1<integer, monomial<signed char>>().size()),
-                    10626u);
-  polynomial<integer, monomial<signed char>>::set_auto_truncate_degree(30);
-  BOOST_CHECK_EQUAL((fateman1<integer, monomial<signed char>>().size()),
-                    46376u);
+BOOST_AUTO_TEST_CASE(fateman1_unpacked_test)
+{
+	init();
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+	}
+	polynomial<integer,monomial<signed char>>::set_auto_truncate_degree(20);
+	BOOST_CHECK_EQUAL((fateman1<integer,monomial<signed char>>().size()),10626u);
+	polynomial<integer,monomial<signed char>>::set_auto_truncate_degree(30);
+	BOOST_CHECK_EQUAL((fateman1<integer,monomial<signed char>>().size()),46376u);
 }

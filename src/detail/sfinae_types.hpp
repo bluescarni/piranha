@@ -31,9 +31,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <array>
 
-namespace piranha {
+namespace piranha
+{
 
-namespace detail {
+namespace detail
+{
 
 // Types for SFINAE-based type traits.
 // Guidelines for usage:
@@ -41,11 +43,14 @@ namespace detail {
 // - use std::is_same in the value of the type trait,
 // - use (...,void(),yes/no()) in the decltype in order to avoid problems with
 //   overloads of the comma operator.
-struct sfinae_types {
-  struct yes {};
-  struct no {};
+struct sfinae_types
+{
+	struct yes {};
+	struct no {};
 };
+
 }
+
 }
 
 #endif

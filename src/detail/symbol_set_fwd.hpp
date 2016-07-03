@@ -29,9 +29,11 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SYMBOL_SET_FWD_HPP
 #define PIRANHA_SYMBOL_SET_FWD_HPP
 
-namespace piranha {
+namespace piranha
+{
 
 class symbol_set;
+
 }
 
 #endif

@@ -41,54 +41,51 @@ see https://www.gnu.org/licenses/. */
 #include "../src/real.hpp"
 #include "type_system.hpp"
 
-namespace pyranha {
+namespace pyranha
+{
 
-PYRANHA_DECLARE_TT_NAMER(piranha::polynomial, "polynomial")
+PYRANHA_DECLARE_TT_NAMER(piranha::polynomial,"polynomial")
 
 // Descriptor for polynomial exposition.
-struct polynomial_descriptor {
-  using params = std::tuple<
-      // Double precision.
-      std::tuple<double, piranha::monomial<piranha::rational>>,
-      std::tuple<double, piranha::monomial<short>>,
-      std::tuple<double, piranha::kronecker_monomial<>>,
-      // Integer.
-      std::tuple<piranha::integer, piranha::monomial<piranha::rational>>,
-      std::tuple<piranha::integer, piranha::monomial<short>>,
-      std::tuple<piranha::integer, piranha::kronecker_monomial<>>,
-      // Integer recursive.
-      // NOTE: this is not really part of the public API, but it can be useful
-      // when experimenting
-      // with recursive poly algorithms.
-      std::tuple<
-          piranha::polynomial<piranha::integer, piranha::monomial<short>>,
-          piranha::monomial<short>>,
-      std::tuple<
-          piranha::polynomial<piranha::integer, piranha::kronecker_monomial<>>,
-          piranha::kronecker_monomial<>>,
-      // Rational.
-      std::tuple<piranha::rational, piranha::monomial<piranha::rational>>,
-      std::tuple<piranha::rational, piranha::monomial<short>>,
-      std::tuple<piranha::rational, piranha::kronecker_monomial<>>,
-      // Real.
-      std::tuple<piranha::real, piranha::monomial<piranha::rational>>,
-      std::tuple<piranha::real, piranha::monomial<short>>,
-      std::tuple<piranha::real, piranha::kronecker_monomial<>>>;
-  using interop_types =
-      std::tuple<double, piranha::integer, piranha::real, piranha::rational>;
-  using pow_types = interop_types;
-  using eval_types = interop_types;
-  using subs_types = interop_types;
-  // For now, we have only degrees computed as integers or rationals.
-  using degree_truncation_types =
-      std::tuple<piranha::integer, piranha::rational>;
-  // Need to refer to these to silence a warning in GCC.
-  interop_types it;
-  pow_types pt;
-  eval_types et;
-  subs_types st;
-  degree_truncation_types dtt;
+struct polynomial_descriptor
+{
+	using params = std::tuple<
+		// Double precision.
+		std::tuple<double,piranha::monomial<piranha::rational>>,
+		std::tuple<double,piranha::monomial<short>>,
+		std::tuple<double,piranha::kronecker_monomial<>>,
+		// Integer.
+		std::tuple<piranha::integer,piranha::monomial<piranha::rational>>,
+		std::tuple<piranha::integer,piranha::monomial<short>>,
+		std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
+		// Integer recursive.
+		// NOTE: this is not really part of the public API, but it can be useful when experimenting
+		// with recursive poly algorithms.
+		std::tuple<piranha::polynomial<piranha::integer,piranha::monomial<short>>,piranha::monomial<short>>,
+		std::tuple<piranha::polynomial<piranha::integer,piranha::kronecker_monomial<>>,piranha::kronecker_monomial<>>,
+		// Rational.
+		std::tuple<piranha::rational,piranha::monomial<piranha::rational>>,
+		std::tuple<piranha::rational,piranha::monomial<short>>,
+		std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
+		// Real.
+		std::tuple<piranha::real,piranha::monomial<piranha::rational>>,
+		std::tuple<piranha::real,piranha::monomial<short>>,
+		std::tuple<piranha::real,piranha::kronecker_monomial<>>
+	>;
+	using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+	using pow_types = interop_types;
+	using eval_types = interop_types;
+	using subs_types = interop_types;
+	// For now, we have only degrees computed as integers or rationals.
+	using degree_truncation_types = std::tuple<piranha::integer,piranha::rational>;
+	// Need to refer to these to silence a warning in GCC.
+	interop_types		it;
+	pow_types		pt;
+	eval_types		et;
+	subs_types		st;
+	degree_truncation_types	dtt;
 };
+
 }
 
 #endif

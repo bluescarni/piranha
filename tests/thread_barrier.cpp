@@ -36,21 +36,16 @@ see https://www.gnu.org/licenses/. */
 #include "../src/init.hpp"
 #include "../src/thread_pool.hpp"
 
-BOOST_AUTO_TEST_CASE(thread_barrier_test_01) {
-  piranha::init();
-  const unsigned n_threads = 100;
-  piranha::thread_barrier tb(n_threads);
-  piranha::thread_pool::resize(n_threads);
-  piranha::future_list<void> f_list;
-  for (unsigned i = 0; i < n_threads; ++i) {
-    BOOST_CHECK_NO_THROW(f_list.push_back(
-        piranha::thread_pool::enqueue(i, std::bind(
-                                             [&tb](unsigned x, unsigned y) {
-                                               tb.wait();
-                                               (void)(x + y);
-                                             },
-                                             i, i + 1))));
-  }
-  BOOST_CHECK_NO_THROW(f_list.wait_all());
-  BOOST_CHECK_NO_THROW(f_list.wait_all());
+BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
+{
+	piranha::init();
+	const unsigned n_threads = 100;
+	piranha::thread_barrier tb(n_threads);
+	piranha::thread_pool::resize(n_threads);
+	piranha::future_list<void> f_list;
+	for (unsigned i = 0; i < n_threads; ++i) {
+		BOOST_CHECK_NO_THROW(f_list.push_back(piranha::thread_pool::enqueue(i,std::bind([&tb](unsigned x, unsigned y) {tb.wait();(void)(x + y);},i,i + 1))));
+	}
+	BOOST_CHECK_NO_THROW(f_list.wait_all());
+	BOOST_CHECK_NO_THROW(f_list.wait_all());
 }

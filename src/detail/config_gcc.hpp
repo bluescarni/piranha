@@ -29,12 +29,12 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_CONFIG_GCC_HPP
 #define PIRANHA_CONFIG_GCC_HPP
 
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
-#error Minimum GCC version supported is 4.8.0.
+#if __GNUC__  < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
+	#error Minimum GCC version supported is 4.8.0.
 #endif
 
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
+#define likely(x) __builtin_expect(!!(x),1)
+#define unlikely(x) __builtin_expect(!!(x),0)
 
 #define PIRANHA_COMPILER_IS_GCC
 

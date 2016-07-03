@@ -29,10 +29,13 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SERIES_MULTIPLIER_FWD_HPP
 #define PIRANHA_SERIES_MULTIPLIER_FWD_HPP
 
-namespace piranha {
+namespace piranha
+{
 
 // Forward-declaration of series_multiplier.
-template <typename, typename> class series_multiplier;
+template <typename, typename>
+class series_multiplier;
+
 }
 
 #endif

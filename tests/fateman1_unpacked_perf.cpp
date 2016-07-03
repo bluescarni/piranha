@@ -44,12 +44,11 @@ using namespace piranha;
 // f * (f+1)
 // where f = (1+x+y+z+t)**20, using unpacked monomials.
 
-BOOST_AUTO_TEST_CASE(fateman1_unpacked_test) {
-  init();
-  if (boost::unit_test::framework::master_test_suite().argc > 1) {
-    settings::set_n_threads(boost::lexical_cast<unsigned>(
-        boost::unit_test::framework::master_test_suite().argv[1u]));
-  }
-  BOOST_CHECK_EQUAL((fateman1<integer, monomial<signed char>>().size()),
-                    135751u);
+BOOST_AUTO_TEST_CASE(fateman1_unpacked_test)
+{
+	init();
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+	}
+	BOOST_CHECK_EQUAL((fateman1<integer,monomial<signed char>>().size()),135751u);
 }
