@@ -43,18 +43,18 @@ BOOST_AUTO_TEST_CASE(polynomial_truncation_pow_cache_test)
     init();
     using p_type = polynomial<integer, monomial<int>>;
     p_type x{"x"}, y{"y"};
-    BOOST_CHECK_EQUAL(math::pow(x+y+1,2),2*x+1+2*y+x*x+y*y+2*x*y);
+    BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y + x * x + y * y + 2 * x * y);
     // Always test twice to exercise the other branch of the pow cache clearing function.
     p_type::set_auto_truncate_degree(1);
-    BOOST_CHECK_EQUAL(math::pow(x+y+1,2),2*x+1+2*y);
+    BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y);
     p_type::set_auto_truncate_degree(1);
-    BOOST_CHECK_EQUAL(math::pow(x+y+1,2),2*x+1+2*y);
-    p_type::set_auto_truncate_degree(1,{"x"});
-    BOOST_CHECK_EQUAL(math::pow(x+y+1,2),2*x+1+2*y+y*y+2*x*y);
-    p_type::set_auto_truncate_degree(1,{"x"});
-    BOOST_CHECK_EQUAL(math::pow(x+y+1,2),2*x+1+2*y+y*y+2*x*y);
-    p_type::set_auto_truncate_degree(1,{"y"});
-    BOOST_CHECK_EQUAL(math::pow(x+y+1,2),2*x+1+2*y+x*x+2*x*y);
-    p_type::set_auto_truncate_degree(1,{"y"});
-    BOOST_CHECK_EQUAL(math::pow(x+y+1,2),2*x+1+2*y+x*x+2*x*y);
+    BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y);
+    p_type::set_auto_truncate_degree(1, {"x"});
+    BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y + y * y + 2 * x * y);
+    p_type::set_auto_truncate_degree(1, {"x"});
+    BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y + y * y + 2 * x * y);
+    p_type::set_auto_truncate_degree(1, {"y"});
+    BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y + x * x + 2 * x * y);
+    p_type::set_auto_truncate_degree(1, {"y"});
+    BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y + x * x + 2 * x * y);
 }
