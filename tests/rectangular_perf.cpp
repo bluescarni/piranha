@@ -44,27 +44,29 @@ using namespace piranha;
 // http://groups.google.com/group/sage-devel/browse_thread/thread/f5b976c979a3b784/1263afcc6f9d09da
 // Meant to test sparse multiplication where series have very different sizes.
 
-BOOST_AUTO_TEST_CASE(rectangular_test)
-{
-	init();
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
-	}
-	typedef polynomial<double,kronecker_monomial<>> p_type;
+BOOST_AUTO_TEST_CASE(rectangular_test) {
+  init();
+  if (boost::unit_test::framework::master_test_suite().argc > 1) {
+    settings::set_n_threads(boost::lexical_cast<unsigned>(
+        boost::unit_test::framework::master_test_suite().argv[1u]));
+  }
+  typedef polynomial<double, kronecker_monomial<>> p_type;
 
-	auto func = []() -> p_type {
-		p_type x("x"), y("y"), z("z");
-		auto f = x*y*y*y*z*z + x*x*y*y*z + x*y*y*y*z + x*y*y*z*z + y*y*y*z*z + y*y*y*z +
-			2*y*y*z*z + 2*x*y*z + y*y*z + y*z*z + y*y + 2*y*z + z;
-		p_type curr(1);
-		for (auto i = 1; i <= 70; ++i) {
-			curr *= f;
-		}
-		BOOST_CHECK_EQUAL(curr.size(),1284816u);
-		return curr;
-	};
-	{
-	boost::timer::auto_cpu_timer t;
-	auto tmp = func();
-	}
+  auto func = []() -> p_type {
+    p_type x("x"), y("y"), z("z");
+    auto f = x * y * y * y * z * z + x * x * y * y * z + x * y * y * y * z +
+             x * y * y * z * z + y * y * y * z * z + y * y * y * z +
+             2 * y * y * z * z + 2 * x * y * z + y * y * z + y * z * z + y * y +
+             2 * y * z + z;
+    p_type curr(1);
+    for (auto i = 1; i <= 70; ++i) {
+      curr *= f;
+    }
+    BOOST_CHECK_EQUAL(curr.size(), 1284816u);
+    return curr;
+  };
+  {
+    boost::timer::auto_cpu_timer t;
+    auto tmp = func();
+  }
 }

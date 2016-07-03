@@ -33,12 +33,11 @@ see https://www.gnu.org/licenses/. */
 #include "expose_utils.hpp"
 #include "polynomial_descriptor.hpp"
 
-namespace pyranha
-{
+namespace pyranha {
 
-void expose_polynomials_4()
-{
-	series_exposer<piranha::polynomial,polynomial_descriptor,4u,5u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
+void expose_polynomials_4() {
+  series_exposer<piranha::polynomial, polynomial_descriptor, 4u, 5u,
+                 poly_custom_hook<polynomial_descriptor>>
+      poly_exposer;
 }
-
 }

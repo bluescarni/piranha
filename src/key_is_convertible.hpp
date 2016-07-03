@@ -35,8 +35,7 @@ see https://www.gnu.org/licenses/. */
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
-namespace piranha
-{
+namespace piranha {
 
 /// Detect if a key type is convertible to another key type.
 /**
@@ -44,24 +43,24 @@ namespace piranha
  * from a const reference to the key type \p From and a const reference to
  * piranha::symbol_set, \p false otherwise.
  *
- * The decay types of \p To and \p From are considered by this type trait. \p To and \p From must satisfy
+ * The decay types of \p To and \p From are considered by this type trait. \p To
+ * and \p From must satisfy
  * piranha::is_key, otherwise a compile-time error will be generated.
  */
-template <typename To, typename From>
-class key_is_convertible
-{
-		using Tod = typename std::decay<To>::type;
-		using Fromd = typename std::decay<From>::type;
-		PIRANHA_TT_CHECK(is_key,Tod);
-		PIRANHA_TT_CHECK(is_key,Fromd);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_constructible<Tod,const Fromd &, const symbol_set &>::value;
+template <typename To, typename From> class key_is_convertible {
+  using Tod = typename std::decay<To>::type;
+  using Fromd = typename std::decay<From>::type;
+  PIRANHA_TT_CHECK(is_key, Tod);
+  PIRANHA_TT_CHECK(is_key, Fromd);
+
+public:
+  /// Value of the type trait.
+  static const bool value =
+      std::is_constructible<Tod, const Fromd &, const symbol_set &>::value;
 };
 
 template <typename To, typename From>
-const bool key_is_convertible<To,From>::value;
-
+const bool key_is_convertible<To, From>::value;
 }
 
 #endif

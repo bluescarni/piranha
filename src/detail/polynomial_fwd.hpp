@@ -33,11 +33,9 @@ see https://www.gnu.org/licenses/. */
 
 #include "../series.hpp"
 
-namespace piranha
-{
+namespace piranha {
 
-namespace detail
-{
+namespace detail {
 
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
 
@@ -46,34 +44,33 @@ struct polynomial_tag;
 
 // Test if a series type has at least one polynomial
 // in the coefficient hierarchy.
-template <typename T, typename = void>
-struct poly_in_cf
-{
-	static const bool value = false;
+template <typename T, typename = void> struct poly_in_cf {
+  static const bool value = false;
 };
 
 template <typename T>
-struct poly_in_cf<T,typename std::enable_if<(series_recursion_index<T>::value > 0u) &&
-	std::is_base_of<polynomial_tag,typename T::term_type::cf_type>::value>::type>
-{
-	static const bool value = true;
+struct poly_in_cf<
+    T, typename std::enable_if<
+           (series_recursion_index<T>::value > 0u) &&
+           std::is_base_of<polynomial_tag,
+                           typename T::term_type::cf_type>::value>::type> {
+  static const bool value = true;
 };
 
 template <typename T>
-struct poly_in_cf<T,typename std::enable_if<(series_recursion_index<T>::value > 0u) &&
-	!std::is_base_of<polynomial_tag,typename T::term_type::cf_type>::value>::type>
-{
-	static const bool value = poly_in_cf<typename T::term_type::cf_type>::value;
+struct poly_in_cf<
+    T, typename std::enable_if<
+           (series_recursion_index<T>::value > 0u) &&
+           !std::is_base_of<polynomial_tag,
+                            typename T::term_type::cf_type>::value>::type> {
+  static const bool value = poly_in_cf<typename T::term_type::cf_type>::value;
 };
-
 }
 
 // Forward declaration of polynomial class.
-template <typename, typename>
-class polynomial;
+template <typename, typename> class polynomial;
 
 #endif
-
 }
 
 #endif

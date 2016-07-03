@@ -33,33 +33,30 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/polynomial.hpp"
 
-namespace piranha
-{
+namespace piranha {
 
-template <typename Cf,typename Key>
-inline polynomial<Cf,Key> pearce1(unsigned long long factor = 1u)
-{
-	typedef polynomial<Cf,Key> p_type;
-	p_type x("x"), y("y"), z("z"), t("t"), u("u");
+template <typename Cf, typename Key>
+inline polynomial<Cf, Key> pearce1(unsigned long long factor = 1u) {
+  typedef polynomial<Cf, Key> p_type;
+  p_type x("x"), y("y"), z("z"), t("t"), u("u");
 
-	auto f = (x + y + z*z*2 + t*t*t*3 + u*u*u*u*u*5 + 1);
-	auto tmp_f(f);
-	auto g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
-	auto tmp_g(g);
-	for (int i = 1; i < 12; ++i) {
-		f *= tmp_f;
-		g *= tmp_g;
-	}
-	if (factor > 1u) {
-	    f *= factor;
-	    g *= factor;
-	}
-	{
-	boost::timer::auto_cpu_timer t;
-	return f * g;
-	}
+  auto f = (x + y + z * z * 2 + t * t * t * 3 + u * u * u * u * u * 5 + 1);
+  auto tmp_f(f);
+  auto g = (u + t + z * z * 2 + y * y * y * 3 + x * x * x * x * x * 5 + 1);
+  auto tmp_g(g);
+  for (int i = 1; i < 12; ++i) {
+    f *= tmp_f;
+    g *= tmp_g;
+  }
+  if (factor > 1u) {
+    f *= factor;
+    g *= factor;
+  }
+  {
+    boost::timer::auto_cpu_timer t;
+    return f * g;
+  }
 }
-
 }
 
 #endif

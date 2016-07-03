@@ -46,11 +46,12 @@ using namespace piranha;
 // f = (1 + u**2 + v + w**2 + x - y**2)**28
 // g = (1 + u + v**2 + w + x**2 + y**3)**28 + 1
 
-BOOST_AUTO_TEST_CASE(gastineau3_test)
-{
-	init();
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
-	}
-	BOOST_CHECK_EQUAL((gastineau3<integer,kronecker_monomial<>>().size()),144049555ull);
+BOOST_AUTO_TEST_CASE(gastineau3_test) {
+  init();
+  if (boost::unit_test::framework::master_test_suite().argc > 1) {
+    settings::set_n_threads(boost::lexical_cast<unsigned>(
+        boost::unit_test::framework::master_test_suite().argv[1u]));
+  }
+  BOOST_CHECK_EQUAL((gastineau3<integer, kronecker_monomial<>>().size()),
+                    144049555ull);
 }

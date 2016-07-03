@@ -34,22 +34,25 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-namespace piranha { namespace detail {
+namespace piranha {
+namespace detail {
 
 // TMP to check if a type is in the tuple.
-template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
-struct type_in_tuple
-{
-	static_assert(I < std::numeric_limits<std::size_t>::max(),"Overflow error.");
-	static const bool value = std::is_same<T,typename std::tuple_element<I,Tuple>::type>::value ||
-		type_in_tuple<T,Tuple,I + 1u>::value;
+template <typename T, typename Tuple, std::size_t I = 0u,
+          typename Enable = void>
+struct type_in_tuple {
+  static_assert(I < std::numeric_limits<std::size_t>::max(), "Overflow error.");
+  static const bool value =
+      std::is_same<T, typename std::tuple_element<I, Tuple>::type>::value ||
+      type_in_tuple<T, Tuple, I + 1u>::value;
 };
 template <typename T, typename Tuple, std::size_t I>
-struct type_in_tuple<T,Tuple,I,typename std::enable_if<I == std::tuple_size<Tuple>::value>::type>
-{
-	static const bool value = false;
+struct type_in_tuple<
+    T, Tuple, I,
+    typename std::enable_if<I == std::tuple_size<Tuple>::value>::type> {
+  static const bool value = false;
 };
-
-}}
+}
+}
 
 #endif

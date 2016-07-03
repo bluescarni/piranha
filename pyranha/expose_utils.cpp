@@ -28,11 +28,9 @@ see https://www.gnu.org/licenses/. */
 
 #include "expose_utils.hpp"
 
-namespace pyranha
-{
+namespace pyranha {
 
 std::size_t exposed_types_counter = 0u;
 
 std::size_t lambdified_counter = 0u;
-
 }

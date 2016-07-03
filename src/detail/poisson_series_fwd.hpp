@@ -29,22 +29,16 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_POISSON_SERIES_FWD_HPP
 #define PIRANHA_POISSON_SERIES_FWD_HPP
 
+namespace piranha {
 
-namespace piranha
-{
-
-namespace detail
-{
+namespace detail {
 
 // Poisson series tag.
 struct poisson_series_tag;
-
 }
 
 // Forward declaration of Poisson series class.
-template <typename>
-class poisson_series;
-
+template <typename> class poisson_series;
 }
 
 #endif

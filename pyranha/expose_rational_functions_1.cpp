@@ -31,12 +31,9 @@ see https://www.gnu.org/licenses/. */
 #include "../src/monomial.hpp"
 #include "expose_rational_functions.hpp"
 
-namespace pyranha
-{
+namespace pyranha {
 
-void expose_rational_functions_1()
-{
-	expose_rational_functions_impl<piranha::monomial<short>>();
+void expose_rational_functions_1() {
+  expose_rational_functions_impl<piranha::monomial<short>>();
 }
-
 }

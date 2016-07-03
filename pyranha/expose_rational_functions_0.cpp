@@ -31,12 +31,9 @@ see https://www.gnu.org/licenses/. */
 #include "../src/kronecker_monomial.hpp"
 #include "expose_rational_functions.hpp"
 
-namespace pyranha
-{
+namespace pyranha {
 
-void expose_rational_functions_0()
-{
-	expose_rational_functions_impl<piranha::k_monomial>();
+void expose_rational_functions_0() {
+  expose_rational_functions_impl<piranha::k_monomial>();
 }
-
 }

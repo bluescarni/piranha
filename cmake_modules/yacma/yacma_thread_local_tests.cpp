@@ -1,5 +1,4 @@
-int main()
-{
-	thread_local int n;
-	(void)n;
+int main() {
+  thread_local int n;
+  (void)n;
 }

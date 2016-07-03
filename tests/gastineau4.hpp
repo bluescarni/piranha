@@ -33,28 +33,24 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/polynomial.hpp"
 
-namespace piranha
-{
+namespace piranha {
 
-template <typename Cf,typename Key>
-inline polynomial<Cf,Key> gastineau4()
-{
-	typedef polynomial<Cf,Key> p_type;
-	p_type z("z"), t("t"), u("u"), x("x"), y("y");
+template <typename Cf, typename Key> inline polynomial<Cf, Key> gastineau4() {
+  typedef polynomial<Cf, Key> p_type;
+  p_type z("z"), t("t"), u("u"), x("x"), y("y");
 
-	auto f = (1 + x + y + 2*z*z + 3*t*t*t + 5*u*u*u*u*u);
-	auto g = (1 + u + t + 2*z*z + 3*y*y*y + 5*x*x*x*x*x);
-	auto tmp_f(f), tmp_g(g);
-	for (int i = 1; i < 20; ++i) {
-		f *= tmp_f;
-		g *= tmp_g;
-	}
-	{
-	boost::timer::auto_cpu_timer t;
-	return f * g;
-	}
+  auto f = (1 + x + y + 2 * z * z + 3 * t * t * t + 5 * u * u * u * u * u);
+  auto g = (1 + u + t + 2 * z * z + 3 * y * y * y + 5 * x * x * x * x * x);
+  auto tmp_f(f), tmp_g(g);
+  for (int i = 1; i < 20; ++i) {
+    f *= tmp_f;
+    g *= tmp_g;
+  }
+  {
+    boost::timer::auto_cpu_timer t;
+    return f * g;
+  }
 }
-
 }
 
 #endif

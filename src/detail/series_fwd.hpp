@@ -29,25 +29,19 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SERIES_FWD_HPP
 #define PIRANHA_SERIES_FWD_HPP
 
-namespace piranha
-{
+namespace piranha {
 
-namespace detail
-{
+namespace detail {
 
 // Tag structure for series.
 struct series_tag {};
-
 }
 
 // Forward-declaration of series.
-template <typename, typename, typename>
-class series;
+template <typename, typename, typename> class series;
 
 // Fwd declaration of type trait.
-template <typename>
-class is_series;
-
+template <typename> class is_series;
 }
 
 #endif

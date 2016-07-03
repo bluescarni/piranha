@@ -4,7 +4,4 @@
 
 #include "../src/detail/config_intel.hpp"
 
-int main()
-{
-	return 0;
-}
+int main() { return 0; }

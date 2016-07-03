@@ -29,12 +29,10 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_REAL_FWD_HPP
 #define PIRANHA_REAL_FWD_HPP
 
-namespace piranha
-{
+namespace piranha {
 
 // Forward-declaration of real.
 class real;
-
 }
 
 #endif

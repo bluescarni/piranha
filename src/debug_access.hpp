@@ -29,16 +29,13 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_DEBUG_ACCESS_HPP
 #define PIRANHA_DEBUG_ACCESS_HPP
 
-namespace piranha
-{
+namespace piranha {
 
 /// Debug class.
 /**
  * Used to access private and protected class members for debug purposes.
  */
-template <typename T>
-class debug_access {};
-
+template <typename T> class debug_access {};
 }
 
 #endif

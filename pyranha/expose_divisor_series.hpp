@@ -29,8 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PYRANHA_EXPOSE_DIVISOR_SERIES_HPP
 #define PYRANHA_EXPOSE_DIVISOR_SERIES_HPP
 
-namespace pyranha
-{
+namespace pyranha {
 
 void expose_divisor_series_0();
 void expose_divisor_series_1();
@@ -41,7 +40,6 @@ void expose_divisor_series_5();
 void expose_divisor_series_6();
 void expose_divisor_series_7();
 void expose_divisor_series_8();
-
 }
 
 #endif
