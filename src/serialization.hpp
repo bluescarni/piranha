@@ -92,4 +92,92 @@ see https://www.gnu.org/licenses/. */
     }                                                                                                                  \
     }
 
+#include <cmath>
+#include <ios>
+#include <locale>
+#include <msgpack.hpp>
+#include <sstream>
+#include <type_traits>
+
+namespace piranha
+{
+
+namespace detail
+{
+
+template <typename T>
+using msgpack_scalar_enabler = typename std::enable_if<std::is_same<char,T>::value ||
+    std::is_same<signed char,T>::value || std::is_same<unsigned char,T>::value ||
+    std::is_same<short,T>::value || std::is_same<unsigned short,T>::value ||
+    std::is_same<int,T>::value || std::is_same<unsigned,T>::value ||
+    std::is_same<long,T>::value || std::is_same<unsigned long,T>::value ||
+    std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value ||
+    std::is_same<float,T>::value || std::is_same<double,T>::value
+>::type;
+
+}
+    
+enum class serialization_format {
+    portable,
+    binary
+};
+
+template <typename Stream, typename T, typename = void>
+struct msgpack_pack_impl
+{};
+
+template <typename Stream, typename T>
+struct msgpack_pack_impl<Stream,T,detail::msgpack_scalar_enabler<T>>
+{
+    void operator()(msgpack::packer<Stream> &packer, const T &x, serialization_format) const
+    {
+        packer.pack(x);
+    }
+};
+
+template <typename Stream, typename T>
+struct msgpack_pack_impl<Stream,T,typename std::enable_if<std::is_same<T,long double>::value>::type>
+{
+    void operator()(msgpack::packer<Stream> &packer, const T &x, serialization_format f) const
+    {
+        if (f == serialization_format::binary) {
+            packer.pack_bin(sizeof(T));
+            packer.pack_bin_body(reinterpret_cast<const char *>(&x), sizeof(T));
+        } else {
+            if (std::isnan(x)) {
+                if (std::signbit(x)) {
+                    packer.pack("-nan");
+                } else {
+                    packer.pack("+nan");
+                }
+            } else if (std::isinf(x)) {
+                if (std::signbit(x)) {
+                    packer.pack("-inf");
+                } else {
+                    packer.pack("+inf");
+                }
+            } else {
+                std::ostringstream oss;
+                // Make sure we are using the C locale.
+                oss.imbue(std::locale::classic());
+                // Use scientific format.
+                oss << std::scientific;
+                // http://stackoverflow.com/questions/554063/how-do-i-print-a-double-value-with-full-precision-using-cout
+                oss.precision(std::numeric_limits<T>::max_digits10);
+                oss << x;
+                packer.pack(oss.str());
+            }
+        }
+    }
+};
+
+// TODO stream detection, enabler.
+template <typename Stream, typename T>
+inline void msgpack_pack(msgpack::packer<Stream> &packer, const T &x, serialization_format f)
+{
+    msgpack_pack_impl<Stream,T>{}(packer,x,f);
+}
+
+}
+
 #endif
