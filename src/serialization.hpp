@@ -106,29 +106,29 @@ namespace detail
 {
 
 template <typename T>
-using msgpack_scalar_enabler = typename std::enable_if<std::is_same<char,T>::value ||
-    std::is_same<signed char,T>::value || std::is_same<unsigned char,T>::value ||
-    std::is_same<short,T>::value || std::is_same<unsigned short,T>::value ||
-    std::is_same<int,T>::value || std::is_same<unsigned,T>::value ||
-    std::is_same<long,T>::value || std::is_same<unsigned long,T>::value ||
-    std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value ||
-    std::is_same<float,T>::value || std::is_same<double,T>::value
->::type;
-
+using msgpack_scalar_enabler =
+    typename std::enable_if<std::is_same<char, T>::value || std::is_same<signed char, T>::value
+                            || std::is_same<unsigned char, T>::value || std::is_same<short, T>::value
+                            || std::is_same<unsigned short, T>::value || std::is_same<int, T>::value
+                            || std::is_same<unsigned, T>::value || std::is_same<long, T>::value
+                            || std::is_same<unsigned long, T>::value || std::is_same<long long, T>::value
+                            || std::is_same<unsigned long long, T>::value || std::is_same<float, T>::value
+                            || std::is_same<double, T>::value>::type;
 }
-    
+
 enum class serialization_format {
+    /// Portable.
     portable,
+    /// Binary.
     binary
 };
 
 template <typename Stream, typename T, typename = void>
-struct msgpack_pack_impl
-{};
+struct msgpack_pack_impl {
+};
 
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream,T,detail::msgpack_scalar_enabler<T>>
-{
+struct msgpack_pack_impl<Stream, T, detail::msgpack_scalar_enabler<T>> {
     void operator()(msgpack::packer<Stream> &packer, const T &x, serialization_format) const
     {
         packer.pack(x);
@@ -136,8 +136,7 @@ struct msgpack_pack_impl<Stream,T,detail::msgpack_scalar_enabler<T>>
 };
 
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream,T,typename std::enable_if<std::is_same<T,long double>::value>::type>
-{
+struct msgpack_pack_impl<Stream, T, typename std::enable_if<std::is_same<T, long double>::value>::type> {
     void operator()(msgpack::packer<Stream> &packer, const T &x, serialization_format f) const
     {
         if (f == serialization_format::binary) {
@@ -175,9 +174,8 @@ struct msgpack_pack_impl<Stream,T,typename std::enable_if<std::is_same<T,long do
 template <typename Stream, typename T>
 inline void msgpack_pack(msgpack::packer<Stream> &packer, const T &x, serialization_format f)
 {
-    msgpack_pack_impl<Stream,T>{}(packer,x,f);
+    msgpack_pack_impl<Stream, T>{}(packer, x, f);
 }
-
 }
 
 #endif

@@ -40,4 +40,3 @@ BOOST_AUTO_TEST_CASE(serialization_test_00)
     init();
     std::cout << std::numeric_limits<double>::digits << '\n';
 }
-
