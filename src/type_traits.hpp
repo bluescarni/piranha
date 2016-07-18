@@ -936,7 +936,6 @@ struct true_tt {
 
 template <typename T>
 const bool true_tt<T>::value;
-
 }
 
 /// Detect the availability of <tt>std::begin()</tt> and <tt>std::end()</tt>.
