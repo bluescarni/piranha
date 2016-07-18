@@ -36,8 +36,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "../src/environment.hpp"
 #include "../src/hash_set.hpp"
+#include "../src/init.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -74,7 +74,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(dynamic_kronecker_monomial_constructor_test)
 {
-	environment env;
+	init();
 	boost::mpl::for_each<int_types>(constructor_tester());
 }
 

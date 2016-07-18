@@ -103,7 +103,7 @@ class dynamic_kronecker_monomial
     static_assert(ksize_ <= std::numeric_limits<std::size_t>::max(), "Overflow error.");
 
 public:
-    /// The number of values packed in each signed integer.
+    /// The implementation-defined number of values packed in each signed integer.
     static const std::size_t ksize = static_cast<std::size_t>(ksize_);
     /// Alias for \p SignedInt.
     using value_type = SignedInt;

@@ -213,7 +213,6 @@ private:
     // Degree utils.
     using degree_type = decltype(std::declval<const T &>() + std::declval<const T &>());
 #endif
-
 public:
     /// Arity of the multiply() method.
     static const std::size_t multiply_arity = 1u;
