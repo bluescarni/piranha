@@ -302,6 +302,8 @@ see https://www.gnu.org/licenses/. */
  * header and then make sure to include that header in every piranha public header.
  * \todo see if in series we can make container_type public (yes) and make the other protected members private, now that
  * we have functions to manipulate the container and the symbol set.
+ * \todo we need save/load functions for rational_function as well. Maybe we should introduce global save/load functions
+ * and use those instead of the static members of series?
  */
 namespace piranha
 {
