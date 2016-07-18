@@ -300,6 +300,8 @@ see https://www.gnu.org/licenses/. */
  * \todo it seems like in C++17 we can finally have an automatically inited global class in which to tuck the init
  * code (and probably the thread pool as well), via inline variables. Probably we will need to define it in a separate
  * header and then make sure to include that header in every piranha public header.
+ * \todo see if in series we can make container_type public (yes) and make the other protected members private, now that
+ * we have functions to manipulate the container and the symbol set.
  */
 namespace piranha
 {
