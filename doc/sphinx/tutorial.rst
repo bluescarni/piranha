@@ -8,3 +8,4 @@ Tutorial
 
    hello_piranha.rst
    fundamental_types.rst
+   polynomials.rst

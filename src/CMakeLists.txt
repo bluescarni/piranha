@@ -31,7 +31,7 @@ SET(HEADERS_LIST
 	mp_integer.hpp
 	mp_rational.hpp
 	math.hpp
-	environment.hpp
+	init.hpp
 	print_tex_coefficient.hpp
 	cache_aligning_allocator.hpp
 	trigonometric_series.hpp
@@ -54,6 +54,8 @@ SET(HEADERS_LIST
 	invert.hpp
 	dynamic_kronecker_monomial.hpp
 	base_series_multiplier.hpp
+	rational_function.hpp
+	lambdify.hpp
 )
 
 SET(DETAIL_HEADERS_LIST
@@ -76,12 +78,13 @@ SET(DETAIL_HEADERS_LIST
 	detail/is_digit.hpp
 	detail/config_intel.hpp
 	detail/type_in_tuple.hpp
-	detail/gcd.hpp
 	detail/vector_merge_args.hpp
 	detail/divisor_series_fwd.hpp
 	detail/cf_mult_impl.hpp
 	detail/safe_integral_adder.hpp
 	detail/parallel_vector_transform.hpp
+	detail/ulshift.hpp
+	detail/demangle.hpp
 )
 
 # NOTE: this dummy cpp file is here with the sole purpose of getting the headers

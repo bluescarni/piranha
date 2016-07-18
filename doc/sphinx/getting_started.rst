@@ -1,5 +1,23 @@
 .. _getting_started:
 
+Quick install
+=============
+
+On a modern GNU/Linux distribution, the following commands will download, configure and install the latest version
+of the Piranha headers in ``/usr/local/include/piranha``:
+
+.. code-block:: console
+
+   $ git clone https://github.com/bluescarni/piranha.git
+   $ mkdir piranha/build
+   $ cd piranha/build
+   $ cmake ../
+   $ sudo make install
+
+The commands above assume that Git, a compiler toolchain, CMake and all of Piranha's dependencies have already been
+installed on the system. The following sections explain the installation process in detail (including the installation
+of the Python bindings).
+
 Getting started
 ===============
 
@@ -9,16 +27,15 @@ Supported platforms
 Piranha requires a recent compiler with robust support for the C++11 standard. The following
 compilers are routinely used to develop and test the library:
 
-* `GCC <http://gcc.gnu.org/>`__ 4.8 and later,
-* `Clang <http://clang.llvm.org/>`__ 3.5 (earlier versions up to 3.1 should work as well),
-* `Intel C++ compiler <https://software.intel.com/en-us/c-compilers>`__ 15 (beta support).
+* `GCC <http://gcc.gnu.org/>`__ 4.8 and later versions,
+* `Clang <http://clang.llvm.org/>`__ 3.8 (earlier versions up to 3.1 should work as well).
 
 The main platform used for the development of Piranha is 64-bit GNU/Linux.
 OSX, Windows (using `MinGW <http://mingw-w64.sourceforge.net/>`__) and BSD flavours are also supported,
 although the library is compiled and tested on these platforms somewhat less frequently.
 
 Piranha aims to be standard-compliant and any portability issue in the source code
-should be reported as a bug.
+should be `reported as a bug <https://github.com/bluescarni/piranha/issues>`__.
 
 Dependencies
 ------------
@@ -45,8 +62,7 @@ Download
 
 At the present time Piranha is being actively developed and no stable release exists yet. Development
 happens in the `GitHub repository <https://github.com/bluescarni/piranha>`__.
-The ``master`` branch is considered to be the stable version of Piranha,
-whereas the separate ``development`` branch is where active development takes place.
+The ``master`` branch is considered to be the stable version of Piranha.
 
 A snapshot of the ``master`` branch can be downloaded
 `here <https://github.com/bluescarni/piranha/archive/master.zip>`__, or checked out using
@@ -55,7 +71,7 @@ the latest version of the ``master`` branch in a directory called ``piranha``:
 
 .. code-block:: console
 
-   $ git clone git@github.com:bluescarni/piranha.git piranha
+   $ git clone https://github.com/bluescarni/piranha.git
 
 You can keep the Piranha source code up-to-date by running periodically the command
 
@@ -133,9 +149,9 @@ to force CMake to pick a specific one, you can set the ``CXX`` environment varia
 
 .. code-block:: console
 
-   $ CXX=/path/to/other/compiler/icpc cmake ../
+   $ CXX=/path/to/other/compiler/clang++ cmake ../
 
-This will force CMake to use the Intel C++ compiler ``icpc`` at the location ``/path/to/other/compiler/``.
+This will force CMake to use the Clang C++ compiler ``clang++`` at the location ``/path/to/other/compiler/``.
 
 Building
 ^^^^^^^^
@@ -200,7 +216,8 @@ After a successful build in ``Debug`` mode, it is good practice to run the test 
 
    Total Test time (real) = 675.26 sec
 
-A full run of the test suite should take a few minutes on a modern desktop machine. Any failure in the unit tests should be reported as a bug.
+A full run of the test suite should take a few minutes on a modern desktop machine. Any failure in the unit tests should be
+`reported as a bug <https://github.com/bluescarni/piranha/issues>`__.
 
 .. note:: Some of the performance tests will create extremely large series. It is advisable, at least initially, to run each performance test separately
    while monitoring the memory usage in order to avoid heavy thrashing.
@@ -252,4 +269,3 @@ test suite with the following commands:
 Note that if you specified a non-standard ``PREFIX`` during the configuration phase, you might need to set the ``PYTHONPATH``
 environment variable in order for the Python interpreter to locate Pyranha. More information is available
 `here <https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH>`__ .
-

@@ -1,43 +1,67 @@
 # -*- coding: iso-8859-1 -*-
-# Copyright (C) 2009-2011 by Francesco Biscani
-# bluescarni@gmail.com
+# Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
+# This file is part of the Piranha library.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# The Piranha library is free software; you can redistribute it and/or modify
+# it under the terms of either:
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the
-# Free Software Foundation, Inc.,
-# 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#  * the GNU Lesser General Public License as published by the Free
+#    Software Foundation; either version 3 of the License, or (at your
+#    option) any later version.
+#
+# or
+#
+#  * the GNU General Public License as published by the Free Software
+#    Foundation; either version 3 of the License, or (at your option) any
+#    later version.
+#
+# or both in parallel, as here.
+#
+# The Piranha library is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received copies of the GNU General Public License and the
+# GNU Lesser General Public License along with the Piranha library.  If not,
+# see https://www.gnu.org/licenses/.
 
 # Use absolute imports to avoid issues with the main math module.
 from __future__ import absolute_import as _ai
 
 from ._common import _cpp_type_catcher
 
-# NOTE: some ideas to improve the extensibility of these functions:
-# http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user
-# Note that now we are adopting an approach of just deferring everything to C++.
+# This is used in a few functions below.
+def __check_names_argument(names):
+	if not names is None and (not isinstance(names,list) or not all([isinstance(_,str) for _ in names])):
+		raise TypeError('the optional \'names\' argument must be a list of strings')
+
+# Helper to check that d is a dictionary suitable for use in evaluation.
+def __check_eval_dict(d):
+	# Type checks.
+	if not isinstance(d,dict):
+		raise TypeError('evaluation dictionary must be a dict object')
+	if len(d) == 0:
+		raise ValueError('evaluation dictionary cannot be empty')
+	if not all([isinstance(k,str) for k in d]):
+		raise TypeError('all keys in the evaluation dictionary must be string objects')
+	t_set = set([type(d[k]) for k in d])
+	if not len(t_set) == 1:
+		raise TypeError('all values in the evaluation dictionary must be of the same type')
 
 def cos(arg):
 	"""Cosine.
-	
-	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports
+
+	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any symbolic type that supports
 	the operation.
-	
+
 	:param arg: cosine argument
-	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.
+	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported symbolic type.
 	:returns: cosine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
-	
+
 	>>> cos(0)
 	1
 	>>> cos(2) # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -46,7 +70,7 @@ def cos(arg):
 	ValueError: cannot compute the cosine of a non-zero integer
 	>>> cos(2.) # doctest: +ELLIPSIS
 	-0.4161468...
-	>>> from .types import poisson_series, polynomial, rational, short, monomial
+	>>> from pyranha.types import poisson_series, polynomial, rational, short, monomial
 	>>> t = poisson_series(polynomial(rational,monomial(short)))()
 	>>> cos(2 * t('x'))
 	cos(2*x)
@@ -54,19 +78,19 @@ def cos(arg):
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
-	
+
 	"""
 	from ._core import _cos
 	return _cpp_type_catcher(_cos,arg)
 
 def sin(arg):
 	"""Sine.
-	
-	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports
+
+	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any symbolic type that supports
 	the operation.
 
 	:param arg: sine argument
-	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.
+	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported symbolic type.
 	:returns: sine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
@@ -79,7 +103,7 @@ def sin(arg):
 	ValueError: cannot compute the cosine of a non-zero integer
 	>>> sin(2.) # doctest: +ELLIPSIS
 	0.9092974...
-	>>> from .types import poisson_series, polynomial, rational, short, monomial
+	>>> from pyranha.types import poisson_series, polynomial, rational, short, monomial
 	>>> t = poisson_series(polynomial(rational,monomial(short)))()
 	>>> sin(2 * t('x'))
 	sin(2*x)
@@ -87,18 +111,18 @@ def sin(arg):
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
-	
+
 	"""
 	from ._core import _sin
 	return _cpp_type_catcher(_sin,arg)
 
 def binomial(x,y):
 	"""Binomial coefficient.
-	
+
 	This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient :math:`{x \choose y}`,
 	supporting various combinations of integral, rational, floating-point and arbitrary-precision floating-point types
 	as input.
-	
+
 	:param x: top argument for the binomial coefficient
 	:type x: ``int``, ``float``, ``Fraction``, ``mpf``
 	:param y: bottom argument for the binomial coefficient
@@ -106,7 +130,7 @@ def binomial(x,y):
 	:returns: *x* choose *y*
 	:raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported
 	:raises: any exception raised by the invoked low-level function
-	
+
 	>>> binomial(3,2)
 	3
 	>>> binomial(-6,2)
@@ -120,26 +144,60 @@ def binomial(x,y):
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
-	
+
 	"""
 	from ._core import _binomial
 	return _cpp_type_catcher(_binomial,x,y)
 
+def gcd(x,y):
+	"""Greatest common divisor.
+
+	This function is a wrapper around a lower level function. It will calculate the GCD of *x* and *y*,
+	supporting ``int`` and various symbolic types as input.
+
+	:param x: first argument
+	:type x: ``int`` or a supported symbolic type
+	:param y: second argument
+	:type y: ``int`` or a supported symbolic type
+	:returns: the GCD of *x* and *y*
+	:raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported
+	:raises: any exception raised by the invoked low-level function
+
+	>>> gcd(12,9)
+	3
+	>>> from pyranha.types import polynomial, integer, k_monomial
+	>>> pt = polynomial(integer,k_monomial)()
+	>>> x,y = pt('x'), pt('y')
+	>>> gcd((x**2-y**2)*(x**3+1),(x+1)*(x+2*y)) # doctest: +SKIP
+	x+1
+	>>> gcd(x**-1,y) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: negative exponents are not allowed
+	>>> gcd(x,2) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _gcd
+	return _cpp_type_catcher(_gcd,x,y)
+
 def partial(arg,name):
 	"""Partial derivative.
-	
-	Compute the partial derivative of *arg* with respect to the variable *name*. *arg* must be a series type and
+
+	Compute the partial derivative of *arg* with respect to the variable *name*. *arg* must be a symbolic type and
 	*name* a string.
-	
+
 	:param arg: argument for the partial derivative
-	:type arg: a series type
+	:type arg: a symbolic type
 	:param name: name of the variable with respect to which the derivative will be calculated
 	:type name: string
 	:returns: partial derivative of *arg* with respect to *name*
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
-	
-	>>> from .types import polynomial, integer, short, monomial
+
+	>>> from pyranha.types import polynomial, integer, short, monomial
 	>>> pt = polynomial(integer,monomial(short))()
 	>>> x,y = pt('x'), pt('y')
 	>>> partial(x + 2*x*y,'y')
@@ -148,27 +206,27 @@ def partial(arg,name):
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
-	
+
 	"""
 	from ._core import _partial
 	return _cpp_type_catcher(_partial,arg,name)
 
 def integrate(arg,name):
 	"""Integration.
-	
-	Compute the antiderivative of *arg* with respect to the variable *name*. *arg* must be a series type and
+
+	Compute the antiderivative of *arg* with respect to the variable *name*. *arg* must be a symbolic type and
 	*name* a string. The success of the operation is not guaranteed, and depends both on the type and value of
 	*arg*.
-	
+
 	:param arg: argument for the integration
-	:type arg: a series type
+	:type arg: a symbolic type
 	:param name: name of the variable with respect to which the integration will be calculated
 	:type name: string
 	:returns: antiderivative of *arg* with respect to *name*
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
-	
-	>>> from .types import polynomial, rational, k_monomial
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
 	>>> pt = polynomial(rational,k_monomial)()
 	>>> x,y = pt('x'), pt('y')
 	>>> integrate(x + 2*x*y,'x') == x**2/2 + x**2*y
@@ -181,22 +239,22 @@ def integrate(arg,name):
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
-	
+
 	"""
 	from ._core import _integrate
 	return _cpp_type_catcher(_integrate,arg,name)
 
 def factorial(n):
 	"""Factorial.
-	
+
 	Will compute the factorial of *n*, which must be a non-negative instance of ``int``.
-	
+
 	:param n: argument for the factorial
 	:type n: ``int``
 	:returns: factorial of *n*
 	:raises: :exc:`TypeError` if *n* is not an ``int``
 	:raises: :exc:`ValueError` if *n* is negative or too large
-	
+
 	>>> factorial(0)
 	1
 	>>> factorial(6)
@@ -209,7 +267,7 @@ def factorial(n):
 	Traceback (most recent call last):
 	   ...
 	TypeError: factorial argument must be an integer
-	
+
 	"""
 	from  ._core import _factorial
 	if not isinstance(n,int):
@@ -221,15 +279,15 @@ def factorial(n):
 
 def pbracket(f,g,p_list,q_list):
 	"""Poisson bracket.
-	
+
 	Compute the Poisson bracket of *f* and *g* with respect to the momenta with names in *p_list*
-	and coordinates with names in *q_list*. *f* and *g* must be series of the same type, and
+	and coordinates with names in *q_list*. *f* and *g* must be symbolic objects of the same type, and
 	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.
-	
+
 	:param f: first argument
-	:type f: a series type
+	:type f: a symbolic type
 	:param g: second argument
-	:type g: a series type
+	:type g: a symbolic type
 	:param p_list: list of momenta names
 	:type p_list: list of strings
 	:param q_list: list of coordinates names
@@ -238,8 +296,8 @@ def pbracket(f,g,p_list,q_list):
 	:raises: :exc:`ValueError` if *p_list* and *q_list* have different sizes or duplicate entries
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
-	
-	>>> from .types import polynomial, rational, short, monomial
+
+	>>> from pyranha.types import polynomial, rational, short, monomial
 	>>> pt = polynomial(rational,monomial(short))()
 	>>> x,v = pt('x'), pt('v')
 	>>> pbracket(x+v,x+v,['v'],['x']) == 0
@@ -256,25 +314,25 @@ def pbracket(f,g,p_list,q_list):
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
-	
+
 	"""
 	from ._core import _pbracket
 	return _cpp_type_catcher(_pbracket,f,g,p_list,q_list)
 
 def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	"""Test if transformation is canonical.
-	
+
 	This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson bracket test.
 	The transformation is expressed as two separate list of objects, *new_p* and *new_q*, representing the new momenta
 	and coordinates as functions of the old momenta *p_list* and *q_list*.
-	
-	The function requires *new_p* and *new_q* to be lists of series of the same type, and
+
+	The function requires *new_p* and *new_q* to be lists of symbolic objects of the same type, and
 	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.
-	
+
 	:param new_p: list of objects representing the new momenta
-	:type new_p: list of series instances
+	:type new_p: list of symbolic instances
 	:param new_q: list of objects representing the new coordinates
-	:type new_q: list of series instances
+	:type new_q: list of symbolic instances
 	:param p_list: list of momenta names
 	:type p_list: list of strings
 	:param q_list: list of coordinates names
@@ -283,8 +341,8 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	:raises: :exc:`ValueError` if the size of all input lists is not the same
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
-	
-	>>> from .types import polynomial, rational, k_monomial
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
 	>>> pt = polynomial(rational,k_monomial)()
 	>>> L,G,H,l,g,h = [pt(_) for _ in 'LGHlgh']
 	>>> transformation_is_canonical([-l],[L],['L'],['l'])
@@ -321,7 +379,7 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
-	
+
 	"""
 	from ._core import _transformation_is_canonical
 	if not isinstance(new_p,list) or not isinstance(new_q,list):
@@ -343,14 +401,14 @@ def truncate_degree(arg,max_degree,names = None):
 	"""Degree-based truncation.
 
 	This function will eliminate from *arg* parts whose degree is greater than *max_degree*. The truncation
-	operates on series types both by eliminating entire terms and by truncating recursively the coefficients,
+	operates on symbolic types both by eliminating entire terms and by truncating recursively the coefficients,
 	if possible.
 
 	If *names* is ``None``, then the total degree is considered for the truncation. Otherwise, *names* must be
 	a list of strings enumerating the variables to be considered for the computation of the degree.
 
 	:param arg: argument for the truncation
-	:type arg: a series type
+	:type arg: a symbolic type
 	:param max_degree: maximum degree that will be kept in *arg*
 	:type max_degree: a type comparable to the type representing the degree of *arg*
 	:param names: list of the names of the variables to be considered in the computation of the degree
@@ -359,7 +417,7 @@ def truncate_degree(arg,max_degree,names = None):
 	:raises: :exc:`TypeError` if *names* is neither ``None`` nor a list of strings
 	:raises: any exception raised by the invoked low-level function
 
-	>>> from .types import polynomial, rational, k_monomial, poisson_series
+	>>> from pyranha.types import polynomial, rational, k_monomial, poisson_series
 	>>> pt = polynomial(rational,k_monomial)()
 	>>> x,y,z = pt('x'), pt('y'), pt('z')
 	>>> truncate_degree(x**2*y+x*y+z,2) # doctest: +SKIP
@@ -383,8 +441,7 @@ def truncate_degree(arg,max_degree,names = None):
 
 	"""
 	from ._core import _truncate_degree
-	if not names is None and (not isinstance(names,list) or not all([isinstance(_,str) for _ in names])):
-		raise TypeError('the optional \'names\' argument must be a list of strings')
+	__check_names_argument(names)
 	if names is None:
 		return _cpp_type_catcher(_truncate_degree,arg,max_degree)
 	else:
@@ -401,7 +458,7 @@ def evaluate(arg,eval_dict):
 	and this type needs to support the operations needed to compute the evaluation.
 
 	:param arg: argument for the evaluation
-	:type arg: a series type
+	:type arg: a symbolic type
 	:param eval_dict: evaluation dictionary
 	:type eval_dict: a dictionary mapping strings to values, with all values of the same type
 	:returns: the evaluation of *arg* according to *eval_dict*
@@ -409,7 +466,7 @@ def evaluate(arg,eval_dict):
 	:raises: :exc:`ValueError` if *eval_dict* is empty
 	:raises: any exception raised by the invoked low-level function
 
-	>>> from .types import polynomial, rational, k_monomial
+	>>> from pyranha.types import polynomial, rational, k_monomial
 	>>> pt = polynomial(rational,k_monomial)()
 	>>> x,y,z = pt('x'), pt('y'), pt('z')
 	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3,'y':-3,'z':5})
@@ -442,10 +499,9 @@ def evaluate(arg,eval_dict):
 	TypeError: invalid argument type(s)
 
 	"""
-	from ._common import _check_eval_dict
 	from ._core import _evaluate
 	# Check input dict.
-	_check_eval_dict(eval_dict)
+	__check_eval_dict(eval_dict)
 	return _cpp_type_catcher(_evaluate,arg,eval_dict,eval_dict[list(eval_dict.keys())[0]])
 
 def subs(arg,name,x):
@@ -456,7 +512,7 @@ def subs(arg,name,x):
 	supports various combinations for the types of *arg* and *x*.
 
 	:param arg: argument for the substitution
-	:type arg: a series type
+	:type arg: a symbolic type
 	:param name: name of the symbol to be substituted
 	:type name: a string
 	:param x: the quantity that will be substituted for *name*
@@ -465,7 +521,7 @@ def subs(arg,name,x):
 	:raises: :exc:`TypeError` in case the input types are not supported or invalid
 	:raises: any exception raised by the invoked low-level function
 
-	>>> from .types import polynomial, rational, k_monomial
+	>>> from pyranha.types import polynomial, rational, k_monomial
 	>>> pt = polynomial(rational,k_monomial)()
 	>>> x,y = pt('x'), pt('y')
 	>>> subs(x/2+1,'x',3)
@@ -489,7 +545,7 @@ def t_subs(arg,name,x,y):
 	a lower-level C++ routine that supports various combinations for the types of *arg*, *x* and *y*.
 
 	:param arg: argument for the substitution
-	:type arg: a series type
+	:type arg: a symbolic type
 	:param name: name of the symbol whose cosine and sine will be substituted
 	:type name: a string
 	:param x: the quantity that will be substituted for the cosine of *name*
@@ -500,7 +556,7 @@ def t_subs(arg,name,x,y):
 	:raises: :exc:`TypeError` in case the input types are not supported or invalid
 	:raises: any exception raised by the invoked low-level function
 
-	>>> from .types import poisson_series, rational, polynomial, short, monomial
+	>>> from pyranha.types import poisson_series, rational, polynomial, short, monomial
 	>>> pt = poisson_series(polynomial(rational,monomial(short)))()
 	>>> x,y = pt('x'), pt('y')
 	>>> t_subs(cos(x+y),'x',1,0)
@@ -524,7 +580,7 @@ def ipow_subs(arg,name,n,x):
 	a lower-level C++ routine that supports various combinations for the types of *arg* and *x*.
 
 	:param arg: argument for the substitution
-	:type arg: a series type
+	:type arg: a symbolic type
 	:param name: name of the symbol whose power will be substituted
 	:type name: a string
 	:param n: power of *name* that will be substituted
@@ -535,7 +591,7 @@ def ipow_subs(arg,name,n,x):
 	:raises: :exc:`TypeError` in case the input types are not supported or invalid
 	:raises: any exception raised by the invoked low-level function
 
-	>>> from .types import rational, polynomial, short, monomial
+	>>> from pyranha.types import rational, polynomial, short, monomial
 	>>> pt = polynomial(rational,monomial(short))()
 	>>> x,y,z = pt('x'), pt('y'), pt('z')
 	>>> ipow_subs(x**5*y,'x',2,z)
@@ -559,11 +615,11 @@ def invert(arg):
 	"""Inverse.
 
 	Compute the multiplicative inverse of the argument.
-	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports
+	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any symbolic type that supports
 	the operation.
 
 	:param arg: inversion argument
-	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.
+	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported symbolic type.
 	:returns: inverse of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
@@ -577,7 +633,7 @@ def invert(arg):
 	Traceback (most recent call last):
 	   ...
 	ZeroDivisionError: division by zero
-	>>> from .types import polynomial, rational, short, monomial, divisor, divisor_series
+	>>> from pyranha.types import polynomial, rational, short, monomial, divisor, divisor_series
 	>>> t = polynomial(rational,monomial(short))()
 	>>> invert(t('x'))
 	x**-1
@@ -596,3 +652,307 @@ def invert(arg):
 	"""
 	from ._core import _invert
 	return _cpp_type_catcher(_invert,arg)
+
+def degree(arg,names = None):
+	"""Degree.
+
+	This function will return the degree of the input argument. Various symbolic types are supported as input
+	(e.g., polynomials, Poisson series, rational functions). If *names* is ``None``, then the total degree is
+	returned. Otherwise, *names* must be a list of strings enumerating the variables to be considered for the
+	computation of the partial degree.
+
+	:param arg: argument whose degree will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the degree
+	:type names: ``None`` or a list of strings
+	:returns: the degree of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
+	>>> t = polynomial(rational,k_monomial)()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> degree(x**3+y*z)
+	3
+	>>> degree(x**3+y*z,['z'])
+	1
+	>>> from fractions import Fraction as F
+	>>> degree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _degree
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_degree,arg)
+	else:
+		return _cpp_type_catcher(_degree,arg,names)
+
+def ldegree(arg,names = None):
+	"""Low degree.
+
+	This function will return the low degree of the input argument. Various symbolic types are supported as input
+	(e.g., polynomials, Poisson series, rational functions). If *names* is ``None``, then the total low degree is
+	returned. Otherwise, *names* must be a list of strings enumerating the variables to be considered for the
+	computation of the partial low degree.
+
+	:param arg: argument whose low degree will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the low degree
+	:type names: ``None`` or a list of strings
+	:returns: the low degree of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
+	>>> t = polynomial(rational,k_monomial)()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> ldegree(x**3+y*z)
+	2
+	>>> ldegree(x**3+y*x,['x'])
+	1
+	>>> from fractions import Fraction as F
+	>>> ldegree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _ldegree
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_ldegree,arg)
+	else:
+		return _cpp_type_catcher(_ldegree,arg,names)
+
+def t_degree(arg,names = None):
+	"""Trigonometric degree.
+
+	This function will return the trigonometric degree of the input argument. Various symbolic types are supported as
+	input. If *names* is ``None``, then the total degree is returned. Otherwise, *names* must be a list of strings
+	enumerating the variables to be considered for the computation of the partial degree.
+
+	:param arg: argument whose trigonometric degree will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the degree
+	:type names: ``None`` or a list of strings
+	:returns: the trigonometric degree of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
+	>>> from pyranha.math import cos
+	>>> t = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> t_degree(cos(3*x+y-z)+cos(2*x))
+	3
+	>>> t_degree(cos(3*x+y+z)+cos(x),['z'])
+	1
+	>>> from fractions import Fraction as F
+	>>> t_degree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_degree
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_t_degree,arg)
+	else:
+		return _cpp_type_catcher(_t_degree,arg,names)
+
+def t_ldegree(arg,names = None):
+	"""Trigonometric low degree.
+
+	This function will return the trigonometric low degree of the input argument. Various symbolic types are supported as
+	input. If *names* is ``None``, then the total low degree is returned. Otherwise, *names* must be a list of strings
+	enumerating the variables to be considered for the computation of the partial low degree.
+
+	:param arg: argument whose trigonometric low degree will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the low degree
+	:type names: ``None`` or a list of strings
+	:returns: the trigonometric low degree of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
+	>>> from pyranha.math import cos
+	>>> t = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> t_ldegree(cos(3*x+y-z)+cos(2*x))
+	2
+	>>> t_ldegree(cos(3*x+y-z)+cos(2*y+z),['y'])
+	1
+	>>> from fractions import Fraction as F
+	>>> t_ldegree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_ldegree
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_t_ldegree,arg)
+	else:
+		return _cpp_type_catcher(_t_ldegree,arg,names)
+
+def t_order(arg,names = None):
+	"""Trigonometric order.
+
+	This function will return the trigonometric order of the input argument. Various symbolic types are supported as
+	input. If *names* is ``None``, then the total order is returned. Otherwise, *names* must be a list of strings
+	enumerating the variables to be considered for the computation of the partial order.
+
+	:param arg: argument whose trigonometric order will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the order
+	:type names: ``None`` or a list of strings
+	:returns: the order of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
+	>>> from pyranha.math import cos
+	>>> t = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> t_order(cos(3*x+y-z)+cos(x))
+	5
+	>>> t_order(cos(3*x+y-z)-sin(y),['z'])
+	1
+	>>> from fractions import Fraction as F
+	>>> t_order(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_order
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_t_order,arg)
+	else:
+		return _cpp_type_catcher(_t_order,arg,names)
+
+def t_lorder(arg,names = None):
+	"""Trigonometric low order.
+
+	This function will return the trigonometric low order of the input argument. Various symbolic types are supported as
+	input. If *names* is ``None``, then the total low order is returned. Otherwise, *names* must be a list of strings
+	enumerating the variables to be considered for the computation of the partial low order.
+
+	:param arg: argument whose trigonometric low order will be returned
+	:type arg: a supported symbolic type.
+	:param names: list of the names of the variables to be considered in the computation of the low order
+	:type names: ``None`` or a list of strings
+	:returns: the trigonometric low order of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
+	>>> from pyranha.math import cos
+	>>> t = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z = t('x'),t('y'),t('z')
+	>>> t_lorder(cos(4*x+y-z)+cos(2*x))
+	2
+	>>> t_lorder(cos(3*x+y-z)+cos(2*y+z),['y'])
+	1
+	>>> from fractions import Fraction as F
+	>>> t_lorder(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_lorder
+	__check_names_argument(names)
+	if names is None:
+		return _cpp_type_catcher(_t_lorder,arg)
+	else:
+		return _cpp_type_catcher(_t_lorder,arg,names)
+
+def lambdify(t,x,names,extra_map = {}):
+	"""Turn a symbolic object into a function.
+
+	This function is a wrapper around :func:`~pyranha.math.evaluate()` which returns a callable object that can be used
+	to evaluate the input argument *x*. The call operator of the returned object takes as input a collection of length
+	``len(names)`` of objects of type *t* which, for the purpose of evaluation, are associated to the list of
+	symbols *names* at the corresponding positions.
+
+	The optional argument *extra_map* is a dictionary that maps symbol names to callables, and it used to specify
+	what values to assign to specific symbols based on the values of the symbols in *names*. For instance, suppose
+	that :math:`z` depends on :math:`x` and :math:`y` via :math:`z\\left(x,y\\right)=\\sqrt{3x+y}`. We can then evaluate
+	the expression :math:`x+y+z` as follows:
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
+	>>> pt = polynomial(rational,k_monomial)()
+	>>> x,y,z = x,y,z = pt('x'),pt('y'),pt('z')
+	>>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: (3.*a[0] + a[1])**.5})
+	>>> l([1.,2.]) # doctest: +ELLIPSIS
+	5.236067977...
+
+	The output value is :math:`1+2+\\sqrt{5}`.
+
+	:param t: the type that will be used for the evaluation of *x*
+	:type t: a supported evaluation type
+	:param x: symbolic object that will be evaluated
+	:type x: a supported symbolic type
+	:param names: the symbols that will be used for evaluation
+	:type names: a list of strings
+	:param extra_map: a dictionary mapping symbol names to custom evaluation functions
+	:type extra_map: a dictionary in which the keys are strings and the values are callables
+	:returns: a callable object that can be used to evaluate *x* with objects of type *t*
+	:rtype: the type returned by the invoked low-level function
+	:raises: :exc:`TypeError` if *t* is not a type, or if *names* is not a list of strings, or if *extra_map* is not
+		a dictionary of the specified type
+	:raises: :exc:`ValueError` if *names* contains duplicates or if *extra_map* contains strings already present in *names*
+	:raises: :exc:`unspecified` any exception raised by the invoked low-level function or by the invoked
+		callables in *extra_map*
+
+	>>> from pyranha.types import polynomial, rational, k_monomial
+	>>> pt = polynomial(rational,k_monomial)()
+	>>> x,y,z = x,y,z = pt('x'),pt('y'),pt('z')
+	>>> l = lambdify(int,2*x-y+3*z,['z','y','x'])
+	>>> l([1,2,3])
+	Fraction(7, 1)
+	>>> l([1,2,-3])
+	Fraction(-5, 1)
+	>>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: (3.*a[0] + a[1])**.5})
+	>>> l([1.,2.]) # doctest: +ELLIPSIS
+	5.236067977...
+	>>> l([1]) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: invalid size of the evaluation vector
+	>>> l = lambdify(3,2*x-y+3*z,['z','y','x']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: the 't' argument must be a type
+	>>> l = lambdify(int,2*x-y+3*z,[1,2,3]) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: the 'names' argument must be a list of strings
+	>>> l = lambdify(int,2*x-y+3*z,['z','y','x','z']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: the 'names' argument contains duplicates
+	>>> l = lambdify(float,x+y+z,['x','y'],{'z': 123})
+	Traceback (most recent call last):
+	   ...
+	TypeError: all the values in the 'extra_map' argument must be callables
+
+	"""
+	from ._core import _lambdify
+	if not isinstance(t,type):
+		raise TypeError('the \'t\' argument must be a type')
+	if not isinstance(names,list) or not all([isinstance(_,str) for _ in names]):
+		raise TypeError('the \'names\' argument must be a list of strings')
+	if not all([isinstance(_,str) for _ in extra_map]):
+		raise TypeError('the \'extra_map\' argument must be a dictionary in which the keys are strings')
+	if not all([callable(extra_map[_]) for _ in extra_map]):
+		raise TypeError('all the values in the \'extra_map\' argument must be callables')
+	return _cpp_type_catcher(_lambdify,x,names,extra_map,t())

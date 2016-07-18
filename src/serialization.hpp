@@ -1,31 +1,39 @@
-/***************************************************************************
- *   Copyright (C) 2009-2011 by Francesco Biscani                          *
- *   bluescarni@gmail.com                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+
+This file is part of the Piranha library.
+
+The Piranha library is free software; you can redistribute it and/or modify
+it under the terms of either:
+
+  * the GNU Lesser General Public License as published by the Free
+    Software Foundation; either version 3 of the License, or (at your
+    option) any later version.
+
+or
+
+  * the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any
+    later version.
+
+or both in parallel, as here.
+
+The Piranha library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received copies of the GNU General Public License and the
+GNU Lesser General Public License along with the Piranha library.  If not,
+see https://www.gnu.org/licenses/. */
 
 #ifndef PIRANHA_SERIALIZATION_HPP
 #define PIRANHA_SERIALIZATION_HPP
 
 // Common headers for serialization.
-#include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <boost/config/suffix.hpp>
 #include <boost/mpl/int.hpp>
 #include <boost/mpl/integral_c_tag.hpp>
@@ -59,29 +67,29 @@
 //   we should test this explicitly eventually.
 
 // Macro for trivial serialization through base class.
-#define PIRANHA_SERIALIZE_THROUGH_BASE(base) \
-friend class boost::serialization::access; \
-template <typename Archive> \
-void serialize(Archive &ar, unsigned int) \
-{ \
-	ar & boost::serialization::base_object<base>(*this); \
-}
+#define PIRANHA_SERIALIZE_THROUGH_BASE(base)                                                                           \
+    friend class boost::serialization::access;                                                                         \
+    template <typename Archive>                                                                                        \
+    void serialize(Archive &ar, unsigned int)                                                                          \
+    {                                                                                                                  \
+        ar &boost::serialization::base_object<base>(*this);                                                            \
+    }
 
 // Macro to customize the serialization level for a template class. Adapted from:
 // http://www.boost.org/doc/libs/release/libs/serialization/doc/traits.html#tracking
 // The exisiting boost macro only covers concrete classes, not generic classes.
-#define PIRANHA_TEMPLATE_SERIALIZATION_LEVEL(TClass,L) \
-namespace boost { namespace serialization { \
-template <typename ... Args> \
-struct implementation_level_impl<const TClass<Args...>> \
-{ \
-	typedef mpl::integral_c_tag tag; \
-	typedef mpl::int_<L> type; \
-	BOOST_STATIC_CONSTANT( \
-		int, \
-		value = implementation_level_impl::type::value \
-	); \
-}; \
-}}
+#define PIRANHA_TEMPLATE_SERIALIZATION_LEVEL(TClass, L)                                                                \
+    namespace boost                                                                                                    \
+    {                                                                                                                  \
+    namespace serialization                                                                                            \
+    {                                                                                                                  \
+    template <typename... Args>                                                                                        \
+    struct implementation_level_impl<const TClass<Args...>> {                                                          \
+        typedef mpl::integral_c_tag tag;                                                                               \
+        typedef mpl::int_<L> type;                                                                                     \
+        BOOST_STATIC_CONSTANT(int, value = implementation_level_impl::type::value);                                    \
+    };                                                                                                                 \
+    }                                                                                                                  \
+    }
 
 #endif

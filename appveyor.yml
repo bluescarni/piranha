@@ -1,0 +1,86 @@
+version: '{build}'
+
+environment:
+  matrix:
+    - BUILD_TYPE: "Release"
+      TEST_NSPLIT: "3"
+      SPLIT_TEST_NUM: "0"
+    - BUILD_TYPE: "Release"
+      TEST_NSPLIT: "3"
+      SPLIT_TEST_NUM: "1"
+    - BUILD_TYPE: "Release"
+      TEST_NSPLIT: "3"
+      SPLIT_TEST_NUM: "2"
+    #- BUILD_TYPE: "Debug"
+      #TEST_NSPLIT: "6"
+      #SPLIT_TEST_NUM: "0"
+    #- BUILD_TYPE: "Debug"
+      #TEST_NSPLIT: "6"
+      #SPLIT_TEST_NUM: "1"
+    #- BUILD_TYPE: "Debug"
+      #TEST_NSPLIT: "6"
+      #SPLIT_TEST_NUM: "2"
+    #- BUILD_TYPE: "Debug"
+      #TEST_NSPLIT: "6"
+      #SPLIT_TEST_NUM: "3"
+    #- BUILD_TYPE: "Debug"
+      #TEST_NSPLIT: "6"
+      #SPLIT_TEST_NUM: "4"
+    #- BUILD_TYPE: "Debug"
+      #TEST_NSPLIT: "6"
+      #SPLIT_TEST_NUM: "5"
+
+cache:
+- C:\boost -> appveyor.yml
+
+install:
+
+# Rename sh.exe as sh.exe in PATH interferes with MinGW
+- rename "C:\Program Files\Git\usr\bin\sh.exe" "sh2.exe"
+
+# Download MinGW-w64 toolchain
+- call tools\appveyor-download.cmd "https://raw.githubusercontent.com/isuruf/symengine-dependencies/71858e2c8ce9767e0995b3626553508f58a24fde/x86_64-5.3.0-release-posix-seh-rt_v4-rev0.7z" -FileName mw64.7z
+- 7z x -oC:\ mw64.7z > NUL
+- set PATH=C:\mingw64\bin;%PATH%
+# Download pre-compiled gmp binary
+- call tools\appveyor-download.cmd "https://raw.githubusercontent.com/symengine/dependencies/5cff7d1736877336cf9fb58267111beea4fa152f/gmp-6.0.0-x86_64-w64-mingw32.7z" -FileName gmp.7z
+- 7z x -oC:\mingw64 gmp.7z > NUL
+# Download pre-compiled mpfr binary
+- call tools\appveyor-download.cmd "https://raw.githubusercontent.com/isuruf/symengine-dependencies/557083e291fb5d4e8f6df2d920d6adb98ccd0748/mpfr-3.1.3-x86_64-w64-mingw32.7z" -FileName mpfr.7z
+- 7z x -aoa -oC:\mingw64 mpfr.7z > NUL
+# Download patched libpythonXX.a
+- call tools\appveyor-download.cmd "https://raw.githubusercontent.com/symengine/dependencies/5cff7d1736877336cf9fb58267111beea4fa152f/python-x86_64-w64-mingw32.7z" -FileName pyx64.7z
+- 7z x -aoa -oC:\ pyx64.7z > NUL
+# Download Bzip2 binary
+- call tools\appveyor-download.cmd "https://raw.githubusercontent.com/isuruf/symengine-dependencies/ee82c8ec4421e3762b974363bb44adac3e4e1f08/bzip2-dev-1.0.6-win-x64.7z" -FileName bzip2.7z
+- 7z x -aoa -oC:\bzip2\ bzip2.7z > NUL
+- set PATH=C:\bzip2\bin;%PATH%
+# Check if boost cache is there
+- if not exist C:\boost set IS_CACHED="FALSE"
+# Download Boost source
+- if not exist C:\boost call tools\appveyor-download.cmd "http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.7z?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.60.0%2F&ts=1454729351&use_mirror=ncu" -FileName boost.7z
+- if not exist C:\boost 7z x -aoa -oC:\projects\ boost.7z > NUL
+# Build boost
+- if not exist C:\boost cd C:\projects\boost_1_60_0
+- if not exist C:\boost .\bootstrap > NUL
+- if not exist C:\boost .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\boost -sNO_BZIP2=0 -sBZIP2_BINARY=libbz2 -sBZIP2_INCLUDE=C:\bzip2\include -sBZIP2_LIBPATH=C:\bzip2\lib > NUL
+
+build_script:
+- cd C:\projects\piranha
+- mkdir build
+- cd build
+
+- cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DPIRANHA_TEST_SPLIT=yes -DTEST_NSPLIT=%TEST_NSPLIT% -DPIRANHA_TEST_SPLIT_NUM=%SPLIT_TEST_NUM% -DBoost_ADDITIONAL_VERSIONS=1.60.0;1.60 -DBoost_USE_MULTITHREADED=yes -DBoost_USE_STATIC_LIBS=yes -DCMAKE_PREFIX_PATH=C:\bzip2;C:\boost ..
+#- cmake --build . --target install
+- mingw32-make install
+
+test_script:
+- if [%BUILD_TYPE%]==[Release] ctest -E "gastineau|perminov|serialization|pearce2_unpacked" -V;
+- if [%BUILD_TYPE%]==[Debug] ctest -E "series_03" -V;
+
+# Enable this to be able to login to the build worker. You can use the
+# `remmina` program in Ubuntu, use the login information that the line below
+# prints into the log.
+#on_finish:
+#- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+

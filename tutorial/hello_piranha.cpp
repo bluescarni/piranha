@@ -9,8 +9,8 @@ using namespace piranha;
 
 int main()
 {
-	// Setup of the Piranha environment.
-	environment env;
-	// Print the rational number 4/3 to screen.
-	std::cout << rational{4,3} << '\n';
+    // Piranha initialisation.
+    init();
+    // Print the rational number 4/3 to screen.
+    std::cout << rational{4, 3} << '\n';
 }
