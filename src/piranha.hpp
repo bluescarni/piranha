@@ -300,6 +300,15 @@ see https://www.gnu.org/licenses/. */
  * \todo it seems like in C++17 we can finally have an automatically inited global class in which to tuck the init
  * code (and probably the thread pool as well), via inline variables. Probably we will need to define it in a separate
  * header and then make sure to include that header in every piranha public header.
+ * \todo on the topic of global objects vs ODR in < c++17:
+ * http://ericniebler.github.io/std/wg21/D4381.html#no-violations-of-the-one-definition-rule
+ * \todo the foreach_tuple trick:
+ * https://isocpp.org/blog/2015/01/for-each-arg-eric-niebler
+ * https://www.reddit.com/r/cpp/comments/2tffv3/for_each_argumentsean_parent/ (see the evaluation order of init list
+ * vs function arguments)
+ * https://www.reddit.com/r/cpp/comments/33b06v/for_each_in_tuple/
+ * This requires the make_index_sequence functionality, an implementation for C++11 is here:
+ * http://stackoverflow.com/questions/17424477/implementation-c14-make-integer-sequence (see 2nd answer)
  */
 namespace piranha
 {
