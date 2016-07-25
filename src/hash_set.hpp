@@ -97,7 +97,7 @@ namespace piranha
  * ## Serialization ##
  *
  * This class supports serialization if the contained type supports it. Note that the hasher and the comparator
- * are not serialised and they are recreated from scratch upon deserialization.
+ * are not serialized and they are recreated from scratch upon deserialization.
  */
 /* Some improvement NOTEs:
 * - tests for low-level methods
