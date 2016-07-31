@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <ios>
@@ -3687,6 +3688,64 @@ public:
     }
 };
 }
+
+// TODO enabler: cf and key need to be packable.
+template <typename Stream, typename Series>
+struct msgpack_pack_impl<Stream, Series, typename std::enable_if<is_series<Series>::value>::type> {
+    void operator()(msgpack::packer<Stream> &packer, const Series &s, msgpack_format f) const
+    {
+        // A series is an array made of two elements: the symbol set and the array of terms.
+        packer.pack_array(2u);
+        // Pack the symbol set.
+        const auto &ss = s.get_symbol_set();
+        packer.pack_array(safe_cast<std::uint32_t>(ss.size()));
+        for (const auto &s : ss) {
+            packer.pack(s.get_name());
+        }
+        // Pack the terms.
+        packer.pack_array(safe_cast<std::uint32_t>(s.size()));
+        for (const auto &t : s._container()) {
+            // Each term is an array made of two elements, coefficient and key.
+            packer.pack_array(2u);
+            msgpack_pack(packer, t.m_cf, f);
+            msgpack_pack_key(packer, t.m_key, f, ss);
+        }
+    }
+};
+
+// TODO enablers.
+template <typename Series>
+struct msgpack_unpack_impl<Series, typename std::enable_if<is_series<Series>::value>::type> {
+    void operator()(Series &s, const msgpack::object &o, msgpack_format f) const
+    {
+        using term_type = typename Series::term_type;
+        using cf_type = typename term_type::cf_type;
+        using key_type = typename term_type::key_type;
+        Series out;
+        // TODO include array.
+        std::array<msgpack::object, 2u> tmp_s;
+        o.convert(tmp_s);
+        // Extract the symbol set and the collection of terms as msgpack::objects.
+        std::vector<std::string> tmp_ss;
+        std::vector<msgpack::object> tmp_terms;
+        tmp_s[0].convert(tmp_ss);
+        tmp_s[1].convert(tmp_terms);
+        // Set the symbol set.
+        out.set_symbol_set(symbol_set(tmp_ss.begin(), tmp_ss.end()));
+        // Insert all the terms.
+        for (const auto &t : tmp_terms) {
+            std::array<msgpack::object, 2u> tmp_term;
+            t.convert(tmp_term);
+            cf_type tmp_cf;
+            key_type tmp_key;
+            msgpack_unpack(tmp_cf, tmp_term[0], f);
+            msgpack_unpack_key(tmp_key, tmp_term[1], f, out.get_symbol_set());
+            out.insert(term_type{std::move(tmp_cf), std::move(tmp_key)});
+        }
+        // Assign the output value.
+        s = std::move(out);
+    }
+};
 }
 
 #endif

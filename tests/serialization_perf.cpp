@@ -184,3 +184,31 @@ BOOST_AUTO_TEST_CASE(serialization_test_04)
     BOOST_CHECK(ret1 == ret2);
     std::cout << "\n\n";
 }
+
+BOOST_AUTO_TEST_CASE(serialization_test_pack)
+{
+    std::cout << "Timing double multiplication:\n";
+    auto ret1 = pearce1<double, monomial<int>>();
+    {
+        std::stringstream ss;
+        boost::archive::text_oarchive oa(ss);
+        boost::timer::auto_cpu_timer t;
+        oa << ret1;
+        std::cout << "Raw text boost serialization: ";
+    }
+    {
+        std::stringstream ss;
+        boost::archive::binary_oarchive oa(ss);
+        boost::timer::auto_cpu_timer t;
+        oa << ret1;
+        std::cout << "Raw binary boost serialization: ";
+    }
+    {
+        msgpack::sbuffer sbuf;
+        msgpack::packer<msgpack::sbuffer> packer(sbuf);
+        boost::timer::auto_cpu_timer t;
+        msgpack_pack(packer,ret1,msgpack_format::binary);
+        std::cout << "Binary msgpack serialization: ";
+    }
+    std::cout << "\n\n";
+}

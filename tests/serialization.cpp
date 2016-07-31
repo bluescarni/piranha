@@ -31,12 +31,72 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE serialization_test
 #include <boost/test/unit_test.hpp>
 
+#include <sstream>
+
 #include "../src/init.hpp"
+
+#include "../src/polynomial.hpp"
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(serialization_test_00)
+template <typename T>
+using sw = detail::msgpack_stream_wrapper<T>;
+
+using msgpack::packer;
+using msgpack::sbuffer;
+
+BOOST_AUTO_TEST_CASE(serialization_msgpack_tt_test)
 {
     init();
-    std::cout << std::numeric_limits<double>::digits << '\n';
+    BOOST_CHECK(is_msgpack_stream<std::ostringstream>::value);
+    BOOST_CHECK(!is_msgpack_stream<std::ostringstream &>::value);
+    BOOST_CHECK(!is_msgpack_stream<const std::ostringstream &>::value);
+    BOOST_CHECK(!is_msgpack_stream<const std::ostringstream>::value);
+    BOOST_CHECK(is_msgpack_stream<sbuffer>::value);
+    BOOST_CHECK(!is_msgpack_stream<float>::value);
+    BOOST_CHECK(!is_msgpack_stream<const double>::value);
+    BOOST_CHECK(is_msgpack_stream<sw<std::ostringstream>>::value);
+    BOOST_CHECK(!is_msgpack_stream<sw<std::ostringstream> &>::value);
+}
+
+BOOST_AUTO_TEST_CASE(serialization_test_00)
+{
+    // sbuffer sbuf2;
+    // packer<sbuffer &> p2(sbuf2);
+    detail::msgpack_stream_wrapper<std::ofstream> sbuf("out.msgpack");
+    packer<detail::msgpack_stream_wrapper<std::ofstream>> p(sbuf);
+/*    msgpack_pack(p,1.23L,msgpack_format::binary);
+    long double x;
+    std::size_t offset = 0u;
+    auto oh = msgpack::unpack(sbuf.data(),sbuf.size(),offset);
+    msgpack_unpack(x,oh.get(),msgpack_format::binary);
+    std::cout << x << '\n';*/
+/*    std::vector<long double> a = {1,2,3};
+    msgpack_pack(p,a,msgpack_format::portable);
+    std::cout << "sbuf size: " << sbuf.size() << '\n';
+    std::vector<long double> b;
+    std::size_t offset = 0u;
+    auto oh = msgpack::unpack(sbuf.data(),sbuf.size(),offset);
+    msgpack_unpack(b,oh.get(),msgpack_format::portable);
+    std::cout << b.size() << '\n';
+    std::cout << b[0] << ',' << b[1] << ',' << b[2] << '\n';
+*/
+    using p_type = polynomial<double,monomial<int>>;
+    p_type x{"x"}, y{"y"};
+    auto ret = math::pow(1.1+.1*x+.3*y,10);
+    {
+    /*std::ostringstream oss;
+    packer<std::ostringstream> p(oss);*/
+    msgpack_pack(p,ret,msgpack_format::binary);
+    //std::cout << sbuf.size() << '\n';
+    }
+    std::stringstream oss;
+    {
+    boost::archive::text_oarchive oa(oss);
+    oa << ret;
+    }
+    //std::cout << oss.str() << '\n';
+    std::vector<char> vec;
+    std::copy(std::istreambuf_iterator<char>(oss), std::istreambuf_iterator<char>(), std::back_inserter(vec));
+    std::cout << vec.size() << '\n';
 }

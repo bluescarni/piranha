@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -1103,6 +1104,42 @@ public:
 
 template <typename T, typename S>
 const std::size_t monomial<T, S>::multiply_arity;
+
+// TODO enabler, T needs to be packable.
+template <typename Stream, typename T, typename S>
+struct msgpack_pack_key_impl<Stream, monomial<T, S>> {
+    void operator()(msgpack::packer<Stream> &packer, const monomial<T, S> &m, msgpack_format f,
+                    const symbol_set &s) const
+    {
+        if (unlikely(m.size() != s.size())) {
+            piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization");
+        }
+        const auto sbe = m.size_begin_end();
+        packer.pack_array(safe_cast<std::uint32_t>(std::get<0u>(sbe)));
+        for (auto it = std::get<1u>(sbe); it != std::get<2u>(sbe); ++it) {
+            msgpack_pack(packer, *it, f);
+        }
+    }
+};
+
+// TODO: requirement: T must be unpackable.
+template <typename T, typename S>
+struct msgpack_unpack_key_impl<monomial<T, S>> {
+    void operator()(monomial<T, S> &m, const msgpack::object &o, msgpack_format f, const symbol_set &s) const
+    {
+        /*static thread_local*/ std::vector<msgpack::object> tmp;
+        o.convert(tmp);
+        if (unlikely(tmp.size()) != s.size()) {
+            // TODO
+        }
+        m.resize(safe_cast<typename monomial<T, S>::size_type>(tmp.size()));
+        std::transform(tmp.begin(), tmp.end(), m.begin(), [f](const msgpack::object &o) -> T {
+            T t;
+            msgpack_unpack(t, o, f);
+            return t;
+        });
+    }
+};
 }
 
 namespace std
