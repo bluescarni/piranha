@@ -402,15 +402,12 @@ protected:
      * with a call operator accepting and returning a base_series_multiplier::size_type.
      *
      * Internally, the double loops is decomposed in blocks of size tuning::get_multiplication_block_size() in an
-     *attempt
-     * to optimise cache memory access patterns.
+     * attempt to optimise cache memory access patterns.
      *
      * This method is meant to be used for series multiplication. \p mf is intended to be a function object that
-     *multiplies
-     * the <tt>i</tt>-th term of the first series by the <tt>j</tt>-th term of the second series. \p lf is intended to
-     *be
-     * a functor that establishes how many terms in the second series have to be multiplied by the <tt>i</tt>-th term
-     * of the first series.
+     * multiplies the <tt>i</tt>-th term of the first series by the <tt>j</tt>-th term of the second series.
+     * \p lf is intended to be a functor that establishes how many terms in the second series have to be multiplied by
+     * the <tt>i</tt>-th term of the first series.
      *
      * @param[in] mf the multiplication functor.
      * @param[in] start1 start index in the first series.
@@ -563,7 +560,7 @@ protected:
         const unsigned n_trials = 15u;
         // NOTE: Hard-coded value for the estimation multiplier.
         // NOTE: This value should be tuned for performance/memory usage tradeoffs.
-        const unsigned multiplier = 2u;
+        const unsigned multiplier = 1u;
         // Number of threads to use. If there are more threads than trials, then reduce
         // the number of actual threads to use.
         // NOTE: this is a bit different from usual, where we do not care if the workload per thread is zero.
