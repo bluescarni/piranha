@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/base_series_multiplier.hpp"
 
-#define BOOST_TEST_MODULE estimation_test
+#define BOOST_TEST_MODULE estimation1_test
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -139,10 +139,31 @@ BOOST_AUTO_TEST_CASE(fateman1_test)
     std::cout << "\n\n";
 }
 
-BOOST_AUTO_TEST_CASE(fateman1_truncated_test)
+BOOST_AUTO_TEST_CASE(fateman1_truncated_35_test)
 {
-    std::cout << "Fateman 1 truncated:\n";
-    std::cout << "====================\n\n";
+    std::cout << "Fateman 1 truncated 35:\n";
+    std::cout << "=======================\n\n";
+    p_type x("x"), y("y"), z("z"), t("t");
+    auto f = x + y + z + t + 1;
+    auto tmp(f);
+    for (auto i = 1; i < 20; ++i) {
+        f *= tmp;
+    }
+    auto g = f + 1;
+    const double real_size = 82251.;
+    for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
+        settings::set_n_threads(nt);
+        multiplier m(f, g);
+        multiplier::lf lf(&m, 35);
+        std::cout << real_size / m.estimate_final_series_size<1u, multiplier::p_mult>(lf) << '\n';
+    }
+    std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(fateman1_truncated_30_test)
+{
+    std::cout << "Fateman 1 truncated 30:\n";
+    std::cout << "=======================\n\n";
     p_type x("x"), y("y"), z("z"), t("t");
     auto f = x + y + z + t + 1;
     auto tmp(f);
@@ -155,6 +176,27 @@ BOOST_AUTO_TEST_CASE(fateman1_truncated_test)
         settings::set_n_threads(nt);
         multiplier m(f, g);
         multiplier::lf lf(&m, 30);
+        std::cout << real_size / m.estimate_final_series_size<1u, multiplier::p_mult>(lf) << '\n';
+    }
+    std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(fateman1_truncated_25_test)
+{
+    std::cout << "Fateman 1 truncated 25:\n";
+    std::cout << "=======================\n\n";
+    p_type x("x"), y("y"), z("z"), t("t");
+    auto f = x + y + z + t + 1;
+    auto tmp(f);
+    for (auto i = 1; i < 20; ++i) {
+        f *= tmp;
+    }
+    auto g = f + 1;
+    const double real_size = 23751.;
+    for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
+        settings::set_n_threads(nt);
+        multiplier m(f, g);
+        multiplier::lf lf(&m, 25);
         std::cout << real_size / m.estimate_final_series_size<1u, multiplier::p_mult>(lf) << '\n';
     }
     std::cout << "\n\n";
@@ -180,10 +222,73 @@ BOOST_AUTO_TEST_CASE(fateman2_test)
     std::cout << "\n\n";
 }
 
-BOOST_AUTO_TEST_CASE(fateman2_truncated_test)
+BOOST_AUTO_TEST_CASE(fateman2_truncated_45_test)
 {
-    std::cout << "Fateman 2 truncated:\n";
-    std::cout << "====================\n\n";
+    std::cout << "Fateman 2 truncated 45:\n";
+    std::cout << "=======================\n\n";
+    p_type x("x"), y("y"), z("z"), t("t");
+    auto f = x + y + z + t + 1;
+    auto tmp(f);
+    for (auto i = 1; i < 30; ++i) {
+        f *= tmp;
+    }
+    auto g = f + 1;
+    const double real_size = 211876.;
+    for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
+        settings::set_n_threads(nt);
+        multiplier m(f, g);
+        multiplier::lf lf(&m, 45);
+        std::cout << real_size / m.estimate_final_series_size<1u, multiplier::p_mult>(lf) << '\n';
+    }
+    std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(fateman2_truncated_40_test)
+{
+    std::cout << "Fateman 2 truncated 40:\n";
+    std::cout << "=======================\n\n";
+    p_type x("x"), y("y"), z("z"), t("t");
+    auto f = x + y + z + t + 1;
+    auto tmp(f);
+    for (auto i = 1; i < 30; ++i) {
+        f *= tmp;
+    }
+    auto g = f + 1;
+    const double real_size = 135751.;
+    for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
+        settings::set_n_threads(nt);
+        multiplier m(f, g);
+        multiplier::lf lf(&m, 40);
+        std::cout << real_size / m.estimate_final_series_size<1u, multiplier::p_mult>(lf) << '\n';
+    }
+    std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(fateman2_truncated_35_test)
+{
+    std::cout << "Fateman 2 truncated 35:\n";
+    std::cout << "=======================\n\n";
+    p_type x("x"), y("y"), z("z"), t("t");
+    auto f = x + y + z + t + 1;
+    auto tmp(f);
+    for (auto i = 1; i < 30; ++i) {
+        f *= tmp;
+    }
+    auto g = f + 1;
+    const double real_size = 82251.;
+    for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
+        settings::set_n_threads(nt);
+        multiplier m(f, g);
+        multiplier::lf lf(&m, 35);
+        std::cout << real_size / m.estimate_final_series_size<1u, multiplier::p_mult>(lf) << '\n';
+    }
+    std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(fateman2_truncated_30_test)
+{
+    std::cout << "Fateman 2 truncated 30:\n";
+    std::cout << "=======================\n\n";
     p_type x("x"), y("y"), z("z"), t("t");
     auto f = x + y + z + t + 1;
     auto tmp(f);
@@ -223,10 +328,58 @@ BOOST_AUTO_TEST_CASE(pearce1_test)
     std::cout << "\n\n";
 }
 
-BOOST_AUTO_TEST_CASE(pearce1_truncated_test)
+BOOST_AUTO_TEST_CASE(pearce1_truncated_80_test)
 {
-    std::cout << "Pearce 1 truncated:\n";
-    std::cout << "===================\n\n";
+    std::cout << "Pearce 1 truncated 80:\n";
+    std::cout << "======================\n\n";
+    p_type x("x"), y("y"), z("z"), t("t"), u("u");
+    auto f = (x + y + z * z * 2 + t * t * t * 3 + u * u * u * u * u * 5 + 1);
+    auto tmp_f(f);
+    auto g = (u + t + z * z * 2 + y * y * y * 3 + x * x * x * x * x * 5 + 1);
+    auto tmp_g(g);
+    for (int i = 1; i < 12; ++i) {
+        f *= tmp_f;
+        g *= tmp_g;
+    }
+    const double real_size = 5554800.;
+    for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
+        settings::set_n_threads(nt);
+        multiplier m(f, g);
+        multiplier::lf lf(&m, 80);
+        std::cout << real_size / m.estimate_final_series_size<1u, multiplier::p_mult>(lf) << '\n';
+        p_type::set_auto_truncate_degree(60);
+    }
+    std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(pearce1_truncated_70_test)
+{
+    std::cout << "Pearce 1 truncated 70:\n";
+    std::cout << "======================\n\n";
+    p_type x("x"), y("y"), z("z"), t("t"), u("u");
+    auto f = (x + y + z * z * 2 + t * t * t * 3 + u * u * u * u * u * 5 + 1);
+    auto tmp_f(f);
+    auto g = (u + t + z * z * 2 + y * y * y * 3 + x * x * x * x * x * 5 + 1);
+    auto tmp_g(g);
+    for (int i = 1; i < 12; ++i) {
+        f *= tmp_f;
+        g *= tmp_g;
+    }
+    const double real_size = 4834198.;
+    for (unsigned nt = 1u; nt <= max_nt(); ++nt) {
+        settings::set_n_threads(nt);
+        multiplier m(f, g);
+        multiplier::lf lf(&m, 70);
+        std::cout << real_size / m.estimate_final_series_size<1u, multiplier::p_mult>(lf) << '\n';
+        p_type::set_auto_truncate_degree(60);
+    }
+    std::cout << "\n\n";
+}
+
+BOOST_AUTO_TEST_CASE(pearce1_truncated_60_test)
+{
+    std::cout << "Pearce 1 truncated 60:\n";
+    std::cout << "======================\n\n";
     p_type x("x"), y("y"), z("z"), t("t"), u("u");
     auto f = (x + y + z * z * 2 + t * t * t * 3 + u * u * u * u * u * 5 + 1);
     auto tmp_f(f);
@@ -368,3 +521,16 @@ BOOST_AUTO_TEST_CASE(audi_truncated_test)
     }
     std::cout << "\n\n";
 }
+
+// BOOST_AUTO_TEST_CASE(tutu)
+// {
+//     std::cout << "AuDi truncated:\n";
+//     std::cout << "===============\n\n";
+//     p_type x1{"x1"}, x2{"x2"}, x3{"x3"}, x4{"x4"}, x5{"x5"}, x6{"x6"}, x7{"x7"}, x8{"x8"}, x9{"x9"}, x10{"x10"};
+//     auto f = math::pow(1 + x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10, 10);
+//     auto g = math::pow(1 + x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10, 10);
+//     p_type::set_auto_truncate_degree(15);
+//     auto res = f * g;
+//     std::cout << res.size() << '\n';
+//     std::cout << res.table_load_factor() << '\n';
+// }
