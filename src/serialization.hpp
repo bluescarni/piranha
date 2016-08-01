@@ -118,6 +118,11 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "detail/sfinae_types.hpp"
+// NOTE: this needs to be eliminated in favour of including symbol_set.hpp in the future. The reason
+// it is here now is that the prototypes of key packing/unpacking need the symbol_set type, but currently
+// symbol_set.hpp includes serialization.hpp - hence circular dep. In the future, we'll remove the serialization
+// code from symbol_set (which will be serialized directly from series) and hence we will be able to include it from
+// here.
 #include "detail/symbol_set_fwd.hpp"
 #include "exceptions.hpp"
 #include "type_traits.hpp"
@@ -196,8 +201,8 @@ const bool is_msgpack_stream<T>::value;
  * This enum establishes two strategies for msgpack serialization: a portable format, intended
  * to be usable across different platforms and suitable for the long-term storage of serialized objects, and a binary
  * format, intended for use in high-performance scenarios (e.g., as temporary on-disk storage during long
- * or memory-intensive computations). These formats are used by the serialization functions piranha::msgpack_pack()
- * and piranha::msgpack_convert().
+ * or memory-intensive computations). These formats are used by the serialization functions piranha::msgpack_pack(),
+ * piranha::msgpack_pack_key(), piranha::msgpack_convert() and  piranha::msgpack_convert_key().
  */
 enum class msgpack_format {
     /// Portable.
@@ -206,6 +211,11 @@ enum class msgpack_format {
     binary
 };
 
+/// Default functor for the implementation of piranha::msgpack_pack().
+/**
+ * This functor can be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
 template <typename Stream, typename T, typename = void>
 struct msgpack_pack_impl {
 };
@@ -218,8 +228,28 @@ using msgpack_scalar_enabler =
     typename std::enable_if<is_msgpack_stream<Stream>::value && is_msgpack_scalar<T>::value>::type;
 }
 
+/// Implementation of piranha::msgpack_pack() for fundamental C++ types supported by msgpack.
+/**
+ * \note
+ * This specialisation is enabled if \p Stream satisfies piranha::is_msgpack_stream and \p T is one of the
+ * following types:
+ * - \p char, <tt>signed char</tt>, or <tt>unsigned char</tt>,
+ * - \p int or <tt>unsigned</tt>,
+ * - \p long or <tt>unsigned long</tt>,
+ * - <tt>long long</tt> or <tt>unsigned long long</tt>,
+ * - \p float or \p double.
+ *
+ * The call operator will use directly the <tt>pack()</tt> method of the input msgpack packer.
+ */
 template <typename Stream, typename T>
 struct msgpack_pack_impl<Stream, T, detail::msgpack_scalar_enabler<Stream, T>> {
+    /// Call operator.
+    /**
+     * @param[in] packer the target packer.
+     * @param[in] x the object to be packed.
+     *
+     * @throws unspecified any exception thrown by <tt>msgpack::packer::pack()</tt>.
+     */
     void operator()(msgpack::packer<Stream> &packer, const T &x, msgpack_format) const
     {
         packer.pack(x);
@@ -234,8 +264,27 @@ using msgpack_ld_enabler =
     typename std::enable_if<is_msgpack_stream<Stream>::value && std::is_same<T, long double>::value>::type;
 }
 
+/// Implementation of piranha::msgpack_pack() for <tt>long double</tt>.
+/**
+ * \note
+ * This specialisation is enabled if \p Stream satisfies piranha::is_msgpack_stream and \p T is <tt>long double</tt>.
+ */
 template <typename Stream, typename T>
 struct msgpack_pack_impl<Stream, T, detail::msgpack_ld_enabler<Stream, T>> {
+    /// Call operator.
+    /**
+     * If \p f is msgpack_format::binary then the byte representation of \p x is packed into \p packer. Otherwise,
+     * \p x is converted into string format and the resulting string will be packed into \p packer.
+     *
+     * @param[in] packer the target packer.
+     * @param[in] x the object to be packed.
+     * @param[in] f the serialization format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - <tt>msgpack::packer::pack()</tt>, <tt>msgpack::packer::pack_bin()</tt>,
+     *   <tt>msgpack::packer::pack_bin_body()</tt>,
+     * - the public interface of \p std::ostringstream.
+     */
     void operator()(msgpack::packer<Stream> &packer, const long double &x, msgpack_format f) const
     {
         if (f == msgpack_format::binary) {
@@ -288,6 +337,25 @@ using msgpack_pack_enabler =
                             int>::type;
 }
 
+/// Pack generic object in a msgpack stream.
+/**
+ * \note
+ * This function is enabled only if \p Stream satisfies piranha::is_msgpack_stream and if
+ * <tt>msgpack_pack_impl<Stream, T>{}(packer, x, f)</tt> is a valid expression.
+ *
+ * This function is intended to pack the input value \p x into a msgpack \p packer using the format
+ * \p f. The actual implementation of this function is in the piranha::msgpack_pack_impl functor.
+ * The body of this function is equivalent to:
+ * @code
+ * msgpack_pack_impl<Stream, T>{}(packer, x, f);
+ * @endcode
+ *
+ * @param[in] packer the msgpack packer object.
+ * @param[in] x the object to be packed into \p packer.
+ * @param[in] f the serialization format.
+ *
+ * @throws unspecified any exception thrown by the call operator piranha::msgpack_pack_impl.
+ */
 template <typename Stream, typename T, detail::msgpack_pack_enabler<Stream, T> = 0>
 inline void msgpack_pack(msgpack::packer<Stream> &packer, const T &x, msgpack_format f)
 {
