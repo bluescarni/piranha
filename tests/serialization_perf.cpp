@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(serialization_test_pack)
         msgpack::sbuffer sbuf;
         msgpack::packer<msgpack::sbuffer> packer(sbuf);
         boost::timer::auto_cpu_timer t;
-        msgpack_pack(packer,ret1,msgpack_format::binary);
+        msgpack_pack(packer, ret1, msgpack_format::binary);
         std::cout << "Binary msgpack serialization: ";
     }
     std::cout << "\n\n";

@@ -375,12 +375,11 @@ using msgpack_pack_key_enabler =
     typename std::enable_if<is_msgpack_stream<Stream>::value
                                 && detail::true_tt<decltype(msgpack_pack_key_impl<Stream, T>{}(
                                        std::declval<msgpack::packer<Stream> &>(), std::declval<const T &>(),
-                                       std::declval<msgpack_format>(),std::declval<const symbol_set &>()))>::value,
+                                       std::declval<msgpack_format>(), std::declval<const symbol_set &>()))>::value,
                             int>::type;
-
 }
 
-template <typename Stream, typename T, detail::msgpack_pack_key_enabler<Stream,T> = 0>
+template <typename Stream, typename T, detail::msgpack_pack_key_enabler<Stream, T> = 0>
 inline void msgpack_pack_key(msgpack::packer<Stream> &packer, const T &x, msgpack_format f, const symbol_set &s)
 {
     msgpack_pack_key_impl<Stream, T>{}(packer, x, f, s);
@@ -463,7 +462,6 @@ inline void msgpack_unpack_key(T &x, const msgpack::object &o, msgpack_format f,
 {
     msgpack_unpack_key_impl<T>{}(x, o, f, s);
 }
-
 }
 
 #endif // PIRANHA_ENABLE_MSGPACK
