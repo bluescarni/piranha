@@ -96,6 +96,14 @@ see https://www.gnu.org/licenses/. */
 
 #if defined(PIRANHA_ENABLE_MSGPACK)
 
+#include <msgpack.hpp>
+
+#if MSGPACK_VERSION_MAJOR < 2
+
+#error Minimum msgpack-c version supported is 2.
+
+#endif
+
 #include <algorithm>
 #include <array>
 #include <boost/numeric/conversion/cast.hpp>
@@ -104,7 +112,6 @@ see https://www.gnu.org/licenses/. */
 #include <ios>
 #include <limits>
 #include <locale>
-#include <msgpack.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>
