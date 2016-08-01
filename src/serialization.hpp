@@ -366,8 +366,21 @@ template <typename Stream, typename T, typename = void>
 struct msgpack_pack_key_impl {
 };
 
-// TODO stream detection, enabler.
+namespace detail
+{
+
+// Enabler for msgpack_pack_key.
 template <typename Stream, typename T>
+using msgpack_pack_key_enabler =
+    typename std::enable_if<is_msgpack_stream<Stream>::value
+                                && detail::true_tt<decltype(msgpack_pack_key_impl<Stream, T>{}(
+                                       std::declval<msgpack::packer<Stream> &>(), std::declval<const T &>(),
+                                       std::declval<msgpack_format>(),std::declval<const symbol_set &>()))>::value,
+                            int>::type;
+
+}
+
+template <typename Stream, typename T, detail::msgpack_pack_key_enabler<Stream,T> = 0>
 inline void msgpack_pack_key(msgpack::packer<Stream> &packer, const T &x, msgpack_format f, const symbol_set &s)
 {
     msgpack_pack_key_impl<Stream, T>{}(packer, x, f, s);
