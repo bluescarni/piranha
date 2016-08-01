@@ -92,6 +92,10 @@ see https://www.gnu.org/licenses/. */
     }                                                                                                                  \
     }
 
+#include "config.hpp"
+
+#if defined(PIRANHA_ENABLE_MSGPACK)
+
 #include <algorithm>
 #include <array>
 #include <boost/numeric/conversion/cast.hpp>
@@ -140,6 +144,7 @@ public:
     auto write(const typename Stream::char_type *p, std::size_t count)
         -> decltype(std::declval<Stream &>().write(p, boost::numeric_cast<std::streamsize>(count)))
     {
+        // NOTE: we need numeric_cast because of circular dep problem if including safe_cast.
         return static_cast<Stream *>(this)->write(p, boost::numeric_cast<std::streamsize>(count));
     }
 };
@@ -173,6 +178,20 @@ public:
 template <typename T>
 const bool is_msgpack_stream<T>::value;
 
+/// Serialization format for msgpack.
+/**
+ * The serialization of non-primitive objects can often be performed in different ways, with different tradeoffs
+ * between performance, storage requirements and portability. The piranha::mp_integer class, for instance, can be
+ * serialized either via a string representation (slow and with high storage requirements, but portable across
+ * architectures, compilers and operating systems) or as an array of platform-dependent unsigned integrals (fast
+ * and compact, but not portable).
+ *
+ * This enum establishes two strategies for msgpack serialization: a portable format, intended
+ * to be usable across different platforms and suitable for the long-term storage of serialized objects, and a binary
+ * format, intended for use in high-performance scenarios (e.g., as temporary on-disk storage during long
+ * or memory-intensive computations). These formats are used by the serialization functions piranha::msgpack_pack()
+ * and piranha::msgpack_convert().
+ */
 enum class msgpack_format {
     /// Portable.
     portable,
@@ -356,6 +375,9 @@ inline void msgpack_unpack_key(T &x, const msgpack::object &o, msgpack_format f,
 {
     msgpack_unpack_key_impl<T>{}(x, o, f, s);
 }
+
 }
+
+#endif // PIRANHA_ENABLE_MSGPACK
 
 #endif

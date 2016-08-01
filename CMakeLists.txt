@@ -30,6 +30,9 @@ option(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 # Use TCMalloc as allocator.
 option(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
 
+# Enable msgpack serialization format.
+option(ENABLE_MSGPACK "Enable support for msgpack serialization format." OFF)
+
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
 # in the future it might become a more general-purpose flag.
@@ -121,6 +124,14 @@ INCLUDE_DIRECTORIES(SYSTEM ${MPFR_INCLUDE_DIR})
 
 # NOTE: MPFR should be linked in before GMP, that's why we link GMP here.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+
+if(ENABLE_MSGPACK)
+	find_package(MSGPACK-C REQUIRED)
+	message(STATUS "msgpack-c library found.")
+	message(STATUS "msgpack-c include dir is: ${MSGPACK-C_INCLUDE_DIR}")
+	include_directories(SYSTEM ${MSGPACK-C_INCLUDE_DIR})
+	set(PIRANHA_ENABLE_MSGPACK "#define PIRANHA_ENABLE_MSGPACK")
+endif()
 
 # bzip2 setup.
 find_package(BZip2 REQUIRED)
