@@ -33,38 +33,51 @@ see https://www.gnu.org/licenses/. */
 
 #include <sstream>
 
+#include "../src/config.hpp"
 #include "../src/init.hpp"
 
-#include "../src/polynomial.hpp"
-
 using namespace piranha;
+
+// using msgpack::packer;
+// using msgpack::sbuffer;
+
+BOOST_AUTO_TEST_CASE(serialization_boost_test_00)
+{
+    // Placeholder for now.
+    init();
+}
+
+#if defined(PIRANHA_ENABLE_MSGPACK)
 
 template <typename T>
 using sw = detail::msgpack_stream_wrapper<T>;
 
-using msgpack::packer;
-using msgpack::sbuffer;
-
 BOOST_AUTO_TEST_CASE(serialization_msgpack_tt_test)
 {
-    init();
     BOOST_CHECK(is_msgpack_stream<std::ostringstream>::value);
     BOOST_CHECK(!is_msgpack_stream<std::ostringstream &>::value);
     BOOST_CHECK(!is_msgpack_stream<const std::ostringstream &>::value);
     BOOST_CHECK(!is_msgpack_stream<const std::ostringstream>::value);
-    BOOST_CHECK(is_msgpack_stream<sbuffer>::value);
+    BOOST_CHECK(is_msgpack_stream<msgpack::sbuffer>::value);
     BOOST_CHECK(!is_msgpack_stream<float>::value);
     BOOST_CHECK(!is_msgpack_stream<const double>::value);
     BOOST_CHECK(is_msgpack_stream<sw<std::ostringstream>>::value);
     BOOST_CHECK(!is_msgpack_stream<sw<std::ostringstream> &>::value);
+    BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, int>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, int>::value));
+    BOOST_CHECK((!has_msgpack_pack<msgpack::sbuffer &, int>::value));
+    BOOST_CHECK((!has_msgpack_pack<const std::ostringstream, int>::value));
+    BOOST_CHECK((!has_msgpack_pack<const std::ostringstream &, int>::value));
+    BOOST_CHECK((!has_msgpack_pack<const std::ostringstream &&, int>::value));
+    BOOST_CHECK((!has_msgpack_pack<std::ostringstream &&, int>::value));
 }
 
 BOOST_AUTO_TEST_CASE(serialization_test_00)
 {
     // sbuffer sbuf2;
     // packer<sbuffer &> p2(sbuf2);
-    detail::msgpack_stream_wrapper<std::ofstream> sbuf("out.msgpack");
-    packer<detail::msgpack_stream_wrapper<std::ofstream>> p(sbuf);
+    // detail::msgpack_stream_wrapper<std::ofstream> sbuf("out.msgpack");
+    // packer<detail::msgpack_stream_wrapper<std::ofstream>> p(sbuf);
     /*    msgpack_pack(p,1.23L,msgpack_format::binary);
         long double x;
         std::size_t offset = 0u;
@@ -81,22 +94,24 @@ BOOST_AUTO_TEST_CASE(serialization_test_00)
         std::cout << b.size() << '\n';
         std::cout << b[0] << ',' << b[1] << ',' << b[2] << '\n';
     */
-    using p_type = polynomial<double, monomial<int>>;
-    p_type x{"x"}, y{"y"};
-    auto ret = math::pow(1.1 + .1 * x + .3 * y, 10);
-    {
-        /*std::ostringstream oss;
-        packer<std::ostringstream> p(oss);*/
-        msgpack_pack(p, ret, msgpack_format::binary);
-        // std::cout << sbuf.size() << '\n';
-    }
-    std::stringstream oss;
-    {
-        boost::archive::text_oarchive oa(oss);
-        oa << ret;
-    }
+    // using p_type = polynomial<double, monomial<int>>;
+    // p_type x{"x"}, y{"y"};
+    // auto ret = math::pow(1.1 + .1 * x + .3 * y, 10);
+    //{
+    /*std::ostringstream oss;
+    packer<std::ostringstream> p(oss);*/
+    // msgpack_pack(p, ret, msgpack_format::binary);
+    // std::cout << sbuf.size() << '\n';
+    //}
+    // std::stringstream oss;
+    //{
+    // boost::archive::text_oarchive oa(oss);
+    // oa << ret;
+    //}
     // std::cout << oss.str() << '\n';
-    std::vector<char> vec;
-    std::copy(std::istreambuf_iterator<char>(oss), std::istreambuf_iterator<char>(), std::back_inserter(vec));
-    std::cout << vec.size() << '\n';
+    // std::vector<char> vec;
+    // std::copy(std::istreambuf_iterator<char>(oss), std::istreambuf_iterator<char>(), std::back_inserter(vec));
+    // std::cout << vec.size() << '\n';
 }
+
+#endif

@@ -118,8 +118,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "detail/sfinae_types.hpp"
-// NOTE: this needs to be eliminated in favour of including symbol_set.hpp in the future. The reason
-// it is here now is that the prototypes of key packing/unpacking need the symbol_set type, but currently
+// NOTE: this needs to be eliminated in favour of including symbol_set.hpp directly in the future. The reason
+// it is here now is that the prototypes of the key serialization functions need the symbol_set type, but currently
 // symbol_set.hpp includes serialization.hpp - hence circular dep. In the future, we'll remove the serialization
 // code from symbol_set (which will be serialized directly from series) and hence we will be able to include it from
 // here.
@@ -201,8 +201,8 @@ const bool is_msgpack_stream<T>::value;
  * This enum establishes two strategies for msgpack serialization: a portable format, intended
  * to be usable across different platforms and suitable for the long-term storage of serialized objects, and a binary
  * format, intended for use in high-performance scenarios (e.g., as temporary on-disk storage during long
- * or memory-intensive computations). These formats are used by the serialization functions piranha::msgpack_pack(),
- * piranha::msgpack_pack_key(), piranha::msgpack_convert() and  piranha::msgpack_convert_key().
+ * or memory-intensive computations). These formats are used by the Piranha msgpack serialization functions
+ * (piranha::msgpack_pack(), piranha::msgpack_convert(), etc.).
  */
 enum class msgpack_format {
     /// Portable.
@@ -362,43 +362,56 @@ inline void msgpack_pack(msgpack::packer<Stream> &packer, const T &x, msgpack_fo
     msgpack_pack_impl<Stream, T>{}(packer, x, f);
 }
 
-template <typename Stream, typename T, typename = void>
-struct msgpack_pack_key_impl {
-};
-
-namespace detail
-{
-
-// Enabler for msgpack_pack_key.
-template <typename Stream, typename T>
-using msgpack_pack_key_enabler =
-    typename std::enable_if<is_msgpack_stream<Stream>::value
-                                && detail::true_tt<decltype(msgpack_pack_key_impl<Stream, T>{}(
-                                       std::declval<msgpack::packer<Stream> &>(), std::declval<const T &>(),
-                                       std::declval<msgpack_format>(), std::declval<const symbol_set &>()))>::value,
-                            int>::type;
-}
-
-template <typename Stream, typename T, detail::msgpack_pack_key_enabler<Stream, T> = 0>
-inline void msgpack_pack_key(msgpack::packer<Stream> &packer, const T &x, msgpack_format f, const symbol_set &s)
-{
-    msgpack_pack_key_impl<Stream, T>{}(packer, x, f, s);
-}
-
+/// Default functor for the implementation of piranha::msgpack_convert().
+/**
+ * This functor can be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
 template <typename T, typename = void>
-struct msgpack_unpack_impl {
+struct msgpack_convert_impl {
 };
 
+/// Implementation of piranha::msgpack_convert() for fundamental C++ types supported by msgpack.
+/**
+ * \note
+ * This specialisation is enabled if \p T is one of the following types:
+ * - \p char, <tt>signed char</tt>, or <tt>unsigned char</tt>,
+ * - \p int or <tt>unsigned</tt>,
+ * - \p long or <tt>unsigned long</tt>,
+ * - <tt>long long</tt> or <tt>unsigned long long</tt>,
+ * - \p float or \p double.
+ *
+ * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
+ */
 template <typename T>
-struct msgpack_unpack_impl<T, typename std::enable_if<detail::is_msgpack_scalar<T>::value>::type> {
+struct msgpack_convert_impl<T, typename std::enable_if<detail::is_msgpack_scalar<T>::value>::type> {
+    /// Call operator.
+    /**
+     * @param[out] x the output value.
+     * @param[in] o the object to be converted.
+     *
+     * @throws unspecified any exception thrown by <tt>msgpack::object::convert()</tt>.
+     */
     void operator()(T &x, const msgpack::object &o, msgpack_format) const
     {
         o.convert(x);
     }
 };
 
+/// Implementation of piranha::msgpack_convert() for <tt>long double</tt>.
 template <>
-struct msgpack_unpack_impl<long double> {
+struct msgpack_convert_impl<long double> {
+    /// Call operator.
+    /**
+     * @param[out] x the output value.
+     * @param[in] o the object to be converted.
+     * @param[in] f the serialization format.
+     *
+     * @throws unspecified any exception thrown by <tt>msgpack::object::convert()</tt> or by the
+     * public interface of <tt>std::istringstream</tt>.
+     * @throws std::invalid_argument if the serialized value is a non-finite value not supported
+     * by the implementation.
+     */
     void operator()(long double &x, const msgpack::object &o, msgpack_format f) const
     {
         using lim = std::numeric_limits<long double>;
@@ -407,7 +420,10 @@ struct msgpack_unpack_impl<long double> {
             o.convert(tmp);
             std::copy(tmp.begin(), tmp.end(), reinterpret_cast<char *>(&x));
         } else {
-            std::string tmp;
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+            static thread_local
+#endif
+                std::string tmp;
             o.convert(tmp);
             if (tmp == "+nan") {
                 if (lim::has_quiet_NaN) {
@@ -445,23 +461,80 @@ struct msgpack_unpack_impl<long double> {
     }
 };
 
-// TODO enabler, T non-const.
-template <typename T>
-inline void msgpack_unpack(T &x, const msgpack::object &o, msgpack_format f)
+namespace detail
 {
-    msgpack_unpack_impl<T>{}(x, o, f);
+
+// Enabler for msgpack_convert.
+template <typename T>
+using msgpack_convert_enabler =
+    typename std::enable_if<!std::is_const<T>::value
+                                && detail::true_tt<decltype(msgpack_convert_impl<T>{}(
+                                       std::declval<T &>(), std::declval<const msgpack::object &>(),
+                                       std::declval<msgpack_format>()))>::value,
+                            int>::type;
 }
 
-template <typename T, typename = void>
-struct msgpack_unpack_key_impl {
+/// Convert msgpack object.
+/**
+ * \note
+ * This function is enabled only if \p T is not const and if
+ * <tt>msgpack_convert_impl<T>{}(x, o, f)</tt> is a valid expression.
+ *
+ * This function is intended to convert the msgpack object \p o into an instance of type \p T, and to write
+ * the converted value into \p x. The actual implementation of this function is in the piranha::msgpack_convert_impl
+ * functor. The body of this function is equivalent to:
+ * @code
+ * msgpack_convert_impl<T>{}(x, o, f);
+ * @endcode
+ *
+ * @param[out] x the output value.
+ * @param[in] o the msgpack object that will be converted into \p x.
+ * @param[in] f the serialization format.
+ *
+ * @throws unspecified any exception thrown by the call operator piranha::msgpack_convert_impl.
+ */
+template <typename T, detail::msgpack_convert_enabler<T> = 0>
+inline void msgpack_convert(T &x, const msgpack::object &o, msgpack_format f)
+{
+    msgpack_convert_impl<T>{}(x, o, f);
+}
+
+/// Detect the presence of piranha::msgpack_pack().
+/**
+ * This type trait will be \p true if piranha::msgpack_pack() can be called with template arguments
+ * \p Stream and \p T, \p false otherwise.
+ */
+template <typename Stream, typename T>
+class has_msgpack_pack : detail::sfinae_types
+{
+    template <typename Stream1, typename T1>
+    static auto test(const Stream1 &s, const T1 &x)
+        -> decltype(piranha::msgpack_pack(std::declval<msgpack::packer<Stream1> &>(), x, std::declval<msgpack_format>()),
+                    void(), yes());
+    static no test(...);
+    static const bool implementation_defined
+        = std::is_same<yes, decltype(test(std::declval<Stream>(),
+            std::declval<T>()))>::value && is_msgpack_stream<Stream>::value;
+
+    // NOTE: alternative, better implementation that does not work on GCC, I think it's a bug because
+    // it tries to instantiate the packer constructor in the decltype() (which fails because of forming a pointer
+    // to a reference).
+    // template <typename SP1, typename T1>
+    // static auto test(SP1 &sp, const T1 &x)
+    //     -> decltype(piranha::msgpack_pack(sp, x,std::declval<msgpack_format>()),
+    //                 void(), yes());
+    // static no test(...);
+    // static const bool implementation_defined
+    //     = std::is_same<yes, decltype(test(std::declval<msgpack::packer<Stream> &>(),
+    //         std::declval<const T &>()))>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
 };
 
-// TODO stream detection, enabler.
-template <typename T>
-inline void msgpack_unpack_key(T &x, const msgpack::object &o, msgpack_format f, const symbol_set &s)
-{
-    msgpack_unpack_key_impl<T>{}(x, o, f, s);
-}
+template <typename Stream, typename T>
+const bool has_msgpack_pack<Stream, T>::value;
 }
 
 #endif // PIRANHA_ENABLE_MSGPACK
