@@ -125,6 +125,7 @@ see https://www.gnu.org/licenses/. */
 // here.
 #include "detail/symbol_set_fwd.hpp"
 #include "exceptions.hpp"
+#include "is_key.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -509,12 +510,13 @@ class has_msgpack_pack : detail::sfinae_types
 {
     template <typename Stream1, typename T1>
     static auto test(const Stream1 &s, const T1 &x)
-        -> decltype(piranha::msgpack_pack(std::declval<msgpack::packer<Stream1> &>(), x, std::declval<msgpack_format>()),
+        -> decltype(piranha::msgpack_pack(std::declval<msgpack::packer<Stream1> &>(), x,
+                                          std::declval<msgpack_format>()),
                     void(), yes());
     static no test(...);
     static const bool implementation_defined
-        = std::is_same<yes, decltype(test(std::declval<Stream>(),
-            std::declval<T>()))>::value && is_msgpack_stream<Stream>::value;
+        = std::is_same<yes, decltype(test(std::declval<Stream>(), std::declval<T>()))>::value
+          && is_msgpack_stream<Stream>::value;
 
     // NOTE: alternative, better implementation that does not work on GCC, I think it's a bug because
     // it tries to instantiate the packer constructor in the decltype() (which fails because of forming a pointer
@@ -535,6 +537,63 @@ public:
 
 template <typename Stream, typename T>
 const bool has_msgpack_pack<Stream, T>::value;
+
+/// Detect the presence of piranha::msgpack_convert().
+/**
+ * This type trait will be \p true if piranha::msgpack_convert() can be called with template argument \p T, after
+ * removal of any reference qualification, \p false otherwise.
+ */
+template <typename T>
+class has_msgpack_convert : detail::sfinae_types
+{
+    template <typename T1>
+    static auto test(T1 &x) -> decltype(piranha::msgpack_convert(x, std::declval<const msgpack::object &>(),
+                                                                 std::declval<msgpack_format>()),
+                                        void(), yes());
+    static no test(...);
+    static const bool implementation_defined
+        = std::is_same<yes, decltype(test(std::declval<typename std::remove_reference<T>::type &>()))>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename T>
+const bool has_msgpack_convert<T>::value;
+
+/// Detect the presence of the <tt>%msgpack_pack()</tt> method in keys.
+/**
+ * This type trait will be \p true if \p Stream satisfies piranha::is_msgpack_stream and the \p Key type has
+ * a method whose signature is compatible with:
+ * @code
+ * Key::msgpack_pack(msgpack::packer<Stream> &, msgpack_format, const symbol_set &) const;
+ * @endcode
+ * The return type of the method is ignored by this type trait.
+ *
+ * If \p Key does not satisfy piranha::is_key, a compile-time error will be produced.
+ */
+template <typename Stream, typename Key>
+class key_has_msgpack_pack : detail::sfinae_types
+{
+    PIRANHA_TT_CHECK(is_key, Key);
+    template <typename Stream1, typename Key1>
+    static auto test(const Stream1 &s, const Key1 &k)
+        -> decltype(k.msgpack_pack(std::declval<msgpack::packer<Stream1> &>(), std::declval<msgpack_format>(),
+                                   std::declval<const symbol_set &>()),
+                    void(), yes());
+    static no test(...);
+    static const bool implementation_defined
+        = std::is_same<yes, decltype(test(std::declval<Stream>(), std::declval<Key>()))>::value
+          && is_msgpack_stream<Stream>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename Stream, typename Key>
+const bool key_has_msgpack_pack<Stream, Key>::value;
 }
 
 #endif // PIRANHA_ENABLE_MSGPACK
