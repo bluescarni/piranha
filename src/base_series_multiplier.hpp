@@ -560,7 +560,7 @@ protected:
         const unsigned n_trials = 15u;
         // NOTE: Hard-coded value for the estimation multiplier.
         // NOTE: This value should be tuned for performance/memory usage tradeoffs.
-        const unsigned multiplier = 1u;
+        const unsigned multiplier = 2u;
         // Number of threads to use. If there are more threads than trials, then reduce
         // the number of actual threads to use.
         // NOTE: this is a bit different from usual, where we do not care if the workload per thread is zero.
