@@ -1209,8 +1209,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_key_test)
     BOOST_CHECK(!is_key<const key01 &>::value);
     BOOST_CHECK(is_key<key02>::value);
     BOOST_CHECK(!is_key<key02 &>::value);
+    BOOST_CHECK(!is_key<key02 &&>::value);
     BOOST_CHECK(!is_key<const key02>::value);
     BOOST_CHECK(!is_key<const key02 &>::value);
+    BOOST_CHECK(!is_key<const key02 &&>::value);
     BOOST_CHECK(!is_key<key03>::value);
 // Missing noexcept.
 #if !defined(PIRANHA_COMPILER_IS_INTEL)
