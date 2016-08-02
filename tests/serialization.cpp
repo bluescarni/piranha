@@ -52,6 +52,8 @@ BOOST_AUTO_TEST_CASE(serialization_boost_test_00)
 template <typename T>
 using sw = detail::msgpack_stream_wrapper<T>;
 
+struct no_msgpack {};
+
 BOOST_AUTO_TEST_CASE(serialization_msgpack_tt_test)
 {
     BOOST_CHECK(is_msgpack_stream<std::ostringstream>::value);
@@ -64,12 +66,25 @@ BOOST_AUTO_TEST_CASE(serialization_msgpack_tt_test)
     BOOST_CHECK(is_msgpack_stream<sw<std::ostringstream>>::value);
     BOOST_CHECK(!is_msgpack_stream<sw<std::ostringstream> &>::value);
     BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, int>::value));
+    BOOST_CHECK((!has_msgpack_pack<msgpack::sbuffer, no_msgpack>::value));
     BOOST_CHECK((has_msgpack_pack<std::ostringstream, int>::value));
+    BOOST_CHECK((has_msgpack_pack<sw<std::ostringstream>, int>::value));
     BOOST_CHECK((!has_msgpack_pack<msgpack::sbuffer &, int>::value));
     BOOST_CHECK((!has_msgpack_pack<const std::ostringstream, int>::value));
     BOOST_CHECK((!has_msgpack_pack<const std::ostringstream &, int>::value));
     BOOST_CHECK((!has_msgpack_pack<const std::ostringstream &&, int>::value));
     BOOST_CHECK((!has_msgpack_pack<std::ostringstream &&, int>::value));
+    BOOST_CHECK((has_msgpack_convert<int>::value));
+    BOOST_CHECK((has_msgpack_convert<double>::value));
+    BOOST_CHECK((has_msgpack_convert<int &>::value));
+    BOOST_CHECK((has_msgpack_convert<double &>::value));
+    BOOST_CHECK((!has_msgpack_convert<no_msgpack>::value));
+    BOOST_CHECK((!has_msgpack_convert<const int>::value));
+    BOOST_CHECK((!has_msgpack_convert<const double>::value));
+    BOOST_CHECK((has_msgpack_convert<int &&>::value));
+    BOOST_CHECK((has_msgpack_convert<double &&>::value));
+    BOOST_CHECK((!has_msgpack_convert<const int &&>::value));
+    BOOST_CHECK((!has_msgpack_convert<const double &&>::value));
 }
 
 BOOST_AUTO_TEST_CASE(serialization_test_00)
