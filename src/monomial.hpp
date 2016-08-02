@@ -1100,46 +1100,52 @@ public:
         const value_type zero(0);
         return std::any_of(std::get<1u>(sbe), std::get<2u>(sbe), [&zero](const value_type &e) { return e < zero; });
     }
-};
+#if defined(PIRANHA_ENABLE_MSGPACK)
+private:
+    // Enablers for msgpack serialization.
+    template <typename Stream>
+    using msgpack_pack_enabler =
+        typename std::enable_if<is_msgpack_stream<Stream>::value && has_msgpack_pack<Stream, T>::value, int>::type;
+    template <typename U>
+    using msgpack_convert_enabler = typename std::enable_if<has_msgpack_convert<U>::value, int>::type;
 
-template <typename T, typename S>
-const std::size_t monomial<T, S>::multiply_arity;
-
-// TODO enabler, T needs to be packable.
-template <typename Stream, typename T, typename S>
-struct msgpack_pack_key_impl<Stream, monomial<T, S>> {
-    void operator()(msgpack::packer<Stream> &packer, const monomial<T, S> &m, msgpack_format f,
-                    const symbol_set &s) const
+public:
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
+    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
     {
-        if (unlikely(m.size() != s.size())) {
+        const auto sbe = this->size_begin_end();
+        if (unlikely(std::get<0u>(sbe) != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization");
         }
-        const auto sbe = m.size_begin_end();
         packer.pack_array(safe_cast<std::uint32_t>(std::get<0u>(sbe)));
         for (auto it = std::get<1u>(sbe); it != std::get<2u>(sbe); ++it) {
-            msgpack_pack(packer, *it, f);
+            piranha::msgpack_pack(packer, *it, f);
         }
     }
-};
-
-// TODO: requirement: T must be unpackable.
-template <typename T, typename S>
-struct msgpack_unpack_key_impl<monomial<T, S>> {
-    void operator()(monomial<T, S> &m, const msgpack::object &o, msgpack_format f, const symbol_set &s) const
+    template <typename U = T, msgpack_convert_enabler<U> = 0>
+    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
     {
-        /*static thread_local*/ std::vector<msgpack::object> tmp;
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+        static thread_local
+#endif
+            std::vector<msgpack::object>
+                tmp;
         o.convert(tmp);
         if (unlikely(tmp.size()) != s.size()) {
-            // TODO
+            piranha_throw(std::invalid_argument, "incompatible symbol set in monomial deserialization");
         }
-        m.resize(safe_cast<typename monomial<T, S>::size_type>(tmp.size()));
-        std::transform(tmp.begin(), tmp.end(), m.begin(), [f](const msgpack::object &o) -> T {
+        resize(safe_cast<typename base::size_type>(tmp.size()));
+        std::transform(tmp.begin(), tmp.end(), this->begin(), [f](const msgpack::object &o) -> T {
             T t;
             msgpack_unpack(t, o, f);
             return t;
         });
     }
+#endif
 };
+
+template <typename T, typename S>
+const std::size_t monomial<T, S>::multiply_arity;
 }
 
 namespace std
