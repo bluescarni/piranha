@@ -1109,13 +1109,18 @@ const bool has_exact_ring_operations<T, Enable>::value;
 /// Detect if type can be returned from a function.
 template <typename T>
 struct is_returnable {
+private:
+    static const bool implementation_defined
+        = std::is_destructible<T>::value
+          && (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value);
+
+public:
     /// Value of the type trait.
     /**
      * The type trait will be true if \p T is destructible and copy or move
      * constructible.
      */
-    static const bool value = std::is_destructible<T>::value
-                              && (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value);
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
