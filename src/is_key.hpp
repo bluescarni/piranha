@@ -34,7 +34,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "detail/sfinae_types.hpp"
-#include "symbol_set.hpp"
+// NOTE: include directly symbol_set.hpp once its dependency from serialization.hpp is removed.
+#include "detail/symbol_set_fwd.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -113,17 +114,17 @@ struct is_key_impl : sfinae_types {
  * reference
  *   to piranha::symbol_set, and returning \p T.
  */
-/*
- * \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
- * polynomial ctors from symbol) -> note that both these two checks have to go in the runtime requirements of key
- * when they get documented.
- */
+// \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
+// polynomial ctors from symbol) -> note that both these two checks have to go in the runtime requirements of key
+// when they get documented.
 template <typename T, typename = void>
 class is_key
 {
+    static const bool implementation_defined = false;
+
 public:
     /// Value of the type trait.
-    static const bool value = false;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
