@@ -146,14 +146,14 @@
 <span class="c1"># GNU Lesser General Public License along with the Piranha library.  If not,</span>
 <span class="c1"># see https://www.gnu.org/licenses/.</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span> <span class="k">as</span> <span class="n">_ai</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span> <span class="k">as</span> <span class="n">_ai</span>
 
 <span class="c1">#: List of Pyranha submodules.</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;celmec&#39;</span><span class="p">,</span> <span class="s1">&#39;math&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;types&#39;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">threading</span> <span class="kn">as</span> <span class="nn">_thr</span>
-<span class="kn">from</span> <span class="nn">._common</span> <span class="kn">import</span> <span class="n">_cpp_type_catcher</span><span class="p">,</span> <span class="n">_monkey_patching</span><span class="p">,</span> <span class="n">_cleanup</span>
-<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">file_format</span><span class="p">,</span> <span class="n">file_compression</span><span class="p">,</span> <span class="n">polynomial_gcd_algorithm</span>
+<span class="kn">import</span> <span class="nn">threading</span> <span class="k">as</span> <span class="nn">_thr</span>
+<span class="kn">from</span> <span class="nn">._common</span> <span class="k">import</span> <span class="n">_cpp_type_catcher</span><span class="p">,</span> <span class="n">_monkey_patching</span><span class="p">,</span> <span class="n">_cleanup</span>
+<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">file_format</span><span class="p">,</span> <span class="n">file_compression</span><span class="p">,</span> <span class="n">polynomial_gcd_algorithm</span>
 
 <span class="c1"># Run the monkey patching.</span>
 <span class="n">_monkey_patching</span><span class="p">()</span>
@@ -178,7 +178,7 @@
 <span class="sd">		20</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_max_term_output</span><span class="p">()</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.set_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_max_term_output">[docs]</a>	<span class="k">def</span> <span class="nf">set_max_term_output</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -202,7 +202,7 @@
 <span class="sd">		&gt;&gt;&gt; settings.reset_max_term_output()</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_max_term_output</span><span class="p">,</span><span class="n">n</span><span class="p">)</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.reset_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_max_term_output">[docs]</a>	<span class="k">def</span> <span class="nf">reset_max_term_output</span><span class="p">():</span>
@@ -218,7 +218,7 @@
 <span class="sd">		20</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_max_term_output</span><span class="p">()</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.get_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_n_threads">[docs]</a>	<span class="k">def</span> <span class="nf">get_n_threads</span><span class="p">():</span>
@@ -232,7 +232,7 @@
 <span class="sd">		16 # This will be a platform-dependent value.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_n_threads</span><span class="p">()</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.set_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_n_threads">[docs]</a>	<span class="k">def</span> <span class="nf">set_n_threads</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -256,7 +256,7 @@
 <span class="sd">		&gt;&gt;&gt; settings.reset_n_threads()</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_n_threads</span><span class="p">,</span><span class="n">n</span><span class="p">)</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.reset_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_n_threads">[docs]</a>	<span class="k">def</span> <span class="nf">reset_n_threads</span><span class="p">():</span>
@@ -273,7 +273,7 @@
 <span class="sd">		True</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_n_threads</span><span class="p">()</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.get_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_latex_repr">[docs]</a>	<span class="k">def</span> <span class="nf">get_latex_repr</span><span class="p">():</span>
@@ -297,7 +297,7 @@
 <span class="sd">		&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
 		<span class="n">s_type</span> <span class="o">=</span> <span class="n">getl</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
 		<span class="k">with</span> <span class="n">settings</span><span class="o">.</span><span class="n">__lock</span><span class="p">:</span>
 			<span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span><span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
@@ -332,9 +332,9 @@
 <span class="sd">		TypeError: the &#39;flag&#39; parameter must be a bool</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_core</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
-		<span class="kn">from</span> <span class="nn">._common</span> <span class="kn">import</span> <span class="n">_register_repr_latex</span>
+		<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_core</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
+		<span class="kn">from</span> <span class="nn">._common</span> <span class="k">import</span> <span class="n">_register_repr_latex</span>
 		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flag</span><span class="p">,</span><span class="nb">bool</span><span class="p">):</span>
 			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;the &#39;flag&#39; parameter must be a bool&quot;</span><span class="p">)</span>
 		<span class="k">with</span> <span class="n">settings</span><span class="o">.</span><span class="n">__lock</span><span class="p">:</span>
@@ -355,7 +355,7 @@
 <span class="sd">		500000 # This will be an implementation-defined value.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_min_work_per_thread</span><span class="p">()</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.set_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_min_work_per_thread">[docs]</a>	<span class="k">def</span> <span class="nf">set_min_work_per_thread</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -379,7 +379,7 @@
 <span class="sd">		&gt;&gt;&gt; settings.reset_min_work_per_thread()</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_min_work_per_thread</span><span class="p">,</span><span class="n">n</span><span class="p">)</span></div>
 	<span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.reset_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_min_work_per_thread">[docs]</a>	<span class="k">def</span> <span class="nf">reset_min_work_per_thread</span><span class="p">():</span>
@@ -394,10 +394,10 @@
 <span class="sd">		True</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
 		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_min_work_per_thread</span><span class="p">()</span></div></div>
 
-<span class="kn">import</span> <span class="nn">atexit</span> <span class="kn">as</span> <span class="nn">_atexit</span>
+<span class="kn">import</span> <span class="nn">atexit</span> <span class="k">as</span> <span class="nn">_atexit</span>
 <span class="n">_atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="k">lambda</span> <span class="p">:</span> <span class="n">_cleanup</span><span class="p">())</span>
 </pre></div>
 
@@ -413,7 +413,7 @@
     </p>
     <p>
         &copy; Copyright 2009-2016, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
     </p>
   </div>
 </footer>

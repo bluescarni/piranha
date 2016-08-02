@@ -147,13 +147,13 @@
 <span class="c1"># see https://www.gnu.org/licenses/.</span>
 
 <span class="c1"># Use absolute imports to avoid issues with the main math module.</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span> <span class="k">as</span> <span class="n">_ai</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span> <span class="k">as</span> <span class="n">_ai</span>
 
-<span class="kn">from</span> <span class="nn">._common</span> <span class="kn">import</span> <span class="n">_cpp_type_catcher</span>
+<span class="kn">from</span> <span class="nn">._common</span> <span class="k">import</span> <span class="n">_cpp_type_catcher</span>
 
 <span class="c1"># This is used in a few functions below.</span>
 <span class="k">def</span> <span class="nf">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])):</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])):</span>
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the optional </span><span class="se">\&#39;</span><span class="s1">names</span><span class="se">\&#39;</span><span class="s1"> argument must be a list of strings&#39;</span><span class="p">)</span>
 
 <span class="c1"># Helper to check that d is a dictionary suitable for use in evaluation.</span>
@@ -199,7 +199,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_cos</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_cos</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_cos</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="sin"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.sin">[docs]</a><span class="k">def</span> <span class="nf">sin</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
@@ -232,7 +232,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_sin</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_sin</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_sin</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="binomial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.binomial">[docs]</a><span class="k">def</span> <span class="nf">binomial</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
@@ -265,7 +265,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_binomial</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_binomial</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_binomial</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="gcd"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.gcd">[docs]</a><span class="k">def</span> <span class="nf">gcd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
@@ -299,7 +299,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_gcd</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_gcd</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_gcd</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="partial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.partial">[docs]</a><span class="k">def</span> <span class="nf">partial</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
@@ -327,7 +327,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_partial</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_partial</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_partial</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="integrate"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.integrate">[docs]</a><span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
@@ -360,7 +360,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_integrate</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_integrate</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_integrate</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="factorial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.factorial">[docs]</a><span class="k">def</span> <span class="nf">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -388,7 +388,7 @@
 <span class="sd">	TypeError: factorial argument must be an integer</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span>  <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_factorial</span>
+	<span class="kn">from</span>  <span class="nn">._core</span> <span class="k">import</span> <span class="n">_factorial</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="nb">int</span><span class="p">):</span>
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;factorial argument must be an integer&#39;</span><span class="p">)</span>
 	<span class="k">try</span><span class="p">:</span>
@@ -435,7 +435,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_pbracket</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_pbracket</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_pbracket</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="transformation_is_canonical"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.transformation_is_canonical">[docs]</a><span class="k">def</span> <span class="nf">transformation_is_canonical</span><span class="p">(</span><span class="n">new_p</span><span class="p">,</span><span class="n">new_q</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">):</span>
@@ -500,7 +500,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_transformation_is_canonical</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_transformation_is_canonical</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_p</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_q</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;non-list input type&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">p_list</span> <span class="o">+</span> <span class="n">q_list</span><span class="p">]):</span>
@@ -516,7 +516,7 @@
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;cannot construct instance of input type&#39;</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_transformation_is_canonical</span><span class="p">,</span><span class="n">new_p</span><span class="p">,</span><span class="n">new_q</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">,</span><span class="n">types_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]())</span></div>
 
-<div class="viewcode-block" id="truncate_degree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.truncate_degree">[docs]</a><span class="k">def</span> <span class="nf">truncate_degree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">max_degree</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="truncate_degree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.truncate_degree">[docs]</a><span class="k">def</span> <span class="nf">truncate_degree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">max_degree</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Degree-based truncation.</span>
 
 <span class="sd">	This function will eliminate from *arg* parts whose degree is greater than *max_degree*. The truncation</span>
@@ -559,9 +559,9 @@
 <span class="sd">	TypeError: the optional &#39;names&#39; argument must be a list of strings</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_truncate_degree</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_truncate_degree</span>
 	<span class="n">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_truncate_degree</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">max_degree</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_truncate_degree</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">max_degree</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
@@ -618,7 +618,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_evaluate</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_evaluate</span>
 	<span class="c1"># Check input dict.</span>
 	<span class="n">__check_eval_dict</span><span class="p">(</span><span class="n">eval_dict</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_evaluate</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">eval_dict</span><span class="p">,</span><span class="n">eval_dict</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">eval_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]])</span></div>
@@ -653,7 +653,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_subs</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_subs</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_subs</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">x</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="t_subs"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_subs">[docs]</a><span class="k">def</span> <span class="nf">t_subs</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
@@ -688,7 +688,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_t_subs</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_t_subs</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_subs</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ipow_subs"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.ipow_subs">[docs]</a><span class="k">def</span> <span class="nf">ipow_subs</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
@@ -727,7 +727,7 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_ipow_subs</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_ipow_subs</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_ipow_subs</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="invert"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.invert">[docs]</a><span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
@@ -769,10 +769,10 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_invert</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_invert</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_invert</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="degree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.degree">[docs]</a><span class="k">def</span> <span class="nf">degree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="degree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.degree">[docs]</a><span class="k">def</span> <span class="nf">degree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Degree.</span>
 
 <span class="sd">	This function will return the degree of the input argument. Various symbolic types are supported as input</span>
@@ -802,14 +802,14 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_degree</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_degree</span>
 	<span class="n">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_degree</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_degree</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ldegree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.ldegree">[docs]</a><span class="k">def</span> <span class="nf">ldegree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ldegree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.ldegree">[docs]</a><span class="k">def</span> <span class="nf">ldegree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Low degree.</span>
 
 <span class="sd">	This function will return the low degree of the input argument. Various symbolic types are supported as input</span>
@@ -839,14 +839,14 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_ldegree</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_ldegree</span>
 	<span class="n">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_ldegree</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_ldegree</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="t_degree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_degree">[docs]</a><span class="k">def</span> <span class="nf">t_degree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="t_degree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_degree">[docs]</a><span class="k">def</span> <span class="nf">t_degree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Trigonometric degree.</span>
 
 <span class="sd">	This function will return the trigonometric degree of the input argument. Various symbolic types are supported as</span>
@@ -876,14 +876,14 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_t_degree</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_t_degree</span>
 	<span class="n">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_degree</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_degree</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="t_ldegree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_ldegree">[docs]</a><span class="k">def</span> <span class="nf">t_ldegree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="t_ldegree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_ldegree">[docs]</a><span class="k">def</span> <span class="nf">t_ldegree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Trigonometric low degree.</span>
 
 <span class="sd">	This function will return the trigonometric low degree of the input argument. Various symbolic types are supported as</span>
@@ -913,14 +913,14 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_t_ldegree</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_t_ldegree</span>
 	<span class="n">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_ldegree</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_ldegree</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="t_order"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_order">[docs]</a><span class="k">def</span> <span class="nf">t_order</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="t_order"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_order">[docs]</a><span class="k">def</span> <span class="nf">t_order</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Trigonometric order.</span>
 
 <span class="sd">	This function will return the trigonometric order of the input argument. Various symbolic types are supported as</span>
@@ -950,14 +950,14 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_t_order</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_t_order</span>
 	<span class="n">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_order</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_order</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="t_lorder"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_lorder">[docs]</a><span class="k">def</span> <span class="nf">t_lorder</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="t_lorder"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_lorder">[docs]</a><span class="k">def</span> <span class="nf">t_lorder</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Trigonometric low order.</span>
 
 <span class="sd">	This function will return the trigonometric low order of the input argument. Various symbolic types are supported as</span>
@@ -987,9 +987,9 @@
 <span class="sd">	TypeError: invalid argument type(s)</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_t_lorder</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_t_lorder</span>
 	<span class="n">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_lorder</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_lorder</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">names</span><span class="p">)</span></div>
@@ -1065,14 +1065,14 @@
 <span class="sd">	TypeError: all the values in the &#39;extra_map&#39; argument must be callables</span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_lambdify</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_lambdify</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="nb">type</span><span class="p">):</span>
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the </span><span class="se">\&#39;</span><span class="s1">t</span><span class="se">\&#39;</span><span class="s1"> argument must be a type&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]):</span>
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the </span><span class="se">\&#39;</span><span class="s1">names</span><span class="se">\&#39;</span><span class="s1"> argument must be a list of strings&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">extra_map</span><span class="p">]):</span>
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the </span><span class="se">\&#39;</span><span class="s1">extra_map</span><span class="se">\&#39;</span><span class="s1"> argument must be a dictionary in which the keys are strings&#39;</span><span class="p">)</span>
-	<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">callable</span><span class="p">(</span><span class="n">extra_map</span><span class="p">[</span><span class="n">_</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">extra_map</span><span class="p">]):</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">callable</span><span class="p">(</span><span class="n">extra_map</span><span class="p">[</span><span class="n">_</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">extra_map</span><span class="p">]):</span>
 		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;all the values in the </span><span class="se">\&#39;</span><span class="s1">extra_map</span><span class="se">\&#39;</span><span class="s1"> argument must be callables&#39;</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_lambdify</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">names</span><span class="p">,</span><span class="n">extra_map</span><span class="p">,</span><span class="n">t</span><span class="p">())</span></div>
 </pre></div>
@@ -1089,7 +1089,7 @@
     </p>
     <p>
         &copy; Copyright 2009-2016, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
     </p>
   </div>
 </footer>
