@@ -122,9 +122,9 @@ struct msgpack_tester {
 BOOST_AUTO_TEST_CASE(monomial_msgpack_test)
 {
     boost::mpl::for_each<expo_types>(msgpack_tester());
-    BOOST_CHECK((!key_has_msgpack_pack<msgpack::sbuffer,monomial<fake_int_01>>::value));
-    BOOST_CHECK((!key_has_msgpack_pack<std::ostringstream,monomial<fake_int_01>>::value));
-    BOOST_CHECK((!key_has_msgpack_pack<sw<std::ostringstream>,monomial<fake_int_01>>::value));
+    BOOST_CHECK((!key_has_msgpack_pack<msgpack::sbuffer, monomial<fake_int_01>>::value));
+    BOOST_CHECK((!key_has_msgpack_pack<std::ostringstream, monomial<fake_int_01>>::value));
+    BOOST_CHECK((!key_has_msgpack_pack<sw<std::ostringstream>, monomial<fake_int_01>>::value));
     BOOST_CHECK((!key_has_msgpack_convert<monomial<fake_int_01>>::value));
 }
 
