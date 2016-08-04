@@ -41,10 +41,17 @@ using namespace piranha;
 using msgpack::packer;
 using msgpack::sbuffer;
 
-BOOST_AUTO_TEST_CASE(serialization_boost_test_00)
+BOOST_AUTO_TEST_CASE(serialization_boost_test_tt)
 {
-    // Placeholder for now.
     init();
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<const boost::archive::binary_oarchive &,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &&,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &,int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<const boost::archive::text_oarchive &,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &&,int>::value));
 }
 
 #if defined(PIRANHA_ENABLE_MSGPACK)

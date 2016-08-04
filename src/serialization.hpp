@@ -35,12 +35,17 @@ see https://www.gnu.org/licenses/. */
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/config/suffix.hpp>
+#include <boost/mpl/bool.hpp>
 #include <boost/mpl/int.hpp>
 #include <boost/mpl/integral_c_tag.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/level.hpp>
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
+#include <cstddef>
+#include <type_traits>
+
+#include "detail/sfinae_types.hpp"
 
 // Serialization todo:
 // - provide alternative overloads of the serialization methods
@@ -92,6 +97,60 @@ see https://www.gnu.org/licenses/. */
     }                                                                                                                  \
     }
 
+namespace piranha
+{
+
+template <typename Archive, typename T>
+class is_boost_saving_archive: detail::sfinae_types
+{
+    // Const pointer to T, after removing top level const and reference qualifiers.
+    using Tcp = typename std::remove_reference<typename std::remove_const<T>::type>::type const *;
+    template <typename A1>
+    static typename A1::is_saving test0(const A1 &);
+    static no test0(...);
+    template <typename A1>
+    static typename A1::is_loading test1(const A1 &);
+    static no test1(...);
+    template <typename A1, typename T1>
+    static auto test2(A1 &a, const T1 &x) -> decltype(a << x);
+    static no test2(...);
+    template <typename A1, typename T1>
+    static auto test3(A1 &a, const T1 &x) -> decltype(a & x);
+    static no test3(...);
+    template <typename A1, typename T1>
+    static auto test4(A1 &a, const T1 *p, std::size_t count) -> decltype(a.save_binary(p,count),void(),yes());
+    static no test4(...);
+    template <typename A1, typename T1>
+    static auto test5(A1 &a, const T1 &) -> decltype(a.template register_type<T1>(),void(),yes());
+    static no test5(...);
+    template <typename A1, typename T1>
+    static auto test6(A1 &a, const T1 *p) -> decltype(a.register_type(p),void(),yes());
+    static no test6(...);
+    template <typename A1>
+    static auto test7(const A1 &a) -> decltype(a.get_library_version());
+    static no test7(...);
+    static const bool implementation_defined =
+        std::is_same<boost::mpl::bool_<true>,decltype(test0(std::declval<Archive>()))>::value &&
+        std::is_same<boost::mpl::bool_<false>,decltype(test1(std::declval<Archive>()))>::value &&
+        std::is_same<Archive &,decltype(test2(std::declval<Archive &>(),std::declval<T>()))>::value &&
+        std::is_same<Archive &,decltype(test3(std::declval<Archive &>(),std::declval<T>()))>::value &&
+        std::is_same<yes,decltype(test4(std::declval<Archive &>(),std::declval<Tcp>(),0u))>::value &&
+        std::is_same<yes,decltype(test5(std::declval<Archive &>(),std::declval<T>()))>::value &&
+        std::is_same<yes,decltype(test6(std::declval<Archive &>(),std::declval<Tcp>()))>::value &&
+        // NOTE: the docs here mention that get_library_version() is supposed to return an unsigned integral
+        // type, but the boost archives apparently return a type which is implicitly convertible to some
+        // unsigned int. This seems to work and it should cover also the cases in which the return type
+        // is a real unsigned int.
+        std::is_convertible<decltype(test7(std::declval<Archive>())),unsigned long long>::value;
+public:
+    static const bool value = implementation_defined;
+};
+
+template <typename Archive, typename T>
+const bool is_boost_saving_archive<Archive,T>::value;
+
+}
+
 #include "config.hpp"
 
 #if defined(PIRANHA_ENABLE_MSGPACK)
@@ -108,16 +167,13 @@ see https://www.gnu.org/licenses/. */
 #include <array>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
-#include <cstddef>
 #include <ios>
 #include <limits>
 #include <locale>
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 
-#include "detail/sfinae_types.hpp"
 // NOTE: this needs to be eliminated in favour of including symbol_set.hpp directly in the future. The reason
 // it is here now is that the prototypes of the key serialization functions need the symbol_set type, but currently
 // symbol_set.hpp includes serialization.hpp - hence circular dep. In the future, we'll remove the serialization
