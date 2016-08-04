@@ -155,9 +155,10 @@ class msgpack_stream_wrapper : public Stream
 public:
     using Stream::Stream;
     auto write(const typename Stream::char_type *p, std::size_t count)
-        -> decltype(std::declval<Stream &>().write(p, boost::numeric_cast<std::streamsize>(count)))
+        -> decltype(std::declval<Stream &>().write(p, std::streamsize(0)))
     {
         // NOTE: we need numeric_cast because of circular dep problem if including safe_cast.
+        // NOTE: this can probably be again a safe_cast, once we sanitize safe_cast.
         return static_cast<Stream *>(this)->write(p, boost::numeric_cast<std::streamsize>(count));
     }
 };
@@ -410,8 +411,9 @@ struct msgpack_convert_impl<long double> {
      *
      * @throws unspecified any exception thrown by <tt>msgpack::object::convert()</tt> or by the
      * public interface of <tt>std::istringstream</tt>.
-     * @throws std::invalid_argument if the serialized value is a non-finite value not supported
-     * by the implementation.
+     * @throws std::invalid_argument if the serialized value is a non-finite value not supported by the implementation,
+     * or, when using the msgpack_format::portable format, the deserialized string does not represent a floating-point
+     * value.
      */
     void operator()(long double &x, const msgpack::object &o, msgpack_format f) const
     {
@@ -455,8 +457,15 @@ struct msgpack_convert_impl<long double> {
             } else {
                 std::istringstream iss;
                 iss.imbue(std::locale::classic());
+                // NOTE: is seems like the std::scientific format flag has an effect on input
+                // streams as well. See the example here:
+                // http://en.cppreference.com/w/cpp/io/manip/fixed
+                iss >> std::scientific;
                 iss.str(tmp);
                 iss >> x;
+                if (unlikely(iss.fail())) {
+                    piranha_throw(std::invalid_argument, "failed to parse the string '" + tmp + "' as a long double");
+                }
             }
         }
     }
@@ -594,6 +603,36 @@ public:
 
 template <typename Stream, typename Key>
 const bool key_has_msgpack_pack<Stream, Key>::value;
+
+/// Detect the presence of the <tt>%msgpack_convert()</tt> method in keys.
+/**
+ * This type trait will be \p true if the \p Key type has a method whose signature is compatible with:
+ * @code
+ * Key::msgpack_convert(const msgpack::object &, msgpack_format, const symbol_set &);
+ * @endcode
+ * The return type of the method is ignored by this type trait.
+ *
+ * If \p Key does not satisfy piranha::is_key, a compile-time error will be produced.
+ */
+template <typename Key>
+class key_has_msgpack_convert : detail::sfinae_types
+{
+    PIRANHA_TT_CHECK(is_key, Key);
+    template <typename Key1>
+    static auto test(Key1 &k)
+        -> decltype(k.msgpack_convert(std::declval<const msgpack::object &>(), std::declval<msgpack_format>(),
+                                      std::declval<const symbol_set &>()),
+                    void(), yes());
+    static no test(...);
+    static const bool implementation_defined = std::is_same<yes, decltype(test(std::declval<Key &>()))>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename Key>
+const bool key_has_msgpack_convert<Key>::value;
 }
 
 #endif // PIRANHA_ENABLE_MSGPACK
