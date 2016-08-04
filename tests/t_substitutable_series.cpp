@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/unit_test.hpp>
 
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>
