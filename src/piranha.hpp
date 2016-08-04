@@ -135,7 +135,6 @@ see https://www.gnu.org/licenses/. */
  * \todo probably we should change the pow() implementation for integer to error out if the power is negative and the
  * base
  * is not unitary.
- * \todo http://keepachangelog.com/CHANGELOG.md
  * \todo in pyranha, it would be nice to have a reverse lookup from the name of the exposed types to their
  * representation
  * in the type system. Plus, maybe when printing the series they should have a header displaying their name in the type
@@ -300,6 +299,9 @@ see https://www.gnu.org/licenses/. */
  * \todo it seems like in C++17 we can finally have an automatically inited global class in which to tuck the init
  * code (and probably the thread pool as well), via inline variables. Probably we will need to define it in a separate
  * header and then make sure to include that header in every piranha public header.
+ * \todo safe_cast fixages: remove the dependency on mp_integer, fix the exception usage as explained above,
+ * and once this is done check all uses of boost numeric_cast, which should now be replaceable by safe_cast.
+ * Check also the fwd declaration usages (e.g., in serialization) which work around the current issues.
  */
 namespace piranha
 {
