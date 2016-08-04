@@ -1110,6 +1110,24 @@ private:
     using msgpack_convert_enabler = typename std::enable_if<has_msgpack_convert<U>::value, int>::type;
 
 public:
+    /// Serialize in msgpack format.
+    /**
+     * \note
+     * This method is activated only if \p Stream satisfies piranha::is_msgpack_stream and the exponent type
+     * satisfies piranha::has_msgpack_pack.
+     *
+     * This method will pack into \p packer \p this. The packed monomial is a msgpack array, and each element
+     * of the array is packed via piranha::msgpack_pack().
+     *
+     * @param[in] packer the target packer.
+     * @param[in] f the serialization format.
+     * @param[in] s reference arguments set.
+     *
+     * @throws std::invalid_argument if the sizes of \p s and \p this differ.
+     * @throws unspecified any exception thrown by:
+     * - <tt>msgpack::packer::pack_array()</tt>,
+     * - piranha::msgpack_pack() or piranha::safe_cast().
+     */
     template <typename Stream, msgpack_pack_enabler<Stream> = 0>
     void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
     {
@@ -1122,6 +1140,26 @@ public:
             piranha::msgpack_pack(packer, *it, f);
         }
     }
+    /// Deserialize from msgpack object.
+    /**
+     * \note
+     * This method is activated only if the exponent type satisfies piranha::has_msgpack_convert.
+     *
+     * This method will deserialize \p o into \p this. \p o is assumed to contain an array of msgpack objects,
+     * representing the exponents of the monomial. Each array element is deserialized via piranha::msgpack_convert().
+     *
+     * In case of errors during deserialization, this method provides the basic exception safety guarantee.
+     *
+     * @param[in] o msgpack object that will be deserialized.
+     * @param[in] f serialization format.
+     * @param[in] s reference arguments set.
+     *
+     * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
+     * @throws unspecified any exception thrown by:
+     * - resize() or the default constructor of \p T,
+     * - <tt>msgpack::object::convert()</tt>,
+     * - piranha::safe_cast() and piranha::msgpack_convert().
+     */
     template <typename U = T, msgpack_convert_enabler<U> = 0>
     void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
     {
@@ -1137,7 +1175,7 @@ public:
         resize(safe_cast<typename base::size_type>(tmp.size()));
         std::transform(tmp.begin(), tmp.end(), this->begin(), [f](const msgpack::object &o) -> T {
             T t;
-            msgpack_unpack(t, o, f);
+            msgpack_convert(t, o, f);
             return t;
         });
     }
