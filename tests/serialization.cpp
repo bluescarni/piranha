@@ -31,43 +31,299 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE serialization_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/mpl/bool.hpp>
+#include <cstddef>
 #include <sstream>
+#include <type_traits>
 
 #include "../src/config.hpp"
 #include "../src/init.hpp"
 
 using namespace piranha;
 
+struct unserial {};
+
+// A good saving archive.
+struct sa0
+{
+    using self_t = sa0;
+    using is_loading = boost::mpl::bool_<false>;
+    using is_saving = boost::mpl::bool_<true>;
+    // Disable serialization for struct unserial.
+    template <typename T, typename std::enable_if<!std::is_same<T,unserial>::value,int>::type = 0>
+    self_t &operator<<(const T &);
+    template <typename T>
+    self_t &operator&(const T &);
+    template <typename T>
+    void save_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+};
+
+// Missing methods.
+struct sa1
+{
+    using self_t = sa1;
+    using is_loading = boost::mpl::bool_<false>;
+    using is_saving = boost::mpl::bool_<true>;
+    template <typename T>
+    self_t &operator<<(const T &);
+    template <typename T>
+    self_t &operator&(const T &);
+    template <typename T>
+    void save_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    // template <typename Helper>
+    // void get_helper(void * const = nullptr) const;
+};
+
+struct sa2
+{
+    using self_t = sa2;
+    // using is_loading = boost::mpl::bool_<false>;
+    using is_saving = boost::mpl::bool_<true>;
+    template <typename T>
+    self_t &operator<<(const T &);
+    template <typename T>
+    self_t &operator&(const T &);
+    template <typename T>
+    void save_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+};
+
+struct sa3
+{
+    using self_t = sa3;
+    using is_loading = boost::mpl::bool_<true>;
+    using is_saving = boost::mpl::bool_<true>;
+    template <typename T>
+    self_t &operator<<(const T &);
+    template <typename T>
+    self_t &operator&(const T &);
+    template <typename T>
+    void save_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+};
+
+struct sa4
+{
+    using self_t = sa4;
+    using is_loading = boost::mpl::bool_<false>;
+    using is_saving = boost::mpl::bool_<true>;
+    template <typename T>
+    self_t &operator<<(const T &);
+    template <typename T>
+    self_t &operator&(const T &);
+    template <typename T>
+    void save_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version();
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+};
+
+// A good loading archive.
+struct la0
+{
+    using self_t = la0;
+    using is_loading = boost::mpl::bool_<true>;
+    using is_saving = boost::mpl::bool_<false>;
+    // Disable serialization for struct unserial.
+    template <typename T, typename std::enable_if<!std::is_same<T,unserial>::value,int>::type = 0>
+    self_t &operator>>(T &);
+    template <typename T>
+    self_t &operator&(T &);
+    template <typename T>
+    void load_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+    template <typename T>
+    void reset_object_address(T *, T *);
+    void delete_created_pointers();
+};
+
+struct la1
+{
+    using self_t = la1;
+    using is_loading = boost::mpl::bool_<true>;
+    using is_saving = boost::mpl::bool_<false>;
+    // template <typename T, typename std::enable_if<!std::is_same<T,unserial>::value,int>::type = 0>
+    // self_t &operator>>(T &);
+    template <typename T>
+    self_t &operator&(T &);
+    template <typename T>
+    void load_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+    template <typename T>
+    void reset_object_address(T *, T *);
+    void delete_created_pointers();
+};
+
+struct la2
+{
+    using self_t = la2;
+    using is_loading = boost::mpl::bool_<true>;
+    using is_saving = boost::mpl::bool_<false>;
+    template <typename T, typename std::enable_if<!std::is_same<T,unserial>::value,int>::type = 0>
+    self_t &operator>>(T &);
+    template <typename T>
+    void operator&(T &);
+    template <typename T>
+    void load_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+    template <typename T>
+    void reset_object_address(T *, T *);
+    void delete_created_pointers();
+};
+
+struct la3
+{
+    using self_t = la3;
+    using is_loading = boost::mpl::bool_<true>;
+    using is_saving = boost::mpl::bool_<false>;
+    template <typename T, typename std::enable_if<!std::is_same<T,unserial>::value,int>::type = 0>
+    self_t &operator>>(T &);
+    template <typename T>
+    self_t &operator&(T &);
+    template <typename T>
+    void load_binary(T *, std::size_t);
+    // template <typename T>
+    // void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+    template <typename T>
+    void reset_object_address(T *, T *);
+    void delete_created_pointers();
+};
+
+struct la4
+{
+    using self_t = la4;
+    using is_loading = boost::mpl::bool_<true>;
+    using is_saving = boost::mpl::bool_<false>;
+    template <typename T, typename std::enable_if<!std::is_same<T,unserial>::value,int>::type = 0>
+    self_t &operator>>(T &);
+    template <typename T>
+    self_t &operator&(T &);
+    template <typename T>
+    void load_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+    template <typename T>
+    void reset_object_address(T *, T *);
+    //void delete_created_pointers();
+};
+
+struct la5
+{
+    using self_t = la5;
+    using is_loading = boost::mpl::bool_<true>;
+    using is_saving = boost::mpl::bool_<false>;
+    template <typename T, typename std::enable_if<!std::is_same<T,unserial>::value,int>::type = 0>
+    self_t &operator>>(T &);
+    template <typename T>
+    self_t &operator&(T &);
+    template <typename T>
+    void load_binary(T *, std::size_t);
+    template <typename T>
+    void register_type();
+    unsigned get_library_version() const;
+    template <typename Helper>
+    void get_helper(void * const = nullptr) const;
+    // template <typename T>
+    // void reset_object_address(T *, T *);
+    void delete_created_pointers();
+};
+
 BOOST_AUTO_TEST_CASE(serialization_boost_test_tt)
 {
     init();
+    // Saving archive.
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,int *>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,int const *>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,int &&>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,const int &>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int &>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,const int &>::value));
     BOOST_CHECK((!is_boost_saving_archive<const boost::archive::binary_oarchive &,int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<const boost::archive::binary_oarchive,int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &&,int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive,int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &,int>::value));
     BOOST_CHECK((!is_boost_saving_archive<const boost::archive::text_oarchive &,int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &&,int>::value));
-    // --
+    // Loading archive.
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive,int *>::value));
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive,int &&>::value));
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive &&,int>::value));
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive &,int &>::value));
-    // BOOST_CHECK((!is_boost_loading_archive<boost::archive::binary_iarchive,const int &>::value));
-    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int>::value));
-    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int &>::value));
-    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,const int &>::value));
-    BOOST_CHECK((!is_boost_saving_archive<const boost::archive::binary_oarchive &,int>::value));
-    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &&,int>::value));
-    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive,int>::value));
-    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &,int>::value));
-    BOOST_CHECK((!is_boost_saving_archive<const boost::archive::text_oarchive &,int>::value));
-    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &&,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive &,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive &,int &>::value));
+    BOOST_CHECK((!is_boost_loading_archive<const boost::archive::binary_iarchive &,int &>::value));
+    BOOST_CHECK((!is_boost_loading_archive<boost::archive::binary_iarchive &,const int &>::value));
+    BOOST_CHECK((!is_boost_loading_archive<boost::archive::binary_iarchive,const int &>::value));
+    BOOST_CHECK((!is_boost_loading_archive<const boost::archive::binary_iarchive &,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive &&,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::text_iarchive,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::text_iarchive &,int>::value));
+    BOOST_CHECK((!is_boost_loading_archive<const boost::archive::text_iarchive &,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::text_iarchive &&,int>::value));
+    // Test custom archives.
+    BOOST_CHECK((is_boost_saving_archive<sa0,int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<sa0,unserial>::value));
+    BOOST_CHECK((!is_boost_saving_archive<sa1,int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<sa2,int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<sa3,int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<sa4,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<la0,int>::value));
+    BOOST_CHECK((!is_boost_loading_archive<la0,unserial>::value));
+    BOOST_CHECK((!is_boost_loading_archive<la1,int>::value));
+    BOOST_CHECK((!is_boost_loading_archive<la2,int>::value));
+    BOOST_CHECK((!is_boost_loading_archive<la3,int>::value));
+    BOOST_CHECK((!is_boost_loading_archive<la4,int>::value));
+    BOOST_CHECK((!is_boost_loading_archive<la5,int>::value));
+    // Serialization funcs type traits.
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive,int>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive,int &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive,const int &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &,const int &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &&,const int &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive const &,const int &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive const,const int &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive,wchar_t>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive,int>::value));
 }
 
 #if defined(PIRANHA_ENABLE_MSGPACK)

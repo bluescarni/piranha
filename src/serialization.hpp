@@ -44,8 +44,10 @@ see https://www.gnu.org/licenses/. */
 #include <boost/serialization/string.hpp>
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 #include "detail/sfinae_types.hpp"
+#include "type_traits.hpp"
 
 // Serialization todo:
 // - provide alternative overloads of the serialization methods
@@ -100,11 +102,33 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-template <typename Archive, typename T>
-class is_boost_saving_archive: detail::sfinae_types
+namespace detail
 {
-    // Const pointer to T, after removing top level const and reference qualifiers.
-    using Tcp = typename std::remove_reference<typename std::remove_const<T>::type>::type const *;
+
+// Scalar types directly supported by the all serialization libraries.
+template <typename T>
+struct is_serialization_scalar
+    : std::integral_constant<bool, std::is_same<char, T>::value || std::is_same<signed char, T>::value
+                                       || std::is_same<unsigned char, T>::value || std::is_same<short, T>::value
+                                       || std::is_same<unsigned short, T>::value || std::is_same<int, T>::value
+                                       || std::is_same<unsigned, T>::value || std::is_same<long, T>::value
+                                       || std::is_same<unsigned long, T>::value || std::is_same<long long, T>::value
+                                       || std::is_same<unsigned long long, T>::value || std::is_same<float, T>::value
+                                       || std::is_same<double, T>::value> {
+};
+}
+
+/// Detect Boost saving archives.
+/**
+ * This type trait will be \p true if \p Archive is a valid Boost saving archive for type \p T,
+ * \p false otherwise. The Boost saving archive concept is described at
+ * http://www.boost.org/doc/libs/1_61_0/libs/serialization/doc/archives.html.
+ */
+template <typename Archive, typename T>
+class is_boost_saving_archive : detail::sfinae_types
+{
+    // Pointer to type T, after reference removal.
+    using Tp = typename std::remove_reference<T>::type *;
     template <typename A1>
     static typename A1::is_saving test0(const A1 &);
     static no test0(...);
@@ -118,49 +142,54 @@ class is_boost_saving_archive: detail::sfinae_types
     static auto test3(A1 &a, const T1 &x) -> decltype(a & x);
     static no test3(...);
     template <typename A1, typename T1>
-    static auto test4(A1 &a, const T1 *p, std::size_t count) -> decltype(a.save_binary(p,count),void(),yes());
+    static auto test4(A1 &a, T1 *p, std::size_t count) -> decltype(a.save_binary(p, count), void(), yes());
     static no test4(...);
     template <typename A1, typename T1>
-    static auto test5(A1 &a, const T1 &) -> decltype(a.template register_type<T1>(),void(),yes());
+    static auto test5(A1 &a, const T1 &) -> decltype(a.template register_type<T1>(), void(), yes());
     static no test5(...);
-    template <typename A1, typename T1>
-    static auto test6(A1 &a, const T1 *p) -> decltype(a.register_type(p),void(),yes());
-    static no test6(...);
     template <typename A1>
     static auto test7(const A1 &a) -> decltype(a.get_library_version());
     static no test7(...);
-    struct helper {};
+    struct helper {
+    };
     template <typename A1>
-    static auto test8(A1 &a) -> decltype(a.template get_helper<helper>(),void(),yes());
+    static auto test8(A1 &a) -> decltype(a.template get_helper<helper>(), void(), yes());
     static no test8(...);
     template <typename A1>
-    static auto test9(A1 &a) -> decltype(a.template get_helper<helper>(static_cast<void * const>(nullptr)),
-        void(),yes());
+    static auto test9(A1 &a)
+        -> decltype(a.template get_helper<helper>(static_cast<void *const>(nullptr)), void(), yes());
     static no test9(...);
-    static const bool implementation_defined =
-        std::is_same<boost::mpl::bool_<true>,decltype(test0(std::declval<Archive>()))>::value &&
-        std::is_same<boost::mpl::bool_<false>,decltype(test1(std::declval<Archive>()))>::value &&
-        std::is_same<Archive &,decltype(test2(std::declval<Archive &>(),std::declval<T>()))>::value &&
-        std::is_same<Archive &,decltype(test3(std::declval<Archive &>(),std::declval<T>()))>::value &&
-        std::is_same<yes,decltype(test4(std::declval<Archive &>(),std::declval<Tcp>(),0u))>::value &&
-        std::is_same<yes,decltype(test5(std::declval<Archive &>(),std::declval<T>()))>::value &&
-        std::is_same<yes,decltype(test6(std::declval<Archive &>(),std::declval<Tcp>()))>::value &&
-        // NOTE: the docs here mention that get_library_version() is supposed to return an unsigned integral
-        // type, but the boost archives apparently return a type which is implicitly convertible to some
-        // unsigned int. This seems to work and it should cover also the cases in which the return type
-        // is a real unsigned int.
-        std::is_convertible<decltype(test7(std::declval<Archive>())),unsigned long long>::value &&
-        std::is_same<decltype(test8(std::declval<Archive &>())),yes>::value &&
-        std::is_same<decltype(test9(std::declval<Archive &>())),yes>::value;
+    static const bool implementation_defined
+        = std::is_same<boost::mpl::bool_<true>, decltype(test0(std::declval<Archive>()))>::value
+          && std::is_same<boost::mpl::bool_<false>, decltype(test1(std::declval<Archive>()))>::value
+          && std::is_same<Archive &, decltype(test2(std::declval<Archive &>(), std::declval<T>()))>::value
+          && std::is_same<Archive &, decltype(test3(std::declval<Archive &>(), std::declval<T>()))>::value
+          && std::is_same<yes, decltype(test4(std::declval<Archive &>(), std::declval<Tp>(), 0u))>::value
+          && std::is_same<yes, decltype(test5(std::declval<Archive &>(), std::declval<T>()))>::value &&
+          // NOTE: the docs here mention that get_library_version() is supposed to return an unsigned integral
+          // type, but the boost archives apparently return a type which is implicitly convertible to some
+          // unsigned int. This seems to work and it should cover also the cases in which the return type
+          // is a real unsigned int.
+          std::is_convertible<decltype(test7(std::declval<Archive>())), unsigned long long>::value
+          && std::is_same<decltype(test8(std::declval<Archive &>())), yes>::value
+          && std::is_same<decltype(test9(std::declval<Archive &>())), yes>::value;
+
 public:
+    /// Value of the type trait.
     static const bool value = implementation_defined;
 };
 
 template <typename Archive, typename T>
-const bool is_boost_saving_archive<Archive,T>::value;
+const bool is_boost_saving_archive<Archive, T>::value;
 
+/// Detect Boost loading archives.
+/**
+ * This type trait will be \p true if \p Archive is a valid Boost loading archive for type \p T,
+ * \p false otherwise. The Boost loading archive concept is described at
+ * http://www.boost.org/doc/libs/1_61_0/libs/serialization/doc/archives.html.
+ */
 template <typename Archive, typename T>
-class is_boost_loading_archive: detail::sfinae_types
+class is_boost_loading_archive : detail::sfinae_types
 {
     // Pointer to T, after removing reference qualifiers.
     using Tp = typename std::remove_reference<T>::type *;
@@ -177,43 +206,110 @@ class is_boost_loading_archive: detail::sfinae_types
     static auto test3(A1 &a, T1 &x) -> decltype(a & x);
     static no test3(...);
     template <typename A1, typename T1>
-    static auto test4(A1 &a, T1 *p, std::size_t count) -> decltype(a.load_binary(p,count),void(),yes());
+    static auto test4(A1 &a, T1 *p, std::size_t count) -> decltype(a.load_binary(p, count), void(), yes());
     static no test4(...);
     template <typename A1, typename T1>
-    static auto test5(A1 &a, const T1 &) -> decltype(a.template register_type<T1>(),void(),yes());
+    static auto test5(A1 &a, const T1 &) -> decltype(a.template register_type<T1>(), void(), yes());
     static no test5(...);
-    template <typename A1, typename T1>
-    static auto test6(A1 &a, T1 *p) -> decltype(a.register_type(p),void(),yes());
-    static no test6(...);
     template <typename A1>
     static auto test7(const A1 &a) -> decltype(a.get_library_version());
     static no test7(...);
-    struct helper {};
+    struct helper {
+    };
     template <typename A1>
-    static auto test8(A1 &a) -> decltype(a.template get_helper<helper>(),void(),yes());
+    static auto test8(A1 &a) -> decltype(a.template get_helper<helper>(), void(), yes());
     static no test8(...);
     template <typename A1>
-    static auto test9(A1 &a) -> decltype(a.template get_helper<helper>(static_cast<void * const>(nullptr)),
-        void(),yes());
+    static auto test9(A1 &a)
+        -> decltype(a.template get_helper<helper>(static_cast<void *const>(nullptr)), void(), yes());
     static no test9(...);
-    static const bool implementation_defined =
-        std::is_same<boost::mpl::bool_<false>,decltype(test0(std::declval<Archive>()))>::value &&
-        std::is_same<boost::mpl::bool_<true>,decltype(test1(std::declval<Archive>()))>::value &&
-        std::is_same<Archive &,decltype(test2(std::declval<Archive &>(),std::declval<T &>()))>::value &&
-        std::is_same<Archive &,decltype(test3(std::declval<Archive &>(),std::declval<T &>()))>::value &&
-        std::is_same<yes,decltype(test4(std::declval<Archive &>(),std::declval<Tp>(),0u))>::value &&
-        std::is_same<yes,decltype(test5(std::declval<Archive &>(),std::declval<T>()))>::value &&
-        std::is_same<yes,decltype(test6(std::declval<Archive &>(),std::declval<Tp>()))>::value /*&&
-        std::is_convertible<decltype(test7(std::declval<Archive>())),unsigned long long>::value &&
-        std::is_same<decltype(test8(std::declval<Archive &>())),yes>::value &&
-        std::is_same<decltype(test9(std::declval<Archive &>())),yes>::value*/;
+    template <typename A1, typename T1>
+    static auto test10(A1 &a, T1 *v, T1 *u) -> decltype(a.reset_object_address(v, u), void(), yes());
+    static no test10(...);
+    template <typename A1>
+    static auto test11(A1 &a) -> decltype(a.delete_created_pointers(), void(), yes());
+    static no test11(...);
+    static const bool implementation_defined
+        = std::is_same<boost::mpl::bool_<false>, decltype(test0(std::declval<Archive>()))>::value
+          && std::is_same<boost::mpl::bool_<true>, decltype(test1(std::declval<Archive>()))>::value
+          && std::is_same<Archive &, decltype(test2(std::declval<Archive &>(), std::declval<T &>()))>::value
+          && std::is_same<Archive &, decltype(test3(std::declval<Archive &>(), std::declval<T &>()))>::value
+          && std::is_same<yes, decltype(test4(std::declval<Archive &>(), std::declval<Tp>(), 0u))>::value
+          && std::is_same<yes, decltype(test5(std::declval<Archive &>(), std::declval<T>()))>::value
+          && std::is_convertible<decltype(test7(std::declval<Archive>())), unsigned long long>::value
+          && std::is_same<decltype(test8(std::declval<Archive &>())), yes>::value
+          && std::is_same<decltype(test9(std::declval<Archive &>())), yes>::value
+          && std::is_same<decltype(test10(std::declval<Archive &>(), std::declval<Tp>(), std::declval<Tp>())),
+                          yes>::value
+          && std::is_same<decltype(test11(std::declval<Archive &>())), yes>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename Archive, typename T>
+const bool is_boost_loading_archive<Archive, T>::value;
+
+template <typename Archive, typename T, typename = void>
+class boost_save_impl
+{
+};
+
+namespace detail
+{
+
+// Enabler for the arithmetic specialisation of boost_save().
+template <typename Archive, typename T>
+using boost_save_arithmetic_enabler =
+    // NOTE: the check for non-constness of Archive is implicit in the saving archive concept.
+    typename std::enable_if<is_boost_saving_archive<Archive, T>::value
+                            && (is_serialization_scalar<T>::value || std::is_same<T, long double>::value)>::type;
+}
+
+template <typename Archive, typename T>
+class boost_save_impl<Archive, T, detail::boost_save_arithmetic_enabler<Archive, T>>
+{
+public:
+    void operator()(Archive &ar, const T &x) const
+    {
+        ar << x;
+    }
+};
+
+namespace detail
+{
+
+// Enabler for boost_save().
+template <typename Archive, typename T>
+using boost_save_enabler =
+    typename std::enable_if<is_boost_saving_archive<Archive, T>::value
+                                && detail::true_tt<decltype(boost_save_impl<Archive, T>{}(
+                                       std::declval<Archive &>(), std::declval<const T &>()))>::value,
+                            int>::type;
+}
+
+template <typename Archive, typename T, detail::boost_save_enabler<Archive, T> = 0>
+void boost_save(Archive &ar, const T &x)
+{
+    boost_save_impl<Archive, T>{}(ar, x);
+}
+
+template <typename Archive, typename T>
+class has_boost_save : detail::sfinae_types
+{
+    template <typename A1, typename T1>
+    static auto test(A1 &a, const T1 &x) -> decltype(piranha::boost_save(a, x), void(), yes());
+    static no test(...);
+    static const bool implementation_defined
+        = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<const T &>()))>::value;
+
 public:
     static const bool value = implementation_defined;
 };
 
 template <typename Archive, typename T>
-const bool is_boost_loading_archive<Archive,T>::value;
-
+const bool has_boost_save<Archive, T>::value;
 }
 
 #include "config.hpp"
@@ -237,7 +333,6 @@ const bool is_boost_loading_archive<Archive,T>::value;
 #include <locale>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
 
 // NOTE: this needs to be eliminated in favour of including symbol_set.hpp directly in the future. The reason
 // it is here now is that the prototypes of the key serialization functions need the symbol_set type, but currently
@@ -247,25 +342,12 @@ const bool is_boost_loading_archive<Archive,T>::value;
 #include "detail/symbol_set_fwd.hpp"
 #include "exceptions.hpp"
 #include "is_key.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {
 
 namespace detail
 {
-
-// Scalar types directly supported by msgpack.
-template <typename T>
-struct is_msgpack_scalar
-    : std::integral_constant<bool, std::is_same<char, T>::value || std::is_same<signed char, T>::value
-                                       || std::is_same<unsigned char, T>::value || std::is_same<short, T>::value
-                                       || std::is_same<unsigned short, T>::value || std::is_same<int, T>::value
-                                       || std::is_same<unsigned, T>::value || std::is_same<long, T>::value
-                                       || std::is_same<unsigned long, T>::value || std::is_same<long long, T>::value
-                                       || std::is_same<unsigned long long, T>::value || std::is_same<float, T>::value
-                                       || std::is_same<double, T>::value> {
-};
 
 // Wrapper for std stream classes for use in msgpack. The reason for this wrapper is that msgpack expects
 // streams with a write(const char *, std::size_t) method, but in std streams the second param is std::streamsize
@@ -348,7 +430,7 @@ namespace detail
 
 template <typename Stream, typename T>
 using msgpack_scalar_enabler =
-    typename std::enable_if<is_msgpack_stream<Stream>::value && is_msgpack_scalar<T>::value>::type;
+    typename std::enable_if<is_msgpack_stream<Stream>::value && is_serialization_scalar<T>::value>::type;
 }
 
 /// Implementation of piranha::msgpack_pack() for fundamental C++ types supported by msgpack.
@@ -507,7 +589,7 @@ struct msgpack_convert_impl {
  * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
  */
 template <typename T>
-struct msgpack_convert_impl<T, typename std::enable_if<detail::is_msgpack_scalar<T>::value>::type> {
+struct msgpack_convert_impl<T, typename std::enable_if<detail::is_serialization_scalar<T>::value>::type> {
     /// Call operator.
     /**
      * @param[out] x the output value.
