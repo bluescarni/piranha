@@ -302,6 +302,9 @@ see https://www.gnu.org/licenses/. */
  * \todo safe_cast fixages: remove the dependency on mp_integer, fix the exception usage as explained above,
  * and once this is done check all uses of boost numeric_cast, which should now be replaceable by safe_cast.
  * Check also the fwd declaration usages (e.g., in serialization) which work around the current issues.
+ * \todo checkout the --enable-fat GMP build option - it looks like this is the way to go for a generic GMP lib
+ * for binary windows distributions.
+ * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
  */
 namespace piranha
 {
