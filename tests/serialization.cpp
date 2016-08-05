@@ -38,14 +38,30 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-using msgpack::packer;
-using msgpack::sbuffer;
-
 BOOST_AUTO_TEST_CASE(serialization_boost_test_tt)
 {
     init();
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,int &&>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive,const int &>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int &>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,const int &>::value));
+    BOOST_CHECK((!is_boost_saving_archive<const boost::archive::binary_oarchive &,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &&,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &,int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<const boost::archive::text_oarchive &,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &&,int>::value));
+    // --
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive,int &&>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive &&,int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive &,int &>::value));
+    // BOOST_CHECK((!is_boost_loading_archive<boost::archive::binary_iarchive,const int &>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,int &>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &,const int &>::value));
     BOOST_CHECK((!is_boost_saving_archive<const boost::archive::binary_oarchive &,int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive &&,int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive,int>::value));
@@ -81,6 +97,9 @@ BOOST_AUTO_TEST_CASE(serialization_boost_test_tt)
 #include "../src/config.hpp"
 #include "../src/is_key.hpp"
 #include "../src/symbol_set.hpp"
+
+using msgpack::packer;
+using msgpack::sbuffer;
 
 using integral_types = boost::mpl::vector<char, signed char, short, int, long, long long, unsigned char, unsigned short,
                                           unsigned, unsigned long, unsigned long long>;

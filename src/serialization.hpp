@@ -129,6 +129,14 @@ class is_boost_saving_archive: detail::sfinae_types
     template <typename A1>
     static auto test7(const A1 &a) -> decltype(a.get_library_version());
     static no test7(...);
+    struct helper {};
+    template <typename A1>
+    static auto test8(A1 &a) -> decltype(a.template get_helper<helper>(),void(),yes());
+    static no test8(...);
+    template <typename A1>
+    static auto test9(A1 &a) -> decltype(a.template get_helper<helper>(static_cast<void * const>(nullptr)),
+        void(),yes());
+    static no test9(...);
     static const bool implementation_defined =
         std::is_same<boost::mpl::bool_<true>,decltype(test0(std::declval<Archive>()))>::value &&
         std::is_same<boost::mpl::bool_<false>,decltype(test1(std::declval<Archive>()))>::value &&
@@ -141,13 +149,70 @@ class is_boost_saving_archive: detail::sfinae_types
         // type, but the boost archives apparently return a type which is implicitly convertible to some
         // unsigned int. This seems to work and it should cover also the cases in which the return type
         // is a real unsigned int.
-        std::is_convertible<decltype(test7(std::declval<Archive>())),unsigned long long>::value;
+        std::is_convertible<decltype(test7(std::declval<Archive>())),unsigned long long>::value &&
+        std::is_same<decltype(test8(std::declval<Archive &>())),yes>::value &&
+        std::is_same<decltype(test9(std::declval<Archive &>())),yes>::value;
 public:
     static const bool value = implementation_defined;
 };
 
 template <typename Archive, typename T>
 const bool is_boost_saving_archive<Archive,T>::value;
+
+template <typename Archive, typename T>
+class is_boost_loading_archive: detail::sfinae_types
+{
+    // Pointer to T, after removing reference qualifiers.
+    using Tp = typename std::remove_reference<T>::type *;
+    template <typename A1>
+    static typename A1::is_saving test0(const A1 &);
+    static no test0(...);
+    template <typename A1>
+    static typename A1::is_loading test1(const A1 &);
+    static no test1(...);
+    template <typename A1, typename T1>
+    static auto test2(A1 &a, T1 &x) -> decltype(a >> x);
+    static no test2(...);
+    template <typename A1, typename T1>
+    static auto test3(A1 &a, T1 &x) -> decltype(a & x);
+    static no test3(...);
+    template <typename A1, typename T1>
+    static auto test4(A1 &a, T1 *p, std::size_t count) -> decltype(a.load_binary(p,count),void(),yes());
+    static no test4(...);
+    template <typename A1, typename T1>
+    static auto test5(A1 &a, const T1 &) -> decltype(a.template register_type<T1>(),void(),yes());
+    static no test5(...);
+    template <typename A1, typename T1>
+    static auto test6(A1 &a, T1 *p) -> decltype(a.register_type(p),void(),yes());
+    static no test6(...);
+    template <typename A1>
+    static auto test7(const A1 &a) -> decltype(a.get_library_version());
+    static no test7(...);
+    struct helper {};
+    template <typename A1>
+    static auto test8(A1 &a) -> decltype(a.template get_helper<helper>(),void(),yes());
+    static no test8(...);
+    template <typename A1>
+    static auto test9(A1 &a) -> decltype(a.template get_helper<helper>(static_cast<void * const>(nullptr)),
+        void(),yes());
+    static no test9(...);
+    static const bool implementation_defined =
+        std::is_same<boost::mpl::bool_<false>,decltype(test0(std::declval<Archive>()))>::value &&
+        std::is_same<boost::mpl::bool_<true>,decltype(test1(std::declval<Archive>()))>::value &&
+        std::is_same<Archive &,decltype(test2(std::declval<Archive &>(),std::declval<T &>()))>::value &&
+        std::is_same<Archive &,decltype(test3(std::declval<Archive &>(),std::declval<T &>()))>::value &&
+        std::is_same<yes,decltype(test4(std::declval<Archive &>(),std::declval<Tp>(),0u))>::value &&
+        std::is_same<yes,decltype(test5(std::declval<Archive &>(),std::declval<T>()))>::value &&
+        std::is_same<yes,decltype(test6(std::declval<Archive &>(),std::declval<Tp>()))>::value /*&&
+        std::is_convertible<decltype(test7(std::declval<Archive>())),unsigned long long>::value &&
+        std::is_same<decltype(test8(std::declval<Archive &>())),yes>::value &&
+        std::is_same<decltype(test9(std::declval<Archive &>())),yes>::value*/;
+public:
+    static const bool value = implementation_defined;
+};
+
+template <typename Archive, typename T>
+const bool is_boost_loading_archive<Archive,T>::value;
 
 }
 
