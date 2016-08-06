@@ -47,9 +47,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "detail/sfinae_types.hpp"
-#include "detail/symbol_set_fwd.hpp"
-#include "print_coefficient.hpp"
-#include "print_tex_coefficient.hpp"
 
 namespace piranha
 {
