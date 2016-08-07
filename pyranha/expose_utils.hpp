@@ -118,9 +118,8 @@ inline bp::class_<T> expose_class()
         // NOTE: it is ok here and elsewhere to use c_str(), as PyErr_SetString will convert the second argument to a
         // Python
         // string object.
-        ::PyErr_SetString(
-            PyExc_RuntimeError,
-            ("the C++ type '" + piranha::detail::demangle(t_idx) + "' has already been exposed").c_str());
+        ::PyErr_SetString(PyExc_RuntimeError,
+                          ("the C++ type '" + piranha::detail::demangle(t_idx) + "' has already been exposed").c_str());
         bp::throw_error_already_set();
     }
     bp::class_<T> class_inst("_exposed_type_" + std::to_string(exposed_types_counter)).c_str(),
@@ -274,8 +273,7 @@ template <typename S, typename U>
 inline void generic_expose_lambdified()
 {
     using l_type = piranha::math::lambdified<S, U>;
-    bp::class_<l_type> class_inst(("_lambdified_" + std::to_string(lambdified_counter)).c_str(),
-                                  bp::no_init);
+    bp::class_<l_type> class_inst(("_lambdified_" + std::to_string(lambdified_counter)).c_str(), bp::no_init);
     // Expose copy/deepcopy.
     class_inst.def("__copy__", generic_copy_wrapper<l_type>);
     class_inst.def("__deepcopy__", generic_deepcopy_wrapper<l_type>);

@@ -58,9 +58,8 @@ bp::object type_generator::operator()() const
 {
     const auto it = et_map.find(m_t_idx);
     if (it == et_map.end()) {
-        ::PyErr_SetString(
-            PyExc_TypeError,
-            ("the type '" + piranha::detail::demangle(m_t_idx) + "' has not been exposed").c_str());
+        ::PyErr_SetString(PyExc_TypeError,
+                          ("the type '" + piranha::detail::demangle(m_t_idx) + "' has not been exposed").c_str());
         bp::throw_error_already_set();
     }
     return it->second;
@@ -95,8 +94,8 @@ type_generator generic_type_generator::operator()(bp::list l) const
     const auto it1 = gtg_map[m_name].find(v_t_idx);
     if (it1 == gtg_map[m_name].end()) {
         ::PyErr_SetString(PyExc_TypeError,
-                          ("the generic type generator '" + m_name
-                           + "' has not been instantiated with the type pack " + v_t_idx_to_str(v_t_idx))
+                          ("the generic type generator '" + m_name + "' has not been instantiated with the type pack "
+                           + v_t_idx_to_str(v_t_idx))
                               .c_str());
         bp::throw_error_already_set();
     }
