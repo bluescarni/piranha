@@ -1353,6 +1353,7 @@ inline void load_file_msgpack_impl(T &, const std::string &, data_format, compre
 
 #else
 
+// If msgpack is not available, just error out.
 template <typename T>
 inline void save_file_msgpack_impl(const T &, const std::string &, data_format, compression)
 {

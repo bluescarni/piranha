@@ -822,7 +822,7 @@ BOOST_AUTO_TEST_CASE(serialization_test_msgpack_float)
 
 #endif
 
-static const int ntrials_file = 10;
+static const int ntrials_file = 20;
 
 static const std::vector<data_format> dfs = {data_format::boost_binary, data_format::boost_portable,
                                              data_format::msgpack_binary, data_format::msgpack_portable};
