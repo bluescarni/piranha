@@ -35,6 +35,8 @@ see https://www.gnu.org/licenses/. */
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/config/suffix.hpp>
+#include <boost/iostreams/filter/bzip2.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/int.hpp>
 #include <boost/mpl/integral_c_tag.hpp>
@@ -43,10 +45,25 @@ see https://www.gnu.org/licenses/. */
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
 #include <cstddef>
+#include <fstream>
+#include <ios>
+#include <memory>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <utility>
 
+#include "detail/demangle.hpp"
 #include "detail/sfinae_types.hpp"
+// NOTE: this needs to be eliminated in favour of including symbol_set.hpp directly in the future. The reason
+// it is here now is that the prototypes of the key serialization functions need the symbol_set type, but currently
+// symbol_set.hpp includes serialization.hpp - hence circular dep. In the future, we'll remove the serialization
+// code from symbol_set (which will be serialized directly from series) and hence we will be able to include it from
+// here.
+#include "detail/symbol_set_fwd.hpp"
+#include "exceptions.hpp"
+#include "is_key.hpp"
+#include "safe_cast.hpp"
 #include "type_traits.hpp"
 
 // Serialization todo:
@@ -251,6 +268,11 @@ public:
 template <typename Archive, typename T>
 const bool is_boost_loading_archive<Archive, T>::value;
 
+/// Default implementation of piranha::boost_save().
+/**
+ * The default implementation does not define any call operator, and will thus result
+ * in a compile-time error if used.
+ */
 template <typename Archive, typename T, typename = void>
 class boost_save_impl
 {
@@ -263,14 +285,40 @@ namespace detail
 template <typename Archive, typename T>
 using boost_save_arithmetic_enabler =
     // NOTE: the check for non-constness of Archive is implicit in the saving archive concept.
+    // NOTE: here we are relying on the fact that the Archive class correctly advertises the capability
+    // to serialize arithmetic types. This is for instance *not* the case for Boost archives, which
+    // accept every type (at the signature level), but since here we are concerned only with arithmetic
+    // types (for which serialization is always available in Boost archives), it should not matter.
     typename std::enable_if<is_boost_saving_archive<Archive, T>::value
                             && (is_serialization_scalar<T>::value || std::is_same<T, long double>::value)>::type;
 }
 
+/// Specialisation of piranha::boost_save() for arithmetic types.
+/**
+ * \note
+ * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_saving_archive and
+ * \p T is either a floating-point type, or one of
+ * - \p char, <tt>signed char</tt>, or <tt>unsigned char</tt>,
+ * - \p int or <tt>unsigned</tt>,
+ * - \p long or <tt>unsigned long</tt>,
+ * - <tt>long long</tt> or <tt>unsigned long long</tt>.
+ */
 template <typename Archive, typename T>
 class boost_save_impl<Archive, T, detail::boost_save_arithmetic_enabler<Archive, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The body of this functions is equivalent to:
+     * @code
+     * ar << x;
+     * @endcode
+     *
+     * @param[in] ar target Boost saving archive.
+     * @param[in] x object to be saved.
+     *
+     * @throws unspecified any exception thrown by the stream operator of the archive.
+     */
     void operator()(Archive &ar, const T &x) const
     {
         ar << x;
@@ -289,12 +337,34 @@ using boost_save_enabler =
                             int>::type;
 }
 
+/// Save to Boost archive.
+/**
+ * \note
+ * This function is enabled only if \p Archive and \p T satisfy piranha::is_boost_saving_archive, and the expression
+ * <tt>boost_save_impl<Archive, T>{}(ar, x)</tt> is well-formed.
+ *
+ * This function will save to the Boost archive \p ar the object \p x. The implementation of this function is in
+ * the call operator of the piranha::boost_save_impl functor. The body of this function is equivalent to:
+ * @code
+ * boost_save_impl<Archive, T>{}(ar, x);
+ * @endcode
+ *
+ * @param[in] ar target Boost saving archive.
+ * @param[in] x object to be saved.
+ *
+ * @throws unspecified any exception thrown by the call operator of piranha::boost_save_impl.
+ */
 template <typename Archive, typename T, detail::boost_save_enabler<Archive, T> = 0>
-void boost_save(Archive &ar, const T &x)
+inline void boost_save(Archive &ar, const T &x)
 {
     boost_save_impl<Archive, T>{}(ar, x);
 }
 
+/// Detect the presence of piranha::boost_save().
+/**
+ * This type trait will be \p true if piranha::boost_save() can be called with template arguments \p Archive and
+ * \p T, \p false otherwise.
+ */
 template <typename Archive, typename T>
 class has_boost_save : detail::sfinae_types
 {
@@ -305,16 +375,184 @@ class has_boost_save : detail::sfinae_types
         = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<const T &>()))>::value;
 
 public:
+    /// Value of the type trait.
     static const bool value = implementation_defined;
 };
 
 template <typename Archive, typename T>
 const bool has_boost_save<Archive, T>::value;
+
+/// Default implementation of piranha::boost_load().
+/**
+ * The default implementation does not define any call operator, and will thus result
+ * in a compile-time error if used.
+ */
+template <typename Archive, typename T, typename = void>
+class boost_load_impl
+{
+};
+
+namespace detail
+{
+
+// Enabler for the arithmetic specialisation of boost_load().
+template <typename Archive, typename T>
+using boost_load_arithmetic_enabler =
+    typename std::enable_if<is_boost_loading_archive<Archive, T>::value
+                            && (is_serialization_scalar<T>::value || std::is_same<T, long double>::value)>::type;
+}
+
+/// Specialisation of piranha::boost_load() for arithmetic types.
+/**
+ * \note
+ * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_loading_archive and
+ * \p T is either a floating-point type, or one of
+ * - \p char, <tt>signed char</tt>, or <tt>unsigned char</tt>,
+ * - \p int or <tt>unsigned</tt>,
+ * - \p long or <tt>unsigned long</tt>,
+ * - <tt>long long</tt> or <tt>unsigned long long</tt>.
+ */
+template <typename Archive, typename T>
+class boost_load_impl<Archive, T, detail::boost_load_arithmetic_enabler<Archive, T>>
+{
+public:
+    /// Call operator.
+    /**
+     * The body of this functions is equivalent to:
+     * @code
+     * ar >> x;
+     * @endcode
+     *
+     * @param[in] ar a Boost loading archive.
+     * @param[in] x object to be loaded from \p ar.
+     *
+     * @throws unspecified any exception thrown by the stream operator of the archive.
+     */
+    void operator()(Archive &ar, T &x) const
+    {
+        ar >> x;
+    }
+};
+
+namespace detail
+{
+
+// Enabler for boost_load().
+template <typename Archive, typename T>
+using boost_load_enabler = typename std::enable_if<is_boost_loading_archive<Archive, T>::value
+                                                       && detail::true_tt<decltype(boost_load_impl<Archive, T>{}(
+                                                              std::declval<Archive &>(), std::declval<T &>()))>::value,
+                                                   int>::type;
+}
+
+/// Load from Boost archive.
+/**
+ * \note
+ * This function is enabled only if \p Archive and \p T satisfy piranha::is_boost_loading_archive, and the expression
+ * <tt>boost_load_impl<Archive, T>{}(ar, x)</tt> is well-formed.
+ *
+ * This function will load the object \p x from the Boost archive \p ar. The implementation of this function is in
+ * the call operator of the piranha::boost_load_impl functor. The body of this function is equivalent to:
+ * @code
+ * boost_load_impl<Archive, T>{}(ar, x);
+ * @endcode
+ *
+ * @param[in] ar a Boost loading archive.
+ * @param[in] x the object that will be loaded from \p ar.
+ *
+ * @throws unspecified any exception thrown by the call operator of piranha::boost_load_impl.
+ */
+template <typename Archive, typename T, detail::boost_load_enabler<Archive, T> = 0>
+inline void boost_load(Archive &ar, T &x)
+{
+    boost_load_impl<Archive, T>{}(ar, x);
+}
+
+/// Detect the presence of piranha::boost_load().
+/**
+ * This type trait will be \p true if piranha::boost_load() can be called with template arguments \p Archive and
+ * \p T, \p false otherwise.
+ */
+template <typename Archive, typename T>
+class has_boost_load : detail::sfinae_types
+{
+    template <typename A1, typename T1>
+    static auto test(A1 &a, T1 &x) -> decltype(piranha::boost_load(a, x), void(), yes());
+    static no test(...);
+    static const bool implementation_defined
+        = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<T &>()))>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename Archive, typename T>
+const bool has_boost_load<Archive, T>::value;
+
+/// Detect the presence of the <tt>boost_save()</tt> method in keys.
+/**
+ * This type trait will be \p true if \p Key
+ * provides a method compatible with the following signature:
+ * @code
+ * Key::boost_save(Archive &, const symbol_set &) const;
+ * @endcode
+ * The return type of the method is ignored by this type trait.
+ *
+ * If \p Key does not satisfy piranha::is_key, a compile-time error will be produced.
+ */
+template <typename Archive, typename Key>
+class key_has_boost_save : detail::sfinae_types
+{
+    PIRANHA_TT_CHECK(is_key, Key);
+    template <typename A1, typename Key1>
+    static auto test(A1 &a, const Key1 &k)
+        -> decltype(k.boost_save(a, std::declval<const symbol_set &>()), void(), yes());
+    static no test(...);
+    static const bool implementation_defined
+        = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<Key>()))>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename Archive, typename Key>
+const bool key_has_boost_save<Archive, Key>::value;
+
+/// Detect the presence of the <tt>boost_load()</tt> method in keys.
+/**
+ * This type trait will be \p true if \p Key
+ * provides a method compatible with the following signature:
+ * @code
+ * Key::boost_load(Archive &, const symbol_set &);
+ * @endcode
+ * The return type of the method is ignored by this type trait.
+ *
+ * If \p Key does not satisfy piranha::is_key, a compile-time error will be produced.
+ */
+template <typename Archive, typename Key>
+class key_has_boost_load : detail::sfinae_types
+{
+    PIRANHA_TT_CHECK(is_key, Key);
+    template <typename A1, typename Key1>
+    static auto test(A1 &a, Key1 &k) -> decltype(k.boost_load(a, std::declval<const symbol_set &>()), void(), yes());
+    static no test(...);
+    static const bool implementation_defined
+        = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<Key &>()))>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename Archive, typename Key>
+const bool key_has_boost_load<Archive, Key>::value;
 }
 
 #include "config.hpp"
 
-#if defined(PIRANHA_ENABLE_MSGPACK)
+#if defined(PIRANHA_WITH_MSGPACK)
 
 #include <msgpack.hpp>
 
@@ -326,22 +564,14 @@ const bool has_boost_save<Archive, T>::value;
 
 #include <algorithm>
 #include <array>
+#include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <ios>
+#include <iterator>
 #include <limits>
 #include <locale>
 #include <sstream>
-#include <stdexcept>
-
-// NOTE: this needs to be eliminated in favour of including symbol_set.hpp directly in the future. The reason
-// it is here now is that the prototypes of the key serialization functions need the symbol_set type, but currently
-// symbol_set.hpp includes serialization.hpp - hence circular dep. In the future, we'll remove the serialization
-// code from symbol_set (which will be serialized directly from series) and hence we will be able to include it from
-// here.
-#include "detail/symbol_set_fwd.hpp"
-#include "exceptions.hpp"
-#include "is_key.hpp"
 
 namespace piranha
 {
@@ -838,6 +1068,331 @@ template <typename Key>
 const bool key_has_msgpack_convert<Key>::value;
 }
 
-#endif // PIRANHA_ENABLE_MSGPACK
+#endif
+
+#if defined(PIRANHA_WITH_ZLIB)
+
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+
+#define PIRANHA_ZLIB_CONDITIONAL(expr) expr
+
+#else
+
+#define PIRANHA_ZLIB_CONDITIONAL(expr) piranha_throw(not_implemented_error, "zlib support is not enabled")
+
+#endif
+
+namespace piranha
+{
+
+/// Data format.
+enum class data_format {
+    /// Boost binary.
+    boost_binary,
+    /// Boost portable.
+    boost_portable,
+    /// msgpack binary.
+    msgpack_binary,
+    /// msgpack portable.
+    msgpack_portable
+};
+
+/// Compression format.
+enum class compression {
+    /// No compression.
+    none,
+    /// bzip2 compression.
+    bzip2,
+    /// gzip compression.
+    gzip,
+    /// zlib compression.
+    zlib
+};
+
+namespace detail
+{
+
+// NOTE: no need for ifdefs guards here, as the compression-specific stuff is hidden in the CompressionFilter type.
+template <typename CompressionFilter, typename T>
+inline void save_file_boost_compress_impl(const T &x, std::ofstream &ofile, data_format f)
+{
+    piranha_assert(f == data_format::boost_binary || f == data_format::boost_portable);
+    // NOTE: there seem to be 2 choices here: stream or streambuf. The first does some formatting, while the second
+    // one if "raw" but does not provide the stream interface (which is used, e.g., by msgpack). Since we always
+    // open files in binary mode (as suggested by the Boost serialization library), this should not matter in the end.
+    // Some resources:
+    // http://stackoverflow.com/questions/1753469/how-to-hook-up-boost-serialization-iostreams-to-serialize-gzip-an-object-to
+    // https://code.google.com/p/cloudobserver/wiki/TutorialsBoostIOstreams
+    // http://stackoverflow.com/questions/8116541/what-exactly-is-streambuf-how-do-i-use-it
+    // http://www.boost.org/doc/libs/1_46_1/libs/serialization/doc/special.html
+    boost::iostreams::filtering_ostream out;
+    out.push(CompressionFilter{});
+    out.push(ofile);
+    if (f == data_format::boost_binary) {
+        boost::archive::binary_oarchive oa(out);
+        boost_save(oa, x);
+    } else {
+        boost::archive::text_oarchive oa(out);
+        boost_save(oa, x);
+    }
+}
+
+// NOTE: the implementation is the specular of the above.
+template <typename DecompressionFilter, typename T>
+inline void load_file_boost_compress_impl(T &x, std::ifstream &ifile, data_format f)
+{
+    piranha_assert(f == data_format::boost_binary || f == data_format::boost_portable);
+    boost::iostreams::filtering_istream in;
+    in.push(DecompressionFilter{});
+    in.push(ifile);
+    if (f == data_format::boost_binary) {
+        boost::archive::binary_iarchive ia(in);
+        boost_load(ia, x);
+    } else {
+        boost::archive::text_iarchive ia(in);
+        boost_load(ia, x);
+    }
+}
+
+// Main save/load functions for Boost format.
+template <typename T, typename std::enable_if<has_boost_save<boost::archive::binary_oarchive, T>::value
+                                                  && has_boost_save<boost::archive::text_oarchive, T>::value,
+                                              int>::type
+                      = 0>
+inline void save_file_boost_impl(const T &x, const std::string &filename, data_format f, compression c)
+{
+    namespace bi = boost::iostreams;
+    // NOTE: always open in binary mode in order to avoid problems with special formatting in streams.
+    std::ofstream ofile(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (unlikely(!ofile.good())) {
+        piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for saving");
+    }
+    switch (c) {
+        case compression::bzip2:
+            save_file_boost_compress_impl<bi::bzip2_compressor>(x, ofile, f);
+            break;
+        case compression::gzip:
+            PIRANHA_ZLIB_CONDITIONAL(save_file_boost_compress_impl<bi::gzip_compressor>(x, ofile, f));
+            break;
+        case compression::zlib:
+            PIRANHA_ZLIB_CONDITIONAL(save_file_boost_compress_impl<bi::zlib_compressor>(x, ofile, f));
+            break;
+        case compression::none:
+            if (f == data_format::boost_binary) {
+                boost::archive::binary_oarchive oa(ofile);
+                boost_save(oa, x);
+            } else {
+                boost::archive::text_oarchive oa(ofile);
+                boost_save(oa, x);
+            }
+    }
+}
+
+template <typename T, typename std::enable_if<!has_boost_save<boost::archive::binary_oarchive, T>::value
+                                                  || !has_boost_save<boost::archive::text_oarchive, T>::value,
+                                              int>::type
+                      = 0>
+inline void save_file_boost_impl(const T &, const std::string &, data_format, compression)
+{
+    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support serialization via Boost");
+}
+
+template <typename T, typename std::enable_if<has_boost_load<boost::archive::binary_iarchive, T>::value
+                                                  && has_boost_load<boost::archive::text_iarchive, T>::value,
+                                              int>::type
+                      = 0>
+inline void load_file_boost_impl(T &x, const std::string &filename, data_format f, compression c)
+{
+    namespace bi = boost::iostreams;
+    std::ifstream ifile(filename, std::ios::in | std::ios::binary);
+    if (unlikely(!ifile.good())) {
+        piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for loading");
+    }
+    switch (c) {
+        case compression::bzip2:
+            load_file_boost_compress_impl<bi::bzip2_decompressor>(x, ifile, f);
+            break;
+        case compression::gzip:
+            PIRANHA_ZLIB_CONDITIONAL(load_file_boost_compress_impl<bi::gzip_decompressor>(x, ifile, f));
+            break;
+        case compression::zlib:
+            PIRANHA_ZLIB_CONDITIONAL(load_file_boost_compress_impl<bi::zlib_decompressor>(x, ifile, f));
+            break;
+        case compression::none:
+            if (f == data_format::boost_binary) {
+                boost::archive::binary_iarchive ia(ifile);
+                boost_load(ia, x);
+            } else {
+                boost::archive::text_iarchive ia(ifile);
+                boost_load(ia, x);
+            }
+    }
+}
+
+template <typename T, typename std::enable_if<!has_boost_load<boost::archive::binary_iarchive, T>::value
+                                                  || !has_boost_load<boost::archive::text_iarchive, T>::value,
+                                              int>::type
+                      = 0>
+inline void load_file_boost_impl(T &, const std::string &, data_format, compression)
+{
+    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support deserialization via Boost");
+}
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+// Compressed load/save for msgpack.
+template <typename CompressionFilter, typename T>
+inline void save_file_msgpack_compress_impl(const T &x, msgpack_stream_wrapper<std::ofstream> &ofile, msgpack_format mf)
+{
+    msgpack_stream_wrapper<boost::iostreams::filtering_ostream> out;
+    out.push(CompressionFilter{});
+    out.push(ofile);
+    msgpack::packer<decltype(out)> packer(out);
+    msgpack_pack(packer, x, mf);
+}
+
+template <typename DecompressionFilter, typename T>
+inline void load_file_msgpack_compress_impl(T &x, const std::string &filename, msgpack_format mf)
+{
+    std::ifstream ifile(filename, std::ios::in | std::ios::binary);
+    if (unlikely(!ifile.good())) {
+        piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for loading");
+    }
+    std::vector<char> vchar;
+    boost::iostreams::filtering_istream in;
+    in.push(DecompressionFilter{});
+    in.push(ifile);
+    std::copy(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>(), std::back_inserter(vchar));
+    auto oh = msgpack::unpack(vchar.data(), boost::numeric_cast<std::size_t>(vchar.size()));
+    msgpack_convert(x, oh.get(), mf);
+}
+
+// Main msgpack load/save functions.
+template <typename T,
+          typename std::enable_if<has_msgpack_pack<msgpack_stream_wrapper<std::ofstream>, T>::value
+                                      && has_msgpack_pack<msgpack_stream_wrapper<boost::iostreams::filtering_ostream>,
+                                                          T>::value,
+                                  int>::type
+          = 0>
+inline void save_file_msgpack_impl(const T &x, const std::string &filename, data_format f, compression c)
+{
+    namespace bi = boost::iostreams;
+    const auto mf = (f == data_format::msgpack_binary) ? msgpack_format::binary : msgpack_format::portable;
+    msgpack_stream_wrapper<std::ofstream> ofile(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (unlikely(!ofile.good())) {
+        piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for saving");
+    }
+    switch (c) {
+        case compression::bzip2:
+            save_file_msgpack_compress_impl<bi::bzip2_compressor>(x, ofile, mf);
+            break;
+        case compression::gzip:
+            PIRANHA_ZLIB_CONDITIONAL(save_file_msgpack_compress_impl<bi::gzip_compressor>(x, ofile, mf));
+            break;
+        case compression::zlib:
+            PIRANHA_ZLIB_CONDITIONAL(save_file_msgpack_compress_impl<bi::zlib_compressor>(x, ofile, mf));
+            break;
+        case compression::none: {
+            msgpack::packer<decltype(ofile)> packer(ofile);
+            msgpack_pack(packer, x, mf);
+        }
+    }
+}
+
+template <typename T,
+          typename std::enable_if<!has_msgpack_pack<msgpack_stream_wrapper<std::ofstream>, T>::value
+                                      || !has_msgpack_pack<msgpack_stream_wrapper<boost::iostreams::filtering_ostream>,
+                                                           T>::value,
+                                  int>::type
+          = 0>
+inline void save_file_msgpack_impl(const T &, const std::string &, data_format, compression)
+{
+    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support serialization via msgpack");
+}
+
+template <typename T, typename std::enable_if<has_msgpack_convert<T>::value, int>::type = 0>
+inline void load_file_msgpack_impl(T &x, const std::string &filename, data_format f, compression c)
+{
+    namespace bi = boost::iostreams;
+    const auto mf = (f == data_format::msgpack_binary) ? msgpack_format::binary : msgpack_format::portable;
+    switch (c) {
+        case compression::bzip2:
+            load_file_msgpack_compress_impl<bi::bzip2_decompressor>(x, filename, mf);
+            break;
+        case compression::gzip:
+            PIRANHA_ZLIB_CONDITIONAL(load_file_msgpack_compress_impl<bi::gzip_decompressor>(x, filename, mf));
+            break;
+        case compression::zlib:
+            PIRANHA_ZLIB_CONDITIONAL(load_file_msgpack_compress_impl<bi::zlib_decompressor>(x, filename, mf));
+            break;
+        case compression::none: {
+            // NOTE: two-stage construction for exception handling.
+            std::unique_ptr<bi::mapped_file> mmap;
+            try {
+                mmap.reset(new bi::mapped_file(filename, bi::mapped_file::readonly));
+            } catch (...) {
+                // NOTE: this is just to beautify a bit the error message, and we assume any error in the line
+                // above results from being unable to open the file.
+                piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for loading");
+            }
+            if (unlikely(!mmap->is_open())) {
+                piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for loading");
+            }
+            auto oh = msgpack::unpack(mmap->const_data(), boost::numeric_cast<std::size_t>(mmap->size()));
+            msgpack_convert(x, oh.get(), mf);
+        }
+    }
+}
+
+template <typename T, typename std::enable_if<!has_msgpack_convert<T>::value, int>::type = 0>
+inline void load_file_msgpack_impl(T &, const std::string &, data_format, compression)
+{
+    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support deserialization via msgpack");
+}
+
+#else
+
+template <typename T>
+inline void save_file_msgpack_impl(const T &, const std::string &, data_format, compression)
+{
+    piranha_throw(not_implemented_error, "msgpack support is not enabled");
+}
+
+template <typename T>
+inline void load_file_msgpack_impl(T &, const std::string &, data_format, compression)
+{
+    piranha_throw(not_implemented_error, "msgpack support is not enabled");
+}
+
+#endif
+
+// General enabler for load_file().
+template <typename T>
+using load_file_enabler = typename std::enable_if<!std::is_const<T>::value, int>::type;
+}
+
+template <typename T>
+inline void save_file(const T &x, const std::string &filename, data_format f, compression c)
+{
+    if (f == data_format::boost_binary || f == data_format::boost_portable) {
+        detail::save_file_boost_impl(x, filename, f, c);
+    } else if (f == data_format::msgpack_binary || f == data_format::msgpack_portable) {
+        detail::save_file_msgpack_impl(x, filename, f, c);
+    }
+}
+
+template <typename T, detail::load_file_enabler<T> = 0>
+inline void load_file(T &x, const std::string &filename, data_format f, compression c)
+{
+    if (f == data_format::boost_binary || f == data_format::boost_portable) {
+        detail::load_file_boost_impl(x, filename, f, c);
+    } else if (f == data_format::msgpack_binary || f == data_format::msgpack_portable) {
+        detail::load_file_msgpack_impl(x, filename, f, c);
+    }
+}
+}
+
+#undef PIRANHA_ZLIB_CONDITIONAL
 
 #endif

@@ -42,6 +42,10 @@ see https://www.gnu.org/licenses/. */
 namespace bfs = boost::filesystem;
 
 // Small raii class for creating a tmp file.
+// NOTE: this will not actually create the file, it will just create
+// a tmp file name - so one is supposed to use the m_path member to create a file
+// in the usual way. The destructor will attempt to delete the file at m_path, nothing
+// will happen if the file does not exist.
 struct tmp_file {
     tmp_file()
     {

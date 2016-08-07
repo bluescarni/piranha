@@ -31,7 +31,10 @@ option(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 option(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
 
 # Enable msgpack serialization format.
-option(ENABLE_MSGPACK "Enable support for msgpack serialization format." OFF)
+option(PIRANHA_WITH_MSGPACK "Enable support for the msgpack serialization format." OFF)
+
+# Enable zlib/gzip compression.
+option(PIRANHA_WITH_ZLIB "Enable support for zlib/gzip compression." OFF)
 
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
@@ -125,7 +128,7 @@ INCLUDE_DIRECTORIES(SYSTEM ${MPFR_INCLUDE_DIR})
 # NOTE: MPFR should be linked in before GMP, that's why we link GMP here.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
 
-if(ENABLE_MSGPACK)
+if(PIRANHA_WITH_MSGPACK)
 	find_package(MSGPACK-C REQUIRED)
 	message(STATUS "msgpack-c library found.")
 	message(STATUS "msgpack-c include dir is: ${MSGPACK-C_INCLUDE_DIR}")
@@ -135,8 +138,24 @@ if(ENABLE_MSGPACK)
 		message(FATAL_ERROR "Unsupported msgpack-c version, please upgrade.")
 	endif()
 	message(STATUS "msgpack-c version is ok.")
+	try_compile(BOOST_MAPPED_FILE_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/test_mmapped_file.cpp"
+		CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${Boost_INCLUDE_DIRS}" LINK_LIBRARIES "${Boost_IOSTREAMS_LIBRARY}")
+	if(NOT BOOST_MAPPED_FILE_CHECK)
+		message(FATAL_ERROR "msgpack-c requires an implementation of Boost's memory mapped file.")
+	endif()
+	message(STATUS "Boost's memory mapped file is supported.")
 	include_directories(SYSTEM ${MSGPACK-C_INCLUDE_DIR})
-	set(PIRANHA_ENABLE_MSGPACK "#define PIRANHA_ENABLE_MSGPACK")
+	set(PIRANHA_ENABLE_MSGPACK "#define PIRANHA_WITH_MSGPACK")
+endif()
+
+if(PIRANHA_WITH_ZLIB)
+	find_package(ZLIB REQUIRED)
+	message(STATUS "zlib library found.")
+	message(STATUS "zlib include dir is: ${ZLIB_INCLUDE_DIR}")
+	message(STATUS "zlib library is: ${ZLIB_LIBRARIES}")
+	include_directories(SYSTEM ${ZLIB_INCLUDE_DIR})
+	set(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${ZLIB_LIBRARIES})
+	set(PIRANHA_ENABLE_ZLIB "#define PIRANHA_WITH_ZLIB")
 endif()
 
 # bzip2 setup.

@@ -1100,7 +1100,7 @@ public:
         const value_type zero(0);
         return std::any_of(std::get<1u>(sbe), std::get<2u>(sbe), [&zero](const value_type &e) { return e < zero; });
     }
-#if defined(PIRANHA_ENABLE_MSGPACK)
+#if defined(PIRANHA_WITH_MSGPACK)
 private:
     // Enablers for msgpack serialization.
     template <typename Stream>

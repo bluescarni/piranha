@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(monomial_init_test)
     init();
 }
 
-#if defined(PIRANHA_ENABLE_MSGPACK)
+#if defined(PIRANHA_WITH_MSGPACK)
 
 #include <functional>
 #include <iostream>
