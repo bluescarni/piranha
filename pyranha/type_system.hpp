@@ -124,7 +124,7 @@ inline void expose_type_generator(const std::string &name)
     if (tg_names.find(name) != tg_names.end()) {
         ::PyErr_SetString(
             PyExc_RuntimeError,
-            (std::string("a type generator called '") + name + "' has already been instantiated").c_str());
+            ("a type generator called '" + name + "' has already been instantiated").c_str());
         bp::throw_error_already_set();
     }
     tg_names.insert(name);
@@ -166,8 +166,8 @@ inline void expose_generic_type_generator()
     // NOTE: the new key in gtg_map, if needed, will be created by the first call
     // to gtg_map[name].
     if (gtg_map[name].find(v_t_idx) != gtg_map[name].end()) {
-        ::PyErr_SetString(PyExc_RuntimeError, (std::string("the generic type generator '") + name
-                                               + std::string("' has already been instantiated with the type pack ")
+        ::PyErr_SetString(PyExc_RuntimeError, ("the generic type generator '" + name
+                                               + "' has already been instantiated with the type pack "
                                                + v_t_idx_to_str(v_t_idx))
                                                   .c_str());
         bp::throw_error_already_set();

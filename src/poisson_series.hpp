@@ -788,7 +788,7 @@ public:
     {
         std::vector<std::string> names;
         for (auto it = this->m_symbol_set.begin(); it != this->m_symbol_set.end(); ++it) {
-            names.push_back(std::string("\\nu_{") + it->get_name() + "}");
+            names.push_back("\\nu_{" + it->get_name() + "}");
         }
         return t_integrate_impl(names);
     }

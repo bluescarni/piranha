@@ -1650,7 +1650,7 @@ public:
             }
             --exp;
             if (exp != ::mpfr_exp_t(0) && r.sign() != 0) {
-                cpp_str.append(std::string("e") + boost::lexical_cast<std::string>(exp));
+                cpp_str.append("e" + boost::lexical_cast<std::string>(exp));
             }
         }
         os << cpp_str;

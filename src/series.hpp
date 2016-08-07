@@ -2963,7 +2963,7 @@ public:
         std::ofstream ofile(filename, (f == file_format::binary) ? (std::ios::out | std::ios::binary | std::ios::trunc)
                                                                  : (std::ios::out | std::ios::trunc));
         if (unlikely(!ofile.good())) {
-            piranha_throw(std::runtime_error, std::string("file '") + filename + "' could not be opened");
+            piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened");
         }
         if (c == file_compression::bzip2) {
             // bzip2 compression is enabled.
@@ -3035,7 +3035,7 @@ public:
     {
         std::ifstream ifile(filename, (f == file_format::binary) ? (std::ios::in | std::ios::binary) : std::ios::in);
         if (unlikely(!ifile.good())) {
-            piranha_throw(std::runtime_error, std::string("file '") + filename + "' could not be opened");
+            piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened");
         }
         // The return value.
         Derived retval;
