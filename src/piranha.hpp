@@ -108,7 +108,8 @@ see https://www.gnu.org/licenses/. */
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at
  * least to make
  * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
- * and keep lexical_cast only for the conversion of piranha's types to string.
+ * and keep lexical_cast only for the conversion of piranha's types to string. UPDATE: it looks like to_string is
+ * influenced by the locale setting, it's probably better to roll our implementation.
  * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in term. Should we require it
