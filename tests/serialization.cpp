@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/unit_test.hpp>
 
 #include <atomic>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
@@ -44,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <random>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -51,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/config.hpp"
+#include "../src/detail/demangle.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/is_key.hpp"
@@ -561,7 +564,6 @@ BOOST_AUTO_TEST_CASE(serialization_test_boost_float)
 #include <cmath>
 #include <iostream>
 #include <iterator>
-#include <stdexcept>
 
 using msgpack::packer;
 using msgpack::sbuffer;
@@ -810,7 +812,12 @@ struct fp_tester {
             std::size_t offset = 0;
             auto oh = msgpack::unpack(sbuf.data(), sbuf.size(), offset);
             long double tmp;
-            BOOST_CHECK_THROW(msgpack_convert(tmp, oh.get(), msgpack_format::portable), std::invalid_argument);
+            auto msg_checker = [](const std::invalid_argument &ia) -> bool {
+                return boost::contains(ia.what(),
+                    "failed to parse the string 'hello world' as a long double");
+            };
+            BOOST_CHECK_EXCEPTION(msgpack_convert(tmp, oh.get(), msgpack_format::portable),
+                std::invalid_argument,msg_checker);
         }
     }
 };
@@ -852,6 +859,15 @@ struct int_save_load_tester {
                 for (auto f : dfs) {
                     for (auto c : cfs) {
                         const auto tmp = dist(eng);
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+                        // NOTE: we are not expecting any failure if we have all optional deps.
+                        auto cmp = save_roundtrip(tmp, f, c);
+                        if (cmp != tmp) {
+                            status.store(false);
+                        }
+#else
+                        // If msgpack or zlib are not available, we will have not_implemented_error
+                        // failures.
                         try {
                             auto cmp = save_roundtrip(tmp, f, c);
                             if (cmp != tmp) {
@@ -860,6 +876,7 @@ struct int_save_load_tester {
                         } catch (const not_implemented_error &) {
                             continue;
                         }
+#endif
                     }
                 }
             }
@@ -885,6 +902,12 @@ struct fp_save_load_tester {
                 for (auto f : dfs) {
                     for (auto c : cfs) {
                         const auto tmp = dist(eng);
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+                        auto cmp = save_roundtrip(tmp, f, c);
+                        if (cmp != tmp) {
+                            status.store(false);
+                        }
+#else
                         try {
                             auto cmp = save_roundtrip(tmp, f, c);
                             if (cmp != tmp) {
@@ -893,6 +916,7 @@ struct fp_save_load_tester {
                         } catch (const not_implemented_error &) {
                             continue;
                         }
+#endif
                     }
                 }
             }
@@ -906,8 +930,32 @@ struct fp_save_load_tester {
     }
 };
 
+struct no_boost_msgpack {};
+
 BOOST_AUTO_TEST_CASE(serialization_test_save_load)
 {
     boost::mpl::for_each<integral_types>(int_save_load_tester());
     boost::mpl::for_each<fp_types>(fp_save_load_tester());
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+    // Test failures.
+    for (auto f : dfs) {
+        for (auto c : cfs) {
+            // Unserializable type.
+            no_boost_msgpack n;
+            auto msg_checker = [](const not_implemented_error &nie) -> bool {
+                return boost::contains(nie.what(),
+                    "type '" + detail::demangle<no_boost_msgpack>() + "' does not support");
+            };
+            BOOST_CHECK_EXCEPTION(save_file(n,"foo",f,c),not_implemented_error,msg_checker);
+            BOOST_CHECK_EXCEPTION(load_file(n,"foo",f,c),not_implemented_error,msg_checker);
+            // Wrong filename for loading.
+            auto msg_checker2 = [](const std::runtime_error &re) -> bool {
+                return boost::contains(re.what(),
+                    "file 'foobar123' could not be opened for loading");
+            };
+            int m = 0;
+            BOOST_CHECK_EXCEPTION(load_file(m,"foobar123",f,c),std::runtime_error,msg_checker2);
+        }
+    }
+#endif
 }

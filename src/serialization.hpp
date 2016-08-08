@@ -1087,18 +1087,44 @@ namespace piranha
 {
 
 /// Data format.
+/**
+ * Data format used by high-level serialization functions such as piranha::save_file() and piranha::load_file().
+ * The Boost formats are based on the Boost serialization library, while the msgpack formats are based on the msgpack
+ * serialization format.
+ *
+ * The portable variants are intended to be usable across different architectures and
+ * Piranha versions, whereas the binary variants are non-portable high-performance serialization formats intended
+ * for temporary storage. That is, saving a binary archive created with Piranha version \p N on architecture \p A
+ * and then loading it on a different architecture \p B or using a different Piranha version \p M will result in
+ * undefined behaviour.
+ */
 enum class data_format {
     /// Boost binary.
+    /**
+     * This format is based on the Boost binary archives.
+     */
     boost_binary,
     /// Boost portable.
+    /**
+     * This format is based on the Boost text archives.
+     */
     boost_portable,
     /// msgpack binary.
+    /**
+     * This format will employ internally the msgpack_format::binary format.
+     */
     msgpack_binary,
     /// msgpack portable.
+    /**
+     * This format will employ internally the msgpack_format::portable format.
+     */
     msgpack_portable
 };
 
 /// Compression format.
+/**
+ * Compression formats used by high-level serialization functions such as piranha::save_file() and piranha::load_file().
+ */
 enum class compression {
     /// No compression.
     none,
@@ -1336,6 +1362,7 @@ inline void load_file_msgpack_impl(T &x, const std::string &filename, data_forma
                 // above results from being unable to open the file.
                 piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for loading");
             }
+            // NOTE: this might be superfluous, but better safe than sorry.
             if (unlikely(!mmap->is_open())) {
                 piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for loading");
             }
@@ -1373,6 +1400,31 @@ template <typename T>
 using load_file_enabler = typename std::enable_if<!std::is_const<T>::value, int>::type;
 }
 
+/// Save to file.
+/**
+ * This function will save the generic object \p x to the file named \p filename, using the data format
+ * \p f and the compression method \p c.
+ *
+ * This function is built on lower-level routines such as piranha::boost_save() and piranha::msgpack_pack(). The data
+ * format \p f establishes both the lower level serialization method to be used and its variant (e.g., portable
+ * vs binary). If requested (i.e., if \p c is not piranha::compression::none), the output file will be compressed.
+ *
+ * @param[in] x object to be saved to file.
+ * @param[in] filename name of the output file.
+ * @param[in] f data format.
+ * @param[in] c compression format.
+ *
+ * @throws piranha::not_implemented_error in the following cases:
+ * - the type \p T does not implement the required serialization method (e.g., \p f is
+ *   piranha::data_format::boost_binary but \p T does not provide an implementation of piranha::boost_save()),
+ * - a necessary optional third-party library (e.g., msgpack or one of the compression libraries)
+ *   is not available on the host platform.
+ * @throws std::runtime_error in case the file cannot be opened for writing.
+ * @throws unspecified any exception thrown by:
+ * - <tt>boost::numeric_cast()</tt>,
+ * - the invoked low-level serialization function,
+ * - the public interface of the Boost iostreams library.
+ */
 template <typename T>
 inline void save_file(const T &x, const std::string &filename, data_format f, compression c)
 {
@@ -1383,6 +1435,36 @@ inline void save_file(const T &x, const std::string &filename, data_format f, co
     }
 }
 
+/// Load from file.
+/**
+ * \note
+ * This function is enabled only if \p T is not const.
+ *
+ * This function will load the content of the file named \p filename into the object \p x, assuming that the data is
+ * stored in the format \p f using the compression method \p c. If \p c is not piranha::compression::none, it will
+ * be assumed that the file is compressed.
+ *
+ * This function is built on lower-level routines such as piranha::boost_load() and piranha::msgpack_convert(). The data
+ * format \p f establishes both the lower level serialization method to be used and its variant (e.g., portable
+ * vs binary).
+ *
+ * @param[out] x the object into which the content of the file name \p filename will be deserialized.
+ * @param[in] filename name of the input file.
+ * @param[in] f data format.
+ * @param[in] c compression format.
+ *
+ * @throws piranha::not_implemented_error in the following cases:
+ * - the type \p T does not implement the required serialization method (e.g., \p f is
+ *   piranha::data_format::boost_binary but \p T does not provide an implementation of piranha::boost_load()),
+ * - a necessary optional third-party library (e.g., msgpack or one of the compression libraries)
+ *   is not available on the host platform.
+ * @throws std::runtime_error in case the file cannot be opened for reading.
+ * @throws unspecified any exception thrown by:
+ * - <tt>boost::numeric_cast()</tt>,
+ * - the invoked low-level serialization function,
+ * - the \p new operator,
+ * - the public interface of the Boost iostreams library.
+ */
 template <typename T, detail::load_file_enabler<T> = 0>
 inline void load_file(T &x, const std::string &filename, data_format f, compression c)
 {
