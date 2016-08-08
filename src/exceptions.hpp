@@ -98,19 +98,18 @@ struct ex_thrower {
  *   where \p str is an instance of \p std::string,
  *
  * then the first argument \p arg0 is interpreted as the error message associated to the exception object, and it will
- be decorated
- * with information about the context in which the exception was thrown (file, line, function) before being
+ * be decorated with information about the context in which the exception was thrown (file, line, function) before being
  * passed on for construction.
  *
  * Note that, in order to be fully standard-compliant, for use with exceptions that take no arguments on construction
  * the invocation must include a closing comma. E.g.,
- @code
- piranha_throw(std::bad_alloc);
- @endcode
+ * @code
+ * piranha_throw(std::bad_alloc);
+ * @endcode
  * is not correct, whereas
- @code
- piranha_throw(std::bad_alloc,);
- @endcode
+ * @code
+ * piranha_throw(std::bad_alloc,);
+ * @endcode
  * is correct.
  */
 // NOTE: we need the struct here because we need to split off the __VA_ARGS__ into a separate function call, otherwise

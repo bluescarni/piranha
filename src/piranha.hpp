@@ -78,13 +78,6 @@ see https://www.gnu.org/licenses/. */
  * http://stackoverflow.com/questions/3675059/how-could-i-sensibly-overload-placement-operator-new (and 18.6.1.3 in the
  * standard)
  * so we might as well keep ::new in those cases.
- * \todo similarly, review all struct/class is_/has_is_ type traits to prevent ADL by using piranha specifiers as
- * needed.
- * \todo should we always use piranha when calling functions in order to prevent ADL? -> note that these ADL concerns
- * apply
- * only to unqualified function calls, of which there are not many (e.g., the math type traits are all defined outside
- * piranha::math
- * and hence always include the math:: qualifier).
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting
  * constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must
