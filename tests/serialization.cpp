@@ -813,11 +813,10 @@ struct fp_tester {
             auto oh = msgpack::unpack(sbuf.data(), sbuf.size(), offset);
             long double tmp;
             auto msg_checker = [](const std::invalid_argument &ia) -> bool {
-                return boost::contains(ia.what(),
-                    "failed to parse the string 'hello world' as a long double");
+                return boost::contains(ia.what(), "failed to parse the string 'hello world' as a long double");
             };
-            BOOST_CHECK_EXCEPTION(msgpack_convert(tmp, oh.get(), msgpack_format::portable),
-                std::invalid_argument,msg_checker);
+            BOOST_CHECK_EXCEPTION(msgpack_convert(tmp, oh.get(), msgpack_format::portable), std::invalid_argument,
+                                  msg_checker);
         }
     }
 };
@@ -930,7 +929,33 @@ struct fp_save_load_tester {
     }
 };
 
-struct no_boost_msgpack {};
+struct no_boost_msgpack {
+};
+
+struct only_boost {
+};
+
+namespace piranha
+{
+
+template <typename Archive>
+class boost_save_impl<Archive, only_boost>
+{
+public:
+    void operator()(Archive &, const only_boost &) const
+    {
+    }
+};
+
+template <typename Archive>
+class boost_load_impl<Archive, only_boost>
+{
+public:
+    void operator()(Archive &, only_boost &) const
+    {
+    }
+};
+}
 
 BOOST_AUTO_TEST_CASE(serialization_test_save_load)
 {
@@ -944,18 +969,25 @@ BOOST_AUTO_TEST_CASE(serialization_test_save_load)
             no_boost_msgpack n;
             auto msg_checker = [](const not_implemented_error &nie) -> bool {
                 return boost::contains(nie.what(),
-                    "type '" + detail::demangle<no_boost_msgpack>() + "' does not support");
+                                       "type '" + detail::demangle<no_boost_msgpack>() + "' does not support");
             };
-            BOOST_CHECK_EXCEPTION(save_file(n,"foo",f,c),not_implemented_error,msg_checker);
-            BOOST_CHECK_EXCEPTION(load_file(n,"foo",f,c),not_implemented_error,msg_checker);
+            BOOST_CHECK_EXCEPTION(save_file(n, "foo", f, c), not_implemented_error, msg_checker);
+            BOOST_CHECK_EXCEPTION(load_file(n, "foo", f, c), not_implemented_error, msg_checker);
             // Wrong filename for loading.
             auto msg_checker2 = [](const std::runtime_error &re) -> bool {
-                return boost::contains(re.what(),
-                    "file 'foobar123' could not be opened for loading");
+                return boost::contains(re.what(), "file 'foobar123' could not be opened for loading");
             };
             int m = 0;
-            BOOST_CHECK_EXCEPTION(load_file(m,"foobar123",f,c),std::runtime_error,msg_checker2);
+            BOOST_CHECK_EXCEPTION(load_file(m, "foobar123", f, c), std::runtime_error, msg_checker2);
         }
     }
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, only_boost>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, only_boost>::value));
+    BOOST_CHECK_NO_THROW(save_roundtrip(only_boost{}, data_format::boost_portable, compression::none));
+    BOOST_CHECK_NO_THROW(save_roundtrip(only_boost{}, data_format::boost_binary, compression::none));
+    BOOST_CHECK_THROW(save_roundtrip(only_boost{}, data_format::msgpack_portable, compression::none),
+                      not_implemented_error);
+    BOOST_CHECK_THROW(save_roundtrip(only_boost{}, data_format::msgpack_binary, compression::none),
+                      not_implemented_error);
 #endif
 }
