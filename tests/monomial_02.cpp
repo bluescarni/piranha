@@ -34,12 +34,16 @@ see https://www.gnu.org/licenses/. */
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <random>
+#include <string>
 #include <type_traits>
+#include <vector>
 
 #include "../src/config.hpp"
 #include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/s11n.hpp"
 
 using namespace piranha;
 
@@ -48,10 +52,77 @@ typedef boost::mpl::vector<std::integral_constant<std::size_t, 0u>, std::integra
                            std::integral_constant<std::size_t, 5u>, std::integral_constant<std::size_t, 10u>>
     size_types;
 
-BOOST_AUTO_TEST_CASE(monomial_init_test)
+static const int ntrials = 100;
+
+static std::mt19937 rng;
+
+struct boost_s11n_tester {
+    template <typename T>
+    struct runner {
+        template <typename U>
+        void operator()(const U &)
+        {
+            using monomial_type = monomial<T, U>;
+            // Test the type traits.
+            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive,monomial_type>::value));
+            BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive,monomial_type>::value));
+            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &,monomial_type>::value));
+            BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive &,monomial_type>::value));
+            BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive,monomial_type>::value));
+            BOOST_CHECK((!key_has_boost_load<boost::archive::binary_oarchive,monomial_type>::value));
+            BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive,monomial_type>::value));
+            BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive,monomial_type>::value));
+            BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &,monomial_type>::value));
+            BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive &,monomial_type>::value));
+            // Random testing.
+            random_test<U>();
+        }
+        template <typename U, typename V = T, typename std::enable_if<!std::is_integral<V>::value,int>::type = 0>
+        void random_test() const
+        {}
+        template <typename U, typename V = T, typename std::enable_if<std::is_integral<V>::value,int>::type = 0>
+        void random_test() const
+        {
+            using monomial_type = monomial<T, U>;
+            using size_type = typename monomial_type::size_type;
+            std::uniform_int_distribution<size_type> sdist(0u,10u);
+            std::uniform_int_distribution<T> edist(-10,10);
+            const std::vector<std::string> vs = {"a","b","c","d","e","f","g","h","i","j"};
+            for (auto i = 0; i < ntrials; ++i) {
+                const auto size = sdist(rng);
+                std::vector<T> tmp;
+                for (size_type j = 0; j < size; ++j) {
+                    tmp.push_back(edist(rng));
+                }
+                monomial_type m(tmp.begin(),tmp.end());
+                symbol_set ss(vs.begin(),vs.begin() + size);
+                std::ostringstream oss;
+                {
+                    boost::archive::text_oarchive oa(oss);
+                    m.boost_save(oa,ss);
+                }
+                std::istringstream iss;
+                monomial_type n;
+                iss.str(oss.str());
+                {
+                    boost::archive::text_iarchive ia(iss);
+                    n.boost_load(ia,ss);
+                }
+                BOOST_CHECK(n == m);
+            }
+        }
+    };
+    template <typename T>
+    void operator()(const T &)
+    {
+        boost::mpl::for_each<size_types>(runner<T>());
+    }
+};
+
+BOOST_AUTO_TEST_CASE(monomial_boost_s11n_test)
 {
-    // Make sure there's always at least 1 test case to run.
     init();
+    boost::mpl::for_each<expo_types>(boost_s11n_tester());
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)

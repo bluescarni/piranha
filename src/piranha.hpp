@@ -353,6 +353,7 @@ inline namespace literals
 #include "real.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "runtime_info.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series.hpp"

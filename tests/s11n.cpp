@@ -26,9 +26,9 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 
-#define BOOST_TEST_MODULE serialization_test
+#define BOOST_TEST_MODULE s11n_test
 #include <boost/test/unit_test.hpp>
 
 #include <atomic>
@@ -396,7 +396,7 @@ struct hash<keyb> {
 };
 }
 
-BOOST_AUTO_TEST_CASE(serialization_boost_test_tt)
+BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
 {
     init();
     // Saving archive.
@@ -523,7 +523,7 @@ struct boost_int_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(serialization_test_boost_int)
+BOOST_AUTO_TEST_CASE(s11n_test_boost_int)
 {
     boost::mpl::for_each<integral_types>(boost_int_tester());
 }
@@ -553,7 +553,7 @@ struct boost_fp_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(serialization_test_boost_float)
+BOOST_AUTO_TEST_CASE(s11n_test_boost_float)
 {
     boost::mpl::for_each<fp_types>(boost_fp_tester());
 }
@@ -676,7 +676,7 @@ static inline T msgpack_roundtrip_sstream(const T &x, msgpack_format f)
     return retval;
 }
 
-BOOST_AUTO_TEST_CASE(serialization_msgpack_tt_test)
+BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
 {
     BOOST_CHECK(is_msgpack_stream<std::ostringstream>::value);
     BOOST_CHECK(!is_msgpack_stream<std::ostringstream &>::value);
@@ -747,7 +747,7 @@ struct int_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(serialization_test_msgpack_int)
+BOOST_AUTO_TEST_CASE(s11n_test_msgpack_int)
 {
     boost::mpl::for_each<integral_types>(int_tester());
 }
@@ -821,7 +821,7 @@ struct fp_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(serialization_test_msgpack_float)
+BOOST_AUTO_TEST_CASE(s11n_test_msgpack_float)
 {
     boost::mpl::for_each<fp_types>(fp_tester());
 }
@@ -957,7 +957,7 @@ public:
 };
 }
 
-BOOST_AUTO_TEST_CASE(serialization_test_save_load)
+BOOST_AUTO_TEST_CASE(s11n_test_save_load)
 {
     boost::mpl::for_each<integral_types>(int_save_load_tester());
     boost::mpl::for_each<fp_types>(fp_save_load_tester());

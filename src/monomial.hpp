@@ -59,6 +59,7 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "pow.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "symbol.hpp"
@@ -1099,6 +1100,42 @@ public:
         auto sbe = this->size_begin_end();
         const value_type zero(0);
         return std::any_of(std::get<1u>(sbe), std::get<2u>(sbe), [&zero](const value_type &e) { return e < zero; });
+    }
+private:
+    // Enablers for the boost s11n methods.
+    template <typename Archive>
+    using boost_save_enabler = typename std::enable_if<has_boost_save<Archive,typename base::size_type>::value &&
+        has_boost_save<Archive,T>::value,int>::type;
+    template <typename Archive>
+    using boost_load_enabler = typename std::enable_if<has_boost_load<Archive,typename base::size_type>::value &&
+        has_boost_load<Archive,T>::value,int>::type;
+public:
+    template <typename Archive, boost_save_enabler<Archive> = 0>
+    void boost_save(Archive &ar, const symbol_set &s) const
+    {
+        auto sbe = this->size_begin_end();
+        if (unlikely(std::get<0u>(sbe) != s.size())) {
+            piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization");
+        }
+        // Save the size first.
+        piranha::boost_save(ar,std::get<0u>(sbe));
+        for (; std::get<1u>(sbe) != std::get<2u>(sbe); ++std::get<1u>(sbe)) {
+            piranha::boost_save(ar,*std::get<1u>(sbe));
+        }
+    }
+    template <typename Archive, boost_load_enabler<Archive> = 0>
+    void boost_load(Archive &ar, const symbol_set &s)
+    {
+        // Get out the size first.
+        typename base::size_type size;
+        piranha::boost_load(ar,size);
+        if (unlikely(size != s.size())) {
+            piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization");
+        }
+        this->resize(size);
+        for (auto sbe = this->size_begin_end(); std::get<1u>(sbe) != std::get<2u>(sbe); ++std::get<1u>(sbe)) {
+            piranha::boost_load(ar,*std::get<1u>(sbe));
+        }
     }
 #if defined(PIRANHA_WITH_MSGPACK)
 private:

@@ -55,6 +55,7 @@ SET(HEADERS_LIST
 	base_series_multiplier.hpp
 	rational_function.hpp
 	lambdify.hpp
+	s11n.hpp
 )
 
 SET(DETAIL_HEADERS_LIST

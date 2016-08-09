@@ -34,8 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "detail/sfinae_types.hpp"
-// NOTE: include directly symbol_set.hpp once its dependency from serialization.hpp is removed.
-#include "detail/symbol_set_fwd.hpp"
+#include "symbol_set.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
