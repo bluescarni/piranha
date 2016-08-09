@@ -51,6 +51,13 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
+/// Remove cv qualifiers and reference.
+/**
+ * This template alias removes cv qualifiers and reference from type \p T.
+ */
+template <typename T>
+using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+
 /// Type is non-const rvalue reference.
 /**
  * This type trait defines a static const boolean \p value flag which is \p true if \p T is a non-const rvalue

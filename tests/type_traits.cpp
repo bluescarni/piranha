@@ -2100,3 +2100,13 @@ BOOST_AUTO_TEST_CASE(type_traits_is_mappable_test)
     BOOST_CHECK(!is_mappable<map_04>::value);
     BOOST_CHECK(!is_mappable<map_05>::value);
 }
+
+BOOST_AUTO_TEST_CASE(type_traits_uncvref_t)
+{
+    BOOST_CHECK((std::is_same<int,uncvref_t<int>>::value));
+    BOOST_CHECK((std::is_same<int,uncvref_t<int &>>::value));
+    BOOST_CHECK((std::is_same<int,uncvref_t<const int &>>::value));
+    BOOST_CHECK((std::is_same<int,uncvref_t<const int &&>>::value));
+    BOOST_CHECK((std::is_same<int,uncvref_t<const int>>::value));
+    BOOST_CHECK((std::is_same<int,uncvref_t<volatile int &>>::value));
+}
