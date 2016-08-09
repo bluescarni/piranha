@@ -444,12 +444,13 @@ const bool has_boost_load<Archive, T>::value;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
- * If \p Key does not satisfy piranha::is_key, a compile-time error will be produced.
+ * If \p Key, after the application of piranha::uncvref_t, does not satisfy piranha::is_key,
+ * a compile-time error will be produced.
  */
 template <typename Archive, typename Key>
 class key_has_boost_save : detail::sfinae_types
 {
-    PIRANHA_TT_CHECK(is_key, Key);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename A1, typename Key1>
     static auto test(A1 &a, const Key1 &k)
         -> decltype(k.boost_save(a, std::declval<const symbol_set &>()), void(), yes());
@@ -474,12 +475,13 @@ const bool key_has_boost_save<Archive, Key>::value;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
- * If \p Key does not satisfy piranha::is_key, a compile-time error will be produced.
+ * If \p Key, after the application of piranha::uncvref_t, does not satisfy piranha::is_key,
+ * a compile-time error will be produced.
  */
 template <typename Archive, typename Key>
 class key_has_boost_load : detail::sfinae_types
 {
-    PIRANHA_TT_CHECK(is_key, Key);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename A1, typename Key1>
     static auto test(A1 &a, Key1 &k) -> decltype(k.boost_load(a, std::declval<const symbol_set &>()), void(), yes());
     static no test(...);
@@ -958,12 +960,13 @@ const bool has_msgpack_convert<T>::value;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
- * If \p Key does not satisfy piranha::is_key, a compile-time error will be produced.
+ * If \p Key, after the application of piranha::uncvref_t, does not satisfy piranha::is_key,
+ * a compile-time error will be produced.
  */
 template <typename Stream, typename Key>
 class key_has_msgpack_pack : detail::sfinae_types
 {
-    PIRANHA_TT_CHECK(is_key, Key);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Stream1, typename Key1>
     static auto test(const Stream1 &s, const Key1 &k)
         -> decltype(k.msgpack_pack(std::declval<msgpack::packer<Stream1> &>(), std::declval<msgpack_format>(),
@@ -990,12 +993,13 @@ const bool key_has_msgpack_pack<Stream, Key>::value;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
- * If \p Key does not satisfy piranha::is_key, a compile-time error will be produced.
+ * If \p Key, after the application of piranha::uncvref_t, does not satisfy piranha::is_key,
+ * a compile-time error will be produced.
  */
 template <typename Key>
 class key_has_msgpack_convert : detail::sfinae_types
 {
-    PIRANHA_TT_CHECK(is_key, Key);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1>
     static auto test(Key1 &k)
         -> decltype(k.msgpack_convert(std::declval<const msgpack::object &>(), std::declval<msgpack_format>(),

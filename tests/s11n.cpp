@@ -474,12 +474,18 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     BOOST_CHECK(is_key<keyb>::value);
     BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, keya>::value));
     BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, keya>::value));
+    BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, keya &>::value));
+    BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, const keya &>::value));
+    BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, const keya>::value));
     BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, keya>::value));
     BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive, keya>::value));
     BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, keya>::value));
     BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, keya>::value));
     BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, keya>::value));
     BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive &, keya>::value));
+    BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive &, keya &>::value));
+    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive &, const keya &>::value));
+    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive &, const keya>::value));
     BOOST_CHECK((!key_has_boost_load<boost::archive::binary_oarchive &, keya>::value));
     BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive, keya>::value));
     BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive &, keya>::value));
@@ -487,6 +493,9 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     BOOST_CHECK((!key_has_boost_save<boost::archive::binary_oarchive, keyb>::value));
     BOOST_CHECK((!key_has_boost_save<boost::archive::binary_oarchive &, keyb>::value));
     BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, keyb>::value));
+    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, keyb &>::value));
+    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, const keyb &>::value));
+    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, const keyb>::value));
     BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive, keyb>::value));
     BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, keyb>::value));
     BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, keyb>::value));
@@ -709,11 +718,18 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
     BOOST_CHECK((!has_msgpack_convert<const double &&>::value));
     BOOST_CHECK(is_key<key01>::value);
     BOOST_CHECK((key_has_msgpack_pack<sbuffer, key01>::value));
+    BOOST_CHECK((key_has_msgpack_pack<sbuffer, key01 &>::value));
+    BOOST_CHECK((key_has_msgpack_pack<sbuffer, const key01 &>::value));
+    BOOST_CHECK((key_has_msgpack_pack<sbuffer, const key01>::value));
     BOOST_CHECK((!key_has_msgpack_pack<sbuffer &, key01>::value));
     BOOST_CHECK((!key_has_msgpack_pack<const sbuffer, key01>::value));
     BOOST_CHECK(is_key<key02>::value);
     BOOST_CHECK((!key_has_msgpack_pack<sbuffer, key02>::value));
     BOOST_CHECK((!key_has_msgpack_convert<key02>::value));
+    BOOST_CHECK((key_has_msgpack_convert<key01>::value));
+    BOOST_CHECK((key_has_msgpack_convert<key01 &>::value));
+    BOOST_CHECK((!key_has_msgpack_convert<const key01 &>::value));
+    BOOST_CHECK((!key_has_msgpack_convert<const key01>::value));
 }
 
 struct int_tester {
