@@ -299,6 +299,12 @@ see https://www.gnu.org/licenses/. */
  * \todo checkout the --enable-fat GMP build option - it looks like this is the way to go for a generic GMP lib
  * for binary windows distributions.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
+ * \todo guidelines for type traits modernization:
+ * - beautify enablers,
+ * - replace std::decay with uncvref_t,
+ * - check returnability,
+ * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
+ *   in the same fashion as the s11n type traits.
  */
 namespace piranha
 {
