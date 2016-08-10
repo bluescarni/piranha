@@ -57,7 +57,6 @@ see https://www.gnu.org/licenses/. */
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "is_key.hpp"
-#include "safe_cast.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
