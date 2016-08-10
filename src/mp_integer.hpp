@@ -257,6 +257,9 @@ struct mpz_raii {
     mpz_raii &operator=(mpz_raii &&) = delete;
     ~mpz_raii()
     {
+        // NOTE: even in recent GMP versions, with lazy allocation,
+        // it seems like the pointer always points to something:
+        // https://gmplib.org/repo/gmp/file/835f8974ff6e/mpz/init.c
         piranha_assert(m_mpz._mp_d != nullptr);
         ::mpz_clear(&m_mpz);
     }
