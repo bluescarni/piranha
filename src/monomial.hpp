@@ -1101,15 +1101,33 @@ public:
         const value_type zero(0);
         return std::any_of(std::get<1u>(sbe), std::get<2u>(sbe), [&zero](const value_type &e) { return e < zero; });
     }
+
 private:
     // Enablers for the boost s11n methods.
     template <typename Archive>
-    using boost_save_enabler = typename std::enable_if<has_boost_save<Archive,typename base::size_type>::value &&
-        has_boost_save<Archive,T>::value,int>::type;
+    using boost_save_enabler = typename std::enable_if<has_boost_save<Archive, typename base::size_type>::value
+                                                           && has_boost_save<Archive, T>::value,
+                                                       int>::type;
     template <typename Archive>
-    using boost_load_enabler = typename std::enable_if<has_boost_load<Archive,typename base::size_type>::value &&
-        has_boost_load<Archive,T>::value,int>::type;
+    using boost_load_enabler = typename std::enable_if<has_boost_load<Archive, typename base::size_type>::value
+                                                           && has_boost_load<Archive, T>::value,
+                                                       int>::type;
+
 public:
+    /// Save to Boost archive.
+    /**
+     * \note
+     * This method is enabled only if \p T and the size type of the monomial can be saved to \p Archive using
+     * piranha::boost_save().
+     *
+     * This method will serialize \p this into the archive \p ar.
+     *
+     * @param[in] ar target archive.
+     * @param[in] s reference symbol set.
+     *
+     * @throws std::invalid_argument if the sizes of \p this and \p s differ.
+     * @throws unspecified any exception thrown by piranha::boost_save().
+     */
     template <typename Archive, boost_save_enabler<Archive> = 0>
     void boost_save(Archive &ar, const symbol_set &s) const
     {
@@ -1118,23 +1136,37 @@ public:
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization");
         }
         // Save the size first.
-        piranha::boost_save(ar,std::get<0u>(sbe));
+        piranha::boost_save(ar, std::get<0u>(sbe));
         for (; std::get<1u>(sbe) != std::get<2u>(sbe); ++std::get<1u>(sbe)) {
-            piranha::boost_save(ar,*std::get<1u>(sbe));
+            piranha::boost_save(ar, *std::get<1u>(sbe));
         }
     }
+    /// Load from Boost archive.
+    /**
+     * \note
+     * This method is enabled only if \p T and the size type of the monomial can be loaded from \p Archive using
+     * piranha::boost_load().
+     *
+     * This method will deserialize the content of \p ar into \p this.
+     *
+     * @param[in] ar target archive.
+     * @param[in] s reference symbol set.
+     *
+     * @throws std::invalid_argument if the size of the deserialized monomial differs from the size of \p s.
+     * @throws unspecified any exception thrown by piranha::boost_load().
+     */
     template <typename Archive, boost_load_enabler<Archive> = 0>
     void boost_load(Archive &ar, const symbol_set &s)
     {
         // Get out the size first.
         typename base::size_type size;
-        piranha::boost_load(ar,size);
+        piranha::boost_load(ar, size);
         if (unlikely(size != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization");
         }
         this->resize(size);
         for (auto sbe = this->size_begin_end(); std::get<1u>(sbe) != std::get<2u>(sbe); ++std::get<1u>(sbe)) {
-            piranha::boost_load(ar,*std::get<1u>(sbe));
+            piranha::boost_load(ar, *std::get<1u>(sbe));
         }
     }
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -1206,13 +1238,13 @@ public:
             std::vector<msgpack::object>
                 tmp;
         o.convert(tmp);
-        if (unlikely(tmp.size()) != s.size()) {
+        if (unlikely(tmp.size() != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial deserialization");
         }
-        resize(safe_cast<typename base::size_type>(tmp.size()));
-        std::transform(tmp.begin(), tmp.end(), this->begin(), [f](const msgpack::object &o) -> T {
+        this->resize(safe_cast<typename base::size_type>(tmp.size()));
+        std::transform(tmp.begin(), tmp.end(), this->begin(), [f](const msgpack::object &obj) -> T {
             T t;
-            msgpack_convert(t, o, f);
+            piranha::msgpack_convert(t, obj, f);
             return t;
         });
     }
