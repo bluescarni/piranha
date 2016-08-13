@@ -275,13 +275,26 @@ namespace detail
 // Enabler for boost_save() for strings.
 template <typename Archive, typename T>
 using boost_save_string_enabler =
-    typename std::enable_if<is_boost_saving_archive<Archive, T>::value && std::is_same<T,std::string>::value>::type;
+    typename std::enable_if<is_boost_saving_archive<Archive, T>::value && std::is_same<T, std::string>::value>::type;
 }
 
+/// Implementation of piranha::boost_save() for \p std::string.
+/**
+ * \note
+ * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_saving_archive and \p T is
+ * \p std::string.
+ */
 template <typename Archive, typename T>
-class boost_save_impl<Archive,T,detail::boost_save_string_enabler<Archive,T>>
+class boost_save_impl<Archive, T, detail::boost_save_string_enabler<Archive, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * @param[in] a target archive.
+     * @param[in] s string argument.
+     *
+     * @throws unspecified any exception thrown by the streaming operator of \p Archive.
+     */
     void operator()(Archive &a, const std::string &s) const
     {
         a << s;
@@ -403,14 +416,26 @@ namespace detail
 // Enabler for boost_load for strings.
 template <typename Archive, typename T>
 using boost_load_string_enabler =
-    typename std::enable_if<is_boost_loading_archive<Archive, T>::value && std::is_same<T,std::string>::value>::type;
-
+    typename std::enable_if<is_boost_loading_archive<Archive, T>::value && std::is_same<T, std::string>::value>::type;
 }
 
+/// Implementation of piranha::boost_load() for \p std::string.
+/**
+ * \note
+ * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_loading_archive and \p T is
+ * \p std::string.
+ */
 template <typename Archive, typename T>
-class boost_load_impl<Archive,T,detail::boost_load_string_enabler<Archive,T>>
+class boost_load_impl<Archive, T, detail::boost_load_string_enabler<Archive, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * @param[in] a input archive.
+     * @param[in] s target string.
+     *
+     * @throws unspecified any exception thrown by the streaming operator of \p Archive.
+     */
     void operator()(Archive &a, std::string &s) const
     {
         a >> s;
@@ -747,6 +772,36 @@ struct msgpack_pack_impl<Stream, T, detail::msgpack_ld_enabler<Stream, T>> {
 namespace detail
 {
 
+template <typename Stream, typename T>
+using msgpack_string_enabler =
+    typename std::enable_if<is_msgpack_stream<Stream>::value && std::is_same<T, std::string>::value>::type;
+}
+
+/// Implementation of piranha::msgpack_pack() for \p std::string.
+/**
+ * \note
+ * This specialisation is enabled if \p Stream satisfies piranha::is_msgpack_stream and \p T is \p std::string.
+ *
+ * The call operator will use directly the <tt>pack()</tt> method of the input msgpack packer.
+ */
+template <typename Stream, typename T>
+struct msgpack_pack_impl<Stream, T, detail::msgpack_string_enabler<Stream, T>> {
+    /// Call operator.
+    /**
+     * @param[in] packer the target packer.
+     * @param[in] s the string to be packed.
+     *
+     * @throws unspecified any exception thrown by <tt>msgpack::packer::pack()</tt>.
+     */
+    void operator()(msgpack::packer<Stream> &packer, const std::string &s, msgpack_format) const
+    {
+        packer.pack(s);
+    }
+};
+
+namespace detail
+{
+
 // Enabler for msgpack_pack.
 template <typename Stream, typename T>
 using msgpack_pack_enabler =
@@ -886,6 +941,28 @@ struct msgpack_convert_impl<long double> {
                 }
             }
         }
+    }
+};
+
+/// Implementation of piranha::msgpack_convert() for \p std::string.
+/**
+ * \note
+ * This specialisation is enabled if \p T is \p std::string.
+ *
+ * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
+ */
+template <typename T>
+struct msgpack_convert_impl<T, typename std::enable_if<std::is_same<T, std::string>::value>::type> {
+    /// Call operator.
+    /**
+     * @param[out] s the output string.
+     * @param[in] o the object to be converted.
+     *
+     * @throws unspecified any exception thrown by <tt>msgpack::object::convert()</tt>.
+     */
+    void operator()(std::string &s, const msgpack::object &o, msgpack_format) const
+    {
+        o.convert(s);
     }
 };
 

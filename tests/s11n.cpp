@@ -583,19 +583,17 @@ BOOST_AUTO_TEST_CASE(s11n_test_boost_string)
 {
     std::atomic<bool> status(true);
     auto checker = [&status](int n) {
-        // TODO check consecutiveness / range limits.
-        std::uniform_int_distribution<char> dist('a', 'z');
-        // TODO check range limits (should be closed range I hope?).
-        std::uniform_int_distribution<unsigned> sdist(0u,10u);
+        // NOTE: the numerical values of the decimal digits are guaranteed to be
+        // consecutive.
+        std::uniform_int_distribution<char> dist('0', '9');
+        std::uniform_int_distribution<unsigned> sdist(0u, 10u);
         std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
-        auto gen = [&eng,&dist]() {
-            return dist(eng);
-        };
-        std::array<char,10u> achar;
+        auto gen = [&eng, &dist]() { return dist(eng); };
+        std::array<char, 10u> achar;
         for (auto i = 0; i < ntrials; ++i) {
             const auto s = sdist(eng);
-            std::generate_n(achar.begin(),s,gen);
-            std::string str(achar.begin(),achar.begin() + s);
+            std::generate_n(achar.begin(), s, gen);
+            std::string str(achar.begin(), achar.begin() + s);
             const auto cmp = boost_roundtrip(str);
             if (cmp != str) {
                 status.store(false);
@@ -741,6 +739,10 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
     BOOST_CHECK((has_msgpack_pack<sbuffer, int>::value));
     BOOST_CHECK((!has_msgpack_pack<sbuffer, no_msgpack>::value));
     BOOST_CHECK((has_msgpack_pack<std::ostringstream, int>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, std::string>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, std::string &>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, const std::string &>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, const std::string>::value));
     BOOST_CHECK((has_msgpack_pack<sw<std::ostringstream>, int>::value));
     BOOST_CHECK((!has_msgpack_pack<sbuffer &, int>::value));
     BOOST_CHECK((!has_msgpack_pack<const std::ostringstream, int>::value));
@@ -755,6 +757,11 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
     BOOST_CHECK((!has_msgpack_convert<const int>::value));
     BOOST_CHECK((!has_msgpack_convert<const double>::value));
     BOOST_CHECK((has_msgpack_convert<int &&>::value));
+    BOOST_CHECK((has_msgpack_convert<std::string>::value));
+    BOOST_CHECK((has_msgpack_convert<std::string &>::value));
+    BOOST_CHECK((has_msgpack_convert<std::string &&>::value));
+    BOOST_CHECK((!has_msgpack_convert<const std::string>::value));
+    BOOST_CHECK((!has_msgpack_convert<const std::string &>::value));
     BOOST_CHECK((has_msgpack_convert<double &&>::value));
     BOOST_CHECK((!has_msgpack_convert<const int &&>::value));
     BOOST_CHECK((!has_msgpack_convert<const double &&>::value));
@@ -882,6 +889,35 @@ struct fp_tester {
 BOOST_AUTO_TEST_CASE(s11n_test_msgpack_float)
 {
     boost::mpl::for_each<fp_types>(fp_tester());
+}
+
+BOOST_AUTO_TEST_CASE(s11n_test_msgpack_string)
+{
+    std::atomic<bool> status(true);
+    auto checker = [&status](int n) {
+        std::uniform_int_distribution<char> dist('0', '9');
+        std::uniform_int_distribution<unsigned> sdist(0u, 10u);
+        std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
+        auto gen = [&eng, &dist]() { return dist(eng); };
+        std::array<char, 10u> achar;
+        for (auto i = 0; i < ntrials; ++i) {
+            for (msgpack_format f : {msgpack_format::portable, msgpack_format::binary}) {
+                const auto s = sdist(eng);
+                std::generate_n(achar.begin(), s, gen);
+                std::string str(achar.begin(), achar.begin() + s);
+                const auto cmp = msgpack_roundtrip(str, f);
+                if (cmp != str) {
+                    status.store(false);
+                }
+            }
+        }
+    };
+    std::thread t0(checker, 0), t1(checker, 1), t2(checker, 2), t3(checker, 3);
+    t0.join();
+    t1.join();
+    t2.join();
+    t3.join();
+    BOOST_CHECK(status.load());
 }
 
 #endif
@@ -1015,10 +1051,59 @@ public:
 };
 }
 
+// Save/load checker for string.
+static inline void string_save_load_tester()
+{
+    std::atomic<bool> status(true);
+    auto checker = [&status](int n) {
+        // NOTE: the numerical values of the decimal digits are guaranteed to be
+        // consecutive.
+        std::uniform_int_distribution<char> dist('0', '9');
+        std::uniform_int_distribution<unsigned> sdist(0u, 10u);
+        std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
+        auto gen = [&eng, &dist]() { return dist(eng); };
+        std::array<char, 10u> achar;
+        for (auto i = 0; i < ntrials_file; ++i) {
+            for (auto f : dfs) {
+                for (auto c : cfs) {
+                    const auto s = sdist(eng);
+                    std::generate_n(achar.begin(), s, gen);
+                    std::string str(achar.begin(), achar.begin() + s);
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+                    // NOTE: we are not expecting any failure if we have all optional deps.
+                    auto cmp = save_roundtrip(str, f, c);
+                    if (cmp != str) {
+                        status.store(false);
+                    }
+#else
+                    // If msgpack or zlib are not available, we will have not_implemented_error
+                    // failures.
+                    try {
+                        auto cmp = save_roundtrip(str, f, c);
+                        if (cmp != str) {
+                            status.store(false);
+                        }
+                    } catch (const not_implemented_error &) {
+                        continue;
+                    }
+#endif
+                }
+            }
+        }
+    };
+    std::thread t0(checker, 0), t1(checker, 1), t2(checker, 2), t3(checker, 3);
+    t0.join();
+    t1.join();
+    t2.join();
+    t3.join();
+    BOOST_CHECK(status.load());
+}
+
 BOOST_AUTO_TEST_CASE(s11n_test_save_load)
 {
     boost::mpl::for_each<integral_types>(int_save_load_tester());
     boost::mpl::for_each<fp_types>(fp_save_load_tester());
+    string_save_load_tester();
 #if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
     // Test failures.
     for (auto f : dfs) {
