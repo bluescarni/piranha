@@ -272,6 +272,25 @@ public:
 namespace detail
 {
 
+// Enabler for boost_save() for strings.
+template <typename Archive, typename T>
+using boost_save_string_enabler =
+    typename std::enable_if<is_boost_saving_archive<Archive, T>::value && std::is_same<T,std::string>::value>::type;
+}
+
+template <typename Archive, typename T>
+class boost_save_impl<Archive,T,detail::boost_save_string_enabler<Archive,T>>
+{
+public:
+    void operator()(Archive &a, const std::string &s) const
+    {
+        a << s;
+    }
+};
+
+namespace detail
+{
+
 // Enabler for boost_save().
 template <typename Archive, typename T>
 using boost_save_enabler =
@@ -375,6 +394,26 @@ public:
     void operator()(Archive &ar, T &x) const
     {
         ar >> x;
+    }
+};
+
+namespace detail
+{
+
+// Enabler for boost_load for strings.
+template <typename Archive, typename T>
+using boost_load_string_enabler =
+    typename std::enable_if<is_boost_loading_archive<Archive, T>::value && std::is_same<T,std::string>::value>::type;
+
+}
+
+template <typename Archive, typename T>
+class boost_load_impl<Archive,T,detail::boost_load_string_enabler<Archive,T>>
+{
+public:
+    void operator()(Archive &a, std::string &s) const
+    {
+        a >> s;
     }
 };
 

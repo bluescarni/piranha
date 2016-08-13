@@ -31,6 +31,8 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE s11n_test
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <array>
 #include <atomic>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -401,6 +403,7 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     init();
     // Saving archive.
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive, int>::value));
+    BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive, std::string>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive, int *>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive, int const *>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive, int &&>::value));
@@ -417,6 +420,7 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &&, int>::value));
     // Loading archive.
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive, int>::value));
+    BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive, std::string>::value));
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive, int *>::value));
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive, int &&>::value));
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive &&, int>::value));
@@ -453,13 +457,21 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, const int &>::value));
     BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const int &>::value));
     BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &&, const int &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &&, std::string>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &&, std::string &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &&, std::string const &>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive const &, const int &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive const &, std::string>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive const, const int &>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, wchar_t>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive, int>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, int>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, long double>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, int &>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, std::string>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, std::string &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, const std::string>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, const std::string &>::value));
     BOOST_CHECK((!has_boost_load<const boost::archive::binary_iarchive, int &>::value));
     BOOST_CHECK((!has_boost_load<const boost::archive::binary_iarchive &, int &>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, const int &>::value));
@@ -567,9 +579,39 @@ BOOST_AUTO_TEST_CASE(s11n_test_boost_float)
     boost::mpl::for_each<fp_types>(boost_fp_tester());
 }
 
+BOOST_AUTO_TEST_CASE(s11n_test_boost_string)
+{
+    std::atomic<bool> status(true);
+    auto checker = [&status](int n) {
+        // TODO check consecutiveness / range limits.
+        std::uniform_int_distribution<char> dist('a', 'z');
+        // TODO check range limits (should be closed range I hope?).
+        std::uniform_int_distribution<unsigned> sdist(0u,10u);
+        std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
+        auto gen = [&eng,&dist]() {
+            return dist(eng);
+        };
+        std::array<char,10u> achar;
+        for (auto i = 0; i < ntrials; ++i) {
+            const auto s = sdist(eng);
+            std::generate_n(achar.begin(),s,gen);
+            std::string str(achar.begin(),achar.begin() + s);
+            const auto cmp = boost_roundtrip(str);
+            if (cmp != str) {
+                status.store(false);
+            }
+        }
+    };
+    std::thread t0(checker, 0), t1(checker, 1), t2(checker, 2), t3(checker, 3);
+    t0.join();
+    t1.join();
+    t2.join();
+    t3.join();
+    BOOST_CHECK(status.load());
+}
+
 #if defined(PIRANHA_WITH_MSGPACK)
 
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <iterator>

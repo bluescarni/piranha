@@ -71,6 +71,7 @@ see https://www.gnu.org/licenses/. */
 #include "pow.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series_multiplier.hpp"
