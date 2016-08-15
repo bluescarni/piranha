@@ -60,6 +60,7 @@ see https://www.gnu.org/licenses/. */
 #include "exceptions.hpp"
 #include "is_key.hpp"
 #include "math.hpp"
+#include "s11n.hpp"
 #include "serialization.hpp"
 #include "type_traits.hpp"
 
@@ -273,7 +274,12 @@ inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz)
         piranha_throw(std::invalid_argument, "number of digits is too large");
     }
     const auto total_size = size_base10 + 2u;
-    std::vector<char> tmp(static_cast<std::vector<char>::size_type>(total_size));
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+    static thread_local
+#endif
+        std::vector<char>
+            tmp;
+    tmp.resize(static_cast<std::vector<char>::size_type>(total_size));
     if (unlikely(tmp.size() != total_size)) {
         piranha_throw(std::invalid_argument, "number of digits is too large");
     }
@@ -4131,6 +4137,194 @@ public:
     }
     //@}
 private:
+    // Safely compute the absolute value of an mpz_size_t. For use in serialization.
+    static detail::mpz_size_t safe_abs_size(detail::mpz_size_t s)
+    {
+        if (unlikely(s < -detail::safe_abs_sint<detail::mpz_size_t>::value)) {
+            piranha_throw(std::overflow_error, "the number of limbs is too large for serialization");
+        }
+        return static_cast<detail::mpz_size_t>(s >= 0 ? s : -s);
+    }
+
+public:
+    void boost_save(boost::archive::binary_oarchive &ar) const
+    {
+        if (is_static()) {
+            ar << true;
+            // NOTE: alloc size is known for static ints.
+            ar << m_int.g_st()._mp_size;
+            std::for_each(m_int.g_st().m_limbs.data(),
+                          m_int.g_st().m_limbs.data() + safe_abs_size(m_int.g_st()._mp_size),
+                          [&ar](const typename detail::integer_union<NBits>::s_storage::limb_t &l) { ar << l; });
+        } else {
+            ar << false;
+            // NOTE: don't record alloc size, we will reserve an adequate size on load.
+            ar << m_int.g_dy()._mp_size;
+            std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + safe_abs_size(m_int.g_dy()._mp_size),
+                          [&ar](const ::mp_limb_t &l) { ar << l; });
+        }
+    }
+    void boost_save(boost::archive::text_oarchive &ar) const
+    {
+        // NOTE: this requires too many allocations, it should be refactored together
+        // with the mpz streaming so that we just need a single string.
+        std::ostringstream oss;
+        oss << *this;
+        ar << oss.str();
+    }
+    void boost_load(boost::archive::binary_iarchive &ar)
+    {
+        const bool this_s = is_static();
+        bool s;
+        ar >> s;
+        // If the staticness of this and the serialized object differ, we have
+        // to adjust this.
+        if (s != this_s) {
+            if (this_s) {
+                // This is static, serialized is dynamic.
+                promote();
+            } else {
+                // This is dynamic, serialized is static.
+                *this = mp_integer{};
+            }
+        }
+        if (s) {
+            try {
+                // NOTE: alloc is already set to the correct value.
+                piranha_assert(m_int.g_st()._mp_alloc == -1);
+                ar >> m_int.g_st()._mp_size;
+                const auto size = safe_abs_size(m_int.g_st()._mp_size);
+                if (unlikely(size > 2)) {
+                    // TODO: exception?
+                    piranha_throw(std::invalid_argument, "");
+                }
+                auto data = m_int.g_st().m_limbs.data();
+                std::for_each(data, data + size,
+                              [&ar](typename detail::integer_union<NBits>::s_storage::limb_t &l) { ar >> l; });
+                // Zero the limbs that were not loaded from the archive.
+                std::fill(data + size, data + 2, 0u);
+            } catch (...) {
+                // Reset the static before re-throwing.
+                m_int.g_st()._mp_size = 0;
+                m_int.g_st().m_limbs[0] = 0u;
+                m_int.g_st().m_limbs[1] = 0u;
+                throw;
+            }
+        } else {
+            detail::mpz_size_t sz;
+            ar >> sz;
+            const auto size = safe_abs_size(sz);
+            try {
+                ::_mpz_realloc(&m_int.g_dy(), size);
+                std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + size, [&ar](::mp_limb_t &l) { ar >> l; });
+                m_int.g_dy()._mp_size = sz;
+            } catch (...) {
+                // NOTE: only possible exception here is when ar >> l throws. In this case we have successfully
+                // reallocated and possibly written some limbs, but we have not set the size yet. Just zero out the mpz.
+                ::mpz_set_ui(&m_int.g_dy(), 0u);
+                throw;
+            }
+        }
+    }
+    void boost_load(boost::archive::text_iarchive &ar)
+    {
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+        static thread_local
+#endif
+            std::string tmp;
+        ar >> tmp;
+        *this = mp_integer{tmp};
+    }
+#if defined(PIRANHA_WITH_MSGPACK)
+    // TODO enabler.
+    // TODO capture size implicitly in the limb array size.
+    template <typename Stream>
+    void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
+    {
+        if (f == msgpack_format::binary) {
+            if (is_static()) {
+                const auto size = m_int.g_st()._mp_size;
+                p.pack_array(3);
+                msgpack_pack(p, true, f);
+                msgpack_pack(p, size, f);
+                p.pack_array(static_cast<std::uint32_t>(size >= 0 ? size : -size));
+                for_each_limb(m_int.g_st().data(), size,
+                              [&p, f](const typename detail::integer_union<NBits>::s_storage::limb_t &l) {
+                                  piranha::msgpack_pack(p, l, f);
+                              });
+            } else {
+                const auto size = m_int.g_dy()._mp_size;
+                if (unlikely(size < -detail::safe_abs_sint<detail::mpz_size_t>::value)) {
+                    piranha_throw(std::overflow_error, "the number of limbs is too large for serialization");
+                }
+                p.pack_array(3);
+                msgpack_pack(p, false, f);
+                msgpack_pack(p, size, f);
+                uint32_t usize;
+                try {
+                    usize = boost::numeric_cast<std::uint32_t>(size >= 0 ? size : -size);
+                } catch (...) {
+                    piranha_throw(std::overflow_error, "the number of limbs is too large for serialization");
+                }
+                p.pack_array(usize);
+                for_each_limb(m_int.g_dy()._mp_d(), size,
+                              [&p, f](const ::mp_limb_t &l) { piranha::msgpack_pack(p, l, f); });
+            }
+        } else {
+            std::ostringstream oss;
+            oss << *this;
+            msgpack_pack(p, oss.str(), f);
+        }
+    }
+    void msgpack_convert(const msgpack::object &o, msgpack_format f)
+    {
+        if (f == msgpack_format::binary) {
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+            static thread_local
+#endif
+                std::vector<msgpack::object>
+                    vobj;
+            o.convert(vobj);
+            if (unlikely(vobj.size() != 3u)) {
+                piranha_throw(msgpack::type_error, );
+            }
+            // Get the staticness of the serialized object.
+            bool s;
+            msgpack_convert(s, vobj[0u], f);
+            // Bring this into the same staticness as the serialized object.
+            const auto this_s = is_static();
+            if (s != this_s) {
+                if (this_s) {
+                    promote();
+                } else {
+                    *this = mp_integer{};
+                }
+            }
+            // Get the size.
+            detail::mpz_size_t size;
+            msgpack_convert(size, vobj[1u], f);
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+            static thread_local
+#endif
+                std::vector<msgpack::object>
+                    vlimbs;
+            // Convert the limbs;
+            if (s) {
+
+            } else {
+            }
+        } else {
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+            static thread_local
+#endif
+                std::string tmp;
+            msgpack_convert(tmp, o, f);
+            *this = mp_integer(tmp);
+        }
+    }
+#endif
+
+private:
     detail::integer_union<NBits> m_int;
 };
 
@@ -4693,6 +4887,40 @@ inline integer operator"" _z(const char *s)
     return integer(s);
 }
 }
+
+namespace detail
+{
+
+template <typename Archive, typename T>
+using mp_integer_boost_save_enabler =
+    typename std::enable_if<is_mp_integer<T>::value && true_tt<decltype(std::declval<const T &>().boost_save(
+                                                           std::declval<Archive &>()))>::value>::type;
+
+template <typename Archive, typename T>
+using mp_integer_boost_load_enabler =
+    typename std::enable_if<is_mp_integer<T>::value && true_tt<decltype(std::declval<T &>().boost_load(
+                                                           std::declval<Archive &>()))>::value>::type;
+}
+
+template <typename Archive, typename T>
+class boost_save_impl<Archive, T, detail::mp_integer_boost_save_enabler<Archive, T>>
+{
+public:
+    void operator()(Archive &ar, const T &n) const
+    {
+        n.boost_save(ar);
+    }
+};
+
+template <typename Archive, typename T>
+class boost_load_impl<Archive, T, detail::mp_integer_boost_load_enabler<Archive, T>>
+{
+public:
+    void operator()(Archive &ar, T &n) const
+    {
+        n.boost_load(ar);
+    }
+};
 }
 
 namespace std
