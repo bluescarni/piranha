@@ -1149,7 +1149,7 @@ public:
      *
      * This method will deserialize the content of \p ar into \p this.
      *
-     * @param[in] ar target archive.
+     * @param[in] ar the source archive.
      * @param[in] s reference symbol set.
      *
      * @throws std::invalid_argument if the size of the deserialized monomial differs from the size of \p s.
