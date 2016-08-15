@@ -738,6 +738,11 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
     BOOST_CHECK((has_msgpack_pack<sbuffer, int>::value));
     BOOST_CHECK((!has_msgpack_pack<sbuffer, no_msgpack>::value));
     BOOST_CHECK((has_msgpack_pack<std::ostringstream, int>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, bool>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, bool &>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, const bool &>::value));
+    BOOST_CHECK((has_msgpack_pack<std::ostringstream, const bool>::value));
+    BOOST_CHECK((!has_msgpack_pack<std::ostringstream &, const bool>::value));
     BOOST_CHECK((has_msgpack_pack<std::ostringstream, std::string>::value));
     BOOST_CHECK((has_msgpack_pack<std::ostringstream, std::string &>::value));
     BOOST_CHECK((has_msgpack_pack<std::ostringstream, const std::string &>::value));
@@ -749,6 +754,9 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
     BOOST_CHECK((!has_msgpack_pack<const std::ostringstream &&, int>::value));
     BOOST_CHECK((!has_msgpack_pack<std::ostringstream &&, int>::value));
     BOOST_CHECK((has_msgpack_convert<int>::value));
+    BOOST_CHECK((has_msgpack_convert<bool>::value));
+    BOOST_CHECK((has_msgpack_convert<bool &>::value));
+    BOOST_CHECK((!has_msgpack_convert<const bool>::value));
     BOOST_CHECK((has_msgpack_convert<double>::value));
     BOOST_CHECK((has_msgpack_convert<int &>::value));
     BOOST_CHECK((has_msgpack_convert<double &>::value));
@@ -814,6 +822,11 @@ struct int_tester {
 BOOST_AUTO_TEST_CASE(s11n_test_msgpack_int)
 {
     boost::mpl::for_each<integral_types>(int_tester());
+    // Test bool as well.
+    for (auto f : {0, 1}) {
+        BOOST_CHECK_EQUAL(true, msgpack_roundtrip(true, static_cast<msgpack_format>(f)));
+        BOOST_CHECK_EQUAL(false, msgpack_roundtrip(false, static_cast<msgpack_format>(f)));
+    }
 }
 
 struct fp_tester {

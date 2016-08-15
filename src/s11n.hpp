@@ -69,7 +69,7 @@ struct is_serialization_scalar
                                        || std::is_same<unsigned, T>::value || std::is_same<long, T>::value
                                        || std::is_same<unsigned long, T>::value || std::is_same<long long, T>::value
                                        || std::is_same<unsigned long long, T>::value || std::is_same<float, T>::value
-                                       || std::is_same<double, T>::value> {
+                                       || std::is_same<double, T>::value || std::is_same<bool, T>::value> {
 };
 }
 
@@ -239,7 +239,8 @@ using boost_save_arithmetic_enabler =
  * - \p char, <tt>signed char</tt>, or <tt>unsigned char</tt>,
  * - \p int or <tt>unsigned</tt>,
  * - \p long or <tt>unsigned long</tt>,
- * - <tt>long long</tt> or <tt>unsigned long long</tt>.
+ * - <tt>long long</tt> or <tt>unsigned long long</tt>,
+ * - \p bool.
  */
 template <typename Archive, typename T>
 class boost_save_impl<Archive, T, detail::boost_save_arithmetic_enabler<Archive, T>>
@@ -380,7 +381,8 @@ using boost_load_arithmetic_enabler =
  * - \p char, <tt>signed char</tt>, or <tt>unsigned char</tt>,
  * - \p int or <tt>unsigned</tt>,
  * - \p long or <tt>unsigned long</tt>,
- * - <tt>long long</tt> or <tt>unsigned long long</tt>.
+ * - <tt>long long</tt> or <tt>unsigned long long</tt>,
+ * - \p bool.
  */
 template <typename Archive, typename T>
 class boost_load_impl<Archive, T, detail::boost_load_arithmetic_enabler<Archive, T>>
@@ -393,7 +395,7 @@ public:
      * ar >> x;
      * @endcode
      *
-     * @param[in] ar a Boost loading archive.
+     * @param[in] ar the source Boost loading archive.
      * @param[in] x object to be loaded from \p ar.
      *
      * @throws unspecified any exception thrown by the stream operator of the archive.
@@ -425,7 +427,7 @@ class boost_load_impl<Archive, T, detail::boost_load_string_enabler<Archive, T>>
 public:
     /// Call operator.
     /**
-     * @param[in] a input archive.
+     * @param[in] a the source archive.
      * @param[in] s target string.
      *
      * @throws unspecified any exception thrown by the streaming operator of \p Archive.
@@ -459,7 +461,7 @@ using boost_load_enabler = typename std::enable_if<is_boost_loading_archive<Arch
  * boost_load_impl<Archive, T>{}(ar, x);
  * @endcode
  *
- * @param[in] ar a Boost loading archive.
+ * @param[in] ar the source Boost loading archive.
  * @param[in] x the object that will be loaded from \p ar.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::boost_load_impl.
@@ -676,7 +678,8 @@ using msgpack_scalar_enabler =
  * - \p int or <tt>unsigned</tt>,
  * - \p long or <tt>unsigned long</tt>,
  * - <tt>long long</tt> or <tt>unsigned long long</tt>,
- * - \p float or \p double.
+ * - \p float or \p double,
+ * - \p bool.
  *
  * The call operator will use directly the <tt>pack()</tt> method of the input msgpack packer.
  */
@@ -848,7 +851,8 @@ struct msgpack_convert_impl {
  * - \p int or <tt>unsigned</tt>,
  * - \p long or <tt>unsigned long</tt>,
  * - <tt>long long</tt> or <tt>unsigned long long</tt>,
- * - \p float or \p double.
+ * - \p float or \p double,
+ * - \p bool.
  *
  * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
  */
