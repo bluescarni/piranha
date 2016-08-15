@@ -99,7 +99,6 @@ using fp_types = boost::mpl::vector<float, double, long double>;
 template <typename T>
 static inline T boost_roundtrip(const T &x)
 {
-
     std::ostringstream oss;
     {
         boost::archive::text_oarchive oa(oss);

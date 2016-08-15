@@ -34,15 +34,9 @@ see https://www.gnu.org/licenses/. */
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-#include <boost/config/suffix.hpp>
 #include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/mpl/bool.hpp>
-#include <boost/mpl/int.hpp>
-#include <boost/mpl/integral_c_tag.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/level.hpp>
-#include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
 #include <cstddef>
 #include <fstream>
