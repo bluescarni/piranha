@@ -120,7 +120,7 @@ static const int ntrials = 10;
 
 static std::mt19937 rng;
 
-BOOST_AUTO_TEST_CASE(series_boost_s11n_test)
+BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
 {
     init();
     using pt1 = polynomial<integer, monomial<int>>;
@@ -237,5 +237,53 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test)
                                               "latest archive version 0 supported by this version of Piranha");
         };
         BOOST_CHECK_EXCEPTION(boost_load(ia, tmp), std::invalid_argument, msg_checker);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(series_boost_s11n_test_01)
+{
+    // Similar to above, but with recursive poly.
+    using pt0 = polynomial<integer, monomial<int>>;
+    using pt1 = polynomial<pt0, monomial<int>>;
+    BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, pt1>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, pt1 &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::text_oarchive &, pt1 &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, const pt1 &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::xml_oarchive, pt1>::value));
+    BOOST_CHECK((!has_boost_save<const boost::archive::text_oarchive, const pt1 &>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, pt1>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, pt1 &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::text_iarchive, const pt1 &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::text_iarchive, const pt1>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::xml_iarchive, pt1>::value));
+    // A few simple tests.
+    BOOST_CHECK_EQUAL(pt1{}, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(pt1{})));
+    BOOST_CHECK_EQUAL(pt1{},
+                      (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(pt1{})));
+    boost_roundtrip_file(pt1{});
+    BOOST_CHECK_EQUAL(pt1{12},
+                      (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(pt1{12})));
+    BOOST_CHECK_EQUAL(pt1{14},
+                      (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(pt1{14})));
+    boost_roundtrip_file(14);
+    pt0 x{"x"};
+    pt1 y{"y"}, z{"z"};
+    const auto p1 = math::pow(3 * x + y, 10);
+    BOOST_CHECK_EQUAL(p1, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(p1)));
+    BOOST_CHECK_EQUAL(p1, (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(p1)));
+    boost_roundtrip_file(p1);
+    // Some random testing.
+    std::uniform_int_distribution<int> mdist(-10, 10);
+    std::uniform_int_distribution<int> powdist(0, 10);
+    for (int i = 0; i < ntrials; ++i) {
+        pt1 tmp;
+        tmp += mdist(rng) * x;
+        tmp += mdist(rng) * y;
+        tmp += mdist(rng) * z;
+        tmp = math::pow(tmp, powdist(rng));
+        BOOST_CHECK_EQUAL(tmp, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(tmp)));
+        BOOST_CHECK_EQUAL(tmp,
+                          (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(tmp)));
+        boost_roundtrip_file(tmp);
     }
 }
