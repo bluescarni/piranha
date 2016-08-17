@@ -4163,8 +4163,7 @@ public:
             // NOTE: alloc size is known for static ints.
             const auto size = m_int.g_st()._mp_size;
             ar << size;
-            std::for_each(m_int.g_st().m_limbs.data(),
-                          m_int.g_st().m_limbs.data() + (size >= 0 ? size : -size),
+            std::for_each(m_int.g_st().m_limbs.data(), m_int.g_st().m_limbs.data() + (size >= 0 ? size : -size),
                           [&ar](const typename detail::integer_union<NBits>::s_storage::limb_t &l) { ar << l; });
         } else {
             ar << false;
