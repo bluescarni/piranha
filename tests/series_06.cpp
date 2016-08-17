@@ -232,8 +232,8 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
     {
         boost::archive::text_iarchive ia(ss);
         pt1 tmp;
-        auto msg_checker = [](const std::invalid_argument &ia) -> bool {
-            return boost::contains(ia.what(), "what: the series archive version 1 is greater than the "
+        auto msg_checker = [](const std::invalid_argument &inva) -> bool {
+            return boost::contains(inva.what(), "what: the series archive version 1 is greater than the "
                                               "latest archive version 0 supported by this version of Piranha");
         };
         BOOST_CHECK_EXCEPTION(boost_load(ia, tmp), std::invalid_argument, msg_checker);
