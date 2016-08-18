@@ -4159,14 +4159,16 @@ public:
     void boost_save(boost::archive::binary_oarchive &ar) const
     {
         if (is_static()) {
-            ar << true;
+            const bool f = true;
+            ar << f;
             // NOTE: alloc size is known for static ints.
             const auto size = m_int.g_st()._mp_size;
             ar << size;
             std::for_each(m_int.g_st().m_limbs.data(), m_int.g_st().m_limbs.data() + (size >= 0 ? size : -size),
                           [&ar](const typename detail::integer_union<NBits>::s_storage::limb_t &l) { ar << l; });
         } else {
-            ar << false;
+            const bool f = false;
+            ar << f;
             // NOTE: don't record alloc size, we will reserve an adequate size on load.
             ar << m_int.g_dy()._mp_size;
             std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + safe_abs_size(m_int.g_dy()._mp_size),
