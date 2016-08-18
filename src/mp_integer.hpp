@@ -4189,8 +4189,7 @@ public:
         // with the mpz streaming so that we just need a single string.
         std::ostringstream oss;
         oss << *this;
-        const auto s = oss.str();
-        ar << s;
+        ar << oss.str();
     }
     /// Deserialize from Boost binary archive.
     /**
