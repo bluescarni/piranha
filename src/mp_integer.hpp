@@ -5044,20 +5044,50 @@ using mp_integer_boost_load_enabler =
                                                            std::declval<Archive &>()))>::value>::type;
 }
 
+/// Implementation of piranha::boost_save() for piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled if \p T is an instance of piranha::mp_integer supporting
+ * the piranha::mp_integer::boost_save() method with an archive of type \p Archive.
+ */
 template <typename Archive, typename T>
 class boost_save_impl<Archive, T, detail::mp_integer_boost_save_enabler<Archive, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The call operator will invoke piranha::mp_integer::boost_save().
+     *
+     * @param[in] ar target archive.
+     * @param[in] n piranha::mp_integer to be serialized into \p ar.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_integer::boost_save().
+     */
     void operator()(Archive &ar, const T &n) const
     {
         n.boost_save(ar);
     }
 };
 
+/// Implementation of piranha::boost_load() for piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled if \p T is an instance of piranha::mp_integer supporting
+ * the piranha::mp_integer::boost_load() method with an archive of type \p Archive.
+ */
 template <typename Archive, typename T>
 class boost_load_impl<Archive, T, detail::mp_integer_boost_load_enabler<Archive, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The call operator will invoke piranha::mp_integer::boost_load().
+     *
+     * @param[in] ar source archive.
+     * @param[in] n target piranha::mp_integer.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_integer::boost_load().
+     */
     void operator()(Archive &ar, T &n) const
     {
         n.boost_load(ar);
@@ -5083,20 +5113,51 @@ using mp_integer_msgpack_convert_enabler =
                                                            std::declval<msgpack_format>()))>::value>::type;
 }
 
+/// Implementation of piranha::msgpack_pack() for piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled if \p T is an instance of piranha::mp_integer supporting
+ * the piranha::mp_integer::msgpack_pack() method with a stream of type \p Stream.
+ */
 template <typename Stream, typename T>
 class msgpack_pack_impl<Stream, T, detail::mp_integer_msgpack_pack_enabler<Stream, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The call operator will use piranha::mp_integer::msgpack_pack() internally.
+     *
+     * @param[in] p target <tt>msgpack::packer</tt>.
+     * @param[in] n piranha::mp_integer to be serialized.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_integer::msgpack_pack().
+     */
     void operator()(msgpack::packer<Stream> &p, const T &n, msgpack_format f) const
     {
         n.msgpack_pack(p, f);
     }
 };
 
+/// Implementation of piranha::msgpack_convert() for piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled if \p T is an instance of piranha::mp_integer.
+ */
 template <typename T>
 class msgpack_convert_impl<T, detail::mp_integer_msgpack_convert_enabler<T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The call operator will use piranha::mp_integer::msgpack_convert() internally.
+     *
+     * @param[in] n target piranha::mp_integer.
+     * @param[in] o the <tt>msgpack::object</tt> to be converted into \p n.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_integer::msgpack_convert().
+     */
     void operator()(T &n, const msgpack::object &o, msgpack_format f) const
     {
         n.msgpack_convert(o, f);

@@ -64,9 +64,6 @@ static const int ntrials = 100;
 
 static std::mt19937 rng;
 
-template <typename T>
-using sw = detail::msgpack_stream_wrapper<T>;
-
 // This is missing the s11n methods.
 struct fake_int_01 {
     fake_int_01();
