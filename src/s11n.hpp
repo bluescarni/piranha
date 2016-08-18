@@ -231,7 +231,7 @@ using boost_save_arithmetic_enabler =
                             && (is_serialization_scalar<T>::value || std::is_same<T, long double>::value)>::type;
 }
 
-/// Specialisation of piranha::boost_save() for arithmetic types.
+/// Implementation of piranha::boost_save() for arithmetic types.
 /**
  * \note
  * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_saving_archive and
@@ -373,7 +373,7 @@ using boost_load_arithmetic_enabler =
                             && (is_serialization_scalar<T>::value || std::is_same<T, long double>::value)>::type;
 }
 
-/// Specialisation of piranha::boost_load() for arithmetic types.
+/// Implementation of piranha::boost_load() for arithmetic types.
 /**
  * \note
  * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_loading_archive and
