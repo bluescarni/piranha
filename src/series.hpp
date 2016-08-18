@@ -3690,6 +3690,152 @@ public:
 };
 }
 
+inline namespace impl
+{
+
+template <typename Archive, typename Series>
+using series_boost_save_enabler =
+    typename std::enable_if<is_series<Series>::value && has_boost_save<Archive, decltype(symbol_set{}.size())>::value
+                            && has_boost_save<Archive, unsigned>::value
+                            && has_boost_save<Archive, const std::string &>::value
+                            && has_boost_save<Archive, decltype(std::declval<const Series &>().size())>::value
+                            && has_boost_save<Archive, typename Series::term_type::cf_type>::value
+                            && key_has_boost_save<Archive, typename Series::term_type::key_type>::value>::type;
+
+template <typename Archive, typename Series>
+using series_boost_load_enabler =
+    // NOTE: the requirement that Series must not be const is in the is_series check.
+    typename std::enable_if<is_series<Series>::value && has_boost_load<Archive, decltype(symbol_set{}.size())>::value
+                            && has_boost_load<Archive, unsigned>::value && has_boost_load<Archive, std::string>::value
+                            && has_boost_load<Archive, decltype(std::declval<const Series &>().size())>::value
+                            && has_boost_load<Archive, typename Series::term_type::cf_type>::value
+                            && key_has_boost_load<Archive, typename Series::term_type::key_type>::value>::type;
+}
+
+#define PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION 0u
+
+/// Implementation of piranha::boost_save() for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Series satisfies piranha::is_series,
+ * - the coefficient type, \p unsigned, and the integral types representing the size of the series and the size of
+ *   piranha::symbol_set satisfy piranha::has_boost_save,
+ * - the key type satisfies piranha::key_has_boost_save.
+ */
+template <typename Archive, typename Series>
+class boost_save_impl<Archive, Series, series_boost_save_enabler<Archive, Series>>
+{
+public:
+    /// Call operator.
+    /**
+     * @param[in] ar target output archive.
+     * @param[in] s series to be serialized.
+     *
+     * @throws unspecified any exception thrown by:
+     * - piranha::boost_save(),
+     * - the <tt>%boost_save()</tt> method of the key.
+     */
+    void operator()(Archive &ar, const Series &s) const
+    {
+        // Serialize the version number.
+        boost_save(ar, PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION);
+        // Serialize the symbol set.
+        boost_save(ar, s.get_symbol_set().size());
+        for (const auto &sym : s.get_symbol_set()) {
+            boost_save(ar, sym.get_name());
+        }
+        // Serialize the series.
+        boost_save(ar, s.size());
+        for (const auto &t : s._container()) {
+            boost_save(ar, t.m_cf);
+            t.m_key.boost_save(ar, s.get_symbol_set());
+        }
+    }
+};
+
+/// Implementation of piranha::boost_load() for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Series satisfies piranha::is_series,
+ * - the coefficient type, \p unsigned, and the integral types representing the size of the series and the size of
+ *   piranha::symbol_set satisfy piranha::has_boost_load,
+ * - the key type satisfies piranha::key_has_boost_load.
+ */
+template <typename Archive, typename Series>
+class boost_load_impl<Archive, Series, series_boost_load_enabler<Archive, Series>>
+{
+public:
+    /// Call operator.
+    /**
+     * @param[in] ar source archive.
+     * @param[out] s the output series.
+     *
+     * @throws std::invalid_argument if \p ar is an archive created with a more recent version of Piranha.
+     * @throws unspecified any exception thrown by:
+     * - piranha::boost_load(),
+     * - the <tt>%boost_load()</tt> method of the key,
+     * - memory errors in standard containers,
+     * - piranha::safe_cast(),
+     * - the public interface of piranha::symbol_set and piranha::hash_set,
+     * - <tt>boost::numeric_cast()</tt>,
+     * - piranha::series::insert(), piranha::series::set_symbol_set().
+     */
+    void operator()(Archive &ar, Series &s) const
+    {
+        using ss_size_t = decltype(s.get_symbol_set().size());
+        using s_size_t = decltype(s.size());
+        using term_type = typename Series::term_type;
+        // Load the version number.
+        unsigned version;
+        boost_load(ar, version);
+        if (unlikely(version > PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION)) {
+            piranha_throw(std::invalid_argument, "the series archive version " + std::to_string(version)
+                                                     + " is greater than the latest archive version "
+                                                     + std::to_string(PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION)
+                                                     + " supported by this version of Piranha");
+        }
+        // Erase s.
+        s = Series{};
+        // Recover the symbol set.
+        // First the size.
+        ss_size_t ss_size;
+        boost_load(ar, ss_size);
+        // NOTE: not sure if it's worth it to make this thread_local, as when resizing up new memory
+        // allocs for each string are necessary anyway.
+        std::vector<std::string> vs;
+        vs.resize(safe_cast<std::vector<std::string>::size_type>(ss_size));
+        // Load the symbol names in a vector of strings.
+        for (auto &str : vs) {
+            boost_load(ar, str);
+        }
+        // Construct the symbol set and set it to the series.
+        symbol_set ss(vs.begin(), vs.end());
+        s.set_symbol_set(ss);
+        // Now recover the series.
+        // Size first.
+        s_size_t s_size;
+        boost_load(ar, s_size);
+        // Preallocate buckets.
+        s._container().rehash(
+            boost::numeric_cast<s_size_t>(std::ceil(static_cast<double>(s_size) / s._container().max_load_factor())));
+        // Insert all the terms.
+        for (s_size_t i = 0u; i < s_size; ++i) {
+            // NOTE: the rationale for creating a new term each time is that if we move it, we have
+            // no guarantees on the moved-from state (in particular, we cannot be certain that a moved-from
+            // term can be deserialized into).
+            term_type t;
+            boost_load(ar, t.m_cf);
+            t.m_key.boost_load(ar, ss);
+            s.insert(std::move(t));
+        }
+    }
+};
+
+#undef PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION
+
+#if 0
 // TODO enabler: cf and key need to be packable.
 template <typename Stream, typename Series>
 struct msgpack_pack_impl<Stream, Series, typename std::enable_if<is_series<Series>::value>::type> {
@@ -3747,6 +3893,7 @@ struct msgpack_unpack_impl<Series, typename std::enable_if<is_series<Series>::va
         s = std::move(out);
     }
 };
+#endif
 }
 
 #endif

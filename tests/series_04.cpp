@@ -661,6 +661,7 @@ struct type_traits_tester {
             BOOST_CHECK(is_series<p_type11>::value);
             BOOST_CHECK(!is_series<p_type1 &>::value);
             BOOST_CHECK(!is_series<p_type11 const &>::value);
+            BOOST_CHECK(!is_series<p_type11 const>::value);
             BOOST_CHECK(is_equality_comparable<p_type1>::value);
             BOOST_CHECK((is_equality_comparable<p_type1, Cf>::value));
             BOOST_CHECK((is_equality_comparable<Cf, p_type1>::value));

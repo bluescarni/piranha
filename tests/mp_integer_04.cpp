@@ -234,6 +234,7 @@ struct boost_s11n_tester {
             BOOST_CHECK_EQUAL(n, 0);
         }
         ss.str("");
+        ss.clear();
         {
             boost::archive::binary_oarchive oa(ss);
             oa << false;
@@ -248,6 +249,7 @@ struct boost_s11n_tester {
             BOOST_CHECK_EQUAL(n, 0);
         }
         ss.str("");
+        ss.clear();
         {
             using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
             boost::archive::binary_oarchive oa(ss);
