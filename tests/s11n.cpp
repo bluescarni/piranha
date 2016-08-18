@@ -41,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/mpl/bool.hpp>
+#include <boost/version.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -438,7 +439,9 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     // Test custom archives.
     BOOST_CHECK((is_boost_saving_archive<sa0, int>::value));
     BOOST_CHECK((!is_boost_saving_archive<sa0, unserial>::value));
+#if BOOST_VERSION >= 105700
     BOOST_CHECK((!is_boost_saving_archive<sa1, int>::value));
+#endif
     BOOST_CHECK((!is_boost_saving_archive<sa2, int>::value));
     BOOST_CHECK((!is_boost_saving_archive<sa3, int>::value));
     BOOST_CHECK((!is_boost_saving_archive<sa4, int>::value));
@@ -552,6 +555,13 @@ struct boost_fp_tester {
     template <typename T>
     void operator()(const T &) const
     {
+#if BOOST_VERSION < 106000
+        // Serialization of long double appears to be broken in previous
+        // Boost versions with the text archive.
+        if (std::is_same<T, long double>::value) {
+            return;
+        }
+#endif
         std::atomic<bool> status(true);
         auto checker = [&status](int n) {
             std::uniform_real_distribution<T> dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
@@ -559,7 +569,9 @@ struct boost_fp_tester {
             for (auto i = 0; i < ntrials; ++i) {
                 const auto tmp = dist(eng);
                 auto cmp = boost_roundtrip(tmp);
-                if (cmp != tmp) {
+                // NOTE: use a bit of tolerance here. Recent Boost versions do the roundtrip exactly
+                // with the text archive, but earlier versions don't.
+                if (std::abs((cmp - tmp) / cmp) > std::numeric_limits<T>::epsilon() * 10.) {
                     status.store(false);
                 }
             }
@@ -999,6 +1011,13 @@ struct fp_save_load_tester {
     template <typename T>
     void operator()(const T &) const
     {
+#if BOOST_VERSION < 106000
+        // Serialization of long double appears to be broken in previous
+        // Boost versions with the text archive.
+        if (std::is_same<T, long double>::value) {
+            return;
+        }
+#endif
         std::atomic<bool> status(true);
         auto checker = [&status](int n) {
             std::uniform_real_distribution<T> dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());

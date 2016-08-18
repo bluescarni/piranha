@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_test)
     {
         boost::archive::binary_oarchive oa(ss);
         boost::timer::auto_cpu_timer t;
-        boost_save(oa,res);
+        boost_save(oa, res);
         std::cout << "Boost save, binary, timing: ";
     }
     std::cout << "Boost save, binary, size: " << ss.tellp() << '\n';
@@ -61,16 +61,16 @@ BOOST_AUTO_TEST_CASE(s11n_series_test)
     {
         boost::archive::binary_iarchive ia(ss);
         boost::timer::auto_cpu_timer t;
-        boost_load(ia,tmp);
+        boost_load(ia, tmp);
         std::cout << "Boost load, binary, timing: ";
     }
-    BOOST_CHECK_EQUAL(tmp,res);
+    BOOST_CHECK_EQUAL(tmp, res);
     ss.str("");
     ss.clear();
     {
         boost::archive::text_oarchive oa(ss);
         boost::timer::auto_cpu_timer t;
-        boost_save(oa,res);
+        boost_save(oa, res);
         std::cout << "Boost save, text, timing: ";
     }
     std::cout << "Boost save, text, size: " << ss.tellp() << '\n';
@@ -78,10 +78,10 @@ BOOST_AUTO_TEST_CASE(s11n_series_test)
     {
         boost::archive::text_iarchive ia(ss);
         boost::timer::auto_cpu_timer t;
-        boost_load(ia,tmp);
+        boost_load(ia, tmp);
         std::cout << "Boost load, text, timing: ";
     }
-    BOOST_CHECK_EQUAL(tmp,res);
+    BOOST_CHECK_EQUAL(tmp, res);
     ss.str("");
     ss.clear();
     {
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_test)
         ia >> tmp;
         std::cout << "Old load, timing: ";
     }
-    BOOST_CHECK_EQUAL(tmp,res);
+    BOOST_CHECK_EQUAL(tmp, res);
     ss.str("");
     ss.clear();
     {
@@ -115,5 +115,5 @@ BOOST_AUTO_TEST_CASE(s11n_series_test)
         ia >> tmp;
         std::cout << "Old load, timing: ";
     }
-    BOOST_CHECK_EQUAL(tmp,res);
+    BOOST_CHECK_EQUAL(tmp, res);
 }

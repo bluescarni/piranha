@@ -223,8 +223,8 @@ struct boost_s11n_tester {
         std::stringstream ss;
         {
             boost::archive::binary_oarchive oa(ss);
-            oa << true;
-            oa << detail::mpz_size_t(1);
+            boost_save(oa, true);
+            boost_save(oa, detail::mpz_size_t(1));
         }
         int_type n{1};
         try {
@@ -237,8 +237,8 @@ struct boost_s11n_tester {
         ss.clear();
         {
             boost::archive::binary_oarchive oa(ss);
-            oa << false;
-            oa << detail::mpz_size_t(1);
+            boost_save(oa, false);
+            boost_save(oa, detail::mpz_size_t(1));
         }
         n = int_type{1};
         n.promote();
@@ -253,11 +253,11 @@ struct boost_s11n_tester {
         {
             using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
             boost::archive::binary_oarchive oa(ss);
-            oa << true;
-            oa << detail::mpz_size_t(3);
-            oa << limb_t(1);
-            oa << limb_t(1);
-            oa << limb_t(1);
+            boost_save(oa, true);
+            boost_save(oa, detail::mpz_size_t(3));
+            boost_save(oa, limb_t(1));
+            boost_save(oa, limb_t(1));
+            boost_save(oa, limb_t(1));
         }
         n = int_type{1};
         try {

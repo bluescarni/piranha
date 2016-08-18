@@ -4159,18 +4159,20 @@ public:
     void boost_save(boost::archive::binary_oarchive &ar) const
     {
         if (is_static()) {
-            ar << true;
+            piranha::boost_save(ar, true);
             // NOTE: alloc size is known for static ints.
             const auto size = m_int.g_st()._mp_size;
-            ar << size;
+            piranha::boost_save(ar, size);
             std::for_each(m_int.g_st().m_limbs.data(), m_int.g_st().m_limbs.data() + (size >= 0 ? size : -size),
-                          [&ar](const typename detail::integer_union<NBits>::s_storage::limb_t &l) { ar << l; });
+                          [&ar](const typename detail::integer_union<NBits>::s_storage::limb_t &l) {
+                              piranha::boost_save(ar, l);
+                          });
         } else {
-            ar << false;
+            piranha::boost_save(ar, false);
             // NOTE: don't record alloc size, we will reserve an adequate size on load.
-            ar << m_int.g_dy()._mp_size;
+            piranha::boost_save(ar, m_int.g_dy()._mp_size);
             std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + safe_abs_size(m_int.g_dy()._mp_size),
-                          [&ar](const ::mp_limb_t &l) { ar << l; });
+                          [&ar](const ::mp_limb_t &l) { piranha::boost_save(ar, l); });
         }
     }
     /// Save to a Boost text archive.
@@ -4189,7 +4191,7 @@ public:
         // with the mpz streaming so that we just need a single string.
         std::ostringstream oss;
         oss << *this;
-        ar << oss.str();
+        piranha::boost_save(ar, oss.str());
     }
     /// Deserialize from Boost binary archive.
     /**
@@ -4207,7 +4209,7 @@ public:
     {
         const bool this_s = is_static();
         bool s;
-        ar >> s;
+        piranha::boost_load(ar, s);
         // If the staticness of this and the serialized object differ, we have
         // to adjust this.
         if (s != this_s) {
@@ -4223,15 +4225,16 @@ public:
             try {
                 // NOTE: alloc is already set to the correct value.
                 piranha_assert(m_int.g_st()._mp_alloc == -1);
-                ar >> m_int.g_st()._mp_size;
+                piranha::boost_load(ar, m_int.g_st()._mp_size);
                 const auto size = safe_abs_size(m_int.g_st()._mp_size);
                 if (unlikely(size > 2)) {
                     piranha_throw(std::invalid_argument,
                                   "cannot deserialize a static integer with " + std::to_string(size) + " limbs");
                 }
                 auto data = m_int.g_st().m_limbs.data();
-                std::for_each(data, data + size,
-                              [&ar](typename detail::integer_union<NBits>::s_storage::limb_t &l) { ar >> l; });
+                std::for_each(data, data + size, [&ar](typename detail::integer_union<NBits>::s_storage::limb_t &l) {
+                    piranha::boost_load(ar, l);
+                });
                 // Zero the limbs that were not loaded from the archive.
                 std::fill(data + size, data + 2, 0u);
             } catch (...) {
@@ -4243,14 +4246,15 @@ public:
             }
         } else {
             detail::mpz_size_t sz;
-            ar >> sz;
+            piranha::boost_load(ar, sz);
             const auto size = safe_abs_size(sz);
             ::_mpz_realloc(&m_int.g_dy(), size);
             try {
-                std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + size, [&ar](::mp_limb_t &l) { ar >> l; });
+                std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + size,
+                              [&ar](::mp_limb_t &l) { piranha::boost_load(ar, l); });
                 m_int.g_dy()._mp_size = sz;
             } catch (...) {
-                // NOTE: only possible exception here is when ar >> l throws. In this case we have successfully
+                // NOTE: only possible exception here is when boost_load(ar,l) throws. In this case we have successfully
                 // reallocated and possibly written some limbs, but we have not set the size yet. Just zero out the mpz.
                 ::mpz_set_ui(&m_int.g_dy(), 0u);
                 throw;
@@ -4272,7 +4276,7 @@ public:
         static thread_local
 #endif
             std::string tmp;
-        ar >> tmp;
+        piranha::boost_load(ar, tmp);
         *this = mp_integer{tmp};
     }
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -4448,9 +4452,6 @@ public:
                     });
                     m_int.g_dy()._mp_size = static_cast<detail::mpz_size_t>(size_sign ? sz : -sz);
                 } catch (...) {
-                    // NOTE: only possible exception here is when ar >> l throws. In this case we have successfully
-                    // reallocated and possibly written some limbs, but we have not set the size yet. Just zero out the
-                    // mpz.
                     ::mpz_set_ui(&m_int.g_dy(), 0u);
                     throw;
                 }

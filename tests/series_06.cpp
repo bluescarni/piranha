@@ -165,11 +165,14 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
         boost_roundtrip_file(tmp);
     }
     // Some error testing.
+    // NOTE: we used to have boost text archives for these tests, but apparently
+    // they error out in a buggy way in earlier Boost versions. Valgrind reports
+    // uninitalized memory reads in correspondence of the missing data, for instance.
     std::stringstream ss;
     using ss_size_t = symbol_set::size_type;
     using s_size_t = pt1::size_type;
     {
-        boost::archive::text_oarchive oa(ss);
+        boost::archive::binary_oarchive oa(ss);
         boost_save(oa, 0u);
         boost_save(oa, ss_size_t(2));
         boost_save(oa, std::string("x"));
@@ -181,14 +184,14 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
         k.boost_save(oa, symbol_set{});
     }
     {
-        boost::archive::text_iarchive ia(ss);
+        boost::archive::binary_iarchive ia(ss);
         pt1 tmp;
         BOOST_CHECK_THROW(boost_load(ia, tmp), std::invalid_argument);
     }
     ss.str("");
     ss.clear();
     {
-        boost::archive::text_oarchive oa(ss);
+        boost::archive::binary_oarchive oa(ss);
         boost_save(oa, 0u);
         boost_save(oa, ss_size_t(2));
         boost_save(oa, std::string("x"));
@@ -198,14 +201,14 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
         // Don't save any monomial.
     }
     {
-        boost::archive::text_iarchive ia(ss);
+        boost::archive::binary_iarchive ia(ss);
         pt1 tmp;
         BOOST_CHECK_THROW(boost_load(ia, tmp), boost::archive::archive_exception);
     }
     ss.str("");
     ss.clear();
     {
-        boost::archive::text_oarchive oa(ss);
+        boost::archive::binary_oarchive oa(ss);
         boost_save(oa, 0u);
         boost_save(oa, ss_size_t(2));
         boost_save(oa, std::string("x"));
@@ -214,14 +217,14 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
         boost_save(oa, s_size_t(0));
     }
     {
-        boost::archive::text_iarchive ia(ss);
+        boost::archive::binary_iarchive ia(ss);
         pt1 tmp;
         BOOST_CHECK_THROW(boost_load(ia, tmp), boost::archive::archive_exception);
     }
     ss.str("");
     ss.clear();
     {
-        boost::archive::text_oarchive oa(ss);
+        boost::archive::binary_oarchive oa(ss);
         // Save version too high.
         boost_save(oa, 1u);
         boost_save(oa, ss_size_t(2));
@@ -230,11 +233,11 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
         boost_save(oa, s_size_t(0));
     }
     {
-        boost::archive::text_iarchive ia(ss);
+        boost::archive::binary_iarchive ia(ss);
         pt1 tmp;
         auto msg_checker = [](const std::invalid_argument &inva) -> bool {
             return boost::contains(inva.what(), "what: the series archive version 1 is greater than the "
-                                              "latest archive version 0 supported by this version of Piranha");
+                                                "latest archive version 0 supported by this version of Piranha");
         };
         BOOST_CHECK_EXCEPTION(boost_load(ia, tmp), std::invalid_argument, msg_checker);
     }

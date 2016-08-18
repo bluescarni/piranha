@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/version.hpp>
 #include <cstddef>
 #include <fstream>
 #include <ios>
@@ -126,8 +127,12 @@ class is_boost_saving_archive : detail::sfinae_types
           // unsigned int. This seems to work and it should cover also the cases in which the return type
           // is a real unsigned int.
           std::is_convertible<decltype(test7(std::declval<Archive>())), unsigned long long>::value
+#if BOOST_VERSION >= 105700
+          //  Helper support is available since 1.57.
           && std::is_same<decltype(test8(std::declval<Archive &>())), yes>::value
-          && std::is_same<decltype(test9(std::declval<Archive &>())), yes>::value;
+          && std::is_same<decltype(test9(std::declval<Archive &>())), yes>::value
+#endif
+        ;
 
 public:
     /// Value of the type trait.
@@ -192,8 +197,10 @@ class is_boost_loading_archive : detail::sfinae_types
           && std::is_same<yes, decltype(test4(std::declval<Archive &>(), std::declval<Tp>(), 0u))>::value
           && std::is_same<yes, decltype(test5(std::declval<Archive &>(), std::declval<T>()))>::value
           && std::is_convertible<decltype(test7(std::declval<Archive>())), unsigned long long>::value
+#if BOOST_VERSION >= 105700
           && std::is_same<decltype(test8(std::declval<Archive &>())), yes>::value
           && std::is_same<decltype(test9(std::declval<Archive &>())), yes>::value
+#endif
           && std::is_same<decltype(test10(std::declval<Archive &>(), std::declval<Tp>(), std::declval<Tp>())),
                           yes>::value
           && std::is_same<decltype(test11(std::declval<Archive &>())), yes>::value;

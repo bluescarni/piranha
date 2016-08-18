@@ -3837,6 +3837,7 @@ public:
 
 #if 0
 // TODO enabler: cf and key need to be packable.
+// TODO use piranha's packing functions, not msgpack's.
 template <typename Stream, typename Series>
 struct msgpack_pack_impl<Stream, Series, typename std::enable_if<is_series<Series>::value>::type> {
     void operator()(msgpack::packer<Stream> &packer, const Series &s, msgpack_format f) const
