@@ -168,6 +168,8 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
     // NOTE: we used to have boost text archives for these tests, but apparently
     // they error out in a buggy way in earlier Boost versions. Valgrind reports
     // uninitalized memory reads in correspondence of the missing data, for instance.
+    // Might be related to this:
+    // https://github.com/boostorg/serialization/commit/fb559afd0dc540774a41fda1c72cc64addebe075
     std::stringstream ss;
     using ss_size_t = symbol_set::size_type;
     using s_size_t = pt1::size_type;
