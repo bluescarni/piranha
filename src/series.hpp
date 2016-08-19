@@ -3693,23 +3693,50 @@ public:
 inline namespace impl
 {
 
-template <typename Archive, typename Series>
-using series_boost_save_enabler =
-    typename std::enable_if<is_series<Series>::value && has_boost_save<Archive, decltype(symbol_set{}.size())>::value
-                            && has_boost_save<Archive, unsigned>::value
-                            && has_boost_save<Archive, const std::string &>::value
-                            && has_boost_save<Archive, decltype(std::declval<const Series &>().size())>::value
-                            && has_boost_save<Archive, typename Series::term_type::cf_type>::value
-                            && key_has_boost_save<Archive, typename Series::term_type::key_type>::value>::type;
+// NOTE: the idea here is to check *first* if Series is a series, and then apply all the checks
+// for the implementation of the serialization bits. If we put the series + serialization checks all in a single
+// statement, we would have the following situation: during any instantiation of boost_save(), we would have
+// to check if, e.g., has_boost_save<Archive, unsigned>::value is satisfied, which would prompt internally another
+// instantiation of boost_save(), and so on in what seems an infinite recursion. In C++14, this should not be a problem
+// as SFINAE proceeds in a lexicographical fashion[0]: if we put first the is_series check, then the other checks are
+// not run when determining has_boost_save<Archive, unsigned>::value (as unsigned is not a series), and the recursion
+// terminates. However, it seems like clang has an issue with this, and yields a rather confusing message in at least
+// one of the test cases. This workaround seems to be fine.
+// 
+// [0] http://en.cppreference.com/w/cpp/language/sfinae
+template <typename Archive, typename Series, typename = void>
+struct sbse_impl {
+};
 
 template <typename Archive, typename Series>
-using series_boost_load_enabler =
+struct sbse_impl<Archive, Series, typename std::enable_if<is_series<Series>::value>::type> {
+    static const bool value = has_boost_save<Archive, decltype(symbol_set{}.size())>::value
+                              && has_boost_save<Archive, unsigned>::value
+                              && has_boost_save<Archive, const std::string &>::value
+                              && has_boost_save<Archive, decltype(std::declval<const Series &>().size())>::value
+                              && has_boost_save<Archive, typename Series::term_type::cf_type>::value
+                              && key_has_boost_save<Archive, typename Series::term_type::key_type>::value;
+};
+
+template <typename Archive, typename Series>
+using series_boost_save_enabler = typename std::enable_if<sbse_impl<Archive, Series>::value>::type;
+
+template <typename Archive, typename Series, typename = void>
+struct sble_impl {
+};
+
+template <typename Archive, typename Series>
+struct sble_impl<Archive, Series, typename std::enable_if<is_series<Series>::value>::type> {
     // NOTE: the requirement that Series must not be const is in the is_series check.
-    typename std::enable_if<is_series<Series>::value && has_boost_load<Archive, decltype(symbol_set{}.size())>::value
-                            && has_boost_load<Archive, unsigned>::value && has_boost_load<Archive, std::string>::value
-                            && has_boost_load<Archive, decltype(std::declval<const Series &>().size())>::value
-                            && has_boost_load<Archive, typename Series::term_type::cf_type>::value
-                            && key_has_boost_load<Archive, typename Series::term_type::key_type>::value>::type;
+    static const bool value = has_boost_load<Archive, decltype(symbol_set{}.size())>::value
+                              && has_boost_load<Archive, unsigned>::value && has_boost_load<Archive, std::string>::value
+                              && has_boost_load<Archive, decltype(std::declval<const Series &>().size())>::value
+                              && has_boost_load<Archive, typename Series::term_type::cf_type>::value
+                              && key_has_boost_load<Archive, typename Series::term_type::key_type>::value;
+};
+
+template <typename Archive, typename Series>
+using series_boost_load_enabler = typename std::enable_if<sble_impl<Archive, Series>::value>::type;
 }
 
 #define PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION 0u
