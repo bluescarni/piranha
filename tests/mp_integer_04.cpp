@@ -184,14 +184,14 @@ struct boost_s11n_tester {
                 if (pdist(rng)) {
                     cmp.negate();
                 }
-                auto tmp = boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
+                auto tmp2 = boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
                     cmp, pdist(rng));
                 // NOTE: binary saving preserves the staticness.
-                if (tmp != cmp || tmp.is_static() != cmp.is_static()) {
+                if (tmp2 != cmp || tmp2.is_static() != cmp.is_static()) {
                     status.store(false);
                 }
-                tmp = boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(cmp, pdist(rng));
-                if (tmp != cmp) {
+                tmp2 = boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(cmp, pdist(rng));
+                if (tmp2 != cmp) {
                     status.store(false);
                 }
             }
@@ -202,13 +202,13 @@ struct boost_s11n_tester {
                 if (pdist(rng) && cmp.is_static()) {
                     cmp.promote();
                 }
-                auto tmp = boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
+                auto tmp2 = boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
                     cmp, pdist(rng));
-                if (tmp != cmp || tmp.is_static() != cmp.is_static()) {
+                if (tmp2 != cmp || tmp2.is_static() != cmp.is_static()) {
                     status.store(false);
                 }
-                tmp = boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(cmp, pdist(rng));
-                if (tmp != cmp) {
+                tmp2 = boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(cmp, pdist(rng));
+                if (tmp2 != cmp) {
                     status.store(false);
                 }
             }
