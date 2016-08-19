@@ -42,10 +42,6 @@ see https://www.gnu.org/licenses/. */
 namespace bfs = boost::filesystem;
 
 // Small raii class for creating a tmp file.
-// NOTE: this will not actually create the file, it will just create
-// a tmp file name - so one is supposed to use the m_path member to create a file
-// in the usual way. The destructor will attempt to delete the file at m_path, nothing
-// will happen if the file does not exist.
 struct tmp_file {
     tmp_file()
     {
@@ -186,33 +182,5 @@ BOOST_AUTO_TEST_CASE(serialization_test_04)
         std::cout << "File size: " << bfs::file_size(f.m_path) / 1024. / 1024. << '\n';
     }
     BOOST_CHECK(ret1 == ret2);
-    std::cout << "\n\n";
-}
-
-BOOST_AUTO_TEST_CASE(serialization_test_pack)
-{
-    std::cout << "Timing double multiplication:\n";
-    auto ret1 = pearce1<double, monomial<int>>();
-    {
-        std::stringstream ss;
-        boost::archive::text_oarchive oa(ss);
-        boost::timer::auto_cpu_timer t;
-        oa << ret1;
-        std::cout << "Raw text boost serialization: ";
-    }
-    {
-        std::stringstream ss;
-        boost::archive::binary_oarchive oa(ss);
-        boost::timer::auto_cpu_timer t;
-        oa << ret1;
-        std::cout << "Raw binary boost serialization: ";
-    }
-    {
-        msgpack::sbuffer sbuf;
-        msgpack::packer<msgpack::sbuffer> packer(sbuf);
-        boost::timer::auto_cpu_timer t;
-        msgpack_pack(packer, ret1, msgpack_format::binary);
-        std::cout << "Binary msgpack serialization: ";
-    }
     std::cout << "\n\n";
 }
