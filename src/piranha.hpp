@@ -295,7 +295,7 @@ see https://www.gnu.org/licenses/. */
  * header and then make sure to include that header in every piranha public header.
  * \todo safe_cast fixages: remove the dependency on mp_integer, fix the exception usage as explained above,
  * and once this is done check all uses of boost numeric_cast, which should now be replaceable by safe_cast.
- * Check also the fwd declaration usages (e.g., in serialization) which work around the current issues.
+ * Check also the fwd declaration usages which work around the current issues.
  * \todo checkout the --enable-fat GMP build option - it looks like this is the way to go for a generic GMP lib
  * for binary windows distributions.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
@@ -306,6 +306,12 @@ see https://www.gnu.org/licenses/. */
  * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
  *   in the same fashion as the s11n type traits.
  * \todo just replace @param[in]/@param[out] with just @param
+ * \todo keep in mind the analysis done for the boost_save() implementation for series. The general issue seems to be
+ * that when implementing functionality recursively on top of existing functionality (e.g., boost_save() for
+ * series depends on boost_save() of other types) and we put these requirements in the enablers, then we risk of running
+ * an infinite recursion: boost_save() needs to check has_boost_save for some other type, which triggers an
+ * instantiation of boost_save(), and so on. If I understand this well, this may result in infinite recursion in C++11
+ * whereas in C++14 the recursion should be stopped by the fact that SFINAE proceeds in lex fashion.
  */
 namespace piranha
 {
