@@ -47,7 +47,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/serialization.hpp"
-#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 
 using namespace piranha;
