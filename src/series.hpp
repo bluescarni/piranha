@@ -3903,8 +3903,28 @@ using series_msgpack_convert_enabler = typename std::enable_if<smce_impl<Series>
 
 #define PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION 0u
 
+/// Implementation of piranha::msgpack_pack() for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Series satisfies piranha::is_series,
+ * - the coefficient type satisfies piranha::has_msgpack_pack,
+ * - the key type satisfies piranha::key_has_msgpack_pack.
+ */
 template <typename Stream, typename Series>
 struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Series>> {
+    /// Call operator.
+    /**
+     * @param packer the target <tt>msgpack::packer</tt>.
+     * @param s the input series.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::msgpack_pack(),
+     * - piranha::safe_cast(),
+     * - the <tt>%msgpack_pack()</tt> method of the key.
+     */
     void operator()(msgpack::packer<Stream> &packer, const Series &s, msgpack_format f) const
     {
         // A series is an array made of up to three elements:
@@ -3934,13 +3954,44 @@ struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Ser
     }
 };
 
+/// Implementation of piranha::msgpack_convert() for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Series satisfies piranha::is_series,
+ * - the coefficient type satisfies piranha::has_msgpack_convert,
+ * - the key type satisfies piranha::key_has_msgpack_convert.
+ */
 template <typename Series>
 struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
+    /// Call operator.
+    /**
+     * The call operator offers the basic exception safety guarantee: upon deserialization errors, \p s will
+     * be left in an unspecified (but valid) state.
+     *
+     * @param s the output series.
+     * @param o the <tt>msgpack::object</tt> that will be converted into \p s.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws std::invalid_argument if \p o contains an array with an invalid number of
+     * elements, or if \p f is piranha::msgpack_format::portable and the serialized object
+     * has been created with a later version of Piranha.
+     * @throws unspecified any exception thrown by:
+     * - memory errors in standard containers,
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::msgpack_convert(),
+     * - the <tt>%msgpack_convert()</tt> method of the key,
+     * - the public interface of piranha::symbol_set and piranha::hash_set,
+     * - piranha::series::set_symbol_set() and piranha::series::insert(),
+     * - the constructor of the term type of the series,
+     * - <tt>boost::numeric_cast()</tt>.
+     */
     void operator()(Series &s, const msgpack::object &o, msgpack_format f) const
     {
         using term_type = typename Series::term_type;
         using cf_type = typename term_type::cf_type;
         using key_type = typename term_type::key_type;
+        using s_size_t = decltype(s.size());
         // Erase s.
         s = Series{};
         std::vector<msgpack::object> tmp_v;
@@ -3976,13 +4027,16 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
         tmp_v[static_cast<std::vector<msgpack::object>::size_type>(v_idx + 1u)].convert(tmp_terms);
         // Create the symbol set, passing through a vec of str.
         std::vector<std::string> v_str;
-        std::string tmp_str;
         std::transform(tmp_ss.begin(), tmp_ss.end(), std::back_inserter(v_str),
-                       [&tmp_str, f](const msgpack::object &obj) -> std::string {
+                       [f](const msgpack::object &obj) -> std::string {
+                           std::string tmp_str;
                            msgpack_convert(tmp_str, obj, f);
                            return tmp_str;
                        });
         s.set_symbol_set(symbol_set(v_str.begin(), v_str.end()));
+        // Preallocate buckets.
+        s._container().rehash(boost::numeric_cast<s_size_t>(
+            std::ceil(static_cast<double>(tmp_terms.size()) / s._container().max_load_factor())));
         // Insert all the terms.
         for (const auto &t : tmp_terms) {
             std::array<msgpack::object, 2> tmp_term;
