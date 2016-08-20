@@ -122,8 +122,7 @@ inline bp::class_<T> expose_class()
                           ("the C++ type '" + piranha::detail::demangle(t_idx) + "' has already been exposed").c_str());
         bp::throw_error_already_set();
     }
-    bp::class_<T> class_inst(("_exposed_type_" + std::to_string(exposed_types_counter)).c_str(),
-                             bp::init<>());
+    bp::class_<T> class_inst(("_exposed_type_" + std::to_string(exposed_types_counter)).c_str(), bp::init<>());
     ++exposed_types_counter;
     // NOTE: class_ inherits from bp::object, here the "call operator" of a class type will construct an instance
     // of that object. We then get the Python type out of that. It seems like another possible way of achieving

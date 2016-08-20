@@ -292,3 +292,38 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_01)
         boost_roundtrip_file(tmp);
     }
 }
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+template <typename T>
+static inline T msgpack_roundtrip(const T &x, msgpack_format f)
+{
+    msgpack::sbuffer sbuf;
+    msgpack::packer<msgpack::sbuffer> p(sbuf);
+    msgpack_pack(p, x, f);
+    auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+    T retval;
+    msgpack_convert(retval, oh.get(), f);
+    return retval;
+}
+
+BOOST_AUTO_TEST_CASE(series_msgpack_s11n_test_00)
+{
+    using pt1 = polynomial<integer, monomial<int>>;
+    BOOST_CHECK((has_msgpack_pack<std::stringstream, pt1>::value));
+    BOOST_CHECK((has_msgpack_pack<std::stringstream, pt1 &>::value));
+    BOOST_CHECK((has_msgpack_pack<std::stringstream, const pt1 &>::value));
+    BOOST_CHECK((has_msgpack_pack<std::stringstream, const pt1>::value));
+    BOOST_CHECK((!has_msgpack_pack<std::stringstream &, const pt1>::value));
+    BOOST_CHECK((!has_msgpack_pack<const std::stringstream, const pt1>::value));
+    BOOST_CHECK((has_msgpack_convert<pt1>::value));
+    BOOST_CHECK((has_msgpack_convert<pt1 &>::value));
+    BOOST_CHECK((!has_msgpack_convert<const pt1 &>::value));
+    BOOST_CHECK((!has_msgpack_convert<const pt1>::value));
+    // A few simple checks.
+    for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
+        BOOST_CHECK_EQUAL(pt1{}, (msgpack_roundtrip(pt1{}, f)));
+    }
+}
+
+#endif

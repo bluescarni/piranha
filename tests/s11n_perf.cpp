@@ -35,6 +35,7 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <sstream>
 
+#include "../src/config.hpp"
 #include "../src/init.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -88,15 +89,15 @@ BOOST_AUTO_TEST_CASE(s11n_series_test)
         boost::archive::text_oarchive oa(ss);
         boost::timer::auto_cpu_timer t;
         oa << res;
-        std::cout << "Old save, timing: ";
+        std::cout << "Old save, text, timing: ";
     }
-    std::cout << "Old save, size: " << ss.tellp() << '\n';
+    std::cout << "Old save, text, size: " << ss.tellp() << '\n';
     tmp = pt{};
     {
         boost::archive::text_iarchive ia(ss);
         boost::timer::auto_cpu_timer t;
         ia >> tmp;
-        std::cout << "Old load, timing: ";
+        std::cout << "Old load, text, timing: ";
     }
     BOOST_CHECK_EQUAL(tmp, res);
     ss.str("");
@@ -105,15 +106,34 @@ BOOST_AUTO_TEST_CASE(s11n_series_test)
         boost::archive::binary_oarchive oa(ss);
         boost::timer::auto_cpu_timer t;
         oa << res;
-        std::cout << "Old save, timing: ";
+        std::cout << "Old save, binary, timing: ";
     }
-    std::cout << "Old save, size: " << ss.tellp() << '\n';
+    std::cout << "Old save, binary, size: " << ss.tellp() << '\n';
     tmp = pt{};
     {
         boost::archive::binary_iarchive ia(ss);
         boost::timer::auto_cpu_timer t;
         ia >> tmp;
-        std::cout << "Old load, timing: ";
+        std::cout << "Old load, binary, timing: ";
     }
     BOOST_CHECK_EQUAL(tmp, res);
+    ss.str("");
+    ss.clear();
+#if defined(PIRANHA_WITH_MSGPACK)
+    msgpack::sbuffer sbuf;
+    {
+        msgpack::packer<msgpack::sbuffer> p(sbuf);
+        boost::timer::auto_cpu_timer t;
+        msgpack_pack(p, res, msgpack_format::binary);
+        std::cout << "msgpack pack, sbuffer, binary, timing: ";
+    }
+    std::cout << "msgpack pack, binary, size: " << sbuf.size() << '\n';
+    {
+        boost::timer::auto_cpu_timer t;
+        auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+        msgpack_convert(tmp, oh.get(), msgpack_format::binary);
+        std::cout << "msgpack convert, sbuffer, binary, timing: ";
+    }
+    BOOST_CHECK_EQUAL(tmp, res);
+#endif
 }
