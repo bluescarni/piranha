@@ -5031,18 +5031,19 @@ inline integer operator"" _z(const char *s)
 }
 }
 
-namespace detail
+inline namespace impl
 {
 
 template <typename Archive, typename T>
 using mp_integer_boost_save_enabler =
-    typename std::enable_if<is_mp_integer<T>::value && true_tt<decltype(std::declval<const T &>().boost_save(
-                                                           std::declval<Archive &>()))>::value>::type;
+    typename std::enable_if<detail::is_mp_integer<T>::value
+                            && detail::true_tt<decltype(
+                                   std::declval<const T &>().boost_save(std::declval<Archive &>()))>::value>::type;
 
 template <typename Archive, typename T>
 using mp_integer_boost_load_enabler =
-    typename std::enable_if<is_mp_integer<T>::value && true_tt<decltype(std::declval<T &>().boost_load(
-                                                           std::declval<Archive &>()))>::value>::type;
+    typename std::enable_if<detail::is_mp_integer<T>::value && detail::true_tt<decltype(std::declval<T &>().boost_load(
+                                                                   std::declval<Archive &>()))>::value>::type;
 }
 
 /// Implementation of piranha::boost_save() for piranha::mp_integer.
@@ -5052,7 +5053,7 @@ using mp_integer_boost_load_enabler =
  * the piranha::mp_integer::boost_save() method with an archive of type \p Archive.
  */
 template <typename Archive, typename T>
-class boost_save_impl<Archive, T, detail::mp_integer_boost_save_enabler<Archive, T>>
+class boost_save_impl<Archive, T, mp_integer_boost_save_enabler<Archive, T>>
 {
 public:
     /// Call operator.
@@ -5077,7 +5078,7 @@ public:
  * the piranha::mp_integer::boost_load() method with an archive of type \p Archive.
  */
 template <typename Archive, typename T>
-class boost_load_impl<Archive, T, detail::mp_integer_boost_load_enabler<Archive, T>>
+class boost_load_impl<Archive, T, mp_integer_boost_load_enabler<Archive, T>>
 {
 public:
     /// Call operator.
@@ -5097,21 +5098,23 @@ public:
 
 #if defined(PIRANHA_WITH_MSGPACK)
 
-namespace detail
+inline namespace impl
 {
 
 // Enablers for msgpack serialization.
 template <typename Stream, typename T>
 using mp_integer_msgpack_pack_enabler =
-    typename std::enable_if<is_mp_integer<T>::value && true_tt<decltype(std::declval<const T &>().msgpack_pack(
-                                                           std::declval<msgpack::packer<Stream> &>(),
-                                                           std::declval<msgpack_format>()))>::value>::type;
+    typename std::enable_if<detail::is_mp_integer<T>::value
+                            && detail::true_tt<decltype(std::declval<const T &>().msgpack_pack(
+                                   std::declval<msgpack::packer<Stream> &>(),
+                                   std::declval<msgpack_format>()))>::value>::type;
 
 template <typename T>
 using mp_integer_msgpack_convert_enabler =
-    typename std::enable_if<is_mp_integer<T>::value && true_tt<decltype(std::declval<T &>().msgpack_convert(
-                                                           std::declval<const msgpack::object &>(),
-                                                           std::declval<msgpack_format>()))>::value>::type;
+    typename std::enable_if<detail::is_mp_integer<T>::value
+                            && detail::true_tt<decltype(
+                                   std::declval<T &>().msgpack_convert(std::declval<const msgpack::object &>(),
+                                                                       std::declval<msgpack_format>()))>::value>::type;
 }
 
 /// Implementation of piranha::msgpack_pack() for piranha::mp_integer.
@@ -5121,7 +5124,7 @@ using mp_integer_msgpack_convert_enabler =
  * the piranha::mp_integer::msgpack_pack() method with a stream of type \p Stream.
  */
 template <typename Stream, typename T>
-class msgpack_pack_impl<Stream, T, detail::mp_integer_msgpack_pack_enabler<Stream, T>>
+class msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>>
 {
 public:
     /// Call operator.
@@ -5146,7 +5149,7 @@ public:
  * This specialisation is enabled if \p T is an instance of piranha::mp_integer.
  */
 template <typename T>
-class msgpack_convert_impl<T, detail::mp_integer_msgpack_convert_enabler<T>>
+class msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>>
 {
 public:
     /// Call operator.
