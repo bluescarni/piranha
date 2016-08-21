@@ -307,11 +307,10 @@ see https://www.gnu.org/licenses/. */
  *   in the same fashion as the s11n type traits.
  * \todo just replace @param[in]/@param[out] with just @param
  * \todo keep in mind the analysis done for the boost_save() implementation for series. The general issue seems to be
- * that when implementing functionality recursively on top of existing functionality (e.g., boost_save() for
- * series depends on boost_save() of other types) and we put these requirements in the enablers, then we risk of running
- * an infinite recursion: boost_save() needs to check has_boost_save for some other type, which triggers an
- * instantiation of boost_save(), and so on. If I understand this well, this may result in infinite recursion in C++11
- * whereas in C++14 the recursion should be stopped by the fact that SFINAE proceeds in lex fashion.
+ * that when implementing functionality recursively (e.g., the boost_save() availability depends on the availability
+ * of boost_save() for another type) we need to make sure we don't enter a loop in which we instantiate the same check.
+ * The general guideline seems to be: in the enabling condition for a foo_impl specialisation for T,
+ * avoid checking has_foo for types not depending on T. If this is necessary, do it in 2 stages (as in boost_save).
  */
 namespace piranha
 {

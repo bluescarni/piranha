@@ -3696,15 +3696,12 @@ inline namespace impl
 
 // NOTE: the idea here is to check *first* if Series is a series, and then apply all the checks
 // for the implementation of the serialization bits. If we put the series + serialization checks all in a single
-// statement, we would have the following situation: during any instantiation of boost_save(), we would have
-// to check if, e.g., has_boost_save<Archive, unsigned>::value is satisfied, which would prompt internally another
-// instantiation of boost_save(), and so on in what seems an infinite recursion. In C++14, this should not be a problem
-// as SFINAE proceeds in a lexicographical fashion[0]: if we put first the is_series check, then the other checks are
-// not run when determining has_boost_save<Archive, unsigned>::value (as unsigned is not a series), and the recursion
-// terminates. However, it seems like clang has an issue with this, and yields a rather confusing message in at least
-// one of the test cases. This workaround seems to be fine.
-//
-// [0] http://en.cppreference.com/w/cpp/language/sfinae
+// statement, we would have the following situation: during any instantiation of boost_save() for series, we would have
+// to check if has_boost_save<Archive, unsigned>::value is satisfied, which would prompt internally another
+// instantiation of boost_save(). This instantiation would then need to check again if
+// has_boost_save<Archive, unsigned>::value is satisfied, in what seems an infinite recursion. Strangely enough,
+// this does not seem to be a problem, apart from one specific case in clang. Still, it looks like it's better to
+// play it defensively.
 template <typename Archive, typename Series, typename = void>
 struct sbse_impl {
 };
