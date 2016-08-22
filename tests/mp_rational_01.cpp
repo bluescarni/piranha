@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/mp_rational.hpp"
 
-#define BOOST_TEST_MODULE mp_rational_test
+#define BOOST_TEST_MODULE mp_rational_01_test
 #include <boost/test/unit_test.hpp>
 
 #define FUSION_MAX_VECTOR_SIZE 20

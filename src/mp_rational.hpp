@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_MP_RATIONAL_HPP
 #define PIRANHA_MP_RATIONAL_HPP
 
+#include <array>
 #include <boost/functional/hash.hpp>
 #include <climits>
 #include <cmath>
@@ -51,6 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "pow.hpp"
 #include "print_tex_coefficient.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 
@@ -84,13 +86,12 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
 /// Multiple precision rational class.
 /**
  * This class encapsulates two instances of piranha::mp_integer to represent an arbitrary-precision rational number
- * in terms of a numerator and a denominator.
- * The meaning of the \p NBits template parameter is the same as in piranha::mp_integer, that is, it represents the
- * bit width of the two limbs stored statically in the numerator and in the denominator.
+ * in terms of a numerator and a denominator. The meaning of the \p NBits template parameter is the same as in
+ * piranha::mp_integer, that is, it represents the bit width of the two limbs stored statically in the numerator and
+ * in the denominator.
  *
  * Unless otherwise specified, rational numbers are always kept in the usual canonical form in which numerator and
- * denominator
- * are coprime, and the denominator is always positive. Zero is uniquely represented by 0/1.
+ * denominator are coprime, and the denominator is always positive. Zero is uniquely represented by 0/1.
  *
  * ## Interoperability with other types ##
  *
@@ -101,8 +102,7 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
  * ## Exception safety guarantee ##
  *
  * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by
- * GMP routines,
- * the program will terminate.
+ * GMP routines, the program will terminate.
  *
  * ## Move semantics ##
  *
@@ -1694,6 +1694,57 @@ public:
         // of magnitude.
         return detail::generic_binomial(*this, n);
     }
+    template <typename Archive>
+    using boost_save_enabler =
+        typename std::enable_if<has_boost_save<Archive,int_type>::value,int>::type;
+    template <typename Archive, boost_save_enabler<Archive> = 0>
+    void boost_save(Archive &oa) const
+    {
+        piranha::boost_save(oa, m_num);
+        piranha::boost_save(oa, m_den);
+    }
+    void boost_load(boost::archive::binary_iarchive &ia)
+    {
+        int_type num, den;
+        piranha::boost_load(ia, num);
+        piranha::boost_load(ia, den);
+        m_num = std::move(num);
+        m_den = std::move(den);
+    }
+    void boost_load(boost::archive::text_iarchive &ia)
+    {
+        int_type num, den;
+        piranha::boost_load(ia, num);
+        piranha::boost_load(ia, den);
+        // This ensures that if we load from a bad archive with non-coprime
+        // num and den or negative den, or... we get anyway a canonicalised
+        // rational or an error.
+        *this = mp_rational{std::move(num), std::move(den)};
+    }
+#if defined(PIRANHA_WITH_MSGPACK)
+    // TODO enabler
+    template <typename Stream>
+    void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
+    {
+        p.pack_array(2u);
+        msgpack_pack(p, m_num, f);
+        msgpack_pack(p, m_den, f);
+    }
+    void msgpack_convert(const msgpack::object &o, msgpack_format f)
+    {
+        std::array<msgpack::object, 2u> v;
+        o.convert(v);
+        int_type num, den;
+        msgpack_convert(num, v[0], f);
+        msgpack_convert(den, v[1], f);
+        if (f == msgpack_format::binary) {
+            m_num = std::move(num);
+            m_den = std::move(den);
+        } else {
+            *this = mp_rational{std::move(num), std::move(den)};
+        }
+    }
+#endif
 
 private:
     int_type m_num;
@@ -2232,6 +2283,83 @@ public:
         return static_cast<To>(q);
     }
 };
+
+inline namespace impl
+{
+
+template <typename Archive, typename T>
+using mp_rational_boost_save_enabler =
+    typename std::enable_if<detail::is_mp_rational<T>::value
+                            && detail::true_tt<decltype(
+                                   std::declval<const T &>().boost_save(std::declval<Archive &>()))>::value>::type;
+
+template <typename Archive, typename T>
+using mp_rational_boost_load_enabler =
+    typename std::enable_if<detail::is_mp_rational<T>::value && detail::true_tt<decltype(std::declval<T &>().boost_load(
+                                                                    std::declval<Archive &>()))>::value>::type;
+}
+
+template <typename Archive, typename T>
+class boost_save_impl<Archive, T, mp_rational_boost_save_enabler<Archive, T>>
+{
+public:
+    void operator()(Archive &ar, const T &q) const
+    {
+        q.boost_save(ar);
+    }
+};
+
+template <typename Archive, typename T>
+class boost_load_impl<Archive, T, mp_rational_boost_load_enabler<Archive, T>>
+{
+public:
+    void operator()(Archive &ar, T &q)
+    {
+        q.boost_load(ar);
+    }
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+template <typename Stream, typename T>
+using mp_rational_msgpack_pack_enabler =
+    typename std::enable_if<detail::is_mp_rational<T>::value
+                            && detail::true_tt<decltype(std::declval<const T &>().msgpack_pack(
+                                   std::declval<msgpack::packer<Stream> &>(),
+                                   std::declval<msgpack_format>()))>::value>::type;
+
+template <typename T>
+using mp_rational_msgpack_convert_enabler =
+    typename std::enable_if<detail::is_mp_rational<T>::value
+                            && detail::true_tt<decltype(
+                                   std::declval<T &>().msgpack_convert(std::declval<const msgpack::object &>(),
+                                                                       std::declval<msgpack_format>()))>::value>::type;
+}
+
+template <typename Stream, typename T>
+class msgpack_pack_impl<Stream, T, mp_rational_msgpack_pack_enabler<Stream, T>>
+{
+public:
+    void operator()(msgpack::packer<Stream> &p, const T &q, msgpack_format f) const
+    {
+        q.msgpack_pack(p, f);
+    }
+};
+
+template <typename T>
+class msgpack_convert_impl<T, mp_rational_msgpack_convert_enabler<T>>
+{
+public:
+    void operator()(T &q, const msgpack::object &o, msgpack_format f) const
+    {
+        q.msgpack_convert(o, f);
+    }
+};
+
+#endif
 }
 
 namespace std

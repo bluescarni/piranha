@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_file_test)
                 std::cout << "File load, " << fn << ", " << cn << ": ";
             }
             std::cout << "File size, " << fn << ", " << cn << ": " << filesize(file.name()) << '\n';
-            BOOST_CHECK_EQUAL(tmp,res);
+            BOOST_CHECK_EQUAL(tmp, res);
             std::cout << '\n';
         }
     }
