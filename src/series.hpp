@@ -907,7 +907,7 @@ class series_operators
     // NOTE: the use of the old syntax for the enable_if with nullptr is because of a likely GCC bug:
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59366
     // In real.hpp, there are a few uses of operator/= on reals (e.g., in binary_div) *before* the is_zero_impl
-    // specialisation for real is declared. These operators are immediately instantiatied when parsed because they are
+    // specialisation for real is declared. These operators are immediately instantiated when parsed because they are
     // not
     // templated. During the overload resolution of operator/=, the operator defined in this class is considered - which
     // is wrong, as the operators here should be found only via ADL and this class is in no way associated to real. What
@@ -3695,13 +3695,13 @@ inline namespace impl
 {
 
 // NOTE: the idea here is to check *first* if Series is a series, and then apply all the checks
-// for the implementation of the serialization bits. If we put the series + serialization checks all in a single
-// statement, we would have the following situation: during any instantiation of boost_save() for series, we would have
-// to check if has_boost_save<Archive, unsigned>::value is satisfied, which would prompt internally another
-// instantiation of boost_save(). This instantiation would then need to check again if
-// has_boost_save<Archive, unsigned>::value is satisfied, in what seems an infinite recursion. Strangely enough,
-// this does not seem to be a problem, apart from one specific case in clang. Still, it looks like it's better to
-// play it defensively.
+// for the implementation of the serialization bits. This is to work around what looks like a clang issue
+// which pops up when recursively instantiating has_boost_save<unsigned>. The recursive instantiation
+// seems to be fine, according to the analysis here:
+// http://stackoverflow.com/questions/39059511/infinite-recursive-template-instantiation-expected
+// That is, there will be no infinite recursion because when has_boost_save<unsigned> is instantiated
+// within the enabling condition the current specialisation is not considered because it's not fully
+// declared yet. In any case, keep in mind this solution in case a similar bug arises somewhere else.
 template <typename Archive, typename Series, typename = void>
 struct sbse_impl {
 };
