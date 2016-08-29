@@ -75,7 +75,7 @@ static inline void boost_roundtrip(const T &x)
         IArchive ia(ss);
         boost_load(ia, retval);
     }
-    BOOST_CHECK_EQUAL(retval,x);
+    BOOST_CHECK_EQUAL(retval, x);
 }
 
 static const int ntrials = 1000;
@@ -102,22 +102,22 @@ struct boost_s11n_tester {
         BOOST_CHECK((!has_boost_load<xml_iarchive, q_type>::value));
         BOOST_CHECK((!has_boost_load<binary_oarchive, q_type>::value));
         // A few simple checks.
-        boost_roundtrip<binary_oarchive,binary_iarchive>(q_type{});
-        boost_roundtrip<text_oarchive,text_iarchive>(q_type{});
-        boost_roundtrip<binary_oarchive,binary_iarchive>(q_type{-1});
-        boost_roundtrip<text_oarchive,text_iarchive>(q_type{23});
-        boost_roundtrip<binary_oarchive,binary_iarchive>(q_type{-1,5});
-        boost_roundtrip<text_oarchive,text_iarchive>(q_type{23,67});
+        boost_roundtrip<binary_oarchive, binary_iarchive>(q_type{});
+        boost_roundtrip<text_oarchive, text_iarchive>(q_type{});
+        boost_roundtrip<binary_oarchive, binary_iarchive>(q_type{-1});
+        boost_roundtrip<text_oarchive, text_iarchive>(q_type{23});
+        boost_roundtrip<binary_oarchive, binary_iarchive>(q_type{-1, 5});
+        boost_roundtrip<text_oarchive, text_iarchive>(q_type{23, 67});
         // Random testing.
-        std::uniform_int_distribution<int> dist(-1000,1000);
+        std::uniform_int_distribution<int> dist(-1000, 1000);
         for (auto i = 0; i < ntrials; ++i) {
             auto num = dist(rng);
             auto den = dist(rng);
             if (den == 0) {
                 continue;
             }
-            boost_roundtrip<binary_oarchive,binary_iarchive>(q_type{num,den});
-            boost_roundtrip<text_oarchive,text_iarchive>(q_type{num,den});
+            boost_roundtrip<binary_oarchive, binary_iarchive>(q_type{num, den});
+            boost_roundtrip<text_oarchive, text_iarchive>(q_type{num, den});
         }
     }
 };

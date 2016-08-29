@@ -1694,10 +1694,11 @@ public:
         // of magnitude.
         return detail::generic_binomial(*this, n);
     }
+
 private:
     template <typename Archive>
-    using boost_save_enabler =
-        typename std::enable_if<has_boost_save<Archive,int_type>::value,int>::type;
+    using boost_save_enabler = typename std::enable_if<has_boost_save<Archive, int_type>::value, int>::type;
+
 public:
     /// Save to Boost archive.
     /**
@@ -1757,8 +1758,10 @@ public:
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     template <typename Stream>
-    using msgpack_pack_enabler = typename std::enable_if<is_msgpack_stream<Stream>::value &&
-        has_msgpack_pack<Stream,int_type>::value,int>::type;
+    using msgpack_pack_enabler =
+        typename std::enable_if<is_msgpack_stream<Stream>::value && has_msgpack_pack<Stream, int_type>::value,
+                                int>::type;
+
 public:
     /// Pack in msgpack format.
     /**
@@ -1766,7 +1769,7 @@ public:
      * This method is enabled only if \p Stream satisfies piranha::is_msgpack_stream and the type representing the
      * numerator and denominator satisfies piranha::has_msgpack_pack.
      *
-     * This method will pack \p this into \p p. Rationals are packed as a numerator-denominator pair.
+     * This method will pack \p this into \p p. Rationals are packed as a numerator-denominator pairs.
      *
      * @param p the target <tt>msgpack::packer</tt>.
      * @param f the desired piranha::msgpack_format.
