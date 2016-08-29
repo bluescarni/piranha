@@ -1694,15 +1694,39 @@ public:
         // of magnitude.
         return detail::generic_binomial(*this, n);
     }
+private:
     template <typename Archive>
     using boost_save_enabler =
         typename std::enable_if<has_boost_save<Archive,int_type>::value,int>::type;
+public:
+    /// Save to Boost archive.
+    /**
+     * \note
+     * This method is enabled only if piranha::boost_save() is enabled
+     * for the type representing the numerator and denominator.
+     *
+     * This method will save \p this to the Boost output archive \p oa.
+     *
+     * @param oa the target Boost archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_save().
+     */
     template <typename Archive, boost_save_enabler<Archive> = 0>
     void boost_save(Archive &oa) const
     {
         piranha::boost_save(oa, m_num);
         piranha::boost_save(oa, m_den);
     }
+    /// Load from binary Boost archive.
+    /**
+     * This method will load a rational value into \p this from \p ia. No canonical form checking is performed
+     * on the content of \p ia: if the loaded rational is not in canonical form, a call to canonicalise() will be
+     * required. The behaviour will be undefined if the deserialized denominator is zero.
+     *
+     * @param ia the source archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_load().
+     */
     void boost_load(boost::archive::binary_iarchive &ia)
     {
         int_type num, den;
@@ -1711,6 +1735,15 @@ public:
         m_num = std::move(num);
         m_den = std::move(den);
     }
+    /// Load from text Boost archive.
+    /**
+     * This method will load a rational value into \p this from \p ia. The loaded rational will be canonicalised
+     * before being assigned to \p this.
+     *
+     * @param ia the source archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_load().
+     */
     void boost_load(boost::archive::text_iarchive &ia)
     {
         int_type num, den;
@@ -1722,14 +1755,47 @@ public:
         *this = mp_rational{std::move(num), std::move(den)};
     }
 #if defined(PIRANHA_WITH_MSGPACK)
-    // TODO enabler
+private:
     template <typename Stream>
+    using msgpack_pack_enabler = typename std::enable_if<is_msgpack_stream<Stream>::value &&
+        has_msgpack_pack<Stream,int_type>::value,int>::type;
+public:
+    /// Pack in msgpack format.
+    /**
+     * \note
+     * This method is enabled only if \p Stream satisfies piranha::is_msgpack_stream and the type representing the
+     * numerator and denominator satisfies piranha::has_msgpack_pack.
+     *
+     * This method will pack \p this into \p p. Rationals are packed as a numerator-denominator pair.
+     *
+     * @param p the target <tt>msgpack::packer</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public API of <tt>msgpack::packer</tt>,
+     * - piranha::msgpack_pack().
+     */
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
     void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
     {
         p.pack_array(2u);
         msgpack_pack(p, m_num, f);
         msgpack_pack(p, m_den, f);
     }
+    /// Convert from msgpack object.
+    /**
+     * This method will convert \p o into \p this. If \p f is piranha::msgpack_format::portable
+     * this method will check that the deserialized rational is in canonical form before assigning it to \p this,
+     * otherwise no check will be performed. The behaviour will be undefined if the deserialized denominator is zero.
+     *
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::msgpack_convert(),
+     * - the constructor of piranha::mp_rational from numerator and denominator.
+     */
     void msgpack_convert(const msgpack::object &o, msgpack_format f)
     {
         std::array<msgpack::object, 2u> v;
@@ -2299,20 +2365,50 @@ using mp_rational_boost_load_enabler =
                                                                     std::declval<Archive &>()))>::value>::type;
 }
 
+/// Implementation of piranha::boost_save() for piranha::mp_rational.
+/**
+ * \note
+ * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
+ * piranha::mp_rational::boost_save() method.
+ */
 template <typename Archive, typename T>
 class boost_save_impl<Archive, T, mp_rational_boost_save_enabler<Archive, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The call operator will use the piranha::mp_rational::boost_save() method of \p q.
+     *
+     * @param ar the target archive.
+     * @param q the input rational.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_rational::boost_save().
+     */
     void operator()(Archive &ar, const T &q) const
     {
         q.boost_save(ar);
     }
 };
 
+/// Implementation of piranha::boost_load() for piranha::mp_rational.
+/**
+ * \note
+ * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
+ * piranha::mp_rational::boost_load() method.
+ */
 template <typename Archive, typename T>
 class boost_load_impl<Archive, T, mp_rational_boost_load_enabler<Archive, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The call operator will use the piranha::mp_rational::boost_load() method of \p q.
+     *
+     * @param ar the source archive.
+     * @param q the output rational.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_rational::boost_load().
+     */
     void operator()(Archive &ar, T &q)
     {
         q.boost_load(ar);
@@ -2339,20 +2435,52 @@ using mp_rational_msgpack_convert_enabler =
                                                                        std::declval<msgpack_format>()))>::value>::type;
 }
 
+/// Implementation of piranha::msgpack_pack() for piranha::mp_rational.
+/**
+ * \note
+ * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
+ * piranha::mp_rational::msgpack_pack() method.
+ */
 template <typename Stream, typename T>
 class msgpack_pack_impl<Stream, T, mp_rational_msgpack_pack_enabler<Stream, T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The call operator will use the piranha::mp_rational::msgpack_pack() method of \p q.
+     *
+     * @param p the source <tt>msgpack::packer</tt>.
+     * @param q the input rational.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_rational::msgpack_pack().
+     */
     void operator()(msgpack::packer<Stream> &p, const T &q, msgpack_format f) const
     {
         q.msgpack_pack(p, f);
     }
 };
 
+/// Implementation of piranha::msgpack_convert() for piranha::mp_rational.
+/**
+ * \note
+ * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
+ * piranha::mp_rational::msgpack_convert() method.
+ */
 template <typename T>
 class msgpack_convert_impl<T, mp_rational_msgpack_convert_enabler<T>>
 {
 public:
+    /// Call operator.
+    /**
+     * The call operator will use the piranha::mp_rational::msgpack_convert() method of \p q.
+     *
+     * @param q the target rational.
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_rational::msgpack_convert().
+     */
     void operator()(T &q, const msgpack::object &o, msgpack_format f) const
     {
         q.msgpack_convert(o, f);
