@@ -51,40 +51,58 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Remove cv qualifiers and reference.
-/**
- * This template alias removes cv qualifiers and reference from type \p T.
- */
+inline namespace impl
+{
+
+// http://en.cppreference.com/w/cpp/types/void_t
+template <typename... Ts>
+struct make_void {
+    typedef void type;
+};
+
+template <typename... Ts>
+using void_t = typename make_void<Ts...>::type;
+
+// http://en.cppreference.com/w/cpp/experimental/is_detected
+template <class Default, class AlwaysVoid, template <class...> class Op, class... Args>
+struct detector {
+    using value_t = std::false_type;
+    using type = Default;
+};
+
+template <class Default, template <class...> class Op, class... Args>
+struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
+    using value_t = std::true_type;
+    using type = Op<Args...>;
+};
+
+struct nonesuch;
+
+template <template <class...> class Op, class... Args>
+using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
+
+template <template <class...> class Op, class... Args>
+using is_detected_t = typename detector<nonesuch, void, Op, Args...>::type;
+
+// Some handy aliases.
 template <typename T>
 using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
-/// Type is non-const rvalue reference.
-/**
- * This type trait defines a static const boolean \p value flag which is \p true if \p T is a non-const rvalue
- * reference.
- */
 template <typename T>
-struct is_nonconst_rvalue_ref {
-    /// Type trait value.
-    static const bool value
-        = std::is_rvalue_reference<T>::value && !std::is_const<typename std::remove_reference<T>::type>::value;
-};
+using unref_t = typename std::remove_reference<T>::type;
 
 template <typename T>
-const bool is_nonconst_rvalue_ref<T>::value;
+using addlref_t = typename std::add_lvalue_reference<T>::type;
 
-namespace detail
-{
+template <typename T>
+using is_nonconst_rvalue_ref
+    = std::integral_constant<bool, std::is_rvalue_reference<T>::value
+                                       && !std::is_const<typename std::remove_reference<T>::type>::value>;
 
 template <typename T, typename U, typename Derived>
-class arith_tt_helper
-{
-    typedef typename std::remove_reference<T>::type Td;
-    typedef typename std::remove_reference<U>::type Ud;
-
-public:
-    static const bool value
-        = std::is_same<decltype(Derived::test(*(Td *)nullptr, *(Ud *)nullptr)), detail::sfinae_types::yes>::value;
+struct arith_tt_helper {
+    static const bool value = std::is_same<decltype(Derived::test(*(unref_t<T> *)nullptr, *(unref_t<U> *)nullptr)),
+                                           detail::sfinae_types::yes>::value;
 };
 }
 
@@ -105,14 +123,14 @@ public:
 template <typename T, typename U = T>
 class is_addable : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_addable<T, U>>;
+    friend class arith_tt_helper<T, U, is_addable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t + u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_addable>::value;
+    static const bool value = arith_tt_helper<T, U, is_addable>::value;
 };
 
 template <typename T, typename U>
@@ -135,14 +153,14 @@ const bool is_addable<T, U>::value;
 template <typename T, typename U = T>
 class is_addable_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_addable_in_place<T, U>>;
+    friend class arith_tt_helper<T, U, is_addable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t += u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_addable_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, is_addable_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -155,14 +173,14 @@ const bool is_addable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_subtractable : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_subtractable<T, U>>;
+    friend class arith_tt_helper<T, U, is_subtractable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t - u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_subtractable>::value;
+    static const bool value = arith_tt_helper<T, U, is_subtractable>::value;
 };
 
 template <typename T, typename U>
@@ -175,14 +193,14 @@ const bool is_subtractable<T, U>::value;
 template <typename T, typename U = T>
 class is_subtractable_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_subtractable_in_place<T, U>>;
+    friend class arith_tt_helper<T, U, is_subtractable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t -= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_subtractable_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, is_subtractable_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -195,14 +213,14 @@ const bool is_subtractable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_multipliable : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_multipliable<T, U>>;
+    friend class arith_tt_helper<T, U, is_multipliable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t * u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_multipliable>::value;
+    static const bool value = arith_tt_helper<T, U, is_multipliable>::value;
 };
 
 template <typename T, typename U>
@@ -215,14 +233,14 @@ const bool is_multipliable<T, U>::value;
 template <typename T, typename U = T>
 class is_multipliable_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_multipliable_in_place<T, U>>;
+    friend class arith_tt_helper<T, U, is_multipliable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t *= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_multipliable_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, is_multipliable_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -235,14 +253,14 @@ const bool is_multipliable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_divisible : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_divisible<T, U>>;
+    friend class arith_tt_helper<T, U, is_divisible<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t / u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_divisible>::value;
+    static const bool value = arith_tt_helper<T, U, is_divisible>::value;
 };
 
 template <typename T, typename U>
@@ -255,14 +273,14 @@ const bool is_divisible<T, U>::value;
 template <typename T, typename U = T>
 class is_divisible_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_divisible_in_place<T, U>>;
+    friend class arith_tt_helper<T, U, is_divisible_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t /= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_divisible_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, is_divisible_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -990,14 +1008,14 @@ const bool has_begin_end<T>::value;
 template <typename T, typename U = T>
 class has_left_shift : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, has_left_shift<T, U>>;
+    friend class arith_tt_helper<T, U, has_left_shift<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t << u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, has_left_shift>::value;
+    static const bool value = arith_tt_helper<T, U, has_left_shift>::value;
 };
 
 template <typename T, typename U>
@@ -1020,14 +1038,14 @@ const bool has_left_shift<T, U>::value;
 template <typename T, typename U = T>
 class has_right_shift : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, has_right_shift<T, U>>;
+    friend class arith_tt_helper<T, U, has_right_shift<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t >> u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, has_right_shift>::value;
+    static const bool value = arith_tt_helper<T, U, has_right_shift>::value;
 };
 
 template <typename T, typename U>
@@ -1050,14 +1068,14 @@ const bool has_right_shift<T, U>::value;
 template <typename T, typename U = T>
 class has_left_shift_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, has_left_shift_in_place<T, U>>;
+    friend class arith_tt_helper<T, U, has_left_shift_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t <<= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, has_left_shift_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, has_left_shift_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -1080,14 +1098,14 @@ const bool has_left_shift_in_place<T, U>::value;
 template <typename T, typename U = T>
 class has_right_shift_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, has_right_shift_in_place<T, U>>;
+    friend class arith_tt_helper<T, U, has_right_shift_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t >>= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, has_right_shift_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, has_right_shift_in_place>::value;
 };
 
 template <typename T, typename U>
