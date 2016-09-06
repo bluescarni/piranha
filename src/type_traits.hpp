@@ -123,7 +123,7 @@ struct arith_tt_helper {
 template <typename T, typename U = T>
 class is_addable : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, is_addable<T, U>>;
+    friend struct arith_tt_helper<T, U, is_addable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t + u, void(), yes());
     static no test(...);
@@ -153,7 +153,7 @@ const bool is_addable<T, U>::value;
 template <typename T, typename U = T>
 class is_addable_in_place : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, is_addable_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, is_addable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t += u, void(), yes());
     static no test(...);
@@ -173,7 +173,7 @@ const bool is_addable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_subtractable : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, is_subtractable<T, U>>;
+    friend struct arith_tt_helper<T, U, is_subtractable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t - u, void(), yes());
     static no test(...);
@@ -193,7 +193,7 @@ const bool is_subtractable<T, U>::value;
 template <typename T, typename U = T>
 class is_subtractable_in_place : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, is_subtractable_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, is_subtractable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t -= u, void(), yes());
     static no test(...);
@@ -213,7 +213,7 @@ const bool is_subtractable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_multipliable : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, is_multipliable<T, U>>;
+    friend struct arith_tt_helper<T, U, is_multipliable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t * u, void(), yes());
     static no test(...);
@@ -233,7 +233,7 @@ const bool is_multipliable<T, U>::value;
 template <typename T, typename U = T>
 class is_multipliable_in_place : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, is_multipliable_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, is_multipliable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t *= u, void(), yes());
     static no test(...);
@@ -253,7 +253,7 @@ const bool is_multipliable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_divisible : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, is_divisible<T, U>>;
+    friend struct arith_tt_helper<T, U, is_divisible<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t / u, void(), yes());
     static no test(...);
@@ -273,7 +273,7 @@ const bool is_divisible<T, U>::value;
 template <typename T, typename U = T>
 class is_divisible_in_place : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, is_divisible_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, is_divisible_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t /= u, void(), yes());
     static no test(...);
@@ -1008,7 +1008,7 @@ const bool has_begin_end<T>::value;
 template <typename T, typename U = T>
 class has_left_shift : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, has_left_shift<T, U>>;
+    friend struct arith_tt_helper<T, U, has_left_shift<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t << u, void(), yes());
     static no test(...);
@@ -1038,7 +1038,7 @@ const bool has_left_shift<T, U>::value;
 template <typename T, typename U = T>
 class has_right_shift : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, has_right_shift<T, U>>;
+    friend struct arith_tt_helper<T, U, has_right_shift<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t >> u, void(), yes());
     static no test(...);
@@ -1068,7 +1068,7 @@ const bool has_right_shift<T, U>::value;
 template <typename T, typename U = T>
 class has_left_shift_in_place : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, has_left_shift_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, has_left_shift_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t <<= u, void(), yes());
     static no test(...);
@@ -1098,7 +1098,7 @@ const bool has_left_shift_in_place<T, U>::value;
 template <typename T, typename U = T>
 class has_right_shift_in_place : detail::sfinae_types
 {
-    friend class arith_tt_helper<T, U, has_right_shift_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, has_right_shift_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t >>= u, void(), yes());
     static no test(...);
