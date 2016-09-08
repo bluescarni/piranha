@@ -362,6 +362,7 @@ class has_boost_save
     static const bool implementation_defined = is_detected<boost_save_t, Archive, T>::value;
 
 public:
+    /// Value of the type trait.
     static const bool value = implementation_defined;
 };
 
@@ -507,6 +508,7 @@ class has_boost_load
     static const bool implementation_defined = is_detected<boost_load_t, Archive, T>::value;
 
 public:
+    /// Value of the type trait.
     static const bool value = implementation_defined;
 };
 
