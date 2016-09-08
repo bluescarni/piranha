@@ -251,7 +251,7 @@ using msgpack::sbuffer;
 using msgpack::packer;
 
 template <typename T>
-using sw = detail::msgpack_stream_wrapper<T>;
+using sw = msgpack_stream_wrapper<T>;
 
 template <typename Monomial>
 static inline Monomial msgpack_round_trip_monomial(const Monomial &m, const symbol_set &s, msgpack_format f)

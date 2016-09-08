@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <thread>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "../src/config.hpp"
@@ -2101,7 +2102,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_mappable_test)
     BOOST_CHECK(!is_mappable<map_05>::value);
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_uncvref_t)
+BOOST_AUTO_TEST_CASE(type_traits_ref_mod_t)
 {
     BOOST_CHECK((std::is_same<int, uncvref_t<int>>::value));
     BOOST_CHECK((std::is_same<int, uncvref_t<int &>>::value));
@@ -2109,4 +2110,39 @@ BOOST_AUTO_TEST_CASE(type_traits_uncvref_t)
     BOOST_CHECK((std::is_same<int, uncvref_t<const int &&>>::value));
     BOOST_CHECK((std::is_same<int, uncvref_t<const int>>::value));
     BOOST_CHECK((std::is_same<int, uncvref_t<volatile int &>>::value));
+    BOOST_CHECK((std::is_same<int, unref_t<int>>::value));
+    BOOST_CHECK((std::is_same<int, unref_t<int &>>::value));
+    BOOST_CHECK((!std::is_same<int, unref_t<int volatile &>>::value));
+    BOOST_CHECK((std::is_same<const int, unref_t<int const &>>::value));
+    BOOST_CHECK((!std::is_same<int, unref_t<int const &>>::value));
+    BOOST_CHECK((std::is_same<int &, addlref_t<int>>::value));
+    BOOST_CHECK((std::is_same<int &, addlref_t<int &>>::value));
+    BOOST_CHECK((std::is_same<int &, addlref_t<int &&>>::value));
+    BOOST_CHECK((std::is_same<void, addlref_t<void>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_void_t)
+{
+    BOOST_CHECK((std::is_same<void, void_t<int>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<void>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<void *>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<std::string &>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<std::string const &>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
+}
+
+template <typename T, typename U>
+using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
+
+BOOST_AUTO_TEST_CASE(type_traits_is_detected)
+{
+    BOOST_CHECK((is_detected<add_t, int, int>::value));
+    BOOST_CHECK((std::is_same<is_detected_t<add_t, int, int>, int>::value));
+    BOOST_CHECK((is_detected<add_t, double, int>::value));
+    BOOST_CHECK((std::is_same<is_detected_t<add_t, int, double>, double>::value));
+    BOOST_CHECK((is_detected<add_t, char, char>::value));
+    BOOST_CHECK((std::is_same<is_detected_t<add_t, char, char>, int>::value));
+    BOOST_CHECK((!is_detected<add_t, double, std::string>::value));
+    BOOST_CHECK((std::is_same<is_detected_t<add_t, double, std::string>, nonesuch>::value));
 }

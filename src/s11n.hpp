@@ -49,7 +49,6 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "detail/demangle.hpp"
-#include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "is_key.hpp"
 #include "symbol_set.hpp"
@@ -58,7 +57,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
 // Scalar types directly supported by the all serialization libraries.
@@ -72,6 +71,68 @@ struct is_serialization_scalar
                                        || std::is_same<unsigned long long, T>::value || std::is_same<float, T>::value
                                        || std::is_same<double, T>::value || std::is_same<bool, T>::value> {
 };
+
+// Implementation of the detection of boost saving archives.
+namespace ibsa_impl
+{
+
+template <typename A>
+using is_saving_t = typename A::is_saving;
+
+template <typename A>
+using is_loading_t = typename A::is_loading;
+
+template <typename A, typename T>
+using lshift_t = decltype(std::declval<A &>() << std::declval<const T &>());
+
+template <typename A, typename T>
+using and_t = decltype(std::declval<A &>() & std::declval<const T &>());
+
+// NOTE: here it does not make much sense that the pointer is non-const, but we are going by the literal
+// description in the boost archive concept.
+template <typename A, typename T>
+using save_binary_t = decltype(std::declval<A &>().save_binary(std::declval<T *>(), std::declval<std::size_t>()));
+
+template <typename A, typename T>
+using register_type_t = decltype(std::declval<A &>().template register_type<T>());
+
+template <typename A>
+using get_library_version_t = decltype(std::declval<const A &>().get_library_version());
+
+struct helper;
+
+template <typename A>
+using get_helper_t_1 = decltype(std::declval<A &>().template get_helper<helper>());
+
+template <typename A>
+using get_helper_t_2 = decltype(std::declval<A &>().template get_helper<helper>(static_cast<void *const>(nullptr)));
+
+template <typename Archive, typename T>
+using impl
+    = std::integral_constant<bool, std::is_same<is_detected_t<is_saving_t, uncvref_t<Archive>>,
+                                                boost::mpl::bool_<true>>::value
+                                       && std::is_same<is_detected_t<is_loading_t, uncvref_t<Archive>>,
+                                                       boost::mpl::bool_<false>>::value
+                                       // NOTE: add lvalue ref instead of using Archive &, so we avoid a hard
+                                       // error if Archive is void.
+                                       && std::is_same<is_detected_t<lshift_t, Archive, T>, addlref_t<Archive>>::value
+                                       && std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>::value
+                                       && is_detected<save_binary_t, Archive, unref_t<T>>::value
+                                       && is_detected<register_type_t, Archive, uncvref_t<T>>::value
+                                       // NOTE: the docs here mention that get_library_version() is supposed to
+                                       // return an unsigned integral type, but the boost archives apparently
+                                       // return a type which is implicitly convertible to some unsigned int.
+                                       // This seems to work and it should cover also the cases in which the
+                                       // return type is a real unsigned int.
+                                       && std::is_convertible<is_detected_t<get_library_version_t, Archive>,
+                                                              unsigned long long>::value
+#if BOOST_VERSION >= 105700
+                                       //  Helper support is available since 1.57.
+                                       && is_detected<get_helper_t_1, Archive>::value
+                                       && is_detected<get_helper_t_2, Archive>::value
+#endif
+                             >;
+}
 }
 
 /// Detect Boost saving archives.
@@ -81,58 +142,9 @@ struct is_serialization_scalar
  * http://www.boost.org/doc/libs/1_61_0/libs/serialization/doc/archives.html.
  */
 template <typename Archive, typename T>
-class is_boost_saving_archive : detail::sfinae_types
+class is_boost_saving_archive
 {
-    // Pointer to type T, after reference removal.
-    using Tp = typename std::remove_reference<T>::type *;
-    template <typename A1>
-    static typename A1::is_saving test0(const A1 &);
-    static no test0(...);
-    template <typename A1>
-    static typename A1::is_loading test1(const A1 &);
-    static no test1(...);
-    template <typename A1, typename T1>
-    static auto test2(A1 &a, const T1 &x) -> decltype(a << x);
-    static no test2(...);
-    template <typename A1, typename T1>
-    static auto test3(A1 &a, const T1 &x) -> decltype(a & x);
-    static no test3(...);
-    template <typename A1, typename T1>
-    static auto test4(A1 &a, T1 *p, std::size_t count) -> decltype(a.save_binary(p, count), void(), yes());
-    static no test4(...);
-    template <typename A1, typename T1>
-    static auto test5(A1 &a, const T1 &) -> decltype(a.template register_type<T1>(), void(), yes());
-    static no test5(...);
-    template <typename A1>
-    static auto test7(const A1 &a) -> decltype(a.get_library_version());
-    static no test7(...);
-    struct helper {
-    };
-    template <typename A1>
-    static auto test8(A1 &a) -> decltype(a.template get_helper<helper>(), void(), yes());
-    static no test8(...);
-    template <typename A1>
-    static auto test9(A1 &a)
-        -> decltype(a.template get_helper<helper>(static_cast<void *const>(nullptr)), void(), yes());
-    static no test9(...);
-    static const bool implementation_defined
-        = std::is_same<boost::mpl::bool_<true>, decltype(test0(std::declval<Archive>()))>::value
-          && std::is_same<boost::mpl::bool_<false>, decltype(test1(std::declval<Archive>()))>::value
-          && std::is_same<Archive &, decltype(test2(std::declval<Archive &>(), std::declval<T>()))>::value
-          && std::is_same<Archive &, decltype(test3(std::declval<Archive &>(), std::declval<T>()))>::value
-          && std::is_same<yes, decltype(test4(std::declval<Archive &>(), std::declval<Tp>(), 0u))>::value
-          && std::is_same<yes, decltype(test5(std::declval<Archive &>(), std::declval<T>()))>::value &&
-          // NOTE: the docs here mention that get_library_version() is supposed to return an unsigned integral
-          // type, but the boost archives apparently return a type which is implicitly convertible to some
-          // unsigned int. This seems to work and it should cover also the cases in which the return type
-          // is a real unsigned int.
-          std::is_convertible<decltype(test7(std::declval<Archive>())), unsigned long long>::value
-#if BOOST_VERSION >= 105700
-          //  Helper support is available since 1.57.
-          && std::is_same<decltype(test8(std::declval<Archive &>())), yes>::value
-          && std::is_same<decltype(test9(std::declval<Archive &>())), yes>::value
-#endif
-        ;
+    static const bool implementation_defined = ibsa_impl::impl<Archive, T>::value;
 
 public:
     /// Value of the type trait.
@@ -142,6 +154,51 @@ public:
 template <typename Archive, typename T>
 const bool is_boost_saving_archive<Archive, T>::value;
 
+inline namespace impl
+{
+
+// Implementation of boost loading archive concept. We reuse some types from the ibsa_impl namespace.
+namespace ibla_impl
+{
+
+template <typename A, typename T>
+using rshift_t = decltype(std::declval<A &>() >> std::declval<T &>());
+
+template <typename A, typename T>
+using and_t = decltype(std::declval<A &>() & std::declval<T &>());
+
+template <typename A, typename T>
+using load_binary_t = decltype(std::declval<A &>().load_binary(std::declval<T *>(), std::declval<std::size_t>()));
+
+template <typename A, typename T>
+using reset_object_address_t
+    = decltype(std::declval<A &>().reset_object_address(std::declval<T *>(), std::declval<T *>()));
+
+template <typename A>
+using delete_created_pointers_t = decltype(std::declval<A &>().delete_created_pointers());
+
+template <typename Archive, typename T>
+using impl
+    = std::integral_constant<bool, std::is_same<is_detected_t<ibsa_impl::is_saving_t, uncvref_t<Archive>>,
+                                                boost::mpl::bool_<false>>::value
+                                       && std::is_same<is_detected_t<ibsa_impl::is_loading_t, uncvref_t<Archive>>,
+                                                       boost::mpl::bool_<true>>::value
+                                       && std::is_same<is_detected_t<rshift_t, Archive, T>, addlref_t<Archive>>::value
+                                       && std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>::value
+                                       && is_detected<load_binary_t, Archive, unref_t<T>>::value
+                                       && is_detected<ibsa_impl::register_type_t, Archive, uncvref_t<T>>::value
+                                       && std::is_convertible<is_detected_t<ibsa_impl::get_library_version_t, Archive>,
+                                                              unsigned long long>::value
+                                       && is_detected<reset_object_address_t, Archive, unref_t<T>>::value
+                                       && is_detected<delete_created_pointers_t, Archive>::value
+#if BOOST_VERSION >= 105700
+                                       && is_detected<ibsa_impl::get_helper_t_1, Archive>::value
+                                       && is_detected<ibsa_impl::get_helper_t_2, Archive>::value
+#endif
+                             >;
+}
+}
+
 /// Detect Boost loading archives.
 /**
  * This type trait will be \p true if \p Archive is a valid Boost loading archive for type \p T,
@@ -149,61 +206,9 @@ const bool is_boost_saving_archive<Archive, T>::value;
  * http://www.boost.org/doc/libs/1_61_0/libs/serialization/doc/archives.html.
  */
 template <typename Archive, typename T>
-class is_boost_loading_archive : detail::sfinae_types
+class is_boost_loading_archive
 {
-    // Pointer to T, after removing reference qualifiers.
-    using Tp = typename std::remove_reference<T>::type *;
-    template <typename A1>
-    static typename A1::is_saving test0(const A1 &);
-    static no test0(...);
-    template <typename A1>
-    static typename A1::is_loading test1(const A1 &);
-    static no test1(...);
-    template <typename A1, typename T1>
-    static auto test2(A1 &a, T1 &x) -> decltype(a >> x);
-    static no test2(...);
-    template <typename A1, typename T1>
-    static auto test3(A1 &a, T1 &x) -> decltype(a & x);
-    static no test3(...);
-    template <typename A1, typename T1>
-    static auto test4(A1 &a, T1 *p, std::size_t count) -> decltype(a.load_binary(p, count), void(), yes());
-    static no test4(...);
-    template <typename A1, typename T1>
-    static auto test5(A1 &a, const T1 &) -> decltype(a.template register_type<T1>(), void(), yes());
-    static no test5(...);
-    template <typename A1>
-    static auto test7(const A1 &a) -> decltype(a.get_library_version());
-    static no test7(...);
-    struct helper {
-    };
-    template <typename A1>
-    static auto test8(A1 &a) -> decltype(a.template get_helper<helper>(), void(), yes());
-    static no test8(...);
-    template <typename A1>
-    static auto test9(A1 &a)
-        -> decltype(a.template get_helper<helper>(static_cast<void *const>(nullptr)), void(), yes());
-    static no test9(...);
-    template <typename A1, typename T1>
-    static auto test10(A1 &a, T1 *v, T1 *u) -> decltype(a.reset_object_address(v, u), void(), yes());
-    static no test10(...);
-    template <typename A1>
-    static auto test11(A1 &a) -> decltype(a.delete_created_pointers(), void(), yes());
-    static no test11(...);
-    static const bool implementation_defined
-        = std::is_same<boost::mpl::bool_<false>, decltype(test0(std::declval<Archive>()))>::value
-          && std::is_same<boost::mpl::bool_<true>, decltype(test1(std::declval<Archive>()))>::value
-          && std::is_same<Archive &, decltype(test2(std::declval<Archive &>(), std::declval<T &>()))>::value
-          && std::is_same<Archive &, decltype(test3(std::declval<Archive &>(), std::declval<T &>()))>::value
-          && std::is_same<yes, decltype(test4(std::declval<Archive &>(), std::declval<Tp>(), 0u))>::value
-          && std::is_same<yes, decltype(test5(std::declval<Archive &>(), std::declval<T>()))>::value
-          && std::is_convertible<decltype(test7(std::declval<Archive>())), unsigned long long>::value
-#if BOOST_VERSION >= 105700
-          && std::is_same<decltype(test8(std::declval<Archive &>())), yes>::value
-          && std::is_same<decltype(test9(std::declval<Archive &>())), yes>::value
-#endif
-          && std::is_same<decltype(test10(std::declval<Archive &>(), std::declval<Tp>(), std::declval<Tp>())),
-                          yes>::value
-          && std::is_same<decltype(test11(std::declval<Archive &>())), yes>::value;
+    static const bool implementation_defined = ibla_impl::impl<Archive, T>::value;
 
 public:
     /// Value of the type trait.
@@ -223,7 +228,7 @@ class boost_save_impl
 {
 };
 
-namespace detail
+inline namespace impl
 {
 
 // Enabler for the arithmetic specialisation of boost_save().
@@ -250,7 +255,7 @@ using boost_save_arithmetic_enabler =
  * - \p bool.
  */
 template <typename Archive, typename T>
-class boost_save_impl<Archive, T, detail::boost_save_arithmetic_enabler<Archive, T>>
+class boost_save_impl<Archive, T, boost_save_arithmetic_enabler<Archive, T>>
 {
 public:
     /// Call operator.
@@ -271,7 +276,7 @@ public:
     }
 };
 
-namespace detail
+inline namespace impl
 {
 
 // Enabler for boost_save() for strings.
@@ -287,7 +292,7 @@ using boost_save_string_enabler =
  * \p std::string.
  */
 template <typename Archive, typename T>
-class boost_save_impl<Archive, T, detail::boost_save_string_enabler<Archive, T>>
+class boost_save_impl<Archive, T, boost_save_string_enabler<Archive, T>>
 {
 public:
     /// Call operator.
@@ -303,16 +308,17 @@ public:
     }
 };
 
-namespace detail
+inline namespace impl
 {
+
+template <typename Archive, typename T>
+using boost_save_impl_t = decltype(boost_save_impl<Archive, T>{}(std::declval<Archive &>(), std::declval<const T &>()));
 
 // Enabler for boost_save().
 template <typename Archive, typename T>
-using boost_save_enabler =
-    typename std::enable_if<is_boost_saving_archive<Archive, T>::value
-                                && detail::true_tt<decltype(boost_save_impl<Archive, T>{}(
-                                       std::declval<Archive &>(), std::declval<const T &>()))>::value,
-                            int>::type;
+using boost_save_enabler = typename std::enable_if<is_boost_saving_archive<Archive, T>::value
+                                                       && is_detected<boost_save_impl_t, Archive, T>::value,
+                                                   int>::type;
 }
 
 /// Save to Boost archive.
@@ -332,10 +338,17 @@ using boost_save_enabler =
  *
  * @throws unspecified any exception thrown by the call operator of piranha::boost_save_impl.
  */
-template <typename Archive, typename T, detail::boost_save_enabler<Archive, T> = 0>
+template <typename Archive, typename T, boost_save_enabler<Archive, T> = 0>
 inline void boost_save(Archive &ar, const T &x)
 {
     boost_save_impl<Archive, T>{}(ar, x);
+}
+
+inline namespace impl
+{
+
+template <typename A, typename T>
+using boost_save_t = decltype(piranha::boost_save(std::declval<A &>(), std::declval<const T &>()));
 }
 
 /// Detect the presence of piranha::boost_save().
@@ -344,16 +357,11 @@ inline void boost_save(Archive &ar, const T &x)
  * \p T, \p false otherwise.
  */
 template <typename Archive, typename T>
-class has_boost_save : detail::sfinae_types
+class has_boost_save
 {
-    template <typename A1, typename T1>
-    static auto test(A1 &a, const T1 &x) -> decltype(piranha::boost_save(a, x), void(), yes());
-    static no test(...);
-    static const bool implementation_defined
-        = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<const T &>()))>::value;
+    static const bool implementation_defined = is_detected<boost_save_t, Archive, T>::value;
 
 public:
-    /// Value of the type trait.
     static const bool value = implementation_defined;
 };
 
@@ -370,7 +378,7 @@ class boost_load_impl
 {
 };
 
-namespace detail
+inline namespace impl
 {
 
 // Enabler for the arithmetic specialisation of boost_load().
@@ -392,7 +400,7 @@ using boost_load_arithmetic_enabler =
  * - \p bool.
  */
 template <typename Archive, typename T>
-class boost_load_impl<Archive, T, detail::boost_load_arithmetic_enabler<Archive, T>>
+class boost_load_impl<Archive, T, boost_load_arithmetic_enabler<Archive, T>>
 {
 public:
     /// Call operator.
@@ -413,7 +421,7 @@ public:
     }
 };
 
-namespace detail
+inline namespace impl
 {
 
 // Enabler for boost_load for strings.
@@ -429,7 +437,7 @@ using boost_load_string_enabler =
  * \p std::string.
  */
 template <typename Archive, typename T>
-class boost_load_impl<Archive, T, detail::boost_load_string_enabler<Archive, T>>
+class boost_load_impl<Archive, T, boost_load_string_enabler<Archive, T>>
 {
 public:
     /// Call operator.
@@ -445,14 +453,16 @@ public:
     }
 };
 
-namespace detail
+inline namespace impl
 {
+
+template <typename Archive, typename T>
+using boost_load_impl_t = decltype(boost_load_impl<Archive, T>{}(std::declval<Archive &>(), std::declval<T &>()));
 
 // Enabler for boost_load().
 template <typename Archive, typename T>
 using boost_load_enabler = typename std::enable_if<is_boost_loading_archive<Archive, T>::value
-                                                       && detail::true_tt<decltype(boost_load_impl<Archive, T>{}(
-                                                              std::declval<Archive &>(), std::declval<T &>()))>::value,
+                                                       && is_detected<boost_load_impl_t, Archive, T>::value,
                                                    int>::type;
 }
 
@@ -473,10 +483,17 @@ using boost_load_enabler = typename std::enable_if<is_boost_loading_archive<Arch
  *
  * @throws unspecified any exception thrown by the call operator of piranha::boost_load_impl.
  */
-template <typename Archive, typename T, detail::boost_load_enabler<Archive, T> = 0>
+template <typename Archive, typename T, boost_load_enabler<Archive, T> = 0>
 inline void boost_load(Archive &ar, T &x)
 {
     boost_load_impl<Archive, T>{}(ar, x);
+}
+
+inline namespace impl
+{
+
+template <typename A, typename T>
+using boost_load_t = decltype(piranha::boost_load(std::declval<A &>(), std::declval<T &>()));
 }
 
 /// Detect the presence of piranha::boost_load().
@@ -485,21 +502,24 @@ inline void boost_load(Archive &ar, T &x)
  * \p T, \p false otherwise.
  */
 template <typename Archive, typename T>
-class has_boost_load : detail::sfinae_types
+class has_boost_load
 {
-    template <typename A1, typename T1>
-    static auto test(A1 &a, T1 &x) -> decltype(piranha::boost_load(a, x), void(), yes());
-    static no test(...);
-    static const bool implementation_defined
-        = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<T &>()))>::value;
+    static const bool implementation_defined = is_detected<boost_load_t, Archive, T>::value;
 
 public:
-    /// Value of the type trait.
     static const bool value = implementation_defined;
 };
 
 template <typename Archive, typename T>
 const bool has_boost_load<Archive, T>::value;
+
+inline namespace impl
+{
+
+template <typename A, typename K>
+using key_boost_save_t
+    = decltype(std::declval<const K &>().boost_save(std::declval<A &>(), std::declval<const symbol_set &>()));
+}
 
 /// Detect the presence of the <tt>boost_save()</tt> method in keys.
 /**
@@ -510,19 +530,14 @@ const bool has_boost_load<Archive, T>::value;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
- * If \p Key, after the application of piranha::uncvref_t, does not satisfy piranha::is_key,
+ * If \p Key, after the removal of cv-ref qualifiers, does not satisfy piranha::is_key,
  * a compile-time error will be produced.
  */
 template <typename Archive, typename Key>
-class key_has_boost_save : detail::sfinae_types
+class key_has_boost_save
 {
     PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
-    template <typename A1, typename Key1>
-    static auto test(A1 &a, const Key1 &k)
-        -> decltype(k.boost_save(a, std::declval<const symbol_set &>()), void(), yes());
-    static no test(...);
-    static const bool implementation_defined
-        = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<Key>()))>::value;
+    static const bool implementation_defined = is_detected<key_boost_save_t, Archive, Key>::value;
 
 public:
     /// Value of the type trait.
@@ -531,6 +546,14 @@ public:
 
 template <typename Archive, typename Key>
 const bool key_has_boost_save<Archive, Key>::value;
+
+inline namespace impl
+{
+
+template <typename A, typename K>
+using key_boost_load_t
+    = decltype(std::declval<K &>().boost_load(std::declval<A &>(), std::declval<const symbol_set &>()));
+}
 
 /// Detect the presence of the <tt>boost_load()</tt> method in keys.
 /**
@@ -541,18 +564,14 @@ const bool key_has_boost_save<Archive, Key>::value;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
- * If \p Key, after the application of piranha::uncvref_t, does not satisfy piranha::is_key,
+ * If \p Key, after the removal of cv-ref qualifiers, does not satisfy piranha::is_key,
  * a compile-time error will be produced.
  */
 template <typename Archive, typename Key>
-class key_has_boost_load : detail::sfinae_types
+class key_has_boost_load
 {
     PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
-    template <typename A1, typename Key1>
-    static auto test(A1 &a, Key1 &k) -> decltype(k.boost_load(a, std::declval<const symbol_set &>()), void(), yes());
-    static no test(...);
-    static const bool implementation_defined
-        = std::is_same<yes, decltype(test(std::declval<Archive &>(), std::declval<Key &>()))>::value;
+    static const bool implementation_defined = is_detected<key_boost_load_t, Archive, Key>::value;
 
 public:
     /// Value of the type trait.
@@ -589,7 +608,7 @@ const bool key_has_boost_load<Archive, Key>::value;
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
 // Wrapper for std stream classes for use in msgpack. The reason for this wrapper is that msgpack expects
@@ -599,6 +618,7 @@ template <typename Stream>
 class msgpack_stream_wrapper : public Stream
 {
 public:
+    // Inherit ctors.
     using Stream::Stream;
     auto write(const typename Stream::char_type *p, std::size_t count)
         -> decltype(std::declval<Stream &>().write(p, std::streamsize(0)))
@@ -608,6 +628,10 @@ public:
         return static_cast<Stream *>(this)->write(p, boost::numeric_cast<std::streamsize>(count));
     }
 };
+
+template <typename T>
+using msgpack_stream_write_t
+    = decltype(std::declval<T &>().write(std::declval<const char *>(), std::declval<std::size_t>()));
 }
 
 /// Detect msgpack stream.
@@ -621,14 +645,10 @@ public:
  * The return type of the <tt>write()</tt> method is ignored by the type trait.
  */
 template <typename T>
-class is_msgpack_stream : detail::sfinae_types
+class is_msgpack_stream
 {
-    template <typename T1>
-    static auto test(T1 &t)
-        -> decltype(t.write(std::declval<const char *>(), std::declval<std::size_t>()), void(), yes());
-    static no test(...);
-    static const bool implementation_defined = std::is_same<decltype(test(std::declval<T &>())), yes>::value
-                                               && !std::is_reference<T>::value && !std::is_const<T>::value;
+    static const bool implementation_defined
+        = is_detected<msgpack_stream_write_t, T>::value && !std::is_reference<T>::value && !std::is_const<T>::value;
 
 public:
     /// Value of the type trait.
@@ -668,7 +688,7 @@ template <typename Stream, typename T, typename = void>
 struct msgpack_pack_impl {
 };
 
-namespace detail
+inline namespace impl
 {
 
 template <typename Stream, typename T>
@@ -691,7 +711,7 @@ using msgpack_scalar_enabler =
  * The call operator will use directly the <tt>pack()</tt> method of the input msgpack packer.
  */
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, detail::msgpack_scalar_enabler<Stream, T>> {
+struct msgpack_pack_impl<Stream, T, msgpack_scalar_enabler<Stream, T>> {
     /// Call operator.
     /**
      * @param[in] packer the target packer.
@@ -705,7 +725,7 @@ struct msgpack_pack_impl<Stream, T, detail::msgpack_scalar_enabler<Stream, T>> {
     }
 };
 
-namespace detail
+inline namespace impl
 {
 
 template <typename Stream, typename T>
@@ -719,7 +739,7 @@ using msgpack_ld_enabler =
  * This specialisation is enabled if \p Stream satisfies piranha::is_msgpack_stream and \p T is <tt>long double</tt>.
  */
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, detail::msgpack_ld_enabler<Stream, T>> {
+struct msgpack_pack_impl<Stream, T, msgpack_ld_enabler<Stream, T>> {
     /// Call operator.
     /**
      * If \p f is msgpack_format::binary then the byte representation of \p x is packed into \p packer. Otherwise,
@@ -773,7 +793,7 @@ struct msgpack_pack_impl<Stream, T, detail::msgpack_ld_enabler<Stream, T>> {
     }
 };
 
-namespace detail
+inline namespace impl
 {
 
 template <typename Stream, typename T>
@@ -789,7 +809,7 @@ using msgpack_string_enabler =
  * The call operator will use directly the <tt>pack()</tt> method of the input msgpack packer.
  */
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, detail::msgpack_string_enabler<Stream, T>> {
+struct msgpack_pack_impl<Stream, T, msgpack_string_enabler<Stream, T>> {
     /// Call operator.
     /**
      * @param[in] packer the target packer.
@@ -803,16 +823,17 @@ struct msgpack_pack_impl<Stream, T, detail::msgpack_string_enabler<Stream, T>> {
     }
 };
 
-namespace detail
+inline namespace impl
 {
+
+template <typename Stream, typename T>
+using msgpack_pack_impl_t = decltype(msgpack_pack_impl<Stream, T>{}(
+    std::declval<msgpack::packer<Stream> &>(), std::declval<const T &>(), std::declval<msgpack_format>()));
 
 // Enabler for msgpack_pack.
 template <typename Stream, typename T>
 using msgpack_pack_enabler =
-    typename std::enable_if<is_msgpack_stream<Stream>::value
-                                && detail::true_tt<decltype(msgpack_pack_impl<Stream, T>{}(
-                                       std::declval<msgpack::packer<Stream> &>(), std::declval<const T &>(),
-                                       std::declval<msgpack_format>()))>::value,
+    typename std::enable_if<is_msgpack_stream<Stream>::value && is_detected<msgpack_pack_impl_t, Stream, T>::value,
                             int>::type;
 }
 
@@ -835,7 +856,7 @@ using msgpack_pack_enabler =
  *
  * @throws unspecified any exception thrown by the call operator piranha::msgpack_pack_impl.
  */
-template <typename Stream, typename T, detail::msgpack_pack_enabler<Stream, T> = 0>
+template <typename Stream, typename T, msgpack_pack_enabler<Stream, T> = 0>
 inline void msgpack_pack(msgpack::packer<Stream> &packer, const T &x, msgpack_format f)
 {
     msgpack_pack_impl<Stream, T>{}(packer, x, f);
@@ -864,7 +885,7 @@ struct msgpack_convert_impl {
  * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
  */
 template <typename T>
-struct msgpack_convert_impl<T, typename std::enable_if<detail::is_serialization_scalar<T>::value>::type> {
+struct msgpack_convert_impl<T, typename std::enable_if<is_serialization_scalar<T>::value>::type> {
     /// Call operator.
     /**
      * @param[out] x the output value.
@@ -971,17 +992,17 @@ struct msgpack_convert_impl<T, typename std::enable_if<std::is_same<T, std::stri
     }
 };
 
-namespace detail
+inline namespace impl
 {
+
+template <typename T>
+using msgpack_convert_impl_t = decltype(msgpack_convert_impl<T>{}(
+    std::declval<T &>(), std::declval<const msgpack::object &>(), std::declval<msgpack_format>()));
 
 // Enabler for msgpack_convert.
 template <typename T>
 using msgpack_convert_enabler =
-    typename std::enable_if<!std::is_const<T>::value
-                                && detail::true_tt<decltype(msgpack_convert_impl<T>{}(
-                                       std::declval<T &>(), std::declval<const msgpack::object &>(),
-                                       std::declval<msgpack_format>()))>::value,
-                            int>::type;
+    typename std::enable_if<!std::is_const<T>::value && is_detected<msgpack_convert_impl_t, T>::value, int>::type;
 }
 
 /// Convert msgpack object.
@@ -1003,10 +1024,18 @@ using msgpack_convert_enabler =
  *
  * @throws unspecified any exception thrown by the call operator piranha::msgpack_convert_impl.
  */
-template <typename T, detail::msgpack_convert_enabler<T> = 0>
+template <typename T, msgpack_convert_enabler<T> = 0>
 inline void msgpack_convert(T &x, const msgpack::object &o, msgpack_format f)
 {
     msgpack_convert_impl<T>{}(x, o, f);
+}
+
+inline namespace impl
+{
+
+template <typename Stream, typename T>
+using msgpack_pack_t = decltype(piranha::msgpack_pack(std::declval<msgpack::packer<Stream> &>(),
+                                                      std::declval<const T &>(), std::declval<msgpack_format>()));
 }
 
 /// Detect the presence of piranha::msgpack_pack().
@@ -1015,29 +1044,9 @@ inline void msgpack_convert(T &x, const msgpack::object &o, msgpack_format f)
  * \p Stream and \p T, \p false otherwise.
  */
 template <typename Stream, typename T>
-class has_msgpack_pack : detail::sfinae_types
+class has_msgpack_pack
 {
-    template <typename Stream1, typename T1>
-    static auto test(const Stream1 &s, const T1 &x)
-        -> decltype(piranha::msgpack_pack(std::declval<msgpack::packer<Stream1> &>(), x,
-                                          std::declval<msgpack_format>()),
-                    void(), yes());
-    static no test(...);
-    static const bool implementation_defined
-        = std::is_same<yes, decltype(test(std::declval<Stream>(), std::declval<T>()))>::value
-          && is_msgpack_stream<Stream>::value;
-
-    // NOTE: alternative, better implementation that does not work on GCC, I think it's a bug because
-    // it tries to instantiate the packer constructor in the decltype() (which fails because of forming a pointer
-    // to a reference).
-    // template <typename SP1, typename T1>
-    // static auto test(SP1 &sp, const T1 &x)
-    //     -> decltype(piranha::msgpack_pack(sp, x,std::declval<msgpack_format>()),
-    //                 void(), yes());
-    // static no test(...);
-    // static const bool implementation_defined
-    //     = std::is_same<yes, decltype(test(std::declval<msgpack::packer<Stream> &>(),
-    //         std::declval<const T &>()))>::value;
+    static const bool implementation_defined = is_detected<msgpack_pack_t, Stream, T>::value;
 
 public:
     /// Value of the type trait.
@@ -1047,21 +1056,22 @@ public:
 template <typename Stream, typename T>
 const bool has_msgpack_pack<Stream, T>::value;
 
+inline namespace impl
+{
+
+template <typename T>
+using msgpack_convert_t = decltype(piranha::msgpack_convert(
+    std::declval<T &>(), std::declval<const msgpack::object &>(), std::declval<msgpack_format>()));
+}
+
 /// Detect the presence of piranha::msgpack_convert().
 /**
- * This type trait will be \p true if piranha::msgpack_convert() can be called with template argument \p T, after
- * removal of any reference qualification, \p false otherwise.
+ * This type trait will be \p true if piranha::msgpack_convert() can be called with template argument \p T.
  */
 template <typename T>
-class has_msgpack_convert : detail::sfinae_types
+class has_msgpack_convert
 {
-    template <typename T1>
-    static auto test(T1 &x) -> decltype(piranha::msgpack_convert(x, std::declval<const msgpack::object &>(),
-                                                                 std::declval<msgpack_format>()),
-                                        void(), yes());
-    static no test(...);
-    static const bool implementation_defined
-        = std::is_same<yes, decltype(test(std::declval<typename std::remove_reference<T>::type &>()))>::value;
+    static const bool implementation_defined = is_detected<msgpack_convert_t, T>::value;
 
 public:
     /// Value of the type trait.
@@ -1070,6 +1080,14 @@ public:
 
 template <typename T>
 const bool has_msgpack_convert<T>::value;
+
+inline namespace impl
+{
+
+template <typename Stream, typename Key>
+using key_msgpack_pack_t = decltype(std::declval<const Key &>().msgpack_pack(
+    std::declval<msgpack::packer<Stream> &>(), std::declval<msgpack_format>(), std::declval<const symbol_set &>()));
+}
 
 /// Detect the presence of the <tt>%msgpack_pack()</tt> method in keys.
 /**
@@ -1080,22 +1098,15 @@ const bool has_msgpack_convert<T>::value;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
- * If \p Key, after the application of piranha::uncvref_t, does not satisfy piranha::is_key,
+ * If \p Key, after the removal of cv-ref qualifiers, does not satisfy piranha::is_key,
  * a compile-time error will be produced.
  */
 template <typename Stream, typename Key>
-class key_has_msgpack_pack : detail::sfinae_types
+class key_has_msgpack_pack
 {
     PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
-    template <typename Stream1, typename Key1>
-    static auto test(const Stream1 &s, const Key1 &k)
-        -> decltype(k.msgpack_pack(std::declval<msgpack::packer<Stream1> &>(), std::declval<msgpack_format>(),
-                                   std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test(...);
     static const bool implementation_defined
-        = std::is_same<yes, decltype(test(std::declval<Stream>(), std::declval<Key>()))>::value
-          && is_msgpack_stream<Stream>::value;
+        = is_detected<key_msgpack_pack_t, Stream, Key>::value && is_msgpack_stream<Stream>::value;
 
 public:
     /// Value of the type trait.
@@ -1105,6 +1116,14 @@ public:
 template <typename Stream, typename Key>
 const bool key_has_msgpack_pack<Stream, Key>::value;
 
+inline namespace impl
+{
+
+template <typename Key>
+using key_msgpack_convert_t = decltype(std::declval<Key &>().msgpack_convert(
+    std::declval<const msgpack::object &>(), std::declval<msgpack_format>(), std::declval<const symbol_set &>()));
+}
+
 /// Detect the presence of the <tt>%msgpack_convert()</tt> method in keys.
 /**
  * This type trait will be \p true if the \p Key type has a method whose signature is compatible with:
@@ -1113,20 +1132,14 @@ const bool key_has_msgpack_pack<Stream, Key>::value;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
- * If \p Key, after the application of piranha::uncvref_t, does not satisfy piranha::is_key,
+ * If \p Key, after the removal of cv-ref qualifiers, does not satisfy piranha::is_key,
  * a compile-time error will be produced.
  */
 template <typename Key>
-class key_has_msgpack_convert : detail::sfinae_types
+class key_has_msgpack_convert
 {
     PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
-    template <typename Key1>
-    static auto test(Key1 &k)
-        -> decltype(k.msgpack_convert(std::declval<const msgpack::object &>(), std::declval<msgpack_format>(),
-                                      std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test(...);
-    static const bool implementation_defined = std::is_same<yes, decltype(test(std::declval<Key &>()))>::value;
+    static const bool implementation_defined = is_detected<key_msgpack_convert_t, Key>::value;
 
 public:
     /// Value of the type trait.

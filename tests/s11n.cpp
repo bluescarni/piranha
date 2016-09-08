@@ -418,6 +418,9 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &, int>::value));
     BOOST_CHECK((!is_boost_saving_archive<const boost::archive::text_oarchive &, int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::text_oarchive &&, int>::value));
+    BOOST_CHECK((!is_boost_saving_archive<boost::archive::binary_oarchive, void>::value));
+    BOOST_CHECK((!is_boost_saving_archive<void, void>::value));
+    BOOST_CHECK((!is_boost_saving_archive<void, int>::value));
     // Loading archive.
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive, int>::value));
     BOOST_CHECK((is_boost_loading_archive<boost::archive::binary_iarchive, std::string>::value));
@@ -436,6 +439,9 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     BOOST_CHECK((is_boost_loading_archive<boost::archive::text_iarchive &, int>::value));
     BOOST_CHECK((!is_boost_loading_archive<const boost::archive::text_iarchive &, int>::value));
     BOOST_CHECK((is_boost_loading_archive<boost::archive::text_iarchive &&, int>::value));
+    BOOST_CHECK((!is_boost_loading_archive<boost::archive::binary_iarchive, void>::value));
+    BOOST_CHECK((!is_boost_loading_archive<void, void>::value));
+    BOOST_CHECK((!is_boost_loading_archive<void, int>::value));
     // Test custom archives.
     BOOST_CHECK((is_boost_saving_archive<sa0, int>::value));
     BOOST_CHECK((!is_boost_saving_archive<sa0, unserial>::value));
@@ -467,6 +473,9 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive const, const int &>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, wchar_t>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive, int>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive, void>::value));
+    BOOST_CHECK((!has_boost_save<void, void>::value));
+    BOOST_CHECK((!has_boost_save<void, int>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, int>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, long double>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, int &>::value));
@@ -483,6 +492,9 @@ BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive const, const int &>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, wchar_t>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, int>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, void>::value));
+    BOOST_CHECK((!has_boost_load<void, void>::value));
+    BOOST_CHECK((!has_boost_load<void, int>::value));
     // Key type traits.
     BOOST_CHECK(is_key<keya>::value);
     BOOST_CHECK(is_key<keyb>::value);
@@ -629,7 +641,7 @@ using msgpack::packer;
 using msgpack::sbuffer;
 
 template <typename T>
-using sw = detail::msgpack_stream_wrapper<T>;
+using sw = msgpack_stream_wrapper<T>;
 
 // A struct with no msgpack support.
 struct no_msgpack {
@@ -740,6 +752,7 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
 {
     BOOST_CHECK(is_msgpack_stream<std::ostringstream>::value);
     BOOST_CHECK(!is_msgpack_stream<std::ostringstream &>::value);
+    BOOST_CHECK(!is_msgpack_stream<void>::value);
     BOOST_CHECK(!is_msgpack_stream<const std::ostringstream &>::value);
     BOOST_CHECK(!is_msgpack_stream<const std::ostringstream>::value);
     BOOST_CHECK(is_msgpack_stream<sbuffer>::value);
@@ -748,6 +761,9 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
     BOOST_CHECK(is_msgpack_stream<sw<std::ostringstream>>::value);
     BOOST_CHECK(!is_msgpack_stream<sw<std::ostringstream> &>::value);
     BOOST_CHECK((has_msgpack_pack<sbuffer, int>::value));
+    BOOST_CHECK((!has_msgpack_pack<sbuffer, void>::value));
+    BOOST_CHECK((!has_msgpack_pack<void, void>::value));
+    BOOST_CHECK((!has_msgpack_pack<void, int>::value));
     BOOST_CHECK((!has_msgpack_pack<sbuffer, no_msgpack>::value));
     BOOST_CHECK((has_msgpack_pack<std::ostringstream, int>::value));
     BOOST_CHECK((has_msgpack_pack<std::ostringstream, bool>::value));
@@ -766,6 +782,7 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
     BOOST_CHECK((!has_msgpack_pack<const std::ostringstream &&, int>::value));
     BOOST_CHECK((!has_msgpack_pack<std::ostringstream &&, int>::value));
     BOOST_CHECK((has_msgpack_convert<int>::value));
+    BOOST_CHECK((!has_msgpack_convert<void>::value));
     BOOST_CHECK((has_msgpack_convert<bool>::value));
     BOOST_CHECK((has_msgpack_convert<bool &>::value));
     BOOST_CHECK((!has_msgpack_convert<const bool>::value));
@@ -786,6 +803,7 @@ BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
     BOOST_CHECK((!has_msgpack_convert<const double &&>::value));
     BOOST_CHECK(is_key<key01>::value);
     BOOST_CHECK((key_has_msgpack_pack<sbuffer, key01>::value));
+    BOOST_CHECK((!key_has_msgpack_pack<void, key01>::value));
     BOOST_CHECK((key_has_msgpack_pack<sbuffer, key01 &>::value));
     BOOST_CHECK((key_has_msgpack_pack<sbuffer, const key01 &>::value));
     BOOST_CHECK((key_has_msgpack_pack<sbuffer, const key01>::value));
