@@ -462,16 +462,14 @@ class series_exposer
     }
     // Expose arithmetics operations with another type, if supported.
     template <typename S, typename T>
-    using common_ops_ic
-        = std::integral_constant<bool,
-                                 piranha::is_addable_in_place<S, T>::value && piranha::is_addable<S, T>::value
-                                     && piranha::is_addable<T, S>::value
-                                     && piranha::is_subtractable_in_place<S, T>::value
-                                     && piranha::is_subtractable<S, T>::value && piranha::is_subtractable<T, S>::value
-                                     && piranha::is_multipliable_in_place<S, T>::value
-                                     && piranha::is_multipliable<S, T>::value && piranha::is_multipliable<T, S>::value
-                                     && piranha::is_equality_comparable<T, S>::value
-                                     && piranha::is_equality_comparable<S, T>::value>;
+    using common_ops_ic = std::
+        integral_constant<bool,
+                          piranha::is_addable_in_place<S, T>::value && piranha::is_addable<S, T>::value
+                              && piranha::is_addable<T, S>::value && piranha::is_subtractable_in_place<S, T>::value
+                              && piranha::is_subtractable<S, T>::value && piranha::is_subtractable<T, S>::value
+                              && piranha::is_multipliable_in_place<S, T>::value && piranha::is_multipliable<S, T>::value
+                              && piranha::is_multipliable<T, S>::value && piranha::is_equality_comparable<T, S>::value
+                              && piranha::is_equality_comparable<S, T>::value>;
     template <typename S, typename T, typename std::enable_if<common_ops_ic<S, T>::value, int>::type = 0>
     static void expose_common_ops(bp::class_<S> &series_class, const T &in)
     {

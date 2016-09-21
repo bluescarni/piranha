@@ -830,8 +830,8 @@ struct arrow_operator_type<T, typename std::enable_if<std::is_pointer<T>::value>
 template <typename T>
 struct arrow_operator_type<T, typename std::enable_if<std::is_same<
                                   typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type,
-                                  typename arrow_operator_type<decltype(
-                                      std::declval<T &>().operator->())>::type>::value>::type> {
+                                  typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type>::
+                                                          value>::type> {
     using type = typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type;
 };
 
@@ -855,8 +855,8 @@ struct is_input_iterator_impl<T,
                                             std::is_same<
                                                 typename std::remove_reference<decltype(
                                                     *std::declval<typename arrow_operator_type<T>::type>())>::type,
-                                                typename std::remove_reference<decltype(
-                                                    *std::declval<T &>())>::type>::value
+                                                typename std::remove_reference<decltype(*std::declval<T &>())>::type>::
+                                                value
                                             &&
                                             // NOTE: here the usage of is_convertible guarantees we catch both iterators
                                             // higher in the type hierarchy and

@@ -192,11 +192,10 @@ private:
     template <typename U>
     using init_list_ctor_enabler = container_ctor_enabler<std::initializer_list<U>>;
     template <typename Iterator>
-    using it_ctor_enabler =
-        typename std::enable_if<is_input_iterator<Iterator>::value
-                                    && has_safe_cast<value_type,
-                                                     typename std::iterator_traits<Iterator>::value_type>::value,
-                                int>::type;
+    using it_ctor_enabler = typename std::
+        enable_if<is_input_iterator<Iterator>::value
+                      && has_safe_cast<value_type, typename std::iterator_traits<Iterator>::value_type>::value,
+                  int>::type;
     // Implementation of the ctor from range.
     template <typename Iterator>
     typename v_type::size_type construct_from_range(Iterator begin, Iterator end)

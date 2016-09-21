@@ -111,10 +111,8 @@ public:
     dynamic_storage() : m_tag(0u), m_size(0u), m_capacity(0u), m_ptr(nullptr)
     {
     }
-    dynamic_storage(dynamic_storage &&other) noexcept : m_tag(0u),
-                                                        m_size(other.m_size),
-                                                        m_capacity(other.m_capacity),
-                                                        m_ptr(other.m_ptr)
+    dynamic_storage(dynamic_storage &&other) noexcept
+        : m_tag(0u), m_size(other.m_size), m_capacity(other.m_capacity), m_ptr(other.m_ptr)
     {
         // Erase the other.
         other.m_size = 0u;

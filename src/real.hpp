@@ -129,8 +129,7 @@ struct is_real_interoperable_type {
 //   on when mixing real with other types. E.g., pow(real,int) when evaluating polynomials. We need to make sure
 //   the conversions are as fast as possible.
 // - At the moment, this class is technically not sortable because moved-from reals cannot be compared. For use in
-// std::sort,
-//   we should add special casing for moved-from objects. See:
+//   std::sort, we should add special casing for moved-from objects. See:
 //   http://stackoverflow.com/questions/26579132/what-is-the-post-condition-of-a-move-constructor
 class real : public detail::real_base<>
 {

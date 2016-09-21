@@ -104,11 +104,10 @@ class symbol_set
     }
     // Enabler for ctor from iterator.
     template <typename Iterator, typename Symbol>
-    using it_ctor_enabler =
-        typename std::enable_if<is_input_iterator<Iterator>::value
-                                    && std::is_constructible<Symbol,
-                                                             decltype(*(std::declval<const Iterator &>()))>::value,
-                                int>::type;
+    using it_ctor_enabler = typename std::
+        enable_if<is_input_iterator<Iterator>::value
+                      && std::is_constructible<Symbol, decltype(*(std::declval<const Iterator &>()))>::value,
+                  int>::type;
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>

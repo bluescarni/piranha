@@ -561,10 +561,9 @@ private:
         return cp_map;
     }
     template <typename F>
-    using custom_partial_enabler =
-        typename std::enable_if<std::is_constructible<std::function<rational_function(const rational_function &)>,
-                                                      F>::value,
-                                int>::type;
+    using custom_partial_enabler = typename std::
+        enable_if<std::is_constructible<std::function<rational_function(const rational_function &)>, F>::value,
+                  int>::type;
     // The mutex for access to the custom derivatives.
     static std::mutex s_cp_mutex;
 
@@ -1424,9 +1423,9 @@ template <typename T, typename U>
 struct pow_impl<T, U, typename std::enable_if<std::is_base_of<detail::rational_function_tag, T>::value>::type> {
 private:
     template <typename V>
-    using pow_enabler = typename std::enable_if<detail::true_tt<decltype(
-                                                    std::declval<const T &>().pow(std::declval<const V &>()))>::value,
-                                                int>::type;
+    using pow_enabler = typename std::
+        enable_if<detail::true_tt<decltype(std::declval<const T &>().pow(std::declval<const V &>()))>::value,
+                  int>::type;
 
 public:
     /// Call operator.

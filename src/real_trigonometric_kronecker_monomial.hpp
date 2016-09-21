@@ -190,16 +190,15 @@ private:
               * math::binomial(std::declval<value_type const &>(), std::declval<value_type const &>()))                \
              * (std::declval<const U &>() * std::declval<const U &>()))
     template <typename U>
-    using t_subs_type =
-        typename std::enable_if<std::is_constructible<U, int>::value && std::is_default_constructible<U>::value
-                                    && std::is_assignable<U &, U>::value
-                                    && std::is_assignable<U &, decltype(std::declval<const U &>()
-                                                                        * std::declval<const U &>())>::value
-                                    && is_addable_in_place<PIRANHA_TMP_TYPE,
-                                                           decltype(std::declval<const value_type &>()
-                                                                    * std::declval<PIRANHA_TMP_TYPE const &>())>::value
-                                    && has_negate<PIRANHA_TMP_TYPE>::value,
-                                PIRANHA_TMP_TYPE>::type;
+    using t_subs_type = typename std::
+        enable_if<std::is_constructible<U, int>::value && std::is_default_constructible<U>::value
+                      && std::is_assignable<U &, U>::value
+                      && std::is_assignable<U &, decltype(std::declval<const U &>() * std::declval<const U &>())>::value
+                      && is_addable_in_place<PIRANHA_TMP_TYPE,
+                                             decltype(std::declval<const value_type &>()
+                                                      * std::declval<PIRANHA_TMP_TYPE const &>())>::value
+                      && has_negate<PIRANHA_TMP_TYPE>::value,
+                  PIRANHA_TMP_TYPE>::type;
 #undef PIRANHA_TMP_TYPE
     // Implementation of canonicalisation.
     static bool canonicalise_impl(v_type &unpacked)

@@ -764,9 +764,8 @@ public:
      *
      * @param[in] other set to be moved.
      */
-    hash_set(hash_set &&other) noexcept : m_pack(std::move(other.m_pack)),
-                                          m_log2_size(other.m_log2_size),
-                                          m_n_elements(other.m_n_elements)
+    hash_set(hash_set &&other) noexcept
+        : m_pack(std::move(other.m_pack)), m_log2_size(other.m_log2_size), m_n_elements(other.m_n_elements)
     {
         // Clear out the other one.
         other.ptr() = nullptr;

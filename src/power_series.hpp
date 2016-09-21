@@ -101,12 +101,12 @@ struct common_degree_type_checks {
     }                                                                                                                  \
     template <                                                                                                         \
         typename Term,                                                                                                 \
-        typename std::enable_if<ps_term_score<Term>::value == 3u                                                       \
-                                    && (!std::is_integral<decltype(                                                    \
-                                            math::property(std::declval<const Term &>().m_cf))>::value                 \
-                                        || !std::is_integral<decltype(std::declval<const Term &>().m_key.property(     \
-                                               std::declval<const symbol_set &>()))>::value),                          \
-                                int>::type                                                                             \
+        typename std::                                                                                                 \
+            enable_if<ps_term_score<Term>::value == 3u                                                                 \
+                          && (!std::is_integral<decltype(math::property(std::declval<const Term &>().m_cf))>::value    \
+                              || !std::is_integral<decltype(std::declval<const Term &>().m_key.property(               \
+                                     std::declval<const symbol_set &>()))>::value),                                    \
+                      int>::type                                                                                       \
         = 0>                                                                                                           \
     inline auto ps_get_##property(const Term &t, const symbol_set &s)                                                  \
         ->decltype(math::property(t.m_cf) + t.m_key.property(s))                                                       \
@@ -349,13 +349,12 @@ class power_series : public Series, detail::power_series_tag
     }
     // Enabler for partial degree truncation.
     template <typename T, typename U>
-    using truncate_pdegree_enabler =
-        typename std::enable_if<detail::true_tt<decltype(truncate_term(std::declval<const typename U::term_type &>(),
-                                                                       std::declval<const T &>(),
-                                                                       std::declval<const std::vector<std::string> &>(),
-                                                                       std::declval<const symbol_set::positions &>(),
-                                                                       std::declval<const symbol_set &>()))>::value,
-                                int>::type;
+    using truncate_pdegree_enabler = typename std::
+        enable_if<detail::true_tt<decltype(truncate_term(
+                      std::declval<const typename U::term_type &>(), std::declval<const T &>(),
+                      std::declval<const std::vector<std::string> &>(), std::declval<const symbol_set::positions &>(),
+                      std::declval<const symbol_set &>()))>::value,
+                  int>::type;
     // Serialization.
     PIRANHA_SERIALIZE_THROUGH_BASE(base)
     // Lift definitions from the detail namespace.
