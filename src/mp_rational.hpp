@@ -673,11 +673,10 @@ private:
     };
     // Pow enabler.
     template <typename T>
-    using pow_enabler =
-        typename std::enable_if<std::is_same<decltype(std::declval<const int_type &>().pow(std::declval<const T &>())),
-                                             decltype(std::declval<const int_type &>().pow(
-                                                 std::declval<const T &>()))>::value,
-                                int>::type;
+    using pow_enabler = typename std::
+        enable_if<std::is_same<decltype(std::declval<const int_type &>().pow(std::declval<const T &>())),
+                               decltype(std::declval<const int_type &>().pow(std::declval<const T &>()))>::value,
+                  int>::type;
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
@@ -1782,8 +1781,8 @@ public:
     void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
     {
         p.pack_array(2u);
-        msgpack_pack(p, m_num, f);
-        msgpack_pack(p, m_den, f);
+        piranha::msgpack_pack(p, m_num, f);
+        piranha::msgpack_pack(p, m_den, f);
     }
     /// Convert from msgpack object.
     /**
@@ -1804,8 +1803,8 @@ public:
         std::array<msgpack::object, 2u> v;
         o.convert(v);
         int_type num, den;
-        msgpack_convert(num, v[0], f);
-        msgpack_convert(den, v[1], f);
+        piranha::msgpack_convert(num, v[0], f);
+        piranha::msgpack_convert(den, v[1], f);
         if (f == msgpack_format::binary) {
             m_num = std::move(num);
             m_den = std::move(den);
@@ -2279,8 +2278,8 @@ struct divexact_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value
  * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_rational.
  */
 template <typename T>
-struct has_exact_ring_operations<T, typename std::enable_if<detail::is_mp_rational<
-                                        typename std::decay<T>::type>::value>::type> {
+struct has_exact_ring_operations<T, typename std::
+                                        enable_if<detail::is_mp_rational<typename std::decay<T>::type>::value>::type> {
     /// Value of the type trait.
     static const bool value = true;
 };
@@ -2293,10 +2292,9 @@ namespace detail
 {
 
 template <typename To, typename From>
-using sc_rat_enabler = typename std::enable_if<(is_mp_rational<To>::value
-                                                && (std::is_arithmetic<From>::value || is_mp_integer<From>::value))
-                                               || ((std::is_integral<To>::value || is_mp_integer<To>::value)
-                                                   && is_mp_rational<From>::value)>::type;
+using sc_rat_enabler = typename std::
+    enable_if<(is_mp_rational<To>::value && (std::is_arithmetic<From>::value || is_mp_integer<From>::value))
+              || ((std::is_integral<To>::value || is_mp_integer<To>::value) && is_mp_rational<From>::value)>::type;
 }
 
 /// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_rational.
@@ -2424,18 +2422,16 @@ inline namespace impl
 {
 
 template <typename Stream, typename T>
-using mp_rational_msgpack_pack_enabler =
-    typename std::enable_if<detail::is_mp_rational<T>::value
-                            && detail::true_tt<decltype(std::declval<const T &>().msgpack_pack(
-                                   std::declval<msgpack::packer<Stream> &>(),
-                                   std::declval<msgpack_format>()))>::value>::type;
+using mp_rational_msgpack_pack_enabler = typename std::
+    enable_if<detail::is_mp_rational<T>::value
+              && detail::true_tt<decltype(std::declval<const T &>().msgpack_pack(
+                     std::declval<msgpack::packer<Stream> &>(), std::declval<msgpack_format>()))>::value>::type;
 
 template <typename T>
-using mp_rational_msgpack_convert_enabler =
-    typename std::enable_if<detail::is_mp_rational<T>::value
-                            && detail::true_tt<decltype(
-                                   std::declval<T &>().msgpack_convert(std::declval<const msgpack::object &>(),
-                                                                       std::declval<msgpack_format>()))>::value>::type;
+using mp_rational_msgpack_convert_enabler = typename std::
+    enable_if<detail::is_mp_rational<T>::value
+              && detail::true_tt<decltype(std::declval<T &>().msgpack_convert(
+                     std::declval<const msgpack::object &>(), std::declval<msgpack_format>()))>::value>::type;
 }
 
 /// Implementation of piranha::msgpack_pack() for piranha::mp_rational.
