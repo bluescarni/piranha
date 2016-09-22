@@ -4150,7 +4150,7 @@ public:
      * @param[in] ar target archive.
      *
      * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
-     * @throws unspecified any exception thrown by the public interface of \p ar.
+     * @throws unspecified any exception thrown by piranha::boost_save().
      */
     void boost_save(boost::archive::binary_oarchive &ar) const
     {
@@ -4177,8 +4177,7 @@ public:
      *
      * @param[in] ar target archive.
      *
-     * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
-     * @throws unspecified any exception thrown by the public interface of \p ar or by the
+     * @throws unspecified any exception thrown by piranha::boost_save() or by the
      * conversion of \p this to string.
      */
     void boost_save(boost::archive::text_oarchive &ar) const
@@ -4199,7 +4198,7 @@ public:
      *
      * @throws std::invalid_argument if the serialized integer is static and its number of limbs is greater than 2.
      * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
-     * @throws unspecified any exception thrown by the public interface of \p ar.
+     * @throws unspecified any exception thrown by piranha::boost_load().
      */
     void boost_load(boost::archive::binary_iarchive &ar)
     {
@@ -4263,7 +4262,7 @@ public:
      *
      * @param[in] ar the source archive.
      *
-     * @throws unspecified any exception thrown by the public interface of \p ar, or by the constructor of
+     * @throws unspecified any exception thrown by piranha::boost_load(), or by the constructor of
      * piranha::mp_integer from string.
      */
     void boost_load(boost::archive::text_iarchive &ar)
