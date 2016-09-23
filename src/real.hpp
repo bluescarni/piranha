@@ -52,6 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "pow.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "type_traits.hpp"
@@ -1689,6 +1690,89 @@ public:
         return &m_value[0u];
     }
     //@}
+private:
+    static ::mpfr_prec_t size_from_prec(::mpfr_prec_t prec)
+    {
+        const ::mpfr_prec_t q = prec / ::mp_bits_per_limb, r = prec % ::mp_bits_per_limb;
+        return q + (r != 0);
+    }
+
+public:
+    /// Save to a Boost binary archive.
+    /**
+     * This method will serialize \p this into \p ar.
+     *
+     * @param[in] ar target archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_save().
+     */
+    void boost_save(boost::archive::binary_oarchive &ar) const
+    {
+        piranha::boost_save(ar, m_value->_mpfr_prec);
+        piranha::boost_save(ar, m_value->_mpfr_sign);
+        piranha::boost_save(ar, m_value->_mpfr_exp);
+        const ::mpfr_prec_t s = size_from_prec(m_value->_mpfr_prec);
+        // NOTE: no need to save the size, as it can be recovered from the prec.
+        for (::mpfr_prec_t i = 0; i < s; ++i) {
+            piranha::boost_save(ar, m_value->_mpfr_d[i]);
+        }
+    }
+    /// Save to a Boost text archive.
+    /**
+     * This method will serialize \p this into \p ar. The serialized data consist of the precision of \p this and its
+     * string representation.
+     *
+     * @param[in] ar target archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_save() or by the conversion of \p this to
+     * string.
+     */
+    void boost_save(boost::archive::text_oarchive &ar) const
+    {
+        std::ostringstream oss;
+        oss << *this;
+        auto prec = get_prec();
+        auto s = oss.str();
+        piranha::boost_save(ar, prec);
+        piranha::boost_save(ar, s);
+    }
+    void boost_load(boost::archive::binary_iarchive &ar)
+    {
+        // First we recover the non-limb members.
+        ::mpfr_prec_t prec;
+        decltype(m_value->_mpfr_sign) sign;
+        decltype(m_value->_mpfr_exp) exp;
+        piranha::boost_load(ar, prec);
+        piranha::boost_load(ar, sign);
+        piranha::boost_load(ar, exp);
+        // Recover the size in limbs from prec.
+        const ::mpfr_prec_t s = size_from_prec(prec);
+        // Set the precision.
+        set_prec(prec);
+        piranha_assert(m_value->_mpfr_prec == prec);
+        m_value->_mpfr_sign = sign;
+        m_value->_mpfr_exp = exp;
+        try {
+            // NOTE: protect in try/catch as in theory boost_load() could throw even
+            // in case of valid archive (e.g., memory errors maybe?) and we want
+            // to deal with this case.
+            for (::mpfr_prec_t i = 0; i < s; ++i) {
+                piranha::boost_load(ar, *(m_value->_mpfr_d + i));
+            }
+        } catch (...) {
+            ::mpfr_set_ui(m_value,0u,default_rnd);
+            throw;
+        }
+    }
+    void boost_load(boost::archive::text_iarchive &ar)
+    {
+        ::mpfr_prec_t prec;
+        std::string s;
+        piranha::boost_load(ar, prec);
+        piranha::boost_load(ar, s);
+        *this = real(s, prec);
+    }
+
 private:
     ::mpfr_t m_value;
 };
