@@ -1719,8 +1719,7 @@ public:
     }
     /// Save to a Boost text archive.
     /**
-     * This method will serialize \p this into \p ar. The serialized data consist of the precision of \p this and its
-     * string representation.
+     * This method will serialize \p this into \p ar.
      *
      * @param[in] ar target archive.
      *
@@ -1736,6 +1735,16 @@ public:
         piranha::boost_save(ar, prec);
         piranha::boost_save(ar, s);
     }
+    /// Deserialize from Boost binary archive.
+    /**
+     * This method will deserialize from \p ar into \p this. The method offers the basic exception guarantee
+     * and performs minimal checking of the input data. Calling this method will result in undefined behaviour
+     * if \p ar does not contain a real serialized via boost_save().
+     *
+     * @param[in] ar the source archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_load().
+     */
     void boost_load(boost::archive::binary_iarchive &ar)
     {
         // First we recover the non-limb members.
@@ -1760,10 +1769,20 @@ public:
                 piranha::boost_load(ar, *(m_value->_mpfr_d + i));
             }
         } catch (...) {
-            ::mpfr_set_ui(m_value,0u,default_rnd);
+            // Set to zero before re-throwing.
+            ::mpfr_set_ui(m_value, 0u, default_rnd);
             throw;
         }
     }
+    /// Deserialize from Boost text archive.
+    /**
+     * This method will deserialize from \p ar into \p this.
+     *
+     * @param[in] ar the source archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_load(), or by the constructor of
+     * piranha::real from string.
+     */
     void boost_load(boost::archive::text_iarchive &ar)
     {
         ::mpfr_prec_t prec;
@@ -2217,6 +2236,74 @@ inline real operator"" _r(const char *s)
     return real(s);
 }
 }
+
+inline namespace impl
+{
+
+template <typename Archive, typename T>
+using real_boost_save_t = decltype(std::declval<const T &>().boost_save(std::declval<Archive &>()));
+
+template <typename Archive, typename T>
+using real_boost_save_enabler =
+    typename std::enable_if<std::is_same<T,real>::value && is_detected<real_boost_save_t,Archive,T>::value>::type;
+
+template <typename Archive, typename T>
+using real_boost_load_t = decltype(std::declval<T &>().boost_load(std::declval<Archive &>()));
+
+template <typename Archive, typename T>
+using real_boost_load_enabler =
+    typename std::enable_if<std::is_same<T,real>::value && is_detected<real_boost_load_t,Archive,T>::value>::type;
+}
+
+/// Implementation of piranha::boost_save() for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled if \p T is piranha::real and
+ * the piranha::real::boost_save() method is supported with an archive of type \p Archive.
+ */
+template <typename Archive, typename T>
+class boost_save_impl<Archive, T, real_boost_save_enabler<Archive, T>>
+{
+public:
+    /// Call operator.
+    /**
+     * The call operator will invoke piranha::real::boost_save().
+     *
+     * @param[in] ar target archive.
+     * @param[in] x piranha::real to be serialized into \p ar.
+     *
+     * @throws unspecified any exception thrown by piranha::real::boost_save().
+     */
+    void operator()(Archive &ar, const T &x) const
+    {
+        x.boost_save(ar);
+    }
+};
+
+/// Implementation of piranha::boost_load() for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled if \p T is piranha::real and
+ * the piranha::real::boost_load() method is supported with an archive of type \p Archive.
+ */
+template <typename Archive, typename T>
+class boost_load_impl<Archive, T, real_boost_load_enabler<Archive, T>>
+{
+public:
+    /// Call operator.
+    /**
+     * The call operator will invoke piranha::real::boost_load().
+     *
+     * @param[in] ar source archive.
+     * @param[in] x target piranha::real.
+     *
+     * @throws unspecified any exception thrown by piranha::real::boost_load().
+     */
+    void operator()(Archive &ar, T &x) const
+    {
+        x.boost_load(ar);
+    }
+};
 }
 
 #endif
