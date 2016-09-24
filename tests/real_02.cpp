@@ -58,27 +58,105 @@ static inline void boost_roundtrip(const T &x)
         IArchive ia(ss);
         boost_load(ia, retval);
     }
-    BOOST_CHECK_EQUAL(x,retval);
+    BOOST_CHECK_EQUAL(x, retval);
 }
 
 BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
 {
     init();
-    std::vector<::mpfr_prec_t> vprec{32,64,128,256,512};
-    std::uniform_real_distribution<double> dist(0.,1.);
-    for (auto prec: vprec) {
+    std::vector<::mpfr_prec_t> vprec{32, 64, 128, 256, 512};
+    std::uniform_real_distribution<double> dist(0., 1.);
+    for (auto prec : vprec) {
         for (auto i = 0; i < ntries; ++i) {
-            boost_roundtrip<boost::archive::binary_oarchive,boost::archive::binary_iarchive>(real(dist(rng),prec));
-            boost_roundtrip<boost::archive::text_oarchive,boost::archive::text_iarchive>(real(dist(rng),prec));
+            boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(real(dist(rng), prec));
+            boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(real(dist(rng), prec));
         }
         // Some special values.
-        boost_roundtrip<boost::archive::binary_oarchive,boost::archive::binary_iarchive>(real(0.,prec));
-        boost_roundtrip<boost::archive::text_oarchive,boost::archive::text_iarchive>(real(0.,prec));
+        boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(real(0., prec));
+        boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(real(0., prec));
         if (std::numeric_limits<double>::has_infinity) {
-            boost_roundtrip<boost::archive::binary_oarchive,boost::archive::binary_iarchive>(real(std::numeric_limits<double>::infinity(),prec));
-            boost_roundtrip<boost::archive::text_oarchive,boost::archive::text_iarchive>(real(std::numeric_limits<double>::infinity(),prec));
-            boost_roundtrip<boost::archive::binary_oarchive,boost::archive::binary_iarchive>(real(-std::numeric_limits<double>::infinity(),prec));
-            boost_roundtrip<boost::archive::text_oarchive,boost::archive::text_iarchive>(real(-std::numeric_limits<double>::infinity(),prec));
+            boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
+                real(std::numeric_limits<double>::infinity(), prec));
+            boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(
+                real(std::numeric_limits<double>::infinity(), prec));
+            boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
+                real(-std::numeric_limits<double>::infinity(), prec));
+            boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(
+                real(-std::numeric_limits<double>::infinity(), prec));
+        }
+        if (std::numeric_limits<double>::has_quiet_NaN) {
+            {
+                std::stringstream ss;
+                {
+                    boost::archive::binary_oarchive oa(ss);
+                    boost_save(oa, real(std::numeric_limits<double>::quiet_NaN()));
+                }
+                real retval;
+                {
+                    boost::archive::binary_iarchive ia(ss);
+                    boost_load(ia, retval);
+                }
+                BOOST_CHECK(retval.is_nan());
+            }
+            {
+                std::stringstream ss;
+                {
+                    boost::archive::binary_oarchive oa(ss);
+                    boost_save(oa, real(-std::numeric_limits<double>::quiet_NaN()));
+                }
+                real retval;
+                {
+                    boost::archive::binary_iarchive ia(ss);
+                    boost_load(ia, retval);
+                }
+                BOOST_CHECK(retval.is_nan());
+            }
+            {
+                std::stringstream ss;
+                {
+                    boost::archive::text_oarchive oa(ss);
+                    boost_save(oa, real(std::numeric_limits<double>::quiet_NaN()));
+                }
+                real retval;
+                {
+                    boost::archive::text_iarchive ia(ss);
+                    boost_load(ia, retval);
+                }
+                BOOST_CHECK(retval.is_nan());
+            }
+            {
+                std::stringstream ss;
+                {
+                    boost::archive::text_oarchive oa(ss);
+                    boost_save(oa, real(-std::numeric_limits<double>::quiet_NaN()));
+                }
+                real retval;
+                {
+                    boost::archive::text_iarchive ia(ss);
+                    boost_load(ia, retval);
+                }
+                BOOST_CHECK(retval.is_nan());
+            }
+        }
+    }
+    // Check for exception safety in binary mode.
+    {
+        std::stringstream ss;
+        {
+            boost::archive::binary_oarchive oa(ss);
+            boost_save(oa, ::mpfr_prec_t(100));
+            boost_save(oa, decltype(std::declval<::mpfr_t &>()->_mpfr_sign)(0));
+            boost_save(oa, decltype(std::declval<::mpfr_t &>()->_mpfr_exp)(0));
+        }
+        real retval{42};
+        {
+            boost::archive::binary_iarchive ia(ss);
+            try {
+                boost_load(ia, retval);
+                BOOST_CHECK(false);
+            } catch (...) {
+                BOOST_CHECK_EQUAL(retval, 0);
+            }
         }
     }
 }

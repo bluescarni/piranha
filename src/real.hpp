@@ -1728,6 +1728,7 @@ public:
      */
     void boost_save(boost::archive::text_oarchive &ar) const
     {
+        // NOTE: like in mp_integer, the performance here can be improved significantly.
         std::ostringstream oss;
         oss << *this;
         auto prec = get_prec();
@@ -1786,7 +1787,7 @@ public:
     void boost_load(boost::archive::text_iarchive &ar)
     {
         ::mpfr_prec_t prec;
-        std::string s;
+        static thread_local std::string s;
         piranha::boost_load(ar, prec);
         piranha::boost_load(ar, s);
         *this = real(s, prec);
@@ -2241,18 +2242,12 @@ inline namespace impl
 {
 
 template <typename Archive, typename T>
-using real_boost_save_t = decltype(std::declval<const T &>().boost_save(std::declval<Archive &>()));
-
-template <typename Archive, typename T>
 using real_boost_save_enabler =
-    typename std::enable_if<std::is_same<T,real>::value && is_detected<real_boost_save_t,Archive,T>::value>::type;
-
-template <typename Archive, typename T>
-using real_boost_load_t = decltype(std::declval<T &>().boost_load(std::declval<Archive &>()));
+    typename std::enable_if<std::is_same<T, real>::value && is_detected<boost_save_member_t, Archive, T>::value>::type;
 
 template <typename Archive, typename T>
 using real_boost_load_enabler =
-    typename std::enable_if<std::is_same<T,real>::value && is_detected<real_boost_load_t,Archive,T>::value>::type;
+    typename std::enable_if<std::is_same<T, real>::value && is_detected<boost_load_member_t, Archive, T>::value>::type;
 }
 
 /// Implementation of piranha::boost_save() for piranha::real.

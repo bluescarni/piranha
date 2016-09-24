@@ -1557,6 +1557,18 @@ inline void load_file(T &x, const std::string &filename, data_format f, compress
         detail::load_file_msgpack_impl(x, filename, f, c);
     }
 }
+
+inline namespace impl
+{
+
+// These typedefs are useful when checking the availability of boost save/load member functions, which
+// we use fairly often to implement the _impl functors.
+template <typename Archive, typename T>
+using boost_save_member_t = decltype(std::declval<const T &>().boost_save(std::declval<Archive &>()));
+
+template <typename Archive, typename T>
+using boost_load_member_t = decltype(std::declval<T &>().boost_load(std::declval<Archive &>()));
+}
 }
 
 #undef PIRANHA_ZLIB_CONDITIONAL
