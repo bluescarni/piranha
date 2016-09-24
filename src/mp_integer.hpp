@@ -5032,13 +5032,12 @@ inline namespace impl
 template <typename Archive, typename T>
 using mp_integer_boost_save_enabler =
     typename std::enable_if<detail::is_mp_integer<T>::value
-                            && detail::true_tt<decltype(
-                                   std::declval<const T &>().boost_save(std::declval<Archive &>()))>::value>::type;
+                            && is_detected<boost_save_member_t, Archive, T>::value>::type;
 
 template <typename Archive, typename T>
 using mp_integer_boost_load_enabler =
-    typename std::enable_if<detail::is_mp_integer<T>::value && detail::true_tt<decltype(std::declval<T &>().boost_load(
-                                                                   std::declval<Archive &>()))>::value>::type;
+    typename std::enable_if<detail::is_mp_integer<T>::value
+                            && is_detected<boost_load_member_t, Archive, T>::value>::type;
 }
 
 /// Implementation of piranha::boost_save() for piranha::mp_integer.
