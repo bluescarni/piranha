@@ -84,6 +84,37 @@ using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
 template <template <class...> class Op, class... Args>
 using is_detected_t = typename detector<nonesuch, void, Op, Args...>::type;
 
+// http://en.cppreference.com/w/cpp/types/conjunction
+template <class...>
+struct conjunction : std::true_type {
+};
+
+template <class B1>
+struct conjunction<B1> : B1 {
+};
+
+template <class B1, class... Bn>
+struct conjunction<B1, Bn...> : std::conditional<B1::value != false, conjunction<Bn...>, B1>::type {
+};
+
+// http://en.cppreference.com/w/cpp/types/disjunction
+template <class...>
+struct disjunction : std::false_type {
+};
+
+template <class B1>
+struct disjunction<B1> : B1 {
+};
+
+template <class B1, class... Bn>
+struct disjunction<B1, Bn...> : std::conditional<B1::value != false, B1, disjunction<Bn...>>::type {
+};
+
+// http://en.cppreference.com/w/cpp/types/negation
+template <class B>
+struct negation : std::integral_constant<bool, !B::value> {
+};
+
 // Some handy aliases.
 template <typename T>
 using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
@@ -830,8 +861,8 @@ struct arrow_operator_type<T, typename std::enable_if<std::is_pointer<T>::value>
 template <typename T>
 struct arrow_operator_type<T, typename std::enable_if<std::is_same<
                                   typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type,
-                                  typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type>::
-                                                          value>::type> {
+                                  typename arrow_operator_type<decltype(
+                                      std::declval<T &>().operator->())>::type>::value>::type> {
     using type = typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type;
 };
 
@@ -855,8 +886,8 @@ struct is_input_iterator_impl<T,
                                             std::is_same<
                                                 typename std::remove_reference<decltype(
                                                     *std::declval<typename arrow_operator_type<T>::type>())>::type,
-                                                typename std::remove_reference<decltype(*std::declval<T &>())>::type>::
-                                                value
+                                                typename std::remove_reference<decltype(
+                                                    *std::declval<T &>())>::type>::value
                                             &&
                                             // NOTE: here the usage of is_convertible guarantees we catch both iterators
                                             // higher in the type hierarchy and
