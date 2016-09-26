@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <vector>
 
+#include "../src/config.hpp"
 #include "../src/detail/mpfr.hpp"
 #include "../src/init.hpp"
 #include "../src/s11n.hpp"
@@ -59,11 +60,18 @@ static inline void boost_roundtrip(const T &x)
         boost_load(ia, retval);
     }
     BOOST_CHECK_EQUAL(x, retval);
+    BOOST_CHECK_EQUAL(x.get_prec(), retval.get_prec());
 }
 
 BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
 {
     init();
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, real>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, real>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, real>::value));
+    BOOST_CHECK((!has_boost_save<void, real>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, real>::value));
+    BOOST_CHECK((!has_boost_load<void, real>::value));
     std::vector<::mpfr_prec_t> vprec{32, 64, 128, 256, 512};
     std::uniform_real_distribution<double> dist(0., 1.);
     for (auto prec : vprec) {
@@ -160,3 +168,25 @@ BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
         }
     }
 }
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+template <typename T>
+static inline void msgpack_roundtrip(const T &x, msgpack_format f)
+{
+    msgpack::sbuffer sbuf;
+    msgpack::packer<msgpack::sbuffer> p(sbuf);
+    msgpack_pack(p, x, f);
+    auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+    T retval;
+    msgpack_convert(retval, oh.get(), f);
+    BOOST_CHECK_EQUAL(x,retval);
+    BOOST_CHECK_EQUAL(x.get_prec(), retval.get_prec());
+}
+
+BOOST_AUTO_TEST_CASE(real_msgpack_s11n_test)
+{
+
+}
+
+#endif

@@ -30,9 +30,11 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_REAL_HPP
 
 #include <algorithm>
+#include <array>
 #include <boost/lexical_cast.hpp>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -1792,6 +1794,122 @@ public:
         piranha::boost_load(ar, s);
         *this = real(s, prec);
     }
+#if defined(PIRANHA_WITH_MSGPACK)
+private:
+    // msgpack enabler.
+    template <typename Stream>
+    using msgpack_pack_enabler =
+        // NOTE: integral types are always serializable for any valid stream.
+        typename std::enable_if<is_msgpack_stream<Stream>::value, int>::type;
+
+public:
+    /// Pack in msgpack format.
+    /**
+     * \note
+     * This method is enabled only if \p Stream satisfies piranha::is_msgpack_stream.
+     *
+     * This method will pack \p this into \p p. If \p f is msgpack_format::portable, then
+     * the precision of \p this and a decimal string representation of \p this are packed in an array.
+     * Otherwise, an array of 4 elements storing the internal MPFR representation of \p this is packed.
+     *
+     * @param[in] p target <tt>msgpack::packer</tt>.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - piranha::safe_cast(),
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::msgpack_pack(),
+     * - the conversion of \p this to string.
+     */
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
+    void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
+    {
+        if (f == msgpack_format::portable) {
+            std::ostringstream oss;
+            oss << *this;
+            auto prec = get_prec();
+            auto s = oss.str();
+            p.pack_array(2);
+            piranha::msgpack_pack(p, prec);
+            piranha::msgpack_pack(p, s);
+        } else {
+            p.pack_array(4);
+            piranha::msgpack_pack(p, m_value->_mpfr_prec);
+            piranha::msgpack_pack(p, m_value->_mpfr_sign);
+            piranha::msgpack_pack(p, m_value->_mpfr_exp);
+            const auto s = safe_cast<std::uint32_t>(size_from_prec(m_value->_mpfr_prec));
+            p.pack_array(s);
+            // NOTE: no need to save the size, as it can be recovered from the prec.
+            for (std::uint32_t i = 0; i < s; ++i) {
+                piranha::msgpack_pack(p, m_value->_mpfr_d[i]);
+            }
+        }
+    }
+    /// Convert from msgpack object.
+    /**
+     * This method will convert the object \p o into \p this. If \p f is piranha::msgpack_format::binary,
+     * this method offers the basic exception safety guarantee and it performs minimal checking on the input data.
+     * Calling this method in binary mode will result in undefined behaviour if \p o does not contain an integer
+     * serialized via msgpack_pack().
+     *
+     * @param[in] o source object.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws std::invalid_argument if, in binary mode, the number of serialized limbs is inconsistent with the
+     * precision.
+     * @throws unspecified any exception thrown by:
+     * - piranha::safe_cast(),
+     * - set_prec(),
+     * - memory errors in standard containers,
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::msgpack_convert(),
+     * - the constructor of piranha::mp_integer from string.
+     */
+    void msgpack_convert(const msgpack::object &o, msgpack_format f)
+    {
+        if (f == msgpack_format::portable) {
+            static thread_local std::array<msgpack::object, 2> vobj;
+            o.convert(vobj);
+            ::mpfr_prec_t prec;
+            static thread_local std::string s;
+            piranha::msgpack_convert(prec, vobj[0], f);
+            piranha::msgpack_convert(s, vobj[1], f);
+            *this = real(s,prec);
+        } else {
+            static thread_local std::array<msgpack::object, 4> vobj;
+            o.convert(vobj);
+            // First let's handle the non-limbs members.
+            ::mpfr_prec_t prec;
+            decltype(m_value->_mpfr_sign) sign;
+            decltype(m_value->_mpfr_exp) exp;
+            piranha::msgpack_convert(prec, vobj[0], f);
+            piranha::msgpack_convert(sign, vobj[1], f);
+            piranha::msgpack_convert(exp, vobj[2], f);
+            set_prec(prec);
+            piranha_assert(m_value->_mpfr_prec == prec);
+            m_value->_mpfr_sign = sign;
+            m_value->_mpfr_exp = exp;
+            // Next the limbs. Protect in try/catch so if anything goes wrong we can fix this in the
+            // catch block before re-throwing.
+            try {
+                static thread_local std::vector<msgpack::object> vlimbs;
+                vobj[3].convert(vlimbs);
+                const auto s = safe_cast<std::vector<msgpack::object>::size_type>(size_from_prec(prec));
+                if (unlikely(s != vlimbs.size())) {
+                    piranha_throw(std::invalid_argument,"mismatch in the msgpack deserialization of a real: the number "
+                        "of limbs is not consistent with the precision");
+                }
+                for (decltype(vlimbs.size()) i = 0; i < s; ++i) {
+                    piranha::msgpack_convert(m_value->_mpfr_d[i], vlimbs[i], f);
+                }
+            } catch (...) {
+                // Set to zero before re-throwing.
+                ::mpfr_set_ui(m_value, 0u, default_rnd);
+                throw;
+            }
+        }
+    }
+#endif
 
 private:
     ::mpfr_t m_value;
