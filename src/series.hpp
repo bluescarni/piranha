@@ -3694,47 +3694,28 @@ public:
 inline namespace impl
 {
 
-// NOTE: the idea here is to check *first* if Series is a series, and then apply all the checks
-// for the implementation of the serialization bits. This is to work around what looks like a clang issue
-// which pops up when recursively instantiating has_boost_save<unsigned>. The recursive instantiation
-// seems to be fine, according to the analysis here:
-// http://stackoverflow.com/questions/39059511/infinite-recursive-template-instantiation-expected
-// That is, there will be no infinite recursion because when has_boost_save<unsigned> is instantiated
-// within the enabling condition the current specialisation is not considered because it's not fully
-// declared yet. In any case, keep in mind this solution in case a similar bug arises somewhere else.
-template <typename Archive, typename Series, typename = void>
-struct sbse_impl {
-};
-
+// NOTE: we check first here if Series is a series, so that, if it is not, we do not instantiate other has_boost_save
+// checks (which might result in infinite recursion due to this enabler being re-instantiated).
 template <typename Archive, typename Series>
-struct sbse_impl<Archive, Series, typename std::enable_if<is_series<Series>::value>::type> {
-    static const bool value = has_boost_save<Archive, decltype(symbol_set{}.size())>::value
-                              && has_boost_save<Archive, unsigned>::value
-                              && has_boost_save<Archive, const std::string &>::value
-                              && has_boost_save<Archive, decltype(std::declval<const Series &>().size())>::value
-                              && has_boost_save<Archive, typename Series::term_type::cf_type>::value
-                              && key_has_boost_save<Archive, typename Series::term_type::key_type>::value;
-};
+using series_boost_save_enabler = typename std::enable_if<conjunction<is_series<Series>,
+                        has_boost_save<Archive, decltype(symbol_set{}.size())>,
+                          has_boost_save<Archive, unsigned>,
+                          has_boost_save<Archive, const std::string &>,
+                          has_boost_save<Archive, decltype(std::declval<const Series &>().size())>,
+                          has_boost_save<Archive, typename Series::term_type::cf_type>,
+                          key_has_boost_save<Archive, typename Series::term_type::key_type>
+>::value>::type;
 
+// NOTE: the requirement that Series must not be const is in the is_series check.
 template <typename Archive, typename Series>
-using series_boost_save_enabler = typename std::enable_if<sbse_impl<Archive, Series>::value>::type;
+using series_boost_load_enabler = typename std::enable_if<conjunction<is_series<Series>,
+                          has_boost_load<Archive, decltype(symbol_set{}.size())>,
+                          has_boost_load<Archive, unsigned>, has_boost_load<Archive, std::string>,
+                          has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
+                          has_boost_load<Archive, typename Series::term_type::cf_type>,
+                          key_has_boost_load<Archive, typename Series::term_type::key_type>
+>::value>::type;
 
-template <typename Archive, typename Series, typename = void>
-struct sble_impl {
-};
-
-template <typename Archive, typename Series>
-struct sble_impl<Archive, Series, typename std::enable_if<is_series<Series>::value>::type> {
-    // NOTE: the requirement that Series must not be const is in the is_series check.
-    static const bool value = has_boost_load<Archive, decltype(symbol_set{}.size())>::value
-                              && has_boost_load<Archive, unsigned>::value && has_boost_load<Archive, std::string>::value
-                              && has_boost_load<Archive, decltype(std::declval<const Series &>().size())>::value
-                              && has_boost_load<Archive, typename Series::term_type::cf_type>::value
-                              && key_has_boost_load<Archive, typename Series::term_type::key_type>::value;
-};
-
-template <typename Archive, typename Series>
-using series_boost_load_enabler = typename std::enable_if<sble_impl<Archive, Series>::value>::type;
 }
 
 #define PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION 0u
@@ -3869,33 +3850,17 @@ inline namespace impl
 {
 
 // Same scheme as above for Boost.
-template <typename Stream, typename Series, typename = void>
-struct smpe_impl {
-};
-
 template <typename Stream, typename Series>
-struct smpe_impl<Stream, Series, typename std::enable_if<is_series<Series>::value>::type> {
-    static const bool value = has_msgpack_pack<Stream, unsigned>::value && has_msgpack_pack<Stream, std::string>::value
-                              && has_msgpack_pack<Stream, typename Series::term_type::cf_type>::value
-                              && key_has_msgpack_pack<Stream, typename Series::term_type::key_type>::value;
-};
-
-template <typename Stream, typename Series>
-using series_msgpack_pack_enabler = typename std::enable_if<smpe_impl<Stream, Series>::value>::type;
-
-template <typename Series, typename = void>
-struct smce_impl {
-};
+using series_msgpack_pack_enabler = typename std::enable_if<conjunction<is_series<Series>,
+            has_msgpack_pack<Stream, unsigned>,has_msgpack_pack<Stream, std::string>,
+                          has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
+                          key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>::type;
 
 template <typename Series>
-struct smce_impl<Series, typename std::enable_if<is_series<Series>::value>::type> {
-    static const bool value = has_msgpack_convert<unsigned>::value && has_msgpack_convert<std::string>::value
-                              && has_msgpack_convert<typename Series::term_type::cf_type>::value
-                              && key_has_msgpack_convert<typename Series::term_type::key_type>::value;
-};
-
-template <typename Series>
-using series_msgpack_convert_enabler = typename std::enable_if<smce_impl<Series>::value>::type;
+using series_msgpack_convert_enabler = typename std::enable_if<conjunction<is_series<Series>,
+                    has_msgpack_convert<unsigned>::value && has_msgpack_convert<std::string>,
+                          has_msgpack_convert<typename Series::term_type::cf_type>,
+                          key_has_msgpack_convert<typename Series::term_type::key_type>>::value>::type;
 }
 
 #define PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION 0u
