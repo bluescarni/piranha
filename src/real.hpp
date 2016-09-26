@@ -1830,18 +1830,18 @@ public:
             auto prec = get_prec();
             auto s = oss.str();
             p.pack_array(2);
-            piranha::msgpack_pack(p, prec);
-            piranha::msgpack_pack(p, s);
+            piranha::msgpack_pack(p, prec, f);
+            piranha::msgpack_pack(p, s, f);
         } else {
             p.pack_array(4);
-            piranha::msgpack_pack(p, m_value->_mpfr_prec);
-            piranha::msgpack_pack(p, m_value->_mpfr_sign);
-            piranha::msgpack_pack(p, m_value->_mpfr_exp);
+            piranha::msgpack_pack(p, m_value->_mpfr_prec, f);
+            piranha::msgpack_pack(p, m_value->_mpfr_sign, f);
+            piranha::msgpack_pack(p, m_value->_mpfr_exp, f);
             const auto s = safe_cast<std::uint32_t>(size_from_prec(m_value->_mpfr_prec));
             p.pack_array(s);
             // NOTE: no need to save the size, as it can be recovered from the prec.
             for (std::uint32_t i = 0; i < s; ++i) {
-                piranha::msgpack_pack(p, m_value->_mpfr_d[i]);
+                piranha::msgpack_pack(p, m_value->_mpfr_d[i], f);
             }
         }
     }
@@ -1863,7 +1863,7 @@ public:
      * - memory errors in standard containers,
      * - the public interface of <tt>msgpack::object</tt>,
      * - piranha::msgpack_convert(),
-     * - the constructor of piranha::mp_integer from string.
+     * - the constructor of piranha::real from string.
      */
     void msgpack_convert(const msgpack::object &o, msgpack_format f)
     {
@@ -1874,7 +1874,7 @@ public:
             static thread_local std::string s;
             piranha::msgpack_convert(prec, vobj[0], f);
             piranha::msgpack_convert(s, vobj[1], f);
-            *this = real(s,prec);
+            *this = real(s, prec);
         } else {
             static thread_local std::array<msgpack::object, 4> vobj;
             o.convert(vobj);
@@ -1896,8 +1896,12 @@ public:
                 vobj[3].convert(vlimbs);
                 const auto s = safe_cast<std::vector<msgpack::object>::size_type>(size_from_prec(prec));
                 if (unlikely(s != vlimbs.size())) {
-                    piranha_throw(std::invalid_argument,"mismatch in the msgpack deserialization of a real: the number "
-                        "of limbs is not consistent with the precision");
+                    piranha_throw(std::invalid_argument,
+                                  std::string("error in the msgpack deserialization of a real: the number "
+                                              "of serialized limbs (")
+                                      + std::to_string(vlimbs.size())
+                                      + ") is not consistent with the number of limbs inferred from the precision ("
+                                      + std::to_string(s) + ")");
                 }
                 for (decltype(vlimbs.size()) i = 0; i < s; ++i) {
                     piranha::msgpack_convert(m_value->_mpfr_d[i], vlimbs[i], f);
@@ -2361,11 +2365,13 @@ inline namespace impl
 
 template <typename Archive, typename T>
 using real_boost_save_enabler =
-    typename std::enable_if<std::is_same<T, real>::value && is_detected<boost_save_member_t, Archive, T>::value>::type;
+    typename std::enable_if<conjunction<std::is_same<T, real>,
+                                        is_detected<boost_save_member_t, Archive, T>>::value>::type;
 
 template <typename Archive, typename T>
 using real_boost_load_enabler =
-    typename std::enable_if<std::is_same<T, real>::value && is_detected<boost_load_member_t, Archive, T>::value>::type;
+    typename std::enable_if<conjunction<std::is_same<T, real>,
+                                        is_detected<boost_load_member_t, Archive, T>>::value>::type;
 }
 
 /// Implementation of piranha::boost_save() for piranha::real.
@@ -2417,6 +2423,74 @@ public:
         x.boost_load(ar);
     }
 };
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+// Enablers for msgpack serialization.
+template <typename Stream, typename T>
+using real_msgpack_pack_enabler =
+    typename std::enable_if<conjunction<std::is_same<real, T>,
+                                        is_detected<msgpack_pack_member_t, Stream, T>>::value>::type;
+
+template <typename T>
+using real_msgpack_convert_enabler = typename std::enable_if<std::is_same<real, T>::value>::type;
+}
+
+/// Implementation of piranha::msgpack_pack() for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled if \p T is piranha::real and
+ * the piranha::real::msgpack_pack() method is supported with a stream of type \p Stream.
+ */
+template <typename Stream, typename T>
+class msgpack_pack_impl<Stream, T, real_msgpack_pack_enabler<Stream, T>>
+{
+public:
+    /// Call operator.
+    /**
+     * The call operator will use piranha::real::msgpack_pack() internally.
+     *
+     * @param[in] p target <tt>msgpack::packer</tt>.
+     * @param[in] x piranha::real to be serialized.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::real::msgpack_pack().
+     */
+    void operator()(msgpack::packer<Stream> &p, const T &x, msgpack_format f) const
+    {
+        x.msgpack_pack(p, f);
+    }
+};
+
+/// Implementation of piranha::msgpack_convert() for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled if \p T is piranha::real.
+ */
+template <typename T>
+class msgpack_convert_impl<T, real_msgpack_convert_enabler<T>>
+{
+public:
+    /// Call operator.
+    /**
+     * The call operator will use piranha::real::msgpack_convert() internally.
+     *
+     * @param[in] x target piranha::real.
+     * @param[in] o the <tt>msgpack::object</tt> to be converted into \p n.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::real::msgpack_convert().
+     */
+    void operator()(T &x, const msgpack::object &o, msgpack_format f) const
+    {
+        x.msgpack_convert(o, f);
+    }
+};
+
+#endif
 }
 
 #endif

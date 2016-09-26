@@ -108,29 +108,30 @@ template <typename A>
 using get_helper_t_2 = decltype(std::declval<A &>().template get_helper<helper>(static_cast<void *const>(nullptr)));
 
 template <typename Archive, typename T>
-using impl = std::
-    integral_constant<bool, std::is_same<is_detected_t<is_saving_t, uncvref_t<Archive>>, boost::mpl::bool_<true>>::value
-                                && std::is_same<is_detected_t<is_loading_t, uncvref_t<Archive>>,
-                                                boost::mpl::bool_<false>>::value
-                                // NOTE: add lvalue ref instead of using Archive &, so we avoid a hard
-                                // error if Archive is void.
-                                && std::is_same<is_detected_t<lshift_t, Archive, T>, addlref_t<Archive>>::value
-                                && std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>::value
-                                && is_detected<save_binary_t, Archive, unref_t<T>>::value
-                                && is_detected<register_type_t, Archive, uncvref_t<T>>::value
-                                // NOTE: the docs here mention that get_library_version() is supposed to
-                                // return an unsigned integral type, but the boost archives apparently
-                                // return a type which is implicitly convertible to some unsigned int.
-                                // This seems to work and it should cover also the cases in which the
-                                // return type is a real unsigned int.
-                                && std::is_convertible<is_detected_t<get_library_version_t, Archive>,
-                                                       unsigned long long>::value
+using impl
+    = std::integral_constant<bool, std::is_same<is_detected_t<is_saving_t, uncvref_t<Archive>>,
+                                                boost::mpl::bool_<true>>::value
+                                       && std::is_same<is_detected_t<is_loading_t, uncvref_t<Archive>>,
+                                                       boost::mpl::bool_<false>>::value
+                                       // NOTE: add lvalue ref instead of using Archive &, so we avoid a hard
+                                       // error if Archive is void.
+                                       && std::is_same<is_detected_t<lshift_t, Archive, T>, addlref_t<Archive>>::value
+                                       && std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>::value
+                                       && is_detected<save_binary_t, Archive, unref_t<T>>::value
+                                       && is_detected<register_type_t, Archive, uncvref_t<T>>::value
+                                       // NOTE: the docs here mention that get_library_version() is supposed to
+                                       // return an unsigned integral type, but the boost archives apparently
+                                       // return a type which is implicitly convertible to some unsigned int.
+                                       // This seems to work and it should cover also the cases in which the
+                                       // return type is a real unsigned int.
+                                       && std::is_convertible<is_detected_t<get_library_version_t, Archive>,
+                                                              unsigned long long>::value
 #if BOOST_VERSION >= 105700
-                                //  Helper support is available since 1.57.
-                                && is_detected<get_helper_t_1, Archive>::value
-                                && is_detected<get_helper_t_2, Archive>::value
+                                       //  Helper support is available since 1.57.
+                                       && is_detected<get_helper_t_1, Archive>::value
+                                       && is_detected<get_helper_t_2, Archive>::value
 #endif
-                      >;
+                             >;
 }
 }
 
@@ -1568,6 +1569,19 @@ using boost_save_member_t = decltype(std::declval<const T &>().boost_save(std::d
 
 template <typename Archive, typename T>
 using boost_load_member_t = decltype(std::declval<T &>().boost_load(std::declval<Archive &>()));
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+// Same for msgpack.
+template <typename Stream, typename T>
+using msgpack_pack_member_t = decltype(
+    std::declval<const T &>().msgpack_pack(std::declval<msgpack::packer<Stream> &>(), std::declval<msgpack_format>()));
+
+template <typename T>
+using msgpack_convert_member_t = decltype(
+    std::declval<T &>().msgpack_convert(std::declval<const msgpack::object &>(), std::declval<msgpack_format>()));
+
+#endif
 }
 }
 
