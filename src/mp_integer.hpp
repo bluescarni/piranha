@@ -1357,16 +1357,12 @@ class mp_integer
         typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value, int>::type;
     // Enabler for in-place mod with interop on the left.
     template <typename T>
-    using generic_in_place_mod_enabler =
-        typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value
-                                    && std::is_integral<T>::value,
-                                int>::type;
+    using generic_in_place_mod_enabler = typename std::
+        enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value && std::is_integral<T>::value, int>::type;
     // Enabler for in-place shifts with interop on the left.
     template <typename T>
-    using generic_in_place_shift_enabler =
-        typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value
-                                    && std::is_integral<T>::value,
-                                int>::type;
+    using generic_in_place_shift_enabler = typename std::
+        enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value && std::is_integral<T>::value, int>::type;
     template <typename Float>
     void construct_from_interoperable(const Float &x,
                                       typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
@@ -5002,8 +4998,8 @@ const bool key_has_ipow_subs<Key, T>::value;
  * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_integer.
  */
 template <typename T>
-struct has_exact_ring_operations<T, typename std::enable_if<detail::is_mp_integer<
-                                        typename std::decay<T>::type>::value>::type> {
+struct has_exact_ring_operations<T, typename std::
+                                        enable_if<detail::is_mp_integer<typename std::decay<T>::type>::value>::type> {
     /// Value of the type trait.
     static const bool value = true;
 };
@@ -5034,14 +5030,12 @@ inline namespace impl
 {
 
 template <typename Archive, typename T>
-using mp_integer_boost_save_enabler =
-    typename std::enable_if<conjunction<detail::is_mp_integer<T>,
-                                        is_detected<boost_save_member_t, Archive, T>>::value>::type;
+using mp_integer_boost_save_enabler = typename std::
+    enable_if<conjunction<detail::is_mp_integer<T>, is_detected<boost_save_member_t, Archive, T>>::value>::type;
 
 template <typename Archive, typename T>
-using mp_integer_boost_load_enabler =
-    typename std::enable_if<conjunction<detail::is_mp_integer<T>,
-                                        is_detected<boost_load_member_t, Archive, T>>::value>::type;
+using mp_integer_boost_load_enabler = typename std::
+    enable_if<conjunction<detail::is_mp_integer<T>, is_detected<boost_load_member_t, Archive, T>>::value>::type;
 }
 
 /// Implementation of piranha::boost_save() for piranha::mp_integer.
@@ -5101,14 +5095,12 @@ inline namespace impl
 
 // Enablers for msgpack serialization.
 template <typename Stream, typename T>
-using mp_integer_msgpack_pack_enabler =
-    typename std::enable_if<conjunction<detail::is_mp_integer<T>,
-                                        is_detected<msgpack_pack_member_t, Stream, T>>::value>::type;
+using mp_integer_msgpack_pack_enabler = typename std::
+    enable_if<conjunction<detail::is_mp_integer<T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>::type;
 
 template <typename T>
-using mp_integer_msgpack_convert_enabler =
-    typename std::enable_if<conjunction<detail::is_mp_integer<T>,
-                                        is_detected<msgpack_convert_member_t, T>>::value>::type;
+using mp_integer_msgpack_convert_enabler = typename std::
+    enable_if<conjunction<detail::is_mp_integer<T>, is_detected<msgpack_convert_member_t, T>>::value>::type;
 }
 
 /// Implementation of piranha::msgpack_pack() for piranha::mp_integer.
