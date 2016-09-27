@@ -31,8 +31,7 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE monomial_02_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -41,6 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -52,13 +52,13 @@ see https://www.gnu.org/licenses/. */
 #include "../src/s11n.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<signed char, int, integer /*, rational*/> expo_types;
-typedef boost::mpl::vector<std::integral_constant<std::size_t, 0u>, std::integral_constant<std::size_t, 1u>,
-                           std::integral_constant<std::size_t, 5u>, std::integral_constant<std::size_t, 10u>>
-    size_types;
+using expo_types = std::tuple<signed char, int, integer, rational>;
+using size_types = std::tuple<std::integral_constant<std::size_t, 0u>, std::integral_constant<std::size_t, 1u>,
+                              std::integral_constant<std::size_t, 5u>, std::integral_constant<std::size_t, 10u>>;
 
 static const int ntrials = 100;
 
@@ -114,7 +114,7 @@ struct boost_s11n_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             using monomial_type = monomial<T, U>;
             // Test the type traits.
@@ -145,8 +145,14 @@ struct boost_s11n_tester {
             std::stringstream ss;
             {
                 boost::archive::text_oarchive oa(ss);
-                BOOST_CHECK_THROW(m.boost_save(oa, s), std::invalid_argument);
+                BOOST_CHECK_EXCEPTION(m.boost_save(oa, s), std::invalid_argument, [](const std::invalid_argument &ia) {
+                    return boost::contains(
+                        ia.what(), "incompatible symbol set in monomial serialization: the reference "
+                                   "symbol set has a size of 1, while the monomial being serialized has a size of 0");
+                });
             }
+            ss.str("");
+            ss.clear();
             m = monomial_type{T(1)};
             {
                 boost::archive::text_oarchive oa(ss);
@@ -154,7 +160,13 @@ struct boost_s11n_tester {
             }
             {
                 boost::archive::text_iarchive ia(ss);
-                BOOST_CHECK_THROW(m.boost_load(ia, symbol_set{}), std::invalid_argument);
+                BOOST_CHECK_EXCEPTION(
+                    m.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &ia) {
+                        return boost::contains(
+                            ia.what(),
+                            "incompatible symbol set in monomial serialization: the reference "
+                            "symbol set has a size of 0, while the monomial being deserialized has a size of 1");
+                    });
             }
             // A few simple tests.
             m = monomial_type{};
@@ -199,6 +211,34 @@ struct boost_s11n_tester {
                               m, ss)));
             }
         }
+        template <typename U, typename V = T, typename std::enable_if<std::is_same<V, rational>::value, int>::type = 0>
+        void random_test() const
+        {
+            using monomial_type = monomial<T, U>;
+            using size_type = typename monomial_type::size_type;
+            std::uniform_int_distribution<size_type> sdist(0u, 10u);
+            std::uniform_int_distribution<int> edist(-10, 10);
+            const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+            for (auto i = 0; i < ntrials; ++i) {
+                const auto size = sdist(rng);
+                std::vector<T> tmp;
+                for (size_type j = 0; j < size; ++j) {
+                    int num = edist(rng), den = edist(rng);
+                    if (!den) {
+                        den = 1;
+                    }
+                    tmp.emplace_back(num, den);
+                }
+                monomial_type m(tmp.begin(), tmp.end());
+                symbol_set ss(vs.begin(), vs.begin() + size);
+                BOOST_CHECK(
+                    (m == boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(m,
+                                                                                                                  ss)));
+                BOOST_CHECK(
+                    (m == boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
+                              m, ss)));
+            }
+        }
         template <typename U, typename V = T, typename std::enable_if<std::is_integral<V>::value, int>::type = 0>
         void random_test() const
         {
@@ -225,16 +265,16 @@ struct boost_s11n_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>());
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_boost_s11n_test)
 {
     init();
-    boost::mpl::for_each<expo_types>(boost_s11n_tester());
+    tuple_for_each(expo_types{}, boost_s11n_tester());
     BOOST_CHECK((is_key<monomial<fake_int_01>>::value));
     BOOST_CHECK((!key_has_boost_save<boost::archive::binary_oarchive, monomial<fake_int_01>>::value));
     BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive, monomial<fake_int_01>>::value));
@@ -283,7 +323,7 @@ struct msgpack_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             using monomial_type = monomial<T, U>;
             BOOST_CHECK((key_has_msgpack_pack<msgpack::sbuffer, monomial_type>::value));
@@ -313,17 +353,108 @@ struct msgpack_tester {
                 // Test exceptions.
                 sbuffer sbuf;
                 packer<sbuffer> p(sbuf);
-                BOOST_CHECK_THROW(m.msgpack_pack(p, f, symbol_set{}), std::invalid_argument);
+                BOOST_CHECK_EXCEPTION(
+                    m.msgpack_pack(p, f, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &ia) {
+                        return boost::contains(
+                            ia.what(),
+                            "incompatible symbol set in monomial serialization: the reference "
+                            "symbol set has a size of 0, while the monomial being serialized has a size of 2");
+                    });
                 m.msgpack_pack(p, f, s);
                 auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-                BOOST_CHECK_THROW(m.msgpack_convert(oh.get(), f, symbol_set{}), std::invalid_argument);
+                BOOST_CHECK_EXCEPTION(
+                    m.msgpack_convert(oh.get(), f, symbol_set{}), std::invalid_argument,
+                    [](const std::invalid_argument &ia) {
+                        return boost::contains(
+                            ia.what(),
+                            "incompatible symbol set in monomial serialization: the reference "
+                            "symbol set has a size of 0, while the monomial being deserialized has a size of 2");
+                    });
             }
             // Random checks.
             random_test<U>();
         }
-        template <typename U, typename V = T, typename std::enable_if<!std::is_integral<V>::value, int>::type = 0>
+        template <typename U, typename V = T, typename std::enable_if<std::is_same<V, integer>::value, int>::type = 0>
         void random_test() const
         {
+            using monomial_type = monomial<T, U>;
+            using size_type = typename monomial_type::size_type;
+            std::atomic<bool> flag(true);
+            auto checker = [&flag](unsigned n) {
+                std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
+                std::uniform_int_distribution<size_type> sdist(0u, 10u);
+                std::uniform_int_distribution<int> edist(-10, 10);
+                const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+                for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
+                    for (auto i = 0; i < ntrials; ++i) {
+                        const auto size = sdist(eng);
+                        std::vector<T> tmp;
+                        for (size_type j = 0; j < size; ++j) {
+                            tmp.emplace_back(edist(eng));
+                        }
+                        monomial_type m(tmp.begin(), tmp.end());
+                        symbol_set ss(vs.begin(), vs.begin() + size);
+                        if (m != msgpack_round_trip_monomial(m, ss, f)) {
+                            flag.store(false);
+                        }
+                        if (m != msgpack_round_trip_monomial_ss(m, ss, f)) {
+                            flag.store(false);
+                        }
+                    }
+                }
+            };
+            std::thread t0(checker, 0);
+            std::thread t1(checker, 1);
+            std::thread t2(checker, 2);
+            std::thread t3(checker, 3);
+            t0.join();
+            t1.join();
+            t2.join();
+            t3.join();
+            BOOST_CHECK(flag.load());
+        }
+        template <typename U, typename V = T, typename std::enable_if<std::is_same<V, rational>::value, int>::type = 0>
+        void random_test() const
+        {
+            using monomial_type = monomial<T, U>;
+            using size_type = typename monomial_type::size_type;
+            std::atomic<bool> flag(true);
+            auto checker = [&flag](unsigned n) {
+                std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
+                std::uniform_int_distribution<size_type> sdist(0u, 10u);
+                std::uniform_int_distribution<int> edist(-10, 10);
+                const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+                for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
+                    for (auto i = 0; i < ntrials; ++i) {
+                        const auto size = sdist(eng);
+                        std::vector<T> tmp;
+                        for (size_type j = 0; j < size; ++j) {
+                            int num = edist(eng), den = edist(eng);
+                            if (!den) {
+                                den = 1;
+                            }
+                            tmp.emplace_back(num, den);
+                        }
+                        monomial_type m(tmp.begin(), tmp.end());
+                        symbol_set ss(vs.begin(), vs.begin() + size);
+                        if (m != msgpack_round_trip_monomial(m, ss, f)) {
+                            flag.store(false);
+                        }
+                        if (m != msgpack_round_trip_monomial_ss(m, ss, f)) {
+                            flag.store(false);
+                        }
+                    }
+                }
+            };
+            std::thread t0(checker, 0);
+            std::thread t1(checker, 1);
+            std::thread t2(checker, 2);
+            std::thread t3(checker, 3);
+            t0.join();
+            t1.join();
+            t2.join();
+            t3.join();
+            BOOST_CHECK(flag.load());
         }
         template <typename U, typename V = T, typename std::enable_if<std::is_integral<V>::value, int>::type = 0>
         void random_test() const
@@ -366,15 +497,15 @@ struct msgpack_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>());
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_msgpack_test)
 {
-    boost::mpl::for_each<expo_types>(msgpack_tester());
+    tuple_for_each(expo_types{}, msgpack_tester());
     BOOST_CHECK((!key_has_msgpack_pack<msgpack::sbuffer, monomial<fake_int_01>>::value));
     BOOST_CHECK((!key_has_msgpack_pack<std::ostringstream, monomial<fake_int_01>>::value));
     BOOST_CHECK((!key_has_msgpack_pack<sw<std::ostringstream>, monomial<fake_int_01>>::value));
