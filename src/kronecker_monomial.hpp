@@ -59,6 +59,7 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "pow.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "static_vector.hpp"
@@ -1115,6 +1116,40 @@ public:
     {
         auto tmp = unpack(args);
         return std::any_of(tmp.begin(), tmp.end(), [](const value_type &e) { return e < value_type(0); });
+    }
+    void boost_save(boost::archive::binary_oarchive &oa, const symbol_set &) const
+    {
+        piranha::boost_save(oa, m_value);
+    }
+    void boost_save(boost::archive::text_oarchive &oa, const symbol_set &args) const
+    {
+        auto tmp = unpack(args);
+        piranha::boost_save(oa, tmp.size());
+        for (auto &n : tmp) {
+            piranha::boost_save(oa, n);
+        }
+    }
+    void boost_load(boost::archive::binary_iarchive &ia, const symbol_set &)
+    {
+        piranha::boost_load(ia, m_value);
+    }
+    void boost_load(boost::archive::text_iarchive &ia, const symbol_set &args)
+    {
+        typename v_type::size_type size;
+        piranha::boost_load(ia, size);
+        if (unlikely(size != args.size())) {
+            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
+                                                 "monomial: the deserialized size is "
+                                                     + std::to_string(size) + " but the reference symbol set has a "
+                                                                              "size of "
+                                                     + std::to_string(args.size()));
+        }
+        static thread_local std::vector<value_type> tmp;
+        tmp.resize(safe_cast<decltype(tmp.size())>(size));
+        for (decltype(tmp.size()) i = 0; i < size; ++i) {
+            piranha::boost_load(ia, tmp[i]);
+        }
+        *this = kronecker_monomial(tmp);
     }
 
 private:
