@@ -1833,6 +1833,9 @@ public:
             piranha::msgpack_pack(p, prec, f);
             piranha::msgpack_pack(p, s, f);
         } else {
+            // NOTE: storing both prec and the number of limbs is a bit redundant: it is possible to
+            // infer the number of limbs from prec but not viceversa (only an upper/lower bound). So let's
+            // store them both.
             p.pack_array(4);
             piranha::msgpack_pack(p, m_value->_mpfr_prec, f);
             piranha::msgpack_pack(p, m_value->_mpfr_sign, f);
@@ -2364,14 +2367,12 @@ inline namespace impl
 {
 
 template <typename Archive, typename T>
-using real_boost_save_enabler =
-    typename std::enable_if<conjunction<std::is_same<T, real>,
-                                        is_detected<boost_save_member_t, Archive, T>>::value>::type;
+using real_boost_save_enabler = typename std::
+    enable_if<conjunction<std::is_same<T, real>, is_detected<boost_save_member_t, Archive, T>>::value>::type;
 
 template <typename Archive, typename T>
-using real_boost_load_enabler =
-    typename std::enable_if<conjunction<std::is_same<T, real>,
-                                        is_detected<boost_load_member_t, Archive, T>>::value>::type;
+using real_boost_load_enabler = typename std::
+    enable_if<conjunction<std::is_same<T, real>, is_detected<boost_load_member_t, Archive, T>>::value>::type;
 }
 
 /// Implementation of piranha::boost_save() for piranha::real.
@@ -2431,9 +2432,8 @@ inline namespace impl
 
 // Enablers for msgpack serialization.
 template <typename Stream, typename T>
-using real_msgpack_pack_enabler =
-    typename std::enable_if<conjunction<std::is_same<real, T>,
-                                        is_detected<msgpack_pack_member_t, Stream, T>>::value>::type;
+using real_msgpack_pack_enabler = typename std::
+    enable_if<conjunction<std::is_same<real, T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>::type;
 
 template <typename T>
 using real_msgpack_convert_enabler = typename std::enable_if<std::is_same<real, T>::value>::type;
