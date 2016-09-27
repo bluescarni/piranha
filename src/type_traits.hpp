@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <cstdarg>
 #include <cstddef>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <ostream>
@@ -114,6 +115,57 @@ struct disjunction<B1, Bn...> : std::conditional<B1::value != false, B1, disjunc
 template <class B>
 struct negation : std::integral_constant<bool, !B::value> {
 };
+
+// std::index_sequence and std::make_index_sequence implementation for C++11. These are available
+// in the std library in C++14. Implementation taken from:
+// http://stackoverflow.com/questions/17424477/implementation-c14-make-integer-sequence
+template <std::size_t... Ints>
+struct index_sequence {
+    using type = index_sequence;
+    using value_type = std::size_t;
+    static constexpr std::size_t size() noexcept
+    {
+        return sizeof...(Ints);
+    }
+};
+
+template <class Sequence1, class Sequence2>
+struct merge_and_renumber;
+
+template <std::size_t... I1, std::size_t... I2>
+struct merge_and_renumber<index_sequence<I1...>, index_sequence<I2...>>
+    : index_sequence<I1..., (sizeof...(I1) + I2)...> {
+};
+
+template <std::size_t N>
+struct make_index_sequence
+    : merge_and_renumber<typename make_index_sequence<N / 2>::type, typename make_index_sequence<N - N / 2>::type> {
+};
+
+template <>
+struct make_index_sequence<0> : index_sequence<> {
+};
+
+template <>
+struct make_index_sequence<1> : index_sequence<0> {
+};
+
+template <typename T, typename F, std::size_t... Is>
+void apply_to_each_item(T &&t, const F &f, index_sequence<Is...>)
+{
+    (void)std::initializer_list<int>{0, (void(f(std::get<Is>(std::forward<T>(t)))), 0)...};
+}
+
+// Tuple for_each(). Execute the functor f on each element of the input Tuple.
+// https://isocpp.org/blog/2015/01/for-each-arg-eric-niebler
+// https://www.reddit.com/r/cpp/comments/2tffv3/for_each_argumentsean_parent/
+// https://www.reddit.com/r/cpp/comments/33b06v/for_each_in_tuple/
+template <class Tuple, class F>
+void tuple_for_each(Tuple &&t, const F &f)
+{
+    apply_to_each_item(std::forward<Tuple>(t), f,
+                       make_index_sequence<std::tuple_size<typename std::decay<Tuple>::type>::value>{});
+}
 
 // Some handy aliases.
 template <typename T>
@@ -861,8 +913,8 @@ struct arrow_operator_type<T, typename std::enable_if<std::is_pointer<T>::value>
 template <typename T>
 struct arrow_operator_type<T, typename std::enable_if<std::is_same<
                                   typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type,
-                                  typename arrow_operator_type<decltype(
-                                      std::declval<T &>().operator->())>::type>::value>::type> {
+                                  typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type>::
+                                                          value>::type> {
     using type = typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type;
 };
 
@@ -886,8 +938,8 @@ struct is_input_iterator_impl<T,
                                             std::is_same<
                                                 typename std::remove_reference<decltype(
                                                     *std::declval<typename arrow_operator_type<T>::type>())>::type,
-                                                typename std::remove_reference<decltype(
-                                                    *std::declval<T &>())>::type>::value
+                                                typename std::remove_reference<decltype(*std::declval<T &>())>::type>::
+                                                value
                                             &&
                                             // NOTE: here the usage of is_convertible guarantees we catch both iterators
                                             // higher in the type hierarchy and

@@ -44,6 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include <set>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -2145,4 +2146,45 @@ BOOST_AUTO_TEST_CASE(type_traits_is_detected)
     BOOST_CHECK((std::is_same<is_detected_t<add_t, char, char>, int>::value));
     BOOST_CHECK((!is_detected<add_t, double, std::string>::value));
     BOOST_CHECK((std::is_same<is_detected_t<add_t, double, std::string>, nonesuch>::value));
+}
+
+template <typename T>
+struct tt_0 {
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_conj_disj_neg)
+{
+    BOOST_CHECK((conjunction<std::is_same<int, int>, std::is_convertible<float, int>>::value));
+    BOOST_CHECK((!conjunction<std::is_same<float, int>, std::is_convertible<float, int>>::value));
+    BOOST_CHECK((!conjunction<std::is_same<float, int>, tt_0<float>>::value));
+    BOOST_CHECK((disjunction<std::is_same<float, int>, std::is_convertible<float, int>>::value));
+    BOOST_CHECK((!disjunction<std::is_same<float, int>, std::is_convertible<float, tt_0<int>>>::value));
+    BOOST_CHECK((disjunction<std::is_same<float, float>, tt_0<float>>::value));
+    BOOST_CHECK((conjunction<negation<std::is_same<float, int>>, std::is_convertible<float, int>>::value));
+    BOOST_CHECK((disjunction<negation<std::is_same<float, int>>, std::is_convertible<float, tt_0<int>>>::value));
+}
+
+struct times_two {
+    template <typename T>
+    void operator()(T &x) const
+    {
+        x = 2 * x;
+    }
+};
+
+struct minus_one {
+    template <typename T>
+    void operator()(T &x) const
+    {
+        x -= 1;
+    }
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_tuple_for_each)
+{
+    auto t = std::make_tuple(1, 2., 3l, 4ll);
+    tuple_for_each(t, times_two{});
+    BOOST_CHECK(t == std::make_tuple(2, 4., 6l, 8ll));
+    tuple_for_each(t, minus_one{});
+    BOOST_CHECK(t == std::make_tuple(1, 3., 5l, 7ll));
 }
