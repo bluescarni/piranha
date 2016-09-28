@@ -161,9 +161,9 @@ struct boost_s11n_tester {
             {
                 boost::archive::text_iarchive ia(ss);
                 BOOST_CHECK_EXCEPTION(
-                    m.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &ia) {
+                    m.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &iae) {
                         return boost::contains(
-                            ia.what(),
+                            iae.what(),
                             "incompatible symbol set in monomial serialization: the reference "
                             "symbol set has a size of 0, while the monomial being deserialized has a size of 1");
                     });
