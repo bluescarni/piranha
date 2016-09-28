@@ -1117,22 +1117,64 @@ public:
         auto tmp = unpack(args);
         return std::any_of(tmp.begin(), tmp.end(), [](const value_type &e) { return e < value_type(0); });
     }
+    /// Save to Boost binary archive.
+    /**
+     * This method will save to the archive \p oa the internal integral instance.
+     *
+     * @param oa the target archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_save().
+     */
     void boost_save(boost::archive::binary_oarchive &oa, const symbol_set &) const
     {
         piranha::boost_save(oa, m_value);
     }
+    /// Save to Boost text archive.
+    /**
+     * This method will unpack \p this and save the vector of exponents to \p oa.
+     *
+     * @param oa the target archive.
+     * @param args reference arguments set.
+     *
+     * @throws unspecified any exception thrown by:
+     * - unpack(),
+     * - piranha::boost_save().
+     */
     void boost_save(boost::archive::text_oarchive &oa, const symbol_set &args) const
     {
         auto tmp = unpack(args);
         piranha::boost_save(oa, tmp.size());
-        for (auto &n : tmp) {
+        for (const auto &n : tmp) {
             piranha::boost_save(oa, n);
         }
     }
+    /// Load from Boost binary archive.
+    /**
+     * This method will load into \p this the content of the input archive \p ia. No checking is performed
+     * on the content of \p ia.
+     *
+     * @param ia the source archive.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_load().
+     */
     void boost_load(boost::archive::binary_iarchive &ia, const symbol_set &)
     {
         piranha::boost_load(ia, m_value);
     }
+    /// Load from Boost text archive.
+    /**
+     * This method will load into \p this the content of the input archive \p ia.
+     *
+     * @param ia the source archive.
+     * @param args reference arguments set.
+     *
+     * @throws std::invalid_argument if the size of the serialized monomial is different from the size of \p args.
+     * @throws unspecified any exception thrown by:
+     * - memory error in standard containers,
+     * - piranha::safe_cast(),
+     * - piranha::boost_load(),
+     * - the constructor of piranha::kronecker_monomial from a container.
+     */
     void boost_load(boost::archive::text_iarchive &ia, const symbol_set &args)
     {
         typename v_type::size_type size;

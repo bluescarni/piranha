@@ -32,45 +32,23 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-// #include <array>
-// #include <boost/lexical_cast.hpp>
-// #include <boost/mpl/for_each.hpp>
-// #include <boost/mpl/vector.hpp>
-// #include <cstddef>
-// #include <initializer_list>
-// #include <iostream>
-// #include <limits>
-// #include <list>
-// #include <set>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#include <initializer_list>
 #include <mutex>
-#include <sstream>
-// #include <stdexcept>
 #include <random>
+#include <sstream>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <tuple>
-// #include <type_traits>
-// #include <unordered_map>
-// #include <unordered_set>
 #include <vector>
 
-// #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
-// #include "../src/is_key.hpp"
-// #include "../src/key_is_convertible.hpp"
-// #include "../src/key_is_multipliable.hpp"
-// #include "../src/kronecker_array.hpp"
-// #include "../src/math.hpp"
-// #include "../src/monomial.hpp"
-// #include "../src/mp_integer.hpp"
-// #include "../src/mp_rational.hpp"
-// #include "../src/pow.hpp"
-// #include "../src/real.hpp"
-// #include "../src/serialization.hpp"
 #include "../src/s11n.hpp"
-// #include "../src/symbol.hpp"
-// #include "../src/symbol_set.hpp"
-// #include "../src/term.hpp"
+#include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -107,6 +85,12 @@ struct boost_s11n_tester {
     void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
+        BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive,k_type>::value));
+        BOOST_CHECK((key_has_boost_save<boost::archive::text_oarchive,k_type>::value));
+        BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive,k_type>::value));
+        BOOST_CHECK((key_has_boost_load<boost::archive::text_iarchive,k_type>::value));
+        BOOST_CHECK((!key_has_boost_save<boost::archive::xml_oarchive,k_type>::value));
+        BOOST_CHECK((!key_has_boost_load<boost::archive::xml_iarchive,k_type>::value));
         const std::vector<std::string> names = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "l"};
         auto t_func = [&names](unsigned n) {
             std::uniform_int_distribution<unsigned> sdist(0, 10);
@@ -137,6 +121,27 @@ struct boost_s11n_tester {
         t1.join();
         t2.join();
         t3.join();
+        // Test inconsistent size.
+        {
+            std::stringstream ss;
+            {
+                boost::archive::text_oarchive oa(ss);
+                boost_save(oa, typename k_type::v_type::size_type(1));
+                boost_save(oa, T(1));
+            }
+            k_type retval{T(1), T(2)};
+            {
+                boost::archive::text_iarchive ia(ss);
+                BOOST_CHECK_EXCEPTION(
+                    retval.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &iae) {
+                        return boost::contains(
+                            iae.what(), "invalid size detected in the deserialization of a Kronercker "
+                                        "monomial: the deserialized size is 1 but the reference symbol set has a "
+                                        "size of 0");
+                    });
+            }
+            BOOST_CHECK((retval == k_type{T(1), T(2)}));
+        }
     }
 };
 
