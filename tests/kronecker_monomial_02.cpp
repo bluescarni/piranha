@@ -85,12 +85,12 @@ struct boost_s11n_tester {
     void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
-        BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive,k_type>::value));
-        BOOST_CHECK((key_has_boost_save<boost::archive::text_oarchive,k_type>::value));
-        BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive,k_type>::value));
-        BOOST_CHECK((key_has_boost_load<boost::archive::text_iarchive,k_type>::value));
-        BOOST_CHECK((!key_has_boost_save<boost::archive::xml_oarchive,k_type>::value));
-        BOOST_CHECK((!key_has_boost_load<boost::archive::xml_iarchive,k_type>::value));
+        BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, k_type>::value));
+        BOOST_CHECK((key_has_boost_save<boost::archive::text_oarchive, k_type>::value));
+        BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, k_type>::value));
+        BOOST_CHECK((key_has_boost_load<boost::archive::text_iarchive, k_type>::value));
+        BOOST_CHECK((!key_has_boost_save<boost::archive::xml_oarchive, k_type>::value));
+        BOOST_CHECK((!key_has_boost_load<boost::archive::xml_iarchive, k_type>::value));
         const std::vector<std::string> names = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "l"};
         auto t_func = [&names](unsigned n) {
             std::uniform_int_distribution<unsigned> sdist(0, 10);
