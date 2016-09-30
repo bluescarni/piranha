@@ -1195,7 +1195,7 @@ public:
      * This method is activated only if \p Stream satisfies piranha::is_msgpack_stream and the exponent type
      * satisfies piranha::has_msgpack_pack.
      *
-     * This method will pack into \p packer \p this. The packed monomial is a msgpack array, and each element
+     * This method will pack \p this into \p packer. The packed monomial is a msgpack array, and each element
      * of the array is packed via piranha::msgpack_pack().
      *
      * @param[in] packer the target packer.
