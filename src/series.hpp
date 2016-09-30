@@ -3721,8 +3721,8 @@ using series_boost_load_enabler = typename std::
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
- * - the coefficient type, \p unsigned, and the integral types representing the size of the series and the size of
- *   piranha::symbol_set satisfy piranha::has_boost_save,
+ * - the coefficient type, \p unsigned, \p std::string and the integral types representing the size of the series
+ *   and the size of piranha::symbol_set satisfy piranha::has_boost_save,
  * - the key type satisfies piranha::key_has_boost_save.
  */
 template <typename Archive, typename Series>
@@ -3761,8 +3761,8 @@ public:
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
- * - the coefficient type, \p unsigned, and the integral types representing the size of the series and the size of
- *   piranha::symbol_set satisfy piranha::has_boost_load,
+ * - the coefficient type, \p unsigned, \p std::string and the integral types representing the size of the series and
+ *   the size of piranha::symbol_set satisfy piranha::has_boost_load,
  * - the key type satisfies piranha::key_has_boost_load.
  */
 template <typename Archive, typename Series>
@@ -3853,10 +3853,9 @@ using series_msgpack_pack_enabler = typename std::
                           key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>::type;
 
 template <typename Series>
-using series_msgpack_convert_enabler = typename std::
-    enable_if<conjunction<is_series<Series>, has_msgpack_convert<unsigned>::value && has_msgpack_convert<std::string>,
-                          has_msgpack_convert<typename Series::term_type::cf_type>,
-                          key_has_msgpack_convert<typename Series::term_type::key_type>>::value>::type;
+using series_msgpack_convert_enabler =
+    typename std::enable_if<conjunction<is_series<Series>, has_msgpack_convert<typename Series::term_type::cf_type>,
+                                        key_has_msgpack_convert<typename Series::term_type::key_type>>::value>::type;
 }
 
 #define PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION 0u
@@ -3866,7 +3865,7 @@ using series_msgpack_convert_enabler = typename std::
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
- * - the coefficient type satisfies piranha::has_msgpack_pack,
+ * - the coefficient type, \p unsigned and \p std::string satisfy piranha::has_msgpack_pack,
  * - the key type satisfies piranha::key_has_msgpack_pack.
  */
 template <typename Stream, typename Series>
