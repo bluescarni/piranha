@@ -46,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <vector>
 
+#include "../src/config.hpp"
 #include "../src/init.hpp"
 #include "../src/s11n.hpp"
 #include "../src/symbol_set.hpp"
@@ -150,3 +151,90 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_boost_s11n_test)
     init();
     tuple_for_each(int_types{}, boost_s11n_tester());
 }
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+template <typename T>
+static inline void msgpack_roundtrip(const T &x, const symbol_set &args, msgpack_format f, bool mt = false)
+{
+    msgpack::sbuffer sbuf;
+    msgpack::packer<msgpack::sbuffer> p(sbuf);
+    x.msgpack_pack(p, f, args);
+    T retval;
+    auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+    retval.msgpack_convert(oh.get(), f, args);
+    if (mt) {
+        std::lock_guard<std::mutex> lock(mut);
+        BOOST_CHECK(x == retval);
+    } else {
+        BOOST_CHECK(x == retval);
+    }
+}
+
+struct msgpack_s11n_tester {
+    template <typename T>
+    void operator()(const T &) const
+    {
+        typedef kronecker_monomial<T> k_type;
+        BOOST_CHECK((key_has_msgpack_pack<msgpack::sbuffer, k_type>::value));
+        BOOST_CHECK((!key_has_msgpack_pack<msgpack::sbuffer &, k_type>::value));
+        BOOST_CHECK((!key_has_msgpack_pack<int, k_type>::value));
+        BOOST_CHECK((!key_has_msgpack_pack<void, k_type>::value));
+        BOOST_CHECK((key_has_msgpack_convert<k_type>::value));
+        BOOST_CHECK((!key_has_msgpack_convert<k_type const &>::value));
+        const std::vector<std::string> names = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "l"};
+        auto t_func = [&names](unsigned n) {
+            std::uniform_int_distribution<unsigned> sdist(0, 10);
+            std::uniform_int_distribution<int> edist(-10, 10);
+            std::mt19937 rng(n);
+            std::vector<T> expos;
+            for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
+                for (int i = 0; i < ntries; ++i) {
+                    auto s = sdist(rng);
+                    expos.resize(s);
+                    std::generate(expos.begin(), expos.end(), [&rng, &edist]() { return edist(rng); });
+                    k_type k;
+                    try {
+                        k = k_type(expos);
+                    } catch (...) {
+                        continue;
+                    }
+                    msgpack_roundtrip(k, symbol_set(names.begin(), names.begin() + s), f, true);
+                }
+            }
+        };
+        std::thread t0(t_func, 0);
+        std::thread t1(t_func, 1);
+        std::thread t2(t_func, 2);
+        std::thread t3(t_func, 3);
+        t0.join();
+        t1.join();
+        t2.join();
+        t3.join();
+        // Test inconsistent size.
+        {
+            msgpack::sbuffer sbuf;
+            msgpack::packer<msgpack::sbuffer> p(sbuf);
+            p.pack_array(1);
+            msgpack_pack(p, T(1), msgpack_format::portable);
+            k_type retval{T(2)};
+            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+            BOOST_CHECK_EXCEPTION(retval.msgpack_convert(oh.get(), msgpack_format::portable, symbol_set{}),
+                                  std::invalid_argument, [](const std::invalid_argument &ia) {
+                                      return boost::contains(
+                                          ia.what(),
+                                          "incompatible symbol set in monomial serialization: the reference "
+                                          "symbol set has a size of 0, while the monomial being deserialized has "
+                                          "a size of 1");
+                                  });
+            BOOST_CHECK((retval == k_type{T(2)}));
+        }
+    }
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_msgpack_s11n_test)
+{
+    tuple_for_each(int_types{}, msgpack_s11n_tester());
+}
+
+#endif

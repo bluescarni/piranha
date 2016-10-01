@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -1193,6 +1194,96 @@ public:
         }
         *this = kronecker_monomial(tmp);
     }
+#if defined(PIRANHA_WITH_MSGPACK)
+private:
+    // Enablers for msgpack serialization.
+    template <typename Stream>
+    using msgpack_pack_enabler =
+        typename std::enable_if<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>>::value, int>::type;
+    template <typename U>
+    using msgpack_convert_enabler = typename std::enable_if<has_msgpack_convert<U>::value, int>::type;
+
+public:
+    /// Serialize in msgpack format.
+    /**
+     * \note
+     * This method is activated only if \p Stream satisfies piranha::is_msgpack_stream and the exponent type
+     * satisfies piranha::has_msgpack_pack.
+     *
+     * This method will pack \p this into \p packer. The packed object is the internal integral instance in binary
+     * format, an array of exponents in portable format.
+     *
+     * @param[in] packer the target packer.
+     * @param[in] f the serialization format.
+     * @param[in] s reference arguments set.
+     *
+     * @throws unspecified any exception thrown by:
+     * - unpack(),
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::msgpack_pack() or piranha::safe_cast().
+     */
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
+    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
+    {
+        if (f == msgpack_format::binary) {
+            piranha::msgpack_pack(packer, m_value, f);
+        } else {
+            auto tmp = unpack(s);
+            packer.pack_array(safe_cast<std::uint32_t>(tmp.size()));
+            for (const auto &n : tmp) {
+                piranha::msgpack_pack(packer, n, f);
+            }
+        }
+    }
+    /// Deserialize from msgpack object.
+    /**
+     * \note
+     * This method is activated only if the exponent type satisfies piranha::has_msgpack_convert.
+     *
+     * This method will deserialize \p o into \p this. In binary mode, no check is performed on the content of \p o,
+     * and calling this method will result in undefined behaviour if \p o does not contain a monomial serialized via
+     * msgpack_pack().
+     *
+     * @param[in] o msgpack object that will be deserialized.
+     * @param[in] f serialization format.
+     * @param[in] s reference arguments set.
+     *
+     * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
+     * @throws unspecified any exception thrown by:
+     * - memory errors in standard containers,
+     * - the constructor of piranha::kronecker_monomial from a container,
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::safe_cast() and piranha::msgpack_convert().
+     */
+    template <typename U = T, msgpack_convert_enabler<U> = 0>
+    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
+    {
+        if (f == msgpack_format::binary) {
+            piranha::msgpack_convert(m_value, o, f);
+        } else {
+            static thread_local std::vector<msgpack::object> tmp_obj;
+            static thread_local std::vector<value_type> tmp_expos;
+            o.convert(tmp_obj);
+            if (unlikely(tmp_obj.size() != s.size())) {
+                piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
+                                                     "symbol set has a size of "
+                                                         + std::to_string(s.size())
+                                                         + ", while the monomial being deserialized has "
+                                                           "a size of "
+                                                         + std::to_string(tmp_obj.size()));
+            }
+            tmp_expos.resize(safe_cast<decltype(tmp_expos.size())>(tmp_obj.size()));
+            std::transform(tmp_obj.begin(), tmp_obj.end(), tmp_expos.begin(),
+                           [f](const msgpack::object &obj) -> value_type {
+                               value_type t;
+                               piranha::msgpack_convert(t, obj, f);
+                               return t;
+                           });
+            *this = kronecker_monomial(tmp_expos);
+        }
+    }
+
+#endif
 
 private:
     value_type m_value;
