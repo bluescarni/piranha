@@ -147,7 +147,7 @@ public:
     /**
      * @return const pointer to the internal error message.
      */
-    virtual const char *what() const noexcept override
+    virtual const char *what() const noexcept override final
     {
         return m_what.c_str();
     }
