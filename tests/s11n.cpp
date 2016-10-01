@@ -1030,11 +1030,9 @@ struct fp_save_load_tester {
     void operator()(const T &) const
     {
 #if BOOST_VERSION < 106000
-        // Serialization of long double appears to be broken in previous
-        // Boost versions with the text archive.
-        if (std::is_same<T, long double>::value) {
-            return;
-        }
+        // Serialization of fp types appears to be broken in previous
+        // Boost versions for exact roundtrip.
+        return;
 #endif
         std::atomic<bool> status(true);
         auto checker = [&status](int n) {
