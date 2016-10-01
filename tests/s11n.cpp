@@ -398,7 +398,7 @@ struct hash<keyb> {
 };
 }
 
-BOOST_AUTO_TEST_CASE(s11n_boost_test_tt)
+BOOST_AUTO_TEST_CASE(s11n_test_boost_tt)
 {
     init();
     // Saving archive.
@@ -568,9 +568,14 @@ struct boost_fp_tester {
     void operator()(const T &) const
     {
 #if BOOST_VERSION < 106000
-        // Serialization of long double appears to be broken in previous
-        // Boost versions with the text archive.
-        if (std::is_same<T, long double>::value) {
+        // Serialization of fp types appears to be broken in previous
+        // Boost versions for exact roundtrip.
+        return;
+#endif
+#if defined(__MINGW32__)
+        // It appears boost serialization of long double is broken on MinGW
+        // at the present time.
+        if (std::is_same<T,long double>::value) {
             return;
         }
 #endif
@@ -748,7 +753,7 @@ static inline T msgpack_roundtrip_sstream(const T &x, msgpack_format f)
     return retval;
 }
 
-BOOST_AUTO_TEST_CASE(s11n_msgpack_tt_test)
+BOOST_AUTO_TEST_CASE(s11n_test_msgpack_tt)
 {
     BOOST_CHECK(is_msgpack_stream<std::ostringstream>::value);
     BOOST_CHECK(!is_msgpack_stream<std::ostringstream &>::value);
@@ -1033,6 +1038,13 @@ struct fp_save_load_tester {
         // Serialization of fp types appears to be broken in previous
         // Boost versions for exact roundtrip.
         return;
+#endif
+#if defined(__MINGW32__)
+        // It appears boost serialization of long double is broken on MinGW
+        // at the present time.
+        if (std::is_same<T,long double>::value) {
+            return;
+        }
 #endif
         std::atomic<bool> status(true);
         auto checker = [&status](int n) {
