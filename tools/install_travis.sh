@@ -37,6 +37,8 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
     # Install sphinx and the rtd theme.
     pip install --user sphinx
+    # Workaround? This should be amongst the deps of sphinx but travis complains.
+    pip install --user utils
     pip install --user sphinx_bootstrap_theme
     export PATH=$PATH:/home/travis/.local/bin
     cd ../doc/sphinx;
