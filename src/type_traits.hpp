@@ -177,6 +177,9 @@ using unref_t = typename std::remove_reference<T>::type;
 template <typename T>
 using addlref_t = typename std::add_lvalue_reference<T>::type;
 
+template <bool B, typename T = void>
+using enable_if_t = typename std::enable_if<B, T>::type;
+
 template <typename T>
 using is_nonconst_rvalue_ref
     = std::integral_constant<bool, std::is_rvalue_reference<T>::value
