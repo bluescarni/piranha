@@ -1118,20 +1118,47 @@ public:
         auto tmp = unpack(args);
         return std::any_of(tmp.begin(), tmp.end(), [](const value_type &e) { return e < value_type(0); });
     }
+
+private:
+    // Enablers for the boost s11n methods.
+    template <typename U>
+    using boost_save_binary_enabler = enable_if_t<has_boost_save<boost::archive::binary_oarchive, U>::value, int>;
+    template <typename U>
+    using boost_save_text_enabler
+        = enable_if_t<conjunction<has_boost_save<boost::archive::text_oarchive, U>,
+                                  has_boost_save<boost::archive::text_oarchive, typename v_type::size_type>>::value,
+                      int>;
+    template <typename U>
+    using boost_load_binary_enabler = enable_if_t<has_boost_load<boost::archive::binary_iarchive, U>::value, int>;
+    template <typename U>
+    using boost_load_text_enabler
+        = enable_if_t<conjunction<has_boost_load<boost::archive::text_iarchive, U>,
+                                  has_boost_load<boost::archive::text_iarchive, typename v_type::size_type>>::value,
+                      int>;
+
+public:
     /// Save to Boost binary archive.
     /**
+     * \note
+     * This method is enabled only if the exponent type supports piranha::boost_save().
+     *
      * This method will save to the archive \p oa the internal integral instance.
      *
      * @param oa the target archive.
      *
      * @throws unspecified any exception thrown by piranha::boost_save().
      */
+    template <typename U = T, boost_save_binary_enabler<U> = 0>
     void boost_save(boost::archive::binary_oarchive &oa, const symbol_set &) const
     {
         piranha::boost_save(oa, m_value);
     }
     /// Save to Boost text archive.
     /**
+     * \note
+     * This method is enabled only if the exponent type and the size type of piranha::kronecker_monomial::v_type
+     * support piranha::boost_save().
+     *
      * This method will unpack \p this and save the vector of exponents to \p oa.
      *
      * @param oa the target archive.
@@ -1141,6 +1168,7 @@ public:
      * - unpack(),
      * - piranha::boost_save().
      */
+    template <typename U = T, boost_save_text_enabler<U> = 0>
     void boost_save(boost::archive::text_oarchive &oa, const symbol_set &args) const
     {
         auto tmp = unpack(args);
@@ -1151,6 +1179,9 @@ public:
     }
     /// Load from Boost binary archive.
     /**
+     * \note
+     * This method is enabled only if the exponent type supports piranha::boost_load().
+     *
      * This method will load into \p this the content of the input archive \p ia. No checking is performed
      * on the content of \p ia.
      *
@@ -1158,12 +1189,17 @@ public:
      *
      * @throws unspecified any exception thrown by piranha::boost_load().
      */
+    template <typename U = T, boost_load_binary_enabler<U> = 0>
     void boost_load(boost::archive::binary_iarchive &ia, const symbol_set &)
     {
         piranha::boost_load(ia, m_value);
     }
     /// Load from Boost text archive.
     /**
+     * \note
+     * This method is enabled only if the exponent type and the size type of piranha::kronecker_monomial::v_type
+     * support piranha::boost_load().
+     *
      * This method will load into \p this the content of the input archive \p ia.
      *
      * @param ia the source archive.
@@ -1176,6 +1212,7 @@ public:
      * - piranha::boost_load(),
      * - the constructor of piranha::kronecker_monomial from a container.
      */
+    template <typename U = T, boost_load_text_enabler<U> = 0>
     void boost_load(boost::archive::text_iarchive &ia, const symbol_set &args)
     {
         typename v_type::size_type size;
