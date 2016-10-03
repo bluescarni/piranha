@@ -575,7 +575,7 @@ struct boost_fp_tester {
 #if defined(__MINGW32__)
         // It appears boost serialization of long double is broken on MinGW
         // at the present time.
-        if (std::is_same<T,long double>::value) {
+        if (std::is_same<T, long double>::value) {
             return;
         }
 #endif
@@ -1042,7 +1042,7 @@ struct fp_save_load_tester {
 #if defined(__MINGW32__)
         // It appears boost serialization of long double is broken on MinGW
         // at the present time.
-        if (std::is_same<T,long double>::value) {
+        if (std::is_same<T, long double>::value) {
             return;
         }
 #endif
