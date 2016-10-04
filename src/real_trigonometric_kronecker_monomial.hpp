@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -56,6 +57,7 @@ see https://www.gnu.org/licenses/. */
 #include "kronecker_array.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "static_vector.hpp"
@@ -1291,6 +1293,126 @@ public:
         }
         return m_flavour < other.m_flavour;
     }
+private:
+    template <typename U>
+    using boost_save_binary_enabler = enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive,U>,
+        has_boost_save<boost::archive::binary_oarchive,bool>>::value, int>;
+    template <typename U>
+    using boost_save_text_enabler = enable_if_t<conjunction<has_boost_save<boost::archive::text_oarchive,typename v_type::size_type>,
+        has_boost_save<boost::archive::text_oarchive,U>,
+        has_boost_save<boost::archive::text_oarchive,bool>>::value, int>;
+    template <typename U>
+    using boost_load_binary_enabler = enable_if_t<conjunction<has_boost_load<boost::archive::binary_iarchive,U>,
+        has_boost_load<boost::archive::binary_iarchive,bool>>::value, int>;
+    template <typename U>
+    using boost_load_text_enabler = enable_if_t<conjunction<has_boost_load<boost::archive::text_iarchive,typename v_type::size_type>,
+        has_boost_load<boost::archive::text_iarchive,U>,
+        has_boost_load<boost::archive::text_iarchive,bool>>::value, int>;
+
+public:
+    // TODO doc: basic exception safety, added type reqs with respect to k_monomial (bool).
+    template <typename U = T, boost_save_binary_enabler<U> = 0>
+    void boost_save(boost::archive::binary_oarchive &oa, const symbol_set &) const
+    {
+        piranha::boost_save(oa, m_value);
+        piranha::boost_save(oa, m_flavour);
+    }
+    template <typename U = T, boost_save_text_enabler<U> = 0>
+    void boost_save(boost::archive::text_oarchive &oa, const symbol_set &args) const
+    {
+        auto tmp = unpack(args);
+        piranha::boost_save(oa, tmp.size());
+        for (const auto &n : tmp) {
+            piranha::boost_save(oa, n);
+        }
+        piranha::boost_save(oa, m_flavour);
+    }
+    template <typename U = T, boost_load_binary_enabler<U> = 0>
+    void boost_load(boost::archive::binary_iarchive &ia, const symbol_set &)
+    {
+        piranha::boost_load(ia, m_value);
+        piranha::boost_load(ia, m_flavour);
+    }
+    template <typename U = T, boost_load_text_enabler<U> = 0>
+    void boost_load(boost::archive::text_iarchive &ia, const symbol_set &args)
+    {
+        typename v_type::size_type size;
+        piranha::boost_load(ia, size);
+        if (unlikely(size != args.size())) {
+            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronercker "
+                                                 "trigonometric monomial: the deserialized size is "
+                                                     + std::to_string(size) + " but the reference symbol set has a "
+                                                                              "size of "
+                                                     + std::to_string(args.size()));
+        }
+        static thread_local std::vector<value_type> tmp;
+        tmp.resize(safe_cast<decltype(tmp.size())>(size));
+        for (decltype(tmp.size()) i = 0; i < size; ++i) {
+            piranha::boost_load(ia, tmp[i]);
+        }
+        // NOTE: here the exception safety is basic, as the last boost_load() could fail in principle.
+        // It does not really matter much, as there's no real dependency between the multipliers and the flavour,
+        // any combination is valid.
+        *this = real_trigonometric_kronecker_monomial(tmp.begin(),tmp.end());
+        piranha::boost_load(ia, m_flavour);
+    }
+#if defined(PIRANHA_WITH_MSGPACK)
+private:
+    template <typename Stream>
+    using msgpack_pack_enabler =
+        typename std::enable_if<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+        has_msgpack_pack<Stream,bool>>::value, int>::type;
+    template <typename U>
+    using msgpack_convert_enabler = typename std::enable_if<conjunction<has_msgpack_convert<U>,has_msgpack_convert<bool>>::value, int>::type;
+public:
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
+    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
+    {
+        packer.pack_array(2);
+        if (f == msgpack_format::binary) {
+            piranha::msgpack_pack(packer, m_value, f);
+            piranha::msgpack_pack(packer, m_flavour, f);
+        } else {
+            auto tmp = unpack(s);
+            packer.pack_array(safe_cast<std::uint32_t>(tmp.size()));
+            for (const auto &n : tmp) {
+                piranha::msgpack_pack(packer, n, f);
+            }
+            piranha::msgpack_pack(packer, m_flavour, f);
+        }
+    }
+    template <typename U = T, msgpack_convert_enabler<U> = 0>
+    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
+    {
+        std::array<msgpack::object, 2> tmp;
+        o.convert(tmp);
+        if (f == msgpack_format::binary) {
+            piranha::msgpack_convert(m_value, tmp[0], f);
+            piranha::msgpack_convert(m_flavour, tmp[1], f);
+        } else {
+            static thread_local std::vector<msgpack::object> tmp_obj;
+            static thread_local std::vector<value_type> tmp_expos;
+            tmp[0].convert(tmp_obj);
+            if (unlikely(tmp_obj.size() != s.size())) {
+                piranha_throw(std::invalid_argument, "incompatible symbol set in trigonometric monomial serialization: the reference "
+                                                     "symbol set has a size of "
+                                                         + std::to_string(s.size())
+                                                         + ", while the trigonometric monomial being deserialized has "
+                                                           "a size of "
+                                                         + std::to_string(tmp_obj.size()));
+            }
+            tmp_expos.resize(safe_cast<decltype(tmp_expos.size())>(tmp_obj.size()));
+            std::transform(tmp_obj.begin(), tmp_obj.end(), tmp_expos.begin(),
+                           [f](const msgpack::object &obj) -> value_type {
+                               value_type t;
+                               piranha::msgpack_convert(t, obj, f);
+                               return t;
+                           });
+            *this = real_trigonometric_kronecker_monomial(tmp_expos.begin(),tmp_expos.end());
+            piranha::msgpack_convert(m_flavour, tmp[1], f);
+        }
+    }
+#endif
 
 private:
     value_type m_value;

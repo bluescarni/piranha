@@ -26,9 +26,9 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/kronecker_monomial.hpp"
+#include "../src/real_trigonometric_kronecker_monomial.hpp"
 
-#define BOOST_TEST_MODULE kronecker_monomial_02_test
+#define BOOST_TEST_MODULE real_trigonometric_kronecker_monomial_02_test
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -39,14 +39,12 @@ see https://www.gnu.org/licenses/. */
 #include <mutex>
 #include <random>
 #include <sstream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
 #include <tuple>
 #include <vector>
 
-#include "../src/config.hpp"
 #include "../src/init.hpp"
 #include "../src/s11n.hpp"
 #include "../src/symbol_set.hpp"
@@ -85,7 +83,7 @@ struct boost_s11n_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
+        using k_type = real_trigonometric_kronecker_monomial<T>;
         BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, k_type>::value));
         BOOST_CHECK((key_has_boost_save<boost::archive::text_oarchive, k_type>::value));
         BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, k_type>::value));
@@ -102,6 +100,7 @@ struct boost_s11n_tester {
         auto t_func = [&names](unsigned n) {
             std::uniform_int_distribution<unsigned> sdist(0, 10);
             std::uniform_int_distribution<int> edist(-10, 10);
+            std::uniform_int_distribution<int> fdist(0, 1);
             std::mt19937 rng(n);
             std::vector<T> expos;
             for (int i = 0; i < ntries; ++i) {
@@ -110,10 +109,11 @@ struct boost_s11n_tester {
                 std::generate(expos.begin(), expos.end(), [&rng, &edist]() { return edist(rng); });
                 k_type k;
                 try {
-                    k = k_type(expos);
+                    k = k_type(expos.begin(),expos.end());
                 } catch (...) {
                     continue;
                 }
+                k.set_flavour(static_cast<bool>(fdist(rng)));
                 boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(
                     k, symbol_set(names.begin(), names.begin() + s), true);
                 boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
@@ -142,8 +142,8 @@ struct boost_s11n_tester {
                 BOOST_CHECK_EXCEPTION(
                     retval.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &iae) {
                         return boost::contains(
-                            iae.what(), "invalid size detected in the deserialization of a Kronercker "
-                                        "monomial: the deserialized size is 1 but the reference symbol set has a "
+                            iae.what(), "invalid size detected in the deserialization of a real Kronercker "
+                                        "trigonometric monomial: the deserialized size is 1 but the reference symbol set has a "
                                         "size of 0");
                     });
             }
@@ -152,7 +152,7 @@ struct boost_s11n_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(kronecker_monomial_boost_s11n_test)
+BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
 {
     init();
     tuple_for_each(int_types{}, boost_s11n_tester());
@@ -181,7 +181,7 @@ struct msgpack_s11n_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
+        using k_type = real_trigonometric_kronecker_monomial<T>;
         BOOST_CHECK((key_has_msgpack_pack<msgpack::sbuffer, k_type>::value));
         BOOST_CHECK((!key_has_msgpack_pack<msgpack::sbuffer &, k_type>::value));
         BOOST_CHECK((!key_has_msgpack_pack<int, k_type>::value));
@@ -192,6 +192,7 @@ struct msgpack_s11n_tester {
         auto t_func = [&names](unsigned n) {
             std::uniform_int_distribution<unsigned> sdist(0, 10);
             std::uniform_int_distribution<int> edist(-10, 10);
+            std::uniform_int_distribution<int> fdist(0,1);
             std::mt19937 rng(n);
             std::vector<T> expos;
             for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
@@ -201,10 +202,11 @@ struct msgpack_s11n_tester {
                     std::generate(expos.begin(), expos.end(), [&rng, &edist]() { return edist(rng); });
                     k_type k;
                     try {
-                        k = k_type(expos);
+                        k = k_type(expos.begin(),expos.end());
                     } catch (...) {
                         continue;
                     }
+                    k.set_flavour(fdist(rng));
                     msgpack_roundtrip(k, symbol_set(names.begin(), names.begin() + s), f, true);
                 }
             }
@@ -221,16 +223,18 @@ struct msgpack_s11n_tester {
         {
             msgpack::sbuffer sbuf;
             msgpack::packer<msgpack::sbuffer> p(sbuf);
+            p.pack_array(2);
             p.pack_array(1);
             msgpack_pack(p, T(1), msgpack_format::portable);
+            msgpack_pack(p, true, msgpack_format::portable);
             k_type retval{T(2)};
             auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
             BOOST_CHECK_EXCEPTION(retval.msgpack_convert(oh.get(), msgpack_format::portable, symbol_set{}),
                                   std::invalid_argument, [](const std::invalid_argument &ia) {
                                       return boost::contains(
                                           ia.what(),
-                                          "incompatible symbol set in monomial serialization: the reference "
-                                          "symbol set has a size of 0, while the monomial being deserialized has "
+                                          "incompatible symbol set in trigonometric monomial serialization: the reference "
+                                          "symbol set has a size of 0, while the trigonometric monomial being deserialized has "
                                           "a size of 1");
                                   });
             BOOST_CHECK((retval == k_type{T(2)}));
