@@ -1,12 +1,12 @@
-PROJECT(piranha)
+cmake_minimum_required(VERSION 3.0.0)
 
-ENABLE_TESTING()
+project(piranha VERSION 0.3)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
+enable_testing()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules" "${CMAKE_SOURCE_DIR}/cmake_modules/yacma")
 
-MESSAGE(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 
 # Set default build type to "Release".
 if(NOT CMAKE_BUILD_TYPE)
