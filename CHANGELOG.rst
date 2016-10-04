@@ -1,8 +1,16 @@
 Changelog
 =========
 
-%%version%% (unreleased)
-------------------------
+v0.4 (2016-10-04)
+-----------------
+
+Fix
+~~~
+
+- Fix changelog generation. [Francesco Biscani]
+
+v0.3 (2016-10-04)
+-----------------
 
 New
 ~~~
