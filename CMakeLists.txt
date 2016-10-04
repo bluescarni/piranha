@@ -1,12 +1,12 @@
-PROJECT(piranha)
+cmake_minimum_required(VERSION 3.0.0)
 
-ENABLE_TESTING()
+project(piranha VERSION 0.4)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
+enable_testing()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules" "${CMAKE_SOURCE_DIR}/cmake_modules/yacma")
 
-MESSAGE(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 
 # Set default build type to "Release".
 if(NOT CMAKE_BUILD_TYPE)
@@ -184,19 +184,17 @@ IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")
 	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${TCMALLOC_LIBRARY})
 ENDIF()
 
-FIND_PROGRAM(PIRANHA_GIT_EXECUTABLE "git" DOC "Path to the git binary.")
-IF(PIRANHA_GIT_EXECUTABLE)
-	MESSAGE(STATUS "Git executable: ${PIRANHA_GIT_EXECUTABLE}")
-	# Version number setup.
-	SET(PIRANHA_GIT_ARGS "log" "--no-color" "-n1" "--date=short" "--pretty=format:%ad")
-	EXECUTE_PROCESS(COMMAND ${PIRANHA_GIT_EXECUTABLE} ${PIRANHA_GIT_ARGS} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE PIRANHA_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-	STRING(REGEX REPLACE "-" "." PIRANHA_VERSION ${PIRANHA_GIT_VERSION})
-	MESSAGE(STATUS "Piranha version: ${PIRANHA_VERSION}")
-	SET(PIRANHA_VERSION "#define PIRANHA_VERSION \"${PIRANHA_VERSION}\"")
-ELSE(PIRANHA_GIT_EXECUTABLE)
-	MESSAGE(STATUS "Git executable: not found")
-	SET(PIRANHA_VERSION "#define PIRANHA_VERSION \"Undetermined\"")
-ENDIF()
+# Try to determine the git revision.
+find_package(Git)
+if(Git_FOUND)
+	message(STATUS "Git executable: ${GIT_EXECUTABLE}")
+	execute_process(COMMAND ${GIT_EXECUTABLE} "log" "--no-color" "-n1" "--date=short" "--pretty=format:%H" WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE PIRANHA_GIT_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+endif()
+if(NOT PIRANHA_GIT_REVISION)
+	set(PIRANHA_GIT_REVISION "unknown")
+endif()
+message(STATUS "Git revision: ${PIRANHA_GIT_REVISION}")
+message(STATUS "Piranha version: ${piranha_VERSION}")
 
 # Configure config.hpp.
 CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/config.hpp.in" "${CMAKE_SOURCE_DIR}/src/config.hpp")
