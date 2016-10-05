@@ -58,7 +58,7 @@ build_script:
 
 test_script:
 - if [%BUILD_TYPE%]==[Release] ctest -VV -E "gastineau|perminov|serialization|pearce2_unpacked";
-- if [%BUILD_TYPE%]==[Debug] ctest -VV -E "series_03";
+- if [%BUILD_TYPE%]==[Debug] ctest -VV;
 
 # Enable this to be able to login to the build worker. You can use the
 # `remmina` program in Ubuntu, use the login information that the line below
