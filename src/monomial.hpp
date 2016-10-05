@@ -1247,7 +1247,10 @@ public:
     template <typename U = T, msgpack_convert_enabler<U> = 0>
     void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
     {
-        static thread_local std::vector<msgpack::object> tmp;
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+        static thread_local
+#endif
+        std::vector<msgpack::object> tmp;
         o.convert(tmp);
         if (unlikely(tmp.size() != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
