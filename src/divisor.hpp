@@ -595,7 +595,8 @@ public:
      * @param[in] os target stream.
      * @param[in] args reference symbol set.
      *
-     * @throws std::invalid_argument if the number of terms of \p this is different from the size of \p args.
+     * @throws std::invalid_argument if the number of variables in the terms of \p this is different from the
+     * size of \p args.
      * @throws unspecified any exception thrown by printing to \p os piranha::divisor::value_type, strings or
      * characters.
      */
@@ -655,7 +656,8 @@ public:
      * @param[in] os target stream.
      * @param[in] args reference symbol set.
      *
-     * @throws std::invalid_argument if the number of terms of \p this is different from the size of \p args.
+     * @throws std::invalid_argument if the number of variables in the terms of \p this is different from the size
+     * of \p args.
      * @throws unspecified any exception thrown by printing to \p os piranha::divisor::value_type, strings or
      * characters.
      */
