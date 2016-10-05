@@ -1,6 +1,17 @@
 Changelog
 =========
 
+v0.5 (2016-10-05)
+-----------------
+
+Fix
+~~~
+
+- YACMA_COMPILER_IS_CLANGXX now recognizes correctly AppleClang. [Isuru
+  Fernando]
+
+  CMAKE_CXX_COMPILER_ID can sometimes be AppleClang when Mac's version of Clang is used
+
 v0.4 (2016-10-04)
 -----------------
 
