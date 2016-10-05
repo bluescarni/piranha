@@ -91,8 +91,7 @@ private:
     using pointer = value_type *;
     using const_pointer = value_type const *;
     // NOTE: this bit of TMP is to avoid checking an always-false condition on reserve() on most platforms, which
-    // triggers a compiler
-    // warning on GCC 4.7.
+    // triggers a compiler warning on GCC 4.7.
     static const std::size_t max_alloc_size = std::numeric_limits<std::size_t>::max() / sizeof(value_type);
     static const bool need_reserve_check = std::numeric_limits<size_type>::max() > max_alloc_size;
     static bool reserve_check_size(const size_type &, const std::false_type &)
