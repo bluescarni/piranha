@@ -1219,7 +1219,7 @@ enum class compression {
     zlib
 };
 
-namespace detail
+inline namespace impl
 {
 
 // NOTE: no need for ifdefs guards here, as the compression-specific stuff is hidden in the CompressionFilter type.
@@ -1304,7 +1304,8 @@ template <typename T, typename std::enable_if<!has_boost_save<boost::archive::bi
                       = 0>
 inline void save_file_boost_impl(const T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support serialization via Boost");
+    piranha_throw(not_implemented_error,
+                  "type '" + detail::demangle<T>() + "' does not support serialization via Boost");
 }
 
 template <typename T, typename std::enable_if<has_boost_load<boost::archive::binary_iarchive, T>::value
@@ -1345,7 +1346,8 @@ template <typename T, typename std::enable_if<!has_boost_load<boost::archive::bi
                       = 0>
 inline void load_file_boost_impl(T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support deserialization via Boost");
+    piranha_throw(not_implemented_error,
+                  "type '" + detail::demangle<T>() + "' does not support deserialization via Boost");
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -1417,7 +1419,8 @@ template <typename T,
           = 0>
 inline void save_file_msgpack_impl(const T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support serialization via msgpack");
+    piranha_throw(not_implemented_error,
+                  "type '" + detail::demangle<T>() + "' does not support serialization via msgpack");
 }
 
 template <typename T, typename std::enable_if<has_msgpack_convert<T>::value, int>::type = 0>
@@ -1458,7 +1461,8 @@ inline void load_file_msgpack_impl(T &x, const std::string &filename, data_forma
 template <typename T, typename std::enable_if<!has_msgpack_convert<T>::value, int>::type = 0>
 inline void load_file_msgpack_impl(T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support deserialization via msgpack");
+    piranha_throw(not_implemented_error,
+                  "type '" + detail::demangle<T>() + "' does not support deserialization via msgpack");
 }
 
 #else
@@ -1512,9 +1516,9 @@ template <typename T>
 inline void save_file(const T &x, const std::string &filename, data_format f, compression c)
 {
     if (f == data_format::boost_binary || f == data_format::boost_portable) {
-        detail::save_file_boost_impl(x, filename, f, c);
+        save_file_boost_impl(x, filename, f, c);
     } else if (f == data_format::msgpack_binary || f == data_format::msgpack_portable) {
-        detail::save_file_msgpack_impl(x, filename, f, c);
+        save_file_msgpack_impl(x, filename, f, c);
     }
 }
 
@@ -1548,13 +1552,13 @@ inline void save_file(const T &x, const std::string &filename, data_format f, co
  * - the \p new operator,
  * - the public interface of the Boost iostreams library.
  */
-template <typename T, detail::load_file_enabler<T> = 0>
+template <typename T, load_file_enabler<T> = 0>
 inline void load_file(T &x, const std::string &filename, data_format f, compression c)
 {
     if (f == data_format::boost_binary || f == data_format::boost_portable) {
-        detail::load_file_boost_impl(x, filename, f, c);
+        load_file_boost_impl(x, filename, f, c);
     } else if (f == data_format::msgpack_binary || f == data_format::msgpack_portable) {
-        detail::load_file_msgpack_impl(x, filename, f, c);
+        load_file_msgpack_impl(x, filename, f, c);
     }
 }
 

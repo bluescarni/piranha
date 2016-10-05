@@ -1792,7 +1792,7 @@ public:
 #if defined(PIRANHA_HAVE_THREAD_LOCAL)
         static thread_local
 #endif
-        std::string s;
+            std::string s;
         piranha::boost_load(ar, prec);
         piranha::boost_load(ar, s);
         *this = real(s, prec);
@@ -1877,13 +1877,14 @@ public:
 #if defined(PIRANHA_HAVE_THREAD_LOCAL)
             static thread_local
 #endif
-            std::array<msgpack::object, 2> vobj;
+                std::array<msgpack::object, 2>
+                    vobj;
             o.convert(vobj);
             ::mpfr_prec_t prec;
 #if defined(PIRANHA_HAVE_THREAD_LOCAL)
             static thread_local
 #endif
-            std::string s;
+                std::string s;
             piranha::msgpack_convert(prec, vobj[0], f);
             piranha::msgpack_convert(s, vobj[1], f);
             *this = real(s, prec);
@@ -1891,7 +1892,8 @@ public:
 #if defined(PIRANHA_HAVE_THREAD_LOCAL)
             static thread_local
 #endif
-            std::array<msgpack::object, 4> vobj;
+                std::array<msgpack::object, 4>
+                    vobj;
             o.convert(vobj);
             // First let's handle the non-limbs members.
             ::mpfr_prec_t prec;
@@ -1910,7 +1912,8 @@ public:
 #if defined(PIRANHA_HAVE_THREAD_LOCAL)
                 static thread_local
 #endif
-                std::vector<msgpack::object> vlimbs;
+                    std::vector<msgpack::object>
+                        vlimbs;
                 vobj[3].convert(vlimbs);
                 const auto s = safe_cast<std::vector<msgpack::object>::size_type>(size_from_prec(prec));
                 if (unlikely(s != vlimbs.size())) {

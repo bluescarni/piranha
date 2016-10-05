@@ -1413,7 +1413,8 @@ public:
 #if defined(PIRANHA_HAVE_THREAD_LOCAL)
         static thread_local
 #endif
-        std::vector<value_type> tmp;
+            std::vector<value_type>
+                tmp;
         tmp.resize(safe_cast<decltype(tmp.size())>(size));
         for (decltype(tmp.size()) i = 0; i < size; ++i) {
             piranha::boost_load(ia, tmp[i]);
@@ -1501,11 +1502,13 @@ public:
 #if defined(PIRANHA_HAVE_THREAD_LOCAL)
             static thread_local
 #endif
-            std::vector<msgpack::object> tmp_obj;
+                std::vector<msgpack::object>
+                    tmp_obj;
 #if defined(PIRANHA_HAVE_THREAD_LOCAL)
             static thread_local
 #endif
-            std::vector<value_type> tmp_expos;
+                std::vector<value_type>
+                    tmp_expos;
             tmp[0].convert(tmp_obj);
             if (unlikely(tmp_obj.size() != s.size())) {
                 piranha_throw(std::invalid_argument,
