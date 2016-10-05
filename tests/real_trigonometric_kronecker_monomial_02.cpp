@@ -109,7 +109,7 @@ struct boost_s11n_tester {
                 std::generate(expos.begin(), expos.end(), [&rng, &edist]() { return edist(rng); });
                 k_type k;
                 try {
-                    k = k_type(expos.begin(),expos.end());
+                    k = k_type(expos.begin(), expos.end());
                 } catch (...) {
                     continue;
                 }
@@ -142,9 +142,10 @@ struct boost_s11n_tester {
                 BOOST_CHECK_EXCEPTION(
                     retval.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &iae) {
                         return boost::contains(
-                            iae.what(), "invalid size detected in the deserialization of a real Kronercker "
-                                        "trigonometric monomial: the deserialized size is 1 but the reference symbol set has a "
-                                        "size of 0");
+                            iae.what(),
+                            "invalid size detected in the deserialization of a real Kronercker "
+                            "trigonometric monomial: the deserialized size is 1 but the reference symbol set has a "
+                            "size of 0");
                     });
             }
             BOOST_CHECK((retval == k_type{T(1), T(2)}));
@@ -192,7 +193,7 @@ struct msgpack_s11n_tester {
         auto t_func = [&names](unsigned n) {
             std::uniform_int_distribution<unsigned> sdist(0, 10);
             std::uniform_int_distribution<int> edist(-10, 10);
-            std::uniform_int_distribution<int> fdist(0,1);
+            std::uniform_int_distribution<int> fdist(0, 1);
             std::mt19937 rng(n);
             std::vector<T> expos;
             for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
@@ -202,7 +203,7 @@ struct msgpack_s11n_tester {
                     std::generate(expos.begin(), expos.end(), [&rng, &edist]() { return edist(rng); });
                     k_type k;
                     try {
-                        k = k_type(expos.begin(),expos.end());
+                        k = k_type(expos.begin(), expos.end());
                     } catch (...) {
                         continue;
                     }
@@ -229,14 +230,15 @@ struct msgpack_s11n_tester {
             msgpack_pack(p, true, msgpack_format::portable);
             k_type retval{T(2)};
             auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            BOOST_CHECK_EXCEPTION(retval.msgpack_convert(oh.get(), msgpack_format::portable, symbol_set{}),
-                                  std::invalid_argument, [](const std::invalid_argument &ia) {
-                                      return boost::contains(
-                                          ia.what(),
-                                          "incompatible symbol set in trigonometric monomial serialization: the reference "
-                                          "symbol set has a size of 0, while the trigonometric monomial being deserialized has "
-                                          "a size of 1");
-                                  });
+            BOOST_CHECK_EXCEPTION(
+                retval.msgpack_convert(oh.get(), msgpack_format::portable, symbol_set{}), std::invalid_argument,
+                [](const std::invalid_argument &ia) {
+                    return boost::contains(
+                        ia.what(),
+                        "incompatible symbol set in trigonometric monomial serialization: the reference "
+                        "symbol set has a size of 0, while the trigonometric monomial being deserialized has "
+                        "a size of 1");
+                });
             BOOST_CHECK((retval == k_type{T(2)}));
         }
     }
