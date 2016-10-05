@@ -1235,10 +1235,10 @@ public:
 private:
     // Enablers for msgpack serialization.
     template <typename Stream>
-    using msgpack_pack_enabler =
-        typename std::enable_if<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>>::value, int>::type;
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>>::value, int>;
     template <typename U>
-    using msgpack_convert_enabler = typename std::enable_if<has_msgpack_convert<U>::value, int>::type;
+    using msgpack_convert_enabler = enable_if_t<has_msgpack_convert<U>::value, int>;
 
 public:
     /// Serialize in msgpack format.
