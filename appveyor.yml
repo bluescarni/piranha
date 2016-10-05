@@ -63,7 +63,7 @@ install:
 # Build boost
 - if not exist C:\boost cd C:\projects\boost_1_60_0
 - if not exist C:\boost .\bootstrap > NUL
-- if not exist C:\boost .\b2 install --toolset=gcc --runtime-link=static --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\boost -sNO_BZIP2=0 -sBZIP2_BINARY=libbz2 -sBZIP2_INCLUDE=C:\bzip2\include -sBZIP2_LIBPATH=C:\bzip2\lib > NUL
+- if not exist C:\boost .\b2 install --toolset=gcc --runtime-link=static --with-regex --with-iostreams --with-serialization --with-filesystem --with-system --with-timer --with-chrono --with-test --prefix=C:\boost -sNO_BZIP2=0 -sBZIP2_BINARY=libbz2 -sBZIP2_INCLUDE=C:\bzip2\include -sBZIP2_LIBPATH=C:\bzip2\lib > NUL
 
 build_script:
 - cd C:\projects\piranha
