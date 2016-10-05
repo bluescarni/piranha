@@ -43,6 +43,13 @@ see https://www.gnu.org/licenses/. */
 // clang-format on
 // End of defines instantiated by CMake.
 
+// NOTE: testing indicates that the thread_local keyword on MinGW is not currently
+// reliable (i.e., parallel initialization of function-level thread-local statics
+// sometimes leads to heap corruption). Disable it for now.
+#if defined(__MINGW32__) && defined(PIRANHA_HAVE_THREAD_LOCAL)
+#undef PIRANHA_HAVE_THREAD_LOCAL
+#endif
+
 #include <cassert>
 
 #define piranha_assert assert

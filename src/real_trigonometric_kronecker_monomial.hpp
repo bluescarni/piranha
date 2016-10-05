@@ -1345,7 +1345,10 @@ public:
                                                                               "size of "
                                                      + std::to_string(args.size()));
         }
-        static thread_local std::vector<value_type> tmp;
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+        static thread_local
+#endif
+        std::vector<value_type> tmp;
         tmp.resize(safe_cast<decltype(tmp.size())>(size));
         for (decltype(tmp.size()) i = 0; i < size; ++i) {
             piranha::boost_load(ia, tmp[i]);
@@ -1390,8 +1393,14 @@ public:
             piranha::msgpack_convert(m_value, tmp[0], f);
             piranha::msgpack_convert(m_flavour, tmp[1], f);
         } else {
-            static thread_local std::vector<msgpack::object> tmp_obj;
-            static thread_local std::vector<value_type> tmp_expos;
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+            static thread_local
+#endif
+            std::vector<msgpack::object> tmp_obj;
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+            static thread_local
+#endif
+            std::vector<value_type> tmp_expos;
             tmp[0].convert(tmp_obj);
             if (unlikely(tmp_obj.size() != s.size())) {
                 piranha_throw(std::invalid_argument, "incompatible symbol set in trigonometric monomial serialization: the reference "
