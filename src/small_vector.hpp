@@ -48,8 +48,8 @@ see https://www.gnu.org/licenses/. */
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "memory.hpp"
-#include "safe_cast.hpp"
 #include "s11n.hpp"
+#include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "static_vector.hpp"
 #include "type_traits.hpp"
@@ -1135,21 +1135,26 @@ inline namespace impl
 
 // Enabler for boost s11n.
 template <typename Archive, typename T, std::size_t Size>
-using small_vector_boost_save_enabler = enable_if_t<conjunction<has_boost_save<Archive,T>,
-    has_boost_save<Archive,typename small_vector<T,std::integral_constant<std::size_t, Size>>::size_type>>::value>;
+using small_vector_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, T>,
+                              has_boost_save<Archive,
+                                             typename small_vector<T, std::integral_constant<std::size_t, Size>>::
+                                                 size_type>>::value>;
 
 template <typename Archive, typename T, std::size_t Size>
-using small_vector_boost_load_enabler = enable_if_t<conjunction<has_boost_load<Archive,T>,
-    has_boost_load<Archive,typename small_vector<T,std::integral_constant<std::size_t, Size>>::size_type>>::value>;
-
+using small_vector_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, T>,
+                              has_boost_load<Archive,
+                                             typename small_vector<T, std::integral_constant<std::size_t, Size>>::
+                                                 size_type>>::value>;
 }
 
 template <typename Archive, typename T, std::size_t Size>
-class boost_save_impl<Archive,small_vector<T,std::integral_constant<std::size_t, Size>>,
-    small_vector_boost_save_enabler<Archive,T,Size>>
+class boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
+                      small_vector_boost_save_enabler<Archive, T, Size>>
 {
 public:
-    void operator()(Archive &ar, const small_vector<T,std::integral_constant<std::size_t, Size>> &v) const
+    void operator()(Archive &ar, const small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
     {
         auto sbe = v.size_begin_end();
         // Save size first.
@@ -1162,11 +1167,11 @@ public:
 };
 
 template <typename Archive, typename T, std::size_t Size>
-class boost_load_impl<Archive,small_vector<T,std::integral_constant<std::size_t, Size>>,
-    small_vector_boost_load_enabler<Archive,T,Size>>
+class boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
+                      small_vector_boost_load_enabler<Archive, T, Size>>
 {
 public:
-    void operator()(Archive &ar, small_vector<T,std::integral_constant<std::size_t, Size>> &v) const
+    void operator()(Archive &ar, small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
     {
         // Load the size first.
         decltype(v.size()) size;
@@ -1187,21 +1192,27 @@ inline namespace impl
 
 // Enablers for msgpack s11n.
 template <typename Stream, typename T, std::size_t Size>
-using small_vector_msgpack_pack_enabler = enable_if_t<conjunction<is_msgpack_stream<Stream>,has_msgpack_pack<Stream,T>,
-    has_safe_cast<std::uint32_t,typename small_vector<T,std::integral_constant<std::size_t, Size>>::size_type>>::value>;
+using small_vector_msgpack_pack_enabler
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+                              has_safe_cast<std::uint32_t,
+                                            typename small_vector<T, std::integral_constant<std::size_t,
+                                                                                            Size>>::size_type>>::value>;
 
 template <typename T, std::size_t Size>
-using small_vector_msgpack_convert_enabler = enable_if_t<conjunction<has_msgpack_convert<T>,
-        has_safe_cast<typename small_vector<T,std::integral_constant<std::size_t, Size>>::size_type,typename std::vector<msgpack::object>::size_type>>::value>;
-
+using small_vector_msgpack_convert_enabler
+    = enable_if_t<conjunction<has_msgpack_convert<T>,
+                              has_safe_cast<
+                                  typename small_vector<T, std::integral_constant<std::size_t, Size>>::size_type,
+                                  typename std::vector<msgpack::object>::size_type>>::value>;
 }
 
 template <typename Stream, typename T, std::size_t Size>
-class msgpack_pack_impl<Stream,small_vector<T,std::integral_constant<std::size_t, Size>>,
-    small_vector_msgpack_pack_enabler<Stream,T,Size>>
+class msgpack_pack_impl<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>,
+                        small_vector_msgpack_pack_enabler<Stream, T, Size>>
 {
 public:
-    void operator()(msgpack::packer<Stream> &packer, const small_vector<T,std::integral_constant<std::size_t, Size>> &v, msgpack_format f) const
+    void operator()(msgpack::packer<Stream> &packer,
+                    const small_vector<T, std::integral_constant<std::size_t, Size>> &v, msgpack_format f) const
     {
         auto sbe = v.size_begin_end();
         packer.pack_array(safe_cast<std::uint32_t>(std::get<0>(sbe)));
@@ -1213,11 +1224,12 @@ public:
 };
 
 template <typename T, std::size_t Size>
-class msgpack_convert_impl<small_vector<T,std::integral_constant<std::size_t, Size>>,
-    small_vector_msgpack_convert_enabler<T,Size>>
+class msgpack_convert_impl<small_vector<T, std::integral_constant<std::size_t, Size>>,
+                           small_vector_msgpack_convert_enabler<T, Size>>
 {
 public:
-    void operator()(small_vector<T,std::integral_constant<std::size_t, Size>> &v, const msgpack::object &o, msgpack_format f) const
+    void operator()(small_vector<T, std::integral_constant<std::size_t, Size>> &v, const msgpack::object &o,
+                    msgpack_format f) const
     {
         PIRANHA_MAYBE_TLS std::vector<msgpack::object> vobj;
         o.convert(vobj);
@@ -1230,7 +1242,6 @@ public:
 };
 
 #endif
-
 }
 
 #endif
