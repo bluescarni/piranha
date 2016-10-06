@@ -142,7 +142,7 @@ private:
     //   to get the end() iterator we get one past the last element);
     // - note that placement new will work as expected (i.e., it will construct the object exactly at the address passed
     //   in as parameter).
-    typedef typename std::aligned_storage<sizeof(T) * MaxSize, alignof(T)>::type storage_type;
+    using storage_type = typename std::aligned_storage<sizeof(T) * MaxSize, alignof(T)>::type;
 #endif
 public:
     /// Maximum size.
@@ -415,6 +415,12 @@ public:
         ::new (static_cast<void *>(ptr() + m_size)) value_type(std::move(x));
         ++m_size;
     }
+
+private:
+    template <typename... Args>
+    using emplace_enabler = enable_if_t<std::is_constructible<value_type, Args &&...>::value, int>;
+
+public:
     /// Construct in-place at the end of the vector.
     /**
      * \note
@@ -427,8 +433,7 @@ public:
      * @throws std::bad_alloc if the insertion of the new element would lead to a size greater than \p MaxSize.
      * @throws unspecified any exception thrown by the constructor of \p T from the input parameters.
      */
-    template <typename... Args,
-              typename = typename std::enable_if<std::is_constructible<value_type, Args &&...>::value>::type>
+    template <typename... Args, emplace_enabler<Args...> = 0>
     void emplace_back(Args &&... params)
     {
         if (unlikely(m_size == MaxSize)) {
@@ -456,11 +461,9 @@ public:
     /// Resize.
     /**
      * After this operation, the number of elements stored in the container will be \p new_size. If \p new_size is
-     * greater than
-     * the size of the object before the operation, the new elements will be value-initialized and placed at the end of
-     * the container.
-     * If \p new_size is smaller than the size of the object before the operation, the first \p new_size
-     * object in the vector will be preserved.
+     * greater than the size of the object before the operation, the new elements will be value-initialized and placed
+     * at the end of the container. If \p new_size is smaller than the size of the object before the operation, the
+     * first \p new_size object in the vector will be preserved.
      *
      * @param[in] new_size new size for the vector.
      *
@@ -551,6 +554,12 @@ public:
         destroy_items();
         m_size = 0u;
     }
+
+private:
+    template <typename U>
+    using hash_enabler = enable_if_t<is_hashable<U>::value, int>;
+
+public:
     /// Hash value.
     /**
      * \note
@@ -568,13 +577,20 @@ public:
      *
      * @see http://www.boost.org/doc/libs/release/doc/html/hash/combine.html
      */
-    template <typename U = T, typename = typename std::enable_if<is_hashable<U>::value>::type>
+    template <typename U = T, hash_enabler<U> = 0>
     std::size_t hash() const
     {
         return detail::vector_hasher(*this);
     }
+private:
+    template <typename U>
+    using ostream_enabler = enable_if_t<is_ostreamable<U>::value,int>;
+public:
     /// Stream operator overload for piranha::static_vector.
     /**
+     * \note
+     * This function is enabled only if \p U satisfies piranha::is_ostreamable.
+     *
      * Will print to stream a human-readable representation of \p v.
      *
      * @param[in] os target stream.
@@ -584,6 +600,7 @@ public:
      *
      * @throws unspecified any exception thrown by printing to stream instances of the value type of \p v.
      */
+    template <typename U = T, ostream_enabler<U> = 0>
     friend std::ostream &operator<<(std::ostream &os, const static_vector &v)
     {
         os << '[';
