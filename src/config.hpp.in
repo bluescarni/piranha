@@ -50,6 +50,15 @@ see https://www.gnu.org/licenses/. */
 #undef PIRANHA_HAVE_THREAD_LOCAL
 #endif
 
+// A handy macro to qualify a variable as static thread-local,
+// but only if the keyword is available (otherwise the variable will not
+// be TLS).
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+#define PIRANHA_MAYBE_TLS static thread_local
+#else
+#define PIRANHA_MAYBE_TLS
+#endif
+
 #include <cassert>
 
 #define piranha_assert assert

@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/small_vector.hpp"
 
-#define BOOST_TEST_MODULE small_vector_test
+#define BOOST_TEST_MODULE small_vector_01_test
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>

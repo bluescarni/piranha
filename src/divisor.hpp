@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -54,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "pow.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "small_vector.hpp"
@@ -901,6 +903,21 @@ public:
             }
         }
         return retval;
+    }
+private:
+public:
+    template <typename Archive>
+    void boost_save(Archive &ar, const symbol_set &args) const
+    {
+        if (unlikely(!is_compatible(args))) {
+            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        }
+        piranha::boost_save(ar, size());
+        const auto it_f = m_container.end();
+        for (auto it = m_container.begin(); it != it_f; ++it) {
+            const auto sbe = it->v.size_begin_end();
+            piranha::boost_save(ar, std::get<0>(sbe));
+        }
     }
 
 private:
