@@ -94,17 +94,18 @@ class array_key
     PIRANHA_TT_CHECK(is_hashable, T);
     template <typename U>
     friend class debug_access;
-    using container_type = small_vector<T, S>;
-    // Enabler for constructor from init list.
-    template <typename U>
-    using init_list_enabler =
-        typename std::enable_if<std::is_constructible<container_type, std::initializer_list<U>>::value, int>::type;
 
 public:
+    /// The internal container type.
+    using container_type = small_vector<T, S>;
     /// Value type.
     using value_type = typename container_type::value_type;
 
 private:
+    // Enabler for constructor from init list.
+    template <typename U>
+    using init_list_enabler =
+        typename std::enable_if<std::is_constructible<container_type, std::initializer_list<U>>::value, int>::type;
     // Enabler for generic ctor.
     template <typename U>
     using generic_ctor_enabler = typename std::enable_if<has_safe_cast<value_type, U>::value, int>::type;
@@ -464,8 +465,8 @@ public:
         return retval;
     }
 
-private:
-    // Internal container.
+protected:
+    /// Internal container.
     container_type m_container;
 
 public:

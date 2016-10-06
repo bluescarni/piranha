@@ -1105,20 +1105,15 @@ public:
 private:
     // Enablers for the boost s11n methods.
     template <typename Archive>
-    using boost_save_enabler = typename std::enable_if<conjunction<has_boost_save<Archive, typename base::size_type>,
-                                                                   has_boost_save<Archive, T>>::value,
-                                                       int>::type;
+    using boost_save_enabler = enable_if_t<has_boost_save<Archive, typename base::container_type>::value, int>;
     template <typename Archive>
-    using boost_load_enabler = typename std::enable_if<conjunction<has_boost_load<Archive, typename base::size_type>,
-                                                                   has_boost_load<Archive, T>>::value,
-                                                       int>::type;
+    using boost_load_enabler = enable_if_t<has_boost_load<Archive, typename base::container_type>::value, int>;
 
 public:
     /// Save to Boost archive.
     /**
      * \note
-     * This method is enabled only if \p T and the size type of the monomial can be saved to \p Archive using
-     * piranha::boost_save().
+     * This method is enabled only if the internal container type satisfies piranha::has_boost_save.
      *
      * This method will serialize \p this into the archive \p ar.
      *
@@ -1131,23 +1126,19 @@ public:
     template <typename Archive, boost_save_enabler<Archive> = 0>
     void boost_save(Archive &ar, const symbol_set &s) const
     {
-        const auto sbe = this->size_begin_end();
-        if (unlikely(std::get<0u>(sbe) != s.size())) {
+        if (unlikely(this->size() != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
                                                  "symbol set has a size of "
                                                      + std::to_string(s.size())
                                                      + ", while the monomial being serialized has a size of "
-                                                     + std::to_string(std::get<0u>(sbe)));
+                                                     + std::to_string(this->size()));
         }
-        // Save the size first.
-        piranha::boost_save(ar, std::get<0u>(sbe));
-        boost_save_range(ar, std::get<1u>(sbe), std::get<2u>(sbe));
+        piranha::boost_save(ar, this->m_container);
     }
     /// Load from Boost archive.
     /**
      * \note
-     * This method is enabled only if \p T and the size type of the monomial can be loaded from \p Archive using
-     * piranha::boost_load().
+     * This method is enabled only if the internal container type satisfies piranha::has_boost_load.
      *
      * This method will deserialize the content of \p ar into \p this. The method provides the basic exception safety
      * guarantee.
@@ -1156,74 +1147,61 @@ public:
      * @param[in] s reference symbol set.
      *
      * @throws std::invalid_argument if the size of the deserialized monomial differs from the size of \p s.
-     * @throws unspecified any exception thrown by piranha::boost_load() or by resize().
+     * @throws unspecified any exception thrown by piranha::boost_load().
      */
     template <typename Archive, boost_load_enabler<Archive> = 0>
     void boost_load(Archive &ar, const symbol_set &s)
     {
-        // Get out the size first.
-        typename base::size_type size;
-        piranha::boost_load(ar, size);
-        if (unlikely(size != s.size())) {
+        piranha::boost_load(ar, this->m_container);
+        if (unlikely(this->size() != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
                                                  "symbol set has a size of "
                                                      + std::to_string(s.size())
                                                      + ", while the monomial being deserialized has a size of "
-                                                     + std::to_string(size));
+                                                     + std::to_string(this->size()));
         }
-        this->resize(size);
-        const auto sbe = this->size_begin_end();
-        boost_load_range(ar, std::get<1u>(sbe), std::get<2u>(sbe));
     }
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     // Enablers for msgpack serialization.
     template <typename Stream>
-    using msgpack_pack_enabler =
-        typename std::enable_if<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>>::value, int>::type;
+    using msgpack_pack_enabler = enable_if_t<has_msgpack_pack<Stream, typename base::container_type>::value, int>;
     template <typename U>
-    using msgpack_convert_enabler = typename std::enable_if<has_msgpack_convert<U>::value, int>::type;
+    using msgpack_convert_enabler = enable_if_t<has_msgpack_convert<typename U::container_type>::value, int>;
 
 public:
     /// Serialize in msgpack format.
     /**
      * \note
-     * This method is activated only if \p Stream satisfies piranha::is_msgpack_stream and the exponent type
-     * satisfies piranha::has_msgpack_pack.
+     * This method is enabled only if the internal container type satisfies piranha::has_msgpack_pack.
      *
-     * This method will pack \p this into \p packer. The packed monomial is a msgpack array, and each element
-     * of the array is packed via piranha::msgpack_pack().
+     * This method will pack \p this into \p packer using the format \p f.
      *
      * @param[in] packer the target packer.
      * @param[in] f the serialization format.
      * @param[in] s reference arguments set.
      *
      * @throws std::invalid_argument if the sizes of \p s and \p this differ.
-     * @throws unspecified any exception thrown by:
-     * - the public interface of <tt>msgpack::packer</tt>,
-     * - piranha::msgpack_pack() or piranha::safe_cast().
+     * @throws unspecified any exception thrown by piranha::msgpack_pack().
      */
     template <typename Stream, msgpack_pack_enabler<Stream> = 0>
     void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
     {
-        const auto sbe = this->size_begin_end();
-        if (unlikely(std::get<0u>(sbe) != s.size())) {
+        if (unlikely(this->size() != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
                                                  "symbol set has a size of "
                                                      + std::to_string(s.size())
                                                      + ", while the monomial being serialized has a size of "
-                                                     + std::to_string(std::get<0u>(sbe)));
+                                                     + std::to_string(this->size()));
         }
-        msgpack_pack_range(packer, std::get<1u>(sbe), std::get<2u>(sbe), std::get<0u>(sbe), f);
+        piranha::msgpack_pack(packer, this->m_container, f);
     }
     /// Deserialize from msgpack object.
     /**
      * \note
-     * This method is activated only if the exponent type satisfies piranha::has_msgpack_convert.
+     * This method is activated only if the internal container type satisfies piranha::has_msgpack_convert.
      *
-     * This method will deserialize \p o into \p this. \p o is assumed to contain an array of msgpack objects,
-     * representing the exponents of the monomial. Each array element is deserialized via piranha::msgpack_convert().
-     *
+     * This method will deserialize \p o into \p this using the format \p f.
      * This method provides the basic exception safety guarantee.
      *
      * @param[in] o msgpack object that will be deserialized.
@@ -1231,29 +1209,19 @@ public:
      * @param[in] s reference arguments set.
      *
      * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
-     * @throws unspecified any exception thrown by:
-     * - resize(),
-     * - the public interface of <tt>msgpack::object</tt>,
-     * - piranha::safe_cast() and piranha::msgpack_convert().
+     * @throws unspecified any exception thrown by piranha::msgpack_convert().
      */
-    template <typename U = T, msgpack_convert_enabler<U> = 0>
+    template <typename U = monomial, msgpack_convert_enabler<U> = 0>
     void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
     {
-        PIRANHA_MAYBE_TLS std::vector<msgpack::object> tmp;
-        o.convert(tmp);
-        if (unlikely(tmp.size() != s.size())) {
+        piranha::msgpack_convert(this->m_container, o, f);
+        if (unlikely(this->size() != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
                                                  "symbol set has a size of "
                                                      + std::to_string(s.size())
                                                      + ", while the monomial being deserialized has a size of "
-                                                     + std::to_string(tmp.size()));
+                                                     + std::to_string(this->size()));
         }
-        this->resize(safe_cast<typename base::size_type>(tmp.size()));
-        std::transform(tmp.begin(), tmp.end(), this->begin(), [f](const msgpack::object &obj) -> T {
-            T t;
-            piranha::msgpack_convert(t, obj, f);
-            return t;
-        });
     }
 #endif
 };
