@@ -517,10 +517,7 @@ public:
      */
     bool is_compatible(const symbol_set &args) const noexcept
     {
-        if (m_container.empty()) {
-            return true;
-        }
-        return m_container.begin()->v.size() == args.size();
+        return m_container.empty() ? true : (m_container.begin()->v.size() == args.size());
     }
     /// Ignorability check.
     /**
