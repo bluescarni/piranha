@@ -600,6 +600,7 @@ const bool key_has_boost_load<Archive, Key>::value;
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
+#include <cstdint>
 #include <ios>
 #include <iterator>
 #include <limits>
@@ -1583,6 +1584,37 @@ using msgpack_pack_member_t = decltype(
 template <typename T>
 using msgpack_convert_member_t = decltype(
     std::declval<T &>().msgpack_convert(std::declval<const msgpack::object &>(), std::declval<msgpack_format>()));
+
+#endif
+
+// Utility functions to serialize ranges.
+template <typename Archive, typename It>
+inline void boost_save_range(Archive &ar, It begin, It end)
+{
+    for (; begin != end; ++begin) {
+        boost_save(ar, *begin);
+    }
+}
+
+template <typename Archive, typename It>
+inline void boost_load_range(Archive &ar, It begin, It end)
+{
+    for (; begin != end; ++begin) {
+        boost_load(ar, *begin);
+    }
+}
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+template <typename Stream, typename It, typename Size>
+inline void msgpack_pack_range(msgpack::packer<Stream> &p, It begin, It end, Size s, msgpack_format f)
+{
+    // NOTE: replace with safe_cast.
+    p.pack_array(boost::numeric_cast<std::uint32_t>(s));
+    for (; begin != end; ++begin) {
+        msgpack_pack(p, *begin, f);
+    }
+}
 
 #endif
 }
