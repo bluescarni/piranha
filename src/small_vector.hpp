@@ -1149,28 +1149,59 @@ using small_vector_boost_load_enabler
                                                  size_type>>::value>;
 }
 
+/// Specialisation of piranha::boost_save() for piranha::small_vector.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and the size type of the vector satisfy
+ * piranha::has_boost_save.
+ */
 template <typename Archive, typename T, std::size_t Size>
 class boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
                       small_vector_boost_save_enabler<Archive, T, Size>>
 {
 public:
+    /// Call operator.
+    /**
+     * This method will serialize \p v into \p ar.
+     *
+     * @param ar the target archive.
+     * @param v the vector to be serialized.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_save().
+     */
     void operator()(Archive &ar, const small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
     {
-        auto sbe = v.size_begin_end();
+        const auto sbe = v.size_begin_end();
         // Save size first.
         boost_save(ar, std::get<0>(sbe));
         // Save the elements.
-        for (; std::get<1>(sbe) != std::get<2>(sbe); ++std::get<1>(sbe)) {
-            boost_save(ar, *std::get<1>(sbe));
-        }
+        boost_save_range(ar, std::get<1>(sbe), std::get<2>(sbe));
     }
 };
 
+/// Specialisation of piranha::boost_load() for piranha::small_vector.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and the size type of the vector satisfy
+ * piranha::has_boost_load.
+ */
 template <typename Archive, typename T, std::size_t Size>
 class boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
                       small_vector_boost_load_enabler<Archive, T, Size>>
 {
 public:
+    /// Call operator.
+    /**
+     * This method will deserialize the content of \p ar into \p v. This method provides the basic exception safety
+     * guarantee.
+     *
+     * @param ar the source archive.
+     * @param v the vector into which the content of \p ar will deserialized.
+     *
+     * @throws unspecified any exception thrown by:
+     * - piranha::boost_load(),
+     * - piranha::small_vector::resize().
+     */
     void operator()(Archive &ar, small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
     {
         // Load the size first.
@@ -1179,9 +1210,8 @@ public:
         // Resize.
         v.resize(size);
         // Load the elements.
-        for (auto sbe = v.size_begin_end(); std::get<1>(sbe) != std::get<2>(sbe); ++std::get<1>(sbe)) {
-            boost_load(ar, *std::get<1>(sbe));
-        }
+        const auto sbe = v.size_begin_end();
+        boost_load_range(ar, std::get<1>(sbe), std::get<2>(sbe));
     }
 };
 
@@ -1206,28 +1236,67 @@ using small_vector_msgpack_convert_enabler
                                   typename std::vector<msgpack::object>::size_type>>::value>;
 }
 
+/// Specialisation of piranha::msgpack_pack() for piranha::small_vector.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Stream satisfies piranha::is_msgpack_stream,
+ * - \p T satisfies piranha::has_msgpack_pack,
+ * - the size type of the vector can be safely converted to \p std::uint32_t.
+ */
 template <typename Stream, typename T, std::size_t Size>
 class msgpack_pack_impl<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>,
                         small_vector_msgpack_pack_enabler<Stream, T, Size>>
 {
 public:
+    /// Call operator.
+    /**
+     * This method will serialize into \p packer the input vector \p v using the format \p f.
+     *
+     * @param packer the target <tt>msgpack::packer</tt>.
+     * @param v the vector to be serialized.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_pack().
+     */
     void operator()(msgpack::packer<Stream> &packer,
                     const small_vector<T, std::integral_constant<std::size_t, Size>> &v, msgpack_format f) const
     {
-        auto sbe = v.size_begin_end();
-        packer.pack_array(safe_cast<std::uint32_t>(std::get<0>(sbe)));
-        // Save the elements.
-        for (; std::get<1>(sbe) != std::get<2>(sbe); ++std::get<1>(sbe)) {
-            msgpack_pack(packer, *std::get<1>(sbe), f);
-        }
+        const auto sbe = v.size_begin_end();
+        msgpack_pack_range(packer, std::get<1>(sbe), std::get<2>(sbe), std::get<0>(sbe), f);
     }
 };
 
+/// Specialisation of piranha::msgpack_convert() for piranha::small_vector.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p T satisfies piranha::has_msgpack_convert,
+ * - the size type of \p std::vector can be safely converted to the size type of piranha::small_vector.
+ */
 template <typename T, std::size_t Size>
 class msgpack_convert_impl<small_vector<T, std::integral_constant<std::size_t, Size>>,
                            small_vector_msgpack_convert_enabler<T, Size>>
 {
 public:
+    /// Call operator.
+    /**
+     * This method will convert \p o into \p v using the format \p f. This method provides the basic exception safety
+     * guarantee.
+     *
+     * @param v the vector into which the content of \p o will deserialized.
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - memory errors in standard containers,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_convert().
+     */
     void operator()(small_vector<T, std::integral_constant<std::size_t, Size>> &v, const msgpack::object &o,
                     msgpack_format f) const
     {
