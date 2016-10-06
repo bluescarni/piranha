@@ -540,6 +540,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_ostreamable_test)
     BOOST_CHECK(!is_ostreamable<stream4>::value);
     BOOST_CHECK(is_ostreamable<stream5>::value);
     BOOST_CHECK(!is_ostreamable<stream6>::value);
+    BOOST_CHECK(!is_ostreamable<void>::value);
 }
 
 struct c_element {

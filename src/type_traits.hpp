@@ -502,26 +502,31 @@ struct is_container_element {
 template <typename T>
 const bool is_container_element<T>::value;
 
+inline namespace impl
+{
+
+// Detection of ostreamable types.
+template <typename T>
+using ostreamable_t = decltype(std::declval<std::ostream &>() << std::declval<const T &>());
+}
+
 /// Type trait for classes that can be output-streamed.
 /**
  * This type trait will be \p true if instances of type \p T can be directed to
  * instances of \p std::ostream via the insertion operator. The operator must have a signature
  * compatible with
- @code
- std::ostream &operator<<(std::ostream &, const T &)
- @endcode
+ * @code
+ * std::ostream &operator<<(std::ostream &, const T &)
+ * @endcode
  */
 template <typename T>
-class is_ostreamable : detail::sfinae_types
+class is_ostreamable
 {
-    template <typename T1>
-    static auto test(std::ostream &s, const T1 &t) -> decltype(s << t);
-    static no test(...);
+    static const bool implementation_defined = std::is_same<is_detected_t<ostreamable_t, T>, std::ostream &>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = std::is_same<decltype(test(*(std::ostream *)nullptr, std::declval<T>())), std::ostream &>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
