@@ -117,7 +117,7 @@ public:
      * Used to represent the number of variables in the monomial. Equivalent to the size type of
      * piranha::kronecker_array.
      */
-    typedef typename ka::size_type size_type;
+    using size_type = typename ka::size_type;
     /// Vector type used for temporary packing/unpacking.
     // NOTE: this essentially defines a maximum number of small ints that can be packed in m_value,
     // as we always need to pass through pack/unpack. In practice, it does not matter: in current
@@ -1172,10 +1172,7 @@ public:
     void boost_save(boost::archive::text_oarchive &oa, const symbol_set &args) const
     {
         auto tmp = unpack(args);
-        piranha::boost_save(oa, tmp.size());
-        for (const auto &n : tmp) {
-            piranha::boost_save(oa, n);
-        }
+        boost_save_vector(oa, tmp);
     }
     /// Load from Boost binary archive.
     /**
@@ -1207,31 +1204,20 @@ public:
      *
      * @throws std::invalid_argument if the size of the serialized monomial is different from the size of \p args.
      * @throws unspecified any exception thrown by:
-     * - memory error in standard containers,
-     * - piranha::safe_cast(),
      * - piranha::boost_load(),
      * - the constructor of piranha::kronecker_monomial from a container.
      */
     template <typename U = T, boost_load_text_enabler<U> = 0>
     void boost_load(boost::archive::text_iarchive &ia, const symbol_set &args)
     {
-        typename v_type::size_type size;
-        piranha::boost_load(ia, size);
-        if (unlikely(size != args.size())) {
+        v_type tmp;
+        boost_load_vector(ia, tmp);
+        if (unlikely(tmp.size() != args.size())) {
             piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
                                                  "monomial: the deserialized size is "
-                                                     + std::to_string(size) + " but the reference symbol set has a "
-                                                                              "size of "
+                                                     + std::to_string(tmp.size())
+                                                     + " but the reference symbol set has a size of "
                                                      + std::to_string(args.size()));
-        }
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-        static thread_local
-#endif
-            std::vector<value_type>
-                tmp;
-        tmp.resize(safe_cast<decltype(tmp.size())>(size));
-        for (decltype(tmp.size()) i = 0; i < size; ++i) {
-            piranha::boost_load(ia, tmp[i]);
         }
         *this = kronecker_monomial(tmp);
     }
@@ -1270,10 +1256,7 @@ public:
             piranha::msgpack_pack(packer, m_value, f);
         } else {
             auto tmp = unpack(s);
-            packer.pack_array(safe_cast<std::uint32_t>(tmp.size()));
-            for (const auto &n : tmp) {
-                piranha::msgpack_pack(packer, n, f);
-            }
+            msgpack_pack_vector(packer, tmp, f);
         }
     }
     /// Deserialize from msgpack object.
@@ -1302,23 +1285,14 @@ public:
         if (f == msgpack_format::binary) {
             piranha::msgpack_convert(m_value, o, f);
         } else {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::vector<msgpack::object>
-                    tmp_obj;
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::vector<value_type>
-                    tmp_expos;
+            PIRANHA_MAYBE_TLS std::vector<msgpack::object> tmp_obj;
+            PIRANHA_MAYBE_TLS std::vector<value_type> tmp_expos;
             o.convert(tmp_obj);
             if (unlikely(tmp_obj.size() != s.size())) {
                 piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
                                                      "symbol set has a size of "
                                                          + std::to_string(s.size())
-                                                         + ", while the monomial being deserialized has "
-                                                           "a size of "
+                                                         + ", while the monomial being deserialized has a size of "
                                                          + std::to_string(tmp_obj.size()));
             }
             tmp_expos.resize(safe_cast<decltype(tmp_expos.size())>(tmp_obj.size()));

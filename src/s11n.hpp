@@ -606,6 +606,7 @@ const bool key_has_boost_load<Archive, Key>::value;
 #include <limits>
 #include <locale>
 #include <sstream>
+#include <vector>
 
 namespace piranha
 {
@@ -1587,7 +1588,7 @@ using msgpack_convert_member_t = decltype(
 
 #endif
 
-// Utility functions to serialize ranges.
+// Utility functions to serialize ranges and vector-like types.
 template <typename Archive, typename It>
 inline void boost_save_range(Archive &ar, It begin, It end)
 {
@@ -1596,12 +1597,28 @@ inline void boost_save_range(Archive &ar, It begin, It end)
     }
 }
 
+template <typename Archive, typename V>
+inline void boost_save_vector(Archive &ar, const V &v)
+{
+    boost_save(ar, v.size());
+    boost_save_range(ar, v.begin(), v.end());
+}
+
 template <typename Archive, typename It>
 inline void boost_load_range(Archive &ar, It begin, It end)
 {
     for (; begin != end; ++begin) {
         boost_load(ar, *begin);
     }
+}
+
+template <typename Archive, typename V>
+inline void boost_load_vector(Archive &ar, V &v)
+{
+    typename V::size_type size;
+    boost_load(ar, size);
+    v.resize(size);
+    boost_load_range(ar, v.begin(), v.end());
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -1613,6 +1630,26 @@ inline void msgpack_pack_range(msgpack::packer<Stream> &p, It begin, It end, Siz
     p.pack_array(boost::numeric_cast<std::uint32_t>(s));
     for (; begin != end; ++begin) {
         msgpack_pack(p, *begin, f);
+    }
+}
+
+template <typename Stream, typename V>
+inline void msgpack_pack_vector(msgpack::packer<Stream> &p, const V &v, msgpack_format f)
+{
+    msgpack_pack_range(p, v.begin(), v.end(), v.size(), f);
+}
+
+// Convert the msgpack array in o to a vector of type V.
+template <typename V>
+inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format f)
+{
+    // First extract a vector of objects from o.
+    PIRANHA_MAYBE_TLS std::vector<msgpack::object> tmp_obj;
+    o.convert(tmp_obj);
+    // NOTE: replace with safe_cast.
+    v.resize(boost::numeric_cast<decltype(v.size())>(tmp_obj.size()));
+    for (decltype(v.size()) i = 0; i < v.size(); ++i) {
+        piranha::msgpack_convert(v[i], tmp_obj[static_cast<decltype(v.size())>(i)], f);
     }
 }
 

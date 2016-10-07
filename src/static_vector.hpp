@@ -43,6 +43,8 @@ see https://www.gnu.org/licenses/. */
 #include "detail/small_vector_fwd.hpp"
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
+#include "s11n.hpp"
+#include "safe_cast.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -582,9 +584,11 @@ public:
     {
         return detail::vector_hasher(*this);
     }
+
 private:
     template <typename U>
-    using ostream_enabler = enable_if_t<is_ostreamable<U>::value,int>;
+    using ostream_enabler = enable_if_t<is_ostreamable<U>::value, int>;
+
 public:
     /// Stream operator overload for piranha::static_vector.
     /**
@@ -657,6 +661,81 @@ private:
 
 template <typename T, std::size_t MaxSize>
 const typename static_vector<T, MaxSize>::size_type static_vector<T, MaxSize>::max_size;
+
+inline namespace impl
+{
+
+// Enablers for boost s11n.
+template <typename Archive, typename T, std::size_t S>
+using static_vector_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, T>,
+                              has_boost_save<Archive, typename static_vector<T, S>::size_type>>::value>;
+
+template <typename Archive, typename T, std::size_t S>
+using static_vector_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, T>,
+                              has_boost_load<Archive, typename static_vector<T, S>::size_type>>::value>;
+}
+
+template <typename Archive, typename T, std::size_t S>
+class boost_save_impl<Archive, static_vector<T, S>, static_vector_boost_save_enabler<Archive, T, S>>
+{
+public:
+    void operator()(Archive &ar, const static_vector<T, S> &v) const
+    {
+        boost_save_vector(ar, v);
+    }
+};
+
+template <typename Archive, typename T, std::size_t S>
+class boost_load_impl<Archive, static_vector<T, S>, static_vector_boost_load_enabler<Archive, T, S>>
+{
+public:
+    void operator()(Archive &ar, static_vector<T, S> &v) const
+    {
+        boost_load_vector(ar, v);
+    }
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+// Enablers for msgpack s11n.
+template <typename Stream, typename T, std::size_t S>
+using static_vector_msgpack_pack_enabler
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+                              has_safe_cast<std::uint32_t, typename static_vector<T, S>::size_type>>::value>;
+
+template <typename T, std::size_t S>
+using static_vector_msgpack_convert_enabler
+    = enable_if_t<conjunction<has_msgpack_convert<T>,
+                              has_safe_cast<typename static_vector<T, S>::size_type,
+                                            typename std::vector<msgpack::object>::size_type>>::value>;
+}
+
+template <typename Stream, typename T, std::size_t S>
+class msgpack_pack_impl<Stream, static_vector<T, S>, static_vector_msgpack_pack_enabler<Stream, T, S>>
+{
+public:
+    void operator()(msgpack::packer<Stream> &p, const static_vector<T, S> &v, msgpack_format f) const
+    {
+        msgpack_pack_vector(p, v, f);
+    }
+};
+
+template <typename T, std::size_t S>
+class msgpack_convert_impl<static_vector<T, S>, static_vector_msgpack_convert_enabler<T, S>>
+{
+public:
+    void operator()(static_vector<T, S> &v, const msgpack::object &o, msgpack_format f) const
+    {
+        msgpack_convert_array(o, v, f);
+    }
+};
+
+#endif
 }
 
 #endif
