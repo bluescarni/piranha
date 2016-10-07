@@ -62,21 +62,18 @@ namespace piranha
  * - the exception safety guarantee is weaker (see below),
  * - iterators and iterator invalidation: after a rehash operation, all iterators will be invalidated and existing
  *   references/pointers to the elements will also be invalid; after an insertion/erase operation, all existing
- * iterators, pointers
- *   and references to the elements in the destination bucket will be invalid,
+ *   iterators, pointers and references to the elements in the destination bucket will be invalid,
  * - the complexity of iterator traversal depends on the load factor of the table.
  *
  * The implementation employs a separate chaining strategy consisting of an array of buckets, each one a singly linked
- * list with the first node
- * stored directly within the array (so that the first insertion in a bucket does not require any heap allocation).
+ * list with the first node stored directly within the array (so that the first insertion in a bucket does not require
+ * any heap allocation).
  *
  * An additional set of low-level methods is provided: such methods are suitable for use in high-performance and
- * multi-threaded contexts,
- * and, if misused, could lead to data corruption and other unpredictable errors.
+ * multi-threaded contexts, and, if misused, could lead to data corruption and other unpredictable errors.
  *
  * Note that for performance reasons the implementation employs sizes that are powers of two. Hence, particular care
- * should be taken
- * that the hash function does not exhibit commensurabilities with powers of 2.
+ * should be taken that the hash function does not exhibit commensurabilities with powers of 2.
  *
  * ## Type requirements ##
  *
@@ -201,9 +198,7 @@ class hash_set
             }
             // Constructor from other iterator type.
             template <typename V,
-                      typename std::enable_if<std::is_convertible<typename iterator_impl<V>::ptr_type, ptr_type>::value,
-                                              int>::type
-                      = 0>
+                      enable_if_t<std::is_convertible<typename iterator_impl<V>::ptr_type, ptr_type>::value, int> = 0>
             iterator_impl(const iterator_impl<V> &other) : m_ptr(other.m_ptr)
             {
             }
@@ -307,9 +302,8 @@ class hash_set
             }
             piranha_assert(other.empty());
         }
-        template <typename U>
-        node *insert(U &&item,
-                     typename std::enable_if<std::is_same<T, typename std::decay<U>::type>::value>::type * = nullptr)
+        template <typename U, enable_if_t<std::is_same<T, uncvref_t<U>>::value, int> = 0>
+        node *insert(U &&item)
         {
             // NOTE: optimize with likely/unlikely?
             if (m_node.m_next) {
@@ -601,8 +595,7 @@ private:
     BOOST_SERIALIZATION_SPLIT_MEMBER()
     // Enabler for insert().
     template <typename U>
-    using insert_enabler =
-        typename std::enable_if<std::is_same<key_type, typename std::decay<U>::type>::value, int>::type;
+    using insert_enabler = enable_if_t<std::is_same<key_type, uncvref_t<U>>::value, int>;
     // Run a consistency check on the set, will return false if something is wrong.
     bool sanity_check() const
     {
