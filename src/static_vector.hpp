@@ -669,7 +669,7 @@ const typename static_vector<T, MaxSize>::size_type static_vector<T, MaxSize>::m
  * piranha::has_boost_save.
  */
 template <typename Archive, typename T, std::size_t S>
-class boost_save_impl<Archive, static_vector<T, S>, boost_save_vector_enabler<Archive,static_vector<T, S>>>
+class boost_save_impl<Archive, static_vector<T, S>, boost_save_vector_enabler<Archive, static_vector<T, S>>>
 {
 public:
     /// Call operator.
@@ -694,7 +694,7 @@ public:
  * piranha::has_boost_load.
  */
 template <typename Archive, typename T, std::size_t S>
-class boost_load_impl<Archive, static_vector<T, S>, boost_load_vector_enabler<Archive,static_vector<T, S>>>
+class boost_load_impl<Archive, static_vector<T, S>, boost_load_vector_enabler<Archive, static_vector<T, S>>>
 {
 public:
     /// Call operator.
@@ -726,7 +726,7 @@ public:
  * - the size type of the vector can be safely converted to \p std::uint32_t.
  */
 template <typename Stream, typename T, std::size_t S>
-class msgpack_pack_impl<Stream, static_vector<T, S>, msgpack_pack_vector_enabler<Stream,static_vector<T, S>>>
+class msgpack_pack_impl<Stream, static_vector<T, S>, msgpack_pack_vector_enabler<Stream, static_vector<T, S>>>
 {
 public:
     /// Call operator.

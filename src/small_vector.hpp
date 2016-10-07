@@ -1142,7 +1142,7 @@ const typename small_vector<T, S>::size_type small_vector<T, S>::max_size;
  */
 template <typename Archive, typename T, std::size_t Size>
 class boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                      boost_save_vector_enabler<Archive,small_vector<T, std::integral_constant<std::size_t, Size>>>>
+                      boost_save_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
 {
 public:
     /// Call operator.
@@ -1156,7 +1156,7 @@ public:
      */
     void operator()(Archive &ar, const small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
     {
-        boost_save_vector(ar,v);
+        boost_save_vector(ar, v);
     }
 };
 
@@ -1168,7 +1168,7 @@ public:
  */
 template <typename Archive, typename T, std::size_t Size>
 class boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                      boost_load_vector_enabler<Archive,small_vector<T, std::integral_constant<std::size_t, Size>>>>
+                      boost_load_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
 {
 public:
     /// Call operator.
@@ -1185,7 +1185,7 @@ public:
      */
     void operator()(Archive &ar, small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
     {
-        boost_load_vector(ar,v);
+        boost_load_vector(ar, v);
     }
 };
 
@@ -1220,7 +1220,7 @@ public:
     void operator()(msgpack::packer<Stream> &packer,
                     const small_vector<T, std::integral_constant<std::size_t, Size>> &v, msgpack_format f) const
     {
-        msgpack_pack_vector(packer,v,f);
+        msgpack_pack_vector(packer, v, f);
     }
 };
 
@@ -1254,7 +1254,7 @@ public:
     void operator()(small_vector<T, std::integral_constant<std::size_t, Size>> &v, const msgpack::object &o,
                     msgpack_format f) const
     {
-        msgpack_convert_array(o,v,f);
+        msgpack_convert_array(o, v, f);
     }
 };
 

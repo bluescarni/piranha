@@ -1124,11 +1124,14 @@ private:
     template <typename U>
     using boost_save_binary_enabler = enable_if_t<has_boost_save<boost::archive::binary_oarchive, U>::value, int>;
     template <typename U>
-    using boost_save_text_enabler = enable_if_t<has_boost_save<boost::archive::text_oarchive,typename U::v_type>::value,int>;
+    using boost_save_text_enabler
+        = enable_if_t<has_boost_save<boost::archive::text_oarchive, typename U::v_type>::value, int>;
     template <typename U>
     using boost_load_binary_enabler = enable_if_t<has_boost_load<boost::archive::binary_iarchive, U>::value, int>;
     template <typename U>
-    using boost_load_text_enabler = enable_if_t<has_boost_load<boost::archive::text_iarchive,typename U::v_type>::value,int>;
+    using boost_load_text_enabler
+        = enable_if_t<has_boost_load<boost::archive::text_iarchive, typename U::v_type>::value, int>;
+
 public:
     /// Save to Boost binary archive.
     /**
@@ -1216,11 +1219,12 @@ public:
 private:
     // Enablers for msgpack serialization.
     template <typename Stream>
-    using msgpack_pack_enabler = enable_if_t<conjunction<has_msgpack_pack<Stream,T>,
-        has_msgpack_pack<Stream,v_type>>::value, int>;
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<has_msgpack_pack<Stream, T>, has_msgpack_pack<Stream, v_type>>::value, int>;
     template <typename U>
     using msgpack_convert_enabler = enable_if_t<conjunction<has_msgpack_convert<typename U::value_type>,
-        has_msgpack_convert<typename U::v_type>>::value, int>;
+                                                            has_msgpack_convert<typename U::v_type>>::value,
+                                                int>;
 
 public:
     /// Serialize in msgpack format.
