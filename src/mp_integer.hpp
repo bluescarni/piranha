@@ -274,11 +274,7 @@ inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz)
         piranha_throw(std::invalid_argument, "number of digits is too large");
     }
     const auto total_size = size_base10 + 2u;
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-    static thread_local
-#endif
-        std::vector<char>
-            tmp;
+    PIRANHA_MAYBE_TLS std::vector<char> tmp;
     tmp.resize(static_cast<std::vector<char>::size_type>(total_size));
     if (unlikely(tmp.size() != total_size)) {
         piranha_throw(std::invalid_argument, "number of digits is too large");
@@ -4267,10 +4263,7 @@ public:
      */
     void boost_load(boost::archive::text_iarchive &ar)
     {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-        static thread_local
-#endif
-            std::string tmp;
+        PIRANHA_MAYBE_TLS std::string tmp;
         piranha::boost_load(ar, tmp);
         *this = mp_integer{tmp};
     }
@@ -4367,11 +4360,7 @@ public:
     void msgpack_convert(const msgpack::object &o, msgpack_format f)
     {
         if (f == msgpack_format::binary) {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::vector<msgpack::object>
-                    vobj;
+            PIRANHA_MAYBE_TLS std::vector<msgpack::object> vobj;
             o.convert(vobj);
             // The serialized object needs to be a triple.
             if (unlikely(vobj.size() != 3u)) {
@@ -4392,11 +4381,7 @@ public:
             // Get the size sign.
             bool size_sign;
             piranha::msgpack_convert(size_sign, vobj[1u], f);
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::vector<msgpack::object>
-                    vlimbs;
+            PIRANHA_MAYBE_TLS std::vector<msgpack::object> vlimbs;
             // Get the limbs.
             vobj[2u].convert(vlimbs);
             const auto size = vlimbs.size();
@@ -4452,10 +4437,7 @@ public:
                 }
             }
         } else {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::string tmp;
+            PIRANHA_MAYBE_TLS std::string tmp;
             piranha::msgpack_convert(tmp, o, f);
             *this = mp_integer(tmp);
         }

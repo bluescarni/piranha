@@ -1789,10 +1789,7 @@ public:
     void boost_load(boost::archive::text_iarchive &ar)
     {
         ::mpfr_prec_t prec;
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-        static thread_local
-#endif
-            std::string s;
+        PIRANHA_MAYBE_TLS std::string s;
         piranha::boost_load(ar, prec);
         piranha::boost_load(ar, s);
         *this = real(s, prec);
@@ -1874,26 +1871,15 @@ public:
     void msgpack_convert(const msgpack::object &o, msgpack_format f)
     {
         if (f == msgpack_format::portable) {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::array<msgpack::object, 2>
-                    vobj;
+            PIRANHA_MAYBE_TLS std::array<msgpack::object, 2> vobj;
             o.convert(vobj);
             ::mpfr_prec_t prec;
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::string s;
+            PIRANHA_MAYBE_TLS std::string s;
             piranha::msgpack_convert(prec, vobj[0], f);
             piranha::msgpack_convert(s, vobj[1], f);
             *this = real(s, prec);
         } else {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::array<msgpack::object, 4>
-                    vobj;
+            PIRANHA_MAYBE_TLS std::array<msgpack::object, 4> vobj;
             o.convert(vobj);
             // First let's handle the non-limbs members.
             ::mpfr_prec_t prec;
@@ -1909,11 +1895,7 @@ public:
             // Next the limbs. Protect in try/catch so if anything goes wrong we can fix this in the
             // catch block before re-throwing.
             try {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-                static thread_local
-#endif
-                    std::vector<msgpack::object>
-                        vlimbs;
+                PIRANHA_MAYBE_TLS std::vector<msgpack::object> vlimbs;
                 vobj[3].convert(vlimbs);
                 const auto s = safe_cast<std::vector<msgpack::object>::size_type>(size_from_prec(prec));
                 if (unlikely(s != vlimbs.size())) {

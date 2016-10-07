@@ -925,10 +925,7 @@ struct msgpack_convert_impl<long double> {
             o.convert(tmp);
             std::copy(tmp.begin(), tmp.end(), reinterpret_cast<char *>(&x));
         } else {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::string tmp;
+            PIRANHA_MAYBE_TLS std::string tmp;
             o.convert(tmp);
             if (tmp == "+nan") {
                 if (lim::has_quiet_NaN) {
