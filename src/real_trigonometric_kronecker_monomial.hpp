@@ -915,7 +915,7 @@ public:
      * The result is a pair consisting of the multiplier associated to \p p and a copy of the monomial.
      * The sign of the multiplier and the flavour of the resulting monomial are set according to the standard
      * differentiation formulas for elementary trigonometric functions.
-     * If \p p is empty or if the exponent associated to it is zero,
+     * If \p p is empty or if the multiplier associated to it is zero,
      * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{args})</tt>.
      *
      * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
@@ -1302,8 +1302,7 @@ private:
                       int>;
     template <typename U>
     using boost_save_text_enabler
-        = enable_if_t<conjunction<has_boost_save<boost::archive::text_oarchive, typename v_type::size_type>,
-                                  has_boost_save<boost::archive::text_oarchive, U>,
+        = enable_if_t<conjunction<has_boost_save<boost::archive::text_oarchive, typename U::v_type>,
                                   has_boost_save<boost::archive::text_oarchive, bool>>::value,
                       int>;
     template <typename U>
@@ -1313,8 +1312,7 @@ private:
                       int>;
     template <typename U>
     using boost_load_text_enabler
-        = enable_if_t<conjunction<has_boost_load<boost::archive::text_iarchive, typename v_type::size_type>,
-                                  has_boost_load<boost::archive::text_iarchive, U>,
+        = enable_if_t<conjunction<has_boost_load<boost::archive::text_iarchive, typename U::v_type>,
                                   has_boost_load<boost::archive::text_iarchive, bool>>::value,
                       int>;
 
@@ -1322,7 +1320,7 @@ public:
     /// Save to Boost binary archive.
     /**
      * \note
-     * This method is enabled only if the exponent type and \p bool support piranha::boost_save().
+     * This method is enabled only if \p T and \p bool support piranha::boost_save().
      *
      * This method will save to the archive \p oa the internal integral instance and the flavour.
      *
@@ -1339,10 +1337,10 @@ public:
     /// Save to Boost text archive.
     /**
      * \note
-     * This method is enabled only if the exponent type, the size type of piranha::kronecker_monomial::v_type
+     * This method is enabled only if piranha::real_trigonometric_kronecker_monomial::v_type
      * and \p bool support piranha::boost_save().
      *
-     * This method will unpack \p this and save the vector of exponents and the flavour to \p oa.
+     * This method will unpack \p this and save the vector of multipliers and the flavour to \p oa.
      *
      * @param oa the target archive.
      * @param args reference arguments set.
@@ -1351,20 +1349,17 @@ public:
      * - unpack(),
      * - piranha::boost_save().
      */
-    template <typename U = T, boost_save_text_enabler<U> = 0>
+    template <typename U = real_trigonometric_kronecker_monomial, boost_save_text_enabler<U> = 0>
     void boost_save(boost::archive::text_oarchive &oa, const symbol_set &args) const
     {
         auto tmp = unpack(args);
-        piranha::boost_save(oa, tmp.size());
-        for (const auto &n : tmp) {
-            piranha::boost_save(oa, n);
-        }
+        piranha::boost_save(oa, tmp);
         piranha::boost_save(oa, m_flavour);
     }
     /// Load from Boost binary archive.
     /**
      * \note
-     * This method is enabled only if the exponent type and \p bool support piranha::boost_load().
+     * This method is enabled only if \p T and \p bool support piranha::boost_load().
      *
      * This method will load into \p this the content of the input archive \p ia. No checking is performed
      * on the content of \p ia. This method provides the basic exception safety guarantee.
@@ -1382,7 +1377,7 @@ public:
     /// Load from Boost text archive.
     /**
      * \note
-     * This method is enabled only if the exponent type, the size type of piranha::kronecker_monomial::v_type
+     * This method is enabled only if piranha::real_trigonometric_kronecker_monomial::v_type
      * and \p bool support piranha::boost_load().
      *
      * This method will load into \p this the content of the input archive \p ia. This method provides the basic
@@ -1393,31 +1388,20 @@ public:
      *
      * @throws std::invalid_argument if the size of the serialized monomial is different from the size of \p args.
      * @throws unspecified any exception thrown by:
-     * - memory error in standard containers,
-     * - piranha::safe_cast(),
      * - piranha::boost_load(),
      * - the constructor of piranha::kronecker_monomial from a container.
      */
-    template <typename U = T, boost_load_text_enabler<U> = 0>
+    template <typename U = real_trigonometric_kronecker_monomial, boost_load_text_enabler<U> = 0>
     void boost_load(boost::archive::text_iarchive &ia, const symbol_set &args)
     {
-        typename v_type::size_type size;
-        piranha::boost_load(ia, size);
-        if (unlikely(size != args.size())) {
+        v_type tmp;
+        piranha::boost_load(ia, tmp);
+        if (unlikely(tmp.size() != args.size())) {
             piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronercker "
                                                  "trigonometric monomial: the deserialized size is "
-                                                     + std::to_string(size)
+                                                     + std::to_string(tmp.size())
                                                      + " but the reference symbol set has a size of "
                                                      + std::to_string(args.size()));
-        }
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-        static thread_local
-#endif
-            std::vector<value_type>
-                tmp;
-        tmp.resize(safe_cast<decltype(tmp.size())>(size));
-        for (decltype(tmp.size()) i = 0; i < size; ++i) {
-            piranha::boost_load(ia, tmp[i]);
         }
         // NOTE: here the exception safety is basic, as the last boost_load() could fail in principle.
         // It does not really matter much, as there's no real dependency between the multipliers and the flavour,
@@ -1430,18 +1414,19 @@ private:
     template <typename Stream>
     using msgpack_pack_enabler =
         typename std::enable_if<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
-                                            has_msgpack_pack<Stream, bool>>::value,
+                                            has_msgpack_pack<Stream, bool>, has_msgpack_pack<Stream,v_type>>::value,
                                 int>::type;
     template <typename U>
     using msgpack_convert_enabler =
-        typename std::enable_if<conjunction<has_msgpack_convert<U>, has_msgpack_convert<bool>>::value, int>::type;
+        typename std::enable_if<conjunction<has_msgpack_convert<typename U::value_type>, has_msgpack_convert<typename U::v_type>,
+        has_msgpack_convert<bool>>::value, int>::type;
 
 public:
     /// Serialize in msgpack format.
     /**
      * \note
-     * This method is activated only if \p Stream satisfies piranha::is_msgpack_stream and the exponent type and \p bool
-     * satisfy piranha::has_msgpack_pack.
+     * This method is activated only if \p Stream satisfies piranha::is_msgpack_stream and \p T, \p bool
+     * and piranha::real_trigonometric_kronecker_monomial::v_type satisfy piranha::has_msgpack_pack.
      *
      * This method will pack \p this into \p packer.
      *
@@ -1450,9 +1435,8 @@ public:
      * @param[in] s reference arguments set.
      *
      * @throws unspecified any exception thrown by:
-     * - unpack(),
      * - the public interface of <tt>msgpack::packer</tt>,
-     * - piranha::msgpack_pack() or piranha::safe_cast().
+     * - piranha::msgpack_pack().
      */
     template <typename Stream, msgpack_pack_enabler<Stream> = 0>
     void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
@@ -1463,17 +1447,15 @@ public:
             piranha::msgpack_pack(packer, m_flavour, f);
         } else {
             auto tmp = unpack(s);
-            packer.pack_array(safe_cast<std::uint32_t>(tmp.size()));
-            for (const auto &n : tmp) {
-                piranha::msgpack_pack(packer, n, f);
-            }
+            piranha::msgpack_pack(packer, tmp, f);
             piranha::msgpack_pack(packer, m_flavour, f);
         }
     }
     /// Deserialize from msgpack object.
     /**
      * \note
-     * This method is activated only if the exponent type and \p bool satisfy piranha::has_msgpack_convert.
+     * This method is activated only if the \p T, \p bool
+     * and piranha::real_trigonometric_kronecker_monomial::v_type satisfy piranha::has_msgpack_convert.
      *
      * This method will deserialize \p o into \p this. In binary mode, no check is performed on the content of \p o,
      * and calling this method will result in undefined behaviour if \p o does not contain a monomial serialized via
@@ -1485,12 +1467,11 @@ public:
      *
      * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
      * @throws unspecified any exception thrown by:
-     * - memory errors in standard containers,
      * - the constructor of piranha::kronecker_monomial from a container,
      * - the public interface of <tt>msgpack::object</tt>,
-     * - piranha::safe_cast() and piranha::msgpack_convert().
+     * - piranha::msgpack_convert().
      */
-    template <typename U = T, msgpack_convert_enabler<U> = 0>
+    template <typename U = real_trigonometric_kronecker_monomial, msgpack_convert_enabler<U> = 0>
     void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
     {
         std::array<msgpack::object, 2> tmp;
@@ -1499,33 +1480,17 @@ public:
             piranha::msgpack_convert(m_value, tmp[0], f);
             piranha::msgpack_convert(m_flavour, tmp[1], f);
         } else {
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::vector<msgpack::object>
-                    tmp_obj;
-#if defined(PIRANHA_HAVE_THREAD_LOCAL)
-            static thread_local
-#endif
-                std::vector<value_type>
-                    tmp_expos;
-            tmp[0].convert(tmp_obj);
-            if (unlikely(tmp_obj.size() != s.size())) {
+            v_type tmp_v;
+            piranha::msgpack_convert(tmp_v, tmp[0], f);
+            if (unlikely(tmp_v.size() != s.size())) {
                 piranha_throw(std::invalid_argument,
                               "incompatible symbol set in trigonometric monomial serialization: the reference "
                               "symbol set has a size of "
                                   + std::to_string(s.size())
                                   + ", while the trigonometric monomial being deserialized has a size of "
-                                  + std::to_string(tmp_obj.size()));
+                                  + std::to_string(tmp_v.size()));
             }
-            tmp_expos.resize(safe_cast<decltype(tmp_expos.size())>(tmp_obj.size()));
-            std::transform(tmp_obj.begin(), tmp_obj.end(), tmp_expos.begin(),
-                           [f](const msgpack::object &obj) -> value_type {
-                               value_type t;
-                               piranha::msgpack_convert(t, obj, f);
-                               return t;
-                           });
-            *this = real_trigonometric_kronecker_monomial(tmp_expos.begin(), tmp_expos.end());
+            *this = real_trigonometric_kronecker_monomial(tmp_v.begin(), tmp_v.end());
             piranha::msgpack_convert(m_flavour, tmp[1], f);
         }
     }

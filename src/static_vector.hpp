@@ -662,35 +662,53 @@ private:
 template <typename T, std::size_t MaxSize>
 const typename static_vector<T, MaxSize>::size_type static_vector<T, MaxSize>::max_size;
 
-inline namespace impl
-{
-
-// Enablers for boost s11n.
+/// Specialisation of piranha::boost_save() for piranha::static_vector.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and the size type of the vector satisfy
+ * piranha::has_boost_save.
+ */
 template <typename Archive, typename T, std::size_t S>
-using static_vector_boost_save_enabler
-    = enable_if_t<conjunction<has_boost_save<Archive, T>,
-                              has_boost_save<Archive, typename static_vector<T, S>::size_type>>::value>;
-
-template <typename Archive, typename T, std::size_t S>
-using static_vector_boost_load_enabler
-    = enable_if_t<conjunction<has_boost_load<Archive, T>,
-                              has_boost_load<Archive, typename static_vector<T, S>::size_type>>::value>;
-}
-
-template <typename Archive, typename T, std::size_t S>
-class boost_save_impl<Archive, static_vector<T, S>, static_vector_boost_save_enabler<Archive, T, S>>
+class boost_save_impl<Archive, static_vector<T, S>, boost_save_vector_enabler<Archive,static_vector<T, S>>>
 {
 public:
+    /// Call operator.
+    /**
+     * This method will serialize \p v into \p ar.
+     *
+     * @param ar the target archive.
+     * @param v the vector to be serialized.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_save().
+     */
     void operator()(Archive &ar, const static_vector<T, S> &v) const
     {
         boost_save_vector(ar, v);
     }
 };
 
+/// Specialisation of piranha::boost_load() for piranha::static_vector.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and the size type of the vector satisfy
+ * piranha::has_boost_load.
+ */
 template <typename Archive, typename T, std::size_t S>
-class boost_load_impl<Archive, static_vector<T, S>, static_vector_boost_load_enabler<Archive, T, S>>
+class boost_load_impl<Archive, static_vector<T, S>, boost_load_vector_enabler<Archive,static_vector<T, S>>>
 {
 public:
+    /// Call operator.
+    /**
+     * This method will deserialize the content of \p ar into \p v. This method provides the basic exception safety
+     * guarantee.
+     *
+     * @param ar the source archive.
+     * @param v the vector into which the content of \p ar will deserialized.
+     *
+     * @throws unspecified any exception thrown by:
+     * - piranha::boost_load(),
+     * - piranha::static_vector::resize().
+     */
     void operator()(Archive &ar, static_vector<T, S> &v) const
     {
         boost_load_vector(ar, v);
@@ -699,36 +717,63 @@ public:
 
 #if defined(PIRANHA_WITH_MSGPACK)
 
-inline namespace impl
-{
-
-// Enablers for msgpack s11n.
+/// Specialisation of piranha::msgpack_pack() for piranha::static_vector.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Stream satisfies piranha::is_msgpack_stream,
+ * - \p T satisfies piranha::has_msgpack_pack,
+ * - the size type of the vector can be safely converted to \p std::uint32_t.
+ */
 template <typename Stream, typename T, std::size_t S>
-using static_vector_msgpack_pack_enabler
-    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
-                              has_safe_cast<std::uint32_t, typename static_vector<T, S>::size_type>>::value>;
-
-template <typename T, std::size_t S>
-using static_vector_msgpack_convert_enabler
-    = enable_if_t<conjunction<has_msgpack_convert<T>,
-                              has_safe_cast<typename static_vector<T, S>::size_type,
-                                            typename std::vector<msgpack::object>::size_type>>::value>;
-}
-
-template <typename Stream, typename T, std::size_t S>
-class msgpack_pack_impl<Stream, static_vector<T, S>, static_vector_msgpack_pack_enabler<Stream, T, S>>
+class msgpack_pack_impl<Stream, static_vector<T, S>, msgpack_pack_vector_enabler<Stream,static_vector<T, S>>>
 {
 public:
+    /// Call operator.
+    /**
+     * This method will serialize into \p p the input vector \p v using the format \p f.
+     *
+     * @param p the target <tt>msgpack::packer</tt>.
+     * @param v the vector to be serialized.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_pack().
+     */
     void operator()(msgpack::packer<Stream> &p, const static_vector<T, S> &v, msgpack_format f) const
     {
         msgpack_pack_vector(p, v, f);
     }
 };
 
+/// Specialisation of piranha::msgpack_convert() for piranha::static_vector.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p T satisfies piranha::has_msgpack_convert,
+ * - the size type of \p std::vector can be safely converted to the size type of piranha::static_vector.
+ */
 template <typename T, std::size_t S>
-class msgpack_convert_impl<static_vector<T, S>, static_vector_msgpack_convert_enabler<T, S>>
+class msgpack_convert_impl<static_vector<T, S>, msgpack_convert_array_enabler<static_vector<T, S>>>
 {
 public:
+    /// Call operator.
+    /**
+     * This method will convert \p o into \p v using the format \p f. This method provides the basic exception safety
+     * guarantee.
+     *
+     * @param v the vector into which the content of \p o will deserialized.
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - memory errors in standard containers,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_convert().
+     */
     void operator()(static_vector<T, S> &v, const msgpack::object &o, msgpack_format f) const
     {
         msgpack_convert_array(o, v, f);

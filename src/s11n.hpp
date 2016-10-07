@@ -1621,6 +1621,15 @@ inline void boost_load_vector(Archive &ar, V &v)
     boost_load_range(ar, v.begin(), v.end());
 }
 
+// Introduce also enablers to detect when we can use the vector save/load functions.
+template <typename Archive, typename V, typename T = void>
+using boost_save_vector_enabler = enable_if_t<conjunction<has_boost_save<Archive,typename V::value_type>,
+    has_boost_save<Archive,typename V::size_type>>::value,T>;
+
+template <typename Archive, typename V, typename T = void>
+using boost_load_vector_enabler = enable_if_t<conjunction<has_boost_load<Archive,typename V::value_type>,
+    has_boost_load<Archive,typename V::size_type>>::value,T>;
+
 #if defined(PIRANHA_WITH_MSGPACK)
 
 template <typename Stream, typename It, typename Size>
@@ -1652,6 +1661,16 @@ inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format
         piranha::msgpack_convert(v[i], tmp_obj[static_cast<decltype(v.size())>(i)], f);
     }
 }
+
+// NOTE: fix safe_cast detection - tag numeric_cast.
+template <typename Stream, typename V, typename T = void>
+using msgpack_pack_vector_enabler = enable_if_t<conjunction<is_msgpack_stream<Stream>,
+    has_msgpack_pack<Stream,typename V::value_type>/*,has_safe_cast<std::uint32_t,typename V::size_type>*/>::value,T>;
+
+template <typename V, typename T = void>
+using msgpack_convert_array_enabler = enable_if_t<conjunction<
+    /*has_safe_cast<typename V::size_type, typename std::vector<msgpack::object>::size_type>,*/
+    has_msgpack_convert<typename V::value_type>>::value,T>;
 
 #endif
 }

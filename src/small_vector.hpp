@@ -674,15 +674,19 @@ public:
     /**
      * The storage type after successful construction will be the same of \p other.
      *
+     * @param other construction argument.
+     *
      * @throws std::bad_alloc in case of memory allocation errors.
      * @throws unspecified any exception thrown by the copy constructor of \p T.
      */
-    small_vector(const small_vector &) = default;
+    small_vector(const small_vector &other) = default;
     /// Move constructor.
     /**
      * The storage type after successful construction will be the same of \p other.
+     *
+     * @param other construction argument.
      */
-    small_vector(small_vector &&) = default;
+    small_vector(small_vector &&other) = default;
     /// Constructor from initializer list.
     /**
      * \note
@@ -1130,25 +1134,6 @@ const typename std::decay<decltype(small_vector<T, S>::d_storage::max_size)>::ty
 template <typename T, typename S>
 const typename small_vector<T, S>::size_type small_vector<T, S>::max_size;
 
-inline namespace impl
-{
-
-// Enabler for boost s11n.
-template <typename Archive, typename T, std::size_t Size>
-using small_vector_boost_save_enabler
-    = enable_if_t<conjunction<has_boost_save<Archive, T>,
-                              has_boost_save<Archive,
-                                             typename small_vector<T, std::integral_constant<std::size_t, Size>>::
-                                                 size_type>>::value>;
-
-template <typename Archive, typename T, std::size_t Size>
-using small_vector_boost_load_enabler
-    = enable_if_t<conjunction<has_boost_load<Archive, T>,
-                              has_boost_load<Archive,
-                                             typename small_vector<T, std::integral_constant<std::size_t, Size>>::
-                                                 size_type>>::value>;
-}
-
 /// Specialisation of piranha::boost_save() for piranha::small_vector.
 /**
  * \note
@@ -1157,7 +1142,7 @@ using small_vector_boost_load_enabler
  */
 template <typename Archive, typename T, std::size_t Size>
 class boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                      small_vector_boost_save_enabler<Archive, T, Size>>
+                      boost_save_vector_enabler<Archive,small_vector<T, std::integral_constant<std::size_t, Size>>>>
 {
 public:
     /// Call operator.
@@ -1171,11 +1156,7 @@ public:
      */
     void operator()(Archive &ar, const small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
     {
-        const auto sbe = v.size_begin_end();
-        // Save size first.
-        boost_save(ar, std::get<0>(sbe));
-        // Save the elements.
-        boost_save_range(ar, std::get<1>(sbe), std::get<2>(sbe));
+        boost_save_vector(ar,v);
     }
 };
 
@@ -1187,7 +1168,7 @@ public:
  */
 template <typename Archive, typename T, std::size_t Size>
 class boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                      small_vector_boost_load_enabler<Archive, T, Size>>
+                      boost_load_vector_enabler<Archive,small_vector<T, std::integral_constant<std::size_t, Size>>>>
 {
 public:
     /// Call operator.
@@ -1204,37 +1185,11 @@ public:
      */
     void operator()(Archive &ar, small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
     {
-        // Load the size first.
-        decltype(v.size()) size;
-        boost_load(ar, size);
-        // Resize.
-        v.resize(size);
-        // Load the elements.
-        const auto sbe = v.size_begin_end();
-        boost_load_range(ar, std::get<1>(sbe), std::get<2>(sbe));
+        boost_load_vector(ar,v);
     }
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)
-
-inline namespace impl
-{
-
-// Enablers for msgpack s11n.
-template <typename Stream, typename T, std::size_t Size>
-using small_vector_msgpack_pack_enabler
-    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
-                              has_safe_cast<std::uint32_t,
-                                            typename small_vector<T, std::integral_constant<std::size_t,
-                                                                                            Size>>::size_type>>::value>;
-
-template <typename T, std::size_t Size>
-using small_vector_msgpack_convert_enabler
-    = enable_if_t<conjunction<has_msgpack_convert<T>,
-                              has_safe_cast<
-                                  typename small_vector<T, std::integral_constant<std::size_t, Size>>::size_type,
-                                  typename std::vector<msgpack::object>::size_type>>::value>;
-}
 
 /// Specialisation of piranha::msgpack_pack() for piranha::small_vector.
 /**
@@ -1246,7 +1201,7 @@ using small_vector_msgpack_convert_enabler
  */
 template <typename Stream, typename T, std::size_t Size>
 class msgpack_pack_impl<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                        small_vector_msgpack_pack_enabler<Stream, T, Size>>
+                        msgpack_pack_vector_enabler<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>>>
 {
 public:
     /// Call operator.
@@ -1265,8 +1220,7 @@ public:
     void operator()(msgpack::packer<Stream> &packer,
                     const small_vector<T, std::integral_constant<std::size_t, Size>> &v, msgpack_format f) const
     {
-        const auto sbe = v.size_begin_end();
-        msgpack_pack_range(packer, std::get<1>(sbe), std::get<2>(sbe), std::get<0>(sbe), f);
+        msgpack_pack_vector(packer,v,f);
     }
 };
 
@@ -1279,7 +1233,7 @@ public:
  */
 template <typename T, std::size_t Size>
 class msgpack_convert_impl<small_vector<T, std::integral_constant<std::size_t, Size>>,
-                           small_vector_msgpack_convert_enabler<T, Size>>
+                           msgpack_convert_array_enabler<small_vector<T, std::integral_constant<std::size_t, Size>>>>
 {
 public:
     /// Call operator.
@@ -1300,13 +1254,7 @@ public:
     void operator()(small_vector<T, std::integral_constant<std::size_t, Size>> &v, const msgpack::object &o,
                     msgpack_format f) const
     {
-        PIRANHA_MAYBE_TLS std::vector<msgpack::object> vobj;
-        o.convert(vobj);
-        v.resize(safe_cast<decltype(v.size())>(vobj.size()));
-        auto vobj_it = vobj.begin();
-        for (auto sbe = v.size_begin_end(); std::get<1>(sbe) != std::get<2>(sbe); ++std::get<1>(sbe), ++vobj_it) {
-            msgpack_convert(*std::get<1>(sbe), *vobj_it, f);
-        }
+        msgpack_convert_array(o,v,f);
     }
 };
 
