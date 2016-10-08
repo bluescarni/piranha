@@ -3796,7 +3796,7 @@ public:
         unsigned version;
         boost_load(ar, version);
         if (unlikely(version > PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION)) {
-            piranha_throw(std::invalid_argument, "the series archive version " + std::to_string(version)
+            piranha_throw(std::invalid_argument, "the series Boost archive version " + std::to_string(version)
                                                      + " is greater than the latest archive version "
                                                      + std::to_string(PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION)
                                                      + " supported by this version of Piranha");
@@ -3969,7 +3969,7 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
         if (f == msgpack_format::portable) {
             msgpack_convert(version, tmp_v[0], f);
             if (unlikely(version > PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION)) {
-                piranha_throw(std::invalid_argument, "the series archive version " + std::to_string(version)
+                piranha_throw(std::invalid_argument, "the series msgpack archive version " + std::to_string(version)
                                                          + " is greater than the latest archive version "
                                                          + std::to_string(PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION)
                                                          + " supported by this version of Piranha");
