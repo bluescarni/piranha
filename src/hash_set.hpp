@@ -30,7 +30,10 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_HASH_SET_HPP
 
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+#include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <limits>
@@ -38,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <memory>
 #include <new>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -47,6 +51,8 @@ see https://www.gnu.org/licenses/. */
 #include "debug_access.hpp"
 #include "exceptions.hpp"
 #include "init.hpp"
+#include "s11n.hpp"
+#include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "thread_pool.hpp"
 #include "type_traits.hpp"
@@ -1458,6 +1464,251 @@ typename hash_set<T, Hash, Pred>::node hash_set<T, Hash, Pred>::list::terminator
 
 template <typename T, typename Hash, typename Pred>
 const typename hash_set<T, Hash, Pred>::size_type hash_set<T, Hash, Pred>::m_n_nonzero_sizes;
+
+inline namespace impl
+{
+
+// Enablers for boost s11n.
+template <typename Archive, typename T, typename Hash, typename Pred>
+using hash_set_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, T>,
+                              has_boost_save<Archive, typename hash_set<T, Hash, Pred>::size_type>,
+                              has_boost_save<Archive, unsigned>>::value>;
+
+template <typename Archive, typename T, typename Hash, typename Pred>
+using hash_set_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, T>,
+                              has_boost_load<Archive, typename hash_set<T, Hash, Pred>::size_type>,
+                              has_boost_load<Archive, unsigned>>::value>;
+}
+
+#define PIRANHA_HASH_SET_BOOST_S11N_LATEST_VERSION 0u
+
+/// Specialisation of piranha::boost_save() for piranha::hash_set.
+/**
+ * \note
+ * This specialisation is enabled only if \p T, \p unsigned and the size type of piranha::hash_set satisfy
+ * piranha::has_boost_save.
+ */
+template <typename Archive, typename T, typename Hash, typename Pred>
+class boost_save_impl<Archive, hash_set<T, Hash, Pred>, hash_set_boost_save_enabler<Archive, T, Hash, Pred>>
+{
+public:
+    /// Call operator.
+    /**
+     * This method will serialize \p h into \p ar. The hashing functor and the equality predicate are not serialized.
+     *
+     * @param ar the target archive.
+     * @param h the piranha::hash_set that will be serialized.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_save().
+     */
+    void operator()(Archive &ar, const hash_set<T, Hash, Pred> &h) const
+    {
+        // Serialize the version number.
+        boost_save(ar, PIRANHA_HASH_SET_BOOST_S11N_LATEST_VERSION);
+        // Size.
+        boost_save(ar, h.size());
+        // Serialize the items.
+        boost_save_range(ar, h.begin(), h.end());
+    }
+};
+
+/// Specialisation of piranha::boost_load() for piranha::hash_set.
+/**
+ * \note
+ * This specialisation is enabled only if \p T, \p unsigned and the size type of piranha::hash_set satisfy
+ * piranha::has_boost_load.
+ */
+template <typename Archive, typename T, typename Hash, typename Pred>
+class boost_load_impl<Archive, hash_set<T, Hash, Pred>, hash_set_boost_load_enabler<Archive, T, Hash, Pred>>
+{
+public:
+    /// Call operator.
+    /**
+     * This method will deserialize the content of \p ar into \p h. In case duplicate elements are encountered
+     * during deserialization, an exception will be raised. Before performing the deserialization, \p h is reset
+     * with a default-constructed instance of piranha::hash_set. The hashing functor and the equality predicate
+     * are not deserialized. This method provides the basic exception safety guarantee.
+     *
+     * @param ar the source archive.
+     * @param h the target piranha::hash_set.
+     *
+     * @throws std::invalid_argument if a duplicate element is encountered during deserialization or if \p ar is an
+     * archive created with a more recent version of Piranha.
+     * @throws unspecified any exception thrown by:
+     * - the public interface of piranha::hash_set,
+     * - piranha::boost_load(),
+     * - <tt>boot::numeric_cast()</tt>.
+     */
+    void operator()(Archive &ar, hash_set<T, Hash, Pred> &h) const
+    {
+        using size_type = typename hash_set<T, Hash, Pred>::size_type;
+        // Reset the output value.
+        h = hash_set<T, Hash, Pred>{};
+        // Recover the version.
+        unsigned version;
+        boost_load(ar, version);
+        if (unlikely(version > PIRANHA_HASH_SET_BOOST_S11N_LATEST_VERSION)) {
+            piranha_throw(std::invalid_argument, "the hash_set Boost archive version " + std::to_string(version)
+                                                     + " is greater than the latest archive version "
+                                                     + std::to_string(PIRANHA_HASH_SET_BOOST_S11N_LATEST_VERSION)
+                                                     + " supported by this version of Piranha");
+        }
+        // Recover the size.
+        size_type size;
+        boost_load(ar, size);
+        // Prepare an adequate number of buckets.
+        h.rehash(boost::numeric_cast<size_type>(std::ceil(static_cast<double>(size) / h.max_load_factor())));
+        for (size_type i = 0; i < size; ++i) {
+            T tmp;
+            boost_load(ar, tmp);
+            const auto p = h.insert(std::move(tmp));
+            if (unlikely(!p.second)) {
+                piranha_throw(std::invalid_argument, "while deserializing a hash_set from a Boost archive "
+                                                     "a duplicate value was encountered");
+            }
+        }
+    }
+};
+
+#undef PIRANHA_HASH_SET_BOOST_S11N_LATEST_VERSION
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+// Enablers for msgpack s11n.
+template <typename Stream, typename T, typename Hash, typename Pred>
+using hash_set_msgpack_pack_enabler
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>,
+                              has_safe_cast<std::uint32_t, typename hash_set<T, Hash, Pred>::size_type>,
+                              has_msgpack_pack<Stream, T>, has_msgpack_pack<Stream, unsigned>>::value>;
+
+template <typename T>
+using hash_set_msgpack_convert_enabler
+    = enable_if_t<conjunction<has_msgpack_convert<T>, has_msgpack_convert<unsigned>>::value>;
+}
+
+#define PIRANHA_HASH_SET_MSGPACK_S11N_LATEST_VERSION 0u
+
+/// Specialisation of piranha::msgpack_pack() for piranha::hash_set.
+/**
+ * \note
+ * This specialisation is enabled only if
+ * - \p Stream satisfies piranha::is_msgpack_stream,
+ * - \p T, the size type of piranha::hash_set and \p unsigned satisfy piranha::has_msgpack_pack,
+ * - the size type of piranha::hash_set is safely convertible to \p std::uint32_t.
+ */
+template <typename Stream, typename T, typename Hash, typename Pred>
+class msgpack_pack_impl<Stream, hash_set<T, Hash, Pred>, hash_set_msgpack_pack_enabler<Stream, T, Hash, Pred>>
+{
+public:
+    /// Call operator.
+    /**
+     * This method will serialize \p h into \p p using the format \p f. The hashing functor and the equality predicate
+     * are not serialized.
+     *
+     * @param p the target packer.
+     * @param h the piranha::hash_set that will be serialized.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_pack().
+     */
+    void operator()(msgpack::packer<Stream> &p, const hash_set<T, Hash, Pred> &h, msgpack_format f) const
+    {
+        if (f == msgpack_format::portable) {
+            p.pack_array(2);
+            msgpack_pack(p, PIRANHA_HASH_SET_MSGPACK_S11N_LATEST_VERSION, f);
+        }
+        msgpack_pack_range(p, h.begin(), h.end(), h.size(), f);
+    }
+};
+
+/// Specialisation of piranha::msgpack_convert() for piranha::hash_set.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and \p unsigned satisfy piranha::has_msgpack_convert.
+ */
+template <typename T, typename Hash, typename Pred>
+class msgpack_convert_impl<hash_set<T, Hash, Pred>, hash_set_msgpack_convert_enabler<T>>
+{
+public:
+    /// Call operator.
+    /**
+     * This method will convert the input object \p o into \p h using the format \p f. In case duplicate elements
+     * are encountered during deserialization, an exception will be raised. Before performing the deserialization,
+     * \p h is reset with a default-constructed instance of piranha::hash_set. The hashing functor and the equality
+     * predicate are not deserialized. This method provides the basic exception safety guarantee.
+     *
+     * @param h the target piranha::hash_set.
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws std::invalid_argument if a duplicate element is encountered during deserialization or \p o was unpacked
+     * from an archive created with a more recent version of Piranha.
+     * @throws unspecified any exception thrown by:
+     * - the public interface of piranha::hash_set and <tt>msgpack::object</tt>,
+     * - <tt>boost::numeric_cast()</tt>,
+     * - piranha::msgpack_convert().
+     */
+    void operator()(hash_set<T, Hash, Pred> &h, const msgpack::object &o, msgpack_format f) const
+    {
+        using size_type = typename hash_set<T, Hash, Pred>::size_type;
+        // Clear out the retval.
+        h = hash_set<T, Hash, Pred>{};
+        // Functor to fill in the retval from a vector of objects.
+        auto items_convert = [&h, f](const std::vector<msgpack::object> &items) {
+            // Prepare the number of buckets.
+            h.rehash(
+                boost::numeric_cast<size_type>(std::ceil(static_cast<double>(items.size()) / h.max_load_factor())));
+            // Deserialize the items.
+            for (const auto &obj : items) {
+                T tmp;
+                msgpack_convert(tmp, obj, f);
+                const auto p = h.insert(std::move(tmp));
+                if (unlikely(!p.second)) {
+                    piranha_throw(std::invalid_argument, "while deserializing a hash_set from a msgpack object "
+                                                         "a duplicate value was encountered");
+                }
+            }
+        };
+        // For both binary and portable, we are expecting a msgpack array.
+        std::vector<msgpack::object> tmp_obj;
+        o.convert(tmp_obj);
+        if (f == msgpack_format::portable) {
+            // In portable format, we have an array of two elements: version and items.
+            if (unlikely(tmp_obj.size() != 2u)) {
+                piranha_throw(std::invalid_argument, "the serialized msgpack portable format of a hash_set consists "
+                                                     "of an array of two elements, but an array of "
+                                                         + std::to_string(tmp_obj.size())
+                                                         + " elements was found instead");
+            }
+            unsigned version;
+            msgpack_convert(version, tmp_obj[0], f);
+            if (unlikely(version > PIRANHA_HASH_SET_MSGPACK_S11N_LATEST_VERSION)) {
+                piranha_throw(std::invalid_argument, "the hash_set msgpack archive version " + std::to_string(version)
+                                                         + " is greater than the latest archive version "
+                                                         + std::to_string(PIRANHA_HASH_SET_MSGPACK_S11N_LATEST_VERSION)
+                                                         + " supported by this version of Piranha");
+            }
+            std::vector<msgpack::object> items;
+            tmp_obj[1].convert(items);
+            items_convert(items);
+        } else {
+            // In binary format, we have directly the array of items.
+            items_convert(tmp_obj);
+        }
+    }
+};
+
+#undef PIRANHA_HASH_SET_MSGPACK_S11N_LATEST_VERSION
+
+#endif
 }
 
 #endif
