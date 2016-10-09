@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_S11N_HPP
 
 // Common headers for serialization.
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -1484,6 +1485,39 @@ inline void load_file_msgpack_impl(T &, const std::string &, data_format, compre
 // General enabler for load_file().
 template <typename T>
 using load_file_enabler = typename std::enable_if<!std::is_const<T>::value, int>::type;
+
+// Utility to deduce compression and data format from a filename.
+inline std::pair<compression, data_format> get_cdf_from_filename(std::string filename)
+{
+    const auto orig_fname = filename;
+    compression c = compression::none;
+    if (boost::ends_with(filename, ".bz2")) {
+        c = compression::bzip2;
+        filename.erase(filename.end() - 4, filename.end());
+    } else if (boost::ends_with(filename, ".gz")) {
+        c = compression::gzip;
+        filename.erase(filename.end() - 3, filename.end());
+    } else if (boost::ends_with(filename, ".zip")) {
+        c = compression::zlib;
+        filename.erase(filename.end() - 4, filename.end());
+    }
+    data_format f;
+    if (boost::ends_with(filename, ".boostb")) {
+        f = data_format::boost_binary;
+    } else if (boost::ends_with(filename, ".boostp")) {
+        f = data_format::boost_portable;
+    } else if (boost::ends_with(filename, ".mpackb")) {
+        f = data_format::msgpack_binary;
+    } else if (boost::ends_with(filename, ".mpackp")) {
+        f = data_format::msgpack_portable;
+    } else {
+        piranha_throw(std::invalid_argument,
+                      "unable to deduce the data format from the filename '" + orig_fname
+                          + "'. The filename must end with one of ['.boostb','.boostp','.mpackb','.mpackp'], "
+                            "optionally followed by one of ['.bz2','gz','zip'].");
+    }
+    return std::make_pair(c, f);
+}
 }
 
 /// Save to file.
@@ -1519,6 +1553,39 @@ inline void save_file(const T &x, const std::string &filename, data_format f, co
     } else if (f == data_format::msgpack_binary || f == data_format::msgpack_portable) {
         save_file_msgpack_impl(x, filename, f, c);
     }
+}
+
+/// Save to file.
+/**
+ * This is a convenience function that will invoke the other overload of piranha::save_file() trying to guess
+ * the data and compression formats from the filename. The heuristic is as follows:
+ * - if \p filename ends in one of the suffixes <tt>.bz2</tt>, <tt>.gz</tt> or <tt>.zip</tt> then the suffix is removed
+ *   for further considerations from \p filename, and the corresponding
+ *   piranha::compression format is assumed (respectively, piranha::compression::bzip2, piranha::compression::gzip
+ *   and piranha::compression::zlib). Otherwise, piranha::compression::none is assumed;
+ * - after the removal of any compression suffix, the extension of \p filename is examined again: if the extension is
+ *   one of <tt>.boostp</tt>, <tt>.boostb</tt>, <tt>.mpackp</tt> and <tt>.mpackb</tt>, then the corresponding data
+ *   format is selected (respectively, piranha::data_format::boost_portable, piranha::data_format::boost_binary,
+ *   piranha::data_format::msgpack_portable, piranha::data_format::msgpack_binary). Othwewise, an error will be
+ *   produced.
+ *
+ * Examples:
+ * - <tt>foo.boostb.bz2</tt> deduces piranha::data_format::boost_binary and piranha::compression::bzip2;
+ * - <tt>foo.mpackp</tt> deduces piranha::data_format::msgpack_portable and piranha::compression::none;
+ * - <tt>foo.txt</tt> produces an error;
+ * - <tt>foo.bz2</tt> produces an error.
+ *
+ * @param x the object that will be saved to file.
+ * @param filename the desired file name.
+ *
+ * @throws std::invalid_argument if the compression and data formats cannot be deduced.
+ * @throws unspecified any exception throw by the first overload of piranha::save_file().
+ */
+template <typename T>
+inline void save_file(const T &x, const std::string &filename)
+{
+    const auto p = get_cdf_from_filename(filename);
+    save_file(x, filename, p.second, p.first);
 }
 
 /// Load from file.
@@ -1559,6 +1626,28 @@ inline void load_file(T &x, const std::string &filename, data_format f, compress
     } else if (f == data_format::msgpack_binary || f == data_format::msgpack_portable) {
         load_file_msgpack_impl(x, filename, f, c);
     }
+}
+
+/// Load from file .
+/**
+ * \note
+ * This function is enabled only if \p T is not const.
+ *
+ * This is a convenience function that will invoke the other overload of piranha::load_file() trying to guess
+ * the data and compression formats from the filename. The heuristic is described in the second overload of
+ * piranha::save_file().
+ *
+ * @param x the object into which the file content will be loaded.
+ * @param filename source file name.
+ *
+ * @throws std::invalid_argument if the compression and data formats cannot be deduced.
+ * @throws unspecified any exception throw by the first overload of piranha::load_file().
+ */
+template <typename T, load_file_enabler<T> = 0>
+inline void load_file(T &x, const std::string &filename)
+{
+    const auto p = get_cdf_from_filename(filename);
+    load_file(x, filename, p.second, p.first);
 }
 
 inline namespace impl

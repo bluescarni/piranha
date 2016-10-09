@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/mpl/bool.hpp>
 #include <boost/version.hpp>
 #include <cstddef>
+#include <cstdio>
 #include <functional>
 #include <initializer_list>
 #include <limits>
@@ -1158,6 +1159,59 @@ static inline void string_save_load_tester()
     BOOST_CHECK(status.load());
 }
 
+BOOST_AUTO_TEST_CASE(s11n_test_get_cdf_from_filename)
+{
+    BOOST_CHECK(get_cdf_from_filename("foo.boostb") == std::make_pair(compression::none, data_format::boost_binary));
+    BOOST_CHECK(get_cdf_from_filename("foo.boostp") == std::make_pair(compression::none, data_format::boost_portable));
+    BOOST_CHECK(get_cdf_from_filename("foo.mpackb") == std::make_pair(compression::none, data_format::msgpack_binary));
+    BOOST_CHECK(get_cdf_from_filename("foo.mpackp")
+                == std::make_pair(compression::none, data_format::msgpack_portable));
+    BOOST_CHECK(get_cdf_from_filename("foo.boostb.bz2")
+                == std::make_pair(compression::bzip2, data_format::boost_binary));
+    BOOST_CHECK(get_cdf_from_filename("foo.boostp.bz2")
+                == std::make_pair(compression::bzip2, data_format::boost_portable));
+    BOOST_CHECK(get_cdf_from_filename("foo.mpackb.bz2")
+                == std::make_pair(compression::bzip2, data_format::msgpack_binary));
+    BOOST_CHECK(get_cdf_from_filename("foo.mpackp.bz2")
+                == std::make_pair(compression::bzip2, data_format::msgpack_portable));
+    BOOST_CHECK(get_cdf_from_filename("foo.boostb.gz") == std::make_pair(compression::gzip, data_format::boost_binary));
+    BOOST_CHECK(get_cdf_from_filename("foo.boostp.gz")
+                == std::make_pair(compression::gzip, data_format::boost_portable));
+    BOOST_CHECK(get_cdf_from_filename("foo.mpackb.gz")
+                == std::make_pair(compression::gzip, data_format::msgpack_binary));
+    BOOST_CHECK(get_cdf_from_filename("foo.mpackp.gz")
+                == std::make_pair(compression::gzip, data_format::msgpack_portable));
+    BOOST_CHECK(get_cdf_from_filename("foo.boostb.zip")
+                == std::make_pair(compression::zlib, data_format::boost_binary));
+    BOOST_CHECK(get_cdf_from_filename("foo.boostp.zip")
+                == std::make_pair(compression::zlib, data_format::boost_portable));
+    BOOST_CHECK(get_cdf_from_filename("foo.mpackb.zip")
+                == std::make_pair(compression::zlib, data_format::msgpack_binary));
+    BOOST_CHECK(get_cdf_from_filename("foo.mpackp.zip")
+                == std::make_pair(compression::zlib, data_format::msgpack_portable));
+    BOOST_CHECK(get_cdf_from_filename("foo.bz2.boostb")
+                == std::make_pair(compression::none, data_format::boost_binary));
+    BOOST_CHECK_EXCEPTION(get_cdf_from_filename("foo"), std::invalid_argument, [](const std::invalid_argument &iae) {
+        return boost::contains(iae.what(), "unable to deduce the data format from the filename 'foo'. The filename "
+                                           "must end with one of ['.boostb','.boostp','.mpackb','.mpackp'], "
+                                           "optionally followed by one of ['.bz2','gz','zip'].");
+    });
+    BOOST_CHECK_EXCEPTION(
+        get_cdf_from_filename("foo.bz2"), std::invalid_argument, [](const std::invalid_argument &iae) {
+            return boost::contains(iae.what(),
+                                   "unable to deduce the data format from the filename 'foo.bz2'. The filename "
+                                   "must end with one of ['.boostb','.boostp','.mpackb','.mpackp'], "
+                                   "optionally followed by one of ['.bz2','gz','zip'].");
+        });
+    BOOST_CHECK_EXCEPTION(
+        get_cdf_from_filename("foo.mpackb.bz2.bz2"), std::invalid_argument, [](const std::invalid_argument &iae) {
+            return boost::contains(
+                iae.what(), "unable to deduce the data format from the filename 'foo.mpackb.bz2.bz2'. The filename "
+                            "must end with one of ['.boostb','.boostp','.mpackb','.mpackp'], "
+                            "optionally followed by one of ['.bz2','gz','zip'].");
+        });
+}
+
 BOOST_AUTO_TEST_CASE(s11n_test_save_load)
 {
     boost::mpl::for_each<integral_types>(int_save_load_tester());
@@ -1191,5 +1245,19 @@ BOOST_AUTO_TEST_CASE(s11n_test_save_load)
                       not_implemented_error);
     BOOST_CHECK_THROW(save_roundtrip(only_boost{}, data_format::msgpack_binary, compression::none),
                       not_implemented_error);
+    // Test the convenience wrappers.
+    for (auto sf : {".boostb", ".boostp", ".mpackb", ".mpackp"}) {
+        for (auto sc : {"", ".bz2", ".gz", ".zip"}) {
+            tmp_file filename;
+            auto fn = filename.name() + sf + sc;
+            save_file(42, fn);
+            int n;
+            load_file(n, fn);
+            BOOST_CHECK_EQUAL(n, 42);
+            std::remove(fn.c_str());
+        }
+    }
+    BOOST_CHECK_THROW(save_file(42, "foo.txt"), std::invalid_argument);
+    BOOST_CHECK_THROW(save_file(42, "foo.bz2"), std::invalid_argument);
 #endif
 }
