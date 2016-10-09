@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/divisor_series.hpp"
 
-#define BOOST_TEST_MODULE divisor_series_test
+#define BOOST_TEST_MODULE divisor_series_01_test
 #include <boost/test/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
