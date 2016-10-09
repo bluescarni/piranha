@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
         boost::archive::binary_iarchive ia(ss);
         pt1 tmp;
         auto msg_checker = [](const std::invalid_argument &inva) {
-            return boost::contains(inva.what(), "what: the series archive version 1 is greater than the "
+            return boost::contains(inva.what(), "what: the series Boost archive version 1 is greater than the "
                                                 "latest archive version 0 supported by this version of Piranha");
         };
         BOOST_CHECK_EXCEPTION(boost_load(ia, tmp), std::invalid_argument, msg_checker);
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(series_msgpack_s11n_test_00)
         msgpack_pack(p, 1u, msgpack_format::portable);
         auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
         auto msg_checker = [](const std::invalid_argument &inva) {
-            return boost::contains(inva.what(), "what: the series archive version 1 is greater than the "
+            return boost::contains(inva.what(), "what: the series msgpack archive version 1 is greater than the "
                                                 "latest archive version 0 supported by this version of Piranha");
         };
         pt1 tmp;
