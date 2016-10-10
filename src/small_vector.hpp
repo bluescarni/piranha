@@ -1200,10 +1200,9 @@ public:
  * - the size type of the vector can be safely converted to \p std::uint32_t.
  */
 template <typename Stream, typename T, std::size_t Size>
-class msgpack_pack_impl<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>,
+struct msgpack_pack_impl<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>,
                         msgpack_pack_vector_enabler<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>>>
 {
-public:
     /// Call operator.
     /**
      * This method will serialize into \p packer the input vector \p v using the format \p f.
@@ -1232,10 +1231,9 @@ public:
  * - the size type of \p std::vector can be safely converted to the size type of piranha::small_vector.
  */
 template <typename T, std::size_t Size>
-class msgpack_convert_impl<small_vector<T, std::integral_constant<std::size_t, Size>>,
+struct msgpack_convert_impl<small_vector<T, std::integral_constant<std::size_t, Size>>,
                            msgpack_convert_array_enabler<small_vector<T, std::integral_constant<std::size_t, Size>>>>
 {
-public:
     /// Call operator.
     /**
      * This method will convert \p o into \p v using the format \p f. This method provides the basic exception safety

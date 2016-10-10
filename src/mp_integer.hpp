@@ -4137,6 +4137,12 @@ private:
         }
         return static_cast<detail::mpz_size_t>(s >= 0 ? s : -s);
     }
+    template <typename U>
+    using boost_save_binary_enabler = enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive,bool>,
+        has_boost_save<boost::archive::binary_oarchive,decltype(std::declval<U>()._mp_alloc)>,
+        has_boost_save<boost::archive::binary_oarchive,decltype(std::declval<U>()._mp_size)>,
+        has_boost_save<boost::archive::binary_oarchive,typename std::remove_pointer<decltype(std::declval<U>()._mp_d)>::type>,
+        has_boost_save<boost::archive::binary_oarchive,typename detail::integer_union<NBits>::s_storage::limb_t>>::value,int>;
 
 public:
     /// Save to a Boost binary archive.
@@ -4148,6 +4154,7 @@ public:
      * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
      * @throws unspecified any exception thrown by piranha::boost_save().
      */
+    template <typename U = detail::mpz_struct_t, boost_save_binary_enabler<U> = 0>
     void boost_save(boost::archive::binary_oarchive &ar) const
     {
         if (is_static()) {
@@ -5092,9 +5099,8 @@ using mp_integer_msgpack_convert_enabler = typename std::
  * the piranha::mp_integer::msgpack_pack() method with a stream of type \p Stream.
  */
 template <typename Stream, typename T>
-class msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>>
+struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>>
 {
-public:
     /// Call operator.
     /**
      * The call operator will use piranha::mp_integer::msgpack_pack() internally.
@@ -5117,9 +5123,8 @@ public:
  * This specialisation is enabled if \p T is an instance of piranha::mp_integer.
  */
 template <typename T>
-class msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>>
+struct msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>>
 {
-public:
     /// Call operator.
     /**
      * The call operator will use piranha::mp_integer::msgpack_convert() internally.

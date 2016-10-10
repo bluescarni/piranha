@@ -875,6 +875,14 @@ template <typename T, typename = void>
 struct msgpack_convert_impl {
 };
 
+inline namespace impl
+{
+
+template <typename T>
+using msgpack_convert_scalar_enabler = enable_if_t<is_serialization_scalar<T>::value>;
+
+}
+
 /// Implementation of piranha::msgpack_convert() for fundamental C++ types supported by msgpack.
 /**
  * \note
@@ -889,7 +897,7 @@ struct msgpack_convert_impl {
  * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
  */
 template <typename T>
-struct msgpack_convert_impl<T, typename std::enable_if<is_serialization_scalar<T>::value>::type> {
+struct msgpack_convert_impl<T, msgpack_convert_scalar_enabler<T>> {
     /// Call operator.
     /**
      * @param[out] x the output value.
@@ -973,13 +981,10 @@ struct msgpack_convert_impl<long double> {
 
 /// Implementation of piranha::msgpack_convert() for \p std::string.
 /**
- * \note
- * This specialisation is enabled if \p T is \p std::string.
- *
  * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
  */
-template <typename T>
-struct msgpack_convert_impl<T, typename std::enable_if<std::is_same<T, std::string>::value>::type> {
+template <>
+struct msgpack_convert_impl<std::string> {
     /// Call operator.
     /**
      * @param[out] s the output string.

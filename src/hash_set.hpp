@@ -1539,7 +1539,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - the public interface of piranha::hash_set,
      * - piranha::boost_load(),
-     * - <tt>boot::numeric_cast()</tt>.
+     * - <tt>boost::numeric_cast()</tt>.
      */
     void operator()(Archive &ar, hash_set<T, Hash, Pred> &h) const
     {
@@ -1602,9 +1602,8 @@ using hash_set_msgpack_convert_enabler
  * - the size type of piranha::hash_set is safely convertible to \p std::uint32_t.
  */
 template <typename Stream, typename T, typename Hash, typename Pred>
-class msgpack_pack_impl<Stream, hash_set<T, Hash, Pred>, hash_set_msgpack_pack_enabler<Stream, T, Hash, Pred>>
+struct msgpack_pack_impl<Stream, hash_set<T, Hash, Pred>, hash_set_msgpack_pack_enabler<Stream, T, Hash, Pred>>
 {
-public:
     /// Call operator.
     /**
      * This method will serialize \p h into \p p using the format \p f. The hashing functor and the equality predicate
@@ -1635,9 +1634,8 @@ public:
  * This specialisation is enabled only if \p T and \p unsigned satisfy piranha::has_msgpack_convert.
  */
 template <typename T, typename Hash, typename Pred>
-class msgpack_convert_impl<hash_set<T, Hash, Pred>, hash_set_msgpack_convert_enabler<T>>
+struct msgpack_convert_impl<hash_set<T, Hash, Pred>, hash_set_msgpack_convert_enabler<T>>
 {
-public:
     /// Call operator.
     /**
      * This method will convert the input object \p o into \p h using the format \p f. In case duplicate elements
@@ -1649,8 +1647,9 @@ public:
      * @param o the source <tt>msgpack::object</tt>.
      * @param f the desired piranha::msgpack_format.
      *
-     * @throws std::invalid_argument if a duplicate element is encountered during deserialization or \p o was unpacked
-     * from an archive created with a more recent version of Piranha.
+     * @throws std::invalid_argument if a duplicate element is encountered during deserialization or if \p f
+     * is piranha::msgpack_format::portable and \p o was unpacked from an archive created with a more recent version of
+     * Piranha.
      * @throws unspecified any exception thrown by:
      * - the public interface of piranha::hash_set and <tt>msgpack::object</tt>,
      * - <tt>boost::numeric_cast()</tt>,

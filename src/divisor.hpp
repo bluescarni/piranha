@@ -134,11 +134,10 @@ public:
 #if defined(PIRANHA_WITH_MSGPACK)
 
 template <typename Stream, typename T>
-class msgpack_pack_impl<Stream, divisor_p_type<T>,
+struct msgpack_pack_impl<Stream, divisor_p_type<T>,
                         enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
                                                 has_msgpack_pack<Stream, typename divisor_p_type<T>::v_type>>::value>>
 {
-public:
     void operator()(msgpack::packer<Stream> &pk, const divisor_p_type<T> &p, msgpack_format f) const
     {
         pk.pack_array(2);
@@ -148,11 +147,10 @@ public:
 };
 
 template <typename T>
-class msgpack_convert_impl<divisor_p_type<T>,
+struct msgpack_convert_impl<divisor_p_type<T>,
                            enable_if_t<conjunction<has_msgpack_convert<T>,
                                                    has_msgpack_convert<typename divisor_p_type<T>::v_type>>::value>>
 {
-public:
     void operator()(divisor_p_type<T> &p, const msgpack::object &o, msgpack_format f) const
     {
         std::array<msgpack::object, 2> tmp;
