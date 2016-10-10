@@ -880,7 +880,6 @@ inline namespace impl
 
 template <typename T>
 using msgpack_convert_scalar_enabler = enable_if_t<is_serialization_scalar<T>::value>;
-
 }
 
 /// Implementation of piranha::msgpack_convert() for fundamental C++ types supported by msgpack.

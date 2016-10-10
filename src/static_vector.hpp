@@ -726,8 +726,7 @@ public:
  * - the size type of the vector can be safely converted to \p std::uint32_t.
  */
 template <typename Stream, typename T, std::size_t S>
-struct msgpack_pack_impl<Stream, static_vector<T, S>, msgpack_pack_vector_enabler<Stream, static_vector<T, S>>>
-{
+struct msgpack_pack_impl<Stream, static_vector<T, S>, msgpack_pack_vector_enabler<Stream, static_vector<T, S>>> {
     /// Call operator.
     /**
      * This method will serialize into \p p the input vector \p v using the format \p f.
@@ -755,8 +754,7 @@ struct msgpack_pack_impl<Stream, static_vector<T, S>, msgpack_pack_vector_enable
  * - the size type of \p std::vector can be safely converted to the size type of piranha::static_vector.
  */
 template <typename T, std::size_t S>
-struct msgpack_convert_impl<static_vector<T, S>, msgpack_convert_array_enabler<static_vector<T, S>>>
-{
+struct msgpack_convert_impl<static_vector<T, S>, msgpack_convert_array_enabler<static_vector<T, S>>> {
     /// Call operator.
     /**
      * This method will convert \p o into \p v using the format \p f. This method provides the basic exception safety

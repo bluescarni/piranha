@@ -1602,8 +1602,7 @@ using hash_set_msgpack_convert_enabler
  * - the size type of piranha::hash_set is safely convertible to \p std::uint32_t.
  */
 template <typename Stream, typename T, typename Hash, typename Pred>
-struct msgpack_pack_impl<Stream, hash_set<T, Hash, Pred>, hash_set_msgpack_pack_enabler<Stream, T, Hash, Pred>>
-{
+struct msgpack_pack_impl<Stream, hash_set<T, Hash, Pred>, hash_set_msgpack_pack_enabler<Stream, T, Hash, Pred>> {
     /// Call operator.
     /**
      * This method will serialize \p h into \p p using the format \p f. The hashing functor and the equality predicate
@@ -1634,8 +1633,7 @@ struct msgpack_pack_impl<Stream, hash_set<T, Hash, Pred>, hash_set_msgpack_pack_
  * This specialisation is enabled only if \p T and \p unsigned satisfy piranha::has_msgpack_convert.
  */
 template <typename T, typename Hash, typename Pred>
-struct msgpack_convert_impl<hash_set<T, Hash, Pred>, hash_set_msgpack_convert_enabler<T>>
-{
+struct msgpack_convert_impl<hash_set<T, Hash, Pred>, hash_set_msgpack_convert_enabler<T>> {
     /// Call operator.
     /**
      * This method will convert the input object \p o into \p h using the format \p f. In case duplicate elements

@@ -2446,8 +2446,7 @@ using real_msgpack_convert_enabler = typename std::enable_if<std::is_same<real, 
  * the piranha::real::msgpack_pack() method is supported with a stream of type \p Stream.
  */
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, real_msgpack_pack_enabler<Stream, T>>
-{
+struct msgpack_pack_impl<Stream, T, real_msgpack_pack_enabler<Stream, T>> {
     /// Call operator.
     /**
      * The call operator will use piranha::real::msgpack_pack() internally.
@@ -2470,8 +2469,7 @@ struct msgpack_pack_impl<Stream, T, real_msgpack_pack_enabler<Stream, T>>
  * This specialisation is enabled if \p T is piranha::real.
  */
 template <typename T>
-struct msgpack_convert_impl<T, real_msgpack_convert_enabler<T>>
-{
+struct msgpack_convert_impl<T, real_msgpack_convert_enabler<T>> {
     /// Call operator.
     /**
      * The call operator will use piranha::real::msgpack_convert() internally.

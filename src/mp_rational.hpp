@@ -2441,8 +2441,7 @@ using mp_rational_msgpack_convert_enabler = typename std::
  * piranha::mp_rational::msgpack_pack() method.
  */
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, mp_rational_msgpack_pack_enabler<Stream, T>>
-{
+struct msgpack_pack_impl<Stream, T, mp_rational_msgpack_pack_enabler<Stream, T>> {
     /// Call operator.
     /**
      * The call operator will use the piranha::mp_rational::msgpack_pack() method of \p q.
@@ -2466,8 +2465,7 @@ struct msgpack_pack_impl<Stream, T, mp_rational_msgpack_pack_enabler<Stream, T>>
  * piranha::mp_rational::msgpack_convert() method.
  */
 template <typename T>
-struct msgpack_convert_impl<T, mp_rational_msgpack_convert_enabler<T>>
-{
+struct msgpack_convert_impl<T, mp_rational_msgpack_convert_enabler<T>> {
     /// Call operator.
     /**
      * The call operator will use the piranha::mp_rational::msgpack_convert() method of \p q.

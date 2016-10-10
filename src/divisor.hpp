@@ -135,9 +135,9 @@ public:
 
 template <typename Stream, typename T>
 struct msgpack_pack_impl<Stream, divisor_p_type<T>,
-                        enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
-                                                has_msgpack_pack<Stream, typename divisor_p_type<T>::v_type>>::value>>
-{
+                         enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+                                                 has_msgpack_pack<Stream,
+                                                                  typename divisor_p_type<T>::v_type>>::value>> {
     void operator()(msgpack::packer<Stream> &pk, const divisor_p_type<T> &p, msgpack_format f) const
     {
         pk.pack_array(2);
@@ -148,9 +148,8 @@ struct msgpack_pack_impl<Stream, divisor_p_type<T>,
 
 template <typename T>
 struct msgpack_convert_impl<divisor_p_type<T>,
-                           enable_if_t<conjunction<has_msgpack_convert<T>,
-                                                   has_msgpack_convert<typename divisor_p_type<T>::v_type>>::value>>
-{
+                            enable_if_t<conjunction<has_msgpack_convert<T>,
+                                                    has_msgpack_convert<typename divisor_p_type<T>::v_type>>::value>> {
     void operator()(divisor_p_type<T> &p, const msgpack::object &o, msgpack_format f) const
     {
         std::array<msgpack::object, 2> tmp;
