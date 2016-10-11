@@ -34,6 +34,7 @@ see https://www.gnu.org/licenses/. */
 #define FUSION_MAX_VECTOR_SIZE 20
 
 #include <atomic>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/filesystem.hpp>
@@ -265,6 +266,24 @@ struct boost_s11n_tester {
             boost_load(ia, n);
         } catch (...) {
             BOOST_CHECK_EQUAL(n, 0);
+        }
+        // Versioning.
+        ss.str("");
+        ss.clear();
+        {
+            boost::archive::text_oarchive oa(ss);
+            boost_save(oa, 1u);
+            boost_save(oa, std::string("42"));
+        }
+        {
+            boost::archive::text_iarchive ia(ss);
+            int_type n{12};
+            BOOST_CHECK_EXCEPTION(boost_load(ia, n), std::invalid_argument, [](const std::invalid_argument &iae) {
+                return boost::contains(iae.what(), "the mp_integer Boost archive version 1 "
+                                                   "is greater than the latest archive version 0 "
+                                                   "supported by this version of Piranha");
+            });
+            BOOST_CHECK_EQUAL(n,12);
         }
     }
 };

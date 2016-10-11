@@ -4137,16 +4137,37 @@ private:
         }
         return static_cast<detail::mpz_size_t>(s >= 0 ? s : -s);
     }
+    // Enablers.
     template <typename U>
-    using boost_save_binary_enabler = enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive,bool>,
-        has_boost_save<boost::archive::binary_oarchive,decltype(std::declval<U>()._mp_alloc)>,
-        has_boost_save<boost::archive::binary_oarchive,decltype(std::declval<U>()._mp_size)>,
-        has_boost_save<boost::archive::binary_oarchive,typename std::remove_pointer<decltype(std::declval<U>()._mp_d)>::type>,
-        has_boost_save<boost::archive::binary_oarchive,typename detail::integer_union<NBits>::s_storage::limb_t>>::value,int>;
+    using boost_save_binary_enabler
+        = enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive, bool>,
+                                  has_boost_save<boost::archive::binary_oarchive,
+                                                 decltype(std::declval<U>()._mp_alloc)>,
+                                  has_boost_save<boost::archive::binary_oarchive, decltype(std::declval<U>()._mp_size)>,
+                                  has_boost_save<boost::archive::binary_oarchive,
+                                                 typename std::remove_pointer<decltype(std::declval<U>()._mp_d)>::type>,
+                                  has_boost_save<boost::archive::binary_oarchive,
+                                                 typename detail::integer_union<NBits>::s_storage::limb_t>>::value,
+                      int>;
+    template <typename U>
+    using boost_load_binary_enabler
+        = enable_if_t<conjunction<has_boost_load<boost::archive::binary_iarchive, bool>,
+                                  has_boost_load<boost::archive::binary_iarchive,
+                                                 decltype(std::declval<U>()._mp_alloc)>,
+                                  has_boost_load<boost::archive::binary_iarchive, decltype(std::declval<U>()._mp_size)>,
+                                  has_boost_load<boost::archive::binary_iarchive,
+                                                 typename std::remove_pointer<decltype(std::declval<U>()._mp_d)>::type>,
+                                  has_boost_load<boost::archive::binary_iarchive,
+                                                 typename detail::integer_union<NBits>::s_storage::limb_t>>::value,
+                      int>;
 
 public:
     /// Save to a Boost binary archive.
     /**
+     * \note
+     * This method is enabled only if all the fundamental types describing the internal state of the integer satisfy
+     * piranha::has_boost_save.
+     *
      * This method will serialize \p this into \p ar.
      *
      * @param[in] ar target archive.
@@ -4174,6 +4195,7 @@ public:
                           [&ar](const ::mp_limb_t &l) { piranha::boost_save(ar, l); });
         }
     }
+#define PIRANHA_MP_INTEGER_BOOST_S11N_LATEST_VERSION 0u
     /// Save to a Boost text archive.
     /**
      * This method will serialize \p this into \p ar as a string in decimal format.
@@ -4185,6 +4207,8 @@ public:
      */
     void boost_save(boost::archive::text_oarchive &ar) const
     {
+        // Save the version.
+        piranha::boost_save(ar, PIRANHA_MP_INTEGER_BOOST_S11N_LATEST_VERSION);
         // NOTE: this requires too many allocations, it should be refactored together
         // with the mpz streaming so that we just need a single string.
         std::ostringstream oss;
@@ -4193,6 +4217,10 @@ public:
     }
     /// Deserialize from Boost binary archive.
     /**
+     * \note
+     * This method is enabled only if all the fundamental types describing the internal state of the integer satisfy
+     * piranha::has_boost_load.
+     *
      * This method will deserialize from \p ar into \p this. The method offers the basic exception guarantee
      * and performs minimal checking of the input data. Calling this method will result in undefined behaviour
      * if \p ar does not contain an integer serialized via boost_save().
@@ -4203,6 +4231,7 @@ public:
      * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
      * @throws unspecified any exception thrown by piranha::boost_load().
      */
+    template <typename U = detail::mpz_struct_t, boost_load_binary_enabler<U> = 0>
     void boost_load(boost::archive::binary_iarchive &ar)
     {
         const bool this_s = is_static();
@@ -4270,10 +4299,19 @@ public:
      */
     void boost_load(boost::archive::text_iarchive &ar)
     {
+        unsigned version;
+        piranha::boost_load(ar, version);
+        if (unlikely(version > PIRANHA_MP_INTEGER_BOOST_S11N_LATEST_VERSION)) {
+            piranha_throw(std::invalid_argument, "the mp_integer Boost archive version " + std::to_string(version)
+                                                     + " is greater than the latest archive version "
+                                                     + std::to_string(PIRANHA_MP_INTEGER_BOOST_S11N_LATEST_VERSION)
+                                                     + " supported by this version of Piranha");
+        }
         PIRANHA_MAYBE_TLS std::string tmp;
         piranha::boost_load(ar, tmp);
         *this = mp_integer{tmp};
     }
+#undef PIRANHA_MP_INTEGER_BOOST_S11N_LATEST_VERSION
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     // msgpack enabler.
@@ -5099,8 +5137,7 @@ using mp_integer_msgpack_convert_enabler = typename std::
  * the piranha::mp_integer::msgpack_pack() method with a stream of type \p Stream.
  */
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>>
-{
+struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>> {
     /// Call operator.
     /**
      * The call operator will use piranha::mp_integer::msgpack_pack() internally.
@@ -5123,8 +5160,7 @@ struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>>
  * This specialisation is enabled if \p T is an instance of piranha::mp_integer.
  */
 template <typename T>
-struct msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>>
-{
+struct msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>> {
     /// Call operator.
     /**
      * The call operator will use piranha::mp_integer::msgpack_convert() internally.
