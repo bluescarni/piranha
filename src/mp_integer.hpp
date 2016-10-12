@@ -4307,7 +4307,7 @@ public:
     void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
     {
         if (f == msgpack_format::binary) {
-            // Regardless of format, we always pack an array of 3 elements:
+            // Regardless of storage type, we always pack an array of 3 elements:
             // - staticness,
             // - sign of size,
             // - array of limbs.
