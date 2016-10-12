@@ -132,7 +132,6 @@ struct boost_s11n_tester {
         std::stringstream ss;
         {
             boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, unsigned(0));
             boost_save(oa, size_type(2));
             boost_save(oa, T(42));
             boost_save(oa, T(42));
@@ -144,23 +143,6 @@ struct boost_s11n_tester {
                 return boost::contains(
                     eia.what(),
                     "while deserializing a hash_set from a Boost archive a duplicate value was encountered");
-            });
-        }
-        ss.str("");
-        ss.clear();
-        {
-            boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, unsigned(1));
-            boost_save(oa, size_type(1));
-            boost_save(oa, T(42));
-        }
-        {
-            boost::archive::binary_iarchive ia(ss);
-            h_type h;
-            BOOST_CHECK_EXCEPTION(boost_load(ia, h), std::invalid_argument, [](const std::invalid_argument &eia) {
-                return boost::contains(
-                    eia.what(), "the hash_set Boost archive version 1 is greater than the latest archive version 0 "
-                                "supported by this version of Piranha");
             });
         }
     }
@@ -230,58 +212,6 @@ struct msgpack_s11n_tester {
                     return boost::contains(
                         iae.what(),
                         "while deserializing a hash_set from a msgpack object a duplicate value was encountered");
-                });
-        }
-        {
-            // Error 1 in portable format.
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> p(sbuf);
-            p.pack_array(3);
-            msgpack_pack(p, T(1), msgpack_format::portable);
-            msgpack_pack(p, T(2), msgpack_format::portable);
-            msgpack_pack(p, T(3), msgpack_format::portable);
-            h_type h;
-            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            BOOST_CHECK_EXCEPTION(msgpack_convert(h, oh.get(), msgpack_format::portable), std::invalid_argument,
-                                  [](const std::invalid_argument &iae) {
-                                      return boost::contains(
-                                          iae.what(),
-                                          "the serialized msgpack portable format of a hash_set consists "
-                                          "of an array of two elements, but an array of 3 elements was found instead");
-                                  });
-        }
-        {
-            // Similar to above.
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> p(sbuf);
-            p.pack_array(1);
-            msgpack_pack(p, T(1), msgpack_format::portable);
-            h_type h;
-            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            BOOST_CHECK_EXCEPTION(msgpack_convert(h, oh.get(), msgpack_format::portable), std::invalid_argument,
-                                  [](const std::invalid_argument &iae) {
-                                      return boost::contains(
-                                          iae.what(),
-                                          "the serialized msgpack portable format of a hash_set consists "
-                                          "of an array of two elements, but an array of 1 elements was found instead");
-                                  });
-        }
-        {
-            // Error 2 in portable format.
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> p(sbuf);
-            p.pack_array(2);
-            msgpack_pack(p, 1u, msgpack_format::portable);
-            p.pack_array(1);
-            msgpack_pack(p, T(1), msgpack_format::portable);
-            h_type h;
-            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            BOOST_CHECK_EXCEPTION(
-                msgpack_convert(h, oh.get(), msgpack_format::portable), std::invalid_argument,
-                [](const std::invalid_argument &iae) {
-                    return boost::contains(
-                        iae.what(), "the hash_set msgpack archive version 1 is greater than the latest archive version "
-                                    "0 supported by this version of Piranha");
                 });
         }
     }

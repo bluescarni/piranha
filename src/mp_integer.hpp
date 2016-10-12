@@ -4138,11 +4138,16 @@ private:
         return static_cast<detail::mpz_size_t>(s >= 0 ? s : -s);
     }
     template <typename U>
-    using boost_save_binary_enabler = enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive,bool>,
-        has_boost_save<boost::archive::binary_oarchive,decltype(std::declval<U>()._mp_alloc)>,
-        has_boost_save<boost::archive::binary_oarchive,decltype(std::declval<U>()._mp_size)>,
-        has_boost_save<boost::archive::binary_oarchive,typename std::remove_pointer<decltype(std::declval<U>()._mp_d)>::type>,
-        has_boost_save<boost::archive::binary_oarchive,typename detail::integer_union<NBits>::s_storage::limb_t>>::value,int>;
+    using boost_save_binary_enabler
+        = enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive, bool>,
+                                  has_boost_save<boost::archive::binary_oarchive,
+                                                 decltype(std::declval<U>()._mp_alloc)>,
+                                  has_boost_save<boost::archive::binary_oarchive, decltype(std::declval<U>()._mp_size)>,
+                                  has_boost_save<boost::archive::binary_oarchive,
+                                                 typename std::remove_pointer<decltype(std::declval<U>()._mp_d)>::type>,
+                                  has_boost_save<boost::archive::binary_oarchive,
+                                                 typename detail::integer_union<NBits>::s_storage::limb_t>>::value,
+                      int>;
 
 public:
     /// Save to a Boost binary archive.
@@ -5099,8 +5104,7 @@ using mp_integer_msgpack_convert_enabler = typename std::
  * the piranha::mp_integer::msgpack_pack() method with a stream of type \p Stream.
  */
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>>
-{
+struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>> {
     /// Call operator.
     /**
      * The call operator will use piranha::mp_integer::msgpack_pack() internally.
@@ -5123,8 +5127,7 @@ struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>>
  * This specialisation is enabled if \p T is an instance of piranha::mp_integer.
  */
 template <typename T>
-struct msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>>
-{
+struct msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>> {
     /// Call operator.
     /**
      * The call operator will use piranha::mp_integer::msgpack_convert() internally.
