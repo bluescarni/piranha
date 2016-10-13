@@ -3833,16 +3833,15 @@ inline namespace impl
 template <typename Stream, typename Series>
 using series_msgpack_pack_enabler = typename std::
     enable_if<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
-                          has_safe_cast<std::uint32_t,decltype(symbol_set{}.size())>,
-                          has_safe_cast<std::uint32_t,typename Series::size_type>,
+                          has_safe_cast<std::uint32_t, decltype(symbol_set{}.size())>,
+                          has_safe_cast<std::uint32_t, typename Series::size_type>,
                           has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
                           key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>::type;
 
 template <typename Series>
 using series_msgpack_convert_enabler =
-    typename std::enable_if<conjunction<is_series<Series>,
-    has_msgpack_convert<std::string>,
-    has_msgpack_convert<typename Series::term_type::cf_type>,
+    typename std::enable_if<conjunction<is_series<Series>, has_msgpack_convert<std::string>,
+                                        has_msgpack_convert<typename Series::term_type::cf_type>,
                                         key_has_msgpack_convert<typename Series::term_type::key_type>>::value>::type;
 }
 
@@ -3933,7 +3932,7 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
         // Erase s.
         s = Series{};
         // Convert the object.
-        std::array<std::vector<msgpack::object>,2> tmp_v;
+        std::array<std::vector<msgpack::object>, 2> tmp_v;
         o.convert(tmp_v);
         // Create the symbol set, passing through a vec of str.
         std::vector<std::string> v_str;
