@@ -67,7 +67,7 @@ see https://www.gnu.org/licenses/. */
 #include "invert.hpp"
 #include "is_cf.hpp"
 #include "key_is_convertible.hpp"
-#include "math.hpp" // For negate() and math specialisations.
+#include "math.hpp"
 #include "mp_integer.hpp"
 #include "pow.hpp"
 #include "print_coefficient.hpp"
@@ -3851,14 +3851,18 @@ using series_msgpack_convert_enabler =
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
  * - \p Stream satisfies piranha::is_msgpack_stream,
- * - the size types of \p Series and piranha::symbol_set, the coefficient type and \p std::string
- *   satisfy piranha::has_msgpack_pack,
- * - the key type satisfies piranha::key_has_msgpack_pack.
+ * - the coefficient type and \p std::string satisfy piranha::has_msgpack_pack,
+ * - the key type satisfies piranha::key_has_msgpack_pack,
+ * - the size types of piranha::series and piranha::symbol_set are safely convertible to \p std::uint32_t.
  */
 template <typename Stream, typename Series>
 struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Series>> {
     /// Call operator.
     /**
+     * The msgpack representation of a series consists of an array of 2 elements:
+     * - the list of symbols, represented as an array of strings,
+     * - the list of terms, represented as an array of coefficient-key pairs.
+     *
      * @param packer the target <tt>msgpack::packer</tt>.
      * @param s the input series.
      * @param f the desired piranha::msgpack_format.

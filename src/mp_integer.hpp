@@ -4281,17 +4281,31 @@ public:
     }
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
-    // msgpack enabler.
+    // msgpack enablers.
     template <typename Stream>
-    using msgpack_pack_enabler =
-        // NOTE: integral types are always serializable for any valid stream.
-        typename std::enable_if<is_msgpack_stream<Stream>::value, int>::type;
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, bool>,
+                                  has_msgpack_pack<Stream, typename detail::integer_union<NBits>::s_storage::limb_t>,
+                                  /*has_safe_cast<std::uint32_t, detail::mpz_size_t>,*/
+                                  has_msgpack_pack<Stream, ::mp_limb_t>, has_msgpack_pack<Stream, std::string>>::value,
+                      int>;
+    template <typename U>
+    using msgpack_convert_enabler
+        = enable_if_t<conjunction<std::is_same<U, U>, // Just for SFINAE.
+                                  has_msgpack_convert<bool>,
+                                  has_msgpack_convert<typename detail::integer_union<NBits>::s_storage::limb_t>,
+                                  has_msgpack_convert<::mp_limb_t>, has_msgpack_convert<std::string>>::value,
+                      int>;
 
 public:
     /// Pack in msgpack format.
     /**
      * \note
-     * This method is enabled only if \p Stream satisfies piranha::is_msgpack_stream.
+     * This method is enabled only if:
+     * - \p Stream satisfies piranha::is_msgpack_stream,
+     * - the integral types used in the internal representation of the integer, \p bool and \p std::string satisfy
+     *   piranha::has_msgpack_pack,
+     * - the integral type representing the size of the integer can be safely cast to \p std::uint32_t.
      *
      * This method will pack \p this into \p p. If \p f is msgpack_format::portable, then
      * a decimal string representation of \p this is packed. Otherwise, an array of 3 elements
@@ -4333,6 +4347,7 @@ public:
                 const auto size = m_int.g_dy()._mp_size;
                 std::uint32_t usize;
                 try {
+                    // TODO: safe_cast.
                     usize = boost::numeric_cast<std::uint32_t>(safe_abs_size(size));
                 } catch (...) {
                     piranha_throw(std::overflow_error, "the number of limbs is too large");
@@ -4351,6 +4366,10 @@ public:
     }
     /// Convert from msgpack object.
     /**
+     * \note
+     * This method is enabled only if the integral types used in the internal representation of the integer, \p bool
+     * and \p std::string satisfy piranha::has_msgpack_convert.
+     *
      * This method will convert the object \p o into \p this. If \p f is piranha::msgpack_format::binary,
      * this method offers the basic exception safety guarantee and it performs minimal checking on the input data.
      * Calling this method in binary mode will result in undefined behaviour if \p o does not contain an integer
@@ -4359,7 +4378,6 @@ public:
      * @param[in] o source object.
      * @param[in] f the desired piranha::msgpack_format.
      *
-     * @throws msgpack::type_error if, in binary mode, the serialized object is not an array of 3 elements.
      * @throws std::invalid_argument if, in binary mode, the serialized static integer has a number of limbs
      * greater than 2.
      * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
@@ -4369,15 +4387,12 @@ public:
      * - piranha::msgpack_convert(),
      * - the constructor of piranha::mp_integer from string.
      */
+    template <typename U = mp_integer, msgpack_convert_enabler<U> = 0>
     void msgpack_convert(const msgpack::object &o, msgpack_format f)
     {
         if (f == msgpack_format::binary) {
-            PIRANHA_MAYBE_TLS std::vector<msgpack::object> vobj;
+            PIRANHA_MAYBE_TLS std::array<msgpack::object, 3> vobj;
             o.convert(vobj);
-            // The serialized object needs to be a triple.
-            if (unlikely(vobj.size() != 3u)) {
-                piranha_throw(msgpack::type_error, );
-            }
             // Get the staticness of the serialized object.
             bool s;
             piranha::msgpack_convert(s, vobj[0u], f);

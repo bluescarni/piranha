@@ -1569,7 +1569,7 @@ using hash_set_msgpack_pack_enabler
                               has_msgpack_pack<Stream, T>>::value>;
 
 template <typename T>
-using hash_set_msgpack_convert_enabler = enable_if_t<conjunction<has_msgpack_convert<T>>::value>;
+using hash_set_msgpack_convert_enabler = enable_if_t<has_msgpack_convert<T>::value>;
 }
 
 /// Specialisation of piranha::msgpack_pack() for piranha::hash_set.
@@ -1577,7 +1577,7 @@ using hash_set_msgpack_convert_enabler = enable_if_t<conjunction<has_msgpack_con
  * \note
  * This specialisation is enabled only if
  * - \p Stream satisfies piranha::is_msgpack_stream,
- * - \p T and the size type of piranha::hash_set satisfy piranha::has_msgpack_pack,
+ * - \p T satisfies piranha::has_msgpack_pack,
  * - the size type of piranha::hash_set is safely convertible to \p std::uint32_t.
  */
 template <typename Stream, typename T, typename Hash, typename Pred>
@@ -1585,7 +1585,8 @@ struct msgpack_pack_impl<Stream, hash_set<T, Hash, Pred>, hash_set_msgpack_pack_
     /// Call operator.
     /**
      * This method will serialize \p h into \p p using the format \p f. The hashing functor and the equality predicate
-     * are not serialized.
+     * are not serialized. The msgpack representation of a piranha::hash_set consists of an array containing the
+     * items in the set.
      *
      * @param p the target packer.
      * @param h the piranha::hash_set that will be serialized.
