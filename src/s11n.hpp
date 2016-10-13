@@ -612,6 +612,13 @@ const bool key_has_boost_load<Archive, Key>::value;
 namespace piranha
 {
 
+// Fwd decls.
+template <typename, typename>
+class has_msgpack_pack;
+
+template <typename>
+class has_msgpack_convert;
+
 inline namespace impl
 {
 
@@ -696,11 +703,10 @@ inline namespace impl
 {
 
 template <typename Stream, typename T>
-using msgpack_scalar_enabler =
-    typename std::enable_if<is_msgpack_stream<Stream>::value && is_serialization_scalar<T>::value>::type;
+using msgpack_scalar_enabler = enable_if_t<conjunction<is_msgpack_stream<Stream>, is_serialization_scalar<T>>::value>;
 }
 
-/// Implementation of piranha::msgpack_pack() for fundamental C++ types supported by msgpack.
+/// Specialisation of piranha::msgpack_pack() for fundamental C++ types supported by msgpack.
 /**
  * \note
  * This specialisation is enabled if \p Stream satisfies piranha::is_msgpack_stream and \p T is one of the
@@ -732,18 +738,20 @@ struct msgpack_pack_impl<Stream, T, msgpack_scalar_enabler<Stream, T>> {
 inline namespace impl
 {
 
-template <typename Stream, typename T>
-using msgpack_ld_enabler =
-    typename std::enable_if<is_msgpack_stream<Stream>::value && std::is_same<T, long double>::value>::type;
+template <typename Stream>
+using msgpack_ld_enabler
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>>::value>;
 }
 
-/// Implementation of piranha::msgpack_pack() for <tt>long double</tt>.
+/// Specialisation of piranha::msgpack_pack() for <tt>long double</tt>.
 /**
  * \note
- * This specialisation is enabled if \p Stream satisfies piranha::is_msgpack_stream and \p T is <tt>long double</tt>.
+ * This specialisation is enabled if:
+ * - \p Stream satisfies piranha::is_msgpack_stream,
+ * - \p std::string satisfies piranha::has_msgpack_pack.
  */
-template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, msgpack_ld_enabler<Stream, T>> {
+template <typename Stream>
+struct msgpack_pack_impl<Stream, long double, msgpack_ld_enabler<Stream>> {
     /// Call operator.
     /**
      * If \p f is msgpack_format::binary then the byte representation of \p x is packed into \p packer. Otherwise,
@@ -754,9 +762,8 @@ struct msgpack_pack_impl<Stream, T, msgpack_ld_enabler<Stream, T>> {
      * @param[in] f the serialization format.
      *
      * @throws unspecified any exception thrown by:
-     * - <tt>msgpack::packer::pack()</tt>, <tt>msgpack::packer::pack_bin()</tt>,
-     *   <tt>msgpack::packer::pack_bin_body()</tt>,
-     * - the public interface of \p std::ostringstream.
+     * - the public interface of \p msgpack::packer and \p std::ostringstream,
+     * - piranha::msgpack_pack().
      */
     void operator()(msgpack::packer<Stream> &packer, const long double &x, msgpack_format f) const
     {
@@ -766,15 +773,15 @@ struct msgpack_pack_impl<Stream, T, msgpack_ld_enabler<Stream, T>> {
         } else {
             if (std::isnan(x)) {
                 if (std::signbit(x)) {
-                    packer.pack("-nan");
+                    msgpack_pack(packer, std::string("-nan"), f);
                 } else {
-                    packer.pack("+nan");
+                    msgpack_pack(packer, std::string("+nan"), f);
                 }
             } else if (std::isinf(x)) {
                 if (std::signbit(x)) {
-                    packer.pack("-inf");
+                    msgpack_pack(packer, std::string("-inf"), f);
                 } else {
-                    packer.pack("+inf");
+                    msgpack_pack(packer, std::string("+inf"), f);
                 }
             } else {
                 std::ostringstream oss;
@@ -791,7 +798,7 @@ struct msgpack_pack_impl<Stream, T, msgpack_ld_enabler<Stream, T>> {
                 // values, subject to various platform/architecture vagaries.
                 oss.precision(std::numeric_limits<long double>::max_digits10);
                 oss << x;
-                packer.pack(oss.str());
+                msgpack_pack(packer, oss.str(), f);
             }
         }
     }
@@ -800,20 +807,19 @@ struct msgpack_pack_impl<Stream, T, msgpack_ld_enabler<Stream, T>> {
 inline namespace impl
 {
 
-template <typename Stream, typename T>
-using msgpack_string_enabler =
-    typename std::enable_if<is_msgpack_stream<Stream>::value && std::is_same<T, std::string>::value>::type;
+template <typename Stream>
+using msgpack_string_enabler = enable_if_t<is_msgpack_stream<Stream>::value>;
 }
 
-/// Implementation of piranha::msgpack_pack() for \p std::string.
+/// Specialisation of piranha::msgpack_pack() for \p std::string.
 /**
  * \note
- * This specialisation is enabled if \p Stream satisfies piranha::is_msgpack_stream and \p T is \p std::string.
+ * This specialisation is enabled if \p Stream satisfies piranha::is_msgpack_stream.
  *
  * The call operator will use directly the <tt>pack()</tt> method of the input msgpack packer.
  */
-template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, msgpack_string_enabler<Stream, T>> {
+template <typename Stream>
+struct msgpack_pack_impl<Stream, std::string, msgpack_string_enabler<Stream>> {
     /// Call operator.
     /**
      * @param[in] packer the target packer.
@@ -836,9 +842,8 @@ using msgpack_pack_impl_t = decltype(msgpack_pack_impl<Stream, T>{}(
 
 // Enabler for msgpack_pack.
 template <typename Stream, typename T>
-using msgpack_pack_enabler =
-    typename std::enable_if<is_msgpack_stream<Stream>::value && is_detected<msgpack_pack_impl_t, Stream, T>::value,
-                            int>::type;
+using msgpack_pack_enabler
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, is_detected<msgpack_pack_impl_t, Stream, T>>::value, int>;
 }
 
 /// Pack generic object in a msgpack stream.
@@ -882,7 +887,7 @@ template <typename T>
 using msgpack_convert_scalar_enabler = enable_if_t<is_serialization_scalar<T>::value>;
 }
 
-/// Implementation of piranha::msgpack_convert() for fundamental C++ types supported by msgpack.
+/// Specialisation of piranha::msgpack_convert() for fundamental C++ types supported by msgpack.
 /**
  * \note
  * This specialisation is enabled if \p T is one of the following types:
@@ -910,17 +915,87 @@ struct msgpack_convert_impl<T, msgpack_convert_scalar_enabler<T>> {
     }
 };
 
-/// Implementation of piranha::msgpack_convert() for <tt>long double</tt>.
+/// Specialisation of piranha::msgpack_convert() for \p std::string.
+/**
+ * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
+ */
 template <>
-struct msgpack_convert_impl<long double> {
+struct msgpack_convert_impl<std::string> {
+    /// Call operator.
+    /**
+     * @param[out] s the output string.
+     * @param[in] o the object to be converted.
+     *
+     * @throws unspecified any exception thrown by the public interface of <tt>msgpack::object</tt>.
+     */
+    void operator()(std::string &s, const msgpack::object &o, msgpack_format) const
+    {
+        o.convert(s);
+    }
+};
+
+inline namespace impl
+{
+
+template <typename T>
+using msgpack_convert_impl_t = decltype(msgpack_convert_impl<T>{}(
+    std::declval<T &>(), std::declval<const msgpack::object &>(), std::declval<msgpack_format>()));
+
+// Enabler for msgpack_convert.
+template <typename T>
+using msgpack_convert_enabler
+    = enable_if_t<conjunction<negation<std::is_const<T>>, is_detected<msgpack_convert_impl_t, T>>::value, int>;
+}
+
+/// Convert msgpack object.
+/**
+ * \note
+ * This function is enabled only if \p T is not const and if
+ * <tt>msgpack_convert_impl<T>{}(x, o, f)</tt> is a valid expression.
+ *
+ * This function is intended to convert the msgpack object \p o into an instance of type \p T, and to write
+ * the converted value into \p x. The actual implementation of this function is in the piranha::msgpack_convert_impl
+ * functor. The body of this function is equivalent to:
+ * @code
+ * msgpack_convert_impl<T>{}(x, o, f);
+ * @endcode
+ *
+ * @param[out] x the output value.
+ * @param[in] o the msgpack object that will be converted into \p x.
+ * @param[in] f the serialization format.
+ *
+ * @throws unspecified any exception thrown by the call operator piranha::msgpack_convert_impl.
+ */
+template <typename T, msgpack_convert_enabler<T> = 0>
+inline void msgpack_convert(T &x, const msgpack::object &o, msgpack_format f)
+{
+    msgpack_convert_impl<T>{}(x, o, f);
+}
+
+inline namespace impl
+{
+
+template <typename T>
+using msgpack_convert_ld_enabler
+    = enable_if_t<conjunction<std::is_same<T, long double>, has_msgpack_convert<std::string>>::value>;
+}
+
+/// Specialisation of piranha::msgpack_convert() for <tt>long double</tt>.
+/**
+ * \note
+ * This specialisation is enabled if \p T is <tt>long double</tt> and \p std::string satisfies
+ * piranha::has_msgpack_convert.
+ */
+template <typename T>
+struct msgpack_convert_impl<T, msgpack_convert_ld_enabler<T>> {
     /// Call operator.
     /**
      * @param[out] x the output value.
      * @param[in] o the object to be converted.
      * @param[in] f the serialization format.
      *
-     * @throws unspecified any exception thrown by <tt>msgpack::object::convert()</tt> or by the
-     * public interface of <tt>std::istringstream</tt>.
+     * @throws unspecified any exception thrown by the public interface of <tt>msgpack::object</tt> and
+     * <tt>std::istringstream</tt>.
      * @throws std::invalid_argument if the serialized value is a non-finite value not supported by the implementation,
      * or, when using the msgpack_format::portable format, the deserialized string does not represent a floating-point
      * value.
@@ -934,7 +1009,7 @@ struct msgpack_convert_impl<long double> {
             std::copy(tmp.begin(), tmp.end(), reinterpret_cast<char *>(&x));
         } else {
             PIRANHA_MAYBE_TLS std::string tmp;
-            o.convert(tmp);
+            msgpack_convert(tmp, o, f);
             if (tmp == "+nan") {
                 if (lim::has_quiet_NaN) {
                     x = std::copysign(lim::quiet_NaN(), 1.l);
@@ -977,63 +1052,6 @@ struct msgpack_convert_impl<long double> {
         }
     }
 };
-
-/// Implementation of piranha::msgpack_convert() for \p std::string.
-/**
- * The call operator will use directly the <tt>convert()</tt> method of the input msgpack object.
- */
-template <>
-struct msgpack_convert_impl<std::string> {
-    /// Call operator.
-    /**
-     * @param[out] s the output string.
-     * @param[in] o the object to be converted.
-     *
-     * @throws unspecified any exception thrown by <tt>msgpack::object::convert()</tt>.
-     */
-    void operator()(std::string &s, const msgpack::object &o, msgpack_format) const
-    {
-        o.convert(s);
-    }
-};
-
-inline namespace impl
-{
-
-template <typename T>
-using msgpack_convert_impl_t = decltype(msgpack_convert_impl<T>{}(
-    std::declval<T &>(), std::declval<const msgpack::object &>(), std::declval<msgpack_format>()));
-
-// Enabler for msgpack_convert.
-template <typename T>
-using msgpack_convert_enabler =
-    typename std::enable_if<!std::is_const<T>::value && is_detected<msgpack_convert_impl_t, T>::value, int>::type;
-}
-
-/// Convert msgpack object.
-/**
- * \note
- * This function is enabled only if \p T is not const and if
- * <tt>msgpack_convert_impl<T>{}(x, o, f)</tt> is a valid expression.
- *
- * This function is intended to convert the msgpack object \p o into an instance of type \p T, and to write
- * the converted value into \p x. The actual implementation of this function is in the piranha::msgpack_convert_impl
- * functor. The body of this function is equivalent to:
- * @code
- * msgpack_convert_impl<T>{}(x, o, f);
- * @endcode
- *
- * @param[out] x the output value.
- * @param[in] o the msgpack object that will be converted into \p x.
- * @param[in] f the serialization format.
- *
- * @throws unspecified any exception thrown by the call operator piranha::msgpack_convert_impl.
- */
-template <typename T, msgpack_convert_enabler<T> = 0>
-inline void msgpack_convert(T &x, const msgpack::object &o, msgpack_format f)
-{
-    msgpack_convert_impl<T>{}(x, o, f);
-}
 
 inline namespace impl
 {
@@ -1269,10 +1287,9 @@ inline void load_file_boost_compress_impl(T &x, std::ifstream &ifile, data_forma
 }
 
 // Main save/load functions for Boost format.
-template <typename T, typename std::enable_if<has_boost_save<boost::archive::binary_oarchive, T>::value
-                                                  && has_boost_save<boost::archive::text_oarchive, T>::value,
-                                              int>::type
-                      = 0>
+template <typename T, enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive, T>,
+                                              has_boost_save<boost::archive::text_oarchive, T>>::value,
+                                  int> = 0>
 inline void save_file_boost_impl(const T &x, const std::string &filename, data_format f, compression c)
 {
     namespace bi = boost::iostreams;
@@ -1302,20 +1319,18 @@ inline void save_file_boost_impl(const T &x, const std::string &filename, data_f
     }
 }
 
-template <typename T, typename std::enable_if<!has_boost_save<boost::archive::binary_oarchive, T>::value
-                                                  || !has_boost_save<boost::archive::text_oarchive, T>::value,
-                                              int>::type
-                      = 0>
+template <typename T, enable_if_t<disjunction<negation<has_boost_save<boost::archive::binary_oarchive, T>>,
+                                              negation<has_boost_save<boost::archive::text_oarchive, T>>>::value,
+                                  int> = 0>
 inline void save_file_boost_impl(const T &, const std::string &, data_format, compression)
 {
     piranha_throw(not_implemented_error,
                   "type '" + detail::demangle<T>() + "' does not support serialization via Boost");
 }
 
-template <typename T, typename std::enable_if<has_boost_load<boost::archive::binary_iarchive, T>::value
-                                                  && has_boost_load<boost::archive::text_iarchive, T>::value,
-                                              int>::type
-                      = 0>
+template <typename T, enable_if_t<conjunction<has_boost_load<boost::archive::binary_iarchive, T>,
+                                              has_boost_load<boost::archive::text_iarchive, T>>::value,
+                                  int> = 0>
 inline void load_file_boost_impl(T &x, const std::string &filename, data_format f, compression c)
 {
     namespace bi = boost::iostreams;
@@ -1344,10 +1359,9 @@ inline void load_file_boost_impl(T &x, const std::string &filename, data_format 
     }
 }
 
-template <typename T, typename std::enable_if<!has_boost_load<boost::archive::binary_iarchive, T>::value
-                                                  || !has_boost_load<boost::archive::text_iarchive, T>::value,
-                                              int>::type
-                      = 0>
+template <typename T, enable_if_t<disjunction<negation<has_boost_load<boost::archive::binary_iarchive, T>>,
+                                              negation<has_boost_load<boost::archive::text_iarchive, T>>>::value,
+                                  int> = 0>
 inline void load_file_boost_impl(T &, const std::string &, data_format, compression)
 {
     piranha_throw(not_implemented_error,
@@ -1384,12 +1398,11 @@ inline void load_file_msgpack_compress_impl(T &x, const std::string &filename, m
 }
 
 // Main msgpack load/save functions.
-template <typename T,
-          typename std::enable_if<has_msgpack_pack<msgpack_stream_wrapper<std::ofstream>, T>::value
-                                      && has_msgpack_pack<msgpack_stream_wrapper<boost::iostreams::filtering_ostream>,
-                                                          T>::value,
-                                  int>::type
-          = 0>
+template <
+    typename T,
+    enable_if_t<conjunction<has_msgpack_pack<msgpack_stream_wrapper<std::ofstream>, T>,
+                            has_msgpack_pack<msgpack_stream_wrapper<boost::iostreams::filtering_ostream>, T>>::value,
+                int> = 0>
 inline void save_file_msgpack_impl(const T &x, const std::string &filename, data_format f, compression c)
 {
     namespace bi = boost::iostreams;
@@ -1416,18 +1429,17 @@ inline void save_file_msgpack_impl(const T &x, const std::string &filename, data
 }
 
 template <typename T,
-          typename std::enable_if<!has_msgpack_pack<msgpack_stream_wrapper<std::ofstream>, T>::value
-                                      || !has_msgpack_pack<msgpack_stream_wrapper<boost::iostreams::filtering_ostream>,
-                                                           T>::value,
-                                  int>::type
-          = 0>
+          enable_if_t<disjunction<negation<has_msgpack_pack<msgpack_stream_wrapper<std::ofstream>, T>>,
+                                  negation<has_msgpack_pack<msgpack_stream_wrapper<boost::iostreams::filtering_ostream>,
+                                                            T>>>::value,
+                      int> = 0>
 inline void save_file_msgpack_impl(const T &, const std::string &, data_format, compression)
 {
     piranha_throw(not_implemented_error,
                   "type '" + detail::demangle<T>() + "' does not support serialization via msgpack");
 }
 
-template <typename T, typename std::enable_if<has_msgpack_convert<T>::value, int>::type = 0>
+template <typename T, enable_if_t<has_msgpack_convert<T>::value, int> = 0>
 inline void load_file_msgpack_impl(T &x, const std::string &filename, data_format f, compression c)
 {
     namespace bi = boost::iostreams;
@@ -1462,7 +1474,7 @@ inline void load_file_msgpack_impl(T &x, const std::string &filename, data_forma
     }
 }
 
-template <typename T, typename std::enable_if<!has_msgpack_convert<T>::value, int>::type = 0>
+template <typename T, enable_if_t<!has_msgpack_convert<T>::value, int> = 0>
 inline void load_file_msgpack_impl(T &, const std::string &, data_format, compression)
 {
     piranha_throw(not_implemented_error,
@@ -1488,7 +1500,7 @@ inline void load_file_msgpack_impl(T &, const std::string &, data_format, compre
 
 // General enabler for load_file().
 template <typename T>
-using load_file_enabler = typename std::enable_if<!std::is_const<T>::value, int>::type;
+using load_file_enabler = enable_if_t<!std::is_const<T>::value, int>;
 
 // Utility to deduce compression and data format from a filename.
 inline std::pair<compression, data_format> get_cdf_from_filename(std::string filename)

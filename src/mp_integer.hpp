@@ -4318,7 +4318,7 @@ public:
      *
      * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
      * @throws unspecified any exception thrown by:
-     * - the public interface of <tt>msgpack::packer</tt>,
+     * - the public interface of \p msgpack::packer and \p std::std::ostringstream,
      * - piranha::msgpack_pack(),
      * - the conversion of \p this to string.
      */
@@ -5112,7 +5112,7 @@ using mp_integer_msgpack_convert_enabler = typename std::
     enable_if<conjunction<detail::is_mp_integer<T>, is_detected<msgpack_convert_member_t, T>>::value>::type;
 }
 
-/// Implementation of piranha::msgpack_pack() for piranha::mp_integer.
+/// Specialisation of piranha::msgpack_pack() for piranha::mp_integer.
 /**
  * \note
  * This specialisation is enabled if \p T is an instance of piranha::mp_integer supporting
@@ -5136,7 +5136,7 @@ struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>> 
     }
 };
 
-/// Implementation of piranha::msgpack_convert() for piranha::mp_integer.
+/// Specialisation of piranha::msgpack_convert() for piranha::mp_integer.
 /**
  * \note
  * This specialisation is enabled if \p T is an instance of piranha::mp_integer.

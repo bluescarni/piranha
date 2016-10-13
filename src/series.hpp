@@ -3845,7 +3845,7 @@ using series_msgpack_convert_enabler =
                                         key_has_msgpack_convert<typename Series::term_type::key_type>>::value>::type;
 }
 
-/// Implementation of piranha::msgpack_pack() for piranha::series.
+/// Specialisation of piranha::msgpack_pack() for piranha::series.
 /**
  * \note
  * This specialisation is enabled only if:
@@ -3896,7 +3896,7 @@ struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Ser
     }
 };
 
-/// Implementation of piranha::msgpack_convert() for piranha::series.
+/// Specialisation of piranha::msgpack_convert() for piranha::series.
 /**
  * \note
  * This specialisation is enabled only if:
