@@ -3832,13 +3832,17 @@ inline namespace impl
 // Same scheme as above for Boost.
 template <typename Stream, typename Series>
 using series_msgpack_pack_enabler = typename std::
-    enable_if<conjunction<is_series<Series>, has_msgpack_pack<Stream, std::string>,
+    enable_if<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
+                          has_safe_cast<std::uint32_t,decltype(symbol_set{}.size())>,
+                          has_safe_cast<std::uint32_t,typename Series::size_type>,
                           has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
                           key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>::type;
 
 template <typename Series>
 using series_msgpack_convert_enabler =
-    typename std::enable_if<conjunction<is_series<Series>, has_msgpack_convert<typename Series::term_type::cf_type>,
+    typename std::enable_if<conjunction<is_series<Series>,
+    has_msgpack_convert<std::string>,
+    has_msgpack_convert<typename Series::term_type::cf_type>,
                                         key_has_msgpack_convert<typename Series::term_type::key_type>>::value>::type;
 }
 
@@ -3847,7 +3851,9 @@ using series_msgpack_convert_enabler =
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
- * - the coefficient type and \p std::string satisfy piranha::has_msgpack_pack,
+ * - \p Stream satisfies piranha::is_msgpack_stream,
+ * - the size types of \p Series and piranha::symbol_set, the coefficient type and \p std::string
+ *   satisfy piranha::has_msgpack_pack,
  * - the key type satisfies piranha::key_has_msgpack_pack.
  */
 template <typename Stream, typename Series>
@@ -3892,7 +3898,7 @@ struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Ser
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
- * - the coefficient type satisfies piranha::has_msgpack_convert,
+ * - \p std::string and the coefficient type satisfy piranha::has_msgpack_convert,
  * - the key type satisfies piranha::key_has_msgpack_convert.
  */
 template <typename Series>
@@ -3914,8 +3920,7 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
      * - the public interface of <tt>msgpack::object</tt>,
      * - piranha::msgpack_convert(),
      * - the <tt>%msgpack_convert()</tt> method of the key,
-     * - the public interface of piranha::symbol_set and piranha::hash_set,
-     * - piranha::series::set_symbol_set() and piranha::series::insert(),
+     * - the public interfaces of piranha::symbol_set, piranha::hash_set and piranha::series,
      * - the constructor of the term type of the series,
      * - <tt>boost::numeric_cast()</tt>.
      */
@@ -3927,40 +3932,12 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
         using s_size_t = decltype(s.size());
         // Erase s.
         s = Series{};
-        std::vector<msgpack::object> tmp_v;
+        // Convert the object.
+        std::array<std::vector<msgpack::object>,2> tmp_v;
         o.convert(tmp_v);
-        // Check size consistency.
-        if (unlikely(f == msgpack_format::portable && tmp_v.size() != 3u)) {
-            piranha_throw(std::invalid_argument, "error converting series from msgpack object: "
-                                                 "the format is portable and the size of the object is "
-                                                     + std::to_string(tmp_v.size()) + " instead of 3");
-        }
-        if (unlikely(f == msgpack_format::binary && tmp_v.size() != 2u)) {
-            piranha_throw(std::invalid_argument, "error converting series from msgpack object: "
-                                                 "the format is binary and the size of the object is "
-                                                     + std::to_string(tmp_v.size()) + " instead of 2");
-        }
-        // Check version in portable format.
-        unsigned version;
-        if (f == msgpack_format::portable) {
-            msgpack_convert(version, tmp_v[0], f);
-            if (unlikely(version > PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION)) {
-                piranha_throw(std::invalid_argument, "the series msgpack archive version " + std::to_string(version)
-                                                         + " is greater than the latest archive version "
-                                                         + std::to_string(PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION)
-                                                         + " supported by this version of Piranha");
-            }
-        }
-        // The index of the next tmp_v element to handle depends on the msgpack format.
-        const std::vector<msgpack::object>::size_type v_idx = (f == msgpack_format::portable) ? 1u : 0u;
-        // Extract the symbol set and the collection of terms as msgpack::objects.
-        std::vector<msgpack::object> tmp_ss;
-        std::vector<msgpack::object> tmp_terms;
-        tmp_v[v_idx].convert(tmp_ss);
-        tmp_v[static_cast<std::vector<msgpack::object>::size_type>(v_idx + 1u)].convert(tmp_terms);
         // Create the symbol set, passing through a vec of str.
         std::vector<std::string> v_str;
-        std::transform(tmp_ss.begin(), tmp_ss.end(), std::back_inserter(v_str),
+        std::transform(tmp_v[0].begin(), tmp_v[0].end(), std::back_inserter(v_str),
                        [f](const msgpack::object &obj) -> std::string {
                            std::string tmp_str;
                            msgpack_convert(tmp_str, obj, f);
@@ -3969,9 +3946,9 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
         s.set_symbol_set(symbol_set(v_str.begin(), v_str.end()));
         // Preallocate buckets.
         s._container().rehash(boost::numeric_cast<s_size_t>(
-            std::ceil(static_cast<double>(tmp_terms.size()) / s._container().max_load_factor())));
+            std::ceil(static_cast<double>(tmp_v[1].size()) / s._container().max_load_factor())));
         // Insert all the terms.
-        for (const auto &t : tmp_terms) {
+        for (const auto &t : tmp_v[1]) {
             std::array<msgpack::object, 2> tmp_term;
             t.convert(tmp_term);
             cf_type tmp_cf;
@@ -3982,8 +3959,6 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
         }
     }
 };
-
-#undef PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION
 
 #endif
 }

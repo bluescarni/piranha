@@ -199,7 +199,6 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
     using s_size_t = pt1::size_type;
     {
         boost::archive::binary_oarchive oa(ss);
-        boost_save(oa, 0u);
         boost_save(oa, ss_size_t(2));
         boost_save(oa, std::string("x"));
         boost_save(oa, std::string("y"));
@@ -218,7 +217,6 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
     ss.clear();
     {
         boost::archive::binary_oarchive oa(ss);
-        boost_save(oa, 0u);
         boost_save(oa, ss_size_t(2));
         boost_save(oa, std::string("x"));
         boost_save(oa, std::string("y"));
@@ -235,7 +233,6 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
     ss.clear();
     {
         boost::archive::binary_oarchive oa(ss);
-        boost_save(oa, 0u);
         boost_save(oa, ss_size_t(2));
         boost_save(oa, std::string("x"));
         // Save an int in place of a string.
@@ -246,26 +243,6 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
         boost::archive::binary_iarchive ia(ss);
         pt1 tmp;
         BOOST_CHECK_THROW(boost_load(ia, tmp), boost::archive::archive_exception);
-    }
-    ss.str("");
-    ss.clear();
-    {
-        boost::archive::binary_oarchive oa(ss);
-        // Save version too high.
-        boost_save(oa, 1u);
-        boost_save(oa, ss_size_t(2));
-        boost_save(oa, std::string("x"));
-        boost_save(oa, std::string("y"));
-        boost_save(oa, s_size_t(0));
-    }
-    {
-        boost::archive::binary_iarchive ia(ss);
-        pt1 tmp;
-        auto msg_checker = [](const std::invalid_argument &inva) {
-            return boost::contains(inva.what(), "what: the series Boost archive version 1 is greater than the "
-                                                "latest archive version 0 supported by this version of Piranha");
-        };
-        BOOST_CHECK_EXCEPTION(boost_load(ia, tmp), std::invalid_argument, msg_checker);
     }
 }
 
@@ -397,54 +374,7 @@ BOOST_AUTO_TEST_CASE(series_msgpack_s11n_test_00)
     msgpack::sbuffer sbuf;
     {
         msgpack::packer<msgpack::sbuffer> p(sbuf);
-        p.pack_array(1);
-        msgpack_pack(p, 42, msgpack_format::portable);
-        auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-        auto msg_checker = [](const std::invalid_argument &inva) {
-            return boost::contains(inva.what(), "error converting series from msgpack object: "
-                                                "the format is portable and the size of the object is 1"
-                                                " instead of 3");
-        };
-        pt1 tmp;
-        BOOST_CHECK_EXCEPTION(msgpack_convert(tmp, oh.get(), msgpack_format::portable), std::invalid_argument,
-                              msg_checker);
-    }
-    sbuf.clear();
-    {
-        msgpack::packer<msgpack::sbuffer> p(sbuf);
-        p.pack_array(1);
-        msgpack_pack(p, 42, msgpack_format::binary);
-        auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-        auto msg_checker = [](const std::invalid_argument &inva) {
-            return boost::contains(inva.what(), "error converting series from msgpack object: "
-                                                "the format is binary and the size of the object is 1"
-                                                " instead of 2");
-        };
-        pt1 tmp;
-        BOOST_CHECK_EXCEPTION(msgpack_convert(tmp, oh.get(), msgpack_format::binary), std::invalid_argument,
-                              msg_checker);
-    }
-    sbuf.clear();
-    {
-        msgpack::packer<msgpack::sbuffer> p(sbuf);
-        p.pack_array(3);
-        msgpack_pack(p, 1u, msgpack_format::portable);
-        msgpack_pack(p, 1u, msgpack_format::portable);
-        msgpack_pack(p, 1u, msgpack_format::portable);
-        auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-        auto msg_checker = [](const std::invalid_argument &inva) {
-            return boost::contains(inva.what(), "what: the series msgpack archive version 1 is greater than the "
-                                                "latest archive version 0 supported by this version of Piranha");
-        };
-        pt1 tmp;
-        BOOST_CHECK_EXCEPTION(msgpack_convert(tmp, oh.get(), msgpack_format::portable), std::invalid_argument,
-                              msg_checker);
-    }
-    sbuf.clear();
-    {
-        msgpack::packer<msgpack::sbuffer> p(sbuf);
-        p.pack_array(3);
-        msgpack_pack(p, 0u, msgpack_format::portable);
+        p.pack_array(2);
         p.pack_array(2);
         msgpack_pack(p, std::string("x"), msgpack_format::portable);
         msgpack_pack(p, std::string("y"), msgpack_format::portable);
