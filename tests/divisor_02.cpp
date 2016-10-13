@@ -168,7 +168,6 @@ struct boost_s11n_tester {
         {
             using p_type = divisor_p_type<T>;
             boost::archive::binary_oarchive oa(sst);
-            boost_save(oa, 0u);
             boost_save(oa, typename d_type::size_type(1));
             boost_save(oa, typename p_type::v_type::size_type(0));
             boost_save(oa, T(0));
