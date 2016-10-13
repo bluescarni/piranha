@@ -3699,7 +3699,7 @@ inline namespace impl
 template <typename Archive, typename Series>
 using series_boost_save_enabler = typename std::
     enable_if<conjunction<is_series<Series>, has_boost_save<Archive, decltype(symbol_set{}.size())>,
-                          has_boost_save<Archive, unsigned>, has_boost_save<Archive, const std::string &>,
+                          has_boost_save<Archive, const std::string &>,
                           has_boost_save<Archive, decltype(std::declval<const Series &>().size())>,
                           has_boost_save<Archive, typename Series::term_type::cf_type>,
                           key_has_boost_save<Archive, typename Series::term_type::key_type>>::value>::type;
@@ -3708,20 +3708,18 @@ using series_boost_save_enabler = typename std::
 template <typename Archive, typename Series>
 using series_boost_load_enabler = typename std::
     enable_if<conjunction<is_series<Series>, has_boost_load<Archive, decltype(symbol_set{}.size())>,
-                          has_boost_load<Archive, unsigned>, has_boost_load<Archive, std::string>,
+                          has_boost_load<Archive, std::string>,
                           has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
                           has_boost_load<Archive, typename Series::term_type::cf_type>,
                           key_has_boost_load<Archive, typename Series::term_type::key_type>>::value>::type;
 }
-
-#define PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION 0u
 
 /// Implementation of piranha::boost_save() for piranha::series.
 /**
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
- * - the coefficient type, \p unsigned, \p std::string and the integral types representing the size of the series
+ * - the coefficient type, \p std::string and the integral types representing the size of the series
  *   and the size of piranha::symbol_set satisfy piranha::has_boost_save,
  * - the key type satisfies piranha::key_has_boost_save.
  */
@@ -3740,8 +3738,6 @@ public:
      */
     void operator()(Archive &ar, const Series &s) const
     {
-        // Serialize the version number.
-        boost_save(ar, PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION);
         // Serialize the symbol set.
         boost_save(ar, s.get_symbol_set().size());
         for (const auto &sym : s.get_symbol_set()) {
@@ -3761,7 +3757,7 @@ public:
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
- * - the coefficient type, \p unsigned, \p std::string and the integral types representing the size of the series and
+ * - the coefficient type, \p std::string and the integral types representing the size of the series and
  *   the size of piranha::symbol_set satisfy piranha::has_boost_load,
  * - the key type satisfies piranha::key_has_boost_load.
  */
@@ -3777,7 +3773,6 @@ public:
      * @param[in] ar source archive.
      * @param[out] s the output series.
      *
-     * @throws std::invalid_argument if \p ar is an archive created with a more recent version of Piranha.
      * @throws unspecified any exception thrown by:
      * - piranha::boost_load(),
      * - the <tt>%boost_load()</tt> method of the key,
@@ -3792,15 +3787,6 @@ public:
         using ss_size_t = decltype(s.get_symbol_set().size());
         using s_size_t = decltype(s.size());
         using term_type = typename Series::term_type;
-        // Load the version number.
-        unsigned version;
-        boost_load(ar, version);
-        if (unlikely(version > PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION)) {
-            piranha_throw(std::invalid_argument, "the series Boost archive version " + std::to_string(version)
-                                                     + " is greater than the latest archive version "
-                                                     + std::to_string(PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION)
-                                                     + " supported by this version of Piranha");
-        }
         // Erase s.
         s = Series{};
         // Recover the symbol set.
@@ -3838,8 +3824,6 @@ public:
     }
 };
 
-#undef PIRANHA_SERIES_BOOST_S11N_LATEST_VERSION
-
 #if defined(PIRANHA_WITH_MSGPACK)
 
 inline namespace impl
@@ -3848,7 +3832,7 @@ inline namespace impl
 // Same scheme as above for Boost.
 template <typename Stream, typename Series>
 using series_msgpack_pack_enabler = typename std::
-    enable_if<conjunction<is_series<Series>, has_msgpack_pack<Stream, unsigned>, has_msgpack_pack<Stream, std::string>,
+    enable_if<conjunction<is_series<Series>, has_msgpack_pack<Stream, std::string>,
                           has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
                           key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>::type;
 
@@ -3858,14 +3842,12 @@ using series_msgpack_convert_enabler =
                                         key_has_msgpack_convert<typename Series::term_type::key_type>>::value>::type;
 }
 
-#define PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION 0u
-
 /// Implementation of piranha::msgpack_pack() for piranha::series.
 /**
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
- * - the coefficient type, \p unsigned and \p std::string satisfy piranha::has_msgpack_pack,
+ * - the coefficient type and \p std::string satisfy piranha::has_msgpack_pack,
  * - the key type satisfies piranha::key_has_msgpack_pack.
  */
 template <typename Stream, typename Series>
@@ -3884,16 +3866,10 @@ struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Ser
      */
     void operator()(msgpack::packer<Stream> &packer, const Series &s, msgpack_format f) const
     {
-        // A series is an array made of up to three elements:
-        // - version (in portable format),
-        // - the symbol set (both formats),
-        // - the array of terms (both formats).
-        if (f == msgpack_format::portable) {
-            packer.pack_array(3u);
-            msgpack_pack(packer, PIRANHA_SERIES_MSGPACK_S11N_LATEST_VERSION, f);
-        } else {
-            packer.pack_array(2u);
-        }
+        // A series is an array made of:
+        // - the symbol set,
+        // - the array of terms.
+        packer.pack_array(2u);
         // Pack the symbol set.
         const auto &ss = s.get_symbol_set();
         packer.pack_array(safe_cast<std::uint32_t>(ss.size()));
