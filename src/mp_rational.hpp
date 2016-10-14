@@ -75,7 +75,7 @@ struct is_mp_rational_interoperable_type {
 };
 
 // The second complication is that we need to cope with the fact that we are using this tt in a context
-// in which Rational might not actually be a rational (in the pow_impl specialsiation). In this case we must prevent
+// in which Rational might not actually be a rational (in the pow_impl specialisation). In this case we must prevent
 // a hard error to be generated.
 template <typename T, typename Rational>
 struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!is_mp_rational<Rational>::value>::type> {
