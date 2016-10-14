@@ -1757,9 +1757,10 @@ public:
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     template <typename Stream>
-    using msgpack_pack_enabler =
-        typename std::enable_if<is_msgpack_stream<Stream>::value && has_msgpack_pack<Stream, int_type>::value,
-                                int>::type;
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, int_type>>::value, int>;
+    template <typename U>
+    using msgpack_convert_enabler = enable_if_t<has_msgpack_convert<typename U::int_type>::value, int>;
 
 public:
     /// Pack in msgpack format.
@@ -1774,7 +1775,7 @@ public:
      * @param f the desired piranha::msgpack_format.
      *
      * @throws unspecified any exception thrown by:
-     * - the public API of <tt>msgpack::packer</tt>,
+     * - the public interface of <tt>msgpack::packer</tt>,
      * - piranha::msgpack_pack().
      */
     template <typename Stream, msgpack_pack_enabler<Stream> = 0>
@@ -1786,9 +1787,13 @@ public:
     }
     /// Convert from msgpack object.
     /**
+     * \note
+     * This method is enabled only if the type representing the
+     * numerator and denominator satisfies piranha::has_msgpack_convert.
+     *
      * This method will convert \p o into \p this. If \p f is piranha::msgpack_format::portable
      * this method will check that the deserialized rational is in canonical form before assigning it to \p this,
-     * otherwise no check will be performed. The behaviour will be undefined if the deserialized denominator is zero.
+     * otherwise no check will be performed and the behaviour will be undefined if the deserialized denominator is zero.
      *
      * @param o the source <tt>msgpack::object</tt>.
      * @param f the desired piranha::msgpack_format.
@@ -1798,6 +1803,7 @@ public:
      * - piranha::msgpack_convert(),
      * - the constructor of piranha::mp_rational from numerator and denominator.
      */
+    template <typename U = mp_rational, msgpack_convert_enabler<U> = 0>
     void msgpack_convert(const msgpack::object &o, msgpack_format f)
     {
         std::array<msgpack::object, 2u> v;
@@ -2422,19 +2428,15 @@ inline namespace impl
 {
 
 template <typename Stream, typename T>
-using mp_rational_msgpack_pack_enabler = typename std::
-    enable_if<detail::is_mp_rational<T>::value
-              && detail::true_tt<decltype(std::declval<const T &>().msgpack_pack(
-                     std::declval<msgpack::packer<Stream> &>(), std::declval<msgpack_format>()))>::value>::type;
+using mp_rational_msgpack_pack_enabler
+    = enable_if_t<conjunction<detail::is_mp_rational<T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>;
 
 template <typename T>
-using mp_rational_msgpack_convert_enabler = typename std::
-    enable_if<detail::is_mp_rational<T>::value
-              && detail::true_tt<decltype(std::declval<T &>().msgpack_convert(
-                     std::declval<const msgpack::object &>(), std::declval<msgpack_format>()))>::value>::type;
+using mp_rational_msgpack_convert_enabler
+    = enable_if_t<conjunction<detail::is_mp_rational<T>, is_detected<msgpack_convert_member_t, T>>::value>;
 }
 
-/// Implementation of piranha::msgpack_pack() for piranha::mp_rational.
+/// Specialisation of piranha::msgpack_pack() for piranha::mp_rational.
 /**
  * \note
  * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
@@ -2458,7 +2460,7 @@ struct msgpack_pack_impl<Stream, T, mp_rational_msgpack_pack_enabler<Stream, T>>
     }
 };
 
-/// Implementation of piranha::msgpack_convert() for piranha::mp_rational.
+/// Specialisation of piranha::msgpack_convert() for piranha::mp_rational.
 /**
  * \note
  * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the

@@ -1798,15 +1798,32 @@ public:
 private:
     // msgpack enabler.
     template <typename Stream>
-    using msgpack_pack_enabler =
-        // NOTE: integral types are always serializable for any valid stream.
-        typename std::enable_if<is_msgpack_stream<Stream>::value, int>::type;
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, ::mpfr_prec_t>,
+                                  has_msgpack_pack<Stream, std::string>,
+                                  has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                                  has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                                  has_msgpack_pack<Stream, ::mp_limb_t>,
+                                  has_safe_cast<std::uint32_t, ::mpfr_prec_t>>::value,
+                      int>;
+    template <typename U>
+    using msgpack_convert_enabler
+        = enable_if_t<conjunction<std::is_same<U, U>, // For SFINAE.
+                                  has_msgpack_convert<::mpfr_prec_t>, has_msgpack_convert<std::string>,
+                                  has_msgpack_convert<decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                                  has_msgpack_convert<decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                                  has_msgpack_convert<::mp_limb_t>>::value,
+                      int>;
 
 public:
     /// Pack in msgpack format.
     /**
      * \note
-     * This method is enabled only if \p Stream satisfies piranha::is_msgpack_stream.
+     * This method is enabled only if:
+     * - \p Stream satisfies piranha::is_msgpack_stream,
+     * - \p std::string and the integral types in terms of which the internal representation of
+     *   piranha::real is defined satisfy piranha::has_msgpack_pack,
+     * - \p mpfr_prec_t can be safely converted to \p std::uint32_t.
      *
      * This method will pack \p this into \p p. If \p f is msgpack_format::portable, then
      * the precision of \p this and a decimal string representation of \p this are packed in an array.
@@ -1850,6 +1867,10 @@ public:
     }
     /// Convert from msgpack object.
     /**
+     * \note
+     * This method is enabled only if \p std::string and all the integral types used to define the internal
+     * representation of piranha::real satisfy piranha::has_msgpack_convert.
+     *
      * This method will convert the object \p o into \p this. If \p f is piranha::msgpack_format::binary,
      * this method offers the basic exception safety guarantee and it performs minimal checking on the input data.
      * Calling this method in binary mode will result in undefined behaviour if \p o does not contain an integer
@@ -1868,6 +1889,7 @@ public:
      * - piranha::msgpack_convert(),
      * - the constructor of piranha::real from string.
      */
+    template <typename U = real, msgpack_convert_enabler<U> = 0>
     void msgpack_convert(const msgpack::object &o, msgpack_format f)
     {
         if (f == msgpack_format::portable) {
@@ -2431,22 +2453,22 @@ inline namespace impl
 {
 
 // Enablers for msgpack serialization.
-template <typename Stream, typename T>
-using real_msgpack_pack_enabler = typename std::
-    enable_if<conjunction<std::is_same<real, T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>::type;
+template <typename Stream>
+using real_msgpack_pack_enabler = enable_if_t<is_detected<msgpack_pack_member_t, Stream, real>::value>;
 
 template <typename T>
-using real_msgpack_convert_enabler = typename std::enable_if<std::is_same<real, T>::value>::type;
+using real_msgpack_convert_enabler
+    = enable_if_t<conjunction<std::is_same<real, T>, is_detected<msgpack_convert_member_t, T>>::value>;
 }
 
-/// Implementation of piranha::msgpack_pack() for piranha::real.
+/// Specialisation of piranha::msgpack_pack() for piranha::real.
 /**
  * \note
  * This specialisation is enabled if \p T is piranha::real and
  * the piranha::real::msgpack_pack() method is supported with a stream of type \p Stream.
  */
-template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, real_msgpack_pack_enabler<Stream, T>> {
+template <typename Stream>
+struct msgpack_pack_impl<Stream, real, real_msgpack_pack_enabler<Stream>> {
     /// Call operator.
     /**
      * The call operator will use piranha::real::msgpack_pack() internally.
@@ -2457,16 +2479,17 @@ struct msgpack_pack_impl<Stream, T, real_msgpack_pack_enabler<Stream, T>> {
      *
      * @throws unspecified any exception thrown by piranha::real::msgpack_pack().
      */
-    void operator()(msgpack::packer<Stream> &p, const T &x, msgpack_format f) const
+    void operator()(msgpack::packer<Stream> &p, const real &x, msgpack_format f) const
     {
         x.msgpack_pack(p, f);
     }
 };
 
-/// Implementation of piranha::msgpack_convert() for piranha::real.
+/// Specialisation of piranha::msgpack_convert() for piranha::real.
 /**
  * \note
- * This specialisation is enabled if \p T is piranha::real.
+ * This specialisation is enabled if \p T is piranha::real and
+ * the piranha::real::msgpack_convert() method is supported.
  */
 template <typename T>
 struct msgpack_convert_impl<T, real_msgpack_convert_enabler<T>> {

@@ -1035,7 +1035,8 @@ public:
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     template <typename Stream>
-    using msgpack_pack_enabler = enable_if_t<has_msgpack_pack<Stream, container_type>::value, int>;
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, container_type>>::value, int>;
     template <typename U>
     using msgpack_convert_enabler = enable_if_t<has_msgpack_convert<typename U::container_type>::value, int>;
 
@@ -1043,7 +1044,8 @@ public:
     /// Pack in msgpack format.
     /**
      * \note
-     * This method is enabled only if the internal container type satisfies piranha::has_msgpack_pack.
+     * This method is enabled only if \p Stream satisfies piranha::is_msgpack_stream and the internal container type
+     * satisfies piranha::has_msgpack_pack.
      *
      * This method will pack \p this in to \p p using the format f.
      *

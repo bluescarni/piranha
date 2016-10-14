@@ -1219,8 +1219,9 @@ public:
 private:
     // Enablers for msgpack serialization.
     template <typename Stream>
-    using msgpack_pack_enabler
-        = enable_if_t<conjunction<has_msgpack_pack<Stream, T>, has_msgpack_pack<Stream, v_type>>::value, int>;
+    using msgpack_pack_enabler = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+                                                         has_msgpack_pack<Stream, v_type>>::value,
+                                             int>;
     template <typename U>
     using msgpack_convert_enabler = enable_if_t<conjunction<has_msgpack_convert<typename U::value_type>,
                                                             has_msgpack_convert<typename U::v_type>>::value,
@@ -1230,8 +1231,8 @@ public:
     /// Serialize in msgpack format.
     /**
      * \note
-     * This method is activated only if both \p T and piranha::kronecker_monomial::v_type satisfy
-     * piranha::has_msgpack_pack.
+     * This method is activated only if \p Stream satisfies piranha::is_msgpack_stream and both \p T and
+     * piranha::kronecker_monomial::v_type satisfy piranha::has_msgpack_pack.
      *
      * This method will pack \p this into \p packer. The packed object is the internal integral instance in binary
      * format, an array of exponents in portable format.

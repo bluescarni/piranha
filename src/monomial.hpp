@@ -1165,7 +1165,10 @@ public:
 private:
     // Enablers for msgpack serialization.
     template <typename Stream>
-    using msgpack_pack_enabler = enable_if_t<has_msgpack_pack<Stream, typename base::container_type>::value, int>;
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>,
+                                  has_msgpack_pack<Stream, typename base::container_type>>::value,
+                      int>;
     template <typename U>
     using msgpack_convert_enabler = enable_if_t<has_msgpack_convert<typename U::container_type>::value, int>;
 
@@ -1173,7 +1176,8 @@ public:
     /// Serialize in msgpack format.
     /**
      * \note
-     * This method is enabled only if the internal container type satisfies piranha::has_msgpack_pack.
+     * This method is enabled only if \p Stream satisfies piranha::is_msgpack_stream and the internal container type
+     * satisfies piranha::has_msgpack_pack.
      *
      * This method will pack \p this into \p packer using the format \p f.
      *
