@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_RATIONAL_FUNCTION_HPP
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -52,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include "polynomial.hpp"
 #include "pow.hpp"
 #include "print_tex_coefficient.hpp"
+#include "s11n.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
 #include "type_traits.hpp"
@@ -1773,6 +1775,162 @@ public:
 
 template <typename T>
 const std::size_t series_recursion_index<T, detail::sri_rf_enabler<T>>::value;
+
+inline namespace impl
+{
+
+template <typename Archive, typename T>
+using rf_boost_save_enabler = enable_if_t<conjunction<std::is_base_of<detail::rational_function_tag, T>,
+                                                      has_boost_save<Archive, typename T::p_type>>::value>;
+
+template <typename Archive, typename T>
+using rf_boost_load_enabler = enable_if_t<conjunction<std::is_base_of<detail::rational_function_tag, T>,
+                                                      has_boost_load<Archive, typename T::p_type>>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::rational_function.
+/**
+ * \note
+ * This specialisation is enabled only if \p T is an instance of piranha::rational_function whose numerator/denominator
+ * type satisfies piranha::has_boost_save.
+ */
+template <typename Archive, typename T>
+class boost_save_impl<Archive, T, rf_boost_save_enabler<Archive, T>>
+{
+public:
+    /// Call operator.
+    /**
+     * @param ar the target archive.
+     * @param r the input rational function.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_save().
+     */
+    void operator()(Archive &ar, const T &r) const
+    {
+        boost_save(ar, r.num());
+        boost_save(ar, r.den());
+    }
+};
+
+/// Specialisation of piranha::boost_load() for piranha::rational_function.
+/**
+ * \note
+ * This specialisation is enabled only if \p T is an instance of piranha::rational_function whose numerator/denominator
+ * type satisfies piranha::has_boost_load.
+ */
+template <typename Archive, typename T>
+class boost_load_impl<Archive, T, rf_boost_load_enabler<Archive, T>>
+{
+public:
+    /// Call operator.
+    /**
+     * If \p Archive is \p boost::archive::binary_iarchive, no checking is
+     * performed on the content of \p ar. Otherwise, this method will ensure that
+     * the deserialized rational function is in canonical form.
+     *
+     * @param ar the source archive.
+     * @param r the rational function into which the content of \p ar will be deserialized.
+     *
+     * @throws unspecified any exception thrown by piranha::boost_load() or by the constructor of
+     * piranha::rational_function from numerator and denominator.
+     */
+    void operator()(Archive &ar, T &r) const
+    {
+        typename T::p_type n, d;
+        boost_load(ar, n);
+        boost_load(ar, d);
+        if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
+            r._num() = std::move(n);
+            r._den() = std::move(d);
+        } else {
+            r = T{std::move(n), std::move(d)};
+        }
+    }
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+template <typename Stream, typename T>
+using rf_mspack_pack_enabler
+    = enable_if_t<conjunction<std::is_base_of<detail::rational_function_tag, T>, is_msgpack_stream<Stream>,
+                              has_msgpack_pack<Stream, typename T::p_type>>::value>;
+
+template <typename T>
+using rf_mspack_convert_enabler = enable_if_t<conjunction<std::is_base_of<detail::rational_function_tag, T>,
+                                                          has_msgpack_convert<typename T::p_type>>::value>;
+}
+
+/// Specialisation of piranha::msgpack_pack() for piranha::rational_function.
+/**
+ * \note
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function whose numerator/denominator
+ * type satisfies piranha::has_msgpack_pack, and \p Stream satisfies piranha::is_msgpack_stream.
+ */
+template <typename Stream, typename T>
+struct msgpack_pack_impl<Stream, T, rf_mspack_pack_enabler<Stream, T>> {
+    /// Call operator.
+    /**
+     * The call operator will pack into \p p the numerator and denominator of \p r as a pair.
+     *
+     * @param p the target \p msgpack::packer.
+     * @param r the rational function to be serialised.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by the public interface of msgpack::packer or piranha::msgpack_pack().
+     */
+    void operator()(msgpack::packer<Stream> &p, const T &r, msgpack_format f) const
+    {
+        p.pack_array(2);
+        msgpack_pack(p, r.num(), f);
+        msgpack_pack(p, r.den(), f);
+    }
+};
+
+/// Specialisation of piranha::msgpack_convert() for piranha::rational_function.
+/**
+ * \note
+ * This specialisation is enabled if \p T is an instance of piranha::rational_function whose numerator/denominator
+ * type satisfies piranha::has_msgpack_convert.
+ */
+template <typename T>
+struct msgpack_convert_impl<T, rf_mspack_convert_enabler<T>> {
+    /// Call operator.
+    /**
+     * This method will convert \p o into \p r using the format \p f.
+     *
+     * If \p f is piranha::msgpack_format::binary, no checking is
+     * performed on the content of \p o. Otherwise, this method will ensure that
+     * the deserialized rational function is in canonical form.
+     *
+     * @param r the rational function into which \p o will be converted.
+     * @param o the source \p msgpack::object.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of \p msgpack::object,
+     * - piranha::msgpack_convert(),
+     * - the constructor of piranha::rational_function from numerator and denominator.
+     */
+    void operator()(T &r, const msgpack::object &o, msgpack_format f) const
+    {
+        std::array<msgpack::object, 2> tmp;
+        o.convert(tmp);
+        typename T::p_type n, d;
+        msgpack_convert(n, tmp[0], f);
+        msgpack_convert(d, tmp[1], f);
+        if (f == msgpack_format::portable) {
+            r = T{std::move(n), std::move(d)};
+        } else {
+            r._num() = std::move(n);
+            r._den() = std::move(d);
+        }
+    }
+};
+
+#endif
 }
 
 #endif
