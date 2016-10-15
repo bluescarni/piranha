@@ -39,244 +39,256 @@ from ._core import file_format, file_compression, polynomial_gcd_algorithm, data
 # Run the monkey patching.
 _monkey_patching()
 
+
 class settings(object):
-	"""Settings class.
+    """Settings class.
 
-	This class is used to configure global Pyranha settings via static methods.
-	The methods are thread-safe.
+    This class is used to configure global Pyranha settings via static methods.
+    The methods are thread-safe.
 
-	"""
-	# Main lock for protecting reads/writes from multiple threads.
-	__lock = _thr.RLock()
-	@staticmethod
-	def get_max_term_output():
-		"""Get the maximum number of series terms to print.
+    """
+    # Main lock for protecting reads/writes from multiple threads.
+    __lock = _thr.RLock()
 
-		:returns: the maximum number of series terms to print
-		:raises: any exception raised by the invoked low-level function
+    @staticmethod
+    def get_max_term_output():
+        """Get the maximum number of series terms to print.
 
-		>>> settings.get_max_term_output()
-		20
+        :returns: the maximum number of series terms to print
+        :raises: any exception raised by the invoked low-level function
 
-		"""
-		from ._core import _settings as _s
-		return _s._get_max_term_output()
-	@staticmethod
-	def set_max_term_output(n):
-		"""Set the maximum number of series terms to print.
+        >>> settings.get_max_term_output()
+        20
 
-		:param n: number of series terms to print
-		:type n: ``int``
-		:raises: any exception raised by the invoked low-level function
+        """
+        from ._core import _settings as _s
+        return _s._get_max_term_output()
 
-		>>> settings.set_max_term_output(10)
-		>>> settings.get_max_term_output()
-		10
-		>>> settings.set_max_term_output(-1) # doctest: +IGNORE_EXCEPTION_DETAIL
-		Traceback (most recent call last):
-		  ...
-		OverflowError: invalid value
-		>>> settings.set_max_term_output("hello") # doctest: +IGNORE_EXCEPTION_DETAIL
-		Traceback (most recent call last):
-		  ...
-		TypeError: invalid type
-		>>> settings.reset_max_term_output()
+    @staticmethod
+    def set_max_term_output(n):
+        """Set the maximum number of series terms to print.
 
-		"""
-		from ._core import _settings as _s
-		return _cpp_type_catcher(_s._set_max_term_output,n)
-	@staticmethod
-	def reset_max_term_output():
-		"""Reset the maximum number of series terms to print to the default value.
+        :param n: number of series terms to print
+        :type n: ``int``
+        :raises: any exception raised by the invoked low-level function
 
-		:raises: any exception raised by the invoked low-level function
+        >>> settings.set_max_term_output(10)
+        >>> settings.get_max_term_output()
+        10
+        >>> settings.set_max_term_output(-1) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        OverflowError: invalid value
+        >>> settings.set_max_term_output("hello") # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        TypeError: invalid type
+        >>> settings.reset_max_term_output()
 
-		>>> settings.set_max_term_output(10)
-		>>> settings.get_max_term_output()
-		10
-		>>> settings.reset_max_term_output()
-		>>> settings.get_max_term_output()
-		20
+        """
+        from ._core import _settings as _s
+        return _cpp_type_catcher(_s._set_max_term_output, n)
 
-		"""
-		from ._core import _settings as _s
-		return _s._reset_max_term_output()
-	@staticmethod
-	def get_n_threads():
-		"""Get the number of threads that can be used by Piranha.
+    @staticmethod
+    def reset_max_term_output():
+        """Reset the maximum number of series terms to print to the default value.
 
-		The initial value is auto-detected on program startup.
+        :raises: any exception raised by the invoked low-level function
 
-		:raises: any exception raised by the invoked low-level function
+        >>> settings.set_max_term_output(10)
+        >>> settings.get_max_term_output()
+        10
+        >>> settings.reset_max_term_output()
+        >>> settings.get_max_term_output()
+        20
 
-		>>> settings.get_n_threads() # doctest: +SKIP
-		16 # This will be a platform-dependent value.
+        """
+        from ._core import _settings as _s
+        return _s._reset_max_term_output()
 
-		"""
-		from ._core import _settings as _s
-		return _s._get_n_threads()
-	@staticmethod
-	def set_n_threads(n):
-		"""Set the number of threads that can be used by Piranha.
+    @staticmethod
+    def get_n_threads():
+        """Get the number of threads that can be used by Piranha.
 
-		:param n: desired number of threads
-		:type n: ``int``
-		:raises: any exception raised by the invoked low-level function
+        The initial value is auto-detected on program startup.
 
-		>>> settings.set_n_threads(2)
-		>>> settings.get_n_threads()
-		2
-		>>> settings.set_n_threads(0) # doctest: +IGNORE_EXCEPTION_DETAIL
-		Traceback (most recent call last):
-		  ...
-		ValueError: invalid value
-		>>> settings.set_n_threads(-1) # doctest: +IGNORE_EXCEPTION_DETAIL
-		Traceback (most recent call last):
-		  ...
-		OverflowError: invalid value
-		>>> settings.reset_n_threads()
+        :raises: any exception raised by the invoked low-level function
 
-		"""
-		from ._core import _settings as _s
-		return _cpp_type_catcher(_s._set_n_threads,n)
-	@staticmethod
-	def reset_n_threads():
-		"""Reset the number of threads that can be used by Piranha to the default value.
+        >>> settings.get_n_threads() # doctest: +SKIP
+        16 # This will be a platform-dependent value.
 
-		:raises: any exception raised by the invoked low-level function
+        """
+        from ._core import _settings as _s
+        return _s._get_n_threads()
 
-		>>> n = settings.get_n_threads()
-		>>> settings.set_n_threads(10)
-		>>> settings.get_n_threads()
-		10
-		>>> settings.reset_n_threads()
-		>>> settings.get_n_threads() == n
-		True
+    @staticmethod
+    def set_n_threads(n):
+        """Set the number of threads that can be used by Piranha.
 
-		"""
-		from ._core import _settings as _s
-		return _s._reset_n_threads()
-	@staticmethod
-	def get_latex_repr():
-		r"""Check if exposed types have a ``_repr_latex_()`` method.
+        :param n: desired number of threads
+        :type n: ``int``
+        :raises: any exception raised by the invoked low-level function
 
-		The ``_repr_latex_()`` method, if present, is used by the IPython notebook to display the TeX
-		representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable
-		to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX
-		representation is disabled, IPython will fall back to the PNG-based representation of the object, which
-		leverages - if available - a local installation of TeX for increased performance via a static rendering
-		of the TeX representation of the object to a PNG bitmap.
+        >>> settings.set_n_threads(2)
+        >>> settings.get_n_threads()
+        2
+        >>> settings.set_n_threads(0) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        ValueError: invalid value
+        >>> settings.set_n_threads(-1) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        OverflowError: invalid value
+        >>> settings.reset_n_threads()
 
-		By default, the TeX representation is enabled.
+        """
+        from ._core import _settings as _s
+        return _cpp_type_catcher(_s._set_n_threads, n)
 
-		>>> settings.get_latex_repr()
-		True
-		>>> from .types import polynomial, rational, k_monomial
-		>>> pt = polynomial(rational,k_monomial)()
-		>>> x = pt('x')
-		>>> (x**2/2)._repr_latex_()
-		'\\[ \\frac{1}{2}{x}^{2} \\]'
+    @staticmethod
+    def reset_n_threads():
+        """Reset the number of threads that can be used by Piranha to the default value.
 
-		"""
-		from ._core import _get_exposed_types_list as getl
-		s_type = getl()[0]
-		with settings.__lock:
-			return hasattr(s_type,'_repr_latex_')
-	@staticmethod
-	def set_latex_repr(flag):
-		r"""Set the availability of the ``_repr_latex_()`` method for the exposed types.
+        :raises: any exception raised by the invoked low-level function
 
-		If *flag* is ``True``, the ``_repr_latex_()`` method of exposed types will be enabled. Otherwise,
-		the method will be disabled. See the documentation for :py:meth:`pyranha.settings.get_latex_repr` for a
-		description of how the method is used.
+        >>> n = settings.get_n_threads()
+        >>> settings.set_n_threads(10)
+        >>> settings.get_n_threads()
+        10
+        >>> settings.reset_n_threads()
+        >>> settings.get_n_threads() == n
+        True
 
-		:param flag: availability flag for the ``_repr_latex_()`` method
-		:type flag: ``bool``
-		:raises: :exc:`TypeError` if *flag* is not a ``bool``
+        """
+        from ._core import _settings as _s
+        return _s._reset_n_threads()
 
-		>>> settings.set_latex_repr(False)
-		>>> settings.get_latex_repr()
-		False
-		>>> from .types import polynomial, rational, k_monomial
-		>>> pt = polynomial(rational,k_monomial)()
-		>>> x = pt('x')
-		>>> (x**2/2)._repr_latex_() # doctest: +IGNORE_EXCEPTION_DETAIL
-		Traceback (most recent call last):
-		  ...
-		AttributeError: object has no attribute '_latex_repr_'
-		>>> settings.set_latex_repr(True)
-		>>> (x**2/2)._repr_latex_()
-		'\\[ \\frac{1}{2}{x}^{2} \\]'
-		>>> settings.set_latex_repr("hello") # doctest: +IGNORE_EXCEPTION_DETAIL
-		Traceback (most recent call last):
-		  ...
-		TypeError: the 'flag' parameter must be a bool
+    @staticmethod
+    def get_latex_repr():
+        r"""Check if exposed types have a ``_repr_latex_()`` method.
 
-		"""
-		from . import _core
-		from ._core import _get_exposed_types_list as getl
-		from ._common import _register_repr_latex
-		if not isinstance(flag,bool):
-			raise TypeError("the 'flag' parameter must be a bool")
-		with settings.__lock:
-			# NOTE: reentrant lock in action.
-			if flag == settings.get_latex_repr():
-				return
-			if flag:
-				_register_repr_latex()
-			else:
-				for s_type in getl():
-					assert(hasattr(s_type,'_repr_latex_'))
-					delattr(s_type,'_repr_latex_')
-	@staticmethod
-	def get_min_work_per_thread():
-		"""Get the minimum work per thread.
+        The ``_repr_latex_()`` method, if present, is used by the IPython notebook to display the TeX
+        representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable
+        to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX
+        representation is disabled, IPython will fall back to the PNG-based representation of the object, which
+        leverages - if available - a local installation of TeX for increased performance via a static rendering
+        of the TeX representation of the object to a PNG bitmap.
 
-		>>> settings.get_min_work_per_thread() # doctest: +SKIP
-		500000 # This will be an implementation-defined value.
+        By default, the TeX representation is enabled.
 
-		"""
-		from ._core import _settings as _s
-		return _s._get_min_work_per_thread()
-	@staticmethod
-	def set_min_work_per_thread(n):
-		"""Set the minimum work per thread.
+        >>> settings.get_latex_repr()
+        True
+        >>> from .types import polynomial, rational, k_monomial
+        >>> pt = polynomial(rational,k_monomial)()
+        >>> x = pt('x')
+        >>> (x**2/2)._repr_latex_()
+        '\\[ \\frac{1}{2}{x}^{2} \\]'
 
-		:param n: desired work per thread
-		:type n: ``int``
-		:raises: any exception raised by the invoked low-level function
+        """
+        from ._core import _get_exposed_types_list as getl
+        s_type = getl()[0]
+        with settings.__lock:
+            return hasattr(s_type, '_repr_latex_')
 
-		>>> settings.set_min_work_per_thread(2)
-		>>> settings.get_min_work_per_thread() # doctest: +SKIP
-		2
-		>>> settings.set_min_work_per_thread(0) # doctest: +IGNORE_EXCEPTION_DETAIL
-		Traceback (most recent call last):
-		  ...
-		ValueError: invalid value
-		>>> settings.set_min_work_per_thread(-1) # doctest: +IGNORE_EXCEPTION_DETAIL
-		Traceback (most recent call last):
-		  ...
-		OverflowError: invalid value
-		>>> settings.reset_min_work_per_thread()
+    @staticmethod
+    def set_latex_repr(flag):
+        r"""Set the availability of the ``_repr_latex_()`` method for the exposed types.
 
-		"""
-		from ._core import _settings as _s
-		return _cpp_type_catcher(_s._set_min_work_per_thread,n)
-	@staticmethod
-	def reset_min_work_per_thread():
-		"""Reset the minimum work per thread.
+        If *flag* is ``True``, the ``_repr_latex_()`` method of exposed types will be enabled. Otherwise,
+        the method will be disabled. See the documentation for :py:meth:`pyranha.settings.get_latex_repr` for a
+        description of how the method is used.
 
-		>>> n = settings.get_min_work_per_thread()
-		>>> settings.set_min_work_per_thread(10)
-		>>> settings.get_min_work_per_thread() # doctest: +SKIP
-		10
-		>>> settings.reset_min_work_per_thread()
-		>>> settings.get_min_work_per_thread() == n
-		True
+        :param flag: availability flag for the ``_repr_latex_()`` method
+        :type flag: ``bool``
+        :raises: :exc:`TypeError` if *flag* is not a ``bool``
 
-		"""
-		from ._core import _settings as _s
-		return _s._reset_min_work_per_thread()
+        >>> settings.set_latex_repr(False)
+        >>> settings.get_latex_repr()
+        False
+        >>> from .types import polynomial, rational, k_monomial
+        >>> pt = polynomial(rational,k_monomial)()
+        >>> x = pt('x')
+        >>> (x**2/2)._repr_latex_() # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        AttributeError: object has no attribute '_latex_repr_'
+        >>> settings.set_latex_repr(True)
+        >>> (x**2/2)._repr_latex_()
+        '\\[ \\frac{1}{2}{x}^{2} \\]'
+        >>> settings.set_latex_repr("hello") # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        TypeError: the 'flag' parameter must be a bool
+
+        """
+        from . import _core
+        from ._core import _get_exposed_types_list as getl
+        from ._common import _register_repr_latex
+        if not isinstance(flag, bool):
+            raise TypeError("the 'flag' parameter must be a bool")
+        with settings.__lock:
+            # NOTE: reentrant lock in action.
+            if flag == settings.get_latex_repr():
+                return
+            if flag:
+                _register_repr_latex()
+            else:
+                for s_type in getl():
+                    assert(hasattr(s_type, '_repr_latex_'))
+                    delattr(s_type, '_repr_latex_')
+
+    @staticmethod
+    def get_min_work_per_thread():
+        """Get the minimum work per thread.
+
+        >>> settings.get_min_work_per_thread() # doctest: +SKIP
+        500000 # This will be an implementation-defined value.
+
+        """
+        from ._core import _settings as _s
+        return _s._get_min_work_per_thread()
+
+    @staticmethod
+    def set_min_work_per_thread(n):
+        """Set the minimum work per thread.
+
+        :param n: desired work per thread
+        :type n: ``int``
+        :raises: any exception raised by the invoked low-level function
+
+        >>> settings.set_min_work_per_thread(2)
+        >>> settings.get_min_work_per_thread() # doctest: +SKIP
+        2
+        >>> settings.set_min_work_per_thread(0) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        ValueError: invalid value
+        >>> settings.set_min_work_per_thread(-1) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        OverflowError: invalid value
+        >>> settings.reset_min_work_per_thread()
+
+        """
+        from ._core import _settings as _s
+        return _cpp_type_catcher(_s._set_min_work_per_thread, n)
+
+    @staticmethod
+    def reset_min_work_per_thread():
+        """Reset the minimum work per thread.
+
+        >>> n = settings.get_min_work_per_thread()
+        >>> settings.set_min_work_per_thread(10)
+        >>> settings.get_min_work_per_thread() # doctest: +SKIP
+        10
+        >>> settings.reset_min_work_per_thread()
+        >>> settings.get_min_work_per_thread() == n
+        True
+
+        """
+        from ._core import _settings as _s
+        return _s._reset_min_work_per_thread()
 
 import atexit as _atexit
-_atexit.register(lambda : _cleanup())
+_atexit.register(lambda: _cleanup())
