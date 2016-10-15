@@ -63,15 +63,13 @@ inline namespace impl
 
 // Scalar types directly supported by the all serialization libraries.
 template <typename T>
-struct is_serialization_scalar
-    : std::integral_constant<bool, std::is_same<char, T>::value || std::is_same<signed char, T>::value
-                                       || std::is_same<unsigned char, T>::value || std::is_same<short, T>::value
-                                       || std::is_same<unsigned short, T>::value || std::is_same<int, T>::value
-                                       || std::is_same<unsigned, T>::value || std::is_same<long, T>::value
-                                       || std::is_same<unsigned long, T>::value || std::is_same<long long, T>::value
-                                       || std::is_same<unsigned long long, T>::value || std::is_same<float, T>::value
-                                       || std::is_same<double, T>::value || std::is_same<bool, T>::value> {
-};
+using is_serialization_scalar = std::
+    integral_constant<bool,
+                      disjunction<std::is_same<char, T>, std::is_same<signed char, T>, std::is_same<unsigned char, T>,
+                                  std::is_same<short, T>, std::is_same<unsigned short, T>, std::is_same<int, T>,
+                                  std::is_same<unsigned, T>, std::is_same<long, T>, std::is_same<unsigned long, T>,
+                                  std::is_same<long long, T>, std::is_same<unsigned long long, T>,
+                                  std::is_same<float, T>, std::is_same<double, T>, std::is_same<bool, T>>::value>;
 
 // Implementation of the detection of boost saving archives.
 namespace ibsa_impl
@@ -110,28 +108,28 @@ using get_helper_t_2 = decltype(std::declval<A &>().template get_helper<helper>(
 
 template <typename Archive, typename T>
 using impl = std::
-    integral_constant<bool, std::is_same<is_detected_t<is_saving_t, uncvref_t<Archive>>, boost::mpl::bool_<true>>::value
-                                && std::is_same<is_detected_t<is_loading_t, uncvref_t<Archive>>,
-                                                boost::mpl::bool_<false>>::value
-                                // NOTE: add lvalue ref instead of using Archive &, so we avoid a hard
-                                // error if Archive is void.
-                                && std::is_same<is_detected_t<lshift_t, Archive, T>, addlref_t<Archive>>::value
-                                && std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>::value
-                                && is_detected<save_binary_t, Archive, unref_t<T>>::value
-                                && is_detected<register_type_t, Archive, uncvref_t<T>>::value
-                                // NOTE: the docs here mention that get_library_version() is supposed to
-                                // return an unsigned integral type, but the boost archives apparently
-                                // return a type which is implicitly convertible to some unsigned int.
-                                // This seems to work and it should cover also the cases in which the
-                                // return type is a real unsigned int.
-                                && std::is_convertible<is_detected_t<get_library_version_t, Archive>,
-                                                       unsigned long long>::value
+    integral_constant<bool,
+                      conjunction<std::is_same<is_detected_t<is_saving_t, uncvref_t<Archive>>, boost::mpl::bool_<true>>,
+                                  std::is_same<is_detected_t<is_loading_t, uncvref_t<Archive>>,
+                                               boost::mpl::bool_<false>>,
+                                  // NOTE: add lvalue ref instead of using Archive &, so we avoid a hard
+                                  // error if Archive is void.
+                                  std::is_same<is_detected_t<lshift_t, Archive, T>, addlref_t<Archive>>,
+                                  std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>,
+                                  is_detected<save_binary_t, Archive, unref_t<T>>,
+                                  is_detected<register_type_t, Archive, uncvref_t<T>>,
+                                  // NOTE: the docs here mention that get_library_version() is supposed to
+                                  // return an unsigned integral type, but the boost archives apparently
+                                  // return a type which is implicitly convertible to some unsigned int.
+                                  // This seems to work and it should cover also the cases in which the
+                                  // return type is a real unsigned int.
+                                  std::is_convertible<is_detected_t<get_library_version_t, Archive>, unsigned long long>
 #if BOOST_VERSION >= 105700
-                                //  Helper support is available since 1.57.
-                                && is_detected<get_helper_t_1, Archive>::value
-                                && is_detected<get_helper_t_2, Archive>::value
+                                  //  Helper support is available since 1.57.
+                                  ,
+                                  is_detected<get_helper_t_1, Archive>, is_detected<get_helper_t_2, Archive>
 #endif
-                      >;
+                                  >::value>;
 }
 }
 
@@ -179,23 +177,25 @@ using delete_created_pointers_t = decltype(std::declval<A &>().delete_created_po
 
 template <typename Archive, typename T>
 using impl
-    = std::integral_constant<bool, std::is_same<is_detected_t<ibsa_impl::is_saving_t, uncvref_t<Archive>>,
-                                                boost::mpl::bool_<false>>::value
-                                       && std::is_same<is_detected_t<ibsa_impl::is_loading_t, uncvref_t<Archive>>,
-                                                       boost::mpl::bool_<true>>::value
-                                       && std::is_same<is_detected_t<rshift_t, Archive, T>, addlref_t<Archive>>::value
-                                       && std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>::value
-                                       && is_detected<load_binary_t, Archive, unref_t<T>>::value
-                                       && is_detected<ibsa_impl::register_type_t, Archive, uncvref_t<T>>::value
-                                       && std::is_convertible<is_detected_t<ibsa_impl::get_library_version_t, Archive>,
-                                                              unsigned long long>::value
-                                       && is_detected<reset_object_address_t, Archive, unref_t<T>>::value
-                                       && is_detected<delete_created_pointers_t, Archive>::value
+    = std::integral_constant<bool,
+                             conjunction<std::is_same<is_detected_t<ibsa_impl::is_saving_t, uncvref_t<Archive>>,
+                                                      boost::mpl::bool_<false>>,
+                                         std::is_same<is_detected_t<ibsa_impl::is_loading_t, uncvref_t<Archive>>,
+                                                      boost::mpl::bool_<true>>,
+                                         std::is_same<is_detected_t<rshift_t, Archive, T>, addlref_t<Archive>>,
+                                         std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>,
+                                         is_detected<load_binary_t, Archive, unref_t<T>>,
+                                         is_detected<ibsa_impl::register_type_t, Archive, uncvref_t<T>>,
+                                         std::is_convertible<is_detected_t<ibsa_impl::get_library_version_t, Archive>,
+                                                             unsigned long long>,
+                                         is_detected<reset_object_address_t, Archive, unref_t<T>>,
+                                         is_detected<delete_created_pointers_t, Archive>
 #if BOOST_VERSION >= 105700
-                                       && is_detected<ibsa_impl::get_helper_t_1, Archive>::value
-                                       && is_detected<ibsa_impl::get_helper_t_2, Archive>::value
+                                         ,
+                                         is_detected<ibsa_impl::get_helper_t_1, Archive>,
+                                         is_detected<ibsa_impl::get_helper_t_2, Archive>
 #endif
-                             >;
+                                         >::value>;
 }
 }
 
@@ -239,8 +239,8 @@ using boost_save_arithmetic_enabler =
     // to serialize arithmetic types. This is for instance *not* the case for Boost archives, which
     // accept every type (at the signature level), but since here we are concerned only with arithmetic
     // types (for which serialization is always available in Boost archives), it should not matter.
-    typename std::enable_if<is_boost_saving_archive<Archive, T>::value
-                            && (is_serialization_scalar<T>::value || std::is_same<T, long double>::value)>::type;
+    enable_if_t<conjunction<is_boost_saving_archive<Archive, T>,
+                            disjunction<is_serialization_scalar<T>, std::is_same<T, long double>>>::value>;
 }
 
 /// Implementation of piranha::boost_save() for arithmetic types.
@@ -281,8 +281,8 @@ inline namespace impl
 
 // Enabler for boost_save() for strings.
 template <typename Archive, typename T>
-using boost_save_string_enabler =
-    typename std::enable_if<is_boost_saving_archive<Archive, T>::value && std::is_same<T, std::string>::value>::type;
+using boost_save_string_enabler
+    = enable_if_t<conjunction<is_boost_saving_archive<Archive, T>, std::is_same<T, std::string>>::value>;
 }
 
 /// Implementation of piranha::boost_save() for \p std::string.
@@ -316,9 +316,9 @@ using boost_save_impl_t = decltype(boost_save_impl<Archive, T>{}(std::declval<Ar
 
 // Enabler for boost_save().
 template <typename Archive, typename T>
-using boost_save_enabler = typename std::enable_if<is_boost_saving_archive<Archive, T>::value
-                                                       && is_detected<boost_save_impl_t, Archive, T>::value,
-                                                   int>::type;
+using boost_save_enabler
+    = enable_if_t<conjunction<is_boost_saving_archive<Archive, T>, is_detected<boost_save_impl_t, Archive, T>>::value,
+                  int>;
 }
 
 /// Save to Boost archive.
@@ -384,9 +384,9 @@ inline namespace impl
 
 // Enabler for the arithmetic specialisation of boost_load().
 template <typename Archive, typename T>
-using boost_load_arithmetic_enabler =
-    typename std::enable_if<is_boost_loading_archive<Archive, T>::value
-                            && (is_serialization_scalar<T>::value || std::is_same<T, long double>::value)>::type;
+using boost_load_arithmetic_enabler
+    = enable_if_t<conjunction<is_boost_loading_archive<Archive, T>,
+                              disjunction<is_serialization_scalar<T>, std::is_same<T, long double>>>::value>;
 }
 
 /// Implementation of piranha::boost_load() for arithmetic types.
@@ -427,8 +427,8 @@ inline namespace impl
 
 // Enabler for boost_load for strings.
 template <typename Archive, typename T>
-using boost_load_string_enabler =
-    typename std::enable_if<is_boost_loading_archive<Archive, T>::value && std::is_same<T, std::string>::value>::type;
+using boost_load_string_enabler
+    = enable_if_t<conjunction<is_boost_loading_archive<Archive, T>, std::is_same<T, std::string>>::value>;
 }
 
 /// Implementation of piranha::boost_load() for \p std::string.
@@ -462,9 +462,9 @@ using boost_load_impl_t = decltype(boost_load_impl<Archive, T>{}(std::declval<Ar
 
 // Enabler for boost_load().
 template <typename Archive, typename T>
-using boost_load_enabler = typename std::enable_if<is_boost_loading_archive<Archive, T>::value
-                                                       && is_detected<boost_load_impl_t, Archive, T>::value,
-                                                   int>::type;
+using boost_load_enabler
+    = enable_if_t<conjunction<is_boost_loading_archive<Archive, T>, is_detected<boost_load_impl_t, Archive, T>>::value,
+                  int>;
 }
 
 /// Load from Boost archive.
@@ -659,7 +659,8 @@ template <typename T>
 class is_msgpack_stream
 {
     static const bool implementation_defined
-        = is_detected<msgpack_stream_write_t, T>::value && !std::is_reference<T>::value && !std::is_const<T>::value;
+        = conjunction<is_detected<msgpack_stream_write_t, T>, negation<std::is_reference<T>>,
+                      negation<std::is_const<T>>>::value;
 
 public:
     /// Value of the type trait.
@@ -1129,7 +1130,7 @@ class key_has_msgpack_pack
 {
     PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     static const bool implementation_defined
-        = is_detected<key_msgpack_pack_t, Stream, Key>::value && is_msgpack_stream<Stream>::value;
+        = conjunction<is_detected<key_msgpack_pack_t, Stream, Key>, is_msgpack_stream<Stream>>::value;
 
 public:
     /// Value of the type trait.
