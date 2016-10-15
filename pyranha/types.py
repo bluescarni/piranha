@@ -41,10 +41,10 @@ double = _t.double
 long_double = _t.long_double
 
 try:
-	#: This generator represents the 128-bit floating-point type from GCC's ``libquadmath``.
-	float128 = _t.float128
+    #: This generator represents the 128-bit floating-point type from GCC's ``libquadmath``.
+    float128 = _t.float128
 except AttributeError:
-	pass
+    pass
 
 #: This generator represents the standard C++ type ``signed char`` (a signed integer type
 #: whose width is usually 8 bits).
