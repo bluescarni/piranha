@@ -68,6 +68,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/pow.hpp"
 #include "../src/power_series.hpp"
 #include "../src/real.hpp"
+#include "../src/s11n.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
@@ -409,6 +410,20 @@ inline void generic_register_custom_derivative_wrapper(const std::string &name, 
     bp::object f_copy = deepcopy(func);
     S::register_custom_derivative(
         name, [f_copy](const S &s) -> partial_type { return bp::extract<partial_type>(f_copy(s)); });
+}
+
+// Generic s11n exposition.
+template <typename S>
+inline void expose_s11n(bp::class_<S> &)
+{
+    bp::def("_save_file", +[](const S &x, const std::string &filename, piranha::data_format f, piranha::compression c) {
+        piranha::save_file(x, filename, f, c);
+    });
+    bp::def("_save_file", +[](const S &x, const std::string &filename) { piranha::save_file(x, filename); });
+    bp::def("_load_file", +[](S &x, const std::string &filename, piranha::data_format f, piranha::compression c) {
+        piranha::load_file(x, filename, f, c);
+    });
+    bp::def("_load_file", +[](S &x, const std::string &filename) { piranha::load_file(x, filename); });
 }
 
 // Generic series exposer.
@@ -1153,6 +1168,8 @@ class series_exposer
             expose_save_load(series_class);
             // Expose invert(), if present.
             expose_invert(series_class);
+            // Expose s11n.
+            expose_s11n(series_class);
             // Run the custom hook.
             CustomHook{}(series_class);
         }

@@ -31,6 +31,57 @@ from __future__ import absolute_import as _ai
 
 import unittest as _ut
 
+def _s11n_load_save_test(self,p):
+	import tempfile, os, shutil
+	from . import load_file, save_file, data_format as df, compression as comp
+	for form in [df.boost_portable,df.boost_binary,df.msgpack_portable,df.msgpack_binary]:
+		for c in [comp.none, comp.bzip2, comp.gzip, comp.zlib]:
+			f = tempfile.NamedTemporaryFile(delete=False)
+			f.close()
+			try:
+				save_file(p,f.name,form,c)
+				ret = type(p)()
+				load_file(ret,f.name,form,c)
+				self.assertEqual(ret,p)
+			except NotImplementedError:
+				pass
+			finally:
+				os.remove(f.name)
+	# Deduce from filename.
+	temp_dir = tempfile.mkdtemp()
+	try:
+		for suff in ['.boostb', '.boostp', '.mpackb', '.mpackp']:
+			for comp in ['','.bz2','.zip','.gz']:
+				filename = os.path.join(temp_dir,'foo'+suff+comp)
+				save_file(p,filename)
+				ret = type(p)()
+				load_file(ret,filename)
+				self.assertEqual(ret,p)
+	except NotImplementedError:
+		pass
+	finally:
+		shutil.rmtree(temp_dir)
+	self.assertRaises(ValueError,lambda : save_file(p,"foo"))
+	self.assertRaises(ValueError,lambda : load_file(p,"foo"))
+
+def _s11n_check_msgpack_ex_translation(self):
+	import os, shutil
+	import tempfile
+	from . import load_file, save_file
+	from .types import polynomial, integer, rational, short, monomial
+	pt1 = polynomial(integer,monomial(short))()
+	pt2 = polynomial(rational,monomial(short))()
+	temp_dir = tempfile.mkdtemp()
+	try:
+		x = pt1('x')
+		save_file(x,os.path.join(temp_dir,'foo.mpackp'))
+		ret = pt2()
+		self.assertRaises(TypeError, lambda : load_file(ret, os.path.join(temp_dir,'foo.mpackp')))
+	except NotImplementedError:
+		pass
+	finally:
+		shutil.rmtree(temp_dir)
+
 class basic_test_case(_ut.TestCase):
 	"""Basic test case.
 
@@ -608,6 +659,11 @@ class polynomial_test_case(_ut.TestCase):
 		self.assertEqual((12*x+20*y).primitive_part(),3*x+5*y)
 		self.assertRaises(ZeroDivisionError, lambda: (x-x).primitive_part())
 		self.assertRaises(AttributeError, lambda: pt2().primitive_part())
+		# s11n.
+		pt = polynomial(integer,monomial(short))()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		p = (x + 3*y - 4*z)**4
+		_s11n_load_save_test(self,p)
 
 class divisor_series_test_case(_ut.TestCase):
 	""":mod:`divisor_series` module test case.
@@ -645,6 +701,9 @@ class divisor_series_test_case(_ut.TestCase):
 		self.assertEqual(integrate(x*invert(y),'x'),x*x/2*invert(y))
 		self.assertEqual(integrate(x*invert(y)+z,'x'),z*x+x*x/2*invert(y))
 		self.assertRaises(ValueError,lambda : integrate(invert(x),'x'))
+		# s11n.
+		p = (x + 3*y - 4*invert(z))**4
+		_s11n_load_save_test(self,p)
 
 class poisson_series_test_case(_ut.TestCase):
 	""":mod:`poisson_series` module test case.
@@ -686,6 +745,9 @@ class poisson_series_test_case(_ut.TestCase):
 		tmp = partial((x+3*y-z)/(4*z+x)*cos(x-2*y+z),"x").subs("y",4*x)
 		self.assertEqual(tmp,-7*(13*x - z)*sin(7*x - z)/(x + 4*z) + 13*cos(7*x - z)/(x + 4*z) - (13*x - z)*cos(7*x - z)/(x + 4*z)**2)
 		prt.unregister_all_custom_derivatives()
+		# s11n.
+		p = (x + 3*invert(y) - 4*cos(z))**4
+		_s11n_load_save_test(self,p)
 
 class converters_test_case(_ut.TestCase):
 	"""Test case for the automatic conversion to/from Python from/to C++.
@@ -867,6 +929,8 @@ class serialization_test_case(_ut.TestCase):
 				self.assertEqual(pt.load(f.name,file_format.binary,file_compression.bzip2),res)
 			finally:
 				os.remove(f.name)
+		# Check msgpack exception translation.
+		_s11n_check_msgpack_ex_translation(self)
 
 class truncate_degree_test_case(_ut.TestCase):
 	"""Test case for the degree-based truncation of series.
@@ -1293,6 +1357,9 @@ class rational_function_test_case(_ut.TestCase):
 		self.assert_(tmp.num == x+3*y-4*z or -tmp.num == x+3*y-4*z)
 		self.assert_(tmp.den == x-5*y or -tmp.den == x-5*y)
 		self.assertEqual(type(tmp.den),pt)
+		# s11n.
+		p = (x+3*y-4*z)/(x-5*y)
+		_s11n_load_save_test(self,p)
 
 def run_test_suite():
 	"""Run the full test suite.

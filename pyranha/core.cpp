@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 
 #include "../src/binomial.hpp"
+#include "../src/config.hpp"
 #include "../src/divisor.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
@@ -55,6 +56,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
+#include "../src/s11n.hpp"
 #include "../src/series.hpp"
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
@@ -149,6 +151,9 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::negative_overflow>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::bad_numeric_cast>();
     pyranha::generic_translate<&PyExc_ArithmeticError, piranha::math::inexact_division>();
+#if defined(PIRANHA_WITH_MSGPACK)
+    pyranha::generic_translate<&PyExc_TypeError, msgpack::type_error>();
+#endif
     // Exposed types list.
     bp::def("_get_exposed_types_list", pyranha::get_exposed_types_list);
     // The enums for save/load.
@@ -158,6 +163,17 @@ BOOST_PYTHON_MODULE(_core)
     bp::enum_<piranha::file_compression>("file_compression")
         .value("disabled", piranha::file_compression::disabled)
         .value("bzip2", piranha::file_compression::bzip2);
+    // The s11n enums.
+    bp::enum_<piranha::data_format>("data_format")
+        .value("boost_binary", piranha::data_format::boost_binary)
+        .value("boost_portable", piranha::data_format::boost_portable)
+        .value("msgpack_binary", piranha::data_format::msgpack_binary)
+        .value("msgpack_portable", piranha::data_format::msgpack_portable);
+    bp::enum_<piranha::compression>("compression")
+        .value("none", piranha::compression::none)
+        .value("zlib", piranha::compression::zlib)
+        .value("gzip", piranha::compression::gzip)
+        .value("bzip2", piranha::compression::bzip2);
     // Expose polynomials.
     pyranha::expose_polynomials_0();
     pyranha::expose_polynomials_1();
