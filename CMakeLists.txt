@@ -36,6 +36,9 @@ option(PIRANHA_WITH_MSGPACK "Enable support for the msgpack serialization format
 # Enable zlib/gzip compression.
 option(PIRANHA_WITH_ZLIB "Enable support for zlib/gzip compression." OFF)
 
+# Enable bzip2 compression.
+option(PIRANHA_WITH_BZIP2 "Enable support for bzip2 compression." OFF)
+
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
 # in the future it might become a more general-purpose flag.
@@ -167,13 +170,15 @@ if(PIRANHA_WITH_ZLIB)
 	set(PIRANHA_ENABLE_ZLIB "#define PIRANHA_WITH_ZLIB")
 endif()
 
-# bzip2 setup.
-find_package(BZip2 REQUIRED)
-message(STATUS "bzip2 library found.")
-message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
-message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
-include_directories(SYSTEM ${BZIP2_INCLUDE_DIR})
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
+if(PIRANHA_WITH_BZIP2)
+	find_package(BZip2 REQUIRED)
+	message(STATUS "bzip2 library found.")
+	message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
+	message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
+	include_directories(SYSTEM ${BZIP2_INCLUDE_DIR})
+	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
+	set(PIRANHA_ENABLE_BZIP2 "#define PIRANHA_WITH_BZIP2")
+endif()
 
 # TCMalloc setup.
 IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")

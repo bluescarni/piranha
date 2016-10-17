@@ -7,16 +7,16 @@ set -x
 
 if [[ "${BUILD_TYPE}" == "Debug" ]]; then
     if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make;
         ctest -E "thread|memory" -V;
     elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make;
         ctest -E "thread" -V;
     fi
 elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="--coverage" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="--coverage" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make;
         ctest -E "thread" -V;
         wget https://codecov.io/bash;
@@ -26,11 +26,11 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         find ./ -iname '*usr*include*.gcov' | xargs rm;
         bash bash -p ./tests -X gcov -g CMakeFiles || echo "Codecov did not collect coverage reports";
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make;
     ctest -E "gastineau|perminov" -V;
 elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DPYTHON_EXECUTABLE=/usr/bin/python2 ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DPYTHON_EXECUTABLE=/usr/bin/python2 ../;
     make install;
     # Install mpmath via pip.
     pip install --user mpmath;
@@ -96,7 +96,7 @@ elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
     cd ..;
     python3 -c "import pyranha.test; pyranha.test.run_test_suite()";
 elif [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes ../;
     make;
     ctest -V;
 elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then

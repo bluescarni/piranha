@@ -35,7 +35,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-#include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/serialization/split_free.hpp>
@@ -1141,6 +1140,18 @@ const bool key_has_msgpack_convert<Key>::value;
 
 #endif
 
+#if defined(PIRANHA_WITH_BZIP2)
+
+#include <boost/iostreams/filter/bzip2.hpp>
+
+#define PIRANHA_BZIP2_CONDITIONAL(expr) expr
+
+#else
+
+#define PIRANHA_BZIP2_CONDITIONAL(expr) piranha_throw(not_implemented_error, "bzip2 support is not enabled")
+
+#endif
+
 namespace piranha
 {
 
@@ -1203,7 +1214,7 @@ inline void save_file_boost_compress_impl(const T &x, std::ofstream &ofile, data
 {
     piranha_assert(f == data_format::boost_binary || f == data_format::boost_portable);
     // NOTE: there seem to be 2 choices here: stream or streambuf. The first does some formatting, while the second
-    // one if "raw" but does not provide the stream interface (which is used, e.g., by msgpack). Since we always
+    // one is "raw" but does not provide the stream interface (which is used, e.g., by msgpack). Since we always
     // open files in binary mode (as suggested by the Boost serialization library), this should not matter in the end.
     // Some resources:
     // http://stackoverflow.com/questions/1753469/how-to-hook-up-boost-serialization-iostreams-to-serialize-gzip-an-object-to
@@ -1253,7 +1264,7 @@ inline void save_file_boost_impl(const T &x, const std::string &filename, data_f
     }
     switch (c) {
         case compression::bzip2:
-            save_file_boost_compress_impl<bi::bzip2_compressor>(x, ofile, f);
+            PIRANHA_BZIP2_CONDITIONAL(save_file_boost_compress_impl<bi::bzip2_compressor>(x, ofile, f));
             break;
         case compression::gzip:
             PIRANHA_ZLIB_CONDITIONAL(save_file_boost_compress_impl<bi::gzip_compressor>(x, ofile, f));
@@ -1293,7 +1304,7 @@ inline void load_file_boost_impl(T &x, const std::string &filename, data_format 
     }
     switch (c) {
         case compression::bzip2:
-            load_file_boost_compress_impl<bi::bzip2_decompressor>(x, ifile, f);
+            PIRANHA_BZIP2_CONDITIONAL(load_file_boost_compress_impl<bi::bzip2_decompressor>(x, ifile, f));
             break;
         case compression::gzip:
             PIRANHA_ZLIB_CONDITIONAL(load_file_boost_compress_impl<bi::gzip_decompressor>(x, ifile, f));
@@ -1366,7 +1377,7 @@ inline void save_file_msgpack_impl(const T &x, const std::string &filename, data
     }
     switch (c) {
         case compression::bzip2:
-            save_file_msgpack_compress_impl<bi::bzip2_compressor>(x, ofile, mf);
+            PIRANHA_BZIP2_CONDITIONAL(save_file_msgpack_compress_impl<bi::bzip2_compressor>(x, ofile, mf));
             break;
         case compression::gzip:
             PIRANHA_ZLIB_CONDITIONAL(save_file_msgpack_compress_impl<bi::gzip_compressor>(x, ofile, mf));
@@ -1399,7 +1410,7 @@ inline void load_file_msgpack_impl(T &x, const std::string &filename, data_forma
     const auto mf = (f == data_format::msgpack_binary) ? msgpack_format::binary : msgpack_format::portable;
     switch (c) {
         case compression::bzip2:
-            load_file_msgpack_compress_impl<bi::bzip2_decompressor>(x, filename, mf);
+            PIRANHA_BZIP2_CONDITIONAL(load_file_msgpack_compress_impl<bi::bzip2_decompressor>(x, filename, mf));
             break;
         case compression::gzip:
             PIRANHA_ZLIB_CONDITIONAL(load_file_msgpack_compress_impl<bi::gzip_decompressor>(x, filename, mf));
