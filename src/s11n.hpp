@@ -38,6 +38,8 @@ see https://www.gnu.org/licenses/. */
 #include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/mpl/bool.hpp>
+#include <boost/serialization/split_free.hpp>
+#include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/version.hpp>
 #include <cstddef>
@@ -218,14 +220,40 @@ public:
 template <typename Archive, typename T>
 const bool is_boost_loading_archive<Archive, T>::value;
 
+/// Implementation of piranha::boost_save() via the Boost API.
+/**
+ * This class can be used to implement piranha::boost_save() via a direct call to the Boost serialization API.
+ */
+template <typename Archive, typename T>
+struct boost_save_via_boost_api {
+    /// Call operator.
+    /**
+     * The body of this operator is equivalent to:
+     * @code
+     * ar << x;
+     * @endcode
+     * That is, \p x will be inserted into the archive \p ar using the stream insertion operator. In order for this
+     * method to be callable, the type \p T must provide valid overloads of the methods/functions needed by the
+     * Boost serialization API.
+     *
+     * @param ar the archive into which \p x will be serialized.
+     * @param x the serialization argument.
+     *
+     * @throws unspecified any exception thrown by the insertion of \p x into \p ar.
+     */
+    void operator()(Archive &ar, const T &x) const
+    {
+        ar << x;
+    }
+};
+
 /// Default implementation of piranha::boost_save().
 /**
  * The default implementation does not define any call operator, and will thus result
  * in a compile-time error if used.
  */
 template <typename Archive, typename T, typename = void>
-class boost_save_impl
-{
+struct boost_save_impl {
 };
 
 inline namespace impl
@@ -255,34 +283,15 @@ using boost_save_arithmetic_enabler =
  * - \p bool.
  */
 template <typename Archive, typename T>
-class boost_save_impl<Archive, T, boost_save_arithmetic_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * The body of this functions is equivalent to:
-     * @code
-     * ar << x;
-     * @endcode
-     *
-     * @param[in] ar target Boost saving archive.
-     * @param[in] x object to be saved.
-     *
-     * @throws unspecified any exception thrown by the stream operator of the archive.
-     */
-    void operator()(Archive &ar, const T &x) const
-    {
-        ar << x;
-    }
+struct boost_save_impl<Archive, T, boost_save_arithmetic_enabler<Archive, T>> : boost_save_via_boost_api<Archive, T> {
 };
 
 inline namespace impl
 {
 
 // Enabler for boost_save() for strings.
-template <typename Archive, typename T>
-using boost_save_string_enabler
-    = enable_if_t<conjunction<is_boost_saving_archive<Archive, T>, std::is_same<T, std::string>>::value>;
+template <typename Archive>
+using boost_save_string_enabler = enable_if_t<is_boost_saving_archive<Archive, std::string>::value>;
 }
 
 /// Implementation of piranha::boost_save() for \p std::string.
@@ -291,21 +300,9 @@ using boost_save_string_enabler
  * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_saving_archive and \p T is
  * \p std::string.
  */
-template <typename Archive, typename T>
-class boost_save_impl<Archive, T, boost_save_string_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * @param[in] a target archive.
-     * @param[in] s string argument.
-     *
-     * @throws unspecified any exception thrown by the streaming operator of \p Archive.
-     */
-    void operator()(Archive &a, const std::string &s) const
-    {
-        a << s;
-    }
+template <typename Archive>
+struct boost_save_impl<Archive, std::string, boost_save_string_enabler<Archive>>
+    : boost_save_via_boost_api<Archive, std::string> {
 };
 
 inline namespace impl
@@ -369,14 +366,40 @@ public:
 template <typename Archive, typename T>
 const bool has_boost_save<Archive, T>::value;
 
+/// Implementation of piranha::boost_load() via the Boost API.
+/**
+ * This class can be used to implement piranha::boost_load() via a direct call to the Boost serialization API.
+ */
+template <typename Archive, typename T>
+struct boost_load_via_boost_api {
+    /// Call operator.
+    /**
+     * The body of this operator is equivalent to:
+     * @code
+     * ar >> x;
+     * @endcode
+     * That is, the content of \p ar will loaded into \p x using the stream extraction operator. In order for this
+     * method to be callable, the type \p T must provide valid overloads of the methods/functions needed by the
+     * Boost serialization API.
+     *
+     * @param ar the source archive.
+     * @param x the object into which the content of \p ar will be deserialized.
+     *
+     * @throws unspecified any exception thrown by the extraction of \p ar into \p x.
+     */
+    void operator()(Archive &ar, T &x) const
+    {
+        ar >> x;
+    }
+};
+
 /// Default implementation of piranha::boost_load().
 /**
  * The default implementation does not define any call operator, and will thus result
  * in a compile-time error if used.
  */
 template <typename Archive, typename T, typename = void>
-class boost_load_impl
-{
+struct boost_load_impl {
 };
 
 inline namespace impl
@@ -401,34 +424,15 @@ using boost_load_arithmetic_enabler
  * - \p bool.
  */
 template <typename Archive, typename T>
-class boost_load_impl<Archive, T, boost_load_arithmetic_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * The body of this functions is equivalent to:
-     * @code
-     * ar >> x;
-     * @endcode
-     *
-     * @param[in] ar the source Boost loading archive.
-     * @param[in] x object to be loaded from \p ar.
-     *
-     * @throws unspecified any exception thrown by the stream operator of the archive.
-     */
-    void operator()(Archive &ar, T &x) const
-    {
-        ar >> x;
-    }
+struct boost_load_impl<Archive, T, boost_load_arithmetic_enabler<Archive, T>> : boost_load_via_boost_api<Archive, T> {
 };
 
 inline namespace impl
 {
 
 // Enabler for boost_load for strings.
-template <typename Archive, typename T>
-using boost_load_string_enabler
-    = enable_if_t<conjunction<is_boost_loading_archive<Archive, T>, std::is_same<T, std::string>>::value>;
+template <typename Archive>
+using boost_load_string_enabler = enable_if_t<is_boost_loading_archive<Archive, std::string>::value>;
 }
 
 /// Implementation of piranha::boost_load() for \p std::string.
@@ -437,21 +441,9 @@ using boost_load_string_enabler
  * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_loading_archive and \p T is
  * \p std::string.
  */
-template <typename Archive, typename T>
-class boost_load_impl<Archive, T, boost_load_string_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * @param[in] a the source archive.
-     * @param[in] s target string.
-     *
-     * @throws unspecified any exception thrown by the streaming operator of \p Archive.
-     */
-    void operator()(Archive &a, std::string &s) const
-    {
-        a >> s;
-    }
+template <typename Archive>
+struct boost_load_impl<Archive, std::string, boost_load_string_enabler<Archive>>
+    : boost_load_via_boost_api<Archive, std::string> {
 };
 
 inline namespace impl
@@ -515,73 +507,33 @@ public:
 template <typename Archive, typename T>
 const bool has_boost_load<Archive, T>::value;
 
-inline namespace impl
-{
-
-template <typename A, typename K>
-using key_boost_save_t
-    = decltype(std::declval<const K &>().boost_save(std::declval<A &>(), std::declval<const symbol_set &>()));
-}
-
-/// Detect the presence of the <tt>boost_save()</tt> method in keys.
+/// Wrapper for the serialization of keys via Boost.
 /**
- * This type trait will be \p true if \p Key
- * provides a method compatible with the following signature:
- * @code
- * Key::boost_save(Archive &, const symbol_set &) const;
- * @endcode
- * The return type of the method is ignored by this type trait.
+ * This is a simple aggregate struct that stores a reference to a key (possibly const-qualified) and a const reference
+ * to a piranha::symbol_set. The Boost serialization routines of piranha::series will attempt to save/load keys via this
+ * wrapper rather than trying to save/load keys directly. The reason for this is that keys might
+ * need external information (in the form of the series' piranha::symbol_set) in order for the (de)serialization to be
+ * successful.
  *
- * If \p Key, after the removal of cv-ref qualifiers, does not satisfy piranha::is_key,
- * a compile-time error will be produced.
+ * Consequently, rather that implementing specialisations of piranha::boost_save_impl and piranha::boost_load_impl
+ * for key types, specialisations of piranha::boost_save_impl and piranha::boost_load_impl for this wrapper structure
+ * should be provided instead.
+ *
+ * This class requires \p Key to satisfy piranha::is_key (after the removal of the const qualifier), otherwise a
+ * compile-time error will be produced.
  */
-template <typename Archive, typename Key>
-class key_has_boost_save
-{
-    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
-    static const bool implementation_defined = is_detected<key_boost_save_t, Archive, Key>::value;
+template <typename Key>
+struct boost_s11n_key_wrapper {
+private:
+    PIRANHA_TT_CHECK(is_key, typename std::remove_const<Key>::type);
 
 public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
+    /// Reference to a key instance.
+    Key &key;
+    /// Const reference to a piranha::symbol_set.
+    const symbol_set &ss;
 };
 
-template <typename Archive, typename Key>
-const bool key_has_boost_save<Archive, Key>::value;
-
-inline namespace impl
-{
-
-template <typename A, typename K>
-using key_boost_load_t
-    = decltype(std::declval<K &>().boost_load(std::declval<A &>(), std::declval<const symbol_set &>()));
-}
-
-/// Detect the presence of the <tt>boost_load()</tt> method in keys.
-/**
- * This type trait will be \p true if \p Key
- * provides a method compatible with the following signature:
- * @code
- * Key::boost_load(Archive &, const symbol_set &);
- * @endcode
- * The return type of the method is ignored by this type trait.
- *
- * If \p Key, after the removal of cv-ref qualifiers, does not satisfy piranha::is_key,
- * a compile-time error will be produced.
- */
-template <typename Archive, typename Key>
-class key_has_boost_load
-{
-    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
-    static const bool implementation_defined = is_detected<key_boost_load_t, Archive, Key>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
-
-template <typename Archive, typename Key>
-const bool key_has_boost_load<Archive, Key>::value;
 }
 
 #include "config.hpp"

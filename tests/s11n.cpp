@@ -329,7 +329,7 @@ struct la5 {
     void delete_created_pointers();
 };
 
-// A key with Boost ser support.
+// A key with Boost s11n support.
 struct keya {
     keya() = default;
     keya(const keya &) = default;
@@ -350,10 +350,6 @@ struct keya {
                                                      const symbol_set &) const;
     void trim_identify(symbol_set &, const symbol_set &) const;
     keya trim(const symbol_set &, const symbol_set &) const;
-    template <typename Archive, typename std::enable_if<is_boost_saving_archive<Archive, int>::value, int>::type = 0>
-    int boost_save(Archive &, const symbol_set &) const;
-    template <typename Archive, typename std::enable_if<is_boost_loading_archive<Archive, int>::value, int>::type = 0>
-    void boost_load(Archive &, const symbol_set &);
 };
 
 // A key without Boost ser support.
@@ -377,13 +373,21 @@ struct keyb {
                                                      const symbol_set &) const;
     void trim_identify(symbol_set &, const symbol_set &) const;
     keyb trim(const symbol_set &, const symbol_set &) const;
-    template <typename Archive, typename std::enable_if<is_boost_saving_archive<Archive, int>::value, int>::type = 0>
-    int boost_save(Archive &, const symbol_set &);
-    template <typename Archive, typename std::enable_if<is_boost_loading_archive<Archive, int>::value, int>::type = 0>
-    void boost_load(Archive &);
-    template <typename Archive, typename std::enable_if<is_boost_saving_archive<Archive, int>::value, int>::type = 0>
-    int boost_save(Archive &, symbol_set &) const;
 };
+
+namespace piranha
+{
+
+template <typename Archive>
+struct boost_save_impl<Archive, boost_s11n_key_wrapper<const keya>> {
+    void operator()(Archive &, const boost_s11n_key_wrapper<const keya> &) const;
+};
+
+template <typename Archive>
+struct boost_load_impl<Archive, boost_s11n_key_wrapper<keya>> {
+    void operator()(Archive &, boost_s11n_key_wrapper<keya> &) const;
+};
+}
 
 namespace std
 {
@@ -499,39 +503,40 @@ BOOST_AUTO_TEST_CASE(s11n_test_boost_tt)
     // Key type traits.
     BOOST_CHECK(is_key<keya>::value);
     BOOST_CHECK(is_key<keyb>::value);
-    BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, keya>::value));
-    BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, keya>::value));
-    BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, keya &>::value));
-    BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, const keya &>::value));
-    BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, const keya>::value));
-    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, keya>::value));
-    BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive, keya>::value));
-    BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, keya>::value));
-    BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, keya>::value));
-    BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, keya>::value));
-    BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive &, keya>::value));
-    BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive &, keya &>::value));
-    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive &, const keya &>::value));
-    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive &, const keya>::value));
-    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_oarchive &, keya>::value));
-    BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive, keya>::value));
-    BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive &, keya>::value));
-    BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive &, keya>::value));
-    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_oarchive, keyb>::value));
-    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_oarchive &, keyb>::value));
-    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, keyb>::value));
-    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, keyb &>::value));
-    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, const keyb &>::value));
-    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive &, const keyb>::value));
-    BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive, keyb>::value));
-    BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, keyb>::value));
-    BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, keyb>::value));
-    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive, keyb>::value));
-    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive &, keyb>::value));
-    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_oarchive &, keyb>::value));
-    BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive, keyb>::value));
-    BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive &, keyb>::value));
-    BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive &, keyb>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<const keya>>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<keyb>>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<const keyb>>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<const keya>>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<const keya>>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<keya> &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<const keya> &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<keya> &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<const keya> &>::value));
+    BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, boost_s11n_key_wrapper<keya> &>::value));
+    BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, boost_s11n_key_wrapper<const keya> &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<keya> &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<const keya> &>::value));
+    BOOST_CHECK((!has_boost_save<void, boost_s11n_key_wrapper<keya> &>::value));
+    BOOST_CHECK((!has_boost_save<void, boost_s11n_key_wrapper<const keya> &>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<const keya>>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<keyb>>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<const keyb>>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<const keya>>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<keya> &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<const keya> &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const boost_s11n_key_wrapper<keya> &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const boost_s11n_key_wrapper<const keya> &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const boost_s11n_key_wrapper<const keya>>::value));
+    BOOST_CHECK((!has_boost_load<void, boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((!has_boost_load<void, boost_s11n_key_wrapper<const keya>>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, boost_s11n_key_wrapper<const keya>>::value));
 }
 
 struct boost_int_tester {
