@@ -137,14 +137,14 @@ struct boost_s11n_tester {
         BOOST_CHECK((has_boost_save<boost::archive::text_oarchive &, const int_type>::value));
         BOOST_CHECK((has_boost_save<boost::archive::text_oarchive &, int_type>::value));
         BOOST_CHECK((has_boost_save<boost::archive::text_oarchive &, int_type &>::value));
-        BOOST_CHECK((!has_boost_save<boost::archive::xml_oarchive &, int_type &>::value));
+        BOOST_CHECK((has_boost_save<boost::archive::xml_oarchive &, int_type &>::value));
         BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, const int_type>::value));
         BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, int_type>::value));
         BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, int_type &>::value));
         BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, int_type &>::value));
         BOOST_CHECK((has_boost_load<boost::archive::text_iarchive &, int_type &>::value));
         BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, int_type>::value));
-        BOOST_CHECK((!has_boost_load<boost::archive::xml_iarchive, int_type>::value));
+        BOOST_CHECK((has_boost_load<boost::archive::xml_iarchive, int_type>::value));
         BOOST_CHECK((!has_boost_load<const boost::archive::binary_iarchive &, int_type &>::value));
         BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const int_type &>::value));
         BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive &, int_type &>::value));
@@ -219,53 +219,6 @@ struct boost_s11n_tester {
         t2.join();
         t3.join();
         BOOST_CHECK(status.load());
-        // Test various failure modes.
-        std::stringstream ss;
-        {
-            boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, true);
-            boost_save(oa, detail::mpz_size_t(1));
-        }
-        int_type n{1};
-        try {
-            boost::archive::binary_iarchive ia(ss);
-            boost_load(ia, n);
-        } catch (...) {
-            BOOST_CHECK_EQUAL(n, 0);
-        }
-        ss.str("");
-        ss.clear();
-        {
-            boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, false);
-            boost_save(oa, detail::mpz_size_t(1));
-        }
-        n = int_type{1};
-        n.promote();
-        try {
-            boost::archive::binary_iarchive ia(ss);
-            boost_load(ia, n);
-        } catch (...) {
-            BOOST_CHECK_EQUAL(n, 0);
-        }
-        ss.str("");
-        ss.clear();
-        {
-            using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
-            boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, true);
-            boost_save(oa, detail::mpz_size_t(3));
-            boost_save(oa, limb_t(1));
-            boost_save(oa, limb_t(1));
-            boost_save(oa, limb_t(1));
-        }
-        n = int_type{1};
-        try {
-            boost::archive::binary_iarchive ia(ss);
-            boost_load(ia, n);
-        } catch (...) {
-            BOOST_CHECK_EQUAL(n, 0);
-        }
     }
 };
 

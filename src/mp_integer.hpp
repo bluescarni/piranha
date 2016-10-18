@@ -61,7 +61,6 @@ see https://www.gnu.org/licenses/. */
 #include "is_key.hpp"
 #include "math.hpp"
 #include "s11n.hpp"
-#include "serialization.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -1271,10 +1270,6 @@ struct is_mp_integer_interoperable_type {
  * This class uses, for certain routines, the internal interface of GMP integers, which is not guaranteed to be stable
  * across different versions. GMP versions 4.x, 5.x and 6.x are explicitly supported by this class.
  *
- * ## Serialization ##
- *
- * This class supports serialization.
- *
  * @see http://gmplib.org/
  */
 /*
@@ -2357,24 +2352,7 @@ class mp_integer
         static_mpz_view m_static_view;
         const detail::mpz_struct_t *m_dyn_ptr;
     };
-    // Serialization support.
-    friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive &ar, unsigned int) const
-    {
-        std::ostringstream oss;
-        oss << *this;
-        auto s = oss.str();
-        ar &s;
-    }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
-    {
-        std::string s;
-        ar &s;
-        *this = mp_integer(s);
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 public:
     /// Defaulted default constructor.
     /**
@@ -4129,6 +4107,8 @@ public:
     }
     //@}
 private:
+    // Boost s11n support.
+    friend class boost::serialization::access;
     // Safely compute the absolute value of an mpz_size_t. For use in serialization.
     static detail::mpz_size_t safe_abs_size(detail::mpz_size_t s)
     {
@@ -4137,30 +4117,26 @@ private:
         }
         return static_cast<detail::mpz_size_t>(s >= 0 ? s : -s);
     }
-    template <typename U>
-    using boost_save_binary_enabler
-        = enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive, bool>,
-                                  has_boost_save<boost::archive::binary_oarchive,
-                                                 decltype(std::declval<U>()._mp_alloc)>,
-                                  has_boost_save<boost::archive::binary_oarchive, decltype(std::declval<U>()._mp_size)>,
-                                  has_boost_save<boost::archive::binary_oarchive,
-                                                 typename std::remove_pointer<decltype(std::declval<U>()._mp_d)>::type>,
-                                  has_boost_save<boost::archive::binary_oarchive,
-                                                 typename detail::integer_union<NBits>::s_storage::limb_t>>::value,
-                      int>;
-
-public:
-    /// Save to a Boost binary archive.
-    /**
-     * This method will serialize \p this into \p ar.
-     *
-     * @param[in] ar target archive.
-     *
-     * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    template <typename U = detail::mpz_struct_t, boost_save_binary_enabler<U> = 0>
-    void boost_save(boost::archive::binary_oarchive &ar) const
+    // Portable serialization.
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+    void save(Archive &ar, unsigned) const
+    {
+        // NOTE: this requires too many allocations, it should be refactored together
+        // with the mpz streaming so that we just need a single string.
+        std::ostringstream oss;
+        oss << *this;
+        piranha::boost_save(ar, oss.str());
+    }
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
+    {
+        PIRANHA_MAYBE_TLS std::string tmp;
+        piranha::boost_load(ar, tmp);
+        *this = mp_integer{tmp};
+    }
+    // Binary serialization.
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+    void save(Archive &ar, unsigned) const
     {
         if (is_static()) {
             piranha::boost_save(ar, true);
@@ -4179,36 +4155,8 @@ public:
                           [&ar](const ::mp_limb_t &l) { piranha::boost_save(ar, l); });
         }
     }
-    /// Save to a Boost text archive.
-    /**
-     * This method will serialize \p this into \p ar as a string in decimal format.
-     *
-     * @param[in] ar target archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save() or by the
-     * conversion of \p this to string.
-     */
-    void boost_save(boost::archive::text_oarchive &ar) const
-    {
-        // NOTE: this requires too many allocations, it should be refactored together
-        // with the mpz streaming so that we just need a single string.
-        std::ostringstream oss;
-        oss << *this;
-        piranha::boost_save(ar, oss.str());
-    }
-    /// Deserialize from Boost binary archive.
-    /**
-     * This method will deserialize from \p ar into \p this. The method offers the basic exception guarantee
-     * and performs minimal checking of the input data. Calling this method will result in undefined behaviour
-     * if \p ar does not contain an integer serialized via boost_save().
-     *
-     * @param[in] ar the source archive.
-     *
-     * @throws std::invalid_argument if the serialized integer is static and its number of limbs is greater than 2.
-     * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
-     * @throws unspecified any exception thrown by piranha::boost_load().
-     */
-    void boost_load(boost::archive::binary_iarchive &ar)
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
     {
         const bool this_s = is_static();
         bool s;
@@ -4264,23 +4212,9 @@ public:
             }
         }
     }
-    /// Deserialize from Boost text archive.
-    /**
-     * This method will deserialize from \p ar into \p this.
-     *
-     * @param[in] ar the source archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_load(), or by the constructor of
-     * piranha::mp_integer from string.
-     */
-    void boost_load(boost::archive::text_iarchive &ar)
-    {
-        PIRANHA_MAYBE_TLS std::string tmp;
-        piranha::boost_load(ar, tmp);
-        *this = mp_integer{tmp};
-    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 #if defined(PIRANHA_WITH_MSGPACK)
-private:
     // msgpack enablers.
     template <typename Stream>
     using msgpack_pack_enabler
@@ -5038,63 +4972,57 @@ inline integer operator"" _z(const char *s)
 inline namespace impl
 {
 
-template <typename Archive, typename T>
-using mp_integer_boost_save_enabler = typename std::
-    enable_if<conjunction<detail::is_mp_integer<T>, is_detected<boost_save_member_t, Archive, T>>::value>::type;
+template <typename Archive, int NBits>
+using mp_integer_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, std::string>, has_boost_save<Archive, detail::mpz_size_t>,
+                              has_boost_save<Archive, bool>,
+                              has_boost_save<Archive, typename detail::integer_union<NBits>::s_storage::limb_t>,
+                              has_boost_save<Archive, ::mp_limb_t>>::value>;
 
-template <typename Archive, typename T>
-using mp_integer_boost_load_enabler = typename std::
-    enable_if<conjunction<detail::is_mp_integer<T>, is_detected<boost_load_member_t, Archive, T>>::value>::type;
+template <typename Archive, int NBits>
+using mp_integer_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, std::string>, has_boost_load<Archive, detail::mpz_size_t>,
+                              has_boost_load<Archive, bool>,
+                              has_boost_load<Archive, typename detail::integer_union<NBits>::s_storage::limb_t>,
+                              has_boost_load<Archive, ::mp_limb_t>>::value>;
 }
 
-/// Implementation of piranha::boost_save() for piranha::mp_integer.
+/// Specialisation of piranha::boost_save() for piranha::mp_integer.
 /**
  * \note
- * This specialisation is enabled if \p T is an instance of piranha::mp_integer supporting
- * the piranha::mp_integer::boost_save() method with an archive of type \p Archive.
+ * This specialisation is enabled only if \p std::string and all the integral types in terms of which
+ * piranha::mp_integer is implemented satisfy piranha::has_boost_save.
+ *
+ * If \p Archive is \p boost::archive::binary_oarchive, a platform-dependent non-portable
+ * representation of the input integer is saved. Otherwise, a string representation of the input
+ * integer is saved.
+ *
+ * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
+ * @throws unspecified any exception thrown by piranha::boost_save() or by the
+ * conversion of \p this to string.
  */
-template <typename Archive, typename T>
-class boost_save_impl<Archive, T, mp_integer_boost_save_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * The call operator will invoke piranha::mp_integer::boost_save().
-     *
-     * @param[in] ar target archive.
-     * @param[in] n piranha::mp_integer to be serialized into \p ar.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_integer::boost_save().
-     */
-    void operator()(Archive &ar, const T &n) const
-    {
-        n.boost_save(ar);
-    }
+template <typename Archive, int NBits>
+struct boost_save_impl<Archive, mp_integer<NBits>, mp_integer_boost_save_enabler<Archive, NBits>>
+    : boost_save_via_boost_api<Archive, mp_integer<NBits>> {
 };
 
-/// Implementation of piranha::boost_load() for piranha::mp_integer.
+/// Specialisation of piranha::boost_load() for piranha::mp_integer.
 /**
  * \note
- * This specialisation is enabled if \p T is an instance of piranha::mp_integer supporting
- * the piranha::mp_integer::boost_load() method with an archive of type \p Archive.
+ * This specialisation is enabled only if \p std::string and all the integral types in terms of which
+ * piranha::mp_integer is implemented satisfy piranha::has_boost_load.
+ *
+ * If \p Archive is \p boost::archive::binary_iarchive, this specialisation offers the basic exception guarantee
+ * and performs minimal checking of the input data.
+ *
+ * @throws std::invalid_argument if the serialized integer is static and its number of limbs is greater than 2.
+ * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
+ * @throws unspecified any exception thrown by piranha::boost_load(), or by the constructor of
+ * piranha::mp_integer from string.
  */
-template <typename Archive, typename T>
-class boost_load_impl<Archive, T, mp_integer_boost_load_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * The call operator will invoke piranha::mp_integer::boost_load().
-     *
-     * @param[in] ar source archive.
-     * @param[in] n target piranha::mp_integer.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_integer::boost_load().
-     */
-    void operator()(Archive &ar, T &n) const
-    {
-        n.boost_load(ar);
-    }
+template <typename Archive, int NBits>
+struct boost_load_impl<Archive, mp_integer<NBits>, mp_integer_boost_load_enabler<Archive, NBits>>
+    : boost_load_via_boost_api<Archive, mp_integer<NBits>> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)
