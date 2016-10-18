@@ -1255,15 +1255,15 @@ BOOST_AUTO_TEST_CASE(s11n_boost_s11n_key_wrapper_test)
     keya ka;
     symbol_set ss;
     using w_type = boost_s11n_key_wrapper<keya>;
-    w_type w1{ka,ss};
+    w_type w1{ka, ss};
     BOOST_CHECK_EQUAL(&ka, &w1.key());
     BOOST_CHECK_EQUAL(&ka, &static_cast<const w_type &>(w1).key());
     BOOST_CHECK_EQUAL(&ss, &w1.ss());
-    w_type w2{static_cast<const keya &>(ka),ss};
+    w_type w2{static_cast<const keya &>(ka), ss};
     BOOST_CHECK_EQUAL(&ka, &static_cast<const w_type &>(w2).key());
     BOOST_CHECK_EQUAL(&ss, &w2.ss());
     BOOST_CHECK_EXCEPTION(w2.key(), std::runtime_error, [](const std::runtime_error &re) {
-        return boost::contains(re.what(),"trying to access the mutable key instance of a boost_s11n_key_wrapper "
-            "that was constructed with a const key");
+        return boost::contains(re.what(), "trying to access the mutable key instance of a boost_s11n_key_wrapper "
+                                          "that was constructed with a const key");
     });
 }

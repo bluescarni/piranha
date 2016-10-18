@@ -524,11 +524,18 @@ template <typename Key>
 struct boost_s11n_key_wrapper {
 private:
     PIRANHA_TT_CHECK(is_key, Key);
+
 public:
     /// Constructor from key and piranha::symbol_set.
-    explicit boost_s11n_key_wrapper(Key &k, const symbol_set &ss):m_key_m(std::addressof(k)),m_key_c(m_key_m),m_ss(ss) {}
+    explicit boost_s11n_key_wrapper(Key &k, const symbol_set &ss)
+        : m_key_m(std::addressof(k)), m_key_c(m_key_m), m_ss(ss)
+    {
+    }
     /// Constructor from const key and piranha::symbol_set.
-    explicit boost_s11n_key_wrapper(const Key &k, const symbol_set &ss):m_key_m(nullptr),m_key_c(std::addressof(k)),m_ss(ss) {}
+    explicit boost_s11n_key_wrapper(const Key &k, const symbol_set &ss)
+        : m_key_m(nullptr), m_key_c(std::addressof(k)), m_ss(ss)
+    {
+    }
     /// Reference to the key.
     /**
      * This method will return a mutable reference to the key used as a construction argument. If \p this was
@@ -541,8 +548,8 @@ public:
     Key &key()
     {
         if (unlikely(!m_key_m)) {
-            piranha_throw(std::runtime_error,"trying to access the mutable key instance of a boost_s11n_key_wrapper "
-                "that was constructed with a const key");
+            piranha_throw(std::runtime_error, "trying to access the mutable key instance of a boost_s11n_key_wrapper "
+                                              "that was constructed with a const key");
         }
         return *m_key_m;
     }
@@ -562,12 +569,12 @@ public:
     {
         return m_ss;
     }
-private:
-    Key                 *m_key_m;
-    const Key           *m_key_c;
-    const symbol_set    &m_ss;
-};
 
+private:
+    Key *m_key_m;
+    const Key *m_key_c;
+    const symbol_set &m_ss;
+};
 }
 
 #include "config.hpp"

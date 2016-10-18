@@ -861,21 +861,16 @@ namespace math
 {
 
 template <>
-struct negate_impl<fake_int>
-{
+struct negate_impl<fake_int> {
     void operator()(fake_int &) const;
 };
 
 template <>
-struct negate_impl<fake_int_01>
-{
+struct negate_impl<fake_int_01> {
     void operator()(fake_int_01 &) const;
 };
-
 }
-
 }
-
 
 namespace std
 {
