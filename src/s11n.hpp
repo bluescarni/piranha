@@ -508,8 +508,8 @@ const bool has_boost_load<Archive, T>::value;
 
 /// Wrapper for the serialization of keys via Boost.
 /**
- * This is a simple aggregate struct that stores a reference to a key (possibly const-qualified) and a const reference
- * to a piranha::symbol_set. The Boost serialization routines of piranha::series will attempt to save/load keys via this
+ * This is a simple struct that stores a reference to a key (possibly const-qualified) and a const reference
+ * to a piranha::symbol_set. The Boost serialization routines of piranha::series will save/load keys via this
  * wrapper rather than trying to save/load keys directly. The reason for this is that keys might
  * need external information (in the form of the series' piranha::symbol_set) in order for the (de)serialization to be
  * successful.
@@ -518,19 +518,54 @@ const bool has_boost_load<Archive, T>::value;
  * for key types, specialisations of piranha::boost_save_impl and piranha::boost_load_impl for this wrapper structure
  * should be provided instead.
  *
- * This class requires \p Key to satisfy piranha::is_key (after the removal of the const qualifier), otherwise a
- * compile-time error will be produced.
+ * This class requires \p Key to satisfy piranha::is_key, otherwise a compile-time error will be produced.
  */
 template <typename Key>
 struct boost_s11n_key_wrapper {
 private:
-    PIRANHA_TT_CHECK(is_key, typename std::remove_const<Key>::type);
-
+    PIRANHA_TT_CHECK(is_key, Key);
 public:
-    /// Reference to a key instance.
-    Key &key;
-    /// Const reference to a piranha::symbol_set.
-    const symbol_set &ss;
+    /// Constructor from key and piranha::symbol_set.
+    explicit boost_s11n_key_wrapper(Key &k, const symbol_set &ss):m_key_m(std::addressof(k)),m_key_c(m_key_m),m_ss(ss) {}
+    /// Constructor from const key and piranha::symbol_set.
+    explicit boost_s11n_key_wrapper(const Key &k, const symbol_set &ss):m_key_m(nullptr),m_key_c(std::addressof(k)),m_ss(ss) {}
+    /// Reference to the key.
+    /**
+     * This method will return a mutable reference to the key used as a construction argument. If \p this was
+     * constructed from a const key instance, calling this method will raise an exception.
+     *
+     * @return a mutable reference to the key used as a construction argument.
+     *
+     * @throws std::runtime_error if \p this was constructed from a const key instance.
+     */
+    Key &key()
+    {
+        if (unlikely(!m_key_m)) {
+            piranha_throw(std::runtime_error,"trying to access the mutable key instance of a boost_s11n_key_wrapper "
+                "that was constructed with a const key");
+        }
+        return *m_key_m;
+    }
+    /// Const reference to the key.
+    /**
+     * @return a const reference to the key used as a construction argument.
+     */
+    const Key &key() const
+    {
+        return *m_key_c;
+    }
+    /// Const reference to the symbol set.
+    /**
+     * @return a const reference to the piranha::symbol_set used as a construction argument.
+     */
+    const symbol_set &ss() const
+    {
+        return m_ss;
+    }
+private:
+    Key                 *m_key_m;
+    const Key           *m_key_c;
+    const symbol_set    &m_ss;
 };
 
 }

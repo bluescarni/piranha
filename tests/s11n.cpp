@@ -379,8 +379,8 @@ namespace piranha
 {
 
 template <typename Archive>
-struct boost_save_impl<Archive, boost_s11n_key_wrapper<const keya>> {
-    void operator()(Archive &, const boost_s11n_key_wrapper<const keya> &) const;
+struct boost_save_impl<Archive, boost_s11n_key_wrapper<keya>> {
+    void operator()(Archive &, const boost_s11n_key_wrapper<keya> &) const;
 };
 
 template <typename Archive>
@@ -503,40 +503,23 @@ BOOST_AUTO_TEST_CASE(s11n_test_boost_tt)
     // Key type traits.
     BOOST_CHECK(is_key<keya>::value);
     BOOST_CHECK(is_key<keyb>::value);
-    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<const keya>>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<keya>>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<keyb>>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<const keyb>>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<keya>>::value));
-    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<const keya>>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<keya>>::value));
-    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<const keya>>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<keya> &>::value));
-    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<const keya> &>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<keya> &>::value));
-    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<const keya> &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<keya>>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const boost_s11n_key_wrapper<keya> &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, boost_s11n_key_wrapper<keya> &>::value));
     BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, boost_s11n_key_wrapper<keya> &>::value));
-    BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, boost_s11n_key_wrapper<const keya> &>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<keya> &>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<const keya> &>::value));
     BOOST_CHECK((!has_boost_save<void, boost_s11n_key_wrapper<keya> &>::value));
-    BOOST_CHECK((!has_boost_save<void, boost_s11n_key_wrapper<const keya> &>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<keya>>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<const keya>>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<keyb>>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<const keyb>>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<keya>>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<const keya>>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<keya> &>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, boost_s11n_key_wrapper<const keya> &>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const boost_s11n_key_wrapper<keya> &>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const boost_s11n_key_wrapper<const keya> &>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const boost_s11n_key_wrapper<keya>>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const boost_s11n_key_wrapper<const keya>>::value));
     BOOST_CHECK((!has_boost_load<void, boost_s11n_key_wrapper<keya>>::value));
-    BOOST_CHECK((!has_boost_load<void, boost_s11n_key_wrapper<const keya>>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, boost_s11n_key_wrapper<keya>>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, boost_s11n_key_wrapper<const keya>>::value));
 }
 
 struct boost_int_tester {
@@ -1005,7 +988,7 @@ struct int_save_load_tester {
                 for (auto f : dfs) {
                     for (auto c : cfs) {
                         const auto tmp = dist(eng);
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
                         // NOTE: we are not expecting any failure if we have all optional deps.
                         auto cmp = save_roundtrip(tmp, f, c);
                         if (cmp != tmp) {
@@ -1060,7 +1043,7 @@ struct fp_save_load_tester {
                 for (auto f : dfs) {
                     for (auto c : cfs) {
                         const auto tmp = dist(eng);
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
                         auto cmp = save_roundtrip(tmp, f, c);
                         if (cmp != tmp) {
                             status.store(false);
@@ -1134,7 +1117,7 @@ static inline void string_save_load_tester()
                     const auto s = sdist(eng);
                     std::generate_n(achar.begin(), s, gen);
                     std::string str(achar.begin(), achar.begin() + s);
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
                     // NOTE: we are not expecting any failure if we have all optional deps.
                     auto cmp = save_roundtrip(str, f, c);
                     if (cmp != str) {
@@ -1222,7 +1205,7 @@ BOOST_AUTO_TEST_CASE(s11n_test_save_load)
     boost::mpl::for_each<integral_types>(int_save_load_tester());
     boost::mpl::for_each<fp_types>(fp_save_load_tester());
     string_save_load_tester();
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
     // Test failures.
     for (auto f : dfs) {
         for (auto c : cfs) {
@@ -1265,4 +1248,22 @@ BOOST_AUTO_TEST_CASE(s11n_test_save_load)
     BOOST_CHECK_THROW(save_file(42, "foo.txt"), std::invalid_argument);
     BOOST_CHECK_THROW(save_file(42, "foo.bz2"), std::invalid_argument);
 #endif
+}
+
+BOOST_AUTO_TEST_CASE(s11n_boost_s11n_key_wrapper_test)
+{
+    keya ka;
+    symbol_set ss;
+    using w_type = boost_s11n_key_wrapper<keya>;
+    w_type w1{ka,ss};
+    BOOST_CHECK_EQUAL(&ka, &w1.key());
+    BOOST_CHECK_EQUAL(&ka, &static_cast<const w_type &>(w1).key());
+    BOOST_CHECK_EQUAL(&ss, &w1.ss());
+    w_type w2{static_cast<const keya &>(ka),ss};
+    BOOST_CHECK_EQUAL(&ka, &static_cast<const w_type &>(w2).key());
+    BOOST_CHECK_EQUAL(&ss, &w2.ss());
+    BOOST_CHECK_EXCEPTION(w2.key(), std::runtime_error, [](const std::runtime_error &re) {
+        return boost::contains(re.what(),"trying to access the mutable key instance of a boost_s11n_key_wrapper "
+            "that was constructed with a const key");
+    });
 }

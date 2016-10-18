@@ -97,7 +97,7 @@ static inline void boost_roundtrip_file(const T &x)
 {
     for (auto f : {data_format::boost_portable, data_format::boost_binary}) {
         for (auto c : {compression::none, compression::bzip2, compression::zlib, compression::gzip}) {
-#if defined(PIRANHA_WITH_ZLIB)
+#if defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
             tmp_file file;
             save_file(x, file.name(), f, c);
             T retval;
@@ -313,7 +313,7 @@ static inline void msgpack_roundtrip_file(const T &x)
 {
     for (auto f : {data_format::msgpack_portable, data_format::msgpack_binary}) {
         for (auto c : {compression::none, compression::bzip2, compression::zlib, compression::gzip}) {
-#if defined(PIRANHA_WITH_ZLIB)
+#if defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
             tmp_file file;
             save_file(x, file.name(), f, c);
             T retval;

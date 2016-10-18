@@ -303,7 +303,7 @@ struct save_load_tester {
                         if (pdist(rng)) {
                             tmp.negate();
                         }
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)
+#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
                         // NOTE: we are not expecting any failure if we have all optional deps.
                         auto cmp = save_roundtrip(tmp, f, c);
                         if (cmp != tmp) {
