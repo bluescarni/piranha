@@ -84,7 +84,10 @@ namespace piranha
  * ## Type requirements ##
  *
  * \p T and \p S must be suitable for use as first and third template arguments in piranha::array_key. Additionally,
- * \p T must satisfy the piranha::has_is_zero type trait, and it must be copy-assignable.
+ * \p T must be copy-assignable and it must satisfy the following type-traits:
+ * - piranha::has_is_unitary,
+ * - piranha::is_ostreamable,
+ * - piranha::has_negate.
  *
  * ## Exception safety guarantee ##
  *
@@ -101,7 +104,9 @@ namespace piranha
 template <typename T, typename S = std::integral_constant<std::size_t, 0u>>
 class monomial : public array_key<T, monomial<T, S>, S>
 {
-    PIRANHA_TT_CHECK(has_is_zero, T);
+    PIRANHA_TT_CHECK(has_is_unitary, T);
+    PIRANHA_TT_CHECK(is_ostreamable, T);
+    PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
     using base = array_key<T, monomial<T, S>, S>;
     // Eval and subs type definition.
@@ -680,26 +685,24 @@ public:
     }
     /// Print.
     /**
-     * Will print to stream a human-readable representation of the monomial.
+     * This method will print to stream a human-readable representation of the monomial.
      *
      * @param[in] os target stream.
      * @param[in] args reference set of piranha::symbol.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception resulting from:
-     * - construction of the exponent type from \p int,
-     * - comparison of exponents,
-     * - printing exponents to stream.
+     * - printing exponents to stream and the public interface of \p os,
+     * - piranha::math::is_zero(), piranha::math::is_unitary().
      */
     void print(std::ostream &os, const symbol_set &args) const
     {
         if (unlikely(args.size() != this->size())) {
             piranha_throw(std::invalid_argument, "invalid size of arguments set");
         }
-        const T zero(0), one(1);
         bool empty_output = true;
         for (typename base::size_type i = 0u; i < this->size(); ++i) {
-            if ((*this)[i] != zero) {
+            if (!math::is_zero((*this)[i])) {
                 // If we are going to print a symbol, and something has been printed before,
                 // then we are going to place the multiplication sign.
                 if (!empty_output) {
@@ -707,7 +710,7 @@ public:
                 }
                 os << args[i].get_name();
                 empty_output = false;
-                if ((*this)[i] != one) {
+                if (!math::is_unitary((*this)[i])) {
                     os << "**" << detail::prepare_for_print((*this)[i]);
                 }
             }
@@ -723,8 +726,8 @@ public:
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception resulting from:
      * - construction, comparison and assignment of exponents,
-     * - piranha::math::negate(),
-     * - streaming to \p os.
+     * - printing exponents to stream and the public interface of \p os,
+     * - piranha::math::negate(), piranha::math::is_zero(), piranha::math::is_unitary().
      */
     void print_tex(std::ostream &os, const symbol_set &args) const
     {
@@ -732,15 +735,17 @@ public:
             piranha_throw(std::invalid_argument, "invalid size of arguments set");
         }
         std::ostringstream oss_num, oss_den, *cur_oss;
-        const T zero(0), one(1);
+        const T zero(0);
         T cur_value;
         for (typename base::size_type i = 0u; i < this->size(); ++i) {
             cur_value = (*this)[i];
-            if (cur_value != zero) {
+            if (!math::is_zero(cur_value)) {
+                // NOTE: the sequencing rules of the ternary operator ensure that math::negate(cur_value) is
+                // evaluated after zero < cur_value.
                 cur_oss
-                    = (cur_value > zero) ? std::addressof(oss_num) : (math::negate(cur_value), std::addressof(oss_den));
+                    = (zero < cur_value) ? std::addressof(oss_num) : (math::negate(cur_value), std::addressof(oss_den));
                 (*cur_oss) << "{" << args[i].get_name() << "}";
-                if (cur_value != one) {
+                if (!math::is_unitary(cur_value)) {
                     (*cur_oss) << "^{" << detail::prepare_for_print(cur_value) << "}";
                 }
             }

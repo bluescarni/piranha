@@ -854,6 +854,29 @@ struct fake_int_01 {
     friend std::ostream &operator<<(std::ostream &, const fake_int_01 &);
 };
 
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct negate_impl<fake_int>
+{
+    void operator()(fake_int &) const;
+};
+
+template <>
+struct negate_impl<fake_int_01>
+{
+    void operator()(fake_int_01 &) const;
+};
+
+}
+
+}
+
+
 namespace std
 {
 

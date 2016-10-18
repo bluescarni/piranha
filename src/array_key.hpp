@@ -66,6 +66,7 @@ namespace piranha
  *   - it must be constructible from \p int,
  *   - it must be less-than comparable and equality-comparable,
  *   - it must be hashable,
+ *   - it must satisfy piranha::has_is_zero,
  * - \p Derived must derive from piranha::array_key of \p T and \p Derived,
  * - \p Derived must satisfy the piranha::is_container_element type trait,
  * - \p S must be suitable as second template argument to piranha::small_vector.
@@ -92,6 +93,7 @@ class array_key
     PIRANHA_TT_CHECK(is_less_than_comparable, T);
     PIRANHA_TT_CHECK(is_equality_comparable, T);
     PIRANHA_TT_CHECK(is_hashable, T);
+    PIRANHA_TT_CHECK(has_is_zero, T);
     template <typename U>
     friend class debug_access;
 
