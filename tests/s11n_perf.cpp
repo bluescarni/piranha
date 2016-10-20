@@ -112,42 +112,6 @@ BOOST_AUTO_TEST_CASE(s11n_series_memory_test)
     ss.str("");
     ss.clear();
     std::cout << '\n';
-    {
-        boost::archive::text_oarchive oa(ss);
-        boost::timer::auto_cpu_timer t;
-        oa << res;
-        std::cout << "Old save, text, timing: ";
-    }
-    std::cout << "Old save, text, size: " << ss.tellp() << '\n';
-    tmp = pt{};
-    {
-        boost::archive::text_iarchive ia(ss);
-        boost::timer::auto_cpu_timer t;
-        ia >> tmp;
-        std::cout << "Old load, text, timing: ";
-    }
-    BOOST_CHECK_EQUAL(tmp, res);
-    ss.str("");
-    ss.clear();
-    std::cout << '\n';
-    {
-        boost::archive::binary_oarchive oa(ss);
-        boost::timer::auto_cpu_timer t;
-        oa << res;
-        std::cout << "Old save, binary, timing: ";
-    }
-    std::cout << "Old save, binary, size: " << ss.tellp() << '\n';
-    tmp = pt{};
-    {
-        boost::archive::binary_iarchive ia(ss);
-        boost::timer::auto_cpu_timer t;
-        ia >> tmp;
-        std::cout << "Old load, binary, timing: ";
-    }
-    BOOST_CHECK_EQUAL(tmp, res);
-    ss.str("");
-    ss.clear();
-    std::cout << '\n';
 #if defined(PIRANHA_WITH_MSGPACK)
     msgpack::sbuffer sbuf;
     {

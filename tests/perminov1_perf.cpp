@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/serialization/vector.hpp>
 #include <boost/timer/timer.hpp>
 #include <cstddef>
 #include <fstream>
@@ -47,7 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
 
@@ -61,23 +60,6 @@ namespace bfs = boost::filesystem;
 // The root path for the tests directory.
 static const bfs::path root_path(PIRANHA_TESTS_DIRECTORY);
 
-static inline bool check_limits()
-{
-    using int_type = std::make_signed<std::size_t>::type;
-    // First load the archived limits.txt file.
-    std::ifstream in((root_path / "data" / "limits.txt").string());
-    boost::archive::text_iarchive ia(in);
-    std::vector<std::vector<int_type>> lims;
-    ia >> lims;
-    // Now get the current limits.
-    std::vector<std::vector<int_type>> comp;
-    for (const auto &t : kronecker_array<int_type>::get_limits()) {
-        comp.push_back(std::get<0u>(t));
-    }
-    // Compare them.
-    return comp == lims;
-}
-
 BOOST_AUTO_TEST_CASE(perminov1_test)
 {
     init();
@@ -86,16 +68,13 @@ BOOST_AUTO_TEST_CASE(perminov1_test)
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
 
-    if (!check_limits()) {
-        std::cout << "This architecture is incompatible with the data files needed for this test.\n";
-        return;
-    }
-
     using pt = polynomial<rational, monomial<rational>>;
     using epst = poisson_series<divisor_series<pt, divisor<short>>>;
 
-    auto f = epst::load((root_path / "data" / "sin(2_l1).epst.bz2").string(), file_compression::bzip2);
-    auto g = epst::load((root_path / "data" / "sin(l1-l3).epst.bz2").string(), file_compression::bzip2);
+    epst f, g;
+
+    load_file(f,(root_path / "data" / "s2l1.mpackp.bz2").string());
+    load_file(g,(root_path / "data" / "sl1l3.mpackp.bz2").string());
 
     pt::set_auto_truncate_degree(2, {"x1", "x2", "x3", "y1", "y2", "y3", "u1", "u2", "u3", "v1", "v2", "v3"});
 

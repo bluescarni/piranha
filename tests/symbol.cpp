@@ -34,16 +34,12 @@ see https://www.gnu.org/licenses/. */
 #include <boost/lexical_cast.hpp>
 #include <limits>
 #include <memory>
-#include <random>
 #include <sstream>
 #include <string>
 #include <unordered_set>
 
 #include "../src/init.hpp"
 #include "../src/type_traits.hpp"
-
-static const int ntries = 1000;
-static std::mt19937 rng;
 
 using namespace piranha;
 

@@ -1080,10 +1080,6 @@ public:
         using tmp_type = decltype(std::declval<U const &>() * std::declval<value_type const &>());
         tmp_type tmp(0);
         auto it = pmap.begin();
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
         for (min_int<decltype(args.size()), typename v_type::size_type> i = 0u; i < args.size(); ++i, ++it) {
             piranha_assert(it != pmap.end() && it->first == i);
             // NOTE: here it might make sense to use multiply_accumulate. There might be a perf gain
@@ -1091,9 +1087,6 @@ public:
             // in case we implement this.
             tmp += it->second * v[i];
         }
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#pragma GCC diagnostic pop
-#endif
         piranha_assert(it == pmap.end());
         if (get_flavour()) {
             return math::cos(tmp);
@@ -1155,10 +1148,6 @@ public:
         v_type new_v;
         s_type retval_s_cos(1), retval_s_sin(0);
         for (min_int<decltype(args.size()), typename v_type::size_type> i = 0u; i < args.size(); ++i) {
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
             if (args[i].get_name() == s) {
                 retval_s_cos = math::cos(v[i] * x);
                 retval_s_sin = math::sin(v[i] * x);
@@ -1167,9 +1156,6 @@ public:
                 new_v.push_back(v[i]);
             }
         }
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#pragma GCC diagnostic pop
-#endif
         const bool sign_changed = canonicalise_impl(new_v);
         piranha_assert(new_v.size() == v.size());
         const auto new_int = ka::encode(new_v);
@@ -1252,10 +1238,6 @@ public:
         res_type cos_nx((cos_phase(abs_n) * math::binomial(abs_n, value_type(0)))
                         * (c_map[value_type(0)] * s_map[abs_n])),
             sin_nx((sin_phase(abs_n) * math::binomial(abs_n, value_type(0))) * (c_map[value_type(0)] * s_map[abs_n]));
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
         for (value_type k(0); k < abs_n; ++k) {
             const value_type p = abs_n - (k + value_type(1));
             piranha_assert(p >= value_type(0));
@@ -1267,9 +1249,6 @@ public:
             cos_nx += cos_phase(p) * tmp;
             sin_nx += sin_phase(p) * tmp;
         }
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#pragma GCC diagnostic pop
-#endif
         // Change sign as necessary.
         if (abs_n != n) {
             math::negate(sin_nx);

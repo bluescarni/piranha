@@ -35,7 +35,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/mpl/vector.hpp>
 #include <functional>
 #include <limits>
-#include <random>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -48,9 +47,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
-
-static const int ntries = 1000;
-std::mt19937 rng;
 
 using namespace piranha;
 
