@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(perminov1_test)
 
     epst f, g;
 
-    load_file(f,(root_path / "data" / "s2l1.mpackp.bz2").string());
-    load_file(g,(root_path / "data" / "sl1l3.mpackp.bz2").string());
+    load_file(f, (root_path / "data" / "s2l1.mpackp.bz2").string());
+    load_file(g, (root_path / "data" / "sl1l3.mpackp.bz2").string());
 
     pt::set_auto_truncate_degree(2, {"x1", "x2", "x3", "y1", "y2", "y3", "u1", "u2", "u3", "v1", "v2", "v3"});
 

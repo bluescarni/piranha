@@ -69,7 +69,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/power_series.hpp"
 #include "../src/real.hpp"
 #include "../src/s11n.hpp"
-#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 #include "type_system.hpp"
@@ -89,8 +88,12 @@ struct generic_pickle_suite : bp::pickle_suite {
     static bp::tuple getstate(const Series &s)
     {
         std::stringstream ss;
-        boost::archive::text_oarchive oa(ss);
-        oa << s;
+        {
+            // NOTE: use text archive by default, as it's the safest. Maybe in the future
+            // we can make the pickle serialization backend selectable by the user.
+            boost::archive::text_oarchive oa(ss);
+            oa << s;
+        }
         return bp::make_tuple(ss.str());
     }
     static void setstate(Series &s, bp::tuple state)
@@ -1040,31 +1043,6 @@ class series_exposer
         }
         return retval;
     }
-    // File load/save.
-    template <typename S>
-    static void expose_save_load(bp::class_<S> &series_class)
-    {
-        // Save.
-        typedef void (*s1)(const S &, const std::string &, piranha::file_format, piranha::file_compression);
-        typedef void (*s2)(const S &, const std::string &);
-        typedef void (*s3)(const S &, const std::string &, piranha::file_compression);
-        typedef void (*s4)(const S &, const std::string &, piranha::file_format);
-        series_class.def("save", static_cast<s1>(&S::save));
-        series_class.def("save", static_cast<s2>(&S::save));
-        series_class.def("save", static_cast<s3>(&S::save));
-        series_class.def("save", static_cast<s4>(&S::save));
-        series_class.staticmethod("save");
-        // Load.
-        typedef S (*l1)(const std::string &, piranha::file_format, piranha::file_compression);
-        typedef S (*l2)(const std::string &);
-        typedef S (*l3)(const std::string &, piranha::file_compression);
-        typedef S (*l4)(const std::string &, piranha::file_format);
-        series_class.def("load", static_cast<l1>(&S::load));
-        series_class.def("load", static_cast<l2>(&S::load));
-        series_class.def("load", static_cast<l3>(&S::load));
-        series_class.def("load", static_cast<l4>(&S::load));
-        series_class.staticmethod("load");
-    }
     // invert().
     template <typename S>
     static auto invert_wrapper(const S &s) -> decltype(piranha::math::invert(s))
@@ -1164,8 +1142,6 @@ class series_exposer
             series_class.add_property("symbol_set", symbol_set_wrapper<s_type>);
             // Pickle support.
             series_class.def_pickle(generic_pickle_suite<s_type>());
-            // Save and load.
-            expose_save_load(series_class);
             // Expose invert(), if present.
             expose_invert(series_class);
             // Expose s11n.

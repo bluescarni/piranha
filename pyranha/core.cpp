@@ -57,7 +57,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 #include "../src/s11n.hpp"
-#include "../src/series.hpp"
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
@@ -156,13 +155,6 @@ BOOST_PYTHON_MODULE(_core)
 #endif
     // Exposed types list.
     bp::def("_get_exposed_types_list", pyranha::get_exposed_types_list);
-    // The enums for save/load.
-    bp::enum_<piranha::file_format>("file_format")
-        .value("text", piranha::file_format::text)
-        .value("binary", piranha::file_format::binary);
-    bp::enum_<piranha::file_compression>("file_compression")
-        .value("disabled", piranha::file_compression::disabled)
-        .value("bzip2", piranha::file_compression::bzip2);
     // The s11n enums.
     bp::enum_<piranha::data_format>("data_format")
         .value("boost_binary", piranha::data_format::boost_binary)

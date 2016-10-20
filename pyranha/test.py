@@ -32,6 +32,7 @@ from __future__ import absolute_import as _ai
 import unittest as _ut
 
 
+# s11n tests for save/load file.
 def _s11n_load_save_test(self, p):
     import tempfile
     import os
@@ -67,27 +68,11 @@ def _s11n_load_save_test(self, p):
     self.assertRaises(ValueError, lambda: save_file(p, "foo"))
     self.assertRaises(ValueError, lambda: load_file(p, "foo"))
 
-
-def _s11n_check_msgpack_ex_translation(self):
-    import os
-    import shutil
-    import tempfile
-    from . import load_file, save_file
-    from .types import polynomial, integer, rational, short, monomial
-    pt1 = polynomial(integer, monomial(short))()
-    pt2 = polynomial(rational, monomial(short))()
-    temp_dir = tempfile.mkdtemp()
-    try:
-        x = pt1('x')
-        save_file(x, os.path.join(temp_dir, 'foo.mpackp'))
-        ret = pt2()
-        self.assertRaises(TypeError, lambda: load_file(
-            ret, os.path.join(temp_dir, 'foo.mpackp')))
-    except NotImplementedError:
-        pass
-    finally:
-        shutil.rmtree(temp_dir)
-
+# Helper to check that pickle roundtrips.
+def _pickle_test(self,x):
+    import pickle
+    str_rep = pickle.dumps(x)
+    self.assertEqual(x, pickle.loads(str_rep))
 
 class basic_test_case(_ut.TestCase):
     """Basic test case.
@@ -745,6 +730,7 @@ class polynomial_test_case(_ut.TestCase):
         x, y, z = pt('x'), pt('y'), pt('z')
         p = (x + 3 * y - 4 * z)**4
         _s11n_load_save_test(self, p)
+        _pickle_test(self, p)
 
 
 class divisor_series_test_case(_ut.TestCase):
@@ -795,6 +781,7 @@ class divisor_series_test_case(_ut.TestCase):
         # s11n.
         p = (x + 3 * y - 4 * invert(z))**4
         _s11n_load_save_test(self, p)
+        _pickle_test(self, p)
 
 
 class poisson_series_test_case(_ut.TestCase):
@@ -852,6 +839,7 @@ class poisson_series_test_case(_ut.TestCase):
         # s11n.
         p = (x + 3 * invert(y) - 4 * cos(z))**4
         _s11n_load_save_test(self, p)
+        _pickle_test(self, p)
 
 
 class converters_test_case(_ut.TestCase):
@@ -980,82 +968,27 @@ class serialization_test_case(_ut.TestCase):
     """
 
     def runTest(self):
-        import pickle
-        import random
-        import tempfile
-        import os
-        from .types import polynomial, short, rational, poisson_series, monomial
-        from .math import sin, cos
-        from . import file_format, file_compression
-        # Set the seed for deterministic output.
-        random.seed(0)
-        rand = lambda: random.randint(-10, 10)
-        # Start with some random polynomial tests.
-        pt = polynomial(rational, monomial(short))()
-        x, y, z = pt('x'), pt('y'), pt('z')
-        for _ in range(0, 100):
-            res = pt(0)
-            for _ in range(0, 20):
-                tmp = x**rand() * y**rand() * z**rand()
-                tmp *= rand()
-                n = rand()
-                if n:
-                    tmp /= n
-                res += tmp
-            str_rep = pickle.dumps(res)
-            self.assertEqual(res, pickle.loads(str_rep))
-            # Check load/save methods..
-            f = tempfile.NamedTemporaryFile(delete=False)
-            f.close()
-            try:
-                pt.save(res, f.name)
-                self.assertEqual(pt.load(f.name), res)
-                pt.save(res, f.name, file_format.binary)
-                self.assertEqual(pt.load(f.name, file_format.binary), res)
-                pt.save(res, f.name, file_compression.bzip2)
-                self.assertEqual(pt.load(f.name, file_compression.bzip2), res)
-                pt.save(res, f.name, file_format.binary,
-                        file_compression.bzip2)
-                self.assertEqual(
-                    pt.load(f.name, file_format.binary, file_compression.bzip2), res)
-            finally:
-                # Remove the temp file in any case.
-                os.remove(f.name)
-        # Poisson series.
-        pt = poisson_series(polynomial(rational, monomial(short)))()
-        x, y, z, a, b = pt('x'), pt('y'), pt('z'), pt('a'), pt('b')
-        for _ in range(0, 100):
-            res = pt(0)
-            for _ in range(0, 20):
-                tmp = x**rand() * y**rand() * z**rand()
-                tmp *= rand()
-                n = rand()
-                if n:
-                    tmp /= n
-                if (n > 0):
-                    tmp *= cos(a * rand() + b * rand())
-                else:
-                    tmp *= sin(a * rand() + b * rand())
-                res += tmp
-            str_rep = pickle.dumps(res)
-            self.assertEqual(res, pickle.loads(str_rep))
-            f = tempfile.NamedTemporaryFile(delete=False)
-            f.close()
-            try:
-                pt.save(res, f.name)
-                self.assertEqual(pt.load(f.name), res)
-                pt.save(res, f.name, file_format.binary)
-                self.assertEqual(pt.load(f.name, file_format.binary), res)
-                pt.save(res, f.name, file_compression.bzip2)
-                self.assertEqual(pt.load(f.name, file_compression.bzip2), res)
-                pt.save(res, f.name, file_format.binary,
-                        file_compression.bzip2)
-                self.assertEqual(
-                    pt.load(f.name, file_format.binary, file_compression.bzip2), res)
-            finally:
-                os.remove(f.name)
+        # NOTE: this used to contain more, but now it contains
+        # only this exception translation check.
         # Check msgpack exception translation.
-        _s11n_check_msgpack_ex_translation(self)
+        import os
+        import shutil
+        import tempfile
+        from . import load_file, save_file
+        from .types import polynomial, integer, rational, short, monomial
+        pt1 = polynomial(integer, monomial(short))()
+        pt2 = polynomial(rational, monomial(short))()
+        temp_dir = tempfile.mkdtemp()
+        try:
+            x = pt1('x')
+            save_file(x, os.path.join(temp_dir, 'foo.mpackp'))
+            ret = pt2()
+            self.assertRaises(TypeError, lambda: load_file(
+                ret, os.path.join(temp_dir, 'foo.mpackp')))
+        except NotImplementedError:
+            pass
+        finally:
+            shutil.rmtree(temp_dir)
 
 
 class truncate_degree_test_case(_ut.TestCase):
@@ -1537,6 +1470,7 @@ class rational_function_test_case(_ut.TestCase):
         # s11n.
         p = (x + 3 * y - 4 * z) / (x - 5 * y)
         _s11n_load_save_test(self, p)
+        _pickle_test(self, p)
 
 
 def run_test_suite():

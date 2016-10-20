@@ -1261,46 +1261,6 @@ public:
     }
 };
 
-/// File formats.
-/**
- * These are the available formats for piranha::series::save(const Derived &, const std::string &, file_format,
- * file_compression) and
- * piranha::series::load(const std::string &, file_format, file_compression).
- */
-enum class file_format {
-    /// Text.
-    /**
-     * Portable text format.
-     */
-    text,
-    /// Binary.
-    /**
-     * Non-portable binary format.
-     */
-    binary
-};
-
-/// File compression options.
-/**
- * These are the available compression options for piranha::series::save(const Derived &, const std::string &,
- * file_format, file_compression) and
- * piranha::series::load(const std::string &, file_format, file_compression).
- */
-enum class file_compression {
-    /// No compression.
-    /**
-     * The file will not be compressed.
-     */
-    disabled,
-    /// Bzip2 compression.
-    /**
-     * The file will be compressed with the bzip2 library.
-     *
-     * @see http://bzip.org/
-     */
-    bzip2
-};
-
 /// Series class.
 /**
  * This class contains the arithmetic and comparison operator overloads for piranha::series instances
