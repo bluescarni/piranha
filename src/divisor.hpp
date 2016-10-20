@@ -257,8 +257,12 @@ private:
             return p.v.hash();
         }
     };
-    // Underlying container type.
+
+public:
+    /// Underlying container type.
     using container_type = hash_set<p_type, p_type_hasher>;
+
+private:
     // Canonical term: the first nonzero element is positive and all the gcd of all elements is 1 or -1.
     // NOTE: this also includes the check for all zero elements, as gcd(0,0,...,0) = 0.
     static bool term_is_canonical(const p_type &p)
