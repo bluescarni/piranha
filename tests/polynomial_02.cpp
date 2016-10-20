@@ -67,6 +67,7 @@ template <typename Cf, typename Expo>
 class polynomial_alt : public series<Cf, monomial<Expo>, polynomial_alt<Cf, Expo>>
 {
     typedef series<Cf, monomial<Expo>, polynomial_alt<Cf, Expo>> base;
+
 public:
     polynomial_alt() = default;
     polynomial_alt(const polynomial_alt &) = default;

@@ -85,7 +85,7 @@ static inline void boost_roundtrip(const T &x, const symbol_set &args, bool mt =
         std::stringstream ss;
         {
             OArchive oa(ss);
-            w_type w{x,args};
+            w_type w{x, args};
             oa << w;
         }
         T retval;
