@@ -69,10 +69,13 @@ def _s11n_load_save_test(self, p):
     self.assertRaises(ValueError, lambda: load_file(p, "foo"))
 
 # Helper to check that pickle roundtrips.
-def _pickle_test(self,x):
+
+
+def _pickle_test(self, x):
     import pickle
     str_rep = pickle.dumps(x)
     self.assertEqual(x, pickle.loads(str_rep))
+
 
 class basic_test_case(_ut.TestCase):
     """Basic test case.
