@@ -46,7 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/series.hpp"
 
 using namespace piranha;
@@ -330,7 +330,7 @@ template <typename Cf, typename Key>
 class g_series_type : public trigonometric_series<series<Cf, Key, g_series_type<Cf, Key>>>
 {
     typedef trigonometric_series<series<Cf, Key, g_series_type<Cf, Key>>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type() = default;
     g_series_type(const g_series_type &) = default;

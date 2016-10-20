@@ -52,7 +52,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
-#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/series_multiplier.hpp"
 #include "../src/settings.hpp"
@@ -67,7 +66,7 @@ template <typename Cf, typename Expo>
 class polynomial_alt : public series<Cf, monomial<Expo>, polynomial_alt<Cf, Expo>>
 {
     typedef series<Cf, monomial<Expo>, polynomial_alt<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     polynomial_alt() = default;
     polynomial_alt(const polynomial_alt &) = default;

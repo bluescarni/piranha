@@ -59,12 +59,77 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "static_vector.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "term.hpp"
 #include "type_traits.hpp"
+
+namespace piranha
+{
+
+// Fwd declaration.
+template <typename>
+class real_trigonometric_kronecker_monomial;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T>
+inline void save(Archive &ar,
+                 const piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k, unsigned)
+{
+    if (std::is_same<Archive, boost::archive::binary_oarchive>::value) {
+        piranha::boost_save(ar, k.key().get_int());
+    } else {
+        auto tmp = k.key().unpack(k.ss());
+        piranha::boost_save(ar, tmp);
+    }
+    piranha::boost_save(ar, k.key().get_flavour());
+}
+
+template <typename Archive, typename T>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k,
+                 unsigned)
+{
+    if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
+        T value;
+        piranha::boost_load(ar, value);
+        k.key().set_int(value);
+    } else {
+        typename piranha::real_trigonometric_kronecker_monomial<T>::v_type tmp;
+        piranha::boost_load(ar, tmp);
+        if (unlikely(tmp.size() != k.ss().size())) {
+            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronercker "
+                                                 "trigonometric monomial: the deserialized size is "
+                                                     + std::to_string(tmp.size())
+                                                     + " but the reference symbol set has a size of "
+                                                     + std::to_string(k.ss().size()));
+        }
+        // NOTE: here the exception safety is basic, as the last boost_load() could fail in principle.
+        // It does not really matter much, as there's no real dependency between the multipliers and the flavour,
+        // any combination is valid.
+        k.key() = piranha::real_trigonometric_kronecker_monomial<T>(tmp.begin(), tmp.end());
+    }
+    // The flavour loading is common.
+    bool f;
+    piranha::boost_load(ar, f);
+    k.key().set_flavour(f);
+}
+
+template <typename Archive, typename T>
+inline void serialize(Archive &ar,
+                      piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k,
+                      unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
 
 namespace piranha
 {
@@ -105,10 +170,6 @@ namespace piranha
  * ## Move semantics ##
  *
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
- *
- * ## Serialization ##
- *
- * This class supports serialization.
  */
 // NOTES:
 // - it might make sense, for canonicalisation and is_compatible(), to provide a method in kronecker_array to get only
@@ -117,10 +178,8 @@ namespace piranha
 // - related to the above: we can embed the flavour as the first element of the kronecker array - at that point checking
 //   the flavour is just determining if the int value is even or odd.
 // - need to do some reasoning on the impact of the codification in a specialised fast poisson series multiplier: how do
-// we deal
-//   with the canonical form without going through code/decode? if we require the last multiplier to be always positive
-//   (instead
-//   of the first), can we just check/flip the sign of the coded value?
+//   we deal with the canonical form without going through code/decode? if we require the last multiplier to be always
+//   positive (instead of the first), can we just check/flip the sign of the coded value?
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
 {
@@ -239,26 +298,6 @@ private:
         typename std::enable_if<is_input_iterator<Iterator>::value
                                     && has_safe_cast<value_type, decltype(*std::declval<const Iterator &>())>::value,
                                 int>::type;
-    // Serialization support.
-    // NOTE: split for exception safety.
-    friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive &ar, unsigned int) const
-    {
-        ar &m_value;
-        ar &m_flavour;
-    }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
-    {
-        value_type value;
-        bool flavour;
-        ar &value;
-        ar &flavour;
-        m_value = value;
-        m_flavour = flavour;
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
     // Enabler for multiplication.
     template <typename Cf>
     using multiply_enabler = typename std::enable_if<is_divisible_in_place<Cf, int>::value && has_negate<Cf>::value
@@ -1315,121 +1354,6 @@ public:
         return m_flavour < other.m_flavour;
     }
 
-private:
-    template <typename U>
-    using boost_save_binary_enabler
-        = enable_if_t<conjunction<has_boost_save<boost::archive::binary_oarchive, U>,
-                                  has_boost_save<boost::archive::binary_oarchive, bool>>::value,
-                      int>;
-    template <typename U>
-    using boost_save_text_enabler
-        = enable_if_t<conjunction<has_boost_save<boost::archive::text_oarchive, typename U::v_type>,
-                                  has_boost_save<boost::archive::text_oarchive, bool>>::value,
-                      int>;
-    template <typename U>
-    using boost_load_binary_enabler
-        = enable_if_t<conjunction<has_boost_load<boost::archive::binary_iarchive, U>,
-                                  has_boost_load<boost::archive::binary_iarchive, bool>>::value,
-                      int>;
-    template <typename U>
-    using boost_load_text_enabler
-        = enable_if_t<conjunction<has_boost_load<boost::archive::text_iarchive, typename U::v_type>,
-                                  has_boost_load<boost::archive::text_iarchive, bool>>::value,
-                      int>;
-
-public:
-    /// Save to Boost binary archive.
-    /**
-     * \note
-     * This method is enabled only if \p T and \p bool support piranha::boost_save().
-     *
-     * This method will save to the archive \p oa the internal integral instance and the flavour.
-     *
-     * @param oa the target archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    template <typename U = T, boost_save_binary_enabler<U> = 0>
-    void boost_save(boost::archive::binary_oarchive &oa, const symbol_set &) const
-    {
-        piranha::boost_save(oa, m_value);
-        piranha::boost_save(oa, m_flavour);
-    }
-    /// Save to Boost text archive.
-    /**
-     * \note
-     * This method is enabled only if piranha::real_trigonometric_kronecker_monomial::v_type
-     * and \p bool support piranha::boost_save().
-     *
-     * This method will unpack \p this and save the vector of multipliers and the flavour to \p oa.
-     *
-     * @param oa the target archive.
-     * @param args reference arguments set.
-     *
-     * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - piranha::boost_save().
-     */
-    template <typename U = real_trigonometric_kronecker_monomial, boost_save_text_enabler<U> = 0>
-    void boost_save(boost::archive::text_oarchive &oa, const symbol_set &args) const
-    {
-        auto tmp = unpack(args);
-        piranha::boost_save(oa, tmp);
-        piranha::boost_save(oa, m_flavour);
-    }
-    /// Load from Boost binary archive.
-    /**
-     * \note
-     * This method is enabled only if \p T and \p bool support piranha::boost_load().
-     *
-     * This method will load into \p this the content of the input archive \p ia. No checking is performed
-     * on the content of \p ia. This method provides the basic exception safety guarantee.
-     *
-     * @param ia the source archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_load().
-     */
-    template <typename U = T, boost_load_binary_enabler<U> = 0>
-    void boost_load(boost::archive::binary_iarchive &ia, const symbol_set &)
-    {
-        piranha::boost_load(ia, m_value);
-        piranha::boost_load(ia, m_flavour);
-    }
-    /// Load from Boost text archive.
-    /**
-     * \note
-     * This method is enabled only if piranha::real_trigonometric_kronecker_monomial::v_type
-     * and \p bool support piranha::boost_load().
-     *
-     * This method will load into \p this the content of the input archive \p ia. This method provides the basic
-     * exception safety guarantee.
-     *
-     * @param ia the source archive.
-     * @param args reference arguments set.
-     *
-     * @throws std::invalid_argument if the size of the serialized monomial is different from the size of \p args.
-     * @throws unspecified any exception thrown by:
-     * - piranha::boost_load(),
-     * - the constructor of piranha::kronecker_monomial from a container.
-     */
-    template <typename U = real_trigonometric_kronecker_monomial, boost_load_text_enabler<U> = 0>
-    void boost_load(boost::archive::text_iarchive &ia, const symbol_set &args)
-    {
-        v_type tmp;
-        piranha::boost_load(ia, tmp);
-        if (unlikely(tmp.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronercker "
-                                                 "trigonometric monomial: the deserialized size is "
-                                                     + std::to_string(tmp.size())
-                                                     + " but the reference symbol set has a size of "
-                                                     + std::to_string(args.size()));
-        }
-        // NOTE: here the exception safety is basic, as the last boost_load() could fail in principle.
-        // It does not really matter much, as there's no real dependency between the multipliers and the flavour,
-        // any combination is valid.
-        *this = real_trigonometric_kronecker_monomial(tmp.begin(), tmp.end());
-        piranha::boost_load(ia, m_flavour);
-    }
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     template <typename Stream>
@@ -1528,6 +1452,59 @@ const std::size_t real_trigonometric_kronecker_monomial<T>::multiply_arity;
 
 /// Alias for piranha::real_trigonometric_kronecker_monomial with default type.
 using rtk_monomial = real_trigonometric_kronecker_monomial<>;
+
+inline namespace impl
+{
+
+template <typename Archive, typename T>
+using rtk_monomial_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, T>, has_boost_save<Archive, bool>,
+                              has_boost_save<Archive,
+                                             typename real_trigonometric_kronecker_monomial<T>::v_type>>::value>;
+
+template <typename Archive, typename T>
+using rtk_monomial_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, T>, has_boost_load<Archive, bool>,
+                              has_boost_load<Archive,
+                                             typename real_trigonometric_kronecker_monomial<T>::v_type>>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::real_trigonometric_kronecker_monomial.
+/**
+ * \note
+ * This specialisation is enabled only if \p T, \p bool and piranha::real_trigonometric_kronecker_monomial::v_type
+ * satisfy piranha::has_boost_save.
+ *
+ * If \p Archive is \p boost::archive::binary_oarchive, the internal integral instance is saved.
+ * Otherwise, the monomial is unpacked and the vector of exponents is saved.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save() or
+ * piranha::real_trigonometric_kronecker_monomial::unpack().
+ */
+template <typename Archive, typename T>
+struct boost_save_impl<Archive, boost_s11n_key_wrapper<real_trigonometric_kronecker_monomial<T>>,
+                       rtk_monomial_boost_save_enabler<Archive, T>>
+    : boost_save_via_boost_api<Archive, boost_s11n_key_wrapper<real_trigonometric_kronecker_monomial<T>>> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::real_trigonometric_kronecker_monomial.
+/**
+ * \note
+ * This specialisation is enabled only if \p T, \p bool and piranha::real_trigonometric_kronecker_monomial::v_type
+ * satisfy piranha::has_boost_load.
+ *
+ * The basic exception safety guarantee is provided.
+ *
+ * @throws std::invalid_argument if the size of the serialized monomial is different from the size of the symbol set.
+ * @throws unspecified any exception thrown by:
+ * - piranha::boost_load(),
+ * - the constructor of piranha::real_trigonometric_kronecker_monomial from a container.
+ */
+template <typename Archive, typename T>
+struct boost_load_impl<Archive, boost_s11n_key_wrapper<real_trigonometric_kronecker_monomial<T>>,
+                       rtk_monomial_boost_load_enabler<Archive, T>>
+    : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<real_trigonometric_kronecker_monomial<T>>> {
+};
 }
 
 namespace std

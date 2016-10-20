@@ -40,7 +40,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/invert.hpp"
 #include "../src/monomial.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -82,7 +81,7 @@ template <typename Cf, typename Expo>
 class g_series_type : public series<Cf, monomial<Expo>, g_series_type<Cf, Expo>>
 {
     using base = series<Cf, monomial<Expo>, g_series_type<Cf, Expo>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type() = default;
     g_series_type(const g_series_type &) = default;
@@ -107,7 +106,7 @@ template <typename Cf, typename Expo>
 class g_series_type2 : public series<Cf, monomial<Expo>, g_series_type2<Cf, Expo>>
 {
     using base = series<Cf, monomial<Expo>, g_series_type2<Cf, Expo>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type2() = default;
     g_series_type2(const g_series_type2 &other) : base(other)
@@ -124,7 +123,6 @@ public:
 template <typename T>
 class null_toolbox : public T
 {
-    PIRANHA_SERIALIZE_THROUGH_BASE(T)
 public:
     null_toolbox() = default;
     null_toolbox(const null_toolbox &other) : T(other)
@@ -140,7 +138,6 @@ public:
 template <typename T>
 class null_toolbox2 : public T
 {
-    PIRANHA_SERIALIZE_THROUGH_BASE(T)
 public:
     null_toolbox2() = default;
     null_toolbox2(const null_toolbox2 &) = default;
@@ -156,7 +153,7 @@ template <typename Cf, typename Expo>
 class g_series_type3 : public null_toolbox<series<Cf, monomial<Expo>, g_series_type3<Cf, Expo>>>
 {
     using base = null_toolbox<series<Cf, monomial<Expo>, g_series_type3<Cf, Expo>>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type3() = default;
     g_series_type3(const g_series_type3 &) = default;
@@ -171,7 +168,7 @@ template <typename Cf, typename Expo>
 class g_series_type4 : public null_toolbox2<series<Cf, monomial<Expo>, g_series_type4<Cf, Expo>>>
 {
     using base = null_toolbox2<series<Cf, monomial<Expo>, g_series_type4<Cf, Expo>>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type4() = default;
     g_series_type4(const g_series_type4 &other) : base(other)
@@ -224,7 +221,7 @@ template <typename Cf, typename Expo>
 class g_series_type5 : public series<Cf, monomial<Expo>, g_series_type5<Cf, Expo>>
 {
     using base = series<Cf, monomial<Expo>, g_series_type5<Cf, Expo>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type5() = default;
     g_series_type5(const g_series_type5 &) = default;
@@ -244,7 +241,7 @@ template <typename Cf, typename Expo>
 class g_series_type6 : public series<Cf, monomial<Expo>, g_series_type6<Cf, Expo>>
 {
     using base = series<Cf, monomial<Expo>, g_series_type6<Cf, Expo>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type6() = default;
     g_series_type6(const g_series_type6 &) = default;

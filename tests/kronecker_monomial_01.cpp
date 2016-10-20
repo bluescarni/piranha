@@ -62,7 +62,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/term.hpp"
@@ -1204,42 +1204,6 @@ struct tt_tester {
 BOOST_AUTO_TEST_CASE(kronecker_monomial_type_traits_test)
 {
     boost::mpl::for_each<int_types>(tt_tester());
-}
-
-struct serialization_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef kronecker_monomial<T> k_type;
-        k_type tmp(T(0));
-        std::stringstream ss;
-        k_type k0(T(42));
-        {
-            boost::archive::text_oarchive oa(ss);
-            oa << k0;
-        }
-        {
-            boost::archive::text_iarchive ia(ss);
-            ia >> tmp;
-        }
-        BOOST_CHECK(tmp == k0);
-        ss.str("");
-        k_type k1(T(41));
-        {
-            boost::archive::text_oarchive oa(ss);
-            oa << k1;
-        }
-        {
-            boost::archive::text_iarchive ia(ss);
-            ia >> tmp;
-        }
-        BOOST_CHECK(tmp == k1);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_monomial_serialization_test)
-{
-    boost::mpl::for_each<int_types>(serialization_tester());
 }
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_kic_test)

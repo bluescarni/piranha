@@ -54,7 +54,6 @@ see https://www.gnu.org/licenses/. */
 #include "print_tex_coefficient.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 
 namespace piranha
 {
@@ -107,10 +106,6 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
  * ## Move semantics ##
  *
  * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
- *
- * ## Serialization ##
- *
- * This class supports serialization.
  */
 template <int NBits = 0>
 class mp_rational
@@ -680,26 +675,30 @@ private:
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    void save(Archive &ar, unsigned) const
     {
-        // NOTE: here in principle we do not need the split member implementation,
-        // this syntax could be used for both load and save. However, for load
-        // we use an implementation that gives better exception safety: load num/den
-        // into local variables and the move them in. So if something goes wrong in the
-        // deserialization of one of the ints, we do not modify this.
-        ar &m_num;
-        ar &m_den;
+        piranha::boost_save(ar, m_num);
+        piranha::boost_save(ar, m_den);
     }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
     {
         int_type num, den;
-        ar &num;
-        ar &den;
+        piranha::boost_load(ar, num);
+        piranha::boost_load(ar, den);
         // This ensures that if we load from a bad archive with non-coprime
         // num and den or negative den, or... we get anyway a canonicalised
         // rational or an error.
-        *this = mp_rational{num, den};
+        *this = mp_rational{std::move(num), std::move(den)};
+    }
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
+    {
+        int_type num, den;
+        piranha::boost_load(ar, num);
+        piranha::boost_load(ar, den);
+        m_num = std::move(num);
+        m_den = std::move(den);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
@@ -1694,66 +1693,6 @@ public:
         return detail::generic_binomial(*this, n);
     }
 
-private:
-    template <typename Archive>
-    using boost_save_enabler = typename std::enable_if<has_boost_save<Archive, int_type>::value, int>::type;
-
-public:
-    /// Save to Boost archive.
-    /**
-     * \note
-     * This method is enabled only if piranha::boost_save() is enabled
-     * for the type representing the numerator and denominator.
-     *
-     * This method will save \p this to the Boost output archive \p oa.
-     *
-     * @param oa the target Boost archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    template <typename Archive, boost_save_enabler<Archive> = 0>
-    void boost_save(Archive &oa) const
-    {
-        piranha::boost_save(oa, m_num);
-        piranha::boost_save(oa, m_den);
-    }
-    /// Load from binary Boost archive.
-    /**
-     * This method will load a rational value into \p this from \p ia. No canonical form checking is performed
-     * on the content of \p ia: if the loaded rational is not in canonical form, a call to canonicalise() will be
-     * required. The behaviour will be undefined if the deserialized denominator is zero.
-     *
-     * @param ia the source archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_load().
-     */
-    void boost_load(boost::archive::binary_iarchive &ia)
-    {
-        int_type num, den;
-        piranha::boost_load(ia, num);
-        piranha::boost_load(ia, den);
-        m_num = std::move(num);
-        m_den = std::move(den);
-    }
-    /// Load from text Boost archive.
-    /**
-     * This method will load a rational value into \p this from \p ia. The loaded rational will be canonicalised
-     * before being assigned to \p this.
-     *
-     * @param ia the source archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_load().
-     */
-    void boost_load(boost::archive::text_iarchive &ia)
-    {
-        int_type num, den;
-        piranha::boost_load(ia, num);
-        piranha::boost_load(ia, den);
-        // This ensures that if we load from a bad archive with non-coprime
-        // num and den or negative den, or... we get anyway a canonicalised
-        // rational or an error.
-        *this = mp_rational{std::move(num), std::move(den)};
-    }
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     template <typename Stream>
@@ -2360,66 +2299,45 @@ public:
 inline namespace impl
 {
 
-template <typename Archive, typename T>
-using mp_rational_boost_save_enabler =
-    typename std::enable_if<detail::is_mp_rational<T>::value
-                            && detail::true_tt<decltype(
-                                   std::declval<const T &>().boost_save(std::declval<Archive &>()))>::value>::type;
+template <typename Archive, int NBits>
+using mp_rational_boost_save_enabler
+    = enable_if_t<has_boost_save<Archive, typename mp_rational<NBits>::int_type>::value>;
 
-template <typename Archive, typename T>
-using mp_rational_boost_load_enabler =
-    typename std::enable_if<detail::is_mp_rational<T>::value && detail::true_tt<decltype(std::declval<T &>().boost_load(
-                                                                    std::declval<Archive &>()))>::value>::type;
+template <typename Archive, int NBits>
+using mp_rational_boost_load_enabler
+    = enable_if_t<has_boost_load<Archive, typename mp_rational<NBits>::int_type>::value>;
 }
 
-/// Implementation of piranha::boost_save() for piranha::mp_rational.
+/// Specialisation of piranha::boost_save() for piranha::mp_rational.
 /**
  * \note
- * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
- * piranha::mp_rational::boost_save() method.
+ * This specialisation is enabled only if the numerator/denominator type of piranha::mp_rational satisfies
+ * piranha::has_boost_save.
+ *
+ * The rational will be serialized as a numerator/denominator pair.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
  */
-template <typename Archive, typename T>
-class boost_save_impl<Archive, T, mp_rational_boost_save_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * The call operator will use the piranha::mp_rational::boost_save() method of \p q.
-     *
-     * @param ar the target archive.
-     * @param q the input rational.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_rational::boost_save().
-     */
-    void operator()(Archive &ar, const T &q) const
-    {
-        q.boost_save(ar);
-    }
+template <typename Archive, int NBits>
+struct boost_save_impl<Archive, mp_rational<NBits>, mp_rational_boost_save_enabler<Archive, NBits>>
+    : boost_save_via_boost_api<Archive, mp_rational<NBits>> {
 };
 
-/// Implementation of piranha::boost_load() for piranha::mp_rational.
+/// Specialisation of piranha::boost_load() for piranha::mp_rational.
 /**
  * \note
- * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
- * piranha::mp_rational::boost_load() method.
+ * This specialisation is enabled only if the numerator/denominator type of piranha::mp_rational satisfies
+ * piranha::has_boost_load.
+ *
+ * If \p Archive is boost::archive::binary_iarchive, the serialized numerator/denominator pair is loaded
+ * as-is, without canonicality checks. Otherwise, the rational will be canonicalised after deserialization.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_load() or by the constructor of piranha::mp_rational
+ * from numerator and denominator.
  */
-template <typename Archive, typename T>
-class boost_load_impl<Archive, T, mp_rational_boost_load_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * The call operator will use the piranha::mp_rational::boost_load() method of \p q.
-     *
-     * @param ar the source archive.
-     * @param q the output rational.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_rational::boost_load().
-     */
-    void operator()(Archive &ar, T &q)
-    {
-        q.boost_load(ar);
-    }
+template <typename Archive, int NBits>
+struct boost_load_impl<Archive, mp_rational<NBits>, mp_rational_boost_load_enabler<Archive, NBits>>
+    : boost_load_via_boost_api<Archive, mp_rational<NBits>> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)

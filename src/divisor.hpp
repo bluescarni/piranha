@@ -57,11 +57,61 @@ see https://www.gnu.org/licenses/. */
 #include "pow.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "small_vector.hpp"
 #include "symbol_set.hpp"
 #include "term.hpp"
 #include "type_traits.hpp"
+
+namespace piranha
+{
+
+// Fwd declaration.
+template <typename>
+class divisor;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T>
+inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
+{
+    if (unlikely(!k.key().is_compatible(k.ss()))) {
+        piranha_throw(std::invalid_argument, "an invalid symbol_set was passed as an argument during the "
+                                             "Boost serialization of a divisor");
+    }
+    piranha::boost_save(ar, k.key().m_container);
+}
+
+template <typename Archive, typename T>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
+{
+    try {
+        piranha::boost_load(ar, k.key().m_container);
+        if (unlikely(!k.key().destruction_checks())) {
+            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive failed internal "
+                                                 "consistency checks");
+        }
+        if (unlikely(!k.key().is_compatible(k.ss()))) {
+            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive is not compatible "
+                                                 "with the supplied symbol set");
+        }
+    } catch (...) {
+        k.key().m_container = typename piranha::divisor<T>::container_type{};
+        throw;
+    }
+}
+
+template <typename Archive, typename T>
+inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
 
 namespace piranha
 {
@@ -91,13 +141,18 @@ struct divisor_p_type {
     }
     // Serialization support.
     template <class Archive>
-    void serialize(Archive &ar, unsigned int)
+    void save(Archive &ar, unsigned) const
     {
-        // NOTE: there's no need here for exception safety, as this is not a public class: we
-        // don't care if during deserialization we end up deserializing only part of the pair.
-        ar &v;
-        ar &e;
+        boost_save(ar, v);
+        boost_save(ar, e);
     }
+    template <class Archive>
+    void load(Archive &ar, unsigned)
+    {
+        boost_load(ar, v);
+        boost_load(ar, e);
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
     // Members.
     v_type v;
     mutable T e;
@@ -106,29 +161,17 @@ struct divisor_p_type {
 
 // Serialization methods for the divisor's pair type. Not documented because they are implementation details.
 template <typename Archive, typename T>
-class boost_save_impl<Archive, divisor_p_type<T>,
-                      enable_if_t<conjunction<has_boost_save<Archive, T>,
-                                              has_boost_save<Archive, typename divisor_p_type<T>::v_type>>::value>>
-{
-public:
-    void operator()(Archive &ar, const divisor_p_type<T> &p) const
-    {
-        boost_save(ar, p.v);
-        boost_save(ar, p.e);
-    }
+struct boost_save_impl<Archive, divisor_p_type<T>,
+                       enable_if_t<conjunction<has_boost_save<Archive, T>,
+                                               has_boost_save<Archive, typename divisor_p_type<T>::v_type>>::value>>
+    : boost_save_via_boost_api<Archive, divisor_p_type<T>> {
 };
 
 template <typename Archive, typename T>
-class boost_load_impl<Archive, divisor_p_type<T>,
-                      enable_if_t<conjunction<has_boost_load<Archive, T>,
-                                              has_boost_load<Archive, typename divisor_p_type<T>::v_type>>::value>>
-{
-public:
-    void operator()(Archive &ar, divisor_p_type<T> &p) const
-    {
-        boost_load(ar, p.v);
-        boost_load(ar, p.e);
-    }
+struct boost_load_impl<Archive, divisor_p_type<T>,
+                       enable_if_t<conjunction<has_boost_load<Archive, T>,
+                                               has_boost_load<Archive, typename divisor_p_type<T>::v_type>>::value>>
+    : boost_load_via_boost_api<Archive, divisor_p_type<T>> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -187,10 +230,6 @@ struct msgpack_convert_impl<divisor_p_type<T>,
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of piranha::hash_set.
- *
- * ## Serialization ##
- *
- * This class supports serialization.
  */
 // NOTE: if we ever make this completely generic on T, remember there are some hard-coded assumptions. E.g.,
 // is_zero must be available in split().
@@ -336,40 +375,6 @@ private:
                                     && has_safe_cast<value_type, typename std::iterator_traits<It>::value_type>::value
                                     && has_safe_cast<value_type, Exponent>::value,
                                 int>::type;
-    // Serialization support.
-    friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive &ar, unsigned int) const
-    {
-        ar &m_container;
-    }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
-    {
-        divisor new_d;
-        try {
-            // NOTE: here we could throw either because the archive is garbage (Boost.Serialization throwing
-            // in this case) or because the loaded terms are invalid. In the second case we must make sure
-            // to destroy the content of new_d before exiting, otherwise the dtor of the divisor will
-            // hit assertion failures in debug mode. We need the second clear() in the catch block
-            // because we could be in the situation that the archive contains invaild terms and it is garbage
-            // after a while - in thie case invalid terms coud be living in new_d and the first clear() is never
-            // hit.
-            ar &new_d.m_container;
-            // Run the destruction checks, if they fail throw.
-            if (unlikely(!new_d.destruction_checks())) {
-                new_d.clear();
-                piranha_throw(std::invalid_argument, "error during the deserialization of a divisor, the loaded data "
-                                                     "is invalid");
-            }
-        } catch (...) {
-            new_d.clear();
-            throw;
-        }
-        // Move in.
-        *this = std::move(new_d);
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
     // Evaluation utilities.
     // NOTE: here we are not actually requiring that the eval_type has to be destructible, copyable/movable, etc.
     // We just assume it is a sane type of some kind.
@@ -971,69 +976,14 @@ public:
     }
 
 private:
-    template <typename Archive>
-    using boost_save_enabler = enable_if_t<has_boost_save<Archive, container_type>::value, int>;
-    template <typename Archive>
-    using boost_load_enabler = enable_if_t<has_boost_load<Archive, container_type>::value, int>;
-
-public:
-    /// Save to Boost archive.
-    /**
-     * \note
-     * This method is enabled only if the internal container satisfies piranha::has_boost_save.
-     *
-     * This method will serialize \p this into \p ar.
-     *
-     * @param ar target archive.
-     * @param args reference symbol set.
-     *
-     * @throws std::invalid_argument if \p args is not compatible with \p this.
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    template <typename Archive, boost_save_enabler<Archive> = 0>
-    void boost_save(Archive &ar, const symbol_set &args) const
-    {
-        if (unlikely(!is_compatible(args))) {
-            piranha_throw(std::invalid_argument, "an invalid symbol_set was passed as an argument for the "
-                                                 "boost_save() method of a divisor");
-        }
-        piranha::boost_save(ar, m_container);
-    }
-    /// Load from Boost archive.
-    /**
-     * \note
-     * This method is enabled only if the internal container satisfies piranha::has_boost_load.
-     *
-     * This method will load the content of \p ar into \p this. The method provides the basic exception safety
-     * guarantee.
-     *
-     * @param ar source archive.
-     * @param args reference symbol set.
-     *
-     * @throws std::invalid_argument if \p args is not compatible with \p this or if the loaded divisor fails internal
-     * consistency checks.
-     * @throws unspecified any exception thrown by piranha::boost_load().
-     */
-    template <typename Archive, boost_load_enabler<Archive> = 0>
-    void boost_load(Archive &ar, const symbol_set &args)
-    {
-        try {
-            piranha::boost_load(ar, m_container);
-            if (unlikely(!destruction_checks())) {
-                piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive failed internal "
-                                                     "consistency checks");
-            }
-            if (unlikely(!is_compatible(args))) {
-                piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive is not compatible "
-                                                     "with the supplied symbol set");
-            }
-        } catch (...) {
-            m_container = container_type{};
-            throw;
-        }
-    }
+    // Make friend with the s11n functions.
+    template <typename Archive, typename T1>
+    friend void boost::serialization::save(Archive &, const piranha::boost_s11n_key_wrapper<piranha::divisor<T1>> &,
+                                           unsigned);
+    template <typename Archive, typename T1>
+    friend void boost::serialization::load(Archive &, piranha::boost_s11n_key_wrapper<piranha::divisor<T1>> &,
+                                           unsigned);
 #if defined(PIRANHA_WITH_MSGPACK)
-private:
     template <typename Stream>
     using msgpack_pack_enabler
         = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, container_type>>::value, int>;
@@ -1107,6 +1057,45 @@ private:
 
 template <typename T>
 const std::size_t divisor<T>::multiply_arity;
+
+inline namespace impl
+{
+
+template <typename Archive, typename T>
+using divisor_boost_save_enabler = enable_if_t<has_boost_save<Archive, typename divisor<T>::container_type>::value>;
+
+template <typename Archive, typename T>
+using divisor_boost_load_enabler = enable_if_t<has_boost_load<Archive, typename divisor<T>::container_type>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::divisor.
+/**
+ * \note
+ * This specialisation is enabled only if piranha::divisor::container_type satisfies piranha::has_boost_save.
+ *
+ * @throws std::invalid_argument if the symbol set is incompatible with the divisor.
+ * @throws unspecified any exception thrown by piranha::boost_save().
+ */
+template <typename Archive, typename T>
+struct boost_save_impl<Archive, boost_s11n_key_wrapper<divisor<T>>, divisor_boost_save_enabler<Archive, T>>
+    : boost_save_via_boost_api<Archive, boost_s11n_key_wrapper<divisor<T>>> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::divisor.
+/**
+ * \note
+ * This specialisation is enabled only if piranha::divisor::container_type satisfies piranha::has_boost_load.
+ *
+ * The basic exception safety guarantee is provided.
+ *
+ * @throws std::invalid_argument if the symbol set is not compatible with the loaded divisor or if the loaded divisor
+ * fails internal consistency checks.
+ * @throws unspecified any exception thrown by piranha::boost_load().
+ */
+template <typename Archive, typename T>
+struct boost_load_impl<Archive, boost_s11n_key_wrapper<divisor<T>>, divisor_boost_load_enabler<Archive, T>>
+    : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<divisor<T>>> {
+};
 }
 
 namespace std

@@ -270,7 +270,7 @@ using boost_save_arithmetic_enabler =
                             disjunction<is_serialization_scalar<T>, std::is_same<T, long double>>>::value>;
 }
 
-/// Implementation of piranha::boost_save() for arithmetic types.
+/// Specialisation of piranha::boost_save() for arithmetic types.
 /**
  * \note
  * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_saving_archive and
@@ -293,7 +293,7 @@ template <typename Archive>
 using boost_save_string_enabler = enable_if_t<is_boost_saving_archive<Archive, std::string>::value>;
 }
 
-/// Implementation of piranha::boost_save() for \p std::string.
+/// Specialisation of piranha::boost_save() for \p std::string.
 /**
  * \note
  * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_saving_archive and \p T is
@@ -411,7 +411,7 @@ using boost_load_arithmetic_enabler
                               disjunction<is_serialization_scalar<T>, std::is_same<T, long double>>>::value>;
 }
 
-/// Implementation of piranha::boost_load() for arithmetic types.
+/// Specialisation of piranha::boost_load() for arithmetic types.
 /**
  * \note
  * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_loading_archive and
@@ -434,7 +434,7 @@ template <typename Archive>
 using boost_load_string_enabler = enable_if_t<is_boost_loading_archive<Archive, std::string>::value>;
 }
 
-/// Implementation of piranha::boost_load() for \p std::string.
+/// Specialisation of piranha::boost_load() for \p std::string.
 /**
  * \note
  * This specialisation is enabled if \p Archive and \p T satisfy piranha::is_boost_loading_archive and \p T is

@@ -58,7 +58,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/term.hpp"
@@ -1420,42 +1420,6 @@ struct tt_tester {
 BOOST_AUTO_TEST_CASE(monomial_type_traits_test)
 {
     boost::mpl::for_each<expo_types>(tt_tester());
-}
-
-struct serialization_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef monomial<int, T> k_type;
-        k_type tmp;
-        std::stringstream ss;
-        k_type k0({1, 2, 3, 4, 5});
-        {
-            boost::archive::text_oarchive oa(ss);
-            oa << k0;
-        }
-        {
-            boost::archive::text_iarchive ia(ss);
-            ia >> tmp;
-        }
-        BOOST_CHECK(tmp == k0);
-        ss.str("");
-        k_type k1({1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-        {
-            boost::archive::text_oarchive oa(ss);
-            oa << k1;
-        }
-        {
-            boost::archive::text_iarchive ia(ss);
-            ia >> tmp;
-        }
-        BOOST_CHECK(tmp == k1);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(monomial_serialization_test)
-{
-    boost::mpl::for_each<size_types>(serialization_tester());
 }
 
 BOOST_AUTO_TEST_CASE(monomial_kic_test)

@@ -146,6 +146,19 @@ private:
     //   in as parameter).
     using storage_type = typename std::aligned_storage<sizeof(T) * MaxSize, alignof(T)>::type;
 #endif
+    // Serialization support.
+    friend class boost::serialization::access;
+    template <class Archive>
+    void save(Archive &ar, unsigned) const
+    {
+        boost_save_vector(ar, *this);
+    }
+    template <class Archive>
+    void load(Archive &ar, unsigned)
+    {
+        boost_load_vector(ar, *this);
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
     /// Maximum size.
     /**
@@ -667,24 +680,12 @@ const typename static_vector<T, MaxSize>::size_type static_vector<T, MaxSize>::m
  * \note
  * This specialisation is enabled only if \p T and the size type of the vector satisfy
  * piranha::has_boost_save.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
  */
 template <typename Archive, typename T, std::size_t S>
-class boost_save_impl<Archive, static_vector<T, S>, boost_save_vector_enabler<Archive, static_vector<T, S>>>
-{
-public:
-    /// Call operator.
-    /**
-     * This method will serialize \p v into \p ar.
-     *
-     * @param ar the target archive.
-     * @param v the vector to be serialized.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    void operator()(Archive &ar, const static_vector<T, S> &v) const
-    {
-        boost_save_vector(ar, v);
-    }
+struct boost_save_impl<Archive, static_vector<T, S>, boost_save_vector_enabler<Archive, static_vector<T, S>>>
+    : boost_save_via_boost_api<Archive, static_vector<T, S>> {
 };
 
 /// Specialisation of piranha::boost_load() for piranha::static_vector.
@@ -692,27 +693,16 @@ public:
  * \note
  * This specialisation is enabled only if \p T and the size type of the vector satisfy
  * piranha::has_boost_load.
+ *
+ * The basic exception safety guarantee is provided.
+ *
+ * @throws unspecified any exception thrown by:
+ * - piranha::boost_load(),
+ * - piranha::static_vector::resize().
  */
 template <typename Archive, typename T, std::size_t S>
-class boost_load_impl<Archive, static_vector<T, S>, boost_load_vector_enabler<Archive, static_vector<T, S>>>
-{
-public:
-    /// Call operator.
-    /**
-     * This method will deserialize the content of \p ar into \p v. This method provides the basic exception safety
-     * guarantee.
-     *
-     * @param ar the source archive.
-     * @param v the vector into which the content of \p ar will deserialized.
-     *
-     * @throws unspecified any exception thrown by:
-     * - piranha::boost_load(),
-     * - piranha::static_vector::resize().
-     */
-    void operator()(Archive &ar, static_vector<T, S> &v) const
-    {
-        boost_load_vector(ar, v);
-    }
+struct boost_load_impl<Archive, static_vector<T, S>, boost_load_vector_enabler<Archive, static_vector<T, S>>>
+    : boost_load_via_boost_api<Archive, static_vector<T, S>> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)

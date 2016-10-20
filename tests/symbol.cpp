@@ -40,7 +40,6 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_set>
 
 #include "../src/init.hpp"
-#include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
 static const int ntries = 1000;
@@ -109,23 +108,4 @@ BOOST_AUTO_TEST_CASE(symbol_hash_test)
 BOOST_AUTO_TEST_CASE(symbol_streaming_test)
 {
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(symbol("x")), "name = \'x\'");
-}
-
-BOOST_AUTO_TEST_CASE(symbol_serialization_test)
-{
-    std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-    symbol tmp("foo");
-    for (int i = 0; i < ntries; ++i) {
-        symbol s(boost::lexical_cast<std::string>(int_dist(rng)));
-        std::stringstream ss;
-        {
-            boost::archive::text_oarchive oa(ss);
-            oa << s;
-        }
-        {
-            boost::archive::text_iarchive ia(ss);
-            ia >> tmp;
-        }
-        BOOST_CHECK_EQUAL(tmp, s);
-    }
 }

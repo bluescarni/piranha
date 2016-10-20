@@ -35,7 +35,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "forwarding.hpp"
 #include "mp_integer.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -74,16 +73,11 @@ struct ipow_substitutable_series_tag {
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of \p Series.
- *
- * ## Serialization ##
- *
- * This class supports serialization if \p Series does.
  */
 template <typename Series, typename Derived>
 class ipow_substitutable_series : public Series, detail::ipow_substitutable_series_tag
 {
     typedef Series base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     // Detect subs term.
     template <typename Term, typename T>
     struct subs_term_score {
@@ -289,8 +283,5 @@ struct ipow_subs_impl<Series, T, detail::ipow_subs_impl_ipow_subs_series_enabler
 };
 }
 }
-
-// Avoid storing version information for the toolbox.
-PIRANHA_TEMPLATE_SERIALIZATION_LEVEL(piranha::ipow_substitutable_series, boost::serialization::object_serializable)
 
 #endif

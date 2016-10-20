@@ -367,7 +367,6 @@ inline namespace literals
 #include "runtime_info.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"

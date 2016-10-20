@@ -53,7 +53,6 @@ see https://www.gnu.org/licenses/. */
 #include "init.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "thread_pool.hpp"
 #include "type_traits.hpp"
 
@@ -96,11 +95,6 @@ namespace piranha
  *
  * Move construction and move assignment will leave the moved-from object equivalent to an empty set whose hasher and
  * equality predicate have been moved-from.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the contained type supports it. Note that the hasher and the comparator
- * are not serialized and they are recreated from scratch upon deserialization.
  */
 /* Some improvement NOTEs:
 * - tests for low-level methods
@@ -567,35 +561,31 @@ private:
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    void save(Archive &ar, unsigned) const
     {
-        // Save the number of elements first.
-        ar &m_n_elements;
-        // Save the elements one by one.
-        const auto it_f = end();
-        for (auto it = begin(); it != it_f; ++it) {
-            ar &(*it);
-        }
+        // Size.
+        boost_save(ar, size());
+        // Serialize the items.
+        boost_save_range(ar, begin(), end());
     }
     template <class Archive>
-    void load(Archive &ar, unsigned int)
+    void load(Archive &ar, unsigned)
     {
-        // Erase this and work on an empty one. In case of exceptions,
-        // we should have an hash set in unspecified but consistent state.
-        // We could also enforce strong exception safety by working on a temporary
-        // set and then swapping that in, but that would need more memory - and we
-        // care about memory for very large series.
-        *this = hash_set();
-        // Recover the number of elements.
-        size_type n_elements;
-        ar &n_elements;
-        // Recover the elements one by one.
-        for (size_type i = 0u; i < n_elements; ++i) {
-            key_type k;
-            ar &k;
-            insert(std::move(k));
-            // NOTE: in case a malicious archive contains duplicates, it does
-            // not matter: we will have only one copy of each element.
+        // Reset this.
+        *this = hash_set{};
+        // Recover the size.
+        size_type size;
+        boost_load(ar, size);
+        // Prepare an adequate number of buckets.
+        rehash(boost::numeric_cast<size_type>(std::ceil(static_cast<double>(size) / max_load_factor())));
+        for (size_type i = 0; i < size; ++i) {
+            T tmp;
+            boost_load(ar, tmp);
+            const auto p = insert(std::move(tmp));
+            if (unlikely(!p.second)) {
+                piranha_throw(std::invalid_argument, "while deserializing a hash_set from a Boost archive "
+                                                     "a duplicate value was encountered");
+            }
         }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -1485,27 +1475,14 @@ using hash_set_boost_load_enabler
  * \note
  * This specialisation is enabled only if \p T and the size type of piranha::hash_set satisfy
  * piranha::has_boost_save.
+ *
+ * The hashing functor and the equality predicate are not serialized.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
  */
 template <typename Archive, typename T, typename Hash, typename Pred>
-class boost_save_impl<Archive, hash_set<T, Hash, Pred>, hash_set_boost_save_enabler<Archive, T, Hash, Pred>>
-{
-public:
-    /// Call operator.
-    /**
-     * This method will serialize \p h into \p ar. The hashing functor and the equality predicate are not serialized.
-     *
-     * @param ar the target archive.
-     * @param h the piranha::hash_set that will be serialized.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    void operator()(Archive &ar, const hash_set<T, Hash, Pred> &h) const
-    {
-        // Size.
-        boost_save(ar, h.size());
-        // Serialize the items.
-        boost_save_range(ar, h.begin(), h.end());
-    }
+struct boost_save_impl<Archive, hash_set<T, Hash, Pred>, hash_set_boost_save_enabler<Archive, T, Hash, Pred>>
+    : boost_save_via_boost_api<Archive, hash_set<T, Hash, Pred>> {
 };
 
 /// Specialisation of piranha::boost_load() for piranha::hash_set.
@@ -1513,47 +1490,21 @@ public:
  * \note
  * This specialisation is enabled only if \p T and the size type of piranha::hash_set satisfy
  * piranha::has_boost_load.
+ *
+ * In case duplicate elements are encountered during deserialization, an exception will be raised. Before performing
+ * the deserialization, the output piranha::hash_set is reset with a default-constructed instance of piranha::hash_set.
+ * The hashing functor and the equality predicate are not deserialized. The basic exception safety guarantee is
+ * provided.
+ *
+ * @throws std::invalid_argument if a duplicate element is encountered during deserialization.
+ * @throws unspecified any exception thrown by:
+ * - the public interface of piranha::hash_set,
+ * - piranha::boost_load(),
+ * - <tt>boost::numeric_cast()</tt>.
  */
 template <typename Archive, typename T, typename Hash, typename Pred>
-class boost_load_impl<Archive, hash_set<T, Hash, Pred>, hash_set_boost_load_enabler<Archive, T, Hash, Pred>>
-{
-public:
-    /// Call operator.
-    /**
-     * This method will deserialize the content of \p ar into \p h. In case duplicate elements are encountered
-     * during deserialization, an exception will be raised. Before performing the deserialization, \p h is reset
-     * with a default-constructed instance of piranha::hash_set. The hashing functor and the equality predicate
-     * are not deserialized. This method provides the basic exception safety guarantee.
-     *
-     * @param ar the source archive.
-     * @param h the target piranha::hash_set.
-     *
-     * @throws std::invalid_argument if a duplicate element is encountered during deserialization.
-     * @throws unspecified any exception thrown by:
-     * - the public interface of piranha::hash_set,
-     * - piranha::boost_load(),
-     * - <tt>boost::numeric_cast()</tt>.
-     */
-    void operator()(Archive &ar, hash_set<T, Hash, Pred> &h) const
-    {
-        using size_type = typename hash_set<T, Hash, Pred>::size_type;
-        // Reset the output value.
-        h = hash_set<T, Hash, Pred>{};
-        // Recover the size.
-        size_type size;
-        boost_load(ar, size);
-        // Prepare an adequate number of buckets.
-        h.rehash(boost::numeric_cast<size_type>(std::ceil(static_cast<double>(size) / h.max_load_factor())));
-        for (size_type i = 0; i < size; ++i) {
-            T tmp;
-            boost_load(ar, tmp);
-            const auto p = h.insert(std::move(tmp));
-            if (unlikely(!p.second)) {
-                piranha_throw(std::invalid_argument, "while deserializing a hash_set from a Boost archive "
-                                                     "a duplicate value was encountered");
-            }
-        }
-    }
+struct boost_load_impl<Archive, hash_set<T, Hash, Pred>, hash_set_boost_load_enabler<Archive, T, Hash, Pred>>
+    : boost_load_via_boost_api<Archive, hash_set<T, Hash, Pred>> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)

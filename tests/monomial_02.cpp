@@ -94,18 +94,33 @@ struct hash<fake_int_01> {
 };
 }
 
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct negate_impl<fake_int_01> {
+    void operator()(fake_int_01 &) const;
+};
+}
+}
+
 template <typename OArchive, typename IArchive, typename Monomial>
 static inline Monomial boost_round_trip_monomial(const Monomial &m, const symbol_set &s)
 {
+    using w_type = boost_s11n_key_wrapper<Monomial>;
     std::stringstream ss;
     {
         OArchive oa(ss);
-        m.boost_save(oa, s);
+        boost_save(oa, w_type{m, s});
     }
     Monomial n;
     {
         IArchive ia(ss);
-        n.boost_load(ia, s);
+        w_type w{n, s};
+        boost_load(ia, w);
     }
     return n;
 }
@@ -117,56 +132,60 @@ struct boost_s11n_tester {
         void operator()(const U &) const
         {
             using monomial_type = monomial<T, U>;
+            using w_type = boost_s11n_key_wrapper<monomial_type>;
             // Test the type traits.
-            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, monomial_type>::value));
-            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, monomial_type &>::value));
-            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, const monomial_type &>::value));
-            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, const monomial_type>::value));
-            BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, monomial_type>::value));
-            BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, monomial_type &>::value));
-            BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, monomial_type &&>::value));
-            BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive, const monomial_type &>::value));
-            BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive, const monomial_type>::value));
-            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, monomial_type>::value));
-            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, monomial_type &>::value));
-            BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, monomial_type &&>::value));
-            BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive &, monomial_type>::value));
-            BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive, monomial_type>::value));
-            BOOST_CHECK((!key_has_boost_load<boost::archive::binary_oarchive, monomial_type>::value));
-            BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive, monomial_type>::value));
-            BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive, monomial_type>::value));
-            BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, monomial_type>::value));
-            BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive &, monomial_type>::value));
-            BOOST_CHECK((!key_has_boost_save<int, monomial_type>::value));
-            BOOST_CHECK((!key_has_boost_load<int, monomial_type>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, w_type>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, w_type &>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, const w_type &>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, const w_type>::value));
+            BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, w_type>::value));
+            BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, w_type &>::value));
+            BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, w_type &&>::value));
+            BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, const w_type &>::value));
+            BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, const w_type>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, w_type>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, w_type &>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, w_type &&>::value));
+            BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, w_type>::value));
+            BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive, w_type>::value));
+            BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, w_type>::value));
+            BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive, w_type>::value));
+            BOOST_CHECK((!has_boost_load<const boost::archive::binary_iarchive, w_type>::value));
+            BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, w_type>::value));
+            BOOST_CHECK((!has_boost_load<const boost::archive::binary_iarchive &, w_type>::value));
+            BOOST_CHECK((!has_boost_save<int, w_type>::value));
+            BOOST_CHECK((!has_boost_load<int, w_type>::value));
             // Check exceptions.
             symbol_set s{symbol{"a"}};
             monomial_type m;
             std::stringstream ss;
             {
                 boost::archive::text_oarchive oa(ss);
-                BOOST_CHECK_EXCEPTION(m.boost_save(oa, s), std::invalid_argument, [](const std::invalid_argument &ia) {
-                    return boost::contains(
-                        ia.what(), "incompatible symbol set in monomial serialization: the reference "
-                                   "symbol set has a size of 1, while the monomial being serialized has a size of 0");
-                });
+                BOOST_CHECK_EXCEPTION(
+                    boost_save(oa, w_type{m, s}), std::invalid_argument, [](const std::invalid_argument &ia) {
+                        return boost::contains(
+                            ia.what(),
+                            "incompatible symbol set in monomial serialization: the reference "
+                            "symbol set has a size of 1, while the monomial being serialized has a size of 0");
+                    });
             }
             ss.str("");
             ss.clear();
             m = monomial_type{T(1)};
             {
                 boost::archive::text_oarchive oa(ss);
-                m.boost_save(oa, s);
+                boost_save(oa, w_type{m, s});
             }
             {
                 boost::archive::text_iarchive ia(ss);
-                BOOST_CHECK_EXCEPTION(
-                    m.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &iae) {
-                        return boost::contains(
-                            iae.what(),
-                            "incompatible symbol set in monomial serialization: the reference "
-                            "symbol set has a size of 0, while the monomial being deserialized has a size of 1");
-                    });
+                symbol_set s2;
+                w_type w{m, s2};
+                BOOST_CHECK_EXCEPTION(boost_load(ia, w), std::invalid_argument, [](const std::invalid_argument &iae) {
+                    return boost::contains(
+                        iae.what(),
+                        "incompatible symbol set in monomial serialization: the reference "
+                        "symbol set has a size of 0, while the monomial being deserialized has a size of 1");
+                });
             }
             // A few simple tests.
             m = monomial_type{};
@@ -276,8 +295,10 @@ BOOST_AUTO_TEST_CASE(monomial_boost_s11n_test)
     init();
     tuple_for_each(expo_types{}, boost_s11n_tester());
     BOOST_CHECK((is_key<monomial<fake_int_01>>::value));
-    BOOST_CHECK((!key_has_boost_save<boost::archive::binary_oarchive, monomial<fake_int_01>>::value));
-    BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive, monomial<fake_int_01>>::value));
+    BOOST_CHECK(
+        (!has_boost_save<boost::archive::binary_oarchive, boost_s11n_key_wrapper<monomial<fake_int_01>>>::value));
+    BOOST_CHECK(
+        (!has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<monomial<fake_int_01>>>::value));
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)

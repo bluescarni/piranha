@@ -53,7 +53,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/polynomial.hpp"
 #include "../src/print_coefficient.hpp"
 #include "../src/print_tex_coefficient.hpp"
-#include "../src/serialization.hpp"
 #include "../src/series_multiplier.hpp"
 #include "../src/settings.hpp"
 #include "../src/type_traits.hpp"
@@ -70,7 +69,6 @@ public:
     template <typename Cf2>
     using rebind = g_series_type<Cf2, Expo>;
     typedef series<Cf, monomial<Expo>, g_series_type<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type() = default;
     g_series_type(const g_series_type &) = default;
     g_series_type(g_series_type &&) = default;
@@ -104,7 +102,6 @@ public:
     template <typename Cf2>
     using rebind = g_series_type2<Cf2, Expo>;
     typedef series<Cf, monomial<Expo>, g_series_type2<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type2() = default;
     g_series_type2(const g_series_type2 &) = default;
     g_series_type2(g_series_type2 &&) = default;
@@ -138,7 +135,6 @@ public:
     template <typename Cf2>
     using rebind = g_series_type3<Cf2, Expo>;
     typedef series<Cf, monomial<Expo>, g_series_type3<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type3() = default;
     g_series_type3(const g_series_type3 &) = default;
     g_series_type3(g_series_type3 &&) = default;
@@ -163,7 +159,6 @@ public:
     template <typename Cf2>
     using rebind = g_series_type4<Cf2, Expo>;
     typedef series<Cf, monomial<Expo>, g_series_type4<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type4() = default;
     g_series_type4(const g_series_type4 &) = default;
     g_series_type4(g_series_type4 &&) = default;

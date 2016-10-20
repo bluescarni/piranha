@@ -74,7 +74,6 @@ see https://www.gnu.org/licenses/. */
 #include "print_tex_coefficient.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"
 #include "symbol.hpp"
@@ -1321,10 +1320,6 @@ enum class file_compression {
  * ## Move semantics ##
  *
  * Moved-from series are left in a state equivalent to an empty series.
- *
- * ## Serialization ##
- *
- * This class supports serialization if its term type does.
  */
 /* TODO:
 * \todo cast operator, to series and non-series types.
@@ -1939,35 +1934,58 @@ private:
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    void save(Archive &ar, unsigned) const
     {
         // Serialize the symbol set.
-        ar &m_symbol_set;
-        // Serialize the size.
-        const auto s = size();
-        ar &s;
-        // Serialize all the terms one by one.
-        const auto it_f = m_container.end();
-        for (auto it = m_container.begin(); it != it_f; ++it) {
-            ar &(*it);
+        boost_save(ar, get_symbol_set().size());
+        for (const auto &sym : get_symbol_set()) {
+            boost_save(ar, sym.get_name());
+        }
+        // Serialize the series.
+        boost_save(ar, size());
+        for (const auto &t : _container()) {
+            boost_save(ar, t.m_cf);
+            boost_save(ar, boost_s11n_key_wrapper<typename term_type::key_type>{t.m_key, get_symbol_set()});
         }
     }
     template <class Archive>
-    void load(Archive &ar, unsigned int)
+    void load(Archive &ar, unsigned)
     {
-        // Erase this.
-        *this = series();
+        using ss_size_t = decltype(get_symbol_set().size());
+        using s_size_t = decltype(size());
+        // Erase s.
+        *this = series{};
         // Recover the symbol set.
-        symbol_set ss;
-        ar &ss;
-        m_symbol_set = std::move(ss);
-        // Recover the size.
-        size_type s;
-        ar &s;
-        // Re-insert all the terms.
-        for (size_type i = 0u; i < s; ++i) {
+        // First the size.
+        ss_size_t ss_size;
+        boost_load(ar, ss_size);
+        // NOTE: not sure if it's worth it to make this thread_local, as when resizing up new memory
+        // allocs for each string are necessary anyway.
+        std::vector<std::string> vs;
+        vs.resize(safe_cast<std::vector<std::string>::size_type>(ss_size));
+        // Load the symbol names in a vector of strings.
+        for (auto &str : vs) {
+            boost_load(ar, str);
+        }
+        // Construct the symbol set and set it to the series.
+        symbol_set ss(vs.begin(), vs.end());
+        set_symbol_set(ss);
+        // Now recover the series.
+        // Size first.
+        s_size_t s_size;
+        boost_load(ar, s_size);
+        // Preallocate buckets.
+        _container().rehash(
+            boost::numeric_cast<s_size_t>(std::ceil(static_cast<double>(s_size) / _container().max_load_factor())));
+        // Insert all the terms.
+        for (s_size_t i = 0u; i < s_size; ++i) {
+            // NOTE: the rationale for creating a new term each time is that if we move it, we have
+            // no guarantees on the moved-from state (in particular, we cannot be certain that a moved-from
+            // term can be deserialized into).
             term_type t;
-            ar &t;
+            boost_load(ar, t.m_cf);
+            boost_s11n_key_wrapper<typename term_type::key_type> w{t.m_key, ss};
+            boost_load(ar, w);
             insert(std::move(t));
         }
     }
@@ -2946,145 +2964,6 @@ public:
         }
         return merge_arguments(new_ss);
     }
-    /// Save series to file.
-    /**
-     * This static method will save the input series \p s to the file named \p filename, using the file format \p f
-     * and the compression method \p c. The possible values for \p f are listed in piranha::file_format, the possible
-     * values for \p c in piranha::file_compression. The output file \p filename, if existing, will be overwritten.
-     *
-     * @param[in] s the series to be saved.
-     * @param[in] filename the name of the file.
-     * @param[in] f the save format.
-     * @param[in] c the compression method.
-     *
-     * @throws std::runtime_error if the output file cannot be opened.
-     * @throws unspecified any exception thrown by the serialization and/or compression of \p s.
-     */
-    static void save(const Derived &s, const std::string &filename, file_format f, file_compression c)
-    {
-        std::ofstream ofile(filename, (f == file_format::binary) ? (std::ios::out | std::ios::binary | std::ios::trunc)
-                                                                 : (std::ios::out | std::ios::trunc));
-        if (unlikely(!ofile.good())) {
-            piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened");
-        }
-        if (c == file_compression::bzip2) {
-            // bzip2 compression is enabled.
-            namespace bi = boost::iostreams;
-            if (f == file_format::binary) {
-                // In case of binary archives, we can write directly to file,
-                // as binary_oarchive can be cted from a filtering_streambuf
-                // (while text_oarchive cannot). See here:
-                // http://stackoverflow.com/questions/1753469/how-to-hook-up-boost-serialization-iostreams-to-serialize-gzip-an-object-to
-                bi::filtering_streambuf<bi::output> out;
-                out.push(bi::bzip2_compressor());
-                out.push(ofile);
-                boost::archive::binary_oarchive oa(out);
-                oa << s;
-            } else {
-                // NOTE: here we are following this tutorial:
-                // https://code.google.com/p/cloudobserver/wiki/TutorialsBoostIOstreams
-                // First write to a stringstream, then compress and write to file.
-                std::stringstream oss;
-                boost::archive::text_oarchive oa(oss);
-                oa << s;
-                bi::filtering_streambuf<bi::input> in;
-                in.push(bi::bzip2_compressor());
-                in.push(oss);
-                bi::copy(in, ofile);
-            }
-        } else {
-            if (f == file_format::binary) {
-                boost::archive::binary_oarchive oa(ofile);
-                oa << s;
-            } else {
-                boost::archive::text_oarchive oa(ofile);
-                oa << s;
-            }
-        }
-    }
-    /// Save series to file (text format, no compression).
-    static void save(const Derived &s, const std::string &filename)
-    {
-        save(s, filename, file_format::text, file_compression::disabled);
-    }
-    /// Save series to file (no compression, choose format).
-    static void save(const Derived &s, const std::string &filename, file_format f)
-    {
-        save(s, filename, f, file_compression::disabled);
-    }
-    /// Save series to file (text format, choose compression).
-    static void save(const Derived &s, const std::string &filename, file_compression c)
-    {
-        save(s, filename, file_format::text, c);
-    }
-    /// Load series from file.
-    /**
-     * This static method will load the series contained in the file named \p filename, using the file format \p f
-     * and the compression method \p c. The possible values for \p f are listed in piranha::file_format, the possible
-     * values for \p c in piranha::file_compression.
-     *
-     * @param[in] filename the name of the file.
-     * @param[in] f the save format.
-     * @param[in] c the compression method.
-     *
-     * @return the series stored in the file named \p filename.
-     *
-     * @throws std::runtime_error if the output file cannot be opened.
-     * @throws unspecified any exception thrown by the deserialization and/or decompression of the series stored in \p
-     * filename.
-     */
-    static Derived load(const std::string &filename, file_format f, file_compression c)
-    {
-        std::ifstream ifile(filename, (f == file_format::binary) ? (std::ios::in | std::ios::binary) : std::ios::in);
-        if (unlikely(!ifile.good())) {
-            piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened");
-        }
-        // The return value.
-        Derived retval;
-        if (c == file_compression::bzip2) {
-            // NOTE: the same considerations as above apply.
-            namespace bi = boost::iostreams;
-            if (f == file_format::binary) {
-                bi::filtering_streambuf<bi::input> in;
-                in.push(bi::bzip2_decompressor());
-                in.push(ifile);
-                boost::archive::binary_iarchive ia(in);
-                ia >> retval;
-            } else {
-                std::stringstream ss;
-                bi::filtering_streambuf<bi::output> out;
-                out.push(bi::bzip2_decompressor());
-                out.push(ss);
-                bi::copy(ifile, out);
-                boost::archive::text_iarchive ia(ss);
-                ia >> retval;
-            }
-        } else {
-            if (f == file_format::binary) {
-                boost::archive::binary_iarchive ia(ifile);
-                ia >> retval;
-            } else {
-                boost::archive::text_iarchive ia(ifile);
-                ia >> retval;
-            }
-        }
-        return retval;
-    }
-    /// Load series from file (text format, no compression).
-    static Derived load(const std::string &filename)
-    {
-        return load(filename, file_format::text, file_compression::disabled);
-    }
-    /// Load series from file (no compression, choose format).
-    static Derived load(const std::string &filename, file_format f)
-    {
-        return load(filename, f, file_compression::disabled);
-    }
-    /// Load series from file (text format, choose compression).
-    static Derived load(const std::string &filename, file_compression c)
-    {
-        return load(filename, file_format::text, c);
-    }
     /** @name Low-level interface
      * Low-level methods.
      */
@@ -3697,131 +3576,63 @@ inline namespace impl
 // NOTE: we check first here if Series is a series, so that, if it is not, we do not instantiate other has_boost_save
 // checks (which might result in infinite recursion due to this enabler being re-instantiated).
 template <typename Archive, typename Series>
-using series_boost_save_enabler = typename std::
-    enable_if<conjunction<is_series<Series>, has_boost_save<Archive, decltype(symbol_set{}.size())>,
-                          has_boost_save<Archive, const std::string &>,
-                          has_boost_save<Archive, decltype(std::declval<const Series &>().size())>,
-                          has_boost_save<Archive, typename Series::term_type::cf_type>,
-                          key_has_boost_save<Archive, typename Series::term_type::key_type>>::value>::type;
+using series_boost_save_enabler
+    = enable_if_t<conjunction<is_series<Series>, has_boost_save<Archive, decltype(symbol_set{}.size())>,
+                              has_boost_save<Archive, const std::string &>,
+                              has_boost_save<Archive, decltype(std::declval<const Series &>().size())>,
+                              has_boost_save<Archive, typename Series::term_type::cf_type>,
+                              has_boost_save<Archive,
+                                             boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
 
 // NOTE: the requirement that Series must not be const is in the is_series check.
 template <typename Archive, typename Series>
-using series_boost_load_enabler = typename std::
-    enable_if<conjunction<is_series<Series>, has_boost_load<Archive, decltype(symbol_set{}.size())>,
-                          has_boost_load<Archive, std::string>,
-                          has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
-                          has_boost_load<Archive, typename Series::term_type::cf_type>,
-                          key_has_boost_load<Archive, typename Series::term_type::key_type>>::value>::type;
+using series_boost_load_enabler
+    = enable_if_t<conjunction<is_series<Series>, has_boost_load<Archive, decltype(symbol_set{}.size())>,
+                              has_boost_load<Archive, std::string>,
+                              has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
+                              has_boost_load<Archive, typename Series::term_type::cf_type>,
+                              has_boost_load<Archive,
+                                             boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
 }
 
-/// Implementation of piranha::boost_save() for piranha::series.
+/// Specialisation of piranha::boost_save() for piranha::series.
 /**
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
  * - the coefficient type, \p std::string and the integral types representing the size of the series
  *   and the size of piranha::symbol_set satisfy piranha::has_boost_save,
- * - the key type satisfies piranha::key_has_boost_save.
+ * - the key type satisfies piranha::has_boost_save (via piranha::boost_s11n_key_wrapper).
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
  */
 template <typename Archive, typename Series>
-class boost_save_impl<Archive, Series, series_boost_save_enabler<Archive, Series>>
-{
-public:
-    /// Call operator.
-    /**
-     * @param[in] ar target output archive.
-     * @param[in] s series to be serialized.
-     *
-     * @throws unspecified any exception thrown by:
-     * - piranha::boost_save(),
-     * - the <tt>%boost_save()</tt> method of the key.
-     */
-    void operator()(Archive &ar, const Series &s) const
-    {
-        // Serialize the symbol set.
-        boost_save(ar, s.get_symbol_set().size());
-        for (const auto &sym : s.get_symbol_set()) {
-            boost_save(ar, sym.get_name());
-        }
-        // Serialize the series.
-        boost_save(ar, s.size());
-        for (const auto &t : s._container()) {
-            boost_save(ar, t.m_cf);
-            t.m_key.boost_save(ar, s.get_symbol_set());
-        }
-    }
+struct boost_save_impl<Archive, Series, series_boost_save_enabler<Archive, Series>>
+    : boost_save_via_boost_api<Archive, Series> {
 };
 
-/// Implementation of piranha::boost_load() for piranha::series.
+/// Specialisation of piranha::boost_load() for piranha::series.
 /**
  * \note
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
  * - the coefficient type, \p std::string and the integral types representing the size of the series and
  *   the size of piranha::symbol_set satisfy piranha::has_boost_load,
- * - the key type satisfies piranha::key_has_boost_load.
+ * - the key type satisfies piranha::has_boost_load (via piranha::boost_s11n_key_wrapper).
+ *
+ * The basic exception safety guarantee is provided.
+ *
+ * @throws unspecified any exception thrown by:
+ * - piranha::boost_load(),
+ * - memory errors in standard containers,
+ * - piranha::safe_cast(),
+ * - the public interface of piranha::symbol_set and piranha::hash_set,
+ * - <tt>boost::numeric_cast()</tt>,
+ * - piranha::series::insert(), piranha::series::set_symbol_set().
  */
 template <typename Archive, typename Series>
-class boost_load_impl<Archive, Series, series_boost_load_enabler<Archive, Series>>
-{
-public:
-    /// Call operator.
-    /**
-     * The call operator offers the basic exception safety guarantee: upon deserialization errors, \p s will
-     * be left in an unspecified (but valid) state.
-     *
-     * @param[in] ar source archive.
-     * @param[out] s the output series.
-     *
-     * @throws unspecified any exception thrown by:
-     * - piranha::boost_load(),
-     * - the <tt>%boost_load()</tt> method of the key,
-     * - memory errors in standard containers,
-     * - piranha::safe_cast(),
-     * - the public interface of piranha::symbol_set and piranha::hash_set,
-     * - <tt>boost::numeric_cast()</tt>,
-     * - piranha::series::insert(), piranha::series::set_symbol_set().
-     */
-    void operator()(Archive &ar, Series &s) const
-    {
-        using ss_size_t = decltype(s.get_symbol_set().size());
-        using s_size_t = decltype(s.size());
-        using term_type = typename Series::term_type;
-        // Erase s.
-        s = Series{};
-        // Recover the symbol set.
-        // First the size.
-        ss_size_t ss_size;
-        boost_load(ar, ss_size);
-        // NOTE: not sure if it's worth it to make this thread_local, as when resizing up new memory
-        // allocs for each string are necessary anyway.
-        std::vector<std::string> vs;
-        vs.resize(safe_cast<std::vector<std::string>::size_type>(ss_size));
-        // Load the symbol names in a vector of strings.
-        for (auto &str : vs) {
-            boost_load(ar, str);
-        }
-        // Construct the symbol set and set it to the series.
-        symbol_set ss(vs.begin(), vs.end());
-        s.set_symbol_set(ss);
-        // Now recover the series.
-        // Size first.
-        s_size_t s_size;
-        boost_load(ar, s_size);
-        // Preallocate buckets.
-        s._container().rehash(
-            boost::numeric_cast<s_size_t>(std::ceil(static_cast<double>(s_size) / s._container().max_load_factor())));
-        // Insert all the terms.
-        for (s_size_t i = 0u; i < s_size; ++i) {
-            // NOTE: the rationale for creating a new term each time is that if we move it, we have
-            // no guarantees on the moved-from state (in particular, we cannot be certain that a moved-from
-            // term can be deserialized into).
-            term_type t;
-            boost_load(ar, t.m_cf);
-            t.m_key.boost_load(ar, ss);
-            s.insert(std::move(t));
-        }
-    }
+struct boost_load_impl<Archive, Series, series_boost_load_enabler<Archive, Series>>
+    : boost_load_via_boost_api<Archive, Series> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)

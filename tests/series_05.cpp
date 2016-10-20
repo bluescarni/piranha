@@ -44,7 +44,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -56,7 +55,6 @@ public:
     template <typename Cf2>
     using rebind = g_series_type<Cf2, Expo>;
     typedef series<Cf, monomial<Expo>, g_series_type<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type() = default;
     g_series_type(const g_series_type &) = default;
     g_series_type(g_series_type &&) = default;
@@ -236,7 +234,6 @@ public:
     template <typename Cf2>
     using rebind = g_series_type2<Cf2, Expo>;
     typedef series<Cf, monomial<Expo>, g_series_type2<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type2() = default;
     g_series_type2(const g_series_type2 &) = default;
     g_series_type2(g_series_type2 &&) = default;

@@ -53,8 +53,8 @@ see https://www.gnu.org/licenses/. */
 #include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/s11n.hpp"
 #include "../src/safe_cast.hpp"
-#include "../src/serialization.hpp"
 
 // NOTE: in these tests we are assuming a few things:
 // - we can generally go a few elements beyond the numerical limits of sizes without wrapping over,
@@ -927,8 +927,6 @@ struct serialization_tester {
                 ia >> tmp;
             }
             BOOST_CHECK(tmp == v);
-            // Check that the static/dynamic character is the same.
-            BOOST_CHECK_EQUAL(tmp.is_static(), v.is_static());
         }
         // Try with integer.
         using v_type2 = small_vector<integer, T>;
@@ -950,7 +948,6 @@ struct serialization_tester {
                 ia >> tmp2;
             }
             BOOST_CHECK(tmp2 == v);
-            BOOST_CHECK_EQUAL(tmp2.is_static(), v.is_static());
         }
     }
 };

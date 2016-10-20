@@ -39,7 +39,6 @@ see https://www.gnu.org/licenses/. */
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -222,10 +221,6 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of \p Series.
- *
- * ## Serialization ##
- *
- * This class supports serialization if \p Series does.
  */
 template <typename Series, typename Derived>
 class power_series : public Series, detail::power_series_tag
@@ -355,8 +350,6 @@ class power_series : public Series, detail::power_series_tag
                       std::declval<const std::vector<std::string> &>(), std::declval<const symbol_set::positions &>(),
                       std::declval<const symbol_set &>()))>::value,
                   int>::type;
-    // Serialization.
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     // Lift definitions from the detail namespace.
     template <typename T>
     using degree_type = detail::ps_degree_type<T>;

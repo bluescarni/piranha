@@ -61,21 +61,44 @@ static std::mutex mut;
 template <typename OArchive, typename IArchive, typename T>
 static inline void boost_roundtrip(const T &x, const symbol_set &args, bool mt = false)
 {
-    std::stringstream ss;
+    using w_type = boost_s11n_key_wrapper<T>;
     {
-        OArchive oa(ss);
-        x.boost_save(oa, args);
+        std::stringstream ss;
+        {
+            OArchive oa(ss);
+            boost_save(oa, w_type{x, args});
+        }
+        T retval;
+        {
+            IArchive ia(ss);
+            w_type w{retval, args};
+            boost_load(ia, w);
+        }
+        if (mt) {
+            std::lock_guard<std::mutex> lock(mut);
+            BOOST_CHECK(x == retval);
+        } else {
+            BOOST_CHECK(x == retval);
+        }
     }
-    T retval;
     {
-        IArchive ia(ss);
-        retval.boost_load(ia, args);
-    }
-    if (mt) {
-        std::lock_guard<std::mutex> lock(mut);
-        BOOST_CHECK(x == retval);
-    } else {
-        BOOST_CHECK(x == retval);
+        std::stringstream ss;
+        {
+            OArchive oa(ss);
+            oa << w_type{x, args};
+        }
+        T retval;
+        {
+            IArchive ia(ss);
+            w_type w{retval, args};
+            ia >> w;
+        }
+        if (mt) {
+            std::lock_guard<std::mutex> lock(mut);
+            BOOST_CHECK(x == retval);
+        } else {
+            BOOST_CHECK(x == retval);
+        }
     }
 }
 
@@ -84,18 +107,19 @@ struct boost_s11n_tester {
     void operator()(const T &) const
     {
         using k_type = real_trigonometric_kronecker_monomial<T>;
-        BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, k_type>::value));
-        BOOST_CHECK((key_has_boost_save<boost::archive::text_oarchive, k_type>::value));
-        BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, k_type>::value));
-        BOOST_CHECK((key_has_boost_load<boost::archive::text_iarchive, k_type>::value));
-        BOOST_CHECK((!key_has_boost_save<boost::archive::xml_oarchive, k_type>::value));
-        BOOST_CHECK((!key_has_boost_load<boost::archive::xml_iarchive, k_type>::value));
-        BOOST_CHECK((!key_has_boost_save<boost::archive::text_iarchive, k_type>::value));
-        BOOST_CHECK((!key_has_boost_load<boost::archive::text_oarchive, k_type>::value));
-        BOOST_CHECK((!key_has_boost_save<boost::archive::binary_oarchive const, k_type>::value));
-        BOOST_CHECK((!key_has_boost_save<void, k_type>::value));
-        BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive const, k_type>::value));
-        BOOST_CHECK((!key_has_boost_load<void, k_type>::value));
+        using w_type = boost_s11n_key_wrapper<k_type>;
+        BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, w_type>::value));
+        BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, w_type>::value));
+        BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, w_type>::value));
+        BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, w_type>::value));
+        BOOST_CHECK((has_boost_save<boost::archive::xml_oarchive, w_type>::value));
+        BOOST_CHECK((has_boost_load<boost::archive::xml_iarchive, w_type>::value));
+        BOOST_CHECK((!has_boost_save<boost::archive::text_iarchive, w_type>::value));
+        BOOST_CHECK((!has_boost_load<boost::archive::text_oarchive, w_type>::value));
+        BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive const, w_type>::value));
+        BOOST_CHECK((!has_boost_save<void, w_type>::value));
+        BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive const, w_type>::value));
+        BOOST_CHECK((!has_boost_load<void, w_type>::value));
         const std::vector<std::string> names = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "l"};
         auto t_func = [&names](unsigned n) {
             std::uniform_int_distribution<unsigned> sdist(0, 10);
@@ -133,20 +157,20 @@ struct boost_s11n_tester {
             std::stringstream ss;
             {
                 boost::archive::text_oarchive oa(ss);
-                boost_save(oa, typename k_type::v_type::size_type(1));
-                boost_save(oa, T(1));
+                boost_save(oa, w_type{k_type{}, symbol_set{}});
             }
             k_type retval{T(1), T(2)};
             {
                 boost::archive::text_iarchive ia(ss);
-                BOOST_CHECK_EXCEPTION(
-                    retval.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &iae) {
-                        return boost::contains(
-                            iae.what(),
-                            "invalid size detected in the deserialization of a real Kronercker "
-                            "trigonometric monomial: the deserialized size is 1 but the reference symbol set has a "
-                            "size of 0");
-                    });
+                symbol_set new_ss{symbol{"x"}};
+                w_type w{retval, new_ss};
+                BOOST_CHECK_EXCEPTION(boost_load(ia, w), std::invalid_argument, [](const std::invalid_argument &iae) {
+                    return boost::contains(
+                        iae.what(),
+                        "invalid size detected in the deserialization of a real Kronercker "
+                        "trigonometric monomial: the deserialized size is 0 but the reference symbol set has a "
+                        "size of 1");
+                });
             }
             BOOST_CHECK((retval == k_type{T(1), T(2)}));
         }

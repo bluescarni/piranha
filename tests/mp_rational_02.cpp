@@ -88,14 +88,13 @@ struct boost_s11n_tester {
     void operator()(const T &)
     {
         using q_type = mp_rational<T::value>;
-        using int_type = typename q_type::int_type;
         BOOST_CHECK((has_boost_save<binary_oarchive, q_type>::value));
         BOOST_CHECK((has_boost_save<binary_oarchive &, q_type>::value));
         BOOST_CHECK((has_boost_save<binary_oarchive &, q_type &>::value));
         BOOST_CHECK((has_boost_save<binary_oarchive &, const q_type &>::value));
         BOOST_CHECK((!has_boost_save<void, const q_type &>::value));
         BOOST_CHECK((!has_boost_save<const binary_oarchive &, const q_type &>::value));
-        BOOST_CHECK((!has_boost_save<xml_oarchive, q_type>::value));
+        BOOST_CHECK((has_boost_save<xml_oarchive, q_type>::value));
         BOOST_CHECK((!has_boost_save<binary_iarchive, q_type>::value));
         BOOST_CHECK((has_boost_load<binary_iarchive, q_type>::value));
         BOOST_CHECK((has_boost_load<binary_iarchive &, q_type>::value));
@@ -103,7 +102,7 @@ struct boost_s11n_tester {
         BOOST_CHECK((!has_boost_load<void, q_type &>::value));
         BOOST_CHECK((!has_boost_load<binary_iarchive &, const q_type &>::value));
         BOOST_CHECK((!has_boost_load<const binary_iarchive &, const q_type &>::value));
-        BOOST_CHECK((!has_boost_load<xml_iarchive, q_type>::value));
+        BOOST_CHECK((has_boost_load<xml_iarchive, q_type>::value));
         BOOST_CHECK((!has_boost_load<binary_oarchive, q_type>::value));
         // A few simple checks.
         boost_roundtrip<binary_oarchive, binary_iarchive>(q_type{});
@@ -122,49 +121,6 @@ struct boost_s11n_tester {
             }
             boost_roundtrip<binary_oarchive, binary_iarchive>(q_type{num, den});
             boost_roundtrip<text_oarchive, text_iarchive>(q_type{num, den});
-        }
-        // Check bogus rationals with text archive.
-        std::stringstream ss;
-        {
-            text_oarchive oa(ss);
-            boost_save(oa, int_type{2});
-            boost_save(oa, int_type{-2});
-        }
-        {
-            // Check the deserialized rational gets normalized.
-            q_type out;
-            text_iarchive ia(ss);
-            boost_load(ia, out);
-            BOOST_CHECK_EQUAL(out, -1);
-        }
-        ss.str("");
-        ss.clear();
-        {
-            text_oarchive oa(ss);
-            boost_save(oa, int_type{2});
-            boost_save(oa, int_type{0});
-        }
-        {
-            // Check exception.
-            q_type out{12};
-            text_iarchive ia(ss);
-            BOOST_CHECK_THROW(boost_load(ia, out), zero_division_error);
-            BOOST_CHECK_EQUAL(out, 12);
-        }
-        ss.str("");
-        ss.clear();
-        {
-            binary_oarchive oa(ss);
-            boost_save(oa, int_type{2});
-            boost_save(oa, int_type{-2});
-        }
-        {
-            // Explicitly canonicalise the value when using binary archive.
-            q_type out;
-            binary_iarchive ia(ss);
-            boost_load(ia, out);
-            out.canonicalise();
-            BOOST_CHECK_EQUAL(out, -1);
         }
     }
 };

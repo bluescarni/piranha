@@ -187,26 +187,6 @@ BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
             }
         }
     }
-    // Check for exception safety in binary mode.
-    {
-        std::stringstream ss;
-        {
-            boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, ::mpfr_prec_t(100));
-            boost_save(oa, decltype(std::declval<::mpfr_t &>()->_mpfr_sign)(0));
-            boost_save(oa, decltype(std::declval<::mpfr_t &>()->_mpfr_exp)(0));
-        }
-        real retval{42};
-        {
-            boost::archive::binary_iarchive ia(ss);
-            try {
-                boost_load(ia, retval);
-                BOOST_CHECK(false);
-            } catch (...) {
-                BOOST_CHECK_EQUAL(retval, 0);
-            }
-        }
-    }
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)

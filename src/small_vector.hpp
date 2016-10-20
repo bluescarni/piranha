@@ -50,7 +50,6 @@ see https://www.gnu.org/licenses/. */
 #include "memory.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "static_vector.hpp"
 #include "type_traits.hpp"
 
@@ -554,10 +553,6 @@ union small_vector_union {
  * ## Move semantics ##
  *
  * After a move operation, the container will be empty.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the value type is serializable.
  */
 // NOTE: some possible improvements:
 // - the m_size member of dynamic and static could be made a signed integer, the sign establishing the storage type
@@ -634,34 +629,14 @@ private:
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    void save(Archive &ar, unsigned) const
     {
-        // First save the size.
-        const auto s = size();
-        ar &s;
-        // Save the individual elements.
-        const auto it_f = end();
-        for (auto it = begin(); it != it_f; ++it) {
-            ar &(*it);
-        }
+        boost_save_vector(ar, *this);
     }
     template <class Archive>
-    void load(Archive &ar, unsigned int)
+    void load(Archive &ar, unsigned)
     {
-        // NOTE: there are faster ways of implementing this, first of all by re-using the storage
-        // with resize(). Here we are forcing a re-allocation instead. Keep this in mind for later
-        // optimisations.
-        // Erase this.
-        *this = small_vector();
-        // Read the size first.
-        size_type s;
-        ar &s;
-        // Read the elements.
-        for (size_type i = 0u; i < s; ++i) {
-            value_type x;
-            ar &x;
-            push_back(std::move(x));
-        }
+        boost_load_vector(ar, *this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
@@ -1139,25 +1114,13 @@ const typename small_vector<T, S>::size_type small_vector<T, S>::max_size;
  * \note
  * This specialisation is enabled only if \p T and the size type of the vector satisfy
  * piranha::has_boost_save.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
  */
 template <typename Archive, typename T, std::size_t Size>
-class boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                      boost_save_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
-{
-public:
-    /// Call operator.
-    /**
-     * This method will serialize \p v into \p ar.
-     *
-     * @param ar the target archive.
-     * @param v the vector to be serialized.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    void operator()(Archive &ar, const small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
-    {
-        boost_save_vector(ar, v);
-    }
+struct boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
+                       boost_save_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
+    : boost_save_via_boost_api<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>> {
 };
 
 /// Specialisation of piranha::boost_load() for piranha::small_vector.
@@ -1165,28 +1128,17 @@ public:
  * \note
  * This specialisation is enabled only if \p T and the size type of the vector satisfy
  * piranha::has_boost_load.
+ *
+ * The basic exception safety guarantee is provided.
+ *
+ * @throws unspecified any exception thrown by:
+ * - piranha::boost_load(),
+ * - piranha::small_vector::resize().
  */
 template <typename Archive, typename T, std::size_t Size>
-class boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                      boost_load_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
-{
-public:
-    /// Call operator.
-    /**
-     * This method will deserialize the content of \p ar into \p v. This method provides the basic exception safety
-     * guarantee.
-     *
-     * @param ar the source archive.
-     * @param v the vector into which the content of \p ar will deserialized.
-     *
-     * @throws unspecified any exception thrown by:
-     * - piranha::boost_load(),
-     * - piranha::small_vector::resize().
-     */
-    void operator()(Archive &ar, small_vector<T, std::integral_constant<std::size_t, Size>> &v) const
-    {
-        boost_load_vector(ar, v);
-    }
+struct boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
+                       boost_load_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
+    : boost_load_via_boost_api<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)

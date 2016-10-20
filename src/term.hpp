@@ -37,7 +37,6 @@ see https://www.gnu.org/licenses/. */
 #include "is_cf.hpp"
 #include "is_key.hpp"
 #include "math.hpp"
-#include "serialization.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -70,37 +69,12 @@ struct term_tag {
  * ## Move semantics ##
  *
  * Move semantics is equivalent to its data members' move semantics.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the coefficient and key types support it.
  */
 template <typename Cf, typename Key>
 class term : detail::term_tag
 {
     PIRANHA_TT_CHECK(is_cf, Cf);
     PIRANHA_TT_CHECK(is_key, Key);
-    // Serialization support.
-    friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive &ar, unsigned int) const
-    {
-        ar &m_cf;
-        ar &m_key;
-    }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
-    {
-        // NOTE: the requirement on def-constructability here is implied
-        // by is_cf and is_key.
-        Cf cf;
-        Key key;
-        ar &cf;
-        ar &key;
-        m_cf = std::move(cf);
-        m_key = std::move(key);
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
     // Enabler for the generic binary ctor.
     template <typename T, typename U>
     using binary_ctor_enabler =

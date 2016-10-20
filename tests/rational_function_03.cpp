@@ -68,7 +68,6 @@ struct boost_s11n_tester {
     void operator()(const Key &) const
     {
         using r_type = rational_function<Key>;
-        using p_type = typename r_type::p_type;
         BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, r_type>::value));
         BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, r_type &>::value));
         BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, const r_type &>::value));
@@ -91,46 +90,6 @@ struct boost_s11n_tester {
         boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(x / y);
         boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>((x + y) / (x * x - y * y));
         boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>((x + y) / (x * x - y * y));
-        // Check that non-binary archives canonicalise.
-        std::stringstream ss;
-        {
-            boost::archive::text_oarchive oa(ss);
-            boost_save(oa, p_type{"x"});
-            boost_save(oa, p_type{"x"});
-        }
-        {
-            boost::archive::text_iarchive ia(ss);
-            r_type retval;
-            boost_load(ia, retval);
-            BOOST_CHECK_EQUAL(retval, 1);
-        }
-        ss.str("");
-        ss.clear();
-        // Check that binary archive does not canonicalise.
-        {
-            boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, p_type{"x"});
-            boost_save(oa, p_type{"x"});
-        }
-        {
-            boost::archive::binary_iarchive ia(ss);
-            r_type retval;
-            boost_load(ia, retval);
-            BOOST_CHECK_EQUAL(retval.num(), p_type{"x"});
-            BOOST_CHECK_EQUAL(retval.den(), p_type{"x"});
-            retval.canonicalise();
-        }
-        // Exception safety.
-        {
-            boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, p_type{"x"});
-        }
-        {
-            boost::archive::binary_iarchive ia(ss);
-            r_type retval{123};
-            BOOST_CHECK_THROW(boost_load(ia, retval), std::exception);
-            BOOST_CHECK_EQUAL(retval, 123);
-        }
     }
 };
 

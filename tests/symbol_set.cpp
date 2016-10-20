@@ -45,7 +45,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/config.hpp"
 #include "../src/init.hpp"
-#include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
 
 static std::mt19937 rng;
@@ -349,55 +348,6 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
             positions p(a, b);
             checker(a, b, p);
         }
-    }
-}
-
-BOOST_AUTO_TEST_CASE(symbol_set_serialization_test)
-{
-    std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-    std::uniform_int_distribution<symbol_set::size_type> size_dist(0u, 10u);
-    symbol_set tmp;
-    for (int i = 0; i < ntries; ++i) {
-        // Create a randomly-size random symbol set.
-        const auto size = size_dist(rng);
-        symbol_set ss;
-        for (symbol_set::size_type j = 0u; j < size; ++j) {
-            try {
-                ss.add(symbol(boost::lexical_cast<std::string>(int_dist(rng))));
-            } catch (...) {
-            }
-        }
-        std::stringstream stream;
-        {
-            boost::archive::text_oarchive oa(stream);
-            oa << ss;
-        }
-        {
-            boost::archive::text_iarchive ia(stream);
-            ia >> tmp;
-        }
-        BOOST_CHECK_EQUAL(tmp.size(), ss.size());
-        BOOST_CHECK(tmp == ss);
-    }
-    // Try with a "bad" archive, containing twice the symbol "b".
-    std::stringstream stream;
-    {
-        const std::string bad_ar = "22 serialization::archive 10 0 0 3 1 a 1 b 1 b";
-        stream.str(bad_ar);
-        boost::archive::text_iarchive ia(stream);
-        const symbol_set old_tmp(tmp);
-        BOOST_CHECK_THROW(ia >> tmp, std::invalid_argument);
-        // Check that the original symbol_set is not affected.
-        BOOST_CHECK(old_tmp == tmp);
-    }
-    {
-        // Symbols in bad order.
-        const std::string bad_ar = "22 serialization::archive 10 0 0 3 1 a 1 c 1 b";
-        stream.str(bad_ar);
-        boost::archive::text_iarchive ia(stream);
-        ia >> tmp;
-        // Check that the original symbol_set is not affected.
-        BOOST_CHECK((tmp == symbol_set{symbol("a"), symbol("b"), symbol("c")}));
     }
 }
 

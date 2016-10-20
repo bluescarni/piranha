@@ -60,17 +60,33 @@ struct no_s11n {
 template <typename OArchive, typename IArchive, typename V>
 static inline void boost_round_trip(const V &v)
 {
-    std::stringstream ss;
     {
-        OArchive oa(ss);
-        boost_save(oa, v);
+        std::stringstream ss;
+        {
+            OArchive oa(ss);
+            boost_save(oa, v);
+        }
+        V retval;
+        {
+            IArchive ia(ss);
+            boost_load(ia, retval);
+        }
+        BOOST_CHECK(retval == v);
     }
-    V retval;
+    // Check also boost api.
     {
-        IArchive ia(ss);
-        boost_load(ia, retval);
+        std::stringstream ss;
+        {
+            OArchive oa(ss);
+            oa << v;
+        }
+        V retval;
+        {
+            IArchive ia(ss);
+            ia >> retval;
+        }
+        BOOST_CHECK(retval == v);
     }
-    BOOST_CHECK(retval == v);
 }
 
 struct boost_s11n_tester {

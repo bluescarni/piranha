@@ -61,11 +61,58 @@ see https://www.gnu.org/licenses/. */
 #include "pow.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "term.hpp"
 #include "type_traits.hpp"
+
+namespace piranha
+{
+
+// Fwd declaration.
+template <typename, typename>
+class monomial;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T, typename S>
+inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned)
+{
+    if (unlikely(k.key().size() != k.ss().size())) {
+        piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
+                                             "symbol set has a size of "
+                                                 + std::to_string(k.ss().size())
+                                                 + ", while the monomial being serialized has a size of "
+                                                 + std::to_string(k.key().size()));
+    }
+    piranha::boost_save(ar, k.key().m_container);
+}
+
+template <typename Archive, typename T, typename S>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned)
+{
+    piranha::boost_load(ar, k.key().m_container);
+    if (unlikely(k.key().size() != k.ss().size())) {
+        piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
+                                             "symbol set has a size of "
+                                                 + std::to_string(k.ss().size())
+                                                 + ", while the monomial being deserialized has a size of "
+                                                 + std::to_string(k.key().size()));
+    }
+}
+
+template <typename Archive, typename T, typename S>
+inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
 
 namespace piranha
 {
@@ -96,10 +143,6 @@ namespace piranha
  * ## Move semantics ##
  *
  * Move semantics is equivalent to piranha::array_key's move semantics.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the base class supports it.
  */
 template <typename T, typename S = std::integral_constant<std::size_t, 0u>>
 class monomial : public array_key<T, monomial<T, S>, S>
@@ -224,8 +267,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     using partial_enabler =
         typename std::enable_if<std::is_assignable<U &, decltype(std::declval<U &>() - std::declval<U>())>::value,
                                 int>::type;
-    // Serialization support.
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     // Subs support.
     // NOTE: this can obviously be compressed and implemented more cleanly with a single enable_if, but unfortunately
     // when this pattern is used both here and in k_monomial, a weird compiler error results with both GCC 4.8 and 4.9.
@@ -1108,66 +1149,14 @@ public:
     }
 
 private:
-    // Enablers for the boost s11n methods.
-    template <typename Archive>
-    using boost_save_enabler = enable_if_t<has_boost_save<Archive, typename base::container_type>::value, int>;
-    template <typename Archive>
-    using boost_load_enabler = enable_if_t<has_boost_load<Archive, typename base::container_type>::value, int>;
-
-public:
-    /// Save to Boost archive.
-    /**
-     * \note
-     * This method is enabled only if the internal container type satisfies piranha::has_boost_save.
-     *
-     * This method will serialize \p this into the archive \p ar.
-     *
-     * @param[in] ar target archive.
-     * @param[in] s reference symbol set.
-     *
-     * @throws std::invalid_argument if the sizes of \p this and \p s differ.
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    template <typename Archive, boost_save_enabler<Archive> = 0>
-    void boost_save(Archive &ar, const symbol_set &s) const
-    {
-        if (unlikely(this->size() != s.size())) {
-            piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
-                                                 "symbol set has a size of "
-                                                     + std::to_string(s.size())
-                                                     + ", while the monomial being serialized has a size of "
-                                                     + std::to_string(this->size()));
-        }
-        piranha::boost_save(ar, this->m_container);
-    }
-    /// Load from Boost archive.
-    /**
-     * \note
-     * This method is enabled only if the internal container type satisfies piranha::has_boost_load.
-     *
-     * This method will deserialize the content of \p ar into \p this. The method provides the basic exception safety
-     * guarantee.
-     *
-     * @param[in] ar the source archive.
-     * @param[in] s reference symbol set.
-     *
-     * @throws std::invalid_argument if the size of the deserialized monomial differs from the size of \p s.
-     * @throws unspecified any exception thrown by piranha::boost_load().
-     */
-    template <typename Archive, boost_load_enabler<Archive> = 0>
-    void boost_load(Archive &ar, const symbol_set &s)
-    {
-        piranha::boost_load(ar, this->m_container);
-        if (unlikely(this->size() != s.size())) {
-            piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
-                                                 "symbol set has a size of "
-                                                     + std::to_string(s.size())
-                                                     + ", while the monomial being deserialized has a size of "
-                                                     + std::to_string(this->size()));
-        }
-    }
+    // Make friend with the s11n functions.
+    template <typename Archive, typename T1, typename S1>
+    friend void
+    boost::serialization::save(Archive &, const piranha::boost_s11n_key_wrapper<piranha::monomial<T1, S1>> &, unsigned);
+    template <typename Archive, typename T1, typename S1>
+    friend void boost::serialization::load(Archive &, piranha::boost_s11n_key_wrapper<piranha::monomial<T1, S1>> &,
+                                           unsigned);
 #if defined(PIRANHA_WITH_MSGPACK)
-private:
     // Enablers for msgpack serialization.
     template <typename Stream>
     using msgpack_pack_enabler
@@ -1237,6 +1226,48 @@ public:
 
 template <typename T, typename S>
 const std::size_t monomial<T, S>::multiply_arity;
+
+inline namespace impl
+{
+
+// Enablers for the boost s11n methods.
+template <typename Archive, typename T, typename S>
+using monomial_boost_save_enabler
+    = enable_if_t<has_boost_save<Archive, typename monomial<T, S>::container_type>::value>;
+
+template <typename Archive, typename T, typename S>
+using monomial_boost_load_enabler
+    = enable_if_t<has_boost_load<Archive, typename monomial<T, S>::container_type>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::monomial.
+/**
+ * \note
+ * This specialisation is enabled only if piranha::monomial::container_type satisfies piranha::has_boost_save.
+ *
+ * @throws std::invalid_argument if the size of the monomial differs from the size of the piranha::symbol_set.
+ * @throws unspecified any exception thrown by piranha::bost_save() or by the public interface of
+ * piranha::boost_s11n_key_wrapper.
+ */
+template <typename Archive, typename T, typename S>
+struct boost_save_impl<Archive, boost_s11n_key_wrapper<monomial<T, S>>, monomial_boost_save_enabler<Archive, T, S>>
+    : boost_save_via_boost_api<Archive, boost_s11n_key_wrapper<monomial<T, S>>> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::monomial.
+/**
+ * \note
+ * This specialisation is enabled only if piranha::monomial::container_type satisfies piranha::has_boost_load.
+ *
+ * @throws std::invalid_argument if the size of the deserialized monomial differs from the size of
+ * the piranha::symbol_set.
+ * @throws unspecified any exception thrown by piranha::bost_load() or by the public interface of
+ * piranha::boost_s11n_key_wrapper.
+ */
+template <typename Archive, typename T, typename S>
+struct boost_load_impl<Archive, boost_s11n_key_wrapper<monomial<T, S>>, monomial_boost_load_enabler<Archive, T, S>>
+    : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<monomial<T, S>>> {
+};
 }
 
 namespace std

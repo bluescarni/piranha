@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
+#include "../src/s11n.hpp"
 #include "../src/safe_cast.hpp"
 #include "../src/type_traits.hpp"
 

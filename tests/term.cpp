@@ -209,51 +209,6 @@ BOOST_AUTO_TEST_CASE(term_ignorability_test)
     boost::mpl::for_each<cf_types>(ignorability_tester());
 }
 
-struct serialization_tester {
-    template <typename Cf>
-    struct runner {
-        template <typename Key>
-        void operator()(const Key &)
-        {
-            typedef term<Cf, Key> term_type;
-            term_type tmp;
-            std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
-                                                        std::numeric_limits<int>::max());
-            std::uniform_int_distribution<unsigned> size_dist(0u, 10u);
-            for (int i = 0; i < ntries; ++i) {
-                Cf cf(int_dist(rng));
-                Key key;
-                const auto size = size_dist(rng);
-                for (unsigned j = 0u; j < size; ++j) {
-                    key.push_back(typename Key::value_type(int_dist(rng)));
-                }
-                term_type t(std::move(cf), std::move(key));
-                std::stringstream ss;
-                {
-                    boost::archive::text_oarchive oa(ss);
-                    oa << t;
-                }
-                {
-                    boost::archive::text_iarchive ia(ss);
-                    ia >> tmp;
-                }
-                BOOST_CHECK(tmp.m_cf == t.m_cf);
-                BOOST_CHECK(tmp.m_key == t.m_key);
-            }
-        }
-    };
-    template <typename Cf>
-    void operator()(const Cf &)
-    {
-        boost::mpl::for_each<key_types>(runner<Cf>());
-    }
-};
-
-BOOST_AUTO_TEST_CASE(term_serialization_test)
-{
-    boost::mpl::for_each<cf_types>(serialization_tester());
-}
-
 namespace piranha
 {
 

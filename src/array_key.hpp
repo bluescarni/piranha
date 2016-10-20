@@ -44,7 +44,6 @@ see https://www.gnu.org/licenses/. */
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "small_vector.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -78,10 +77,6 @@ namespace piranha
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of piranha::small_vector.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the internal piranha::small_vector is serializable.
  */
 template <typename T, typename Derived, typename S = std::integral_constant<std::size_t, 0u>>
 class array_key
@@ -118,14 +113,6 @@ private:
     using add_enabler = decltype(std::declval<U const &>().add(std::declval<U &>(), std::declval<U const &>()));
     template <typename U>
     using sub_enabler = decltype(std::declval<U const &>().sub(std::declval<U &>(), std::declval<U const &>()));
-    // Serialization support.
-    // NOTE: no need for split save/load, this is just a single-member class.
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive &ar, unsigned int)
-    {
-        ar &m_container;
-    }
 
 public:
     /// Iterator type.

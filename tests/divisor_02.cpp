@@ -61,17 +61,35 @@ static const int ntries = 1000;
 template <typename OArchive, typename IArchive, typename T>
 static inline void boost_round_trip(const T &d, const symbol_set &s)
 {
-    std::stringstream ss;
+    using w_type = boost_s11n_key_wrapper<T>;
     {
-        OArchive oa(ss);
-        d.boost_save(oa, s);
+        std::stringstream ss;
+        {
+            OArchive oa(ss);
+            boost_save(oa, w_type{d, s});
+        }
+        T retval;
+        {
+            IArchive ia(ss);
+            w_type w{retval, s};
+            boost_load(ia, w);
+        }
+        BOOST_CHECK(retval == d);
     }
-    T retval;
     {
-        IArchive ia(ss);
-        retval.boost_load(ia, s);
+        std::stringstream ss;
+        {
+            OArchive oa(ss);
+            oa << w_type{d, s};
+        }
+        T retval;
+        {
+            IArchive ia(ss);
+            w_type w{retval, s};
+            ia >> w;
+        }
+        BOOST_CHECK(retval == d);
     }
-    BOOST_CHECK(retval == d);
 }
 
 struct boost_s11n_tester {
@@ -79,20 +97,21 @@ struct boost_s11n_tester {
     void operator()(const T &) const
     {
         using d_type = divisor<T>;
-        BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive, d_type>::value));
-        BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, d_type>::value));
-        BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, const d_type>::value));
-        BOOST_CHECK((key_has_boost_save<boost::archive::binary_oarchive &, const d_type &>::value));
-        BOOST_CHECK((!key_has_boost_save<const boost::archive::binary_oarchive &, const d_type &>::value));
-        BOOST_CHECK((!key_has_boost_save<void, const d_type &>::value));
-        BOOST_CHECK((!key_has_boost_save<boost::archive::binary_iarchive, d_type>::value));
-        BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive, d_type>::value));
-        BOOST_CHECK((key_has_boost_load<boost::archive::binary_iarchive &, d_type>::value));
-        BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive &, const d_type>::value));
-        BOOST_CHECK((!key_has_boost_load<boost::archive::binary_iarchive &, const d_type &>::value));
-        BOOST_CHECK((!key_has_boost_load<const boost::archive::binary_iarchive &, const d_type &>::value));
-        BOOST_CHECK((!key_has_boost_load<void, const d_type &>::value));
-        BOOST_CHECK((!key_has_boost_load<boost::archive::binary_oarchive, d_type>::value));
+        using w_type = boost_s11n_key_wrapper<d_type>;
+        BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, w_type>::value));
+        BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, w_type>::value));
+        BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const w_type>::value));
+        BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const w_type &>::value));
+        BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, const w_type &>::value));
+        BOOST_CHECK((!has_boost_save<void, const w_type &>::value));
+        BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive, w_type>::value));
+        BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, w_type>::value));
+        BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, w_type>::value));
+        BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const w_type>::value));
+        BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const w_type &>::value));
+        BOOST_CHECK((!has_boost_load<const boost::archive::binary_iarchive &, const w_type &>::value));
+        BOOST_CHECK((!has_boost_load<void, const w_type &>::value));
+        BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, w_type>::value));
         std::uniform_int_distribution<int> sdist(0, 10), ddist(-10, 10), edist(1, 10);
         const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
         for (int i = 0; i < ntries; ++i) {
@@ -137,24 +156,26 @@ struct boost_s11n_tester {
                 std::stringstream sst;
                 {
                     boost::archive::binary_oarchive oa(sst);
-                    BOOST_CHECK_EXCEPTION(
-                        d.boost_save(oa, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &iae) {
-                            return boost::contains(iae.what(),
-                                                   "an invalid symbol_set was passed as an argument for the "
-                                                   "boost_save() method of a divisor");
-                        });
+                    BOOST_CHECK_EXCEPTION(boost_save(oa, w_type{d, symbol_set{}}), std::invalid_argument,
+                                          [](const std::invalid_argument &iae) {
+                                              return boost::contains(
+                                                  iae.what(),
+                                                  "an invalid symbol_set was passed as an argument during the "
+                                                  "Boost serialization of a divisor");
+                                          });
                 }
                 sst.str("");
                 sst.clear();
                 {
                     boost::archive::binary_oarchive oa(sst);
-                    d.boost_save(oa, ss);
+                    boost_save(oa, w_type{d, ss});
                 }
                 ss.add("z");
                 {
                     boost::archive::binary_iarchive ia(sst);
+                    w_type w{d, ss};
                     BOOST_CHECK_EXCEPTION(
-                        d.boost_load(ia, ss), std::invalid_argument, [](const std::invalid_argument &iae) {
+                        boost_load(ia, w), std::invalid_argument, [](const std::invalid_argument &iae) {
                             return boost::contains(iae.what(),
                                                    "the divisor loaded from a Boost archive is not compatible "
                                                    "with the supplied symbol set");
@@ -162,25 +183,6 @@ struct boost_s11n_tester {
                     BOOST_CHECK_EQUAL(d.size(), 0u);
                 }
             }
-        }
-        // Check malformed data.
-        std::stringstream sst;
-        {
-            using p_type = divisor_p_type<T>;
-            boost::archive::binary_oarchive oa(sst);
-            boost_save(oa, typename d_type::size_type(1));
-            boost_save(oa, typename p_type::v_type::size_type(0));
-            boost_save(oa, T(0));
-        }
-        {
-            boost::archive::binary_iarchive ia(sst);
-            d_type dv;
-            BOOST_CHECK_EXCEPTION(
-                dv.boost_load(ia, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &iae) {
-                    return boost::contains(iae.what(), "the divisor loaded from a Boost archive failed internal "
-                                                       "consistency checks");
-                });
-            BOOST_CHECK(dv == d_type{});
         }
     }
 };

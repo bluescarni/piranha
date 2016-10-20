@@ -188,62 +188,6 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
                           (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(tmp)));
         boost_roundtrip_file(tmp);
     }
-    // Some error testing.
-    // NOTE: we used to have boost text archives for these tests, but apparently
-    // they error out in a buggy way in earlier Boost versions. Valgrind reports
-    // uninitalized memory reads in correspondence of the missing data, for instance.
-    // Might be related to this:
-    // https://github.com/boostorg/serialization/commit/fb559afd0dc540774a41fda1c72cc64addebe075
-    std::stringstream ss;
-    using ss_size_t = symbol_set::size_type;
-    using s_size_t = pt1::size_type;
-    {
-        boost::archive::binary_oarchive oa(ss);
-        boost_save(oa, ss_size_t(2));
-        boost_save(oa, std::string("x"));
-        boost_save(oa, std::string("y"));
-        boost_save(oa, s_size_t(1));
-        boost_save(oa, 1_z);
-        // Monomial incompatible with symbol set.
-        monomial<int> k;
-        k.boost_save(oa, symbol_set{});
-    }
-    {
-        boost::archive::binary_iarchive ia(ss);
-        pt1 tmp;
-        BOOST_CHECK_THROW(boost_load(ia, tmp), std::invalid_argument);
-    }
-    ss.str("");
-    ss.clear();
-    {
-        boost::archive::binary_oarchive oa(ss);
-        boost_save(oa, ss_size_t(2));
-        boost_save(oa, std::string("x"));
-        boost_save(oa, std::string("y"));
-        boost_save(oa, s_size_t(1));
-        boost_save(oa, 1_z);
-        // Don't save any monomial.
-    }
-    {
-        boost::archive::binary_iarchive ia(ss);
-        pt1 tmp;
-        BOOST_CHECK_THROW(boost_load(ia, tmp), boost::archive::archive_exception);
-    }
-    ss.str("");
-    ss.clear();
-    {
-        boost::archive::binary_oarchive oa(ss);
-        boost_save(oa, ss_size_t(2));
-        boost_save(oa, std::string("x"));
-        // Save an int in place of a string.
-        boost_save(oa, 1);
-        boost_save(oa, s_size_t(0));
-    }
-    {
-        boost::archive::binary_iarchive ia(ss);
-        pt1 tmp;
-        BOOST_CHECK_THROW(boost_load(ia, tmp), boost::archive::archive_exception);
-    }
 }
 
 BOOST_AUTO_TEST_CASE(series_boost_s11n_test_01)

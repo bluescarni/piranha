@@ -71,7 +71,6 @@ see https://www.gnu.org/licenses/. */
 #include "pow.hpp"
 #include "power_series.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"
@@ -664,10 +663,6 @@ enum class polynomial_gcd_algorithm {
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of the base series type it derives from.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the underlying coefficient and key types do.
  */
 template <typename Cf, typename Key>
 class polynomial
@@ -887,7 +882,6 @@ class polynomial
                       std::declval<const T &>(), std::declval<const symbol_set &>()))>::value,
                   decltype(std::declval<series<Cf, Key, polynomial<Cf, Key>> const &>().pow(
                       std::declval<const T &>()))>::type;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     // Invert utils.
     template <typename Series>
     using inverse_type = decltype(std::declval<const Series &>().pow(-1));

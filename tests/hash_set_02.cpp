@@ -128,23 +128,6 @@ struct boost_s11n_tester {
             boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(h);
             boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(h);
         }
-        // Check failure modes.
-        std::stringstream ss;
-        {
-            boost::archive::binary_oarchive oa(ss);
-            boost_save(oa, size_type(2));
-            boost_save(oa, T(42));
-            boost_save(oa, T(42));
-        }
-        {
-            boost::archive::binary_iarchive ia(ss);
-            h_type h;
-            BOOST_CHECK_EXCEPTION(boost_load(ia, h), std::invalid_argument, [](const std::invalid_argument &eia) {
-                return boost::contains(
-                    eia.what(),
-                    "while deserializing a hash_set from a Boost archive a duplicate value was encountered");
-            });
-        }
     }
 };
 

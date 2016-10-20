@@ -56,7 +56,6 @@ see https://www.gnu.org/licenses/. */
 #include "pow.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -117,10 +116,6 @@ struct is_real_interoperable_type {
  *
  * Move construction and move assignment will leave the moved-from object in a state that is destructible and
  * assignable.
- *
- * ## Serialization ##
- *
- * This class supports serialization.
  *
  * @see http://www.mpfr.org
  */
@@ -661,24 +656,75 @@ class real : public detail::real_base<>
     }
     // Serialization support.
     friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    // Utility function to infer the size (in number of limbs) from the precision.
+    static ::mpfr_prec_t size_from_prec(::mpfr_prec_t prec)
     {
+        const ::mpfr_prec_t q = prec / ::mp_bits_per_limb, r = prec % ::mp_bits_per_limb;
+        return q + (r != 0);
+    }
+    // Portable s11n.
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+    void save(Archive &ar, unsigned) const
+    {
+        // NOTE: like in mp_integer, the performance here can be improved significantly.
         std::ostringstream oss;
         oss << *this;
         auto prec = get_prec();
         auto s = oss.str();
-        ar &prec;
-        ar &s;
+        piranha::boost_save(ar, prec);
+        piranha::boost_save(ar, s);
     }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
     {
         ::mpfr_prec_t prec;
-        ar &prec;
-        std::string s;
-        ar &s;
+        PIRANHA_MAYBE_TLS std::string s;
+        piranha::boost_load(ar, prec);
+        piranha::boost_load(ar, s);
         *this = real(s, prec);
+    }
+    // Binary s11n.
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+    void save(Archive &ar, unsigned) const
+    {
+        piranha::boost_save(ar, m_value->_mpfr_prec);
+        piranha::boost_save(ar, m_value->_mpfr_sign);
+        piranha::boost_save(ar, m_value->_mpfr_exp);
+        const ::mpfr_prec_t s = size_from_prec(m_value->_mpfr_prec);
+        // NOTE: no need to save the size, as it can be recovered from the prec.
+        for (::mpfr_prec_t i = 0; i < s; ++i) {
+            piranha::boost_save(ar, m_value->_mpfr_d[i]);
+        }
+    }
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
+    {
+        // First we recover the non-limb members.
+        ::mpfr_prec_t prec;
+        decltype(m_value->_mpfr_sign) sign;
+        decltype(m_value->_mpfr_exp) exp;
+        piranha::boost_load(ar, prec);
+        piranha::boost_load(ar, sign);
+        piranha::boost_load(ar, exp);
+        // Recover the size in limbs from prec.
+        const ::mpfr_prec_t s = size_from_prec(prec);
+        // Set the precision.
+        set_prec(prec);
+        piranha_assert(m_value->_mpfr_prec == prec);
+        m_value->_mpfr_sign = sign;
+        m_value->_mpfr_exp = exp;
+        try {
+            // NOTE: protect in try/catch as in theory boost_load() could throw even
+            // in case of valid archive (e.g., memory errors maybe?) and we want
+            // to deal with this case.
+            for (::mpfr_prec_t i = 0; i < s; ++i) {
+                piranha::boost_load(ar, *(m_value->_mpfr_d + i));
+            }
+        } catch (...) {
+            // Set to zero before re-throwing.
+            ::mpfr_set_ui(m_value, 0u, default_rnd);
+            throw;
+        }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
@@ -1691,109 +1737,8 @@ public:
     {
         return &m_value[0u];
     }
-    //@}
-private:
-    static ::mpfr_prec_t size_from_prec(::mpfr_prec_t prec)
-    {
-        const ::mpfr_prec_t q = prec / ::mp_bits_per_limb, r = prec % ::mp_bits_per_limb;
-        return q + (r != 0);
-    }
+//@}
 
-public:
-    /// Save to a Boost binary archive.
-    /**
-     * This method will serialize \p this into \p ar.
-     *
-     * @param[in] ar target archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    void boost_save(boost::archive::binary_oarchive &ar) const
-    {
-        piranha::boost_save(ar, m_value->_mpfr_prec);
-        piranha::boost_save(ar, m_value->_mpfr_sign);
-        piranha::boost_save(ar, m_value->_mpfr_exp);
-        const ::mpfr_prec_t s = size_from_prec(m_value->_mpfr_prec);
-        // NOTE: no need to save the size, as it can be recovered from the prec.
-        for (::mpfr_prec_t i = 0; i < s; ++i) {
-            piranha::boost_save(ar, m_value->_mpfr_d[i]);
-        }
-    }
-    /// Save to a Boost text archive.
-    /**
-     * This method will serialize \p this into \p ar.
-     *
-     * @param[in] ar target archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save() or by the conversion of \p this to
-     * string.
-     */
-    void boost_save(boost::archive::text_oarchive &ar) const
-    {
-        // NOTE: like in mp_integer, the performance here can be improved significantly.
-        std::ostringstream oss;
-        oss << *this;
-        auto prec = get_prec();
-        auto s = oss.str();
-        piranha::boost_save(ar, prec);
-        piranha::boost_save(ar, s);
-    }
-    /// Deserialize from Boost binary archive.
-    /**
-     * This method will deserialize from \p ar into \p this. The method offers the basic exception guarantee
-     * and performs minimal checking of the input data. Calling this method will result in undefined behaviour
-     * if \p ar does not contain a real serialized via boost_save().
-     *
-     * @param[in] ar the source archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_load().
-     */
-    void boost_load(boost::archive::binary_iarchive &ar)
-    {
-        // First we recover the non-limb members.
-        ::mpfr_prec_t prec;
-        decltype(m_value->_mpfr_sign) sign;
-        decltype(m_value->_mpfr_exp) exp;
-        piranha::boost_load(ar, prec);
-        piranha::boost_load(ar, sign);
-        piranha::boost_load(ar, exp);
-        // Recover the size in limbs from prec.
-        const ::mpfr_prec_t s = size_from_prec(prec);
-        // Set the precision.
-        set_prec(prec);
-        piranha_assert(m_value->_mpfr_prec == prec);
-        m_value->_mpfr_sign = sign;
-        m_value->_mpfr_exp = exp;
-        try {
-            // NOTE: protect in try/catch as in theory boost_load() could throw even
-            // in case of valid archive (e.g., memory errors maybe?) and we want
-            // to deal with this case.
-            for (::mpfr_prec_t i = 0; i < s; ++i) {
-                piranha::boost_load(ar, *(m_value->_mpfr_d + i));
-            }
-        } catch (...) {
-            // Set to zero before re-throwing.
-            ::mpfr_set_ui(m_value, 0u, default_rnd);
-            throw;
-        }
-    }
-    /// Deserialize from Boost text archive.
-    /**
-     * This method will deserialize from \p ar into \p this.
-     *
-     * @param[in] ar the source archive.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_load(), or by the constructor of
-     * piranha::real from string.
-     */
-    void boost_load(boost::archive::text_iarchive &ar)
-    {
-        ::mpfr_prec_t prec;
-        PIRANHA_MAYBE_TLS std::string s;
-        piranha::boost_load(ar, prec);
-        piranha::boost_load(ar, s);
-        *this = real(s, prec);
-    }
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     // msgpack enabler.
@@ -2388,63 +2333,51 @@ inline real operator"" _r(const char *s)
 inline namespace impl
 {
 
-template <typename Archive, typename T>
-using real_boost_save_enabler = typename std::
-    enable_if<conjunction<std::is_same<T, real>, is_detected<boost_save_member_t, Archive, T>>::value>::type;
+template <typename Archive>
+using real_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, ::mpfr_prec_t>, has_boost_save<Archive, std::string>,
+                              has_boost_save<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                              has_boost_save<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                              has_boost_save<Archive, ::mp_limb_t>>::value>;
 
-template <typename Archive, typename T>
-using real_boost_load_enabler = typename std::
-    enable_if<conjunction<std::is_same<T, real>, is_detected<boost_load_member_t, Archive, T>>::value>::type;
+template <typename Archive>
+using real_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, ::mpfr_prec_t>, has_boost_load<Archive, std::string>,
+                              has_boost_load<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                              has_boost_load<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                              has_boost_load<Archive, ::mp_limb_t>>::value>;
 }
 
-/// Implementation of piranha::boost_save() for piranha::real.
+/// Specialisation of piranha::boost_save() for piranha::real.
 /**
  * \note
- * This specialisation is enabled if \p T is piranha::real and
- * the piranha::real::boost_save() method is supported with an archive of type \p Archive.
+ * This specialisation is enabled only if \p std::string and all the integral types in terms of which piranha::real
+ * is implemented satisfy piranha::has_boost_save.
+ *
+ * If \p Archive is \p boost::archive::binary_oarchive, a platform dependent binary representation of the input
+ * piranha::real will be saved. Otherwise, the piranha::real is serialized in string form.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save() or by the conversion of the input piranha::real to
+ * string.
  */
-template <typename Archive, typename T>
-class boost_save_impl<Archive, T, real_boost_save_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * The call operator will invoke piranha::real::boost_save().
-     *
-     * @param[in] ar target archive.
-     * @param[in] x piranha::real to be serialized into \p ar.
-     *
-     * @throws unspecified any exception thrown by piranha::real::boost_save().
-     */
-    void operator()(Archive &ar, const T &x) const
-    {
-        x.boost_save(ar);
-    }
+template <typename Archive>
+struct boost_save_impl<Archive, real, real_boost_save_enabler<Archive>> : boost_save_via_boost_api<Archive, real> {
 };
 
-/// Implementation of piranha::boost_load() for piranha::real.
+/// Specialisation of piranha::boost_load() for piranha::real.
 /**
  * \note
- * This specialisation is enabled if \p T is piranha::real and
- * the piranha::real::boost_load() method is supported with an archive of type \p Archive.
+ * This specialisation is enabled only if \p std::string and all the integral types in terms of which piranha::real
+ * is implemented satisfy piranha::has_boost_load.
+ *
+ * If \p Archive is \p boost::archive::binary_iarchive, no checking is performed on the deserialized piranha::real
+ * and the implementation offers the basic exception safety guarantee.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_load(), or by the constructor of
+ * piranha::real from string.
  */
-template <typename Archive, typename T>
-class boost_load_impl<Archive, T, real_boost_load_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * The call operator will invoke piranha::real::boost_load().
-     *
-     * @param[in] ar source archive.
-     * @param[in] x target piranha::real.
-     *
-     * @throws unspecified any exception thrown by piranha::real::boost_load().
-     */
-    void operator()(Archive &ar, T &x) const
-    {
-        x.boost_load(ar);
-    }
+template <typename Archive>
+struct boost_load_impl<Archive, real, real_boost_load_enabler<Archive>> : boost_load_via_boost_api<Archive, real> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)

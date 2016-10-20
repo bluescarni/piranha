@@ -42,7 +42,6 @@ SET(HEADERS_LIST
 	thread_pool.hpp
 	tuning.hpp
 	convert_to.hpp
-	serialization.hpp
 	key_is_multipliable.hpp
 	divisor.hpp
 	key_is_convertible.hpp

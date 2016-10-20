@@ -56,7 +56,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/series_multiplier.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
@@ -74,7 +74,7 @@ template <typename Cf, typename Expo>
 class g_series_type : public series<Cf, monomial<Expo>, g_series_type<Cf, Expo>>
 {
     typedef series<Cf, monomial<Expo>, g_series_type<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     template <typename Cf2>
     using rebind = g_series_type<Cf2, Expo>;
@@ -101,7 +101,6 @@ class g_series_type2 : public series<Cf, monomial<Expo>, g_series_type2<Cf, Expo
 {
 public:
     typedef series<Cf, monomial<Expo>, g_series_type2<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type2() = default;
     g_series_type2(const g_series_type2 &) = default;
     g_series_type2(g_series_type2 &&) = default;
@@ -132,7 +131,7 @@ template <typename Cf, typename Key>
 class g_series_type3 : public series<Cf, Key, g_series_type3<Cf, Key>>
 {
     typedef series<Cf, Key, g_series_type3<Cf, Key>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     template <typename Cf2>
     using rebind = g_series_type3<Cf2, Key>;
@@ -360,43 +359,6 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
             ia >> tmp;
         }
         BOOST_CHECK_EQUAL(tmp, p);
-    }
-    {
-        // Test bad archives.
-        std::stringstream ss;
-        // This originally corresponded to:
-        // math::pow(x,2)/2 + math::pow(y,2)/3
-        // An extra exponent was added to the only term of math::pow(y,2)/3.
-        const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 1 1 1 2 0 0 0 0 0 0 2 "
-                               "2 0 1 1 1 3 3 0 2 0";
-        ss.str(ba);
-        boost::archive::text_iarchive ia(ss);
-        BOOST_CHECK_THROW(ia >> tmp, std::invalid_argument);
-    }
-    {
-        // This is equivalent to:
-        // math::pow(x,2)/2 + math::pow(x,2)/3
-        // (y replaced with x wrt the original example).
-        std::stringstream ss;
-        const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 1 1 1 2 0 0 0 0 0 0 2 "
-                               "2 0 1 1 1 3 2 2 0";
-        ss.str(ba);
-        boost::archive::text_iarchive ia(ss);
-        ia >> tmp;
-        BOOST_CHECK_EQUAL(tmp, math::pow(x, 2) / 2 + math::pow(x, 2) / 3);
-        BOOST_CHECK_EQUAL(tmp.size(), 1u);
-    }
-    {
-        // This is equivalent to:
-        // math::pow(x,2)/2 + math::pow(x,2)/3
-        // with the numerators of the fractions replaced by zero.
-        std::stringstream ss;
-        const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 1 0 1 2 0 0 0 0 0 0 2 "
-                               "2 0 1 0 1 3 2 2 0";
-        ss.str(ba);
-        boost::archive::text_iarchive ia(ss);
-        ia >> tmp;
-        BOOST_CHECK_EQUAL(tmp.size(), 0u);
     }
 }
 
@@ -2132,7 +2094,7 @@ template <typename Cf, typename Expo>
 class g_series_type_nm : public series<Cf, monomial<Expo>, g_series_type_nm<Cf, Expo>>
 {
     typedef series<Cf, monomial<Expo>, g_series_type_nm<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     template <typename Cf2>
     using rebind = g_series_type_nm<Cf2, Expo>;

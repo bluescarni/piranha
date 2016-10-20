@@ -54,7 +54,6 @@ see https://www.gnu.org/licenses/. */
 #include "pow.hpp"
 #include "print_tex_coefficient.hpp"
 #include "s11n.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "type_traits.hpp"
 
@@ -110,10 +109,6 @@ struct rational_function_tag {
  * ## Move semantics ##
  *
  * Move operations will leave objects of this class in a state which is destructible and assignable.
- *
- * ## Serialization ##
- *
- * This class supports serialization.
  */
 template <typename Key>
 class rational_function : public detail::rational_function_tag
@@ -503,26 +498,23 @@ private:
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    void save(Archive &ar, unsigned) const
     {
-        // NOTE: here in principle we do not need the split member implementation,
-        // this syntax could be used for both load and save. However, for load
-        // we use an implementation that gives better exception safety: load num/den
-        // into local variables and the move them in. So if something goes wrong in the
-        // deserialization of one of the ints, we do not modify this.
-        ar &m_num;
-        ar &m_den;
+        boost_save(ar, num());
+        boost_save(ar, den());
     }
     template <class Archive>
-    void load(Archive &ar, unsigned int)
+    void load(Archive &ar, unsigned)
     {
-        p_type num, den;
-        ar &num;
-        ar &den;
-        // This ensures that if we load from a bad archive with non-coprime
-        // num and den or negative den, or... we get anyway a canonicalised
-        // rational_function or an error.
-        *this = rational_function{num, den};
+        p_type n, d;
+        boost_load(ar, n);
+        boost_load(ar, d);
+        if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
+            _num() = std::move(n);
+            _den() = std::move(d);
+        } else {
+            *this = rational_function{std::move(n), std::move(d)};
+        }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
     // Hashing utils.
@@ -1793,23 +1785,11 @@ using rf_boost_load_enabler = enable_if_t<conjunction<std::is_base_of<detail::ra
  * \note
  * This specialisation is enabled only if \p T is an instance of piranha::rational_function whose numerator/denominator
  * type satisfies piranha::has_boost_save.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
  */
 template <typename Archive, typename T>
-class boost_save_impl<Archive, T, rf_boost_save_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * @param ar the target archive.
-     * @param r the input rational function.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_save().
-     */
-    void operator()(Archive &ar, const T &r) const
-    {
-        boost_save(ar, r.num());
-        boost_save(ar, r.den());
-    }
+struct boost_save_impl<Archive, T, rf_boost_save_enabler<Archive, T>> : boost_save_via_boost_api<Archive, T> {
 };
 
 /// Specialisation of piranha::boost_load() for piranha::rational_function.
@@ -1817,35 +1797,16 @@ public:
  * \note
  * This specialisation is enabled only if \p T is an instance of piranha::rational_function whose numerator/denominator
  * type satisfies piranha::has_boost_load.
+ *
+ * If \p Archive is \p boost::archive::binary_iarchive, no checking is
+ * performed on the content of \p ar. Otherwise, it will be ensured that
+ * the deserialized rational function is in canonical form.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_load() or by the constructor of
+ * piranha::rational_function from numerator and denominator.
  */
 template <typename Archive, typename T>
-class boost_load_impl<Archive, T, rf_boost_load_enabler<Archive, T>>
-{
-public:
-    /// Call operator.
-    /**
-     * If \p Archive is \p boost::archive::binary_iarchive, no checking is
-     * performed on the content of \p ar. Otherwise, this method will ensure that
-     * the deserialized rational function is in canonical form.
-     *
-     * @param ar the source archive.
-     * @param r the rational function into which the content of \p ar will be deserialized.
-     *
-     * @throws unspecified any exception thrown by piranha::boost_load() or by the constructor of
-     * piranha::rational_function from numerator and denominator.
-     */
-    void operator()(Archive &ar, T &r) const
-    {
-        typename T::p_type n, d;
-        boost_load(ar, n);
-        boost_load(ar, d);
-        if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
-            r._num() = std::move(n);
-            r._den() = std::move(d);
-        } else {
-            r = T{std::move(n), std::move(d)};
-        }
-    }
+struct boost_load_impl<Archive, T, rf_boost_load_enabler<Archive, T>> : boost_load_via_boost_api<Archive, T> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)
