@@ -149,16 +149,20 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, pt1 &>::value));
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive &, pt1 &>::value));
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, const pt1 &>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::xml_oarchive, pt1>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::xml_oarchive, pt1>::value));
     BOOST_CHECK((!has_boost_save<const boost::archive::text_oarchive, const pt1 &>::value));
+    BOOST_CHECK((!has_boost_save<void, const pt1 &>::value));
+    BOOST_CHECK((!has_boost_save<int, const pt1 &>::value));
     BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, pt1>::value));
     BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, pt1 &>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::text_iarchive, const pt1 &>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::text_iarchive, const pt1>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::xml_iarchive, pt1>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::xml_iarchive, pt1>::value));
     BOOST_CHECK(is_cf<mock_cf3>::value);
     BOOST_CHECK((!has_boost_save<boost::archive::text_oarchive, polynomial<mock_cf3, monomial<int>>>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::text_iarchive, polynomial<mock_cf3, monomial<int>>>::value));
+    BOOST_CHECK((!has_boost_load<void, pt1>::value));
+    BOOST_CHECK((!has_boost_load<int, pt1>::value));
     // A few simple tests.
     BOOST_CHECK_EQUAL(pt1{}, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(pt1{})));
     BOOST_CHECK_EQUAL(pt1{},
@@ -199,13 +203,17 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_01)
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, pt1 &>::value));
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive &, pt1 &>::value));
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, const pt1 &>::value));
-    BOOST_CHECK((!has_boost_save<boost::archive::xml_oarchive, pt1>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::xml_oarchive, pt1>::value));
     BOOST_CHECK((!has_boost_save<const boost::archive::text_oarchive, const pt1 &>::value));
+    BOOST_CHECK((!has_boost_save<void, const pt1 &>::value));
+    BOOST_CHECK((!has_boost_save<int, const pt1 &>::value));
     BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, pt1>::value));
     BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, pt1 &>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::text_iarchive, const pt1 &>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::text_iarchive, const pt1>::value));
-    BOOST_CHECK((!has_boost_load<boost::archive::xml_iarchive, pt1>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::xml_iarchive, pt1>::value));
+    BOOST_CHECK((!has_boost_load<void, pt1>::value));
+    BOOST_CHECK((!has_boost_load<int, pt1>::value));
     // A few simple tests.
     BOOST_CHECK_EQUAL(pt1{}, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(pt1{})));
     BOOST_CHECK_EQUAL(pt1{},

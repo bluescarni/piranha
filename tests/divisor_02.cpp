@@ -80,7 +80,8 @@ static inline void boost_round_trip(const T &d, const symbol_set &s)
         std::stringstream ss;
         {
             OArchive oa(ss);
-            oa << w_type{d, s};
+            w_type w{d, s};
+            oa << w;
         }
         T retval;
         {
