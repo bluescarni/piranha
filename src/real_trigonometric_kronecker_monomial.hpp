@@ -1337,14 +1337,14 @@ public:
 private:
     template <typename Stream>
     using msgpack_pack_enabler =
-        typename std::enable_if<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+        enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
                                             has_msgpack_pack<Stream, bool>, has_msgpack_pack<Stream, v_type>>::value,
-                                int>::type;
+                                int>;
     template <typename U>
     using msgpack_convert_enabler =
-        typename std::enable_if<conjunction<has_msgpack_convert<typename U::value_type>,
+        enable_if_t<conjunction<has_msgpack_convert<typename U::value_type>,
                                             has_msgpack_convert<typename U::v_type>, has_msgpack_convert<bool>>::value,
-                                int>::type;
+                                int>;
 
 public:
     /// Serialize in msgpack format.
