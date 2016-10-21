@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Fundamental numerical types in Piranha &#8212; Piranha 0.1 documentation</title>
+    <title>Fundamental numerical types in Piranha &#8212; Piranha 0.6 documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="Piranha 0.1 documentation" href="index.html" />
+    <link rel="top" title="Piranha 0.6 documentation" href="index.html" />
     <link rel="up" title="Tutorial" href="tutorial.html" />
     <link rel="next" title="Piranha polynomials and series" href="polynomials.html" />
     <link rel="prev" title="Hello Piranha!" href="hello_piranha.html" />
@@ -54,7 +54,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Piranha</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.6</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -297,7 +297,8 @@ This is arguably the C++ syntax that most closely matches Python&#8217;s syntax.
 19
 20
 21
-22</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Import the pyranha.math submodule.</span>
+22
+23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># Import the pyranha.math submodule.</span>
 <span class="kn">from</span> <span class="nn">pyranha</span> <span class="kn">import</span> <span class="n">math</span>
 
 <span class="c1"># Various ways of constructing an int.</span>
@@ -317,8 +318,9 @@ This is arguably the C++ syntax that most closely matches Python&#8217;s syntax.
 <span class="c1"># Exponentiation via the &#39;**&#39; operator.</span>
 <span class="k">print</span><span class="p">(</span><span class="mi">42</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
-<span class="c1"># Calculate (42 choose 21) using the binomial() function from the math submodule.</span>
-<span class="k">print</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">21</span><span class="p">))</span>
+<span class="c1"># Calculate (42 choose 21) using the binomial() function from the math</span>
+<span class="c1"># submodule.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">21</span><span class="p">))</span>
 </pre></div>
 </td></tr></table></div>
 <p>Python indeed provides multiprecision integers as basic types. Some notable differences exist between Python 2.x and
@@ -529,26 +531,26 @@ result as a <code class="docutils literal"><span class="pre">rational</span></co
 <span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">))</span>
 <span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="s2">&quot;42&quot;</span><span class="p">))</span>
 <span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mf">1.5</span><span class="p">))</span>
-<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">12</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
 <span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="s2">&quot;42/12&quot;</span><span class="p">))</span>
 
 <span class="c1"># Arithmetics and interoperability with float and int.</span>
-<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">))</span>
-<span class="k">print</span><span class="p">(</span><span class="mf">43.</span> <span class="o">-</span> <span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">13</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="mf">43.</span> <span class="o">-</span> <span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">85</span><span class="p">)</span> <span class="o">/</span> <span class="mi">13</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">84</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">42</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="mi">42</span> <span class="o">&gt;=</span> <span class="n">F</span><span class="p">(</span><span class="mi">84</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">84</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">42</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="mi">42</span> <span class="o">&gt;=</span> <span class="n">F</span><span class="p">(</span><span class="mi">84</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
 <span class="c1"># Exponentiation is provided by the standard &#39;**&#39; operator.</span>
-<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">)</span><span class="o">**-</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span><span class="o">**-</span><span class="mi">3</span><span class="p">)</span>
 
 <span class="c1"># Conversion to int yields the truncated value.</span>
-<span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">)))</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
 
 <span class="c1"># Calculate (42/13 choose 21) via the math::binomial() function.</span>
-<span class="k">print</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">),</span><span class="mi">21</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span> <span class="mi">21</span><span class="p">))</span>
 </pre></div>
 </td></tr></table></div>
 <p>Although Python does not provide a rational type as a builtin, a rational class named <code class="docutils literal"><span class="pre">Fraction</span></code> is available in the standard <code class="docutils literal"><span class="pre">fractions</span></code>

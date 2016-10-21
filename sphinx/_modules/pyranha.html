@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyranha &#8212; Piranha 0.1 documentation</title>
+    <title>pyranha &#8212; Piranha 0.6 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="Piranha 0.1 documentation" href="../index.html" />
+    <link rel="top" title="Piranha 0.6 documentation" href="../index.html" />
     <link rel="up" title="Module code" href="index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -52,7 +52,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           Piranha</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.6</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -155,252 +155,264 @@
 
 <span class="kn">import</span> <span class="nn">threading</span> <span class="k">as</span> <span class="nn">_thr</span>
 <span class="kn">from</span> <span class="nn">._common</span> <span class="k">import</span> <span class="n">_cpp_type_catcher</span><span class="p">,</span> <span class="n">_monkey_patching</span><span class="p">,</span> <span class="n">_cleanup</span>
-<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">file_format</span><span class="p">,</span> <span class="n">file_compression</span><span class="p">,</span> <span class="n">polynomial_gcd_algorithm</span>
+<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">polynomial_gcd_algorithm</span><span class="p">,</span> <span class="n">data_format</span><span class="p">,</span> <span class="n">compression</span><span class="p">,</span> <span class="n">_load_file</span> <span class="k">as</span> <span class="n">load_file</span><span class="p">,</span> <span class="n">_save_file</span> <span class="k">as</span> <span class="n">save_file</span>
 
 <span class="c1"># Run the monkey patching.</span>
 <span class="n">_monkey_patching</span><span class="p">()</span>
 
+
 <div class="viewcode-block" id="settings"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings">[docs]</a><span class="k">class</span> <span class="nc">settings</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Settings class.</span>
+    <span class="sd">&quot;&quot;&quot;Settings class.</span>
 
-<span class="sd">	This class is used to configure global Pyranha settings via static methods.</span>
-<span class="sd">	The methods are thread-safe.</span>
+<span class="sd">    This class is used to configure global Pyranha settings via static methods.</span>
+<span class="sd">    The methods are thread-safe.</span>
 
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="c1"># Main lock for protecting reads/writes from multiple threads.</span>
-	<span class="n">__lock</span> <span class="o">=</span> <span class="n">_thr</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_max_term_output">[docs]</a>	<span class="k">def</span> <span class="nf">get_max_term_output</span><span class="p">():</span>
-		<span class="sd">&quot;&quot;&quot;Get the maximum number of series terms to print.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Main lock for protecting reads/writes from multiple threads.</span>
+    <span class="n">__lock</span> <span class="o">=</span> <span class="n">_thr</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
 
-<span class="sd">		:returns: the maximum number of series terms to print</span>
-<span class="sd">		:raises: any exception raised by the invoked low-level function</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.get_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_max_term_output">[docs]</a>    <span class="k">def</span> <span class="nf">get_max_term_output</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Get the maximum number of series terms to print.</span>
 
-<span class="sd">		&gt;&gt;&gt; settings.get_max_term_output()</span>
-<span class="sd">		20</span>
+<span class="sd">        :returns: the maximum number of series terms to print</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_max_term_output</span><span class="p">()</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_max_term_output">[docs]</a>	<span class="k">def</span> <span class="nf">set_max_term_output</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;Set the maximum number of series terms to print.</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_max_term_output()</span>
+<span class="sd">        20</span>
 
-<span class="sd">		:param n: number of series terms to print</span>
-<span class="sd">		:type n: ``int``</span>
-<span class="sd">		:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_max_term_output</span><span class="p">()</span></div>
 
-<span class="sd">		&gt;&gt;&gt; settings.set_max_term_output(10)</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_max_term_output()</span>
-<span class="sd">		10</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_max_term_output(-1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">		Traceback (most recent call last):</span>
-<span class="sd">		  ...</span>
-<span class="sd">		OverflowError: invalid value</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_max_term_output(&quot;hello&quot;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">		Traceback (most recent call last):</span>
-<span class="sd">		  ...</span>
-<span class="sd">		TypeError: invalid type</span>
-<span class="sd">		&gt;&gt;&gt; settings.reset_max_term_output()</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.set_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_max_term_output">[docs]</a>    <span class="k">def</span> <span class="nf">set_max_term_output</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the maximum number of series terms to print.</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_max_term_output</span><span class="p">,</span><span class="n">n</span><span class="p">)</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.reset_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_max_term_output">[docs]</a>	<span class="k">def</span> <span class="nf">reset_max_term_output</span><span class="p">():</span>
-		<span class="sd">&quot;&quot;&quot;Reset the maximum number of series terms to print to the default value.</span>
+<span class="sd">        :param n: number of series terms to print</span>
+<span class="sd">        :type n: ``int``</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">		:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_max_term_output(10)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_max_term_output()</span>
+<span class="sd">        10</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_max_term_output(-1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        OverflowError: invalid value</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_max_term_output(&quot;hello&quot;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        TypeError: invalid type</span>
+<span class="sd">        &gt;&gt;&gt; settings.reset_max_term_output()</span>
 
-<span class="sd">		&gt;&gt;&gt; settings.set_max_term_output(10)</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_max_term_output()</span>
-<span class="sd">		10</span>
-<span class="sd">		&gt;&gt;&gt; settings.reset_max_term_output()</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_max_term_output()</span>
-<span class="sd">		20</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_max_term_output</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_max_term_output</span><span class="p">()</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_n_threads">[docs]</a>	<span class="k">def</span> <span class="nf">get_n_threads</span><span class="p">():</span>
-		<span class="sd">&quot;&quot;&quot;Get the number of threads that can be used by Piranha.</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.reset_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_max_term_output">[docs]</a>    <span class="k">def</span> <span class="nf">reset_max_term_output</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Reset the maximum number of series terms to print to the default value.</span>
 
-<span class="sd">		The initial value is auto-detected on program startup.</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">		:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_max_term_output(10)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_max_term_output()</span>
+<span class="sd">        10</span>
+<span class="sd">        &gt;&gt;&gt; settings.reset_max_term_output()</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_max_term_output()</span>
+<span class="sd">        20</span>
 
-<span class="sd">		&gt;&gt;&gt; settings.get_n_threads() # doctest: +SKIP</span>
-<span class="sd">		16 # This will be a platform-dependent value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_max_term_output</span><span class="p">()</span></div>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_n_threads</span><span class="p">()</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_n_threads">[docs]</a>	<span class="k">def</span> <span class="nf">set_n_threads</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;Set the number of threads that can be used by Piranha.</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.get_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_n_threads">[docs]</a>    <span class="k">def</span> <span class="nf">get_n_threads</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of threads that can be used by Piranha.</span>
 
-<span class="sd">		:param n: desired number of threads</span>
-<span class="sd">		:type n: ``int``</span>
-<span class="sd">		:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">        The initial value is auto-detected on program startup.</span>
 
-<span class="sd">		&gt;&gt;&gt; settings.set_n_threads(2)</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_n_threads()</span>
-<span class="sd">		2</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_n_threads(0) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">		Traceback (most recent call last):</span>
-<span class="sd">		  ...</span>
-<span class="sd">		ValueError: invalid value</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_n_threads(-1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">		Traceback (most recent call last):</span>
-<span class="sd">		  ...</span>
-<span class="sd">		OverflowError: invalid value</span>
-<span class="sd">		&gt;&gt;&gt; settings.reset_n_threads()</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_n_threads</span><span class="p">,</span><span class="n">n</span><span class="p">)</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.reset_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_n_threads">[docs]</a>	<span class="k">def</span> <span class="nf">reset_n_threads</span><span class="p">():</span>
-		<span class="sd">&quot;&quot;&quot;Reset the number of threads that can be used by Piranha to the default value.</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_n_threads() # doctest: +SKIP</span>
+<span class="sd">        16 # This will be a platform-dependent value.</span>
 
-<span class="sd">		:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_n_threads</span><span class="p">()</span></div>
 
-<span class="sd">		&gt;&gt;&gt; n = settings.get_n_threads()</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_n_threads(10)</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_n_threads()</span>
-<span class="sd">		10</span>
-<span class="sd">		&gt;&gt;&gt; settings.reset_n_threads()</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_n_threads() == n</span>
-<span class="sd">		True</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.set_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_n_threads">[docs]</a>    <span class="k">def</span> <span class="nf">set_n_threads</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the number of threads that can be used by Piranha.</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_n_threads</span><span class="p">()</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_latex_repr">[docs]</a>	<span class="k">def</span> <span class="nf">get_latex_repr</span><span class="p">():</span>
-		<span class="sd">r&quot;&quot;&quot;Check if exposed types have a ``_repr_latex_()`` method.</span>
+<span class="sd">        :param n: desired number of threads</span>
+<span class="sd">        :type n: ``int``</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">		The ``_repr_latex_()`` method, if present, is used by the IPython notebook to display the TeX</span>
-<span class="sd">		representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable</span>
-<span class="sd">		to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX</span>
-<span class="sd">		representation is disabled, IPython will fall back to the PNG-based representation of the object, which</span>
-<span class="sd">		leverages - if available - a local installation of TeX for increased performance via a static rendering</span>
-<span class="sd">		of the TeX representation of the object to a PNG bitmap.</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_n_threads(2)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_n_threads()</span>
+<span class="sd">        2</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_n_threads(0) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        ValueError: invalid value</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_n_threads(-1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        OverflowError: invalid value</span>
+<span class="sd">        &gt;&gt;&gt; settings.reset_n_threads()</span>
 
-<span class="sd">		By default, the TeX representation is enabled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_n_threads</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
 
-<span class="sd">		&gt;&gt;&gt; settings.get_latex_repr()</span>
-<span class="sd">		True</span>
-<span class="sd">		&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
-<span class="sd">		&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
-<span class="sd">		&gt;&gt;&gt; x = pt(&#39;x&#39;)</span>
-<span class="sd">		&gt;&gt;&gt; (x**2/2)._repr_latex_()</span>
-<span class="sd">		&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.reset_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_n_threads">[docs]</a>    <span class="k">def</span> <span class="nf">reset_n_threads</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Reset the number of threads that can be used by Piranha to the default value.</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
-		<span class="n">s_type</span> <span class="o">=</span> <span class="n">getl</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-		<span class="k">with</span> <span class="n">settings</span><span class="o">.</span><span class="n">__lock</span><span class="p">:</span>
-			<span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span><span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_latex_repr">[docs]</a>	<span class="k">def</span> <span class="nf">set_latex_repr</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
-		<span class="sd">r&quot;&quot;&quot;Set the availability of the ``_repr_latex_()`` method for the exposed types.</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">		If *flag* is ``True``, the ``_repr_latex_()`` method of exposed types will be enabled. Otherwise,</span>
-<span class="sd">		the method will be disabled. See the documentation for :py:meth:`pyranha.settings.get_latex_repr` for a</span>
-<span class="sd">		description of how the method is used.</span>
+<span class="sd">        &gt;&gt;&gt; n = settings.get_n_threads()</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_n_threads(10)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_n_threads()</span>
+<span class="sd">        10</span>
+<span class="sd">        &gt;&gt;&gt; settings.reset_n_threads()</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_n_threads() == n</span>
+<span class="sd">        True</span>
 
-<span class="sd">		:param flag: availability flag for the ``_repr_latex_()`` method</span>
-<span class="sd">		:type flag: ``bool``</span>
-<span class="sd">		:raises: :exc:`TypeError` if *flag* is not a ``bool``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_n_threads</span><span class="p">()</span></div>
 
-<span class="sd">		&gt;&gt;&gt; settings.set_latex_repr(False)</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_latex_repr()</span>
-<span class="sd">		False</span>
-<span class="sd">		&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
-<span class="sd">		&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
-<span class="sd">		&gt;&gt;&gt; x = pt(&#39;x&#39;)</span>
-<span class="sd">		&gt;&gt;&gt; (x**2/2)._repr_latex_() # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">		Traceback (most recent call last):</span>
-<span class="sd">		  ...</span>
-<span class="sd">		AttributeError: object has no attribute &#39;_latex_repr_&#39;</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_latex_repr(True)</span>
-<span class="sd">		&gt;&gt;&gt; (x**2/2)._repr_latex_()</span>
-<span class="sd">		&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_latex_repr(&quot;hello&quot;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">		Traceback (most recent call last):</span>
-<span class="sd">		  ...</span>
-<span class="sd">		TypeError: the &#39;flag&#39; parameter must be a bool</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.get_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_latex_repr">[docs]</a>    <span class="k">def</span> <span class="nf">get_latex_repr</span><span class="p">():</span>
+        <span class="sd">r&quot;&quot;&quot;Check if exposed types have a ``_repr_latex_()`` method.</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_core</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
-		<span class="kn">from</span> <span class="nn">._common</span> <span class="k">import</span> <span class="n">_register_repr_latex</span>
-		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flag</span><span class="p">,</span><span class="nb">bool</span><span class="p">):</span>
-			<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;the &#39;flag&#39; parameter must be a bool&quot;</span><span class="p">)</span>
-		<span class="k">with</span> <span class="n">settings</span><span class="o">.</span><span class="n">__lock</span><span class="p">:</span>
-			<span class="c1"># NOTE: reentrant lock in action.</span>
-			<span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">():</span>
-				<span class="k">return</span>
-			<span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
-				<span class="n">_register_repr_latex</span><span class="p">()</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="k">for</span> <span class="n">s_type</span> <span class="ow">in</span> <span class="n">getl</span><span class="p">():</span>
-					<span class="k">assert</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span><span class="s1">&#39;_repr_latex_&#39;</span><span class="p">))</span>
-					<span class="nb">delattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span><span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_min_work_per_thread">[docs]</a>	<span class="k">def</span> <span class="nf">get_min_work_per_thread</span><span class="p">():</span>
-		<span class="sd">&quot;&quot;&quot;Get the minimum work per thread.</span>
+<span class="sd">        The ``_repr_latex_()`` method, if present, is used by the IPython notebook to display the TeX</span>
+<span class="sd">        representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable</span>
+<span class="sd">        to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX</span>
+<span class="sd">        representation is disabled, IPython will fall back to the PNG-based representation of the object, which</span>
+<span class="sd">        leverages - if available - a local installation of TeX for increased performance via a static rendering</span>
+<span class="sd">        of the TeX representation of the object to a PNG bitmap.</span>
 
-<span class="sd">		&gt;&gt;&gt; settings.get_min_work_per_thread() # doctest: +SKIP</span>
-<span class="sd">		500000 # This will be an implementation-defined value.</span>
+<span class="sd">        By default, the TeX representation is enabled.</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_min_work_per_thread</span><span class="p">()</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_min_work_per_thread">[docs]</a>	<span class="k">def</span> <span class="nf">set_min_work_per_thread</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot;Set the minimum work per thread.</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_latex_repr()</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+<span class="sd">        &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">        &gt;&gt;&gt; x = pt(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; (x**2/2)._repr_latex_()</span>
+<span class="sd">        &#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
 
-<span class="sd">		:param n: desired work per thread</span>
-<span class="sd">		:type n: ``int``</span>
-<span class="sd">		:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
+        <span class="n">s_type</span> <span class="o">=</span> <span class="n">getl</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">with</span> <span class="n">settings</span><span class="o">.</span><span class="n">__lock</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span> <span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
 
-<span class="sd">		&gt;&gt;&gt; settings.set_min_work_per_thread(2)</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_min_work_per_thread() # doctest: +SKIP</span>
-<span class="sd">		2</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_min_work_per_thread(0) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">		Traceback (most recent call last):</span>
-<span class="sd">		  ...</span>
-<span class="sd">		ValueError: invalid value</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_min_work_per_thread(-1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">		Traceback (most recent call last):</span>
-<span class="sd">		  ...</span>
-<span class="sd">		OverflowError: invalid value</span>
-<span class="sd">		&gt;&gt;&gt; settings.reset_min_work_per_thread()</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.set_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_latex_repr">[docs]</a>    <span class="k">def</span> <span class="nf">set_latex_repr</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;Set the availability of the ``_repr_latex_()`` method for the exposed types.</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_min_work_per_thread</span><span class="p">,</span><span class="n">n</span><span class="p">)</span></div>
-	<span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.reset_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_min_work_per_thread">[docs]</a>	<span class="k">def</span> <span class="nf">reset_min_work_per_thread</span><span class="p">():</span>
-		<span class="sd">&quot;&quot;&quot;Reset the minimum work per thread.</span>
+<span class="sd">        If *flag* is ``True``, the ``_repr_latex_()`` method of exposed types will be enabled. Otherwise,</span>
+<span class="sd">        the method will be disabled. See the documentation for :py:meth:`pyranha.settings.get_latex_repr` for a</span>
+<span class="sd">        description of how the method is used.</span>
 
-<span class="sd">		&gt;&gt;&gt; n = settings.get_min_work_per_thread()</span>
-<span class="sd">		&gt;&gt;&gt; settings.set_min_work_per_thread(10)</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_min_work_per_thread() # doctest: +SKIP</span>
-<span class="sd">		10</span>
-<span class="sd">		&gt;&gt;&gt; settings.reset_min_work_per_thread()</span>
-<span class="sd">		&gt;&gt;&gt; settings.get_min_work_per_thread() == n</span>
-<span class="sd">		True</span>
+<span class="sd">        :param flag: availability flag for the ``_repr_latex_()`` method</span>
+<span class="sd">        :type flag: ``bool``</span>
+<span class="sd">        :raises: :exc:`TypeError` if *flag* is not a ``bool``</span>
 
-<span class="sd">		&quot;&quot;&quot;</span>
-		<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-		<span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_min_work_per_thread</span><span class="p">()</span></div></div>
+<span class="sd">        &gt;&gt;&gt; settings.set_latex_repr(False)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_latex_repr()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+<span class="sd">        &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">        &gt;&gt;&gt; x = pt(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; (x**2/2)._repr_latex_() # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        AttributeError: object has no attribute &#39;_latex_repr_&#39;</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_latex_repr(True)</span>
+<span class="sd">        &gt;&gt;&gt; (x**2/2)._repr_latex_()</span>
+<span class="sd">        &#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_latex_repr(&quot;hello&quot;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        TypeError: the &#39;flag&#39; parameter must be a bool</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_core</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_get_exposed_types_list</span> <span class="k">as</span> <span class="n">getl</span>
+        <span class="kn">from</span> <span class="nn">._common</span> <span class="k">import</span> <span class="n">_register_repr_latex</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flag</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;the &#39;flag&#39; parameter must be a bool&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">settings</span><span class="o">.</span><span class="n">__lock</span><span class="p">:</span>
+            <span class="c1"># NOTE: reentrant lock in action.</span>
+            <span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">():</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+                <span class="n">_register_repr_latex</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">s_type</span> <span class="ow">in</span> <span class="n">getl</span><span class="p">():</span>
+                    <span class="k">assert</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span> <span class="s1">&#39;_repr_latex_&#39;</span><span class="p">))</span>
+                    <span class="nb">delattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span> <span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.get_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_min_work_per_thread">[docs]</a>    <span class="k">def</span> <span class="nf">get_min_work_per_thread</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Get the minimum work per thread.</span>
+
+<span class="sd">        &gt;&gt;&gt; settings.get_min_work_per_thread() # doctest: +SKIP</span>
+<span class="sd">        500000 # This will be an implementation-defined value.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_min_work_per_thread</span><span class="p">()</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.set_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_min_work_per_thread">[docs]</a>    <span class="k">def</span> <span class="nf">set_min_work_per_thread</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the minimum work per thread.</span>
+
+<span class="sd">        :param n: desired work per thread</span>
+<span class="sd">        :type n: ``int``</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
+
+<span class="sd">        &gt;&gt;&gt; settings.set_min_work_per_thread(2)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_min_work_per_thread() # doctest: +SKIP</span>
+<span class="sd">        2</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_min_work_per_thread(0) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        ValueError: invalid value</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_min_work_per_thread(-1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        OverflowError: invalid value</span>
+<span class="sd">        &gt;&gt;&gt; settings.reset_min_work_per_thread()</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_min_work_per_thread</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.reset_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_min_work_per_thread">[docs]</a>    <span class="k">def</span> <span class="nf">reset_min_work_per_thread</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Reset the minimum work per thread.</span>
+
+<span class="sd">        &gt;&gt;&gt; n = settings.get_min_work_per_thread()</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_min_work_per_thread(10)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_min_work_per_thread() # doctest: +SKIP</span>
+<span class="sd">        10</span>
+<span class="sd">        &gt;&gt;&gt; settings.reset_min_work_per_thread()</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_min_work_per_thread() == n</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_min_work_per_thread</span><span class="p">()</span></div></div>
 
 <span class="kn">import</span> <span class="nn">atexit</span> <span class="k">as</span> <span class="nn">_atexit</span>
-<span class="n">_atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="k">lambda</span> <span class="p">:</span> <span class="n">_cleanup</span><span class="p">())</span>
+<span class="n">_atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">_cleanup</span><span class="p">())</span>
 </pre></div>
 
     </div>

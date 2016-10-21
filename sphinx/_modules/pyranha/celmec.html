@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyranha.celmec &#8212; Piranha 0.1 documentation</title>
+    <title>pyranha.celmec &#8212; Piranha 0.6 documentation</title>
     
     <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.1',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="Piranha 0.1 documentation" href="../../index.html" />
+    <link rel="top" title="Piranha 0.6 documentation" href="../../index.html" />
     <link rel="up" title="pyranha" href="../pyranha.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -52,7 +52,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           Piranha</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.6</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -150,77 +150,78 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span> <span class="k">as</span> <span class="n">_ai</span>
 
+
 <div class="viewcode-block" id="orbitalR"><a class="viewcode-back" href="../../pyranha_celmec.html#pyranha.celmec.orbitalR">[docs]</a><span class="k">def</span> <span class="nf">orbitalR</span><span class="p">(</span><span class="n">angles</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Orbital rotation matrix.</span>
-<span class="sd">	</span>
-<span class="sd">	The returned value is the composite rotation matrix from the orbital reference system to the reference system</span>
-<span class="sd">	with respect to which the parameters of the orbit are defined. The rotation angles are the keplerian orbital elements</span>
-<span class="sd">	:math:`\omega`, :math:`i` and :math:`\Omega`, and they must be passed as elements of a list-like container.</span>
-<span class="sd">	</span>
-<span class="sd">	If the input list contains 3 elements, they will be interpreted as the angles :math:`\omega`, :math:`i` and</span>
-<span class="sd">	:math:`\Omega`. If the input list contains 6 elements, they will be interpreted as :math:`\cos\omega`, :math:`\sin\omega`,</span>
-<span class="sd">	:math:`\cos i`, :math:`\sin i`, :math:`\cos\Omega` and 	:math:`\sin\Omega`. The functions from the :py:mod:`.math` module</span>
-<span class="sd">	are used to compute sines and cosines as needed.</span>
-<span class="sd">	</span>
-<span class="sd">	The returned rotation matrix is:</span>
-<span class="sd">	</span>
-<span class="sd">	.. math:: \\begin{bmatrix}</span>
-<span class="sd">	   \cos\Omega\cos\omega-\sin\Omega\cos i \sin\omega &amp;</span>
-<span class="sd">	   -\cos\Omega\sin\omega-\sin\Omega\cos i \cos\omega &amp;</span>
-<span class="sd">	   \sin\Omega\sin i\\\\</span>
-<span class="sd">	   \sin\Omega\cos\omega+\cos\Omega\cos i \sin\omega &amp;</span>
-<span class="sd">	   -\sin\Omega\sin\omega+\cos\Omega\cos i \cos\omega &amp;</span>
-<span class="sd">	   -\cos\Omega\sin i\\\\</span>
-<span class="sd">	   \sin i \sin\omega &amp;</span>
-<span class="sd">	   \sin i \cos\omega &amp;</span>
-<span class="sd">	   \cos i</span>
-<span class="sd">	   \end{bmatrix}</span>
-<span class="sd">	</span>
-<span class="sd">	Note that this function requires the availability of the NumPy library: the rotation matrix will be returned as a</span>
-<span class="sd">	NumPy array.</span>
-<span class="sd">	</span>
-<span class="sd">	:param angles: list of rotation angles</span>
-<span class="sd">	:returns: orbital rotation matrix</span>
-<span class="sd">	:raises: :exc:`ValueError` if the length of the input list is different from 3 or 6</span>
-<span class="sd">	:raises: any exception raised by the invoked mathematical functions</span>
-<span class="sd">	</span>
-<span class="sd">	&gt;&gt;&gt; orbitalR([.1,.2,.3]) # doctest: +SKIP</span>
-<span class="sd">	array([[ 0.92164909, -0.38355704,  0.0587108 ],</span>
-<span class="sd">	       [ 0.3875172 ,  0.902113  , -0.18979606],</span>
-<span class="sd">	       [ 0.01983384,  0.19767681,  0.98006658]])</span>
-<span class="sd">	&gt;&gt;&gt; orbitalR([0,1,0,1,0,1]) # doctest: +SKIP</span>
-<span class="sd">	array([[ 0,  0,  1],</span>
-<span class="sd">	       [ 0, -1,  0],</span>
-<span class="sd">	       [ 1,  0,  0]])</span>
-<span class="sd">	&gt;&gt;&gt; orbitalR([.1,.2,.3,.4]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">	Traceback (most recent call last):</span>
-<span class="sd">	   ...</span>
-<span class="sd">	ValueError: input list must contain either 3 or 6 elements</span>
-<span class="sd">	</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">array</span>
-	<span class="kn">from</span> <span class="nn">.math</span> <span class="k">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
-	<span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">l</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">l</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
-		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;input list must contain either 3 or 6 elements&#39;</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-		<span class="n">omega</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">Omega</span> <span class="o">=</span> <span class="n">angles</span>
-		<span class="n">cos_omega</span><span class="p">,</span> <span class="n">sin_omega</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">omega</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
-		<span class="n">cos_i</span><span class="p">,</span> <span class="n">sin_i</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-		<span class="n">cos_Omega</span><span class="p">,</span> <span class="n">sin_Omega</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">Omega</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">Omega</span><span class="p">)</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="n">cos_omega</span><span class="p">,</span> <span class="n">sin_omega</span><span class="p">,</span> <span class="n">cos_i</span><span class="p">,</span> <span class="n">sin_i</span><span class="p">,</span> <span class="n">cos_Omega</span><span class="p">,</span> <span class="n">sin_Omega</span> <span class="o">=</span> <span class="n">angles</span>
-	<span class="k">return</span> <span class="n">array</span><span class="p">([</span> \
-		<span class="p">[</span><span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">cos_omega</span> <span class="o">-</span> <span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">cos_i</span> <span class="o">*</span> <span class="n">sin_omega</span><span class="p">,</span> \
-		<span class="o">-</span><span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">sin_omega</span> <span class="o">-</span> <span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">cos_i</span> <span class="o">*</span> <span class="n">cos_omega</span><span class="p">,</span> \
-		<span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">sin_i</span><span class="p">],</span> \
-		<span class="p">[</span><span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">cos_omega</span> <span class="o">+</span> <span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">cos_i</span> <span class="o">*</span> <span class="n">sin_omega</span><span class="p">,</span> \
-		<span class="o">-</span><span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">sin_omega</span> <span class="o">+</span> <span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">cos_i</span> <span class="o">*</span> <span class="n">cos_omega</span><span class="p">,</span> \
-		<span class="o">-</span><span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">sin_i</span><span class="p">],</span> \
-		<span class="p">[</span><span class="n">sin_i</span> <span class="o">*</span> <span class="n">sin_omega</span><span class="p">,</span> \
-		<span class="n">sin_i</span> <span class="o">*</span> <span class="n">cos_omega</span><span class="p">,</span> \
-		<span class="n">cos_i</span><span class="p">]</span> \
-	<span class="p">])</span></div>
+    <span class="sd">&quot;&quot;&quot;Orbital rotation matrix.</span>
+
+<span class="sd">    The returned value is the composite rotation matrix from the orbital reference system to the reference system</span>
+<span class="sd">    with respect to which the parameters of the orbit are defined. The rotation angles are the keplerian orbital elements</span>
+<span class="sd">    :math:`\omega`, :math:`i` and :math:`\Omega`, and they must be passed as elements of a list-like container.</span>
+
+<span class="sd">    If the input list contains 3 elements, they will be interpreted as the angles :math:`\omega`, :math:`i` and</span>
+<span class="sd">    :math:`\Omega`. If the input list contains 6 elements, they will be interpreted as :math:`\cos\omega`, :math:`\sin\omega`,</span>
+<span class="sd">    :math:`\cos i`, :math:`\sin i`, :math:`\cos\Omega` and 	:math:`\sin\Omega`. The functions from the :py:mod:`.math` module</span>
+<span class="sd">    are used to compute sines and cosines as needed.</span>
+
+<span class="sd">    The returned rotation matrix is:</span>
+
+<span class="sd">    .. math:: \\begin{bmatrix}</span>
+<span class="sd">       \cos\Omega\cos\omega-\sin\Omega\cos i \sin\omega &amp;</span>
+<span class="sd">       -\cos\Omega\sin\omega-\sin\Omega\cos i \cos\omega &amp;</span>
+<span class="sd">       \sin\Omega\sin i\\\\</span>
+<span class="sd">       \sin\Omega\cos\omega+\cos\Omega\cos i \sin\omega &amp;</span>
+<span class="sd">       -\sin\Omega\sin\omega+\cos\Omega\cos i \cos\omega &amp;</span>
+<span class="sd">       -\cos\Omega\sin i\\\\</span>
+<span class="sd">       \sin i \sin\omega &amp;</span>
+<span class="sd">       \sin i \cos\omega &amp;</span>
+<span class="sd">       \cos i</span>
+<span class="sd">       \end{bmatrix}</span>
+
+<span class="sd">    Note that this function requires the availability of the NumPy library: the rotation matrix will be returned as a</span>
+<span class="sd">    NumPy array.</span>
+
+<span class="sd">    :param angles: list of rotation angles</span>
+<span class="sd">    :returns: orbital rotation matrix</span>
+<span class="sd">    :raises: :exc:`ValueError` if the length of the input list is different from 3 or 6</span>
+<span class="sd">    :raises: any exception raised by the invoked mathematical functions</span>
+
+<span class="sd">    &gt;&gt;&gt; orbitalR([.1,.2,.3]) # doctest: +SKIP</span>
+<span class="sd">    array([[ 0.92164909, -0.38355704,  0.0587108 ],</span>
+<span class="sd">           [ 0.3875172 ,  0.902113  , -0.18979606],</span>
+<span class="sd">           [ 0.01983384,  0.19767681,  0.98006658]])</span>
+<span class="sd">    &gt;&gt;&gt; orbitalR([0,1,0,1,0,1]) # doctest: +SKIP</span>
+<span class="sd">    array([[ 0,  0,  1],</span>
+<span class="sd">           [ 0, -1,  0],</span>
+<span class="sd">           [ 1,  0,  0]])</span>
+<span class="sd">    &gt;&gt;&gt; orbitalR([.1,.2,.3,.4]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">       ...</span>
+<span class="sd">    ValueError: input list must contain either 3 or 6 elements</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">array</span>
+    <span class="kn">from</span> <span class="nn">.math</span> <span class="k">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">l</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">l</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;input list must contain either 3 or 6 elements&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">omega</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">Omega</span> <span class="o">=</span> <span class="n">angles</span>
+        <span class="n">cos_omega</span><span class="p">,</span> <span class="n">sin_omega</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">omega</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+        <span class="n">cos_i</span><span class="p">,</span> <span class="n">sin_i</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">cos_Omega</span><span class="p">,</span> <span class="n">sin_Omega</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">Omega</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">Omega</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cos_omega</span><span class="p">,</span> <span class="n">sin_omega</span><span class="p">,</span> <span class="n">cos_i</span><span class="p">,</span> <span class="n">sin_i</span><span class="p">,</span> <span class="n">cos_Omega</span><span class="p">,</span> <span class="n">sin_Omega</span> <span class="o">=</span> <span class="n">angles</span>
+    <span class="k">return</span> <span class="n">array</span><span class="p">([</span>
+        <span class="p">[</span><span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">cos_omega</span> <span class="o">-</span> <span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">cos_i</span> <span class="o">*</span> <span class="n">sin_omega</span><span class="p">,</span>
+         <span class="o">-</span><span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">sin_omega</span> <span class="o">-</span> <span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">cos_i</span> <span class="o">*</span> <span class="n">cos_omega</span><span class="p">,</span>
+         <span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">sin_i</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">cos_omega</span> <span class="o">+</span> <span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">cos_i</span> <span class="o">*</span> <span class="n">sin_omega</span><span class="p">,</span>
+         <span class="o">-</span><span class="n">sin_Omega</span> <span class="o">*</span> <span class="n">sin_omega</span> <span class="o">+</span> <span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">cos_i</span> <span class="o">*</span> <span class="n">cos_omega</span><span class="p">,</span>
+         <span class="o">-</span><span class="n">cos_Omega</span> <span class="o">*</span> <span class="n">sin_i</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">sin_i</span> <span class="o">*</span> <span class="n">sin_omega</span><span class="p">,</span>
+         <span class="n">sin_i</span> <span class="o">*</span> <span class="n">cos_omega</span><span class="p">,</span>
+         <span class="n">cos_i</span><span class="p">]</span>
+    <span class="p">])</span></div>
 </pre></div>
 
     </div>
