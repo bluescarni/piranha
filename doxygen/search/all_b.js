@@ -1,10 +1,13 @@
 var searchData=
 [
   ['k_5fmonomial',['k_monomial',['../namespacepiranha.html#a8a41a40472e52a050f1c6a80ee9cf340',1,'piranha']]],
+  ['key',['key',['../structpiranha_1_1boost__s11n__key__wrapper.html#ae1ca44282cb026e520d25267f83bf23c',1,'piranha::boost_s11n_key_wrapper::key()'],['../structpiranha_1_1boost__s11n__key__wrapper.html#a632a8d87f474710998b2ba958853917c',1,'piranha::boost_s11n_key_wrapper::key() const']]],
   ['key_5fequal',['key_equal',['../classpiranha_1_1hash__set.html#a0520d097897953075e6551dccb5bc40d',1,'piranha::hash_set']]],
   ['key_5fhas_5fdegree',['key_has_degree',['../classpiranha_1_1key__has__degree.html',1,'piranha']]],
   ['key_5fhas_5fipow_5fsubs',['key_has_ipow_subs',['../classpiranha_1_1key__has__ipow__subs.html',1,'piranha']]],
   ['key_5fhas_5fldegree',['key_has_ldegree',['../classpiranha_1_1key__has__ldegree.html',1,'piranha']]],
+  ['key_5fhas_5fmsgpack_5fconvert',['key_has_msgpack_convert',['../classpiranha_1_1key__has__msgpack__convert.html',1,'piranha']]],
+  ['key_5fhas_5fmsgpack_5fpack',['key_has_msgpack_pack',['../classpiranha_1_1key__has__msgpack__pack.html',1,'piranha']]],
   ['key_5fhas_5fsubs',['key_has_subs',['../classpiranha_1_1key__has__subs.html',1,'piranha']]],
   ['key_5fhas_5ft_5fdegree',['key_has_t_degree',['../classpiranha_1_1key__has__t__degree.html',1,'piranha']]],
   ['key_5fhas_5ft_5fldegree',['key_has_t_ldegree',['../classpiranha_1_1key__has__t__ldegree.html',1,'piranha']]],

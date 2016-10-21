@@ -3,6 +3,8 @@ var searchData=
   ['key_5fhas_5fdegree',['key_has_degree',['../classpiranha_1_1key__has__degree.html',1,'piranha']]],
   ['key_5fhas_5fipow_5fsubs',['key_has_ipow_subs',['../classpiranha_1_1key__has__ipow__subs.html',1,'piranha']]],
   ['key_5fhas_5fldegree',['key_has_ldegree',['../classpiranha_1_1key__has__ldegree.html',1,'piranha']]],
+  ['key_5fhas_5fmsgpack_5fconvert',['key_has_msgpack_convert',['../classpiranha_1_1key__has__msgpack__convert.html',1,'piranha']]],
+  ['key_5fhas_5fmsgpack_5fpack',['key_has_msgpack_pack',['../classpiranha_1_1key__has__msgpack__pack.html',1,'piranha']]],
   ['key_5fhas_5fsubs',['key_has_subs',['../classpiranha_1_1key__has__subs.html',1,'piranha']]],
   ['key_5fhas_5ft_5fdegree',['key_has_t_degree',['../classpiranha_1_1key__has__t__degree.html',1,'piranha']]],
   ['key_5fhas_5ft_5fldegree',['key_has_t_ldegree',['../classpiranha_1_1key__has__t__ldegree.html',1,'piranha']]],

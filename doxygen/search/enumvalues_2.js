@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['disabled',['disabled',['../namespacepiranha.html#af7d5dbb3845a8a293a35a60e083f8c0ca075ae3d2fc31640504f814f60e5ef713',1,'piranha']]]
+  ['gzip',['gzip',['../namespacepiranha.html#a6acfbeb0c26b634e270f69f0ab13126ea749cadba7b2ed8d4a2aaa91a9cb1896c',1,'piranha']]]
 ];

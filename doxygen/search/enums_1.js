@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['polynomial_5fgcd_5falgorithm',['polynomial_gcd_algorithm',['../namespacepiranha.html#a10eca18731adffdf7043d601309e6866',1,'piranha']]]
+  ['data_5fformat',['data_format',['../namespacepiranha.html#a28a1bd79e5d32d0ed1b1f33fc9ea423a',1,'piranha']]]
 ];
