@@ -38,8 +38,27 @@ see https://www.gnu.org/licenses/. */
 @PIRANHA_SYSTEM_LOGICAL_PROCESSOR_INFORMATION@
 @PIRANHA_HAVE_UINT128_T@
 @PIRANHA_THREAD_LOCAL@
+@PIRANHA_ENABLE_MSGPACK@
+@PIRANHA_ENABLE_ZLIB@
+@PIRANHA_ENABLE_BZIP2@
 // clang-format on
 // End of defines instantiated by CMake.
+
+// NOTE: testing indicates that the thread_local keyword on MinGW is not currently
+// reliable (i.e., parallel initialization of function-level thread-local statics
+// sometimes leads to heap corruption). Disable it for now.
+#if defined(__MINGW32__) && defined(PIRANHA_HAVE_THREAD_LOCAL)
+#undef PIRANHA_HAVE_THREAD_LOCAL
+#endif
+
+// A handy macro to qualify a variable as static thread-local,
+// but only if the keyword is available (otherwise the variable will not
+// be TLS).
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+#define PIRANHA_MAYBE_TLS static thread_local
+#else
+#define PIRANHA_MAYBE_TLS
+#endif
 
 #include <cassert>
 
@@ -54,7 +73,7 @@ see https://www.gnu.org/licenses/. */
 #elif defined(__GNUC__)
 #include "detail/config_gcc.hpp"
 #else
-// NOTE: addidtional compiler configurations go here or in separate file as above.
+// NOTE: additional compiler configurations go here or in separate file as above.
 #define likely(x) (x)
 #define unlikely(x) (x)
 #endif

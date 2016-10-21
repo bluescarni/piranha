@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
+#include "../src/safe_cast.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -385,6 +386,13 @@ struct mapping_tester {
         = 0>
     void overflow_check(const T &x, const T &y) const
     {
+        // NOTE: mp_integer's pow accepts exponents in the unsigned long range,
+        // so we need to skip this test if the exponent is too large.
+        try {
+            (void)safe_cast<unsigned long>(std::numeric_limits<k_monomial::value_type>::max());
+        } catch (...) {
+            return;
+        }
         BOOST_CHECK_THROW(poly_to_univariate(x.pow(std::numeric_limits<k_monomial::value_type>::max()), x),
                           std::overflow_error);
         BOOST_CHECK_THROW(poly_to_univariate(x.pow(std::numeric_limits<k_monomial::value_type>::max() / 2)

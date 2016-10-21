@@ -58,7 +58,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/safe_cast.hpp"
-#include "../src/serialization.hpp"
 #include "../src/series_multiplier.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
@@ -76,7 +75,6 @@ public:
     template <typename Cf2>
     using rebind = g_series_type<Cf2, Expo>;
     typedef series<Cf, monomial<Expo>, g_series_type<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type() = default;
     g_series_type(const g_series_type &) = default;
     g_series_type(g_series_type &&) = default;
@@ -110,7 +108,6 @@ public:
     template <typename Cf2>
     using rebind = g_series_type2<Cf2, Expo>;
     typedef series<Cf, monomial<Expo>, g_series_type2<Cf, Expo>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     g_series_type2() = default;
     g_series_type2(const g_series_type2 &) = default;
     g_series_type2(g_series_type2 &&) = default;

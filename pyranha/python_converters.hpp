@@ -71,8 +71,7 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
     // for long integers).
     ::PyObject *str_obj = ::PyObject_Str(obj_ptr);
     if (!str_obj) {
-        ::PyErr_SetString(PyExc_RuntimeError,
-                          (std::string("unable to extract string representation of ") + name).c_str());
+        ::PyErr_SetString(PyExc_RuntimeError, ("unable to extract string representation of " + name).c_str());
         bp::throw_error_already_set();
     }
     bp::handle<> str_rep(str_obj);
@@ -81,15 +80,13 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 #else
     ::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(), "ascii", "strict");
     if (!unicode_str_obj) {
-        ::PyErr_SetString(PyExc_RuntimeError,
-                          (std::string("unable to extract string representation of ") + name).c_str());
+        ::PyErr_SetString(PyExc_RuntimeError, ("unable to extract string representation of " + name).c_str());
         bp::throw_error_already_set();
     }
     bp::handle<> unicode_str(unicode_str_obj);
     const char *s = ::PyBytes_AsString(unicode_str.get());
     if (!s) {
-        ::PyErr_SetString(PyExc_RuntimeError,
-                          (std::string("unable to extract string representation of ") + name).c_str());
+        ::PyErr_SetString(PyExc_RuntimeError, ("unable to extract string representation of " + name).c_str());
         bp::throw_error_already_set();
     }
 #endif

@@ -87,6 +87,7 @@ install:
 script:
     - mkdir build
     - cd build
+    - source ../tools/install_msgpack.sh
     - source ../tools/install_travis.sh
 notifications:
   email: false

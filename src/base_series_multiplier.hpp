@@ -908,8 +908,8 @@ protected:
         try {
             for (unsigned i = 0u; i < n_threads; ++i) {
                 const auto start = static_cast<bucket_size_type>((b_count / n_threads) * i),
-                           end = static_cast<bucket_size_type>((i == n_threads - 1u) ? b_count : (b_count / n_threads)
-                                                                                                     * (i + 1u));
+                           end = static_cast<bucket_size_type>(
+                               (i == n_threads - 1u) ? b_count : (b_count / n_threads) * (i + 1u));
                 f_list.push_back(thread_pool::enqueue(i, eraser, start, end));
             }
             // First let's wait for everything to finish.

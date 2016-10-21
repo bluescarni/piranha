@@ -43,6 +43,8 @@ see https://www.gnu.org/licenses/. */
 #include "detail/small_vector_fwd.hpp"
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
+#include "s11n.hpp"
+#include "safe_cast.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -58,10 +60,9 @@ using static_vector_size_types = std::tuple<unsigned char, unsigned short, unsig
 template <std::size_t Size, std::size_t Index = 0u>
 struct static_vector_size_type {
     using candidate_type = typename std::tuple_element<Index, static_vector_size_types>::type;
-    using type =
-        typename std::conditional<(std::numeric_limits<candidate_type>::max() >= Size), candidate_type,
-                                  typename static_vector_size_type<Size,
-                                                                   static_cast<std::size_t>(Index + 1u)>::type>::type;
+    using type = typename std::
+        conditional<(std::numeric_limits<candidate_type>::max() >= Size), candidate_type,
+                    typename static_vector_size_type<Size, static_cast<std::size_t>(Index + 1u)>::type>::type;
 };
 
 template <std::size_t Size>
@@ -143,8 +144,21 @@ private:
     //   to get the end() iterator we get one past the last element);
     // - note that placement new will work as expected (i.e., it will construct the object exactly at the address passed
     //   in as parameter).
-    typedef typename std::aligned_storage<sizeof(T) * MaxSize, alignof(T)>::type storage_type;
+    using storage_type = typename std::aligned_storage<sizeof(T) * MaxSize, alignof(T)>::type;
 #endif
+    // Serialization support.
+    friend class boost::serialization::access;
+    template <class Archive>
+    void save(Archive &ar, unsigned) const
+    {
+        boost_save_vector(ar, *this);
+    }
+    template <class Archive>
+    void load(Archive &ar, unsigned)
+    {
+        boost_load_vector(ar, *this);
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
     /// Maximum size.
     /**
@@ -416,6 +430,12 @@ public:
         ::new (static_cast<void *>(ptr() + m_size)) value_type(std::move(x));
         ++m_size;
     }
+
+private:
+    template <typename... Args>
+    using emplace_enabler = enable_if_t<std::is_constructible<value_type, Args &&...>::value, int>;
+
+public:
     /// Construct in-place at the end of the vector.
     /**
      * \note
@@ -428,8 +448,7 @@ public:
      * @throws std::bad_alloc if the insertion of the new element would lead to a size greater than \p MaxSize.
      * @throws unspecified any exception thrown by the constructor of \p T from the input parameters.
      */
-    template <typename... Args,
-              typename = typename std::enable_if<std::is_constructible<value_type, Args &&...>::value>::type>
+    template <typename... Args, emplace_enabler<Args...> = 0>
     void emplace_back(Args &&... params)
     {
         if (unlikely(m_size == MaxSize)) {
@@ -457,11 +476,9 @@ public:
     /// Resize.
     /**
      * After this operation, the number of elements stored in the container will be \p new_size. If \p new_size is
-     * greater than
-     * the size of the object before the operation, the new elements will be value-initialized and placed at the end of
-     * the container.
-     * If \p new_size is smaller than the size of the object before the operation, the first \p new_size
-     * object in the vector will be preserved.
+     * greater than the size of the object before the operation, the new elements will be value-initialized and placed
+     * at the end of the container. If \p new_size is smaller than the size of the object before the operation, the
+     * first \p new_size object in the vector will be preserved.
      *
      * @param[in] new_size new size for the vector.
      *
@@ -552,6 +569,12 @@ public:
         destroy_items();
         m_size = 0u;
     }
+
+private:
+    template <typename U>
+    using hash_enabler = enable_if_t<is_hashable<U>::value, int>;
+
+public:
     /// Hash value.
     /**
      * \note
@@ -569,13 +592,22 @@ public:
      *
      * @see http://www.boost.org/doc/libs/release/doc/html/hash/combine.html
      */
-    template <typename U = T, typename = typename std::enable_if<is_hashable<U>::value>::type>
+    template <typename U = T, hash_enabler<U> = 0>
     std::size_t hash() const
     {
         return detail::vector_hasher(*this);
     }
+
+private:
+    template <typename U>
+    using ostream_enabler = enable_if_t<is_ostreamable<U>::value, int>;
+
+public:
     /// Stream operator overload for piranha::static_vector.
     /**
+     * \note
+     * This function is enabled only if \p U satisfies piranha::is_ostreamable.
+     *
      * Will print to stream a human-readable representation of \p v.
      *
      * @param[in] os target stream.
@@ -585,6 +617,7 @@ public:
      *
      * @throws unspecified any exception thrown by printing to stream instances of the value type of \p v.
      */
+    template <typename U = T, ostream_enabler<U> = 0>
     friend std::ostream &operator<<(std::ostream &os, const static_vector &v)
     {
         os << '[';
@@ -641,6 +674,99 @@ private:
 
 template <typename T, std::size_t MaxSize>
 const typename static_vector<T, MaxSize>::size_type static_vector<T, MaxSize>::max_size;
+
+/// Specialisation of piranha::boost_save() for piranha::static_vector.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and the size type of the vector satisfy
+ * piranha::has_boost_save.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
+ */
+template <typename Archive, typename T, std::size_t S>
+struct boost_save_impl<Archive, static_vector<T, S>, boost_save_vector_enabler<Archive, static_vector<T, S>>>
+    : boost_save_via_boost_api<Archive, static_vector<T, S>> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::static_vector.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and the size type of the vector satisfy
+ * piranha::has_boost_load.
+ *
+ * The basic exception safety guarantee is provided.
+ *
+ * @throws unspecified any exception thrown by:
+ * - piranha::boost_load(),
+ * - piranha::static_vector::resize().
+ */
+template <typename Archive, typename T, std::size_t S>
+struct boost_load_impl<Archive, static_vector<T, S>, boost_load_vector_enabler<Archive, static_vector<T, S>>>
+    : boost_load_via_boost_api<Archive, static_vector<T, S>> {
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+/// Specialisation of piranha::msgpack_pack() for piranha::static_vector.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Stream satisfies piranha::is_msgpack_stream,
+ * - \p T satisfies piranha::has_msgpack_pack,
+ * - the size type of the vector can be safely converted to \p std::uint32_t.
+ */
+template <typename Stream, typename T, std::size_t S>
+struct msgpack_pack_impl<Stream, static_vector<T, S>, msgpack_pack_vector_enabler<Stream, static_vector<T, S>>> {
+    /// Call operator.
+    /**
+     * This method will serialize into \p p the input vector \p v using the format \p f.
+     *
+     * @param p the target <tt>msgpack::packer</tt>.
+     * @param v the vector to be serialized.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_pack().
+     */
+    void operator()(msgpack::packer<Stream> &p, const static_vector<T, S> &v, msgpack_format f) const
+    {
+        msgpack_pack_vector(p, v, f);
+    }
+};
+
+/// Specialisation of piranha::msgpack_convert() for piranha::static_vector.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p T satisfies piranha::has_msgpack_convert,
+ * - the size type of \p std::vector can be safely converted to the size type of piranha::static_vector.
+ */
+template <typename T, std::size_t S>
+struct msgpack_convert_impl<static_vector<T, S>, msgpack_convert_array_enabler<static_vector<T, S>>> {
+    /// Call operator.
+    /**
+     * This method will convert \p o into \p v using the format \p f. This method provides the basic exception safety
+     * guarantee.
+     *
+     * @param v the vector into which the content of \p o will deserialized.
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - memory errors in standard containers,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_convert().
+     */
+    void operator()(static_vector<T, S> &v, const msgpack::object &o, msgpack_format f) const
+    {
+        msgpack_convert_array(o, v, f);
+    }
+};
+
+#endif
 }
 
 #endif

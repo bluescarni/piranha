@@ -71,7 +71,6 @@ see https://www.gnu.org/licenses/. */
 #include "pow.hpp"
 #include "power_series.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"
@@ -611,16 +610,15 @@ template <typename T>
 using expo_t = typename T::term_type::key_type::value_type;
 
 template <typename T, typename U>
-using enabler =
-    typename std::enable_if<std::is_base_of<polynomial_tag, T>::value && std::is_same<T, U>::value
-                                && is_multipliable_in_place<cf_t<T>>::value
-                                && std::is_same<decltype(std::declval<const cf_t<T> &>()
-                                                         * std::declval<const cf_t<T> &>()),
-                                                cf_t<T>>::value
-                                && has_exact_division<cf_t<T>>::value && has_exact_ring_operations<cf_t<T>>::value
-                                && is_subtractable_in_place<T>::value
-                                && (std::is_integral<expo_t<T>>::value || is_mp_integer<expo_t<T>>::value),
-                            int>::type;
+using enabler = typename std::
+    enable_if<std::is_base_of<polynomial_tag, T>::value && std::is_same<T, U>::value
+                  && is_multipliable_in_place<cf_t<T>>::value
+                  && std::is_same<decltype(std::declval<const cf_t<T> &>() * std::declval<const cf_t<T> &>()),
+                                  cf_t<T>>::value
+                  && has_exact_division<cf_t<T>>::value && has_exact_ring_operations<cf_t<T>>::value
+                  && is_subtractable_in_place<T>::value
+                  && (std::is_integral<expo_t<T>>::value || is_mp_integer<expo_t<T>>::value),
+              int>::type;
 }
 }
 
@@ -665,10 +663,6 @@ enum class polynomial_gcd_algorithm {
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of the base series type it derives from.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the underlying coefficient and key types do.
  */
 template <typename Cf, typename Key>
 class polynomial
@@ -883,13 +877,11 @@ class polynomial
     // argument T
     // and that exponentiation of key type is legal.
     template <typename T, typename Series>
-    using pow_ret_type =
-        typename std::enable_if<detail::true_tt<decltype(
-                                    std::declval<typename Series::term_type::key_type const &>().pow(
-                                        std::declval<const T &>(), std::declval<const symbol_set &>()))>::value,
-                                decltype(std::declval<series<Cf, Key, polynomial<Cf, Key>> const &>().pow(
-                                    std::declval<const T &>()))>::type;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+    using pow_ret_type = typename std::
+        enable_if<detail::true_tt<decltype(std::declval<typename Series::term_type::key_type const &>().pow(
+                      std::declval<const T &>(), std::declval<const symbol_set &>()))>::value,
+                  decltype(std::declval<series<Cf, Key, polynomial<Cf, Key>> const &>().pow(
+                      std::declval<const T &>()))>::type;
     // Invert utils.
     template <typename Series>
     using inverse_type = decltype(std::declval<const Series &>().pow(-1));
@@ -1176,11 +1168,10 @@ class polynomial
                                 int>::type;
     // Prem enabler.
     template <typename T>
-    using uprem_enabler =
-        typename std::enable_if<detail::true_tt<poly_div_enabler<T>>::value
-                                    && std::is_same<decltype(math::pow(std::declval<const cf_t<T> &>(), 0u)),
-                                                    cf_t<T>>::value,
-                                int>::type;
+    using uprem_enabler = typename std::
+        enable_if<detail::true_tt<poly_div_enabler<T>>::value
+                      && std::is_same<decltype(math::pow(std::declval<const cf_t<T> &>(), 0u)), cf_t<T>>::value,
+                  int>::type;
     // Enabler for GCD.
     template <typename T>
     using gcd_enabler = typename std::
@@ -2294,9 +2285,9 @@ using poly_ero_enabler =
 
 // Enabler for GCD.
 template <typename T>
-using poly_gcd_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag, T>::value
-                                                 && true_tt<decltype(T::gcd(std::declval<const T &>(),
-                                                                            std::declval<const T &>()))>::value>::type;
+using poly_gcd_enabler = typename std::
+    enable_if<std::is_base_of<detail::polynomial_tag, T>::value
+              && true_tt<decltype(T::gcd(std::declval<const T &>(), std::declval<const T &>()))>::value>::type;
 }
 
 namespace math

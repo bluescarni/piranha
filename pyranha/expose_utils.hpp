@@ -68,7 +68,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/pow.hpp"
 #include "../src/power_series.hpp"
 #include "../src/real.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 #include "type_system.hpp"
@@ -88,8 +88,12 @@ struct generic_pickle_suite : bp::pickle_suite {
     static bp::tuple getstate(const Series &s)
     {
         std::stringstream ss;
-        boost::archive::text_oarchive oa(ss);
-        oa << s;
+        {
+            // NOTE: use text archive by default, as it's the safest. Maybe in the future
+            // we can make the pickle serialization backend selectable by the user.
+            boost::archive::text_oarchive oa(ss);
+            oa << s;
+        }
         return bp::make_tuple(ss.str());
     }
     static void setstate(Series &s, bp::tuple state)
@@ -118,13 +122,11 @@ inline bp::class_<T> expose_class()
         // NOTE: it is ok here and elsewhere to use c_str(), as PyErr_SetString will convert the second argument to a
         // Python
         // string object.
-        ::PyErr_SetString(
-            PyExc_RuntimeError,
-            (std::string("the C++ type '") + piranha::detail::demangle(t_idx) + "' has already been exposed").c_str());
+        ::PyErr_SetString(PyExc_RuntimeError,
+                          ("the C++ type '" + piranha::detail::demangle(t_idx) + "' has already been exposed").c_str());
         bp::throw_error_already_set();
     }
-    bp::class_<T> class_inst((std::string("_exposed_type_") + std::to_string(exposed_types_counter)).c_str(),
-                             bp::init<>());
+    bp::class_<T> class_inst(("_exposed_type_" + std::to_string(exposed_types_counter)).c_str(), bp::init<>());
     ++exposed_types_counter;
     // NOTE: class_ inherits from bp::object, here the "call operator" of a class type will construct an instance
     // of that object. We then get the Python type out of that. It seems like another possible way of achieving
@@ -274,8 +276,7 @@ template <typename S, typename U>
 inline void generic_expose_lambdified()
 {
     using l_type = piranha::math::lambdified<S, U>;
-    bp::class_<l_type> class_inst((std::string("_lambdified_") + std::to_string(lambdified_counter)).c_str(),
-                                  bp::no_init);
+    bp::class_<l_type> class_inst(("_lambdified_" + std::to_string(lambdified_counter)).c_str(), bp::no_init);
     // Expose copy/deepcopy.
     class_inst.def("__copy__", generic_copy_wrapper<l_type>);
     class_inst.def("__deepcopy__", generic_deepcopy_wrapper<l_type>);
@@ -414,6 +415,20 @@ inline void generic_register_custom_derivative_wrapper(const std::string &name, 
         name, [f_copy](const S &s) -> partial_type { return bp::extract<partial_type>(f_copy(s)); });
 }
 
+// Generic s11n exposition.
+template <typename S>
+inline void expose_s11n(bp::class_<S> &)
+{
+    bp::def("_save_file", +[](const S &x, const std::string &filename, piranha::data_format f, piranha::compression c) {
+        piranha::save_file(x, filename, f, c);
+    });
+    bp::def("_save_file", +[](const S &x, const std::string &filename) { piranha::save_file(x, filename); });
+    bp::def("_load_file", +[](S &x, const std::string &filename, piranha::data_format f, piranha::compression c) {
+        piranha::load_file(x, filename, f, c);
+    });
+    bp::def("_load_file", +[](S &x, const std::string &filename) { piranha::load_file(x, filename); });
+}
+
 // Generic series exposer.
 template <template <typename...> class Series, typename Descriptor, std::size_t Begin = 0u,
           std::size_t End = std::tuple_size<typename Descriptor::params>::value, typename CustomHook = NullHook>
@@ -465,16 +480,14 @@ class series_exposer
     }
     // Expose arithmetics operations with another type, if supported.
     template <typename S, typename T>
-    using common_ops_ic
-        = std::integral_constant<bool,
-                                 piranha::is_addable_in_place<S, T>::value && piranha::is_addable<S, T>::value
-                                     && piranha::is_addable<T, S>::value
-                                     && piranha::is_subtractable_in_place<S, T>::value
-                                     && piranha::is_subtractable<S, T>::value && piranha::is_subtractable<T, S>::value
-                                     && piranha::is_multipliable_in_place<S, T>::value
-                                     && piranha::is_multipliable<S, T>::value && piranha::is_multipliable<T, S>::value
-                                     && piranha::is_equality_comparable<T, S>::value
-                                     && piranha::is_equality_comparable<S, T>::value>;
+    using common_ops_ic = std::
+        integral_constant<bool,
+                          piranha::is_addable_in_place<S, T>::value && piranha::is_addable<S, T>::value
+                              && piranha::is_addable<T, S>::value && piranha::is_subtractable_in_place<S, T>::value
+                              && piranha::is_subtractable<S, T>::value && piranha::is_subtractable<T, S>::value
+                              && piranha::is_multipliable_in_place<S, T>::value && piranha::is_multipliable<S, T>::value
+                              && piranha::is_multipliable<T, S>::value && piranha::is_equality_comparable<T, S>::value
+                              && piranha::is_equality_comparable<S, T>::value>;
     template <typename S, typename T, typename std::enable_if<common_ops_ic<S, T>::value, int>::type = 0>
     static void expose_common_ops(bp::class_<S> &series_class, const T &in)
     {
@@ -1030,31 +1043,6 @@ class series_exposer
         }
         return retval;
     }
-    // File load/save.
-    template <typename S>
-    static void expose_save_load(bp::class_<S> &series_class)
-    {
-        // Save.
-        typedef void (*s1)(const S &, const std::string &, piranha::file_format, piranha::file_compression);
-        typedef void (*s2)(const S &, const std::string &);
-        typedef void (*s3)(const S &, const std::string &, piranha::file_compression);
-        typedef void (*s4)(const S &, const std::string &, piranha::file_format);
-        series_class.def("save", static_cast<s1>(&S::save));
-        series_class.def("save", static_cast<s2>(&S::save));
-        series_class.def("save", static_cast<s3>(&S::save));
-        series_class.def("save", static_cast<s4>(&S::save));
-        series_class.staticmethod("save");
-        // Load.
-        typedef S (*l1)(const std::string &, piranha::file_format, piranha::file_compression);
-        typedef S (*l2)(const std::string &);
-        typedef S (*l3)(const std::string &, piranha::file_compression);
-        typedef S (*l4)(const std::string &, piranha::file_format);
-        series_class.def("load", static_cast<l1>(&S::load));
-        series_class.def("load", static_cast<l2>(&S::load));
-        series_class.def("load", static_cast<l3>(&S::load));
-        series_class.def("load", static_cast<l4>(&S::load));
-        series_class.staticmethod("load");
-    }
     // invert().
     template <typename S>
     static auto invert_wrapper(const S &s) -> decltype(piranha::math::invert(s))
@@ -1154,10 +1142,10 @@ class series_exposer
             series_class.add_property("symbol_set", symbol_set_wrapper<s_type>);
             // Pickle support.
             series_class.def_pickle(generic_pickle_suite<s_type>());
-            // Save and load.
-            expose_save_load(series_class);
             // Expose invert(), if present.
             expose_invert(series_class);
+            // Expose s11n.
+            expose_s11n(series_class);
             // Run the custom hook.
             CustomHook{}(series_class);
         }

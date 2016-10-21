@@ -7,16 +7,16 @@ set -x
 
 if [[ "${BUILD_TYPE}" == "Debug" ]]; then
     if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
-        cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make;
         ctest -E "thread|memory" -V;
     elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
-        cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make;
         ctest -E "thread" -V;
     fi
 elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
-        cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="--coverage" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="--coverage" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make;
         ctest -E "thread" -V;
         wget https://codecov.io/bash;
@@ -26,17 +26,19 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         find ./ -iname '*usr*include*.gcov' | xargs rm;
         bash bash -p ./tests -X gcov -g CMakeFiles || echo "Codecov did not collect coverage reports";
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
-    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make;
-    ctest -E "gastineau|perminov" -V;
+    ctest -E "gastineau" -V;
 elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
-    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DPYTHON_EXECUTABLE=/usr/bin/python2 ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DPYTHON_EXECUTABLE=/usr/bin/python2 ../;
     make install;
     # Install mpmath via pip.
     pip install --user mpmath;
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
     # Install sphinx and the rtd theme.
     pip install --user sphinx
+    # Workaround? This should be amongst the deps of sphinx but travis complains.
+    pip install --user utils
     pip install --user sphinx_bootstrap_theme
     export PATH=$PATH:/home/travis/.local/bin
     cd ../doc/sphinx;
@@ -94,16 +96,16 @@ elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
     cd ..;
     python3 -c "import pyranha.test; pyranha.test.run_test_suite()";
 elif [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
-    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes ../;
     make;
     ctest -V;
 elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     # Configure.
     cmake ../;
     # Install a recent version of Doxygen locally.
-    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.src.tar.gz";
-    tar xzf doxygen-1.8.11.src.tar.gz;
-    cd doxygen-1.8.11;
+    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.12.src.tar.gz";
+    tar xzf doxygen-1.8.12.src.tar.gz;
+    cd doxygen-1.8.12;
     mkdir build;
     cd build;
     cmake -DCMAKE_INSTALL_PREFIX=/home/travis/.local -Duse_libclang=YES ../;

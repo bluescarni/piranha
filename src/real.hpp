@@ -30,9 +30,11 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_REAL_HPP
 
 #include <algorithm>
+#include <array>
 #include <boost/lexical_cast.hpp>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -52,8 +54,8 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "pow.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -115,10 +117,6 @@ struct is_real_interoperable_type {
  * Move construction and move assignment will leave the moved-from object in a state that is destructible and
  * assignable.
  *
- * ## Serialization ##
- *
- * This class supports serialization.
- *
  * @see http://www.mpfr.org
  */
 // NOTES:
@@ -129,8 +127,7 @@ struct is_real_interoperable_type {
 //   on when mixing real with other types. E.g., pow(real,int) when evaluating polynomials. We need to make sure
 //   the conversions are as fast as possible.
 // - At the moment, this class is technically not sortable because moved-from reals cannot be compared. For use in
-// std::sort,
-//   we should add special casing for moved-from objects. See:
+//   std::sort, we should add special casing for moved-from objects. See:
 //   http://stackoverflow.com/questions/26579132/what-is-the-post-condition-of-a-move-constructor
 class real : public detail::real_base<>
 {
@@ -659,24 +656,75 @@ class real : public detail::real_base<>
     }
     // Serialization support.
     friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    // Utility function to infer the size (in number of limbs) from the precision.
+    static ::mpfr_prec_t size_from_prec(::mpfr_prec_t prec)
     {
+        const ::mpfr_prec_t q = prec / ::mp_bits_per_limb, r = prec % ::mp_bits_per_limb;
+        return q + (r != 0);
+    }
+    // Portable s11n.
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+    void save(Archive &ar, unsigned) const
+    {
+        // NOTE: like in mp_integer, the performance here can be improved significantly.
         std::ostringstream oss;
         oss << *this;
         auto prec = get_prec();
         auto s = oss.str();
-        ar &prec;
-        ar &s;
+        piranha::boost_save(ar, prec);
+        piranha::boost_save(ar, s);
     }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
     {
         ::mpfr_prec_t prec;
-        ar &prec;
-        std::string s;
-        ar &s;
+        PIRANHA_MAYBE_TLS std::string s;
+        piranha::boost_load(ar, prec);
+        piranha::boost_load(ar, s);
         *this = real(s, prec);
+    }
+    // Binary s11n.
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+    void save(Archive &ar, unsigned) const
+    {
+        piranha::boost_save(ar, m_value->_mpfr_prec);
+        piranha::boost_save(ar, m_value->_mpfr_sign);
+        piranha::boost_save(ar, m_value->_mpfr_exp);
+        const ::mpfr_prec_t s = size_from_prec(m_value->_mpfr_prec);
+        // NOTE: no need to save the size, as it can be recovered from the prec.
+        for (::mpfr_prec_t i = 0; i < s; ++i) {
+            piranha::boost_save(ar, m_value->_mpfr_d[i]);
+        }
+    }
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
+    {
+        // First we recover the non-limb members.
+        ::mpfr_prec_t prec;
+        decltype(m_value->_mpfr_sign) sign;
+        decltype(m_value->_mpfr_exp) exp;
+        piranha::boost_load(ar, prec);
+        piranha::boost_load(ar, sign);
+        piranha::boost_load(ar, exp);
+        // Recover the size in limbs from prec.
+        const ::mpfr_prec_t s = size_from_prec(prec);
+        // Set the precision.
+        set_prec(prec);
+        piranha_assert(m_value->_mpfr_prec == prec);
+        m_value->_mpfr_sign = sign;
+        m_value->_mpfr_exp = exp;
+        try {
+            // NOTE: protect in try/catch as in theory boost_load() could throw even
+            // in case of valid archive (e.g., memory errors maybe?) and we want
+            // to deal with this case.
+            for (::mpfr_prec_t i = 0; i < s; ++i) {
+                piranha::boost_load(ar, *(m_value->_mpfr_d + i));
+            }
+        } catch (...) {
+            // Set to zero before re-throwing.
+            ::mpfr_set_ui(m_value, 0u, default_rnd);
+            throw;
+        }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
@@ -1650,7 +1698,7 @@ public:
             }
             --exp;
             if (exp != ::mpfr_exp_t(0) && r.sign() != 0) {
-                cpp_str.append(std::string("e") + boost::lexical_cast<std::string>(exp));
+                cpp_str.append("e" + boost::lexical_cast<std::string>(exp));
             }
         }
         os << cpp_str;
@@ -1689,7 +1737,154 @@ public:
     {
         return &m_value[0u];
     }
-    //@}
+//@}
+
+#if defined(PIRANHA_WITH_MSGPACK)
+private:
+    // msgpack enabler.
+    template <typename Stream>
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, ::mpfr_prec_t>,
+                                  has_msgpack_pack<Stream, std::string>,
+                                  has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                                  has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                                  has_msgpack_pack<Stream, ::mp_limb_t>,
+                                  has_safe_cast<std::uint32_t, ::mpfr_prec_t>>::value,
+                      int>;
+    template <typename U>
+    using msgpack_convert_enabler
+        = enable_if_t<conjunction<std::is_same<U, U>, // For SFINAE.
+                                  has_msgpack_convert<::mpfr_prec_t>, has_msgpack_convert<std::string>,
+                                  has_msgpack_convert<decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                                  has_msgpack_convert<decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                                  has_msgpack_convert<::mp_limb_t>>::value,
+                      int>;
+
+public:
+    /// Pack in msgpack format.
+    /**
+     * \note
+     * This method is enabled only if:
+     * - \p Stream satisfies piranha::is_msgpack_stream,
+     * - \p std::string and the integral types in terms of which the internal representation of
+     *   piranha::real is defined satisfy piranha::has_msgpack_pack,
+     * - \p mpfr_prec_t can be safely converted to \p std::uint32_t.
+     *
+     * This method will pack \p this into \p p. If \p f is msgpack_format::portable, then
+     * the precision of \p this and a decimal string representation of \p this are packed in an array.
+     * Otherwise, an array of 4 elements storing the internal MPFR representation of \p this is packed.
+     *
+     * @param[in] p target <tt>msgpack::packer</tt>.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - piranha::safe_cast(),
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::msgpack_pack(),
+     * - the conversion of \p this to string.
+     */
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
+    void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
+    {
+        if (f == msgpack_format::portable) {
+            std::ostringstream oss;
+            oss << *this;
+            auto prec = get_prec();
+            auto s = oss.str();
+            p.pack_array(2);
+            piranha::msgpack_pack(p, prec, f);
+            piranha::msgpack_pack(p, s, f);
+        } else {
+            // NOTE: storing both prec and the number of limbs is a bit redundant: it is possible to
+            // infer the number of limbs from prec but not viceversa (only an upper/lower bound). So let's
+            // store them both.
+            p.pack_array(4);
+            piranha::msgpack_pack(p, m_value->_mpfr_prec, f);
+            piranha::msgpack_pack(p, m_value->_mpfr_sign, f);
+            piranha::msgpack_pack(p, m_value->_mpfr_exp, f);
+            const auto s = safe_cast<std::uint32_t>(size_from_prec(m_value->_mpfr_prec));
+            p.pack_array(s);
+            // NOTE: no need to save the size, as it can be recovered from the prec.
+            for (std::uint32_t i = 0; i < s; ++i) {
+                piranha::msgpack_pack(p, m_value->_mpfr_d[i], f);
+            }
+        }
+    }
+    /// Convert from msgpack object.
+    /**
+     * \note
+     * This method is enabled only if \p std::string and all the integral types used to define the internal
+     * representation of piranha::real satisfy piranha::has_msgpack_convert.
+     *
+     * This method will convert the object \p o into \p this. If \p f is piranha::msgpack_format::binary,
+     * this method offers the basic exception safety guarantee and it performs minimal checking on the input data.
+     * Calling this method in binary mode will result in undefined behaviour if \p o does not contain an integer
+     * serialized via msgpack_pack().
+     *
+     * @param[in] o source object.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws std::invalid_argument if, in binary mode, the number of serialized limbs is inconsistent with the
+     * precision.
+     * @throws unspecified any exception thrown by:
+     * - piranha::safe_cast(),
+     * - set_prec(),
+     * - memory errors in standard containers,
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::msgpack_convert(),
+     * - the constructor of piranha::real from string.
+     */
+    template <typename U = real, msgpack_convert_enabler<U> = 0>
+    void msgpack_convert(const msgpack::object &o, msgpack_format f)
+    {
+        if (f == msgpack_format::portable) {
+            PIRANHA_MAYBE_TLS std::array<msgpack::object, 2> vobj;
+            o.convert(vobj);
+            ::mpfr_prec_t prec;
+            PIRANHA_MAYBE_TLS std::string s;
+            piranha::msgpack_convert(prec, vobj[0], f);
+            piranha::msgpack_convert(s, vobj[1], f);
+            *this = real(s, prec);
+        } else {
+            PIRANHA_MAYBE_TLS std::array<msgpack::object, 4> vobj;
+            o.convert(vobj);
+            // First let's handle the non-limbs members.
+            ::mpfr_prec_t prec;
+            decltype(m_value->_mpfr_sign) sign;
+            decltype(m_value->_mpfr_exp) exp;
+            piranha::msgpack_convert(prec, vobj[0], f);
+            piranha::msgpack_convert(sign, vobj[1], f);
+            piranha::msgpack_convert(exp, vobj[2], f);
+            set_prec(prec);
+            piranha_assert(m_value->_mpfr_prec == prec);
+            m_value->_mpfr_sign = sign;
+            m_value->_mpfr_exp = exp;
+            // Next the limbs. Protect in try/catch so if anything goes wrong we can fix this in the
+            // catch block before re-throwing.
+            try {
+                PIRANHA_MAYBE_TLS std::vector<msgpack::object> vlimbs;
+                vobj[3].convert(vlimbs);
+                const auto s = safe_cast<std::vector<msgpack::object>::size_type>(size_from_prec(prec));
+                if (unlikely(s != vlimbs.size())) {
+                    piranha_throw(std::invalid_argument,
+                                  std::string("error in the msgpack deserialization of a real: the number "
+                                              "of serialized limbs (")
+                                      + std::to_string(vlimbs.size())
+                                      + ") is not consistent with the number of limbs inferred from the precision ("
+                                      + std::to_string(s) + ")");
+                }
+                for (decltype(vlimbs.size()) i = 0; i < s; ++i) {
+                    piranha::msgpack_convert(m_value->_mpfr_d[i], vlimbs[i], f);
+                }
+            } catch (...) {
+                // Set to zero before re-throwing.
+                ::mpfr_set_ui(m_value, 0u, default_rnd);
+                throw;
+            }
+        }
+    }
+#endif
+
 private:
     ::mpfr_t m_value;
 };
@@ -2134,6 +2329,120 @@ inline real operator"" _r(const char *s)
     return real(s);
 }
 }
+
+inline namespace impl
+{
+
+template <typename Archive>
+using real_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, ::mpfr_prec_t>, has_boost_save<Archive, std::string>,
+                              has_boost_save<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                              has_boost_save<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                              has_boost_save<Archive, ::mp_limb_t>>::value>;
+
+template <typename Archive>
+using real_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, ::mpfr_prec_t>, has_boost_load<Archive, std::string>,
+                              has_boost_load<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                              has_boost_load<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                              has_boost_load<Archive, ::mp_limb_t>>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled only if \p std::string and all the integral types in terms of which piranha::real
+ * is implemented satisfy piranha::has_boost_save.
+ *
+ * If \p Archive is \p boost::archive::binary_oarchive, a platform dependent binary representation of the input
+ * piranha::real will be saved. Otherwise, the piranha::real is serialized in string form.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save() or by the conversion of the input piranha::real to
+ * string.
+ */
+template <typename Archive>
+struct boost_save_impl<Archive, real, real_boost_save_enabler<Archive>> : boost_save_via_boost_api<Archive, real> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled only if \p std::string and all the integral types in terms of which piranha::real
+ * is implemented satisfy piranha::has_boost_load.
+ *
+ * If \p Archive is \p boost::archive::binary_iarchive, no checking is performed on the deserialized piranha::real
+ * and the implementation offers the basic exception safety guarantee.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_load(), or by the constructor of
+ * piranha::real from string.
+ */
+template <typename Archive>
+struct boost_load_impl<Archive, real, real_boost_load_enabler<Archive>> : boost_load_via_boost_api<Archive, real> {
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+// Enablers for msgpack serialization.
+template <typename Stream>
+using real_msgpack_pack_enabler = enable_if_t<is_detected<msgpack_pack_member_t, Stream, real>::value>;
+
+template <typename T>
+using real_msgpack_convert_enabler
+    = enable_if_t<conjunction<std::is_same<real, T>, is_detected<msgpack_convert_member_t, T>>::value>;
+}
+
+/// Specialisation of piranha::msgpack_pack() for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled if \p T is piranha::real and
+ * the piranha::real::msgpack_pack() method is supported with a stream of type \p Stream.
+ */
+template <typename Stream>
+struct msgpack_pack_impl<Stream, real, real_msgpack_pack_enabler<Stream>> {
+    /// Call operator.
+    /**
+     * The call operator will use piranha::real::msgpack_pack() internally.
+     *
+     * @param[in] p target <tt>msgpack::packer</tt>.
+     * @param[in] x piranha::real to be serialized.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::real::msgpack_pack().
+     */
+    void operator()(msgpack::packer<Stream> &p, const real &x, msgpack_format f) const
+    {
+        x.msgpack_pack(p, f);
+    }
+};
+
+/// Specialisation of piranha::msgpack_convert() for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled if \p T is piranha::real and
+ * the piranha::real::msgpack_convert() method is supported.
+ */
+template <typename T>
+struct msgpack_convert_impl<T, real_msgpack_convert_enabler<T>> {
+    /// Call operator.
+    /**
+     * The call operator will use piranha::real::msgpack_convert() internally.
+     *
+     * @param[in] x target piranha::real.
+     * @param[in] o the <tt>msgpack::object</tt> to be converted into \p n.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::real::msgpack_convert().
+     */
+    void operator()(T &x, const msgpack::object &o, msgpack_format f) const
+    {
+        x.msgpack_convert(o, f);
+    }
+};
+
+#endif
 }
 
 #endif

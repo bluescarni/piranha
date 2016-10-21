@@ -51,7 +51,6 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "power_series.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "substitutable_series.hpp"
@@ -102,10 +101,6 @@ struct base_getter {
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of the base series type it derives from.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the underlying coefficient type does.
  */
 template <typename Cf, typename Key>
 class divisor_series
@@ -127,7 +122,6 @@ class divisor_series
                                                                              divisor_series<Cf, Key>>,
                                                         divisor_series<Cf, Key>>,
                               divisor_series<Cf, Key>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     // Value type of the divisor.
     using dv_type = typename Key::value_type;
     // Partial utils.

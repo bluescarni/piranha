@@ -44,7 +44,6 @@ see https://www.gnu.org/licenses/. */
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "small_vector.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -66,6 +65,7 @@ namespace piranha
  *   - it must be constructible from \p int,
  *   - it must be less-than comparable and equality-comparable,
  *   - it must be hashable,
+ *   - it must satisfy piranha::has_is_zero,
  * - \p Derived must derive from piranha::array_key of \p T and \p Derived,
  * - \p Derived must satisfy the piranha::is_container_element type trait,
  * - \p S must be suitable as second template argument to piranha::small_vector.
@@ -77,10 +77,6 @@ namespace piranha
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of piranha::small_vector.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the internal piranha::small_vector is serializable.
  */
 template <typename T, typename Derived, typename S = std::integral_constant<std::size_t, 0u>>
 class array_key
@@ -92,19 +88,21 @@ class array_key
     PIRANHA_TT_CHECK(is_less_than_comparable, T);
     PIRANHA_TT_CHECK(is_equality_comparable, T);
     PIRANHA_TT_CHECK(is_hashable, T);
+    PIRANHA_TT_CHECK(has_is_zero, T);
     template <typename U>
     friend class debug_access;
-    using container_type = small_vector<T, S>;
-    // Enabler for constructor from init list.
-    template <typename U>
-    using init_list_enabler =
-        typename std::enable_if<std::is_constructible<container_type, std::initializer_list<U>>::value, int>::type;
 
 public:
+    /// The internal container type.
+    using container_type = small_vector<T, S>;
     /// Value type.
     using value_type = typename container_type::value_type;
 
 private:
+    // Enabler for constructor from init list.
+    template <typename U>
+    using init_list_enabler =
+        typename std::enable_if<std::is_constructible<container_type, std::initializer_list<U>>::value, int>::type;
     // Enabler for generic ctor.
     template <typename U>
     using generic_ctor_enabler = typename std::enable_if<has_safe_cast<value_type, U>::value, int>::type;
@@ -115,14 +113,6 @@ private:
     using add_enabler = decltype(std::declval<U const &>().add(std::declval<U &>(), std::declval<U const &>()));
     template <typename U>
     using sub_enabler = decltype(std::declval<U const &>().sub(std::declval<U &>(), std::declval<U const &>()));
-    // Serialization support.
-    // NOTE: no need for split save/load, this is just a single-member class.
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive &ar, unsigned int)
-    {
-        ar &m_container;
-    }
 
 public:
     /// Iterator type.
@@ -464,8 +454,8 @@ public:
         return retval;
     }
 
-private:
-    // Internal container.
+protected:
+    /// Internal container.
     container_type m_container;
 
 public:

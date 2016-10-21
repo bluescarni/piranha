@@ -256,6 +256,8 @@ inline void expose_rational_functions_impl()
     // num/den property.
     rf_class.add_property("num", rf_num_wrapper<r_type>);
     rf_class.add_property("den", rf_den_wrapper<r_type>);
+    // s11n.
+    expose_s11n(rf_class);
 }
 }
 

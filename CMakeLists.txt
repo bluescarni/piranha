@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project(piranha VERSION 0.4)
+project(piranha VERSION 0.6)
 
 enable_testing()
 
@@ -29,6 +29,15 @@ option(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 
 # Use TCMalloc as allocator.
 option(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
+
+# Enable msgpack serialization format.
+option(PIRANHA_WITH_MSGPACK "Enable support for the msgpack serialization format." OFF)
+
+# Enable zlib/gzip compression.
+option(PIRANHA_WITH_ZLIB "Enable support for zlib/gzip compression." OFF)
+
+# Enable bzip2 compression.
+option(PIRANHA_WITH_BZIP2 "Enable support for bzip2 compression." OFF)
 
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
@@ -122,13 +131,54 @@ INCLUDE_DIRECTORIES(SYSTEM ${MPFR_INCLUDE_DIR})
 # NOTE: MPFR should be linked in before GMP, that's why we link GMP here.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
 
-# bzip2 setup.
-find_package(BZip2 REQUIRED)
-message(STATUS "bzip2 library found.")
-message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
-message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
-include_directories(SYSTEM ${BZIP2_INCLUDE_DIR})
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
+if(PIRANHA_WITH_MSGPACK)
+	find_package(MSGPACK-C REQUIRED)
+	message(STATUS "msgpack-c library found.")
+	message(STATUS "msgpack-c include dir is: ${MSGPACK-C_INCLUDE_DIR}")
+	try_compile(MSGPACK-C_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/msgpack_check_version.cpp"
+		CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${MSGPACK-C_INCLUDE_DIR}")
+	if(NOT MSGPACK-C_VERSION_CHECK)
+		message(FATAL_ERROR "Unsupported msgpack-c version, please upgrade.")
+	endif()
+	message(STATUS "msgpack-c version is ok.")
+	# msgpack load file requires memory mapping for uncompressed format.
+	try_compile(BOOST_MAPPED_FILE_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/test_mmapped_file.cpp"
+		CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${Boost_INCLUDE_DIRS}" LINK_LIBRARIES "${Boost_IOSTREAMS_LIBRARY}")
+	if(NOT BOOST_MAPPED_FILE_CHECK)
+		message(FATAL_ERROR "msgpack support in Piranha requires an implementation of Boost's memory mapped file.")
+	endif()
+	message(STATUS "Boost's memory mapped file is supported.")
+	# We make explicit use of std::uint32_t.
+	set(CMAKE_EXTRA_INCLUDE_FILES "cstdint")
+	check_type_size(std::uint32_t PIRANHA_HAVE_UINT32_T LANGUAGE CXX)
+	if(NOT PIRANHA_HAVE_UINT32_T)
+		message(FATAL_ERROR "msgpack support in Piranha requires the availability of the std::uint32_t type.")
+	endif()
+	unset(CMAKE_EXTRA_INCLUDE_FILES)
+	unset(PIRANHA_HAVE_UINT32_T)
+	include_directories(SYSTEM ${MSGPACK-C_INCLUDE_DIR})
+	set(PIRANHA_ENABLE_MSGPACK "#define PIRANHA_WITH_MSGPACK")
+endif()
+
+if(PIRANHA_WITH_ZLIB)
+	find_package(ZLIB REQUIRED)
+	message(STATUS "zlib library found.")
+	message(STATUS "zlib include dir is: ${ZLIB_INCLUDE_DIR}")
+	message(STATUS "zlib library is: ${ZLIB_LIBRARIES}")
+	include_directories(SYSTEM ${ZLIB_INCLUDE_DIR})
+	set(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${ZLIB_LIBRARIES})
+	set(PIRANHA_ENABLE_ZLIB "#define PIRANHA_WITH_ZLIB")
+endif()
+
+if(PIRANHA_WITH_BZIP2)
+	find_package(BZip2 REQUIRED)
+	message(STATUS "bzip2 library found.")
+	message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
+	message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
+	include_directories(SYSTEM ${BZIP2_INCLUDE_DIR})
+	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
+	set(PIRANHA_ENABLE_BZIP2 "#define PIRANHA_WITH_BZIP2")
+endif()
 
 # TCMalloc setup.
 IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")

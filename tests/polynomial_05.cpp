@@ -31,10 +31,14 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE polynomial_05_test
 #include <boost/test/unit_test.hpp>
 
+#include <sstream>
+
+#include "../src/config.hpp"
 #include "../src/init.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/pow.hpp"
+#include "../src/s11n.hpp"
 
 using namespace piranha;
 
@@ -58,3 +62,114 @@ BOOST_AUTO_TEST_CASE(polynomial_truncation_pow_cache_test)
     p_type::set_auto_truncate_degree(1, {"y"});
     BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y + x * x + 2 * x * y);
 }
+
+BOOST_AUTO_TEST_CASE(polynomial_boost_s11n_test)
+{
+    using p_type = polynomial<integer, monomial<int>>;
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, p_type>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, p_type>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, p_type &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const p_type &>::value));
+    BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, const p_type &>::value));
+    BOOST_CHECK((!has_boost_save<void, const p_type &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive, p_type>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, p_type>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, p_type>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, p_type &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const p_type &>::value));
+    BOOST_CHECK((!has_boost_load<const boost::archive::binary_oarchive &, const p_type &>::value));
+    BOOST_CHECK((!has_boost_load<void, const p_type &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, p_type>::value));
+    using pp_type = polynomial<p_type, monomial<int>>;
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, pp_type>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, pp_type>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, pp_type &>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const pp_type &>::value));
+    BOOST_CHECK((!has_boost_save<const boost::archive::binary_oarchive &, const pp_type &>::value));
+    BOOST_CHECK((!has_boost_save<void, const pp_type &>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive, pp_type>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, pp_type>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, pp_type>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive &, pp_type &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive &, const pp_type &>::value));
+    BOOST_CHECK((!has_boost_load<const boost::archive::binary_oarchive &, const pp_type &>::value));
+    BOOST_CHECK((!has_boost_load<void, const pp_type &>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, pp_type>::value));
+    p_type x{"x"}, y{"y"};
+    const auto tmp = (x + y) * 3 * (x - y) + 1;
+    std::stringstream ss;
+    {
+        boost::archive::binary_oarchive oa(ss);
+        boost_save(oa, tmp);
+    }
+    {
+        p_type retval;
+        boost::archive::binary_iarchive ia(ss);
+        boost_load(ia, retval);
+        BOOST_CHECK_EQUAL(tmp, retval);
+    }
+    ss.str("");
+    ss.clear();
+    pp_type xx{"x"}, yy{"y"};
+    const auto ttmp = (xx + yy) * 3 * (xx - yy) + 1;
+    {
+        boost::archive::binary_oarchive oa(ss);
+        boost_save(oa, ttmp);
+    }
+    {
+        pp_type retval;
+        boost::archive::binary_iarchive ia(ss);
+        boost_load(ia, retval);
+        BOOST_CHECK_EQUAL(ttmp, retval);
+    }
+}
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+BOOST_AUTO_TEST_CASE(polynomial_msgpack_s11n_test)
+{
+    using p_type = polynomial<integer, monomial<int>>;
+    BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, p_type>::value));
+    BOOST_CHECK((!has_msgpack_pack<msgpack::sbuffer &, p_type>::value));
+    BOOST_CHECK((!has_msgpack_pack<msgpack::sbuffer &, p_type &>::value));
+    BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, const p_type &>::value));
+    BOOST_CHECK((!has_msgpack_pack<const msgpack::sbuffer &, const p_type &>::value));
+    BOOST_CHECK((!has_msgpack_pack<void, const p_type &>::value));
+    BOOST_CHECK((has_msgpack_convert<p_type>::value));
+    BOOST_CHECK((has_msgpack_convert<p_type &>::value));
+    BOOST_CHECK((!has_msgpack_convert<const p_type &>::value));
+    using pp_type = polynomial<p_type, monomial<int>>;
+    BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, pp_type>::value));
+    BOOST_CHECK((!has_msgpack_pack<msgpack::sbuffer &, pp_type>::value));
+    BOOST_CHECK((!has_msgpack_pack<msgpack::sbuffer &, pp_type &>::value));
+    BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, const pp_type &>::value));
+    BOOST_CHECK((!has_msgpack_pack<const msgpack::sbuffer &, const pp_type &>::value));
+    BOOST_CHECK((!has_msgpack_pack<void, const pp_type &>::value));
+    BOOST_CHECK((has_msgpack_convert<pp_type>::value));
+    BOOST_CHECK((has_msgpack_convert<pp_type &>::value));
+    BOOST_CHECK((!has_msgpack_convert<const pp_type &>::value));
+    {
+        p_type x{"x"}, y{"y"};
+        const auto tmp = (x + y) * 3 * (x - y) + 1;
+        msgpack::sbuffer sbuf;
+        msgpack::packer<msgpack::sbuffer> p(sbuf);
+        msgpack_pack(p, tmp, msgpack_format::portable);
+        auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+        p_type retval;
+        msgpack_convert(retval, oh.get(), msgpack_format::portable);
+        BOOST_CHECK(retval == tmp);
+    }
+    {
+        pp_type xx{"x"}, yy{"y"};
+        const auto ttmp = (xx + yy) * 3 * (xx - yy) + 1;
+        msgpack::sbuffer sbuf;
+        msgpack::packer<msgpack::sbuffer> p(sbuf);
+        msgpack_pack(p, ttmp, msgpack_format::portable);
+        auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+        pp_type retval;
+        msgpack_convert(retval, oh.get(), msgpack_format::portable);
+        BOOST_CHECK(retval == ttmp);
+    }
+}
+
+#endif

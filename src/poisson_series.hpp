@@ -55,7 +55,6 @@ see https://www.gnu.org/licenses/. */
 #include "rational_function.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "substitutable_series.hpp"
@@ -96,10 +95,6 @@ struct poisson_series_tag {
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of the base series type it derives from.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the underlying coefficient type does.
  */
 // TODO:
 // - make this more general, make the key type selectable;
@@ -447,8 +442,6 @@ class poisson_series
         piranha_throw(std::invalid_argument,
                       "unable to perform Poisson series integration: coefficient type is not a polynomial");
     }
-    // Serialization.
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
     // Time integration.
     // First the implementation for divisor series.
     template <typename T>
@@ -788,7 +781,7 @@ public:
     {
         std::vector<std::string> names;
         for (auto it = this->m_symbol_set.begin(); it != this->m_symbol_set.end(); ++it) {
-            names.push_back(std::string("\\nu_{") + it->get_name() + "}");
+            names.push_back("\\nu_{" + it->get_name() + "}");
         }
         return t_integrate_impl(names);
     }

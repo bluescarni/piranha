@@ -104,10 +104,9 @@ namespace detail
 
 // Enabler for math::is_zero().
 template <typename T>
-using math_is_zero_enabler =
-    typename std::enable_if<std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())),
-                                                bool>::value,
-                            int>::type;
+using math_is_zero_enabler = typename std::
+    enable_if<std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())), bool>::value,
+              int>::type;
 }
 
 namespace math
@@ -214,10 +213,9 @@ namespace detail
 
 // Enabler for piranha::math::is_unitary().
 template <typename T>
-using math_is_unitary_enabler =
-    typename std::enable_if<std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())),
-                                                bool>::value,
-                            int>::type;
+using math_is_unitary_enabler = typename std::
+    enable_if<std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())), bool>::value,
+              int>::type;
 }
 
 namespace math
@@ -406,13 +404,12 @@ namespace detail
 
 // Enabler for multiply_accumulate.
 template <typename T, typename U, typename V>
-using math_multiply_accumulate_enabler =
-    typename std::enable_if<!std::is_const<T>::value
-                                && true_tt<decltype(math::multiply_accumulate_impl<T, typename std::decay<U>::type,
-                                                                                   typename std::decay<V>::type>{}(
-                                       std::declval<T &>(), std::declval<const U &>(),
-                                       std::declval<const V &>()))>::value,
-                            int>::type;
+using math_multiply_accumulate_enabler = typename std::
+    enable_if<!std::is_const<T>::value
+                  && true_tt<decltype(math::multiply_accumulate_impl<T, typename std::decay<U>::type,
+                                                                     typename std::decay<V>::type>{}(
+                         std::declval<T &>(), std::declval<const U &>(), std::declval<const V &>()))>::value,
+              int>::type;
 }
 
 namespace math

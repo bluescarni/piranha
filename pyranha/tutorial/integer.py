@@ -18,5 +18,6 @@ print(85 / 2)
 # Exponentiation via the '**' operator.
 print(42**2)
 
-# Calculate (42 choose 21) using the binomial() function from the math submodule.
-print(math.binomial(42,21))
+# Calculate (42 choose 21) using the binomial() function from the math
+# submodule.
+print(math.binomial(42, 21))

@@ -46,7 +46,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
 #include "../src/real_trigonometric_kronecker_monomial.hpp"
-#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 
 using namespace piranha;
@@ -58,7 +57,7 @@ template <typename Cf, typename Expo>
 class g_series_type : public power_series<series<Cf, monomial<Expo>, g_series_type<Cf, Expo>>, g_series_type<Cf, Expo>>
 {
     using base = power_series<series<Cf, monomial<Expo>, g_series_type<Cf, Expo>>, g_series_type<Cf, Expo>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type() = default;
     g_series_type(const g_series_type &) = default;
@@ -73,7 +72,7 @@ template <typename Cf>
 class g_series_type2 : public power_series<series<Cf, rtk_monomial, g_series_type2<Cf>>, g_series_type2<Cf>>
 {
     typedef power_series<series<Cf, rtk_monomial, g_series_type2<Cf>>, g_series_type2<Cf>> base;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     g_series_type2() = default;
     g_series_type2(const g_series_type2 &) = default;

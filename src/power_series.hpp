@@ -39,7 +39,6 @@ see https://www.gnu.org/licenses/. */
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -101,12 +100,12 @@ struct common_degree_type_checks {
     }                                                                                                                  \
     template <                                                                                                         \
         typename Term,                                                                                                 \
-        typename std::enable_if<ps_term_score<Term>::value == 3u                                                       \
-                                    && (!std::is_integral<decltype(                                                    \
-                                            math::property(std::declval<const Term &>().m_cf))>::value                 \
-                                        || !std::is_integral<decltype(std::declval<const Term &>().m_key.property(     \
-                                               std::declval<const symbol_set &>()))>::value),                          \
-                                int>::type                                                                             \
+        typename std::                                                                                                 \
+            enable_if<ps_term_score<Term>::value == 3u                                                                 \
+                          && (!std::is_integral<decltype(math::property(std::declval<const Term &>().m_cf))>::value    \
+                              || !std::is_integral<decltype(std::declval<const Term &>().m_key.property(               \
+                                     std::declval<const symbol_set &>()))>::value),                                    \
+                      int>::type                                                                                       \
         = 0>                                                                                                           \
     inline auto ps_get_##property(const Term &t, const symbol_set &s)                                                  \
         ->decltype(math::property(t.m_cf) + t.m_key.property(s))                                                       \
@@ -222,10 +221,6 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of \p Series.
- *
- * ## Serialization ##
- *
- * This class supports serialization if \p Series does.
  */
 template <typename Series, typename Derived>
 class power_series : public Series, detail::power_series_tag
@@ -349,15 +344,12 @@ class power_series : public Series, detail::power_series_tag
     }
     // Enabler for partial degree truncation.
     template <typename T, typename U>
-    using truncate_pdegree_enabler =
-        typename std::enable_if<detail::true_tt<decltype(truncate_term(std::declval<const typename U::term_type &>(),
-                                                                       std::declval<const T &>(),
-                                                                       std::declval<const std::vector<std::string> &>(),
-                                                                       std::declval<const symbol_set::positions &>(),
-                                                                       std::declval<const symbol_set &>()))>::value,
-                                int>::type;
-    // Serialization.
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+    using truncate_pdegree_enabler = typename std::
+        enable_if<detail::true_tt<decltype(truncate_term(
+                      std::declval<const typename U::term_type &>(), std::declval<const T &>(),
+                      std::declval<const std::vector<std::string> &>(), std::declval<const symbol_set::positions &>(),
+                      std::declval<const symbol_set &>()))>::value,
+                  int>::type;
     // Lift definitions from the detail namespace.
     template <typename T>
     using degree_type = detail::ps_degree_type<T>;

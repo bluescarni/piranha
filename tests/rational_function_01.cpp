@@ -50,7 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/pow.hpp"
 #include "../src/print_tex_coefficient.hpp"
 #include "../src/real.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"

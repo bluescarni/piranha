@@ -38,7 +38,6 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include "config.hpp"
-#include "serialization.hpp"
 
 namespace piranha
 {
@@ -77,10 +76,6 @@ std::set<std::string> base_symbol<T>::m_symbol_list;
  * ## Move semantics ##
  *
  * Move construction and move assignment will not alter the original object.
- *
- * ## Serialization ##
- *
- * This class supports serialization.
  */
 class symbol : private detail::base_symbol<>
 {
@@ -187,21 +182,7 @@ private:
         // http://www.gotw.ca/gotw/050.htm
         return &*it;
     }
-    // Serialization support.
-    friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive &ar, unsigned int) const
-    {
-        ar &(*m_ptr);
-    }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
-    {
-        std::string s;
-        ar &s;
-        *this = symbol(std::move(s));
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 private:
     std::string const *m_ptr;
 };

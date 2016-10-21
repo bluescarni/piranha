@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_SERIES_HPP
 
 #include <algorithm>
+#include <array>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
@@ -38,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <ios>
@@ -65,13 +67,13 @@ see https://www.gnu.org/licenses/. */
 #include "invert.hpp"
 #include "is_cf.hpp"
 #include "key_is_convertible.hpp"
-#include "math.hpp" // For negate() and math specialisations.
+#include "math.hpp"
 #include "mp_integer.hpp"
 #include "pow.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"
 #include "symbol.hpp"
@@ -904,7 +906,7 @@ class series_operators
     // NOTE: the use of the old syntax for the enable_if with nullptr is because of a likely GCC bug:
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59366
     // In real.hpp, there are a few uses of operator/= on reals (e.g., in binary_div) *before* the is_zero_impl
-    // specialisation for real is declared. These operators are immediately instantiatied when parsed because they are
+    // specialisation for real is declared. These operators are immediately instantiated when parsed because they are
     // not
     // templated. During the overload resolution of operator/=, the operator defined in this class is considered - which
     // is wrong, as the operators here should be found only via ADL and this class is in no way associated to real. What
@@ -1259,46 +1261,6 @@ public:
     }
 };
 
-/// File formats.
-/**
- * These are the available formats for piranha::series::save(const Derived &, const std::string &, file_format,
- * file_compression) and
- * piranha::series::load(const std::string &, file_format, file_compression).
- */
-enum class file_format {
-    /// Text.
-    /**
-     * Portable text format.
-     */
-    text,
-    /// Binary.
-    /**
-     * Non-portable binary format.
-     */
-    binary
-};
-
-/// File compression options.
-/**
- * These are the available compression options for piranha::series::save(const Derived &, const std::string &,
- * file_format, file_compression) and
- * piranha::series::load(const std::string &, file_format, file_compression).
- */
-enum class file_compression {
-    /// No compression.
-    /**
-     * The file will not be compressed.
-     */
-    disabled,
-    /// Bzip2 compression.
-    /**
-     * The file will be compressed with the bzip2 library.
-     *
-     * @see http://bzip.org/
-     */
-    bzip2
-};
-
 /// Series class.
 /**
  * This class contains the arithmetic and comparison operator overloads for piranha::series instances
@@ -1318,10 +1280,6 @@ enum class file_compression {
  * ## Move semantics ##
  *
  * Moved-from series are left in a state equivalent to an empty series.
- *
- * ## Serialization ##
- *
- * This class supports serialization if its term type does.
  */
 /* TODO:
 * \todo cast operator, to series and non-series types.
@@ -1379,15 +1337,6 @@ private:
         }
         insertion_impl<Sign>(std::forward<T>(term));
     }
-// NOTE: here GCC complains about the in-place operators with -Wconversion
-// when constructing series with, e.g., a char coefficient. This is triggered
-// for instance in series_05.cpp. This is not the best solution, maybe when
-// we have complex<int> + double = complex<double> we can replace the char/short
-// tests in series_05 with something that does not trigger this warning.
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
     // Cf arithmetics when inserting, normal and move variants.
     template <bool Sign, typename Iterator>
     static void insertion_cf_arithmetics(Iterator &it, const term_type &term)
@@ -1407,9 +1356,6 @@ private:
             it->m_cf -= std::move(term.m_cf);
         }
     }
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#pragma GCC diagnostic pop
-#endif
     // Insert compatible, non-ignorable term.
     template <bool Sign, typename T>
     void insertion_impl(T &&term)
@@ -1936,35 +1882,58 @@ private:
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    void save(Archive &ar, unsigned) const
     {
         // Serialize the symbol set.
-        ar &m_symbol_set;
-        // Serialize the size.
-        const auto s = size();
-        ar &s;
-        // Serialize all the terms one by one.
-        const auto it_f = m_container.end();
-        for (auto it = m_container.begin(); it != it_f; ++it) {
-            ar &(*it);
+        boost_save(ar, get_symbol_set().size());
+        for (const auto &sym : get_symbol_set()) {
+            boost_save(ar, sym.get_name());
+        }
+        // Serialize the series.
+        boost_save(ar, size());
+        for (const auto &t : _container()) {
+            boost_save(ar, t.m_cf);
+            boost_save(ar, boost_s11n_key_wrapper<typename term_type::key_type>{t.m_key, get_symbol_set()});
         }
     }
     template <class Archive>
-    void load(Archive &ar, unsigned int)
+    void load(Archive &ar, unsigned)
     {
-        // Erase this.
-        *this = series();
+        using ss_size_t = decltype(get_symbol_set().size());
+        using s_size_t = decltype(size());
+        // Erase s.
+        *this = series{};
         // Recover the symbol set.
-        symbol_set ss;
-        ar &ss;
-        m_symbol_set = std::move(ss);
-        // Recover the size.
-        size_type s;
-        ar &s;
-        // Re-insert all the terms.
-        for (size_type i = 0u; i < s; ++i) {
+        // First the size.
+        ss_size_t ss_size;
+        boost_load(ar, ss_size);
+        // NOTE: not sure if it's worth it to make this thread_local, as when resizing up new memory
+        // allocs for each string are necessary anyway.
+        std::vector<std::string> vs;
+        vs.resize(safe_cast<std::vector<std::string>::size_type>(ss_size));
+        // Load the symbol names in a vector of strings.
+        for (auto &str : vs) {
+            boost_load(ar, str);
+        }
+        // Construct the symbol set and set it to the series.
+        symbol_set ss(vs.begin(), vs.end());
+        set_symbol_set(ss);
+        // Now recover the series.
+        // Size first.
+        s_size_t s_size;
+        boost_load(ar, s_size);
+        // Preallocate buckets.
+        _container().rehash(
+            boost::numeric_cast<s_size_t>(std::ceil(static_cast<double>(s_size) / _container().max_load_factor())));
+        // Insert all the terms.
+        for (s_size_t i = 0u; i < s_size; ++i) {
+            // NOTE: the rationale for creating a new term each time is that if we move it, we have
+            // no guarantees on the moved-from state (in particular, we cannot be certain that a moved-from
+            // term can be deserialized into).
             term_type t;
-            ar &t;
+            boost_load(ar, t.m_cf);
+            boost_s11n_key_wrapper<typename term_type::key_type> w{t.m_key, ss};
+            boost_load(ar, w);
             insert(std::move(t));
         }
     }
@@ -2943,145 +2912,6 @@ public:
         }
         return merge_arguments(new_ss);
     }
-    /// Save series to file.
-    /**
-     * This static method will save the input series \p s to the file named \p filename, using the file format \p f
-     * and the compression method \p c. The possible values for \p f are listed in piranha::file_format, the possible
-     * values for \p c in piranha::file_compression. The output file \p filename, if existing, will be overwritten.
-     *
-     * @param[in] s the series to be saved.
-     * @param[in] filename the name of the file.
-     * @param[in] f the save format.
-     * @param[in] c the compression method.
-     *
-     * @throws std::runtime_error if the output file cannot be opened.
-     * @throws unspecified any exception thrown by the serialization and/or compression of \p s.
-     */
-    static void save(const Derived &s, const std::string &filename, file_format f, file_compression c)
-    {
-        std::ofstream ofile(filename, (f == file_format::binary) ? (std::ios::out | std::ios::binary | std::ios::trunc)
-                                                                 : (std::ios::out | std::ios::trunc));
-        if (unlikely(!ofile.good())) {
-            piranha_throw(std::runtime_error, std::string("file '") + filename + "' could not be opened");
-        }
-        if (c == file_compression::bzip2) {
-            // bzip2 compression is enabled.
-            namespace bi = boost::iostreams;
-            if (f == file_format::binary) {
-                // In case of binary archives, we can write directly to file,
-                // as binary_oarchive can be cted from a filtering_streambuf
-                // (while text_oarchive cannot). See here:
-                // http://stackoverflow.com/questions/1753469/how-to-hook-up-boost-serialization-iostreams-to-serialize-gzip-an-object-to
-                bi::filtering_streambuf<bi::output> out;
-                out.push(bi::bzip2_compressor());
-                out.push(ofile);
-                boost::archive::binary_oarchive oa(out);
-                oa << s;
-            } else {
-                // NOTE: here we are following this tutorial:
-                // https://code.google.com/p/cloudobserver/wiki/TutorialsBoostIOstreams
-                // First write to a stringstream, then compress and write to file.
-                std::stringstream oss;
-                boost::archive::text_oarchive oa(oss);
-                oa << s;
-                bi::filtering_streambuf<bi::input> in;
-                in.push(bi::bzip2_compressor());
-                in.push(oss);
-                bi::copy(in, ofile);
-            }
-        } else {
-            if (f == file_format::binary) {
-                boost::archive::binary_oarchive oa(ofile);
-                oa << s;
-            } else {
-                boost::archive::text_oarchive oa(ofile);
-                oa << s;
-            }
-        }
-    }
-    /// Save series to file (text format, no compression).
-    static void save(const Derived &s, const std::string &filename)
-    {
-        save(s, filename, file_format::text, file_compression::disabled);
-    }
-    /// Save series to file (no compression, choose format).
-    static void save(const Derived &s, const std::string &filename, file_format f)
-    {
-        save(s, filename, f, file_compression::disabled);
-    }
-    /// Save series to file (text format, choose compression).
-    static void save(const Derived &s, const std::string &filename, file_compression c)
-    {
-        save(s, filename, file_format::text, c);
-    }
-    /// Load series from file.
-    /**
-     * This static method will load the series contained in the file named \p filename, using the file format \p f
-     * and the compression method \p c. The possible values for \p f are listed in piranha::file_format, the possible
-     * values for \p c in piranha::file_compression.
-     *
-     * @param[in] filename the name of the file.
-     * @param[in] f the save format.
-     * @param[in] c the compression method.
-     *
-     * @return the series stored in the file named \p filename.
-     *
-     * @throws std::runtime_error if the output file cannot be opened.
-     * @throws unspecified any exception thrown by the deserialization and/or decompression of the series stored in \p
-     * filename.
-     */
-    static Derived load(const std::string &filename, file_format f, file_compression c)
-    {
-        std::ifstream ifile(filename, (f == file_format::binary) ? (std::ios::in | std::ios::binary) : std::ios::in);
-        if (unlikely(!ifile.good())) {
-            piranha_throw(std::runtime_error, std::string("file '") + filename + "' could not be opened");
-        }
-        // The return value.
-        Derived retval;
-        if (c == file_compression::bzip2) {
-            // NOTE: the same considerations as above apply.
-            namespace bi = boost::iostreams;
-            if (f == file_format::binary) {
-                bi::filtering_streambuf<bi::input> in;
-                in.push(bi::bzip2_decompressor());
-                in.push(ifile);
-                boost::archive::binary_iarchive ia(in);
-                ia >> retval;
-            } else {
-                std::stringstream ss;
-                bi::filtering_streambuf<bi::output> out;
-                out.push(bi::bzip2_decompressor());
-                out.push(ss);
-                bi::copy(ifile, out);
-                boost::archive::text_iarchive ia(ss);
-                ia >> retval;
-            }
-        } else {
-            if (f == file_format::binary) {
-                boost::archive::binary_iarchive ia(ifile);
-                ia >> retval;
-            } else {
-                boost::archive::text_iarchive ia(ifile);
-                ia >> retval;
-            }
-        }
-        return retval;
-    }
-    /// Load series from file (text format, no compression).
-    static Derived load(const std::string &filename)
-    {
-        return load(filename, file_format::text, file_compression::disabled);
-    }
-    /// Load series from file (no compression, choose format).
-    static Derived load(const std::string &filename, file_format f)
-    {
-        return load(filename, f, file_compression::disabled);
-    }
-    /// Load series from file (text format, choose compression).
-    static Derived load(const std::string &filename, file_compression c)
-    {
-        return load(filename, file_format::text, c);
-    }
     /** @name Low-level interface
      * Low-level methods.
      */
@@ -3687,6 +3517,212 @@ public:
     }
 };
 }
+
+inline namespace impl
+{
+
+// NOTE: we check first here if Series is a series, so that, if it is not, we do not instantiate other has_boost_save
+// checks (which might result in infinite recursion due to this enabler being re-instantiated).
+template <typename Archive, typename Series>
+using series_boost_save_enabler
+    = enable_if_t<conjunction<is_series<Series>, has_boost_save<Archive, decltype(symbol_set{}.size())>,
+                              has_boost_save<Archive, const std::string &>,
+                              has_boost_save<Archive, decltype(std::declval<const Series &>().size())>,
+                              has_boost_save<Archive, typename Series::term_type::cf_type>,
+                              has_boost_save<Archive,
+                                             boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
+
+// NOTE: the requirement that Series must not be const is in the is_series check.
+template <typename Archive, typename Series>
+using series_boost_load_enabler
+    = enable_if_t<conjunction<is_series<Series>, has_boost_load<Archive, decltype(symbol_set{}.size())>,
+                              has_boost_load<Archive, std::string>,
+                              has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
+                              has_boost_load<Archive, typename Series::term_type::cf_type>,
+                              has_boost_load<Archive,
+                                             boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Series satisfies piranha::is_series,
+ * - the coefficient type, \p std::string and the integral types representing the size of the series
+ *   and the size of piranha::symbol_set satisfy piranha::has_boost_save,
+ * - the key type satisfies piranha::has_boost_save (via piranha::boost_s11n_key_wrapper).
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
+ */
+template <typename Archive, typename Series>
+struct boost_save_impl<Archive, Series, series_boost_save_enabler<Archive, Series>>
+    : boost_save_via_boost_api<Archive, Series> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Series satisfies piranha::is_series,
+ * - the coefficient type, \p std::string and the integral types representing the size of the series and
+ *   the size of piranha::symbol_set satisfy piranha::has_boost_load,
+ * - the key type satisfies piranha::has_boost_load (via piranha::boost_s11n_key_wrapper).
+ *
+ * The basic exception safety guarantee is provided.
+ *
+ * @throws unspecified any exception thrown by:
+ * - piranha::boost_load(),
+ * - memory errors in standard containers,
+ * - piranha::safe_cast(),
+ * - the public interface of piranha::symbol_set and piranha::hash_set,
+ * - <tt>boost::numeric_cast()</tt>,
+ * - piranha::series::insert(), piranha::series::set_symbol_set().
+ */
+template <typename Archive, typename Series>
+struct boost_load_impl<Archive, Series, series_boost_load_enabler<Archive, Series>>
+    : boost_load_via_boost_api<Archive, Series> {
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+// Same scheme as above for Boost.
+template <typename Stream, typename Series>
+using series_msgpack_pack_enabler
+    = enable_if_t<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
+                              has_safe_cast<std::uint32_t, decltype(symbol_set{}.size())>,
+                              has_safe_cast<std::uint32_t, typename Series::size_type>,
+                              has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
+                              key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>;
+
+template <typename Series>
+using series_msgpack_convert_enabler
+    = enable_if_t<conjunction<is_series<Series>, has_msgpack_convert<std::string>,
+                              has_msgpack_convert<typename Series::term_type::cf_type>,
+                              key_has_msgpack_convert<typename Series::term_type::key_type>>::value>;
+}
+
+/// Specialisation of piranha::msgpack_pack() for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Series satisfies piranha::is_series,
+ * - \p Stream satisfies piranha::is_msgpack_stream,
+ * - the coefficient type and \p std::string satisfy piranha::has_msgpack_pack,
+ * - the key type satisfies piranha::key_has_msgpack_pack,
+ * - the size types of piranha::series and piranha::symbol_set are safely convertible to \p std::uint32_t.
+ */
+template <typename Stream, typename Series>
+struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Series>> {
+    /// Call operator.
+    /**
+     * The msgpack representation of a series consists of an array of 2 elements:
+     * - the list of symbols, represented as an array of strings,
+     * - the list of terms, represented as an array of coefficient-key pairs.
+     *
+     * @param packer the target <tt>msgpack::packer</tt>.
+     * @param s the input series.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::msgpack_pack(),
+     * - piranha::safe_cast(),
+     * - the <tt>%msgpack_pack()</tt> method of the key.
+     */
+    void operator()(msgpack::packer<Stream> &packer, const Series &s, msgpack_format f) const
+    {
+        // A series is an array made of:
+        // - the symbol set,
+        // - the array of terms.
+        packer.pack_array(2u);
+        // Pack the symbol set.
+        const auto &ss = s.get_symbol_set();
+        packer.pack_array(safe_cast<std::uint32_t>(ss.size()));
+        for (const auto &sym : ss) {
+            msgpack_pack(packer, sym.get_name(), f);
+        }
+        // Pack the terms.
+        packer.pack_array(safe_cast<std::uint32_t>(s.size()));
+        for (const auto &t : s._container()) {
+            // Each term is an array made of two elements, coefficient and key.
+            packer.pack_array(2u);
+            msgpack_pack(packer, t.m_cf, f);
+            t.m_key.msgpack_pack(packer, f, ss);
+        }
+    }
+};
+
+/// Specialisation of piranha::msgpack_convert() for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Series satisfies piranha::is_series,
+ * - \p std::string and the coefficient type satisfy piranha::has_msgpack_convert,
+ * - the key type satisfies piranha::key_has_msgpack_convert.
+ */
+template <typename Series>
+struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
+    /// Call operator.
+    /**
+     * The call operator offers the basic exception safety guarantee: upon deserialization errors, \p s will
+     * be left in an unspecified (but valid) state.
+     *
+     * @param s the output series.
+     * @param o the <tt>msgpack::object</tt> that will be converted into \p s.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws std::invalid_argument if \p o contains an array with an invalid number of
+     * elements, or if \p f is piranha::msgpack_format::portable and the serialized object
+     * has been created with a later version of Piranha.
+     * @throws unspecified any exception thrown by:
+     * - memory errors in standard containers,
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::msgpack_convert(),
+     * - the <tt>%msgpack_convert()</tt> method of the key,
+     * - the public interfaces of piranha::symbol_set, piranha::hash_set and piranha::series,
+     * - the constructor of the term type of the series,
+     * - <tt>boost::numeric_cast()</tt>.
+     */
+    void operator()(Series &s, const msgpack::object &o, msgpack_format f) const
+    {
+        using term_type = typename Series::term_type;
+        using cf_type = typename term_type::cf_type;
+        using key_type = typename term_type::key_type;
+        using s_size_t = decltype(s.size());
+        // Erase s.
+        s = Series{};
+        // Convert the object.
+        std::array<std::vector<msgpack::object>, 2> tmp_v;
+        o.convert(tmp_v);
+        // Create the symbol set, passing through a vec of str.
+        std::vector<std::string> v_str;
+        std::transform(tmp_v[0].begin(), tmp_v[0].end(), std::back_inserter(v_str),
+                       [f](const msgpack::object &obj) -> std::string {
+                           std::string tmp_str;
+                           msgpack_convert(tmp_str, obj, f);
+                           return tmp_str;
+                       });
+        s.set_symbol_set(symbol_set(v_str.begin(), v_str.end()));
+        // Preallocate buckets.
+        s._container().rehash(boost::numeric_cast<s_size_t>(
+            std::ceil(static_cast<double>(tmp_v[1].size()) / s._container().max_load_factor())));
+        // Insert all the terms.
+        for (const auto &t : tmp_v[1]) {
+            std::array<msgpack::object, 2> tmp_term;
+            t.convert(tmp_term);
+            cf_type tmp_cf;
+            key_type tmp_key;
+            msgpack_convert(tmp_cf, tmp_term[0], f);
+            tmp_key.msgpack_convert(tmp_term[1], f, s.get_symbol_set());
+            s.insert(term_type{std::move(tmp_cf), std::move(tmp_key)});
+        }
+    }
+};
+
+#endif
 }
 
 #endif

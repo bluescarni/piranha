@@ -35,7 +35,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "forwarding.hpp"
 #include "math.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -75,10 +74,6 @@ struct t_substitutable_series_tag {
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of \p Series.
- *
- * ## Serialization ##
- *
- * This class supports serialization if \p Series does.
  */
 template <typename Series, typename Derived>
 class t_substitutable_series : public Series, detail::t_substitutable_series_tag
@@ -165,7 +160,7 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
         = decltype(t_subs_utils<T, U>::subs(std::declval<typename Series::term_type const &>(),
                                             std::declval<const std::string &>(), std::declval<const T &>(),
                                             std::declval<const U &>(), std::declval<symbol_set const &>()));
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     /// Defaulted default constructor.
     t_substitutable_series() = default;
