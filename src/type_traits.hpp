@@ -77,13 +77,19 @@ struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
     using type = Op<Args...>;
 };
 
-struct nonesuch;
+// http://en.cppreference.com/w/cpp/experimental/nonesuch
+struct nonesuch {
+    nonesuch() = delete;
+    ~nonesuch() = delete;
+    nonesuch(nonesuch const &) = delete;
+    void operator=(nonesuch const &) = delete;
+};
 
 template <template <class...> class Op, class... Args>
 using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
 
 template <template <class...> class Op, class... Args>
-using is_detected_t = typename detector<nonesuch, void, Op, Args...>::type;
+using detected_t = typename detector<nonesuch, void, Op, Args...>::type;
 
 // http://en.cppreference.com/w/cpp/types/conjunction
 template <class...>
@@ -522,7 +528,7 @@ using ostreamable_t = decltype(std::declval<std::ostream &>() << std::declval<co
 template <typename T>
 class is_ostreamable
 {
-    static const bool implementation_defined = std::is_same<is_detected_t<ostreamable_t, T>, std::ostream &>::value;
+    static const bool implementation_defined = std::is_same<detected_t<ostreamable_t, T>, std::ostream &>::value;
 
 public:
     /// Value of the type trait.

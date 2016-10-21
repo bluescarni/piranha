@@ -110,13 +110,12 @@ using get_helper_t_2 = decltype(std::declval<A &>().template get_helper<helper>(
 template <typename Archive, typename T>
 using impl = std::
     integral_constant<bool,
-                      conjunction<std::is_same<is_detected_t<is_saving_t, uncvref_t<Archive>>, boost::mpl::bool_<true>>,
-                                  std::is_same<is_detected_t<is_loading_t, uncvref_t<Archive>>,
-                                               boost::mpl::bool_<false>>,
+                      conjunction<std::is_same<detected_t<is_saving_t, uncvref_t<Archive>>, boost::mpl::bool_<true>>,
+                                  std::is_same<detected_t<is_loading_t, uncvref_t<Archive>>, boost::mpl::bool_<false>>,
                                   // NOTE: add lvalue ref instead of using Archive &, so we avoid a hard
                                   // error if Archive is void.
-                                  std::is_same<is_detected_t<lshift_t, Archive, T>, addlref_t<Archive>>,
-                                  std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>,
+                                  std::is_same<detected_t<lshift_t, Archive, T>, addlref_t<Archive>>,
+                                  std::is_same<detected_t<and_t, Archive, T>, addlref_t<Archive>>,
                                   is_detected<save_binary_t, Archive, unref_t<T>>,
                                   is_detected<register_type_t, Archive, uncvref_t<T>>,
                                   // NOTE: the docs here mention that get_library_version() is supposed to
@@ -124,7 +123,7 @@ using impl = std::
                                   // return a type which is implicitly convertible to some unsigned int.
                                   // This seems to work and it should cover also the cases in which the
                                   // return type is a real unsigned int.
-                                  std::is_convertible<is_detected_t<get_library_version_t, Archive>, unsigned long long>
+                                  std::is_convertible<detected_t<get_library_version_t, Archive>, unsigned long long>
 #if BOOST_VERSION >= 105700
                                   //  Helper support is available since 1.57.
                                   ,
@@ -179,15 +178,15 @@ using delete_created_pointers_t = decltype(std::declval<A &>().delete_created_po
 template <typename Archive, typename T>
 using impl
     = std::integral_constant<bool,
-                             conjunction<std::is_same<is_detected_t<ibsa_impl::is_saving_t, uncvref_t<Archive>>,
+                             conjunction<std::is_same<detected_t<ibsa_impl::is_saving_t, uncvref_t<Archive>>,
                                                       boost::mpl::bool_<false>>,
-                                         std::is_same<is_detected_t<ibsa_impl::is_loading_t, uncvref_t<Archive>>,
+                                         std::is_same<detected_t<ibsa_impl::is_loading_t, uncvref_t<Archive>>,
                                                       boost::mpl::bool_<true>>,
-                                         std::is_same<is_detected_t<rshift_t, Archive, T>, addlref_t<Archive>>,
-                                         std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>,
+                                         std::is_same<detected_t<rshift_t, Archive, T>, addlref_t<Archive>>,
+                                         std::is_same<detected_t<and_t, Archive, T>, addlref_t<Archive>>,
                                          is_detected<load_binary_t, Archive, unref_t<T>>,
                                          is_detected<ibsa_impl::register_type_t, Archive, uncvref_t<T>>,
-                                         std::is_convertible<is_detected_t<ibsa_impl::get_library_version_t, Archive>,
+                                         std::is_convertible<detected_t<ibsa_impl::get_library_version_t, Archive>,
                                                              unsigned long long>,
                                          is_detected<reset_object_address_t, Archive, unref_t<T>>,
                                          is_detected<delete_created_pointers_t, Archive>
