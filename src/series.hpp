@@ -143,7 +143,7 @@ template <typename T>
 class is_series
 {
     static const bool implementation_defined
-        = std::is_base_of<detail::series_tag, T>::value && is_container_element<T>::value;
+        = conjunction<std::is_base_of<detail::series_tag, T>, is_container_element<T>>::value;
 
 public:
     /// Value of the type trait.
@@ -153,33 +153,25 @@ public:
 template <typename T>
 const bool is_series<T>::value;
 
-namespace detail
+// Implementation of the series_is_rebindable tt.
+inline namespace impl
 {
 
-// Implementation of the series_is_rebindable tt.
+template <typename T, typename Cf>
+using series_rebind_t = typename uncvref_t<T>::template rebind<uncvref_t<Cf>>;
+
+template <typename T, typename Cf>
+using series_rebind_cf_t = typename series_rebind_t<T, Cf>::term_type::cf_type;
+
 template <typename T, typename Cf, typename = void>
-struct series_is_rebindable_impl : detail::sfinae_types {
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-    using Td = typename std::decay<T>::type;
-    using Cfd = typename std::decay<Cf>::type;
-    template <typename T1>
-    using rebound_type = typename T1::template rebind<Cfd>;
-    template <typename T1,
-              typename std::enable_if<is_series<rebound_type<T1>>::value
-                                          && std::is_same<typename rebound_type<T1>::term_type::cf_type, Cfd>::value,
-                                      int>::type
-              = 0>
-    static rebound_type<T1> test(const T1 &);
-    static no test(...);
-#endif
-    // Value of the type trait.
-    static const bool value = !std::is_same<no, decltype(test(std::declval<Td>()))>::value;
+struct series_is_rebindable_impl {
+    static const bool value = conjunction<is_series<detected_t<series_rebind_t, T, Cf>>,
+                                          std::is_same<detected_t<series_rebind_cf_t, T, Cf>, uncvref_t<Cf>>>::value;
 };
 
 template <typename T, typename Cf>
-struct series_is_rebindable_impl<T, Cf,
-                                 typename std::enable_if<!is_cf<typename std::decay<Cf>::type>::value
-                                                         || !is_series<typename std::decay<T>::type>::value>::type> {
+struct series_is_rebindable_impl<T, Cf, enable_if_t<disjunction<negation<is_cf<uncvref_t<Cf>>>,
+                                                                negation<is_series<uncvref_t<T>>>>::value>> {
     static const bool value = false;
 };
 }
@@ -194,8 +186,9 @@ struct series_is_rebindable_impl<T, Cf,
  * - <tt>T::rebind<Cf></tt> is a series types,
  * - the coefficient type of <tt>T::rebind<Cf></tt> is \p Cf.
  *
- * The decay types of \p T and \p Cf are considered in this type trait. If \p T is not an instance of piranha::series
- * or \p Cf does not satisfy piranha::is_cf, then the value of the type trait will be \p false.
+ * \p T and \p Cf are considered after the removal of cv/reference qualifiers in this type trait.
+ * If \p T is not an instance of piranha::series or \p Cf does not satisfy piranha::is_cf, then the value of the type
+ * trait will be \p false.
  */
 // NOTE: the behaviour when T and Cf do not satisfy the requirements is to allow this type trait
 // to be used an all types. The trait is used in the metaprogramming of generic series arithmetics,
@@ -203,22 +196,24 @@ struct series_is_rebindable_impl<T, Cf,
 // class not fire static asserts when non-series arguments are substituted.
 template <typename T, typename Cf>
 struct series_is_rebindable {
+private:
+    static const bool implementation_defined = series_is_rebindable_impl<T, Cf>::value;
+
+public:
     /// Value of the type trait.
-    static const bool value = detail::series_is_rebindable_impl<T, Cf>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename Cf>
 const bool series_is_rebindable<T, Cf>::value;
 
-namespace detail
+inline namespace impl
 {
 
 // Implementation of the series_rebind alias, with SFINAE to soft-disable it in case
 // the series is not rebindable.
 template <typename T, typename Cf>
-using series_rebind_ =
-    typename std::enable_if<series_is_rebindable<T, Cf>::value,
-                            typename std::decay<T>::type::template rebind<typename std::decay<Cf>::type>>::type;
+using series_rebind_implementation = enable_if_t<series_is_rebindable<T, Cf>::value, series_rebind_t<T, Cf>>;
 }
 
 /// Rebind series.
@@ -228,7 +223,7 @@ using series_rebind_ =
  * also check that \p T and \p Cf satisfy the piranha::series_is_rebindable type traits.
  */
 template <typename T, typename Cf>
-using series_rebind = detail::series_rebind_<T, Cf>;
+using series_rebind = series_rebind_implementation<T, Cf>;
 
 /// Series recursion index.
 /**
