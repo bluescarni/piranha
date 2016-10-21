@@ -1336,15 +1336,15 @@ public:
 #if defined(PIRANHA_WITH_MSGPACK)
 private:
     template <typename Stream>
-    using msgpack_pack_enabler =
-        enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
-                                            has_msgpack_pack<Stream, bool>, has_msgpack_pack<Stream, v_type>>::value,
-                                int>;
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+                                  has_msgpack_pack<Stream, bool>, has_msgpack_pack<Stream, v_type>>::value,
+                      int>;
     template <typename U>
-    using msgpack_convert_enabler =
-        enable_if_t<conjunction<has_msgpack_convert<typename U::value_type>,
-                                            has_msgpack_convert<typename U::v_type>, has_msgpack_convert<bool>>::value,
-                                int>;
+    using msgpack_convert_enabler
+        = enable_if_t<conjunction<has_msgpack_convert<typename U::value_type>, has_msgpack_convert<typename U::v_type>,
+                                  has_msgpack_convert<bool>>::value,
+                      int>;
 
 public:
     /// Serialize in msgpack format.

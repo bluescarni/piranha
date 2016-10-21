@@ -3590,18 +3590,18 @@ inline namespace impl
 
 // Same scheme as above for Boost.
 template <typename Stream, typename Series>
-using series_msgpack_pack_enabler =
-    enable_if_t<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
-                          has_safe_cast<std::uint32_t, decltype(symbol_set{}.size())>,
-                          has_safe_cast<std::uint32_t, typename Series::size_type>,
-                          has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
-                          key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>;
+using series_msgpack_pack_enabler
+    = enable_if_t<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
+                              has_safe_cast<std::uint32_t, decltype(symbol_set{}.size())>,
+                              has_safe_cast<std::uint32_t, typename Series::size_type>,
+                              has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
+                              key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>;
 
 template <typename Series>
-using series_msgpack_convert_enabler =
-    enable_if_t<conjunction<is_series<Series>, has_msgpack_convert<std::string>,
-                                        has_msgpack_convert<typename Series::term_type::cf_type>,
-                                        key_has_msgpack_convert<typename Series::term_type::key_type>>::value>;
+using series_msgpack_convert_enabler
+    = enable_if_t<conjunction<is_series<Series>, has_msgpack_convert<std::string>,
+                              has_msgpack_convert<typename Series::term_type::cf_type>,
+                              key_has_msgpack_convert<typename Series::term_type::key_type>>::value>;
 }
 
 /// Specialisation of piranha::msgpack_pack() for piranha::series.
