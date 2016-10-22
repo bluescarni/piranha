@@ -607,39 +607,50 @@ struct multiplication_tester {
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
 {
-    // Simple test with empty series.
-    using pt = p_type<integer>;
-    using mt = m_checker<pt>;
-    pt e1, e2;
-    mt m0{e1, e2};
-    BOOST_CHECK_EQUAL(m0.plain_multiplication(), 0);
-    BOOST_CHECK(m0.get_n_threads() != 0u);
-    // Testing ported over from the previous series_multiplier tests. Just use polynomial directly.
-    using pt1 = p_type<double>;
-    using pt2 = p_type<integer>;
-    pt1 p1{"x"}, p2{"x"};
-    // Check that the merged symbol set is returned when one of the series is empty.
-    BOOST_CHECK(e1 * p1 == 0);
-    BOOST_CHECK((e1 * p1).get_symbol_set() == symbol_set{symbol{"x"}});
-    BOOST_CHECK((p1 * e1).get_symbol_set() == symbol_set{symbol{"x"}});
-    p1._container().begin()->m_cf *= 2;
-    p2._container().begin()->m_cf *= 3;
-    auto retval = p1 * p2;
-    BOOST_CHECK(retval.size() == 1u);
-    BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
-    BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
-    BOOST_CHECK(retval._container().begin()->m_cf == (double(3) * double(1)) * (double(2) * double(1)));
-    pt2 p3{"x"};
-    p3._container().begin()->m_cf *= 4;
-    pt2 p4{"x"};
-    p4._container().begin()->m_cf *= 2;
-    retval = p4 * p3;
-    BOOST_CHECK(retval.size() == 1u);
-    BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
-    BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
-    BOOST_CHECK(retval._container().begin()->m_cf == double((double(2) * double(1)) * (integer(1) * 4)));
-    using p_types = boost::mpl::vector<pt1, pt2, p_type<rational>>;
-    boost::mpl::for_each<p_types>(multiplication_tester());
+    {
+        // Simple test with empty series.
+        using pt = p_type<integer>;
+        using mt = m_checker<pt>;
+        pt e1, e2;
+        mt m0{e1, e2};
+        BOOST_CHECK_EQUAL(m0.plain_multiplication(), 0);
+        BOOST_CHECK(m0.get_n_threads() != 0u);
+        // Testing ported over from the previous series_multiplier tests. Just use polynomial directly.
+        using pt1 = p_type<double>;
+        using pt2 = p_type<integer>;
+        pt1 p1{"x"}, p2{"x"};
+        // Check that the merged symbol set is returned when one of the series is empty.
+        BOOST_CHECK(e1 * p1 == 0);
+        BOOST_CHECK((e1 * p1).get_symbol_set() == symbol_set{symbol{"x"}});
+        BOOST_CHECK((p1 * e1).get_symbol_set() == symbol_set{symbol{"x"}});
+        p1._container().begin()->m_cf *= 2;
+        p2._container().begin()->m_cf *= 3;
+        auto retval = p1 * p2;
+        BOOST_CHECK(retval.size() == 1u);
+        BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
+        BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
+        BOOST_CHECK(retval._container().begin()->m_cf == (double(3) * double(1)) * (double(2) * double(1)));
+        pt2 p3{"x"};
+        p3._container().begin()->m_cf *= 4;
+        pt2 p4{"x"};
+        p4._container().begin()->m_cf *= 2;
+        retval = p4 * p3;
+        BOOST_CHECK(retval.size() == 1u);
+        BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
+        BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
+        BOOST_CHECK(retval._container().begin()->m_cf == double((double(2) * double(1)) * (integer(1) * 4)));
+        using p_types = boost::mpl::vector<pt1, pt2, p_type<rational>>;
+        boost::mpl::for_each<p_types>(multiplication_tester());
+    }
+    {
+        // Some testing with double for the zero absorber modifications.
+        using pt = p_type<double>;
+        pt x{"x"}, y{"y"};
+        BOOST_CHECK_EQUAL((x + y + 1).pow(5) * pt(0), 0);
+        BOOST_CHECK_EQUAL(pt(0) * (x + y + 1).pow(5), 0);
+        BOOST_CHECK_EQUAL(pt(0) * pt(0), 0);
+        BOOST_CHECK_EQUAL((x + x + y - y) * (x + x + y - y), 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
