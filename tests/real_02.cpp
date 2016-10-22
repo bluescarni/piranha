@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/detail/mpfr.hpp"
 #include "../src/init.hpp"
 #include "../src/s11n.hpp"
+#include "../src/type_traits.hpp"
 
 static const int ntries = 1000;
 
@@ -329,3 +330,12 @@ BOOST_AUTO_TEST_CASE(real_msgpack_s11n_test)
 }
 
 #endif
+
+BOOST_AUTO_TEST_CASE(real_zero_is_absorbing_test)
+{
+    BOOST_CHECK((!zero_is_absorbing<real>::value));
+    BOOST_CHECK((!zero_is_absorbing<real &>::value));
+    BOOST_CHECK((!zero_is_absorbing<real &&>::value));
+    BOOST_CHECK((!zero_is_absorbing<const real &>::value));
+    BOOST_CHECK((!zero_is_absorbing<const real>::value));
+}

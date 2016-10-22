@@ -346,13 +346,10 @@ public:
      * @throws unspecified any exception thrown by:
      * - thread_pool::use_threads(),
      * - memory allocation errors in standard containers,
-     * - the construction of the term type of \p Series.
+     * - the construction of the term, coefficient and key types of \p Series,
+     * - the public interface of piranha::hash_set.
      */
-    explicit base_series_multiplier(const Series &s1, const Series &s2)
-        : m_ss(s1.get_symbol_set()),
-          m_n_threads((s1.size() && s2.size()) ? thread_pool::use_threads(integer(s1.size()) * s2.size(),
-                                                                          integer(settings::get_min_work_per_thread()))
-                                               : 1u)
+    explicit base_series_multiplier(const Series &s1, const Series &s2) : m_ss(s1.get_symbol_set())
     {
         if (unlikely(s1.get_symbol_set() != s2.get_symbol_set())) {
             piranha_throw(std::invalid_argument, "incompatible arguments sets");
@@ -365,8 +362,34 @@ public:
         // This is just an optimisation, no troubles if there is a truncation due to static_cast.
         m_v1.reserve(static_cast<size_type>(p1->size()));
         m_v2.reserve(static_cast<size_type>(p2->size()));
-        // Fill in the vectors of pointers.
-        this->fill_term_pointers(p1->_container(), p2->_container(), m_v1, m_v2);
+        typename Series::container_type const *ctr1 = &p1->_container(), *ctr2 = &p2->_container();
+        // NOTE: if the zero element of Series is not absorbing, we need to create a temporary zero series in place
+        // of any factor that is zero, and then use it in the multiplication. This ensures a correct series
+        // multiplication result for coefficient types (such as IEEE floats) for which 0 times x is not necessarily
+        // always 0. The temporary zero series is stored in the m_zero_f member as a collection of 1 term with
+        // zero coefficient.
+        if (!zero_is_absorbing<Series>::value) {
+            if (p1->empty()) {
+                m_zero_f.insert(
+                    typename Series::term_type{0, typename Series::term_type::key_type(s1.get_symbol_set())});
+                ctr1 = &m_zero_f;
+            }
+            // NOTE: in case both factors are zero m_zero_f will represent both factors (this is ok as operands are
+            // allowed to overlap).
+            if (p2->empty()) {
+                // NOTE: in case m_zero_f already contained something, this is still fine as the insertion will not take
+                // place.
+                m_zero_f.insert(
+                    typename Series::term_type{0, typename Series::term_type::key_type(s1.get_symbol_set())});
+                ctr2 = &m_zero_f;
+            }
+        }
+        // Set the number of threads.
+        m_n_threads = (ctr1->size() && ctr2->size())
+                          ? thread_pool::use_threads(integer(ctr1->size()) * ctr2->size(),
+                                                     integer(settings::get_min_work_per_thread()))
+                          : 1u;
+        this->fill_term_pointers(*ctr1, *ctr2, m_v1, m_v2);
     }
     /// Deleted default constructor.
     base_series_multiplier() = delete;
@@ -1124,7 +1147,11 @@ protected:
      * that will be used by the multiplier. The value is always at least 1 and it is calculated
      * via thread_pool::use_threads().
      */
-    const unsigned m_n_threads;
+    unsigned m_n_threads;
+
+private:
+    // See the constructor for an explanation.
+    typename Series::container_type m_zero_f;
 };
 }
 

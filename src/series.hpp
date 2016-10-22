@@ -298,8 +298,7 @@ namespace detail
 // Some notes on this machinery:
 // - this is only for determining the type of the result, but it does not guarantee that we can actually compute it.
 //   In general we should separate the algorithmic requirements from the determination of the type. Note that we still
-//   use
-//   the operators on the coefficients to determine the return type, but that's inevitable.
+//   use the operators on the coefficients to determine the return type, but that's inevitable.
 
 // Alias for getting the cf type from a series. Will generate a type error if S is not a series.
 // NOTE: the is_series check is an extra safe guard to really assert we are
@@ -487,8 +486,7 @@ struct binary_series_op_return_type<S1, S2, N,
  * The operators defined here, similarly to the builtin operators in C++, promote one or both operands to a common
  * type, if necessary, before actually performing the operation. The promotion rules are dependent on
  * the recursion indices and coefficient types of the series, and they rely on the series rebinding mechanism to promote
- * a series
- * as needed (see piranha::series_is_rebindable and piranha::series_recursion_index).
+ * a series as needed (see piranha::series_is_rebindable and piranha::series_recursion_index).
  *
  * These are the scenarios handled by the type promotion mechanism:
  * - the two arguments are of the same series type and the operator on the coefficient type of the series results in the
@@ -3718,6 +3716,35 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
 };
 
 #endif
+
+inline namespace impl
+{
+
+template <typename T>
+using series_zero_is_absorbing_enabler = enable_if_t<is_series<uncvref_t<T>>::value>;
+}
+
+/// Specialisation of piranha::zero_is_absorbing for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled if \p T, after the removal of cv/reference qualifiers, satisfies piranha::is_series.
+ *
+ * The value of the type trait will be the value of piranha::zero_is_absorbing for the coefficient type of \p T. This
+ * type trait requires \p T to satisfy piranha::is_multipliable, after the removal of cv/reference qualifiers.
+ */
+template <typename T>
+struct zero_is_absorbing<T, series_zero_is_absorbing_enabler<T>> {
+private:
+    PIRANHA_TT_CHECK(is_multipliable, uncvref_t<T>);
+    static const bool implementation_defined = zero_is_absorbing<typename uncvref_t<T>::term_type::cf_type>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename T>
+const bool zero_is_absorbing<T, series_zero_is_absorbing_enabler<T>>::value;
 }
 
 #endif
