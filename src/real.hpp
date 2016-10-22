@@ -2455,6 +2455,8 @@ using real_zero_is_absorbing_enabler = enable_if_t<std::is_same<uncvref_t<T>, re
 /**
  * \note
  * This specialisation is enabled if \p T, after the removal of cv/reference qualifiers, is piranha::real.
+ *
+ * Due to the presence of NaN, the zero element is not absorbing for piranha::real.
  */
 template <typename T>
 struct zero_is_absorbing<T, real_zero_is_absorbing_enabler<T>> {
