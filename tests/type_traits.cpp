@@ -2206,4 +2206,16 @@ BOOST_AUTO_TEST_CASE(type_traits_zero_is_absorbing)
         BOOST_CHECK((!zero_is_absorbing<const double &>::value));
         BOOST_CHECK((!zero_is_absorbing<double &&>::value));
     }
+    if (std::numeric_limits<long double>::has_quiet_NaN || std::numeric_limits<long double>::has_signaling_NaN) {
+        BOOST_CHECK((!zero_is_absorbing<long double>::value));
+        BOOST_CHECK((!zero_is_absorbing<long double &>::value));
+        BOOST_CHECK((!zero_is_absorbing<const long double &>::value));
+        BOOST_CHECK((!zero_is_absorbing<long double &&>::value));
+    }
+    if (std::numeric_limits<float>::has_quiet_NaN || std::numeric_limits<float>::has_signaling_NaN) {
+        BOOST_CHECK((!zero_is_absorbing<float>::value));
+        BOOST_CHECK((!zero_is_absorbing<float &>::value));
+        BOOST_CHECK((!zero_is_absorbing<const float &>::value));
+        BOOST_CHECK((!zero_is_absorbing<float &&>::value));
+    }
 }
