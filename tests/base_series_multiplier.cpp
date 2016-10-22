@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
         BOOST_CHECK_EQUAL((x + y + 1).pow(5) * pt(0), 0);
         BOOST_CHECK_EQUAL(pt(0) * (x + y + 1).pow(5), 0);
         BOOST_CHECK_EQUAL(pt(0) * pt(0), 0);
-        BOOST_CHECK_EQUAL((x + x + y - y) * (x + x + y - y), 0);
+        BOOST_CHECK_EQUAL((x - x + y - y) * (x - x + y - y), 0);
     }
 }
 

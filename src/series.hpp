@@ -837,18 +837,19 @@ class series_operators
     static series_common_type<T, U, 3> dispatch_binary_div(T &&x, U &&y)
     {
         using ret_type = series_common_type<T, U, 3>;
-        // NOTE: is_zero() is always available for series.
-        if (math::is_zero(y)) {
-            piranha_throw(zero_division_error, "zero denominator in series division");
-        }
-        if (math::is_zero(x)) {
-            return ret_type{};
-        }
+        using term_type = typename ret_type::term_type;
+        using cf_type = typename term_type::cf_type;
+        using key_type = typename term_type::key_type;
         if (!y.is_single_coefficient()) {
-            piranha_throw(std::invalid_argument, "divisor in series division does not "
-                                                 "consist of a single coefficient");
+            piranha_throw(std::invalid_argument, "divisor in series division does not consist of a single coefficient");
         }
-        return x / y._container().begin()->m_cf;
+        const auto y_cf = y.empty() ? cf_type(0) : y._container().begin()->m_cf;
+        if (x.empty()) {
+            ret_type retval;
+            retval.insert(term_type{cf_type{0} / y_cf, key_type{retval.get_symbol_set()}});
+            return retval;
+        }
+        return x / y_cf;
     }
     // Same recursion, first coefficient wins.
     template <typename T, typename U,
@@ -894,30 +895,31 @@ class series_operators
         return dispatch_binary_div(std::move(x1), std::move(y1));
     }
     // The implementation of these two cases 4 and 5 is different from the other operations, as we cannot promote to a
-    // common
-    // type (true series division is not implemented).
+    // common type (true series division is not implemented).
     // NOTE: the use of the old syntax for the enable_if with nullptr is because of a likely GCC bug:
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59366
     // In real.hpp, there are a few uses of operator/= on reals (e.g., in binary_div) *before* the is_zero_impl
     // specialisation for real is declared. These operators are immediately instantiated when parsed because they are
-    // not
-    // templated. During the overload resolution of operator/=, the operator defined in this class is considered - which
-    // is wrong, as the operators here should be found only via ADL and this class is in no way associated to real. What
-    // happens
-    // then is that is_zero_impl is instantiated for a real type before the real specialisation is seen, and GCC errors
-    // out.
-    // I *think* the nullptr syntax works because the bso_type enable_if disables the function before has_is_zero is
-    // encountered,
-    // or maybe because it does not participate in template deduction.
+    // not templated. During the overload resolution of operator/=, the operator defined in this class is considered -
+    // which is wrong, as the operators here should be found only via ADL and this class is in no way associated to
+    // real. What happens then is that is_zero_impl is instantiated for a real type before the real specialisation is
+    // seen, and GCC errors out. I *think* the nullptr syntax works because the bso_type enable_if disables the function
+    // before has_is_zero is encountered, or maybe because it does not participate in template deduction.
     template <typename T, typename U, typename std::enable_if<bso_type<T, U, 3>::value == 4u, int>::type = 0>
     static series_common_type<T, U, 3>
     dispatch_binary_div(T &&x, U &&y,
                         typename std::enable_if<has_is_zero<typename std::decay<U>::type>::value>::type * = nullptr)
     {
-        if (unlikely(x.size() == 0u) && math::is_zero(y)) {
-            piranha_throw(zero_division_error, "cannot divide empty series by zero");
-        }
         using ret_type = series_common_type<T, U, 3>;
+        if (x.empty()) {
+            // Special case: if x is empty, then we will just insert a single term consisting of 0 / y.
+            using term_type = typename ret_type::term_type;
+            using cf_type = typename term_type::cf_type;
+            using key_type = typename term_type::key_type;
+            ret_type retval;
+            retval.insert(term_type{cf_type{0} / y, key_type{retval.get_symbol_set()}});
+            return retval;
+        }
         static_assert(std::is_same<typename std::decay<T>::type, ret_type>::value, "Invalid type.");
         // Create a copy of x and work on it. This is always possible.
         ret_type retval(std::forward<T>(x));
@@ -1179,10 +1181,9 @@ public:
      *
      * @return <tt>x / y</tt>.
      *
-     * @throws piranha::zero_division_error if \p x is and empty series and \p y is zero.
      * @throws unspecified any exception thrown by:
-     * - any invoked series constructor,
-     * - piranha::math::is_zero(),
+     * - any invoked series, coefficient, term and key constructor,
+     * - piranha::series::insert(),
      * - piranha::hash_set::erase(),
      * - the division operator on the coefficient type of the result.
      */
