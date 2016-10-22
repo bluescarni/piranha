@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/tuning.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -68,6 +69,30 @@ struct m_checker : public base_series_multiplier<Series> {
     explicit m_checker(const Series &s1, const Series &s2) : base(s1, s2)
     {
         term_pointers_checker(s1, s2);
+        null_absorber_checker(s1, s2);
+    }
+    template <typename T, enable_if_t<zero_is_absorbing<typename T::term_type::cf_type>::value, int> = 0>
+    void null_absorber_checker(const T &s1_, const T &s2_) const
+    {
+        const T &s1 = s1_.size() < s2_.size() ? s2_ : s1_;
+        const T &s2 = s1_.size() < s2_.size() ? s1_ : s2_;
+        BOOST_CHECK(s1.size() == this->m_v1.size());
+        BOOST_CHECK(s2.size() == this->m_v2.size());
+    }
+    template <typename T, enable_if_t<!zero_is_absorbing<typename T::term_type::cf_type>::value, int> = 0>
+    void null_absorber_checker(const T &s1_, const T &s2_) const
+    {
+        const T &s1 = s1_.size() < s2_.size() ? s2_ : s1_;
+        const T &s2 = s1_.size() < s2_.size() ? s1_ : s2_;
+        BOOST_CHECK((s1.size() && s1.size() == this->m_v1.size())
+                    || (!s1.size() && this->m_v1.size() == 1u && this->m_v1[0]->m_cf == 0));
+        BOOST_CHECK((s2.size() && s2.size() == this->m_v2.size())
+                    || (!s2.size() && this->m_v2.size() == 1u && this->m_v2[0]->m_cf == 0));
+    }
+    template <typename T, enable_if_t<std::is_same<typename T::term_type::cf_type, double>::value, int> = 0>
+    void term_pointers_checker(const T &, const T &) const
+    {
+        // Don't do anything for double, as we use it only to check the null absorber.
     }
     template <typename T,
               typename std::enable_if<std::is_same<typename T::term_type::cf_type, integer>::value, int>::type = 0>
@@ -183,6 +208,14 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
         s2 = 0;
         m_checker<pt> m2(s1, s2);
         BOOST_CHECK_THROW(m_checker<pt>(x, z), std::invalid_argument);
+    }
+    {
+        // Do a test with floating-point and null series.
+        using pt = p_type<double>;
+        pt x{"x"}, null{x - x};
+        m_checker<pt> m1((x + 1).pow(5), null);
+        m_checker<pt> m2(null, (x - 3).pow(5));
+        m_checker<pt> m3(null, null);
     }
 }
 

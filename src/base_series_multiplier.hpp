@@ -326,18 +326,21 @@ public:
     /// Constructor.
     /**
      * This constructor will store in the base_series_multiplier::m_v1 and base_series_multiplier::m_v2 protected
-     * members
-     * references to the terms of the input series \p s1 and \p s2. \p m_v1 will store references to the larger series,
-     * \p m_v2 will store references to the smaller serier. The constructor will also store a copy of the symbol set of
-     * \p s1 and \p s2 in the protected member base_series_multiplier::m_ss.
+     * members references to the terms of the input series \p s1 and \p s2. \p m_v1 will store references to the larger
+     * series, \p m_v2 will store references to the smaller series. The constructor will also store a copy of the symbol
+     * set of \p s1 and \p s2 in the protected member base_series_multiplier::m_ss.
      *
      * If the coefficient type of \p Series is an instance of piranha::mp_rational, then the pointers in \p m_v1 and \p
-     * m_v2
-     * will refer not to the original terms in \p s1 and \p s2 but to *copies* of these terms, in which all coefficients
-     * have unitary denominator and the numerators have all been multiplied by the global least common multiplier. This
-     * transformation
-     * allows to reduce the multiplication of series with rational coefficients to the multiplication of series with
-     * integral coefficients.
+     * m_v2 will refer not to the original terms in \p s1 and \p s2 but to *copies* of these terms, in which all
+     * coefficients have unitary denominator and the numerators have all been multiplied by the global least common
+     * multiplier. This transformation allows to reduce the multiplication of series with rational coefficients to the
+     * multiplication of series with integral coefficients.
+     *
+     * If an operand is empty and the series type does not satisfy piranha::zero_is_absorbing, then a hidden
+     * private series consisting of a single term with zero coefficient is created, and the pointers in
+     * base_series_multiplier::m_v1 and/or base_series_multiplier::m_v2 will refer to this hidden instance. This ensures
+     * that a multiplication by a null series results in multiplications by a zero coefficient, which may not
+     * necessarily lead to a zero result (e.g., with IEEE floats inf times zero gives NaN).
      *
      * @param[in] s1 first series.
      * @param[in] s2 second series.
@@ -370,18 +373,14 @@ public:
         // zero coefficient.
         if (!zero_is_absorbing<Series>::value) {
             if (p1->empty()) {
-                m_zero_f.insert(
+                m_zero_f1.insert(
                     typename Series::term_type{0, typename Series::term_type::key_type(s1.get_symbol_set())});
-                ctr1 = &m_zero_f;
+                ctr1 = &m_zero_f1;
             }
-            // NOTE: in case both factors are zero m_zero_f will represent both factors (this is ok as operands are
-            // allowed to overlap).
             if (p2->empty()) {
-                // NOTE: in case m_zero_f already contained something, this is still fine as the insertion will not take
-                // place.
-                m_zero_f.insert(
+                m_zero_f2.insert(
                     typename Series::term_type{0, typename Series::term_type::key_type(s1.get_symbol_set())});
-                ctr2 = &m_zero_f;
+                ctr2 = &m_zero_f2;
             }
         }
         // Set the number of threads.
@@ -1151,7 +1150,8 @@ protected:
 
 private:
     // See the constructor for an explanation.
-    typename Series::container_type m_zero_f;
+    typename Series::container_type m_zero_f1;
+    typename Series::container_type m_zero_f2;
 };
 }
 
