@@ -229,6 +229,8 @@ class base_series_multiplier : private detail::base_series_multiplier_impl<Serie
     PIRANHA_TT_CHECK(is_series, Series);
     // Make friends with the base, so it can access protected/private members of this.
     friend struct detail::base_series_multiplier_impl<Series, base_series_multiplier<Series>>;
+    // Alias for the series' container type.
+    using container_type = uncvref_t<decltype(std::declval<const Series &>()._container())>;
 
 public:
     /// Alias for a vector of const pointers to series terms.
@@ -365,7 +367,7 @@ public:
         // This is just an optimisation, no troubles if there is a truncation due to static_cast.
         m_v1.reserve(static_cast<size_type>(p1->size()));
         m_v2.reserve(static_cast<size_type>(p2->size()));
-        typename Series::container_type const *ctr1 = &p1->_container(), *ctr2 = &p2->_container();
+        container_type const *ctr1 = &p1->_container(), *ctr2 = &p2->_container();
         // NOTE: if the zero element of Series is not absorbing, we need to create a temporary zero series in place
         // of any factor that is zero, and then use it in the multiplication. This ensures a correct series
         // multiplication result for coefficient types (such as IEEE floats) for which 0 times x is not necessarily
@@ -1150,8 +1152,8 @@ protected:
 
 private:
     // See the constructor for an explanation.
-    typename Series::container_type m_zero_f1;
-    typename Series::container_type m_zero_f2;
+    container_type m_zero_f1;
+    container_type m_zero_f2;
 };
 }
 
