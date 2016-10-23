@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/hash_set.hpp"
 
-#define BOOST_TEST_MODULE hash_set_test
+#define BOOST_TEST_MODULE hash_set_01_test
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -54,7 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/thread_pool.hpp"
 #include "../src/type_traits.hpp"
 

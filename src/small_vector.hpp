@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
@@ -39,6 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "config.hpp"
 #include "detail/small_vector_fwd.hpp"
@@ -46,8 +48,8 @@ see https://www.gnu.org/licenses/. */
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "memory.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "static_vector.hpp"
 #include "type_traits.hpp"
 
@@ -91,8 +93,7 @@ private:
     using pointer = value_type *;
     using const_pointer = value_type const *;
     // NOTE: this bit of TMP is to avoid checking an always-false condition on reserve() on most platforms, which
-    // triggers a compiler
-    // warning on GCC 4.7.
+    // triggers a compiler warning on GCC 4.7.
     static const std::size_t max_alloc_size = std::numeric_limits<std::size_t>::max() / sizeof(value_type);
     static const bool need_reserve_check = std::numeric_limits<size_type>::max() > max_alloc_size;
     static bool reserve_check_size(const size_type &, const std::false_type &)
@@ -111,10 +112,8 @@ public:
     dynamic_storage() : m_tag(0u), m_size(0u), m_capacity(0u), m_ptr(nullptr)
     {
     }
-    dynamic_storage(dynamic_storage &&other) noexcept : m_tag(0u),
-                                                        m_size(other.m_size),
-                                                        m_capacity(other.m_capacity),
-                                                        m_ptr(other.m_ptr)
+    dynamic_storage(dynamic_storage &&other) noexcept
+        : m_tag(0u), m_size(other.m_size), m_capacity(other.m_capacity), m_ptr(other.m_ptr)
     {
         // Erase the other.
         other.m_size = 0u;
@@ -554,10 +553,6 @@ union small_vector_union {
  * ## Move semantics ##
  *
  * After a move operation, the container will be empty.
- *
- * ## Serialization ##
- *
- * This class supports serialization if the value type is serializable.
  */
 // NOTE: some possible improvements:
 // - the m_size member of dynamic and static could be made a signed integer, the sign establishing the storage type
@@ -565,7 +560,7 @@ union small_vector_union {
 //   but not sure this is worth it;
 // - POD optimisations in dynamic storage;
 // - in the dynamic storage, it looks like on 64bit we can bump up the size member to 16 bit without changing size,
-//   thus we could sture ~16000 elements. BUT on 32bit this will change the size.
+//   thus we could store ~16000 elements. BUT on 32bit this will change the size.
 template <typename T, typename S = std::integral_constant<std::size_t, 0u>>
 class small_vector
 {
@@ -634,34 +629,14 @@ private:
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    void save(Archive &ar, unsigned) const
     {
-        // First save the size.
-        const auto s = size();
-        ar &s;
-        // Save the individual elements.
-        const auto it_f = end();
-        for (auto it = begin(); it != it_f; ++it) {
-            ar &(*it);
-        }
+        boost_save_vector(ar, *this);
     }
     template <class Archive>
-    void load(Archive &ar, unsigned int)
+    void load(Archive &ar, unsigned)
     {
-        // NOTE: there are faster ways of implementing this, first of all by re-using the storage
-        // with resize(). Here we are forcing a re-allocation instead. Keep this in mind for later
-        // optimisations.
-        // Erase this.
-        *this = small_vector();
-        // Read the size first.
-        size_type s;
-        ar &s;
-        // Read the elements.
-        for (size_type i = 0u; i < s; ++i) {
-            value_type x;
-            ar &x;
-            push_back(std::move(x));
-        }
+        boost_load_vector(ar, *this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
@@ -674,15 +649,19 @@ public:
     /**
      * The storage type after successful construction will be the same of \p other.
      *
+     * @param other construction argument.
+     *
      * @throws std::bad_alloc in case of memory allocation errors.
      * @throws unspecified any exception thrown by the copy constructor of \p T.
      */
-    small_vector(const small_vector &) = default;
+    small_vector(const small_vector &other) = default;
     /// Move constructor.
     /**
      * The storage type after successful construction will be the same of \p other.
+     *
+     * @param other construction argument.
      */
-    small_vector(small_vector &&) = default;
+    small_vector(small_vector &&other) = default;
     /// Constructor from initializer list.
     /**
      * \note
@@ -1129,6 +1108,106 @@ const typename std::decay<decltype(small_vector<T, S>::d_storage::max_size)>::ty
 
 template <typename T, typename S>
 const typename small_vector<T, S>::size_type small_vector<T, S>::max_size;
+
+/// Specialisation of piranha::boost_save() for piranha::small_vector.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and the size type of the vector satisfy
+ * piranha::has_boost_save.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
+ */
+template <typename Archive, typename T, std::size_t Size>
+struct boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
+                       boost_save_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
+    : boost_save_via_boost_api<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::small_vector.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and the size type of the vector satisfy
+ * piranha::has_boost_load.
+ *
+ * The basic exception safety guarantee is provided.
+ *
+ * @throws unspecified any exception thrown by:
+ * - piranha::boost_load(),
+ * - piranha::small_vector::resize().
+ */
+template <typename Archive, typename T, std::size_t Size>
+struct boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
+                       boost_load_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
+    : boost_load_via_boost_api<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>> {
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+/// Specialisation of piranha::msgpack_pack() for piranha::small_vector.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p Stream satisfies piranha::is_msgpack_stream,
+ * - \p T satisfies piranha::has_msgpack_pack,
+ * - the size type of the vector can be safely converted to \p std::uint32_t.
+ */
+template <typename Stream, typename T, std::size_t Size>
+struct msgpack_pack_impl<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>,
+                         msgpack_pack_vector_enabler<Stream,
+                                                     small_vector<T, std::integral_constant<std::size_t, Size>>>> {
+    /// Call operator.
+    /**
+     * This method will serialize into \p packer the input vector \p v using the format \p f.
+     *
+     * @param packer the target <tt>msgpack::packer</tt>.
+     * @param v the vector to be serialized.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_pack().
+     */
+    void operator()(msgpack::packer<Stream> &packer,
+                    const small_vector<T, std::integral_constant<std::size_t, Size>> &v, msgpack_format f) const
+    {
+        msgpack_pack_vector(packer, v, f);
+    }
+};
+
+/// Specialisation of piranha::msgpack_convert() for piranha::small_vector.
+/**
+ * \note
+ * This specialisation is enabled only if:
+ * - \p T satisfies piranha::has_msgpack_convert,
+ * - the size type of \p std::vector can be safely converted to the size type of piranha::small_vector.
+ */
+template <typename T, std::size_t Size>
+struct msgpack_convert_impl<small_vector<T, std::integral_constant<std::size_t, Size>>,
+                            msgpack_convert_array_enabler<small_vector<T, std::integral_constant<std::size_t, Size>>>> {
+    /// Call operator.
+    /**
+     * This method will convert \p o into \p v using the format \p f. This method provides the basic exception safety
+     * guarantee.
+     *
+     * @param v the vector into which the content of \p o will deserialized.
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - memory errors in standard containers,
+     * - piranha::safe_cast(),
+     * - piranha::msgpack_convert().
+     */
+    void operator()(small_vector<T, std::integral_constant<std::size_t, Size>> &v, const msgpack::object &o,
+                    msgpack_format f) const
+    {
+        msgpack_convert_array(o, v, f);
+    }
+};
+
+#endif
 }
 
 #endif

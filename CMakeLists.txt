@@ -1,12 +1,12 @@
-PROJECT(piranha)
+cmake_minimum_required(VERSION 3.0.0)
 
-ENABLE_TESTING()
+project(piranha VERSION 0.6)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
+enable_testing()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules" "${CMAKE_SOURCE_DIR}/cmake_modules/yacma")
 
-MESSAGE(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 
 # Set default build type to "Release".
 if(NOT CMAKE_BUILD_TYPE)
@@ -29,6 +29,15 @@ option(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 
 # Use TCMalloc as allocator.
 option(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
+
+# Enable msgpack serialization format.
+option(PIRANHA_WITH_MSGPACK "Enable support for the msgpack serialization format." OFF)
+
+# Enable zlib/gzip compression.
+option(PIRANHA_WITH_ZLIB "Enable support for zlib/gzip compression." OFF)
+
+# Enable bzip2 compression.
+option(PIRANHA_WITH_BZIP2 "Enable support for bzip2 compression." OFF)
 
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
@@ -122,13 +131,54 @@ INCLUDE_DIRECTORIES(SYSTEM ${MPFR_INCLUDE_DIR})
 # NOTE: MPFR should be linked in before GMP, that's why we link GMP here.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
 
-# bzip2 setup.
-find_package(BZip2 REQUIRED)
-message(STATUS "bzip2 library found.")
-message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
-message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
-include_directories(SYSTEM ${BZIP2_INCLUDE_DIR})
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
+if(PIRANHA_WITH_MSGPACK)
+	find_package(MSGPACK-C REQUIRED)
+	message(STATUS "msgpack-c library found.")
+	message(STATUS "msgpack-c include dir is: ${MSGPACK-C_INCLUDE_DIR}")
+	try_compile(MSGPACK-C_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/msgpack_check_version.cpp"
+		CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${MSGPACK-C_INCLUDE_DIR}")
+	if(NOT MSGPACK-C_VERSION_CHECK)
+		message(FATAL_ERROR "Unsupported msgpack-c version, please upgrade.")
+	endif()
+	message(STATUS "msgpack-c version is ok.")
+	# msgpack load file requires memory mapping for uncompressed format.
+	try_compile(BOOST_MAPPED_FILE_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/test_mmapped_file.cpp"
+		CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${Boost_INCLUDE_DIRS}" LINK_LIBRARIES "${Boost_IOSTREAMS_LIBRARY}")
+	if(NOT BOOST_MAPPED_FILE_CHECK)
+		message(FATAL_ERROR "msgpack support in Piranha requires an implementation of Boost's memory mapped file.")
+	endif()
+	message(STATUS "Boost's memory mapped file is supported.")
+	# We make explicit use of std::uint32_t.
+	set(CMAKE_EXTRA_INCLUDE_FILES "cstdint")
+	check_type_size(std::uint32_t PIRANHA_HAVE_UINT32_T LANGUAGE CXX)
+	if(NOT PIRANHA_HAVE_UINT32_T)
+		message(FATAL_ERROR "msgpack support in Piranha requires the availability of the std::uint32_t type.")
+	endif()
+	unset(CMAKE_EXTRA_INCLUDE_FILES)
+	unset(PIRANHA_HAVE_UINT32_T)
+	include_directories(SYSTEM ${MSGPACK-C_INCLUDE_DIR})
+	set(PIRANHA_ENABLE_MSGPACK "#define PIRANHA_WITH_MSGPACK")
+endif()
+
+if(PIRANHA_WITH_ZLIB)
+	find_package(ZLIB REQUIRED)
+	message(STATUS "zlib library found.")
+	message(STATUS "zlib include dir is: ${ZLIB_INCLUDE_DIR}")
+	message(STATUS "zlib library is: ${ZLIB_LIBRARIES}")
+	include_directories(SYSTEM ${ZLIB_INCLUDE_DIR})
+	set(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${ZLIB_LIBRARIES})
+	set(PIRANHA_ENABLE_ZLIB "#define PIRANHA_WITH_ZLIB")
+endif()
+
+if(PIRANHA_WITH_BZIP2)
+	find_package(BZip2 REQUIRED)
+	message(STATUS "bzip2 library found.")
+	message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
+	message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
+	include_directories(SYSTEM ${BZIP2_INCLUDE_DIR})
+	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
+	set(PIRANHA_ENABLE_BZIP2 "#define PIRANHA_WITH_BZIP2")
+endif()
 
 # TCMalloc setup.
 IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -139,19 +189,17 @@ IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")
 	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${TCMALLOC_LIBRARY})
 ENDIF()
 
-FIND_PROGRAM(PIRANHA_GIT_EXECUTABLE "git" DOC "Path to the git binary.")
-IF(PIRANHA_GIT_EXECUTABLE)
-	MESSAGE(STATUS "Git executable: ${PIRANHA_GIT_EXECUTABLE}")
-	# Version number setup.
-	SET(PIRANHA_GIT_ARGS "log" "--no-color" "-n1" "--date=short" "--pretty=format:%ad")
-	EXECUTE_PROCESS(COMMAND ${PIRANHA_GIT_EXECUTABLE} ${PIRANHA_GIT_ARGS} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE PIRANHA_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-	STRING(REGEX REPLACE "-" "." PIRANHA_VERSION ${PIRANHA_GIT_VERSION})
-	MESSAGE(STATUS "Piranha version: ${PIRANHA_VERSION}")
-	SET(PIRANHA_VERSION "#define PIRANHA_VERSION \"${PIRANHA_VERSION}\"")
-ELSE(PIRANHA_GIT_EXECUTABLE)
-	MESSAGE(STATUS "Git executable: not found")
-	SET(PIRANHA_VERSION "#define PIRANHA_VERSION \"Undetermined\"")
-ENDIF()
+# Try to determine the git revision.
+find_package(Git)
+if(Git_FOUND)
+	message(STATUS "Git executable: ${GIT_EXECUTABLE}")
+	execute_process(COMMAND ${GIT_EXECUTABLE} "log" "--no-color" "-n1" "--date=short" "--pretty=format:%H" WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE PIRANHA_GIT_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+endif()
+if(NOT PIRANHA_GIT_REVISION)
+	set(PIRANHA_GIT_REVISION "unknown")
+endif()
+message(STATUS "Git revision: ${PIRANHA_GIT_REVISION}")
+message(STATUS "Piranha version: ${piranha_VERSION}")
 
 # Configure config.hpp.
 CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/config.hpp.in" "${CMAKE_SOURCE_DIR}/src/config.hpp")

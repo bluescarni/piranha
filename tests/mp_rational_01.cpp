@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/mp_rational.hpp"
 
-#define BOOST_TEST_MODULE mp_rational_test
+#define BOOST_TEST_MODULE mp_rational_01_test
 #include <boost/test/unit_test.hpp>
 
 #define FUSION_MAX_VECTOR_SIZE 20
@@ -60,8 +60,8 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/pow.hpp"
 #include "../src/print_tex_coefficient.hpp"
+#include "../src/s11n.hpp"
 #include "../src/safe_cast.hpp"
-#include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
 static std::mt19937 rng;
@@ -2226,39 +2226,6 @@ struct serialization_tester {
 BOOST_AUTO_TEST_CASE(mp_rational_serialization_test)
 {
     boost::mpl::for_each<size_types>(serialization_tester());
-    // Tests for bad archives.
-    auto tmp = 1 / 3_q;
-    std::stringstream ss;
-    {
-        const std::string ba0 = "22 serialization::archive 10 0 0 0 0 1 3 1 0";
-        ss.str(ba0);
-        boost::archive::text_iarchive ia0(ss);
-        BOOST_CHECK_THROW(ia0 >> tmp, zero_division_error);
-        BOOST_CHECK_EQUAL(tmp, 1 / 3_q);
-    }
-    {
-        const std::string ba1 = "22 serialization::archive 10 0 0 0 0 1 3 1 3";
-        ss.str(ba1);
-        boost::archive::text_iarchive ia1(ss);
-        ia1 >> tmp;
-        BOOST_CHECK_EQUAL(tmp, 1);
-    }
-    {
-        const std::string ba2 = "22 serialization::archive 10 0 0 0 0 1 3 2 -3";
-        ss.str(ba2);
-        boost::archive::text_iarchive ia2(ss);
-        ia2 >> tmp;
-        BOOST_CHECK_EQUAL(tmp, -1);
-    }
-    {
-        const std::string ba3 = "22 serialization::archive 10 0 0 0 0 1 0 2 -3";
-        ss.str(ba3);
-        boost::archive::text_iarchive ia3(ss);
-        ia3 >> tmp;
-        BOOST_CHECK_EQUAL(tmp, 0);
-        BOOST_CHECK_EQUAL(tmp.den(), 1);
-        BOOST_CHECK_EQUAL(tmp.num(), 0);
-    }
 }
 
 struct is_unitary_tester {

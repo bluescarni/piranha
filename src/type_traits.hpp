@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <cstdarg>
 #include <cstddef>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <ostream>
@@ -47,40 +48,147 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "detail/sfinae_types.hpp"
-#include "detail/symbol_set_fwd.hpp"
-#include "print_coefficient.hpp"
-#include "print_tex_coefficient.hpp"
 
 namespace piranha
 {
 
-/// Type is non-const rvalue reference.
-/**
- * This type trait defines a static const boolean \p value flag which is \p true if \p T is a non-const rvalue
- * reference.
- */
-template <typename T>
-struct is_nonconst_rvalue_ref {
-    /// Type trait value.
-    static const bool value
-        = std::is_rvalue_reference<T>::value && !std::is_const<typename std::remove_reference<T>::type>::value;
+inline namespace impl
+{
+
+// http://en.cppreference.com/w/cpp/types/void_t
+template <typename... Ts>
+struct make_void {
+    typedef void type;
 };
 
-template <typename T>
-const bool is_nonconst_rvalue_ref<T>::value;
+template <typename... Ts>
+using void_t = typename make_void<Ts...>::type;
 
-namespace detail
+// http://en.cppreference.com/w/cpp/experimental/is_detected
+template <class Default, class AlwaysVoid, template <class...> class Op, class... Args>
+struct detector {
+    using value_t = std::false_type;
+    using type = Default;
+};
+
+template <class Default, template <class...> class Op, class... Args>
+struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
+    using value_t = std::true_type;
+    using type = Op<Args...>;
+};
+
+struct nonesuch;
+
+template <template <class...> class Op, class... Args>
+using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
+
+template <template <class...> class Op, class... Args>
+using is_detected_t = typename detector<nonesuch, void, Op, Args...>::type;
+
+// http://en.cppreference.com/w/cpp/types/conjunction
+template <class...>
+struct conjunction : std::true_type {
+};
+
+template <class B1>
+struct conjunction<B1> : B1 {
+};
+
+template <class B1, class... Bn>
+struct conjunction<B1, Bn...> : std::conditional<B1::value != false, conjunction<Bn...>, B1>::type {
+};
+
+// http://en.cppreference.com/w/cpp/types/disjunction
+template <class...>
+struct disjunction : std::false_type {
+};
+
+template <class B1>
+struct disjunction<B1> : B1 {
+};
+
+template <class B1, class... Bn>
+struct disjunction<B1, Bn...> : std::conditional<B1::value != false, B1, disjunction<Bn...>>::type {
+};
+
+// http://en.cppreference.com/w/cpp/types/negation
+template <class B>
+struct negation : std::integral_constant<bool, !B::value> {
+};
+
+// std::index_sequence and std::make_index_sequence implementation for C++11. These are available
+// in the std library in C++14. Implementation taken from:
+// http://stackoverflow.com/questions/17424477/implementation-c14-make-integer-sequence
+template <std::size_t... Ints>
+struct index_sequence {
+    using type = index_sequence;
+    using value_type = std::size_t;
+    static constexpr std::size_t size() noexcept
+    {
+        return sizeof...(Ints);
+    }
+};
+
+template <class Sequence1, class Sequence2>
+struct merge_and_renumber;
+
+template <std::size_t... I1, std::size_t... I2>
+struct merge_and_renumber<index_sequence<I1...>, index_sequence<I2...>>
+    : index_sequence<I1..., (sizeof...(I1) + I2)...> {
+};
+
+template <std::size_t N>
+struct make_index_sequence
+    : merge_and_renumber<typename make_index_sequence<N / 2>::type, typename make_index_sequence<N - N / 2>::type> {
+};
+
+template <>
+struct make_index_sequence<0> : index_sequence<> {
+};
+
+template <>
+struct make_index_sequence<1> : index_sequence<0> {
+};
+
+template <typename T, typename F, std::size_t... Is>
+void apply_to_each_item(T &&t, const F &f, index_sequence<Is...>)
 {
+    (void)std::initializer_list<int>{0, (void(f(std::get<Is>(std::forward<T>(t)))), 0)...};
+}
+
+// Tuple for_each(). Execute the functor f on each element of the input Tuple.
+// https://isocpp.org/blog/2015/01/for-each-arg-eric-niebler
+// https://www.reddit.com/r/cpp/comments/2tffv3/for_each_argumentsean_parent/
+// https://www.reddit.com/r/cpp/comments/33b06v/for_each_in_tuple/
+template <class Tuple, class F>
+void tuple_for_each(Tuple &&t, const F &f)
+{
+    apply_to_each_item(std::forward<Tuple>(t), f,
+                       make_index_sequence<std::tuple_size<typename std::decay<Tuple>::type>::value>{});
+}
+
+// Some handy aliases.
+template <typename T>
+using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+
+template <typename T>
+using unref_t = typename std::remove_reference<T>::type;
+
+template <typename T>
+using addlref_t = typename std::add_lvalue_reference<T>::type;
+
+template <bool B, typename T = void>
+using enable_if_t = typename std::enable_if<B, T>::type;
+
+template <typename T>
+using is_nonconst_rvalue_ref
+    = std::integral_constant<bool, std::is_rvalue_reference<T>::value
+                                       && !std::is_const<typename std::remove_reference<T>::type>::value>;
 
 template <typename T, typename U, typename Derived>
-class arith_tt_helper
-{
-    typedef typename std::remove_reference<T>::type Td;
-    typedef typename std::remove_reference<U>::type Ud;
-
-public:
-    static const bool value
-        = std::is_same<decltype(Derived::test(*(Td *)nullptr, *(Ud *)nullptr)), detail::sfinae_types::yes>::value;
+struct arith_tt_helper {
+    static const bool value = std::is_same<decltype(Derived::test(*(unref_t<T> *)nullptr, *(unref_t<U> *)nullptr)),
+                                           detail::sfinae_types::yes>::value;
 };
 }
 
@@ -101,14 +209,14 @@ public:
 template <typename T, typename U = T>
 class is_addable : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_addable<T, U>>;
+    friend struct arith_tt_helper<T, U, is_addable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t + u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_addable>::value;
+    static const bool value = arith_tt_helper<T, U, is_addable>::value;
 };
 
 template <typename T, typename U>
@@ -131,14 +239,14 @@ const bool is_addable<T, U>::value;
 template <typename T, typename U = T>
 class is_addable_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_addable_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, is_addable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t += u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_addable_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, is_addable_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -151,14 +259,14 @@ const bool is_addable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_subtractable : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_subtractable<T, U>>;
+    friend struct arith_tt_helper<T, U, is_subtractable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t - u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_subtractable>::value;
+    static const bool value = arith_tt_helper<T, U, is_subtractable>::value;
 };
 
 template <typename T, typename U>
@@ -171,14 +279,14 @@ const bool is_subtractable<T, U>::value;
 template <typename T, typename U = T>
 class is_subtractable_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_subtractable_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, is_subtractable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t -= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_subtractable_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, is_subtractable_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -191,14 +299,14 @@ const bool is_subtractable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_multipliable : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_multipliable<T, U>>;
+    friend struct arith_tt_helper<T, U, is_multipliable<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t * u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_multipliable>::value;
+    static const bool value = arith_tt_helper<T, U, is_multipliable>::value;
 };
 
 template <typename T, typename U>
@@ -211,14 +319,14 @@ const bool is_multipliable<T, U>::value;
 template <typename T, typename U = T>
 class is_multipliable_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_multipliable_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, is_multipliable_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t *= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_multipliable_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, is_multipliable_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -231,14 +339,14 @@ const bool is_multipliable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_divisible : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_divisible<T, U>>;
+    friend struct arith_tt_helper<T, U, is_divisible<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t / u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_divisible>::value;
+    static const bool value = arith_tt_helper<T, U, is_divisible>::value;
 };
 
 template <typename T, typename U>
@@ -251,14 +359,14 @@ const bool is_divisible<T, U>::value;
 template <typename T, typename U = T>
 class is_divisible_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, is_divisible_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, is_divisible_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t /= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, is_divisible_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, is_divisible_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -394,26 +502,31 @@ struct is_container_element {
 template <typename T>
 const bool is_container_element<T>::value;
 
+inline namespace impl
+{
+
+// Detection of ostreamable types.
+template <typename T>
+using ostreamable_t = decltype(std::declval<std::ostream &>() << std::declval<const T &>());
+}
+
 /// Type trait for classes that can be output-streamed.
 /**
  * This type trait will be \p true if instances of type \p T can be directed to
  * instances of \p std::ostream via the insertion operator. The operator must have a signature
  * compatible with
- @code
- std::ostream &operator<<(std::ostream &, const T &)
- @endcode
+ * @code
+ * std::ostream &operator<<(std::ostream &, const T &)
+ * @endcode
  */
 template <typename T>
-class is_ostreamable : detail::sfinae_types
+class is_ostreamable
 {
-    template <typename T1>
-    static auto test(std::ostream &s, const T1 &t) -> decltype(s << t);
-    static no test(...);
+    static const bool implementation_defined = std::is_same<is_detected_t<ostreamable_t, T>, std::ostream &>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = std::is_same<decltype(test(*(std::ostream *)nullptr, std::declval<T>())), std::ostream &>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -808,8 +921,8 @@ struct arrow_operator_type<T, typename std::enable_if<std::is_pointer<T>::value>
 template <typename T>
 struct arrow_operator_type<T, typename std::enable_if<std::is_same<
                                   typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type,
-                                  typename arrow_operator_type<decltype(
-                                      std::declval<T &>().operator->())>::type>::value>::type> {
+                                  typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type>::
+                                                          value>::type> {
     using type = typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type;
 };
 
@@ -833,8 +946,8 @@ struct is_input_iterator_impl<T,
                                             std::is_same<
                                                 typename std::remove_reference<decltype(
                                                     *std::declval<typename arrow_operator_type<T>::type>())>::type,
-                                                typename std::remove_reference<decltype(
-                                                    *std::declval<T &>())>::type>::value
+                                                typename std::remove_reference<decltype(*std::declval<T &>())>::type>::
+                                                value
                                             &&
                                             // NOTE: here the usage of is_convertible guarantees we catch both iterators
                                             // higher in the type hierarchy and
@@ -986,14 +1099,14 @@ const bool has_begin_end<T>::value;
 template <typename T, typename U = T>
 class has_left_shift : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, has_left_shift<T, U>>;
+    friend struct arith_tt_helper<T, U, has_left_shift<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t << u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, has_left_shift>::value;
+    static const bool value = arith_tt_helper<T, U, has_left_shift>::value;
 };
 
 template <typename T, typename U>
@@ -1016,14 +1129,14 @@ const bool has_left_shift<T, U>::value;
 template <typename T, typename U = T>
 class has_right_shift : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, has_right_shift<T, U>>;
+    friend struct arith_tt_helper<T, U, has_right_shift<T, U>>;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u) -> decltype(t >> u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, has_right_shift>::value;
+    static const bool value = arith_tt_helper<T, U, has_right_shift>::value;
 };
 
 template <typename T, typename U>
@@ -1046,14 +1159,14 @@ const bool has_right_shift<T, U>::value;
 template <typename T, typename U = T>
 class has_left_shift_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, has_left_shift_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, has_left_shift_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t <<= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, has_left_shift_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, has_left_shift_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -1076,14 +1189,14 @@ const bool has_left_shift_in_place<T, U>::value;
 template <typename T, typename U = T>
 class has_right_shift_in_place : detail::sfinae_types
 {
-    friend class detail::arith_tt_helper<T, U, has_right_shift_in_place<T, U>>;
+    friend struct arith_tt_helper<T, U, has_right_shift_in_place<T, U>>;
     template <typename T1, typename U1>
     static auto test(T1 &t, const U1 &u) -> decltype(t >>= u, void(), yes());
     static no test(...);
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::arith_tt_helper<T, U, has_right_shift_in_place>::value;
+    static const bool value = arith_tt_helper<T, U, has_right_shift_in_place>::value;
 };
 
 template <typename T, typename U>
@@ -1109,13 +1222,18 @@ const bool has_exact_ring_operations<T, Enable>::value;
 /// Detect if type can be returned from a function.
 template <typename T>
 struct is_returnable {
+private:
+    static const bool implementation_defined
+        = std::is_destructible<T>::value
+          && (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value);
+
+public:
     /// Value of the type trait.
     /**
      * The type trait will be true if \p T is destructible and copy or move
      * constructible.
      */
-    static const bool value = std::is_destructible<T>::value
-                              && (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value);
+    static const bool value = implementation_defined;
 };
 
 template <typename T>

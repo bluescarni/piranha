@@ -60,7 +60,7 @@ see https://www.gnu.org/licenses/. */
 #include "exceptions.hpp"
 #include "is_key.hpp"
 #include "math.hpp"
-#include "serialization.hpp"
+#include "s11n.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -257,6 +257,9 @@ struct mpz_raii {
     mpz_raii &operator=(mpz_raii &&) = delete;
     ~mpz_raii()
     {
+        // NOTE: even in recent GMP versions, with lazy allocation,
+        // it seems like the pointer always points to something:
+        // https://gmplib.org/repo/gmp/file/835f8974ff6e/mpz/init.c
         piranha_assert(m_mpz._mp_d != nullptr);
         ::mpz_clear(&m_mpz);
     }
@@ -270,7 +273,8 @@ inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz)
         piranha_throw(std::invalid_argument, "number of digits is too large");
     }
     const auto total_size = size_base10 + 2u;
-    std::vector<char> tmp(static_cast<std::vector<char>::size_type>(total_size));
+    PIRANHA_MAYBE_TLS std::vector<char> tmp;
+    tmp.resize(static_cast<std::vector<char>::size_type>(total_size));
     if (unlikely(tmp.size() != total_size)) {
         piranha_throw(std::invalid_argument, "number of digits is too large");
     }
@@ -1266,10 +1270,6 @@ struct is_mp_integer_interoperable_type {
  * This class uses, for certain routines, the internal interface of GMP integers, which is not guaranteed to be stable
  * across different versions. GMP versions 4.x, 5.x and 6.x are explicitly supported by this class.
  *
- * ## Serialization ##
- *
- * This class supports serialization.
- *
  * @see http://gmplib.org/
  */
 /*
@@ -1348,16 +1348,12 @@ class mp_integer
         typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value, int>::type;
     // Enabler for in-place mod with interop on the left.
     template <typename T>
-    using generic_in_place_mod_enabler =
-        typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value
-                                    && std::is_integral<T>::value,
-                                int>::type;
+    using generic_in_place_mod_enabler = typename std::
+        enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value && std::is_integral<T>::value, int>::type;
     // Enabler for in-place shifts with interop on the left.
     template <typename T>
-    using generic_in_place_shift_enabler =
-        typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value
-                                    && std::is_integral<T>::value,
-                                int>::type;
+    using generic_in_place_shift_enabler = typename std::
+        enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value && std::is_integral<T>::value, int>::type;
     template <typename Float>
     void construct_from_interoperable(const Float &x,
                                       typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
@@ -2356,24 +2352,7 @@ class mp_integer
         static_mpz_view m_static_view;
         const detail::mpz_struct_t *m_dyn_ptr;
     };
-    // Serialization support.
-    friend class boost::serialization::access;
-    template <class Archive>
-    void save(Archive &ar, unsigned int) const
-    {
-        std::ostringstream oss;
-        oss << *this;
-        auto s = oss.str();
-        ar &s;
-    }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
-    {
-        std::string s;
-        ar &s;
-        *this = mp_integer(s);
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 public:
     /// Defaulted default constructor.
     /**
@@ -4128,6 +4107,305 @@ public:
     }
     //@}
 private:
+    // Boost s11n support.
+    friend class boost::serialization::access;
+    // Safely compute the absolute value of an mpz_size_t. For use in serialization.
+    static detail::mpz_size_t safe_abs_size(detail::mpz_size_t s)
+    {
+        if (unlikely(s < -detail::safe_abs_sint<detail::mpz_size_t>::value)) {
+            piranha_throw(std::overflow_error, "the number of limbs is too large");
+        }
+        return static_cast<detail::mpz_size_t>(s >= 0 ? s : -s);
+    }
+    // Portable serialization.
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+    void save(Archive &ar, unsigned) const
+    {
+        // NOTE: this requires too many allocations, it should be refactored together
+        // with the mpz streaming so that we just need a single string.
+        std::ostringstream oss;
+        oss << *this;
+        piranha::boost_save(ar, oss.str());
+    }
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
+    {
+        PIRANHA_MAYBE_TLS std::string tmp;
+        piranha::boost_load(ar, tmp);
+        *this = mp_integer{tmp};
+    }
+    // Binary serialization.
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+    void save(Archive &ar, unsigned) const
+    {
+        if (is_static()) {
+            piranha::boost_save(ar, true);
+            // NOTE: alloc size is known for static ints.
+            const auto size = m_int.g_st()._mp_size;
+            piranha::boost_save(ar, size);
+            std::for_each(m_int.g_st().m_limbs.data(), m_int.g_st().m_limbs.data() + (size >= 0 ? size : -size),
+                          [&ar](const typename detail::integer_union<NBits>::s_storage::limb_t &l) {
+                              piranha::boost_save(ar, l);
+                          });
+        } else {
+            piranha::boost_save(ar, false);
+            // NOTE: don't record alloc size, we will reserve an adequate size on load.
+            piranha::boost_save(ar, m_int.g_dy()._mp_size);
+            std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + safe_abs_size(m_int.g_dy()._mp_size),
+                          [&ar](const ::mp_limb_t &l) { piranha::boost_save(ar, l); });
+        }
+    }
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
+    {
+        const bool this_s = is_static();
+        bool s;
+        piranha::boost_load(ar, s);
+        // If the staticness of this and the serialized object differ, we have
+        // to adjust this.
+        if (s != this_s) {
+            if (this_s) {
+                // This is static, serialized is dynamic.
+                promote();
+            } else {
+                // This is dynamic, serialized is static.
+                *this = mp_integer{};
+            }
+        }
+        if (s) {
+            try {
+                // NOTE: alloc is already set to the correct value.
+                piranha_assert(m_int.g_st()._mp_alloc == -1);
+                piranha::boost_load(ar, m_int.g_st()._mp_size);
+                const auto size = safe_abs_size(m_int.g_st()._mp_size);
+                if (unlikely(size > 2)) {
+                    piranha_throw(std::invalid_argument,
+                                  "cannot deserialize a static integer with " + std::to_string(size) + " limbs");
+                }
+                auto data = m_int.g_st().m_limbs.data();
+                std::for_each(data, data + size, [&ar](typename detail::integer_union<NBits>::s_storage::limb_t &l) {
+                    piranha::boost_load(ar, l);
+                });
+                // Zero the limbs that were not loaded from the archive.
+                std::fill(data + size, data + 2, 0u);
+            } catch (...) {
+                // Reset the static before re-throwing.
+                m_int.g_st()._mp_size = 0;
+                m_int.g_st().m_limbs[0] = 0u;
+                m_int.g_st().m_limbs[1] = 0u;
+                throw;
+            }
+        } else {
+            detail::mpz_size_t sz;
+            piranha::boost_load(ar, sz);
+            const auto size = safe_abs_size(sz);
+            ::_mpz_realloc(&m_int.g_dy(), size);
+            try {
+                std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + size,
+                              [&ar](::mp_limb_t &l) { piranha::boost_load(ar, l); });
+                m_int.g_dy()._mp_size = sz;
+            } catch (...) {
+                // NOTE: only possible exception here is when boost_load(ar,l) throws. In this case we have successfully
+                // reallocated and possibly written some limbs, but we have not set the size yet. Just zero out the mpz.
+                ::mpz_set_ui(&m_int.g_dy(), 0u);
+                throw;
+            }
+        }
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+#if defined(PIRANHA_WITH_MSGPACK)
+    // msgpack enablers.
+    template <typename Stream>
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, bool>,
+                                  has_msgpack_pack<Stream, typename detail::integer_union<NBits>::s_storage::limb_t>,
+                                  /*has_safe_cast<std::uint32_t, detail::mpz_size_t>,*/
+                                  has_msgpack_pack<Stream, ::mp_limb_t>, has_msgpack_pack<Stream, std::string>>::value,
+                      int>;
+    template <typename U>
+    using msgpack_convert_enabler
+        = enable_if_t<conjunction<std::is_same<U, U>, // Just for SFINAE.
+                                  has_msgpack_convert<bool>,
+                                  has_msgpack_convert<typename detail::integer_union<NBits>::s_storage::limb_t>,
+                                  has_msgpack_convert<::mp_limb_t>, has_msgpack_convert<std::string>>::value,
+                      int>;
+
+public:
+    /// Pack in msgpack format.
+    /**
+     * \note
+     * This method is enabled only if:
+     * - \p Stream satisfies piranha::is_msgpack_stream,
+     * - the integral types used in the internal representation of the integer, \p bool and \p std::string satisfy
+     *   piranha::has_msgpack_pack,
+     * - the integral type representing the size of the integer can be safely cast to \p std::uint32_t.
+     *
+     * This method will pack \p this into \p p. If \p f is msgpack_format::portable, then
+     * a decimal string representation of \p this is packed. Otherwise, an array of 3 elements
+     * is packed: the first element is a boolean representing whether the integer is stored in static
+     * storage or not, the second element is a boolean representing the sign of the integer (\p true
+     * for positive or zero, \p false for negative) and the last element is an array of limbs.
+     *
+     * @param[in] p target <tt>msgpack::packer</tt>.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
+     * @throws unspecified any exception thrown by:
+     * - the public interface of \p msgpack::packer and \p std::std::ostringstream,
+     * - piranha::msgpack_pack(),
+     * - the conversion of \p this to string.
+     */
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
+    void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
+    {
+        if (f == msgpack_format::binary) {
+            // Regardless of storage type, we always pack an array of 3 elements:
+            // - staticness,
+            // - sign of size,
+            // - array of limbs.
+            p.pack_array(3);
+            if (is_static()) {
+                const auto size = m_int.g_st()._mp_size;
+                // No problems with the static casting here, abs(size) is at most 2.
+                const auto usize = static_cast<std::uint32_t>(size >= 0 ? size : -size);
+                piranha::msgpack_pack(p, true, f);
+                // Store whether the size is positive (true) or negative (false).
+                piranha::msgpack_pack(p, size >= 0, f);
+                p.pack_array(usize);
+                std::for_each(m_int.g_st().m_limbs.data(), m_int.g_st().m_limbs.data() + usize,
+                              [&p, f](const typename detail::integer_union<NBits>::s_storage::limb_t &l) {
+                                  piranha::msgpack_pack(p, l, f);
+                              });
+            } else {
+                const auto size = m_int.g_dy()._mp_size;
+                std::uint32_t usize;
+                try {
+                    // TODO: safe_cast.
+                    usize = boost::numeric_cast<std::uint32_t>(safe_abs_size(size));
+                } catch (...) {
+                    piranha_throw(std::overflow_error, "the number of limbs is too large");
+                }
+                piranha::msgpack_pack(p, false, f);
+                piranha::msgpack_pack(p, size >= 0, f);
+                p.pack_array(usize);
+                std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + usize,
+                              [&p, f](const ::mp_limb_t &l) { piranha::msgpack_pack(p, l, f); });
+            }
+        } else {
+            std::ostringstream oss;
+            oss << *this;
+            piranha::msgpack_pack(p, oss.str(), f);
+        }
+    }
+    /// Convert from msgpack object.
+    /**
+     * \note
+     * This method is enabled only if the integral types used in the internal representation of the integer, \p bool
+     * and \p std::string satisfy piranha::has_msgpack_convert.
+     *
+     * This method will convert the object \p o into \p this. If \p f is piranha::msgpack_format::binary,
+     * this method offers the basic exception safety guarantee and it performs minimal checking on the input data.
+     * Calling this method in binary mode will result in undefined behaviour if \p o does not contain an integer
+     * serialized via msgpack_pack().
+     *
+     * @param[in] o source object.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws std::invalid_argument if, in binary mode, the serialized static integer has a number of limbs
+     * greater than 2.
+     * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
+     * @throws unspecified any exception thrown by:
+     * - memory errors in standard containers,
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::msgpack_convert(),
+     * - the constructor of piranha::mp_integer from string.
+     */
+    template <typename U = mp_integer, msgpack_convert_enabler<U> = 0>
+    void msgpack_convert(const msgpack::object &o, msgpack_format f)
+    {
+        if (f == msgpack_format::binary) {
+            PIRANHA_MAYBE_TLS std::array<msgpack::object, 3> vobj;
+            o.convert(vobj);
+            // Get the staticness of the serialized object.
+            bool s;
+            piranha::msgpack_convert(s, vobj[0u], f);
+            // Bring this into the same staticness as the serialized object.
+            const auto this_s = is_static();
+            if (s != this_s) {
+                if (this_s) {
+                    promote();
+                } else {
+                    *this = mp_integer{};
+                }
+            }
+            // Get the size sign.
+            bool size_sign;
+            piranha::msgpack_convert(size_sign, vobj[1u], f);
+            PIRANHA_MAYBE_TLS std::vector<msgpack::object> vlimbs;
+            // Get the limbs.
+            vobj[2u].convert(vlimbs);
+            const auto size = vlimbs.size();
+            // We will need to iterate over the vector of limbs in both cases.
+            auto it = vlimbs.begin();
+            if (s) {
+                if (unlikely(size > 2u)) {
+                    piranha_throw(std::invalid_argument, "cannot deserialize a static integer with "
+                                                             + std::to_string(vlimbs.size()) + " limbs");
+                }
+                try {
+                    // Fill in the limbs.
+                    auto data = m_int.g_st().m_limbs.data();
+                    // NOTE: for_each is guaranteed to proceed in order, so we are sure that it and l are consistent.
+                    std::for_each(data, data + size,
+                                  [f, &it](typename detail::integer_union<NBits>::s_storage::limb_t &l) {
+                                      piranha::msgpack_convert(l, *it, f);
+                                      ++it;
+                                  });
+                    // Zero the limbs that were not loaded from the archive.
+                    std::fill(data + size, data + 2, 0u);
+                    // Set the size, with sign.
+                    m_int.g_st()._mp_size = static_cast<detail::mpz_size_t>(
+                        size_sign ? static_cast<detail::mpz_size_t>(size) : -static_cast<detail::mpz_size_t>(size));
+                } catch (...) {
+                    // Reset the static before re-throwing.
+                    m_int.g_st()._mp_size = 0;
+                    m_int.g_st().m_limbs[0] = 0u;
+                    m_int.g_st().m_limbs[1] = 0u;
+                    throw;
+                }
+            } else {
+                detail::mpz_size_t sz;
+                try {
+                    sz = boost::numeric_cast<detail::mpz_size_t>(size);
+                    // We need to be able to negate this.
+                    if (unlikely(sz > detail::safe_abs_sint<detail::mpz_size_t>::value)) {
+                        throw std::overflow_error("");
+                    }
+                } catch (...) {
+                    piranha_throw(std::overflow_error, "the number of limbs is too large");
+                }
+                ::_mpz_realloc(&m_int.g_dy(), sz);
+                try {
+                    std::for_each(m_int.g_dy()._mp_d, m_int.g_dy()._mp_d + sz, [f, &it](::mp_limb_t &l) {
+                        piranha::msgpack_convert(l, *it, f);
+                        ++it;
+                    });
+                    m_int.g_dy()._mp_size = static_cast<detail::mpz_size_t>(size_sign ? sz : -sz);
+                } catch (...) {
+                    ::mpz_set_ui(&m_int.g_dy(), 0u);
+                    throw;
+                }
+            }
+        } else {
+            PIRANHA_MAYBE_TLS std::string tmp;
+            piranha::msgpack_convert(tmp, o, f);
+            *this = mp_integer(tmp);
+        }
+    }
+#endif
+
+private:
     detail::integer_union<NBits> m_int;
 };
 
@@ -4663,8 +4941,8 @@ const bool key_has_ipow_subs<Key, T>::value;
  * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_integer.
  */
 template <typename T>
-struct has_exact_ring_operations<T, typename std::enable_if<detail::is_mp_integer<
-                                        typename std::decay<T>::type>::value>::type> {
+struct has_exact_ring_operations<T, typename std::
+                                        enable_if<detail::is_mp_integer<typename std::decay<T>::type>::value>::type> {
     /// Value of the type trait.
     static const bool value = true;
 };
@@ -4690,6 +4968,126 @@ inline integer operator"" _z(const char *s)
     return integer(s);
 }
 }
+
+inline namespace impl
+{
+
+template <typename Archive, int NBits>
+using mp_integer_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, std::string>, has_boost_save<Archive, detail::mpz_size_t>,
+                              has_boost_save<Archive, bool>,
+                              has_boost_save<Archive, typename detail::integer_union<NBits>::s_storage::limb_t>,
+                              has_boost_save<Archive, ::mp_limb_t>>::value>;
+
+template <typename Archive, int NBits>
+using mp_integer_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, std::string>, has_boost_load<Archive, detail::mpz_size_t>,
+                              has_boost_load<Archive, bool>,
+                              has_boost_load<Archive, typename detail::integer_union<NBits>::s_storage::limb_t>,
+                              has_boost_load<Archive, ::mp_limb_t>>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled only if \p std::string and all the integral types in terms of which
+ * piranha::mp_integer is implemented satisfy piranha::has_boost_save.
+ *
+ * If \p Archive is \p boost::archive::binary_oarchive, a platform-dependent non-portable
+ * representation of the input integer is saved. Otherwise, a string representation of the input
+ * integer is saved.
+ *
+ * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
+ * @throws unspecified any exception thrown by piranha::boost_save() or by the
+ * conversion of \p this to string.
+ */
+template <typename Archive, int NBits>
+struct boost_save_impl<Archive, mp_integer<NBits>, mp_integer_boost_save_enabler<Archive, NBits>>
+    : boost_save_via_boost_api<Archive, mp_integer<NBits>> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled only if \p std::string and all the integral types in terms of which
+ * piranha::mp_integer is implemented satisfy piranha::has_boost_load.
+ *
+ * If \p Archive is \p boost::archive::binary_iarchive, this specialisation offers the basic exception guarantee
+ * and performs minimal checking of the input data.
+ *
+ * @throws std::invalid_argument if the serialized integer is static and its number of limbs is greater than 2.
+ * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
+ * @throws unspecified any exception thrown by piranha::boost_load(), or by the constructor of
+ * piranha::mp_integer from string.
+ */
+template <typename Archive, int NBits>
+struct boost_load_impl<Archive, mp_integer<NBits>, mp_integer_boost_load_enabler<Archive, NBits>>
+    : boost_load_via_boost_api<Archive, mp_integer<NBits>> {
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+// Enablers for msgpack serialization.
+template <typename Stream, typename T>
+using mp_integer_msgpack_pack_enabler = typename std::
+    enable_if<conjunction<detail::is_mp_integer<T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>::type;
+
+template <typename T>
+using mp_integer_msgpack_convert_enabler = typename std::
+    enable_if<conjunction<detail::is_mp_integer<T>, is_detected<msgpack_convert_member_t, T>>::value>::type;
+}
+
+/// Specialisation of piranha::msgpack_pack() for piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled if \p T is an instance of piranha::mp_integer supporting
+ * the piranha::mp_integer::msgpack_pack() method with a stream of type \p Stream.
+ */
+template <typename Stream, typename T>
+struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>> {
+    /// Call operator.
+    /**
+     * The call operator will use piranha::mp_integer::msgpack_pack() internally.
+     *
+     * @param[in] p target <tt>msgpack::packer</tt>.
+     * @param[in] n piranha::mp_integer to be serialized.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_integer::msgpack_pack().
+     */
+    void operator()(msgpack::packer<Stream> &p, const T &n, msgpack_format f) const
+    {
+        n.msgpack_pack(p, f);
+    }
+};
+
+/// Specialisation of piranha::msgpack_convert() for piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled if \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>> {
+    /// Call operator.
+    /**
+     * The call operator will use piranha::mp_integer::msgpack_convert() internally.
+     *
+     * @param[in] n target piranha::mp_integer.
+     * @param[in] o the <tt>msgpack::object</tt> to be converted into \p n.
+     * @param[in] f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_integer::msgpack_convert().
+     */
+    void operator()(T &n, const msgpack::object &o, msgpack_format f) const
+    {
+        n.msgpack_convert(o, f);
+    }
+};
+
+#endif
 }
 
 namespace std

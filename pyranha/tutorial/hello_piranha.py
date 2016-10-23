@@ -4,4 +4,4 @@ from fractions import Fraction
 import pyranha
 
 # Print the rational 4/3 to screen.
-print(Fraction(4,3))
+print(Fraction(4, 3))

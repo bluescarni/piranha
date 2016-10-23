@@ -53,7 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/series.hpp"
 #include "../src/series_multiplier.hpp"
 #include "../src/symbol_set.hpp"
@@ -65,7 +65,7 @@ template <typename Cf, typename Key>
 class g_series_type : public substitutable_series<series<Cf, Key, g_series_type<Cf, Key>>, g_series_type<Cf, Key>>
 {
     using base = substitutable_series<series<Cf, Key, g_series_type<Cf, Key>>, g_series_type<Cf, Key>>;
-    PIRANHA_SERIALIZE_THROUGH_BASE(base)
+
 public:
     template <typename Cf2>
     using rebind = g_series_type<Cf2, Key>;

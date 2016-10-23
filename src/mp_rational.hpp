@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_MP_RATIONAL_HPP
 #define PIRANHA_MP_RATIONAL_HPP
 
+#include <array>
 #include <boost/functional/hash.hpp>
 #include <climits>
 #include <cmath>
@@ -51,8 +52,8 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "pow.hpp"
 #include "print_tex_coefficient.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 
 namespace piranha
 {
@@ -73,7 +74,7 @@ struct is_mp_rational_interoperable_type {
 };
 
 // The second complication is that we need to cope with the fact that we are using this tt in a context
-// in which Rational might not actually be a rational (in the pow_impl specialsiation). In this case we must prevent
+// in which Rational might not actually be a rational (in the pow_impl specialisation). In this case we must prevent
 // a hard error to be generated.
 template <typename T, typename Rational>
 struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!is_mp_rational<Rational>::value>::type> {
@@ -84,13 +85,12 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
 /// Multiple precision rational class.
 /**
  * This class encapsulates two instances of piranha::mp_integer to represent an arbitrary-precision rational number
- * in terms of a numerator and a denominator.
- * The meaning of the \p NBits template parameter is the same as in piranha::mp_integer, that is, it represents the
- * bit width of the two limbs stored statically in the numerator and in the denominator.
+ * in terms of a numerator and a denominator. The meaning of the \p NBits template parameter is the same as in
+ * piranha::mp_integer, that is, it represents the bit width of the two limbs stored statically in the numerator and
+ * in the denominator.
  *
  * Unless otherwise specified, rational numbers are always kept in the usual canonical form in which numerator and
- * denominator
- * are coprime, and the denominator is always positive. Zero is uniquely represented by 0/1.
+ * denominator are coprime, and the denominator is always positive. Zero is uniquely represented by 0/1.
  *
  * ## Interoperability with other types ##
  *
@@ -101,16 +101,11 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
  * ## Exception safety guarantee ##
  *
  * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by
- * GMP routines,
- * the program will terminate.
+ * GMP routines, the program will terminate.
  *
  * ## Move semantics ##
  *
  * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
- *
- * ## Serialization ##
- *
- * This class supports serialization.
  */
 template <int NBits = 0>
 class mp_rational
@@ -673,34 +668,37 @@ private:
     };
     // Pow enabler.
     template <typename T>
-    using pow_enabler =
-        typename std::enable_if<std::is_same<decltype(std::declval<const int_type &>().pow(std::declval<const T &>())),
-                                             decltype(std::declval<const int_type &>().pow(
-                                                 std::declval<const T &>()))>::value,
-                                int>::type;
+    using pow_enabler = typename std::
+        enable_if<std::is_same<decltype(std::declval<const int_type &>().pow(std::declval<const T &>())),
+                               decltype(std::declval<const int_type &>().pow(std::declval<const T &>()))>::value,
+                  int>::type;
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive &ar, unsigned int) const
+    void save(Archive &ar, unsigned) const
     {
-        // NOTE: here in principle we do not need the split member implementation,
-        // this syntax could be used for both load and save. However, for load
-        // we use an implementation that gives better exception safety: load num/den
-        // into local variables and the move them in. So if something goes wrong in the
-        // deserialization of one of the ints, we do not modify this.
-        ar &m_num;
-        ar &m_den;
+        piranha::boost_save(ar, m_num);
+        piranha::boost_save(ar, m_den);
     }
-    template <class Archive>
-    void load(Archive &ar, unsigned int)
+    template <class Archive, enable_if_t<!std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
     {
         int_type num, den;
-        ar &num;
-        ar &den;
+        piranha::boost_load(ar, num);
+        piranha::boost_load(ar, den);
         // This ensures that if we load from a bad archive with non-coprime
         // num and den or negative den, or... we get anyway a canonicalised
         // rational or an error.
-        *this = mp_rational{num, den};
+        *this = mp_rational{std::move(num), std::move(den)};
+    }
+    template <class Archive, enable_if_t<std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+    void load(Archive &ar, unsigned)
+    {
+        int_type num, den;
+        piranha::boost_load(ar, num);
+        piranha::boost_load(ar, den);
+        m_num = std::move(num);
+        m_den = std::move(den);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 public:
@@ -1695,6 +1693,72 @@ public:
         return detail::generic_binomial(*this, n);
     }
 
+#if defined(PIRANHA_WITH_MSGPACK)
+private:
+    template <typename Stream>
+    using msgpack_pack_enabler
+        = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, int_type>>::value, int>;
+    template <typename U>
+    using msgpack_convert_enabler = enable_if_t<has_msgpack_convert<typename U::int_type>::value, int>;
+
+public:
+    /// Pack in msgpack format.
+    /**
+     * \note
+     * This method is enabled only if \p Stream satisfies piranha::is_msgpack_stream and the type representing the
+     * numerator and denominator satisfies piranha::has_msgpack_pack.
+     *
+     * This method will pack \p this into \p p. Rationals are packed as a numerator-denominator pairs.
+     *
+     * @param p the target <tt>msgpack::packer</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::msgpack_pack().
+     */
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
+    void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f) const
+    {
+        p.pack_array(2u);
+        piranha::msgpack_pack(p, m_num, f);
+        piranha::msgpack_pack(p, m_den, f);
+    }
+    /// Convert from msgpack object.
+    /**
+     * \note
+     * This method is enabled only if the type representing the
+     * numerator and denominator satisfies piranha::has_msgpack_convert.
+     *
+     * This method will convert \p o into \p this. If \p f is piranha::msgpack_format::portable
+     * this method will check that the deserialized rational is in canonical form before assigning it to \p this,
+     * otherwise no check will be performed and the behaviour will be undefined if the deserialized denominator is zero.
+     *
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::msgpack_convert(),
+     * - the constructor of piranha::mp_rational from numerator and denominator.
+     */
+    template <typename U = mp_rational, msgpack_convert_enabler<U> = 0>
+    void msgpack_convert(const msgpack::object &o, msgpack_format f)
+    {
+        std::array<msgpack::object, 2u> v;
+        o.convert(v);
+        int_type num, den;
+        piranha::msgpack_convert(num, v[0], f);
+        piranha::msgpack_convert(den, v[1], f);
+        if (f == msgpack_format::binary) {
+            m_num = std::move(num);
+            m_den = std::move(den);
+        } else {
+            *this = mp_rational{std::move(num), std::move(den)};
+        }
+    }
+#endif
+
 private:
     int_type m_num;
     int_type m_den;
@@ -2159,8 +2223,8 @@ struct divexact_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value
  * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_rational.
  */
 template <typename T>
-struct has_exact_ring_operations<T, typename std::enable_if<detail::is_mp_rational<
-                                        typename std::decay<T>::type>::value>::type> {
+struct has_exact_ring_operations<T, typename std::
+                                        enable_if<detail::is_mp_rational<typename std::decay<T>::type>::value>::type> {
     /// Value of the type trait.
     static const bool value = true;
 };
@@ -2173,10 +2237,9 @@ namespace detail
 {
 
 template <typename To, typename From>
-using sc_rat_enabler = typename std::enable_if<(is_mp_rational<To>::value
-                                                && (std::is_arithmetic<From>::value || is_mp_integer<From>::value))
-                                               || ((std::is_integral<To>::value || is_mp_integer<To>::value)
-                                                   && is_mp_rational<From>::value)>::type;
+using sc_rat_enabler = typename std::
+    enable_if<(is_mp_rational<To>::value && (std::is_arithmetic<From>::value || is_mp_integer<From>::value))
+              || ((std::is_integral<To>::value || is_mp_integer<To>::value) && is_mp_rational<From>::value)>::type;
 }
 
 /// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_rational.
@@ -2232,6 +2295,114 @@ public:
         return static_cast<To>(q);
     }
 };
+
+inline namespace impl
+{
+
+template <typename Archive, int NBits>
+using mp_rational_boost_save_enabler
+    = enable_if_t<has_boost_save<Archive, typename mp_rational<NBits>::int_type>::value>;
+
+template <typename Archive, int NBits>
+using mp_rational_boost_load_enabler
+    = enable_if_t<has_boost_load<Archive, typename mp_rational<NBits>::int_type>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::mp_rational.
+/**
+ * \note
+ * This specialisation is enabled only if the numerator/denominator type of piranha::mp_rational satisfies
+ * piranha::has_boost_save.
+ *
+ * The rational will be serialized as a numerator/denominator pair.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save().
+ */
+template <typename Archive, int NBits>
+struct boost_save_impl<Archive, mp_rational<NBits>, mp_rational_boost_save_enabler<Archive, NBits>>
+    : boost_save_via_boost_api<Archive, mp_rational<NBits>> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::mp_rational.
+/**
+ * \note
+ * This specialisation is enabled only if the numerator/denominator type of piranha::mp_rational satisfies
+ * piranha::has_boost_load.
+ *
+ * If \p Archive is boost::archive::binary_iarchive, the serialized numerator/denominator pair is loaded
+ * as-is, without canonicality checks. Otherwise, the rational will be canonicalised after deserialization.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_load() or by the constructor of piranha::mp_rational
+ * from numerator and denominator.
+ */
+template <typename Archive, int NBits>
+struct boost_load_impl<Archive, mp_rational<NBits>, mp_rational_boost_load_enabler<Archive, NBits>>
+    : boost_load_via_boost_api<Archive, mp_rational<NBits>> {
+};
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+inline namespace impl
+{
+
+template <typename Stream, typename T>
+using mp_rational_msgpack_pack_enabler
+    = enable_if_t<conjunction<detail::is_mp_rational<T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>;
+
+template <typename T>
+using mp_rational_msgpack_convert_enabler
+    = enable_if_t<conjunction<detail::is_mp_rational<T>, is_detected<msgpack_convert_member_t, T>>::value>;
+}
+
+/// Specialisation of piranha::msgpack_pack() for piranha::mp_rational.
+/**
+ * \note
+ * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
+ * piranha::mp_rational::msgpack_pack() method.
+ */
+template <typename Stream, typename T>
+struct msgpack_pack_impl<Stream, T, mp_rational_msgpack_pack_enabler<Stream, T>> {
+    /// Call operator.
+    /**
+     * The call operator will use the piranha::mp_rational::msgpack_pack() method of \p q.
+     *
+     * @param p the source <tt>msgpack::packer</tt>.
+     * @param q the input rational.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_rational::msgpack_pack().
+     */
+    void operator()(msgpack::packer<Stream> &p, const T &q, msgpack_format f) const
+    {
+        q.msgpack_pack(p, f);
+    }
+};
+
+/// Specialisation of piranha::msgpack_convert() for piranha::mp_rational.
+/**
+ * \note
+ * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
+ * piranha::mp_rational::msgpack_convert() method.
+ */
+template <typename T>
+struct msgpack_convert_impl<T, mp_rational_msgpack_convert_enabler<T>> {
+    /// Call operator.
+    /**
+     * The call operator will use the piranha::mp_rational::msgpack_convert() method of \p q.
+     *
+     * @param q the target rational.
+     * @param o the source <tt>msgpack::object</tt>.
+     * @param f the desired piranha::msgpack_format.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_rational::msgpack_convert().
+     */
+    void operator()(T &q, const msgpack::object &o, msgpack_format f) const
+    {
+        q.msgpack_convert(o, f);
+    }
+};
+
+#endif
 }
 
 namespace std

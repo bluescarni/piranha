@@ -201,7 +201,7 @@ namespace detail
 
 template <typename To, typename From>
 using safe_cast_enabler =
-    typename std::enable_if<std::is_same<decltype(safe_cast_impl<typename std::decay<To>::type, From>()(
+    typename std::enable_if<std::is_same<decltype(safe_cast_impl<typename std::decay<To>::type, From>{}(
                                              std::declval<const From &>())),
                                          typename std::decay<To>::type>::value,
                             int>::type;
@@ -234,7 +234,7 @@ template <typename To, typename From, detail::safe_cast_enabler<To, From> = 0>
 inline To safe_cast(const From &x)
 {
     try {
-        return safe_cast_impl<typename std::decay<To>::type, From>()(x);
+        return safe_cast_impl<typename std::decay<To>::type, From>{}(x);
     } catch (const std::exception &e) {
         piranha_throw(std::invalid_argument,
                       std::string("unsafe conversion, the full error message is:\n") + e.what() + "\n");
@@ -256,10 +256,12 @@ class has_safe_cast : detail::sfinae_types
     template <typename To1, typename From1, detail::safe_cast_enabler<To1, From1> = 0>
     static yes test(const To1 &, const From1 &);
     static no test(...);
+    static const bool implementation_defined
+        = std::is_same<decltype(test(std::declval<Tod>(), std::declval<Fromd>())), yes>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<Tod>(), std::declval<Fromd>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.

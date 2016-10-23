@@ -44,7 +44,9 @@ see https://www.gnu.org/licenses/. */
 #include <set>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "../src/config.hpp"
@@ -538,6 +540,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_ostreamable_test)
     BOOST_CHECK(!is_ostreamable<stream4>::value);
     BOOST_CHECK(is_ostreamable<stream5>::value);
     BOOST_CHECK(!is_ostreamable<stream6>::value);
+    BOOST_CHECK(!is_ostreamable<void>::value);
 }
 
 struct c_element {
@@ -1209,8 +1212,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_key_test)
     BOOST_CHECK(!is_key<const key01 &>::value);
     BOOST_CHECK(is_key<key02>::value);
     BOOST_CHECK(!is_key<key02 &>::value);
+    BOOST_CHECK(!is_key<key02 &&>::value);
     BOOST_CHECK(!is_key<const key02>::value);
     BOOST_CHECK(!is_key<const key02 &>::value);
+    BOOST_CHECK(!is_key<const key02 &&>::value);
     BOOST_CHECK(!is_key<key03>::value);
 // Missing noexcept.
 #if !defined(PIRANHA_COMPILER_IS_INTEL)
@@ -2097,4 +2102,90 @@ BOOST_AUTO_TEST_CASE(type_traits_is_mappable_test)
     BOOST_CHECK(!is_mappable<map_03>::value);
     BOOST_CHECK(!is_mappable<map_04>::value);
     BOOST_CHECK(!is_mappable<map_05>::value);
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_ref_mod_t)
+{
+    BOOST_CHECK((std::is_same<int, uncvref_t<int>>::value));
+    BOOST_CHECK((std::is_same<int, uncvref_t<int &>>::value));
+    BOOST_CHECK((std::is_same<int, uncvref_t<const int &>>::value));
+    BOOST_CHECK((std::is_same<int, uncvref_t<const int &&>>::value));
+    BOOST_CHECK((std::is_same<int, uncvref_t<const int>>::value));
+    BOOST_CHECK((std::is_same<int, uncvref_t<volatile int &>>::value));
+    BOOST_CHECK((std::is_same<int, unref_t<int>>::value));
+    BOOST_CHECK((std::is_same<int, unref_t<int &>>::value));
+    BOOST_CHECK((!std::is_same<int, unref_t<int volatile &>>::value));
+    BOOST_CHECK((std::is_same<const int, unref_t<int const &>>::value));
+    BOOST_CHECK((!std::is_same<int, unref_t<int const &>>::value));
+    BOOST_CHECK((std::is_same<int &, addlref_t<int>>::value));
+    BOOST_CHECK((std::is_same<int &, addlref_t<int &>>::value));
+    BOOST_CHECK((std::is_same<int &, addlref_t<int &&>>::value));
+    BOOST_CHECK((std::is_same<void, addlref_t<void>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_void_t)
+{
+    BOOST_CHECK((std::is_same<void, void_t<int>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<void>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<void *>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<std::string &>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<std::string const &>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
+    BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
+}
+
+template <typename T, typename U>
+using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
+
+BOOST_AUTO_TEST_CASE(type_traits_is_detected)
+{
+    BOOST_CHECK((is_detected<add_t, int, int>::value));
+    BOOST_CHECK((std::is_same<is_detected_t<add_t, int, int>, int>::value));
+    BOOST_CHECK((is_detected<add_t, double, int>::value));
+    BOOST_CHECK((std::is_same<is_detected_t<add_t, int, double>, double>::value));
+    BOOST_CHECK((is_detected<add_t, char, char>::value));
+    BOOST_CHECK((std::is_same<is_detected_t<add_t, char, char>, int>::value));
+    BOOST_CHECK((!is_detected<add_t, double, std::string>::value));
+    BOOST_CHECK((std::is_same<is_detected_t<add_t, double, std::string>, nonesuch>::value));
+}
+
+template <typename T>
+struct tt_0 {
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_conj_disj_neg)
+{
+    BOOST_CHECK((conjunction<std::is_same<int, int>, std::is_convertible<float, int>>::value));
+    BOOST_CHECK((!conjunction<std::is_same<float, int>, std::is_convertible<float, int>>::value));
+    BOOST_CHECK((!conjunction<std::is_same<float, int>, tt_0<float>>::value));
+    BOOST_CHECK((disjunction<std::is_same<float, int>, std::is_convertible<float, int>>::value));
+    BOOST_CHECK((!disjunction<std::is_same<float, int>, std::is_convertible<float, tt_0<int>>>::value));
+    BOOST_CHECK((disjunction<std::is_same<float, float>, tt_0<float>>::value));
+    BOOST_CHECK((conjunction<negation<std::is_same<float, int>>, std::is_convertible<float, int>>::value));
+    BOOST_CHECK((disjunction<negation<std::is_same<float, int>>, std::is_convertible<float, tt_0<int>>>::value));
+}
+
+struct times_two {
+    template <typename T>
+    void operator()(T &x) const
+    {
+        x = 2 * x;
+    }
+};
+
+struct minus_one {
+    template <typename T>
+    void operator()(T &x) const
+    {
+        x -= 1;
+    }
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_tuple_for_each)
+{
+    auto t = std::make_tuple(1, 2., 3l, 4ll);
+    tuple_for_each(t, times_two{});
+    BOOST_CHECK(t == std::make_tuple(2, 4., 6l, 8ll));
+    tuple_for_each(t, minus_one{});
+    BOOST_CHECK(t == std::make_tuple(1, 3., 5l, 7ll));
 }

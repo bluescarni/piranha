@@ -78,13 +78,6 @@ see https://www.gnu.org/licenses/. */
  * http://stackoverflow.com/questions/3675059/how-could-i-sensibly-overload-placement-operator-new (and 18.6.1.3 in the
  * standard)
  * so we might as well keep ::new in those cases.
- * \todo similarly, review all struct/class is_/has_is_ type traits to prevent ADL by using piranha specifiers as
- * needed.
- * \todo should we always use piranha when calling functions in order to prevent ADL? -> note that these ADL concerns
- * apply
- * only to unqualified function calls, of which there are not many (e.g., the math type traits are all defined outside
- * piranha::math
- * and hence always include the math:: qualifier).
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting
  * constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must
@@ -108,7 +101,8 @@ see https://www.gnu.org/licenses/. */
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at
  * least to make
  * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
- * and keep lexical_cast only for the conversion of piranha's types to string.
+ * and keep lexical_cast only for the conversion of piranha's types to string. UPDATE: it looks like to_string is
+ * influenced by the locale setting, it's probably better to roll our implementation.
  * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in term. Should we require it
@@ -135,7 +129,6 @@ see https://www.gnu.org/licenses/. */
  * \todo probably we should change the pow() implementation for integer to error out if the power is negative and the
  * base
  * is not unitary.
- * \todo http://keepachangelog.com/CHANGELOG.md
  * \todo in pyranha, it would be nice to have a reverse lookup from the name of the exposed types to their
  * representation
  * in the type system. Plus, maybe when printing the series they should have a header displaying their name in the type
@@ -302,8 +295,19 @@ see https://www.gnu.org/licenses/. */
  * header and then make sure to include that header in every piranha public header.
  * \todo see if in series we can make container_type public (yes) and make the other protected members private, now that
  * we have functions to manipulate the container and the symbol set.
- * \todo we need save/load functions for rational_function as well. Maybe we should introduce global save/load functions
- * and use those instead of the static members of series?
+ * \todo safe_cast fixages: remove the dependency on mp_integer, fix the exception usage as explained above,
+ * and once this is done check all uses of boost numeric_cast, which should now be replaceable by safe_cast.
+ * Check also the fwd declaration usages which work around the current issues.
+ * \todo checkout the --enable-fat GMP build option - it looks like this is the way to go for a generic GMP lib
+ * for binary windows distributions.
+ * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
+ * \todo guidelines for type traits modernization:
+ * - beautify enablers,
+ * - replace std::decay with uncvref_t,
+ * - check returnability,
+ * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
+ *   in the same fashion as the s11n type traits.
+ * \todo just replace @param[in]/@param[out] with just @param
  */
 namespace piranha
 {
@@ -312,6 +316,11 @@ namespace piranha
 // Classes and functions defined in this namespace are non-documented implementation details.
 // Users should never employ functionality implemented in this namespace.
 namespace detail
+{
+}
+
+// Same as above, new version as inline namespace so we don't have to use detail:: everywhere.
+inline namespace impl
 {
 }
 
@@ -358,8 +367,8 @@ inline namespace literals
 #include "real.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "runtime_info.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"

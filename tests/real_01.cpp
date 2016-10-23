@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/real.hpp"
 
-#define BOOST_TEST_MODULE real_test
+#define BOOST_TEST_MODULE real_01_test
 #include <boost/test/unit_test.hpp>
 
 #define FUSION_MAX_VECTOR_SIZE 20
@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
+#include "../src/s11n.hpp"
 #include "../src/safe_cast.hpp"
 #include "../src/type_traits.hpp"
 

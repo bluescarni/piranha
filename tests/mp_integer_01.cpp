@@ -105,7 +105,7 @@ using detail::mpz_alloc_t;
 // Constructors and assignments.
 struct constructor_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef detail::static_integer<T::value> int_type;
         using limbs_type = typename int_type::limbs_type;

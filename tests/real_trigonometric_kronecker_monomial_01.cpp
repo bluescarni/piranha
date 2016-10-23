@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/real_trigonometric_kronecker_monomial.hpp"
 
-#define BOOST_TEST_MODULE real_trigonometric_kronecker_monomial_test
+#define BOOST_TEST_MODULE real_trigonometric_kronecker_monomial_01_test
 #include <boost/test/unit_test.hpp>
 
 #include <array>
@@ -57,7 +57,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
-#include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/term.hpp"
@@ -1703,42 +1702,6 @@ struct is_evaluable_tester {
 BOOST_AUTO_TEST_CASE(rtkm_key_is_evaluable_test)
 {
     boost::mpl::for_each<int_types>(is_evaluable_tester());
-}
-
-struct serialization_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef real_trigonometric_kronecker_monomial<T> k_type;
-        k_type tmp;
-        std::stringstream ss;
-        k_type k0(T(1), true);
-        {
-            boost::archive::text_oarchive oa(ss);
-            oa << k0;
-        }
-        {
-            boost::archive::text_iarchive ia(ss);
-            ia >> tmp;
-        }
-        BOOST_CHECK(tmp == k0);
-        ss.str("");
-        k_type k1(T(2), false);
-        {
-            boost::archive::text_oarchive oa(ss);
-            oa << k1;
-        }
-        {
-            boost::archive::text_iarchive ia(ss);
-            ia >> tmp;
-        }
-        BOOST_CHECK(tmp == k1);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(rtkm_serialization_test)
-{
-    boost::mpl::for_each<int_types>(serialization_tester());
 }
 
 BOOST_AUTO_TEST_CASE(rtkm_kic_test)

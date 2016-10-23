@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -59,8 +60,8 @@ see https://www.gnu.org/licenses/. */
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "pow.hpp"
+#include "s11n.hpp"
 #include "safe_cast.hpp"
-#include "serialization.hpp"
 #include "static_vector.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
@@ -70,12 +71,64 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
+// Fwd declaration.
+template <typename>
+class kronecker_monomial;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T>
+inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned)
+{
+    if (std::is_same<Archive, boost::archive::binary_oarchive>::value) {
+        piranha::boost_save(ar, k.key().get_int());
+    } else {
+        auto tmp = k.key().unpack(k.ss());
+        piranha::boost_save(ar, tmp);
+    }
+}
+
+template <typename Archive, typename T>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned)
+{
+    if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
+        T value;
+        piranha::boost_load(ar, value);
+        k.key().set_int(value);
+    } else {
+        typename piranha::kronecker_monomial<T>::v_type tmp;
+        piranha::boost_load(ar, tmp);
+        if (unlikely(tmp.size() != k.ss().size())) {
+            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
+                                                 "monomial: the deserialized size is "
+                                                     + std::to_string(tmp.size())
+                                                     + " but the reference symbol set has a size of "
+                                                     + std::to_string(k.ss().size()));
+        }
+        k.key() = piranha::kronecker_monomial<T>(tmp);
+    }
+}
+
+template <typename Archive, typename T>
+inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
+
+namespace piranha
+{
+
 /// Kronecker monomial class.
 /**
- * This class represents a multivariate monomial with integral exponents.
- * The values of the exponents are packed in a signed integer using Kronecker substitution, using the facilities
- * provided
- * by piranha::kronecker_array.
+ * This class represents a multivariate monomial with integral exponents. The values of the exponents are packed in a
+ * signed integer using Kronecker substitution, using the facilities provided by piranha::kronecker_array.
  *
  * This class satisfies the piranha::is_key, piranha::key_has_degree, piranha::key_has_ldegree and
  * piranha::key_is_differentiable type traits.
@@ -92,10 +145,6 @@ namespace piranha
  * ## Move semantics ##
  *
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
- *
- * ## Serialization ##
- *
- * This class supports serialization.
  */
 // TODO:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
@@ -115,7 +164,7 @@ public:
      * Used to represent the number of variables in the monomial. Equivalent to the size type of
      * piranha::kronecker_array.
      */
-    typedef typename ka::size_type size_type;
+    using size_type = typename ka::size_type;
     /// Vector type used for temporary packing/unpacking.
     // NOTE: this essentially defines a maximum number of small ints that can be packed in m_value,
     // as we always need to pass through pack/unpack. In practice, it does not matter: in current
@@ -144,13 +193,6 @@ private:
     template <typename U>
     using pow_enabler = typename std::
         enable_if<has_safe_cast<T, decltype(std::declval<integer &&>() * std::declval<const U &>())>::value, int>::type;
-    // Serialization support.
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive &ar, unsigned int)
-    {
-        ar &m_value;
-    }
     // Enabler for multiply().
     template <typename Cf>
     using multiply_enabler = typename std::enable_if<detail::true_tt<detail::cf_mult_enabler<Cf>>::value, int>::type;
@@ -192,11 +234,10 @@ private:
     template <typename U>
     using init_list_ctor_enabler = container_ctor_enabler<std::initializer_list<U>>;
     template <typename Iterator>
-    using it_ctor_enabler =
-        typename std::enable_if<is_input_iterator<Iterator>::value
-                                    && has_safe_cast<value_type,
-                                                     typename std::iterator_traits<Iterator>::value_type>::value,
-                                int>::type;
+    using it_ctor_enabler = typename std::
+        enable_if<is_input_iterator<Iterator>::value
+                      && has_safe_cast<value_type, typename std::iterator_traits<Iterator>::value_type>::value,
+                  int>::type;
     // Implementation of the ctor from range.
     template <typename Iterator>
     typename v_type::size_type construct_from_range(Iterator begin, Iterator end)
@@ -1118,12 +1159,138 @@ public:
         return std::any_of(tmp.begin(), tmp.end(), [](const value_type &e) { return e < value_type(0); });
     }
 
+#if defined(PIRANHA_WITH_MSGPACK)
+private:
+    // Enablers for msgpack serialization.
+    template <typename Stream>
+    using msgpack_pack_enabler = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+                                                         has_msgpack_pack<Stream, v_type>>::value,
+                                             int>;
+    template <typename U>
+    using msgpack_convert_enabler = enable_if_t<conjunction<has_msgpack_convert<typename U::value_type>,
+                                                            has_msgpack_convert<typename U::v_type>>::value,
+                                                int>;
+
+public:
+    /// Serialize in msgpack format.
+    /**
+     * \note
+     * This method is activated only if \p Stream satisfies piranha::is_msgpack_stream and both \p T and
+     * piranha::kronecker_monomial::v_type satisfy piranha::has_msgpack_pack.
+     *
+     * This method will pack \p this into \p packer. The packed object is the internal integral instance in binary
+     * format, an array of exponents in portable format.
+     *
+     * @param[in] packer the target packer.
+     * @param[in] f the serialization format.
+     * @param[in] s reference arguments set.
+     *
+     * @throws unspecified any exception thrown by unpack() or piranha::msgpack_pack().
+     */
+    template <typename Stream, msgpack_pack_enabler<Stream> = 0>
+    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
+    {
+        if (f == msgpack_format::binary) {
+            piranha::msgpack_pack(packer, m_value, f);
+        } else {
+            auto tmp = unpack(s);
+            piranha::msgpack_pack(packer, tmp, f);
+        }
+    }
+    /// Deserialize from msgpack object.
+    /**
+     * \note
+     * This method is activated only if both \p T and piranha::kronecker_monomial::v_type satisfy
+     * piranha::has_msgpack_convert.
+     *
+     * This method will deserialize \p o into \p this. In binary mode, no check is performed on the content of \p o,
+     * and calling this method will result in undefined behaviour if \p o does not contain a monomial serialized via
+     * msgpack_pack().
+     *
+     * @param[in] o msgpack object that will be deserialized.
+     * @param[in] f serialization format.
+     * @param[in] s reference arguments set.
+     *
+     * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
+     * @throws unspecified any exception thrown by:
+     * - the constructor of piranha::kronecker_monomial from a container,
+     * - piranha::msgpack_convert().
+     */
+    template <typename U = kronecker_monomial, msgpack_convert_enabler<U> = 0>
+    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
+    {
+        if (f == msgpack_format::binary) {
+            piranha::msgpack_convert(m_value, o, f);
+        } else {
+            v_type tmp;
+            piranha::msgpack_convert(tmp, o, f);
+            if (unlikely(tmp.size() != s.size())) {
+                piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
+                                                     "symbol set has a size of "
+                                                         + std::to_string(s.size())
+                                                         + ", while the monomial being deserialized has a size of "
+                                                         + std::to_string(tmp.size()));
+            }
+            *this = kronecker_monomial(tmp);
+        }
+    }
+
+#endif
+
 private:
     value_type m_value;
 };
 
 /// Alias for piranha::kronecker_monomial with default type.
 using k_monomial = kronecker_monomial<>;
+
+inline namespace impl
+{
+
+template <typename Archive, typename T>
+using k_monomial_boost_save_enabler
+    = enable_if_t<conjunction<has_boost_save<Archive, T>,
+                              has_boost_save<Archive, typename kronecker_monomial<T>::v_type>>::value>;
+
+template <typename Archive, typename T>
+using k_monomial_boost_load_enabler
+    = enable_if_t<conjunction<has_boost_load<Archive, T>,
+                              has_boost_load<Archive, typename kronecker_monomial<T>::v_type>>::value>;
+}
+
+/// Specialisation of piranha::boost_save() for piranha::kronecker_monomial.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and piranha::kronecker_monomial::v_type satisfy
+ * piranha::has_boost_save.
+ *
+ * If \p Archive is \p boost::archive::binary_oarchive, the internal integral instance is saved.
+ * Otherwise, the monomial is unpacked and the vector of exponents is saved.
+ *
+ * @throws unspecified any exception thrown by piranha::boost_save() or piranha::kronecker_monomial::unpack().
+ */
+template <typename Archive, typename T>
+struct boost_save_impl<Archive, boost_s11n_key_wrapper<kronecker_monomial<T>>,
+                       k_monomial_boost_save_enabler<Archive, T>>
+    : boost_save_via_boost_api<Archive, boost_s11n_key_wrapper<kronecker_monomial<T>>> {
+};
+
+/// Specialisation of piranha::boost_load() for piranha::kronecker_monomial.
+/**
+ * \note
+ * This specialisation is enabled only if \p T and piranha::kronecker_monomial::v_type satisfy
+ * piranha::has_boost_load.
+ *
+ * @throws std::invalid_argument if the size of the serialized monomial is different from the size of the symbol set.
+ * @throws unspecified any exception thrown by:
+ * - piranha::boost_load(),
+ * - the constructor of piranha::kronecker_monomial from a container.
+ */
+template <typename Archive, typename T>
+struct boost_load_impl<Archive, boost_s11n_key_wrapper<kronecker_monomial<T>>,
+                       k_monomial_boost_load_enabler<Archive, T>>
+    : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<kronecker_monomial<T>>> {
+};
 }
 
 namespace std
@@ -1133,9 +1300,9 @@ namespace std
 template <typename T>
 struct hash<piranha::kronecker_monomial<T>> {
     /// Result type.
-    typedef size_t result_type;
+    using result_type = size_t;
     /// Argument type.
-    typedef piranha::kronecker_monomial<T> argument_type;
+    using argument_type = piranha::kronecker_monomial<T>;
     /// Hash operator.
     /**
      * @param[in] a argument whose hash value will be computed.

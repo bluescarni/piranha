@@ -402,15 +402,12 @@ protected:
      * with a call operator accepting and returning a base_series_multiplier::size_type.
      *
      * Internally, the double loops is decomposed in blocks of size tuning::get_multiplication_block_size() in an
-     *attempt
-     * to optimise cache memory access patterns.
+     * attempt to optimise cache memory access patterns.
      *
      * This method is meant to be used for series multiplication. \p mf is intended to be a function object that
-     *multiplies
-     * the <tt>i</tt>-th term of the first series by the <tt>j</tt>-th term of the second series. \p lf is intended to
-     *be
-     * a functor that establishes how many terms in the second series have to be multiplied by the <tt>i</tt>-th term
-     * of the first series.
+     * multiplies the <tt>i</tt>-th term of the first series by the <tt>j</tt>-th term of the second series.
+     * \p lf is intended to be a functor that establishes how many terms in the second series have to be multiplied by
+     * the <tt>i</tt>-th term of the first series.
      *
      * @param[in] mf the multiplication functor.
      * @param[in] start1 start index in the first series.
@@ -911,8 +908,8 @@ protected:
         try {
             for (unsigned i = 0u; i < n_threads; ++i) {
                 const auto start = static_cast<bucket_size_type>((b_count / n_threads) * i),
-                           end = static_cast<bucket_size_type>((i == n_threads - 1u) ? b_count : (b_count / n_threads)
-                                                                                                     * (i + 1u));
+                           end = static_cast<bucket_size_type>(
+                               (i == n_threads - 1u) ? b_count : (b_count / n_threads) * (i + 1u));
                 f_list.push_back(thread_pool::enqueue(i, eraser, start, end));
             }
             // First let's wait for everything to finish.

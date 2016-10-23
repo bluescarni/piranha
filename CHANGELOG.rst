@@ -1,8 +1,27 @@
 Changelog
 =========
 
-%%version%% (unreleased)
-------------------------
+v0.5 (2016-10-05)
+-----------------
+
+Fix
+~~~
+
+- YACMA_COMPILER_IS_CLANGXX now recognizes correctly AppleClang. [Isuru
+  Fernando]
+
+  CMAKE_CXX_COMPILER_ID can sometimes be AppleClang when Mac's version of Clang is used
+
+v0.4 (2016-10-04)
+-----------------
+
+Fix
+~~~
+
+- Fix changelog generation. [Francesco Biscani]
+
+v0.3 (2016-10-04)
+-----------------
 
 New
 ~~~
@@ -14,6 +33,10 @@ New
 Changes
 ~~~~~~~
 
+- Require CMake >= 3.0.0. [Francesco Biscani]
+
+- Remove the (unused) is_instance_of type trait. [Francesco Biscani]
+
 - Setting a global truncation limit in polynomials now resets the cache
   of natural powers. [Francesco Biscani]
 
@@ -23,6 +46,14 @@ Changes
 
 Fix
 ~~~
+
+- Fix build system error when cmake is not run from a git checkout.
+  [Francesco Biscani]
+
+- Test compilation fixes for libc++. [Francesco Biscani]
+
+- Improve documentation for mp_integer::get_mpz_view() (fixes #22) [skip
+  ci]. [Francesco Biscani]
 
 - Fix documentation of the truncated multiplication method in the
   polynomial multiplier. [Francesco Biscani]

@@ -55,7 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/math.hpp"
-#include "../src/serialization.hpp"
+#include "../src/s11n.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
