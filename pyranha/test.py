@@ -692,7 +692,6 @@ class polynomial_test_case(_ut.TestCase):
         x /= x
         self.assertEqual(x, 1)
         x = pt('x')
-        self.assertRaises(ZeroDivisionError, lambda: pt2() / pt2())
         self.assertRaises(ArithmeticError, lambda: pt(1) / x)
         self.assertEqual(pt.udivrem(x, x)[0], 1)
         self.assertEqual(pt.udivrem(x, x)[1], 0)

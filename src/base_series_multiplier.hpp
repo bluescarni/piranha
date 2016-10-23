@@ -374,14 +374,15 @@ public:
         // always 0. The temporary zero series is stored in the m_zero_f member as a collection of 1 term with
         // zero coefficient.
         if (!zero_is_absorbing<Series>::value) {
+            using term_type = typename Series::term_type;
+            using cf_type = typename term_type::cf_type;
+            using key_type = typename term_type::key_type;
             if (p1->empty()) {
-                m_zero_f1.insert(
-                    typename Series::term_type{0, typename Series::term_type::key_type(s1.get_symbol_set())});
+                m_zero_f1.insert(term_type{cf_type(0), key_type(s1.get_symbol_set())});
                 ctr1 = &m_zero_f1;
             }
             if (p2->empty()) {
-                m_zero_f2.insert(
-                    typename Series::term_type{0, typename Series::term_type::key_type(s1.get_symbol_set())});
+                m_zero_f2.insert(term_type{cf_type(0), key_type(s1.get_symbol_set())});
                 ctr2 = &m_zero_f2;
             }
         }
