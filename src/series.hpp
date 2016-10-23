@@ -1942,7 +1942,7 @@ private:
     using pow_m_type = decltype(std::declval<const U &>() * std::declval<const U &>());
     // Common checks on the exponent.
     template <typename T>
-    using pow_expo_checks = typename std::enable_if<has_is_zero<T>::value && has_safe_cast<integer, T>::value>::type;
+    using pow_expo_checks = std::integral_constant<bool, conjunction<has_is_zero<T>, has_safe_cast<integer, T>>::value>;
     // Hashing utils for series.
     struct series_hasher {
         template <typename T>
@@ -1976,38 +1976,36 @@ private:
     };
     // Case 0: the exponentiation of the coefficient does not change its type.
     template <typename T, typename U>
-    struct
-        pow_ret_type_<T, U,
-                      typename std::
-                          enable_if<std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>::value
-                                    && detail::true_tt<pow_expo_checks<T>>::value &&
-                                    // Check we can construct the return value from the type stored in the cache.
-                                    std::is_constructible<U, pow_m_type<U>>::value &&
-                                    // Check that when we multiply the type stored in the cache by *this, we get again
-                                    // the type stored in the cache.
-                                    std::is_same<pow_m_type<U>, decltype(std::declval<const pow_m_type<U> &>()
-                                                                         * std::declval<const U &>())>::value
-                                    &&
-                                    // Check we can use is_identical.
-                                    std::is_same<is_identical_enabler<U>, int>::value>::type> {
+    struct pow_ret_type_<T, U, enable_if_t<conjunction<std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>,
+                                                       pow_expo_checks<T>,
+                                                       // Check we can construct the return value from the type stored
+                                                       // in the cache.
+                                                       std::is_constructible<U, pow_m_type<U>>,
+                                                       // Check that when we multiply the type stored in the cache by
+                                                       // *this, we get again the type stored in the cache.
+                                                       std::is_same<pow_m_type<U>,
+                                                                    decltype(std::declval<const pow_m_type<U> &>()
+                                                                             * std::declval<const U &>())>,
+                                                       // Check we can use is_identical.
+                                                       std::is_same<is_identical_enabler<U>, int>>::value>> {
         using type = U;
     };
     // Case 1: the exponentiation of the coefficient does change its type.
     template <typename T, typename U>
-    struct
-        pow_ret_type_<T, U,
-                      typename std::
-                          enable_if<!std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>::value
-                                    && detail::true_tt<pow_expo_checks<T>>::value &&
-                                    // Check we can construct the return value from the type stored in the cache.
-                                    std::is_constructible<series_rebind<U, pow_cf_type<T, U>>, pow_m_type<U>>::value &&
-                                    // Check that when we multiply the type stored in the cache by *this, we get again
-                                    // the type stored in the cache.
-                                    std::is_same<pow_m_type<U>, decltype(std::declval<const pow_m_type<U> &>()
-                                                                         * std::declval<const U &>())>::value
-                                    &&
-                                    // Check we can use is_identical.
-                                    std::is_same<is_identical_enabler<U>, int>::value>::type> {
+    struct pow_ret_type_<T, U, enable_if_t<conjunction<negation<std::is_same<pow_cf_type<T, U>,
+                                                                             typename U::term_type::cf_type>>,
+                                                       pow_expo_checks<T>,
+                                                       // Check we can construct the return value from the type stored
+                                                       // in the cache.
+                                                       std::is_constructible<series_rebind<U, pow_cf_type<T, U>>,
+                                                                             pow_m_type<U>>,
+                                                       // Check that when we multiply the type stored in the cache by
+                                                       // *this, we get again the type stored in the cache.
+                                                       std::is_same<pow_m_type<U>,
+                                                                    decltype(std::declval<const pow_m_type<U> &>()
+                                                                             * std::declval<const U &>())>,
+                                                       // Check we can use is_identical.
+                                                       std::is_same<is_identical_enabler<U>, int>>::value>> {
         using type = series_rebind<U, pow_cf_type<T, U>>;
     };
     // Final typedef.
@@ -2019,7 +2017,7 @@ public:
     /**
      * Used to represent the number of terms in the series. Equivalent to piranha::hash_set::size_type.
      */
-    typedef typename container_type::size_type size_type;
+    using size_type = typename container_type::size_type;
     /// Const iterator.
     /**
      * Iterator type that can be used to iterate over the terms of the series.
@@ -2032,7 +2030,7 @@ public:
      *
      * @see piranha::series::begin() and piranha::series::end().
      */
-    typedef const_iterator_impl const_iterator;
+    using const_iterator = const_iterator_impl;
     /// Defaulted default constructor.
     series() = default;
     /// Defaulted copy constructor.
@@ -2308,20 +2306,17 @@ public:
      *
      * Return \p this raised to the <tt>x</tt>-th power. The type of the result is either the calling series type,
      * or the calling series type rebound to the type resulting from the exponentiation of the coefficient of the
-     * calling
-     * type to the power of \p x. The exponentiation algorithm proceeds as follows:
+     * calling type to the power of \p x. The exponentiation algorithm proceeds as follows:
      * - if the series is single-coefficient, the result is a single-coefficient series in which the coefficient
      *   is the original coefficient (or zero, if the calling series is empty) raised to the power of \p x;
      * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
      *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised
-     * to
-     *   the power of zero is 1 - including empty series);
+     *   to the power of zero is 1 - including empty series);
      * - if \p x represents a non-negative integral value, the return value is constructed via repeated multiplications;
      * - otherwise, an exception will be raised.
      *
      * An internal thread-safe cache of natural powers of series is maintained in order to improve performance during,
-     * e.g., substitution operations.
-     * This cache can be cleared with clear_pow_cache().
+     * e.g., substitution operations. This cache can be cleared with clear_pow_cache().
      *
      * @param[in] x exponent.
      *
@@ -3044,14 +3039,16 @@ struct is_zero_impl<Series, typename std::enable_if<is_series<Series>::value>::t
 };
 }
 
-namespace detail
+inline namespace impl
 {
 
 // Enabler for the pow() specialisation for series.
 template <typename Series, typename T>
-using pow_series_enabler =
-    typename std::enable_if<is_series<Series>::value && true_tt<decltype(std::declval<const Series &>().pow(
-                                                            std::declval<const T &>()))>::value>::type;
+using series_pow_member_t = decltype(std::declval<const Series &>().pow(std::declval<const T &>()));
+
+template <typename Series, typename T>
+using pow_series_enabler
+    = enable_if_t<conjunction<is_series<Series>, is_detected<series_pow_member_t, Series, T>>::value>;
 }
 
 namespace math
@@ -3063,10 +3060,18 @@ namespace math
  * a method with the same signature as piranha::series::pow().
  */
 template <typename Series, typename T>
-struct pow_impl<Series, T, detail::pow_series_enabler<Series, T>> {
+struct pow_impl<Series, T, pow_series_enabler<Series, T>> {
+private:
+    using pow_type = series_pow_member_t<Series, T>;
+
+public:
     /// Call operator.
     /**
-     * The exponentiation will be computed via the series' <tt>pow()</tt> method.
+     * The exponentiation will be computed via the series' <tt>pow()</tt> method. The body of this method
+     * is equivalent to:
+     * @code
+     * return s.pow(x);
+     * @endcode
      *
      * @param[in] s base.
      * @param[in] x exponent.
@@ -3075,8 +3080,7 @@ struct pow_impl<Series, T, detail::pow_series_enabler<Series, T>> {
      *
      * @throws unspecified any exception resulting from the series' <tt>pow()</tt> method.
      */
-    template <typename S, typename U>
-    auto operator()(const S &s, const U &x) const -> decltype(s.pow(x))
+    pow_type operator()(const Series &s, const T &x) const
     {
         return s.pow(x);
     }

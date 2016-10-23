@@ -37,6 +37,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/type_traits.hpp"
 
@@ -140,6 +141,7 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
             tmp = 1.;
             tmp /= 0.;
             BOOST_CHECK((tmp.size() == 1u));
+            BOOST_CHECK(math::pow(pt1(0.), std::numeric_limits<double>::quiet_NaN()).size() == 1u);
         }
     }
     {
@@ -195,6 +197,7 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
         tmp = 1.;
         tmp /= 0.;
         BOOST_CHECK((tmp.size() == 1u));
+        BOOST_CHECK(math::pow(pt2(0.), real{"nan"}).size() == 1u);
     }
     {
         using pt1 = polynomial<polynomial<double, monomial<int>>, monomial<int>>;
@@ -257,6 +260,7 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
             tmp = 1.;
             tmp /= 0.;
             BOOST_CHECK((tmp.size() == 1u));
+            BOOST_CHECK(math::pow(pt1(0.), std::numeric_limits<double>::quiet_NaN()).size() == 1u);
         }
     }
     {
@@ -312,5 +316,6 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
         tmp = 1.;
         tmp /= 0.;
         BOOST_CHECK((tmp.size() == 1u));
+        BOOST_CHECK(math::pow(pt2(0.), real{"nan"}).size() == 1u);
     }
 }
