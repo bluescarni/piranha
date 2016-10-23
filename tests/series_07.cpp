@@ -125,6 +125,9 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
             BOOST_CHECK((pt1(std::numeric_limits<double>::quiet_NaN()) / pt1(0.)).size() == 1u);
             BOOST_CHECK((0. / pt1(0.)).size() == 1u);
             BOOST_CHECK((std::numeric_limits<double>::quiet_NaN() / pt1(0.)).size() == 1u);
+            BOOST_CHECK((pt1(1.) / pt1(0.)).size() == 1u);
+            BOOST_CHECK((pt1(1.) / 0.).size() == 1u);
+            BOOST_CHECK((1. / pt1(0.)).size() == 1u);
         }
     }
     {
@@ -165,6 +168,9 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
         BOOST_CHECK((0. * (pt2(-real{"nan"}) - x)).size() == 1u);
         BOOST_CHECK(((pt2(-real{"inf"}) + x) * 0.).size() == 1u);
         BOOST_CHECK(((pt2(-real{"nan"}) + x) * 0.).size() == 1u);
+        BOOST_CHECK((pt2(1.) / pt2(0.)).size() == 1u);
+        BOOST_CHECK((pt2(1.) / 0.).size() == 1u);
+        BOOST_CHECK((1. / pt2(0.)).size() == 1u);
     }
     {
         using pt1 = polynomial<polynomial<double, monomial<int>>, monomial<int>>;
@@ -212,6 +218,9 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
             BOOST_CHECK((pt1(std::numeric_limits<double>::quiet_NaN()) / pt1(0.)).size() == 1u);
             BOOST_CHECK((0. / pt1(0.)).size() == 1u);
             BOOST_CHECK((std::numeric_limits<double>::quiet_NaN() / pt1(0.)).size() == 1u);
+            BOOST_CHECK((pt1(1.) / pt1(0.)).size() == 1u);
+            BOOST_CHECK((pt1(1.) / 0.).size() == 1u);
+            BOOST_CHECK((1. / pt1(0.)).size() == 1u);
         }
     }
     {
@@ -252,5 +261,8 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
         BOOST_CHECK((0. * (pt2(-real{"nan"}) - x)).size() == 1u);
         BOOST_CHECK(((pt2(-real{"inf"}) + x) * 0.).size() == 1u);
         BOOST_CHECK(((pt2(-real{"nan"}) + x) * 0.).size() == 1u);
+        BOOST_CHECK((pt2(1.) / pt2(0.)).size() == 1u);
+        BOOST_CHECK((pt2(1.) / 0.).size() == 1u);
+        BOOST_CHECK((1. / pt2(0.)).size() == 1u);
     }
 }
