@@ -2443,6 +2443,29 @@ struct msgpack_convert_impl<T, real_msgpack_convert_enabler<T>> {
 };
 
 #endif
+
+inline namespace impl
+{
+
+template <typename T>
+using real_zero_is_absorbing_enabler = enable_if_t<std::is_same<uncvref_t<T>, real>::value>;
+}
+
+/// Specialisation of piranha::zero_is_absorbing for piranha::real.
+/**
+ * \note
+ * This specialisation is enabled if \p T, after the removal of cv/reference qualifiers, is piranha::real.
+ *
+ * Due to the presence of NaN, the zero element is not absorbing for piranha::real.
+ */
+template <typename T>
+struct zero_is_absorbing<T, real_zero_is_absorbing_enabler<T>> {
+    /// Value of the type trait.
+    static const bool value = false;
+};
+
+template <typename T>
+const bool zero_is_absorbing<T, real_zero_is_absorbing_enabler<T>>::value;
 }
 
 #endif

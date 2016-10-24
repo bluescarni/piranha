@@ -1807,9 +1807,11 @@ public:
             BOOST_CHECK(it2->m_key.size() == 1u);
             BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
             // Test division by zero of empty series.
-            BOOST_CHECK_THROW(p_type1{} / 0, zero_division_error);
-            p_type1 zero;
-            BOOST_CHECK_THROW(zero /= 0, zero_division_error);
+            if (std::is_same<integer, Cf>::value || std::is_same<rational, Cf>::value) {
+                BOOST_CHECK_THROW(p_type1{} / 0, zero_division_error);
+                p_type1 zero;
+                BOOST_CHECK_THROW(zero /= 0, zero_division_error);
+            }
             // Check with scalar on the left.
             BOOST_CHECK((!is_divisible_in_place<int, p_type1>::value));
         }

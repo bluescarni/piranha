@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/tuning.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -68,6 +69,30 @@ struct m_checker : public base_series_multiplier<Series> {
     explicit m_checker(const Series &s1, const Series &s2) : base(s1, s2)
     {
         term_pointers_checker(s1, s2);
+        null_absorber_checker(s1, s2);
+    }
+    template <typename T, enable_if_t<zero_is_absorbing<typename T::term_type::cf_type>::value, int> = 0>
+    void null_absorber_checker(const T &s1_, const T &s2_) const
+    {
+        const T &s1 = s1_.size() < s2_.size() ? s2_ : s1_;
+        const T &s2 = s1_.size() < s2_.size() ? s1_ : s2_;
+        BOOST_CHECK(s1.size() == this->m_v1.size());
+        BOOST_CHECK(s2.size() == this->m_v2.size());
+    }
+    template <typename T, enable_if_t<!zero_is_absorbing<typename T::term_type::cf_type>::value, int> = 0>
+    void null_absorber_checker(const T &s1_, const T &s2_) const
+    {
+        const T &s1 = s1_.size() < s2_.size() ? s2_ : s1_;
+        const T &s2 = s1_.size() < s2_.size() ? s1_ : s2_;
+        BOOST_CHECK((s1.size() && s1.size() == this->m_v1.size())
+                    || (!s1.size() && this->m_v1.size() == 1u && this->m_v1[0]->m_cf == 0));
+        BOOST_CHECK((s2.size() && s2.size() == this->m_v2.size())
+                    || (!s2.size() && this->m_v2.size() == 1u && this->m_v2[0]->m_cf == 0));
+    }
+    template <typename T, enable_if_t<std::is_same<typename T::term_type::cf_type, double>::value, int> = 0>
+    void term_pointers_checker(const T &, const T &) const
+    {
+        // Don't do anything for double, as we use it only to check the null absorber.
     }
     template <typename T,
               typename std::enable_if<std::is_same<typename T::term_type::cf_type, integer>::value, int>::type = 0>
@@ -183,6 +208,14 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
         s2 = 0;
         m_checker<pt> m2(s1, s2);
         BOOST_CHECK_THROW(m_checker<pt>(x, z), std::invalid_argument);
+    }
+    {
+        // Do a test with floating-point and null series.
+        using pt = p_type<double>;
+        pt x{"x"}, null{x - x};
+        m_checker<pt> m1((x + 1).pow(5), null);
+        m_checker<pt> m2(null, (x - 3).pow(5));
+        m_checker<pt> m3(null, null);
     }
 }
 
@@ -574,39 +607,50 @@ struct multiplication_tester {
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
 {
-    // Simple test with empty series.
-    using pt = p_type<integer>;
-    using mt = m_checker<pt>;
-    pt e1, e2;
-    mt m0{e1, e2};
-    BOOST_CHECK_EQUAL(m0.plain_multiplication(), 0);
-    BOOST_CHECK(m0.get_n_threads() != 0u);
-    // Testing ported over from the previous series_multiplier tests. Just use polynomial directly.
-    using pt1 = p_type<double>;
-    using pt2 = p_type<integer>;
-    pt1 p1{"x"}, p2{"x"};
-    // Check that the merged symbol set is returned when one of the series is empty.
-    BOOST_CHECK(e1 * p1 == 0);
-    BOOST_CHECK((e1 * p1).get_symbol_set() == symbol_set{symbol{"x"}});
-    BOOST_CHECK((p1 * e1).get_symbol_set() == symbol_set{symbol{"x"}});
-    p1._container().begin()->m_cf *= 2;
-    p2._container().begin()->m_cf *= 3;
-    auto retval = p1 * p2;
-    BOOST_CHECK(retval.size() == 1u);
-    BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
-    BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
-    BOOST_CHECK(retval._container().begin()->m_cf == (double(3) * double(1)) * (double(2) * double(1)));
-    pt2 p3{"x"};
-    p3._container().begin()->m_cf *= 4;
-    pt2 p4{"x"};
-    p4._container().begin()->m_cf *= 2;
-    retval = p4 * p3;
-    BOOST_CHECK(retval.size() == 1u);
-    BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
-    BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
-    BOOST_CHECK(retval._container().begin()->m_cf == double((double(2) * double(1)) * (integer(1) * 4)));
-    using p_types = boost::mpl::vector<pt1, pt2, p_type<rational>>;
-    boost::mpl::for_each<p_types>(multiplication_tester());
+    {
+        // Simple test with empty series.
+        using pt = p_type<integer>;
+        using mt = m_checker<pt>;
+        pt e1, e2;
+        mt m0{e1, e2};
+        BOOST_CHECK_EQUAL(m0.plain_multiplication(), 0);
+        BOOST_CHECK(m0.get_n_threads() != 0u);
+        // Testing ported over from the previous series_multiplier tests. Just use polynomial directly.
+        using pt1 = p_type<double>;
+        using pt2 = p_type<integer>;
+        pt1 p1{"x"}, p2{"x"};
+        // Check that the merged symbol set is returned when one of the series is empty.
+        BOOST_CHECK(e1 * p1 == 0);
+        BOOST_CHECK((e1 * p1).get_symbol_set() == symbol_set{symbol{"x"}});
+        BOOST_CHECK((p1 * e1).get_symbol_set() == symbol_set{symbol{"x"}});
+        p1._container().begin()->m_cf *= 2;
+        p2._container().begin()->m_cf *= 3;
+        auto retval = p1 * p2;
+        BOOST_CHECK(retval.size() == 1u);
+        BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
+        BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
+        BOOST_CHECK(retval._container().begin()->m_cf == (double(3) * double(1)) * (double(2) * double(1)));
+        pt2 p3{"x"};
+        p3._container().begin()->m_cf *= 4;
+        pt2 p4{"x"};
+        p4._container().begin()->m_cf *= 2;
+        retval = p4 * p3;
+        BOOST_CHECK(retval.size() == 1u);
+        BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
+        BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
+        BOOST_CHECK(retval._container().begin()->m_cf == double((double(2) * double(1)) * (integer(1) * 4)));
+        using p_types = boost::mpl::vector<pt1, pt2, p_type<rational>>;
+        boost::mpl::for_each<p_types>(multiplication_tester());
+    }
+    {
+        // Some testing with double for the zero absorber modifications.
+        using pt = p_type<double>;
+        pt x{"x"}, y{"y"};
+        BOOST_CHECK_EQUAL((x + y + 1).pow(5) * pt(0), 0);
+        BOOST_CHECK_EQUAL(pt(0) * (x + y + 1).pow(5), 0);
+        BOOST_CHECK_EQUAL(pt(0) * pt(0), 0);
+        BOOST_CHECK_EQUAL((x - x + y - y) * (x - x + y - y), 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)

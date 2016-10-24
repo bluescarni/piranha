@@ -229,6 +229,8 @@ class base_series_multiplier : private detail::base_series_multiplier_impl<Serie
     PIRANHA_TT_CHECK(is_series, Series);
     // Make friends with the base, so it can access protected/private members of this.
     friend struct detail::base_series_multiplier_impl<Series, base_series_multiplier<Series>>;
+    // Alias for the series' container type.
+    using container_type = uncvref_t<decltype(std::declval<const Series &>()._container())>;
 
 public:
     /// Alias for a vector of const pointers to series terms.
@@ -326,18 +328,21 @@ public:
     /// Constructor.
     /**
      * This constructor will store in the base_series_multiplier::m_v1 and base_series_multiplier::m_v2 protected
-     * members
-     * references to the terms of the input series \p s1 and \p s2. \p m_v1 will store references to the larger series,
-     * \p m_v2 will store references to the smaller serier. The constructor will also store a copy of the symbol set of
-     * \p s1 and \p s2 in the protected member base_series_multiplier::m_ss.
+     * members references to the terms of the input series \p s1 and \p s2. \p m_v1 will store references to the larger
+     * series, \p m_v2 will store references to the smaller series. The constructor will also store a copy of the symbol
+     * set of \p s1 and \p s2 in the protected member base_series_multiplier::m_ss.
      *
      * If the coefficient type of \p Series is an instance of piranha::mp_rational, then the pointers in \p m_v1 and \p
-     * m_v2
-     * will refer not to the original terms in \p s1 and \p s2 but to *copies* of these terms, in which all coefficients
-     * have unitary denominator and the numerators have all been multiplied by the global least common multiplier. This
-     * transformation
-     * allows to reduce the multiplication of series with rational coefficients to the multiplication of series with
-     * integral coefficients.
+     * m_v2 will refer not to the original terms in \p s1 and \p s2 but to *copies* of these terms, in which all
+     * coefficients have unitary denominator and the numerators have all been multiplied by the global least common
+     * multiplier. This transformation allows to reduce the multiplication of series with rational coefficients to the
+     * multiplication of series with integral coefficients.
+     *
+     * If an operand is empty and the series type does not satisfy piranha::zero_is_absorbing, then a hidden
+     * private series consisting of a single term with zero coefficient is created, and the pointers in
+     * base_series_multiplier::m_v1 and/or base_series_multiplier::m_v2 will refer to this hidden instance. This ensures
+     * that a multiplication by a null series results in multiplications by a zero coefficient, which may not
+     * necessarily lead to a zero result (e.g., with IEEE floats inf times zero gives NaN).
      *
      * @param[in] s1 first series.
      * @param[in] s2 second series.
@@ -346,13 +351,10 @@ public:
      * @throws unspecified any exception thrown by:
      * - thread_pool::use_threads(),
      * - memory allocation errors in standard containers,
-     * - the construction of the term type of \p Series.
+     * - the construction of the term, coefficient and key types of \p Series,
+     * - the public interface of piranha::hash_set.
      */
-    explicit base_series_multiplier(const Series &s1, const Series &s2)
-        : m_ss(s1.get_symbol_set()),
-          m_n_threads((s1.size() && s2.size()) ? thread_pool::use_threads(integer(s1.size()) * s2.size(),
-                                                                          integer(settings::get_min_work_per_thread()))
-                                               : 1u)
+    explicit base_series_multiplier(const Series &s1, const Series &s2) : m_ss(s1.get_symbol_set())
     {
         if (unlikely(s1.get_symbol_set() != s2.get_symbol_set())) {
             piranha_throw(std::invalid_argument, "incompatible arguments sets");
@@ -365,8 +367,31 @@ public:
         // This is just an optimisation, no troubles if there is a truncation due to static_cast.
         m_v1.reserve(static_cast<size_type>(p1->size()));
         m_v2.reserve(static_cast<size_type>(p2->size()));
-        // Fill in the vectors of pointers.
-        this->fill_term_pointers(p1->_container(), p2->_container(), m_v1, m_v2);
+        container_type const *ctr1 = &p1->_container(), *ctr2 = &p2->_container();
+        // NOTE: if the zero element of Series is not absorbing, we need to create a temporary zero series in place
+        // of any factor that is zero, and then use it in the multiplication. This ensures a correct series
+        // multiplication result for coefficient types (such as IEEE floats) for which 0 times x is not necessarily
+        // always 0. The temporary zero series is stored in the m_zero_f member as a collection of 1 term with
+        // zero coefficient.
+        if (!zero_is_absorbing<Series>::value) {
+            using term_type = typename Series::term_type;
+            using cf_type = typename term_type::cf_type;
+            using key_type = typename term_type::key_type;
+            if (p1->empty()) {
+                m_zero_f1.insert(term_type{cf_type(0), key_type(s1.get_symbol_set())});
+                ctr1 = &m_zero_f1;
+            }
+            if (p2->empty()) {
+                m_zero_f2.insert(term_type{cf_type(0), key_type(s1.get_symbol_set())});
+                ctr2 = &m_zero_f2;
+            }
+        }
+        // Set the number of threads.
+        m_n_threads = (ctr1->size() && ctr2->size())
+                          ? thread_pool::use_threads(integer(ctr1->size()) * ctr2->size(),
+                                                     integer(settings::get_min_work_per_thread()))
+                          : 1u;
+        this->fill_term_pointers(*ctr1, *ctr2, m_v1, m_v2);
     }
     /// Deleted default constructor.
     base_series_multiplier() = delete;
@@ -1124,7 +1149,12 @@ protected:
      * that will be used by the multiplier. The value is always at least 1 and it is calculated
      * via thread_pool::use_threads().
      */
-    const unsigned m_n_threads;
+    unsigned m_n_threads;
+
+private:
+    // See the constructor for an explanation.
+    container_type m_zero_f1;
+    container_type m_zero_f2;
 };
 }
 

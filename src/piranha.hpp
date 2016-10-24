@@ -222,18 +222,12 @@ see https://www.gnu.org/licenses/. */
  * This should probably be an is_base_of check, as done in forwarding.hpp, so that if one derives from the class then we
  * are still not mixing
  * up generic ctor and standard copy/move ones in the derived class.
- * \todo in order to circumvent the problem of the lack of thread local storage on osx, we should probably just create a
- * local variable ad-hoc.
  * It will be suboptimal but at least it should work on osx.
  * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs,
  * e.g., implementing the test() method
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type
  * traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
- * Once we have this, we could
- * also think about re-implementing multiplication by zero by an actual coefficient multiplication, thus solving the
- * incosistency with double
- * coefficients reported in audi (0 * inf = 0 --> empty polynomial, instead of NaN).
  * \todo in mp_integer probably the ternary operations (and multadd and divexact etc.) should be modified so that the
  * return value is demoted to
  * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times,
@@ -297,7 +291,8 @@ see https://www.gnu.org/licenses/. */
  * and once this is done check all uses of boost numeric_cast, which should now be replaceable by safe_cast.
  * Check also the fwd declaration usages which work around the current issues.
  * \todo checkout the --enable-fat GMP build option - it looks like this is the way to go for a generic GMP lib
- * for binary windows distributions.
+ * for binary windows distributions. UPDATE: this does not seem to work properly in mingw, but keep it in mind
+ * for manylinux1.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
  * \todo guidelines for type traits modernization:
  * - beautify enablers,
