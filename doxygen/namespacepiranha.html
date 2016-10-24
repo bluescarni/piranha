@@ -723,6 +723,18 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__division__error.html">zero_division_error</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exception for signalling division by zero.  <a href="structpiranha_1_1zero__division__error.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__is__absorbing.html">zero_is_absorbing</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect if zero is a multiplicative absorber.  <a href="structpiranha_1_1zero__is__absorbing.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01fp__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html">zero_is_absorbing&lt; T, fp_zero_is_absorbing_enabler&lt; T &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of <a class="el" href="structpiranha_1_1zero__is__absorbing.html" title="Detect if zero is a multiplicative absorber. ">piranha::zero_is_absorbing</a> for floating-point types.  <a href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01fp__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01real__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html">zero_is_absorbing&lt; T, real_zero_is_absorbing_enabler&lt; T &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of <a class="el" href="structpiranha_1_1zero__is__absorbing.html" title="Detect if zero is a multiplicative absorber. ">piranha::zero_is_absorbing</a> for <a class="el" href="classpiranha_1_1real.html" title="Arbitrary precision floating-point class. ">piranha::real</a>.  <a href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01real__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01series__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html">zero_is_absorbing&lt; T, series_zero_is_absorbing_enabler&lt; T &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of <a class="el" href="structpiranha_1_1zero__is__absorbing.html" title="Detect if zero is a multiplicative absorber. ">piranha::zero_is_absorbing</a> for <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a>.  <a href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01series__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -746,10 +758,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nam
 using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#acf8373ab492b3cd9e4ae7ba5f42e4805">rtk_monomial</a> = <a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html">real_trigonometric_kronecker_monomial</a>&lt;&gt;</td></tr>
 <tr class="memdesc:acf8373ab492b3cd9e4ae7ba5f42e4805"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for <a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html" title="Real trigonometric Kronecker monomial class. ">piranha::real_trigonometric_kronecker_monomial</a> with default type. <br /></td></tr>
 <tr class="separator:acf8373ab492b3cd9e4ae7ba5f42e4805"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6223655e374e88ca23c5c458262c5782"><td class="memTemplParams" colspan="2">template&lt;typename T , typename Cf &gt; </td></tr>
-<tr class="memitem:a6223655e374e88ca23c5c458262c5782"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#a6223655e374e88ca23c5c458262c5782">series_rebind</a> = detail::series_rebind_&lt; T, Cf &gt;</td></tr>
-<tr class="memdesc:a6223655e374e88ca23c5c458262c5782"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rebind series.  <a href="#a6223655e374e88ca23c5c458262c5782">More...</a><br /></td></tr>
-<tr class="separator:a6223655e374e88ca23c5c458262c5782"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e374d97567c46982142e2f8c0c7b1e4"><td class="memTemplParams" colspan="2">template&lt;typename T , typename Cf &gt; </td></tr>
+<tr class="memitem:a6e374d97567c46982142e2f8c0c7b1e4"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#a6e374d97567c46982142e2f8c0c7b1e4">series_rebind</a> = series_rebind_implementation&lt; T, Cf &gt;</td></tr>
+<tr class="memdesc:a6e374d97567c46982142e2f8c0c7b1e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rebind series.  <a href="#a6e374d97567c46982142e2f8c0c7b1e4">More...</a><br /></td></tr>
+<tr class="separator:a6e374d97567c46982142e2f8c0c7b1e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b3bd7640a743985bcb412ed5918068d"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepiranha.html#a2b3bd7640a743985bcb412ed5918068d">settings</a> = <a class="el" href="classpiranha_1_1settings__.html">settings_</a>&lt;&gt;</td></tr>
 <tr class="memdesc:a2b3bd7640a743985bcb412ed5918068d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for <a class="el" href="classpiranha_1_1settings__.html" title="Global settings. ">piranha::settings_</a>.  <a href="#a2b3bd7640a743985bcb412ed5918068d">More...</a><br /></td></tr>
 <tr class="separator:a2b3bd7640a743985bcb412ed5918068d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -895,7 +907,7 @@ template&lt;typename T , typename... Args&gt; </div>
 <p>Detect widest integer type. </p>
 <p>This type alias requires <code>T</code> and <code>Args</code> (if any) to be all signed or unsigned integer types. It will be defined as the input type with the widest numerical range. </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00801">801</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00807">807</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>
@@ -916,7 +928,7 @@ template&lt;typename T , typename... Args&gt; </div>
 <p>Detect narrowest integer type. </p>
 <p>This type alias requires <code>T</code> and <code>Args</code> (if any) to be all signed or unsigned integer types. It will be defined as the input type with the narrowest numerical range. </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00793">793</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00799">799</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>
@@ -938,12 +950,12 @@ template&lt;unsigned N, typename Cf , typename Key &gt; </div>
 <p>This is a convenience alias that can be used to define multivariate polynomials as univariate polynomials with univariate polynomials as coefficients.</p>
 <p>For instance, the type </p><div class="fragment"><div class="line">r_polynomial&lt;1,double,k_monomial&gt;;</div></div><!-- fragment --><p> is exactly equivalent to </p><div class="fragment"><div class="line">polynomial&lt;double,k_monomial&gt;;</div></div><!-- fragment --><p> The type </p><div class="fragment"><div class="line">r_polynomial&lt;2,double,k_monomial&gt;;</div></div><!-- fragment --><p> is exactly equivalent to </p><div class="fragment"><div class="line">polynomial&lt;polynomial&lt;double,k_monomial&gt;,<a class="code" href="namespacepiranha.html#a8a41a40472e52a050f1c6a80ee9cf340">k_monomial</a>&gt;;</div></div><!-- fragment --><p> And so on for increasing values of <code>N</code>. <code>N</code> must be nonzero, or a compile-time error will be generated. </p>
 
-<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02213">2213</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
+<p>Definition at line <a class="el" href="polynomial_8hpp_source.html#l02212">2212</a> of file <a class="el" href="polynomial_8hpp_source.html">polynomial.hpp</a>.</p>
 
 </div>
 </div>
-<a id="a6223655e374e88ca23c5c458262c5782"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6223655e374e88ca23c5c458262c5782">&sect;&nbsp;</a></span>series_rebind</h2>
+<a id="a6e374d97567c46982142e2f8c0c7b1e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e374d97567c46982142e2f8c0c7b1e4">&sect;&nbsp;</a></span>series_rebind</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -951,7 +963,7 @@ template&lt;unsigned N, typename Cf , typename Key &gt; </div>
 template&lt;typename T , typename Cf &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="namespacepiranha.html#a6223655e374e88ca23c5c458262c5782">piranha::series_rebind</a> = typedef detail::series_rebind_&lt;T, Cf&gt;</td>
+          <td class="memname">using <a class="el" href="namespacepiranha.html#a6e374d97567c46982142e2f8c0c7b1e4">piranha::series_rebind</a> = typedef series_rebind_implementation&lt;T, Cf&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -959,7 +971,7 @@ template&lt;typename T , typename Cf &gt; </div>
 <p>Rebind series. </p>
 <p>Utility alias to rebind series <code>T</code> to coefficient <code>Cf</code>. See <a class="el" href="structpiranha_1_1series__is__rebindable.html" title="Check if a series can be rebound. ">piranha::series_is_rebindable</a> for an explanation. In addition to being a shortcut to the <code>rebind</code> alias in <code>T</code> (if present), the implementation will also check that <code>T</code> and <code>Cf</code> satisfy the <a class="el" href="structpiranha_1_1series__is__rebindable.html" title="Check if a series can be rebound. ">piranha::series_is_rebindable</a> type traits. </p>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l00231">231</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l00226">226</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 
 </div>
 </div>
@@ -1035,7 +1047,7 @@ template&lt;typename T , typename Cf &gt; </div>
 </td></tr>
 </table>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01239">1239</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01238">1238</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -1077,7 +1089,7 @@ template&lt;typename T , typename Cf &gt; </div>
 </td></tr>
 </table>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01212">1212</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01211">1211</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -1111,7 +1123,7 @@ template&lt;typename T , typename Cf &gt; </div>
 </td></tr>
 </table>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00680">680</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00679">679</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -1410,7 +1422,7 @@ template&lt;typename Archive , typename T , boost_load_enabler&lt; Archive, T &g
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00479">479</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00478">478</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -1466,7 +1478,7 @@ template&lt;typename Archive , typename T , boost_save_enabler&lt; Archive, T &g
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00338">338</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00337">337</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -1667,7 +1679,7 @@ template&lt;typename T , load_file_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01644">1644</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01643">1643</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -1725,7 +1737,7 @@ template&lt;typename T , load_file_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01669">1669</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01668">1668</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -1852,7 +1864,7 @@ template&lt;typename T , msgpack_convert_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00964">964</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00963">963</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -1915,7 +1927,7 @@ template&lt;typename Stream , typename T , msgpack_pack_enabler&lt; Stream, T &g
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00863">863</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l00862">862</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -2293,7 +2305,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01571">1571</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01570">1570</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>
@@ -2359,7 +2371,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01607">1607</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
+<p>Definition at line <a class="el" href="s11n_8hpp_source.html#l01606">1606</a> of file <a class="el" href="s11n_8hpp_source.html">s11n.hpp</a>.</p>
 
 </div>
 </div>

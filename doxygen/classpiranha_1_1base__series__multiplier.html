@@ -201,9 +201,9 @@ Protected Attributes</h2></td></tr>
 const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1base__series__multiplier.html#af37b7711dd0636239a78c96d215ccf95">m_ss</a></td></tr>
 <tr class="memdesc:af37b7711dd0636239a78c96d215ccf95"><td class="mdescLeft">&#160;</td><td class="mdescRight">The symbol set of the series used during construction. <br /></td></tr>
 <tr class="separator:af37b7711dd0636239a78c96d215ccf95"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15146dd8edd6038e73396e4e4ee20759"><td class="memItemLeft" align="right" valign="top">const unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1base__series__multiplier.html#a15146dd8edd6038e73396e4e4ee20759">m_n_threads</a></td></tr>
-<tr class="memdesc:a15146dd8edd6038e73396e4e4ee20759"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of threads.  <a href="#a15146dd8edd6038e73396e4e4ee20759">More...</a><br /></td></tr>
-<tr class="separator:a15146dd8edd6038e73396e4e4ee20759"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab03da0589cc878e131ee8325176e346c"><td class="memItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1base__series__multiplier.html#ab03da0589cc878e131ee8325176e346c">m_n_threads</a></td></tr>
+<tr class="memdesc:ab03da0589cc878e131ee8325176e346c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of threads.  <a href="#ab03da0589cc878e131ee8325176e346c">More...</a><br /></td></tr>
+<tr class="separator:ab03da0589cc878e131ee8325176e346c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Series&gt;<br />
@@ -257,8 +257,9 @@ template&lt;typename Series &gt; </div>
 </div><div class="memdoc">
 
 <p>Constructor. </p>
-<p>This constructor will store in the <a class="el" href="classpiranha_1_1base__series__multiplier.html#ab0a3e37b54cb6c111229924666756de0" title="Vector of const pointers to the terms in the larger series. ">base_series_multiplier::m_v1</a> and <a class="el" href="classpiranha_1_1base__series__multiplier.html#a2ed07a1857607d4b72c237f7b88d4568" title="Vector of const pointers to the terms in the smaller series. ">base_series_multiplier::m_v2</a> protected members references to the terms of the input series <code>s1</code> and <code>s2</code>. <code>m_v1</code> will store references to the larger series, <code>m_v2</code> will store references to the smaller serier. The constructor will also store a copy of the symbol set of <code>s1</code> and <code>s2</code> in the protected member <a class="el" href="classpiranha_1_1base__series__multiplier.html#af37b7711dd0636239a78c96d215ccf95" title="The symbol set of the series used during construction. ">base_series_multiplier::m_ss</a>.</p>
+<p>This constructor will store in the <a class="el" href="classpiranha_1_1base__series__multiplier.html#ab0a3e37b54cb6c111229924666756de0" title="Vector of const pointers to the terms in the larger series. ">base_series_multiplier::m_v1</a> and <a class="el" href="classpiranha_1_1base__series__multiplier.html#a2ed07a1857607d4b72c237f7b88d4568" title="Vector of const pointers to the terms in the smaller series. ">base_series_multiplier::m_v2</a> protected members references to the terms of the input series <code>s1</code> and <code>s2</code>. <code>m_v1</code> will store references to the larger series, <code>m_v2</code> will store references to the smaller series. The constructor will also store a copy of the symbol set of <code>s1</code> and <code>s2</code> in the protected member <a class="el" href="classpiranha_1_1base__series__multiplier.html#af37b7711dd0636239a78c96d215ccf95" title="The symbol set of the series used during construction. ">base_series_multiplier::m_ss</a>.</p>
 <p>If the coefficient type of <code>Series</code> is an instance of <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>, then the pointers in <code>m_v1</code> and <code>m_v2</code> will refer not to the original terms in <code>s1</code> and <code>s2</code> but to <em>copies</em> of these terms, in which all coefficients have unitary denominator and the numerators have all been multiplied by the global least common multiplier. This transformation allows to reduce the multiplication of series with rational coefficients to the multiplication of series with integral coefficients.</p>
+<p>If an operand is empty and the series type does not satisfy <a class="el" href="structpiranha_1_1zero__is__absorbing.html" title="Detect if zero is a multiplicative absorber. ">piranha::zero_is_absorbing</a>, then a hidden private series consisting of a single term with zero coefficient is created, and the pointers in <a class="el" href="classpiranha_1_1base__series__multiplier.html#ab0a3e37b54cb6c111229924666756de0" title="Vector of const pointers to the terms in the larger series. ">base_series_multiplier::m_v1</a> and/or <a class="el" href="classpiranha_1_1base__series__multiplier.html#a2ed07a1857607d4b72c237f7b88d4568" title="Vector of const pointers to the terms in the smaller series. ">base_series_multiplier::m_v2</a> will refer to this hidden instance. This ensures that a multiplication by a null series results in multiplications by a zero coefficient, which may not necessarily lead to a zero result (e.g., with IEEE floats inf times zero gives NaN).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">s1</td><td>first series. </td></tr>
@@ -272,14 +273,15 @@ template&lt;typename Series &gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b" title="Compute number of threads to use. ">thread_pool::use_threads()</a>,</li>
 <li>memory allocation errors in standard containers,</li>
-<li>the construction of the term type of <code>Series</code>. </li>
+<li>the construction of the term, coefficient and key types of <code>Series</code>,</li>
+<li>the public interface of <a class="el" href="classpiranha_1_1hash__set.html" title="Hash set. ">piranha::hash_set</a>. </li>
 </ul>
 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00351">351</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00357">357</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -357,7 +359,7 @@ template&lt;typename MultFunctor , typename LimitFunctor &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00422">422</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00447">447</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -422,7 +424,7 @@ template&lt;typename MultFunctor &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00489">489</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00514">514</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -484,7 +486,7 @@ template&lt;std::size_t MultArity, typename MultFunctor , typename LimitFunctor 
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00541">541</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00566">566</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -524,7 +526,7 @@ template&lt;std::size_t MultArity, typename MultFunctor &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00705">705</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00730">730</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -573,7 +575,7 @@ template&lt;typename Series &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01109">1109</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01134">1134</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -636,7 +638,7 @@ template&lt;typename LimitFunctor &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00967">967</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00992">992</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -674,7 +676,7 @@ template&lt;typename Series &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01089">1089</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01114">1114</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
@@ -744,13 +746,13 @@ template&lt;typename Series &gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00834">834</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l00859">859</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a15146dd8edd6038e73396e4e4ee20759"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a15146dd8edd6038e73396e4e4ee20759">&sect;&nbsp;</a></span>m_n_threads</h2>
+<a id="ab03da0589cc878e131ee8325176e346c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab03da0589cc878e131ee8325176e346c">&sect;&nbsp;</a></span>m_n_threads</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -761,7 +763,7 @@ template&lt;typename Series &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const unsigned <a class="el" href="classpiranha_1_1base__series__multiplier.html">piranha::base_series_multiplier</a>&lt; Series &gt;::m_n_threads</td>
+          <td class="memname">unsigned <a class="el" href="classpiranha_1_1base__series__multiplier.html">piranha::base_series_multiplier</a>&lt; Series &gt;::m_n_threads</td>
         </tr>
       </table>
   </td>
@@ -774,7 +776,7 @@ template&lt;typename Series &gt; </div>
 <p>Number of threads. </p>
 <p>This value will be set by the constructor, and it represents the number of threads that will be used by the multiplier. The value is always at least 1 and it is calculated via <a class="el" href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b" title="Compute number of threads to use. ">thread_pool::use_threads()</a>. </p>
 
-<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01127">1127</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
+<p>Definition at line <a class="el" href="base__series__multiplier_8hpp_source.html#l01152">1152</a> of file <a class="el" href="base__series__multiplier_8hpp_source.html">base_series_multiplier.hpp</a>.</p>
 
 </div>
 </div>

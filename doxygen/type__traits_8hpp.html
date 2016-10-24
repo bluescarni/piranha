@@ -241,6 +241,12 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__mappable.html">piranha::is_mappable&lt; T &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect types that can be used as mapped values in associative containers.  <a href="structpiranha_1_1is__mappable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__is__absorbing.html">piranha::zero_is_absorbing&lt; T, typename &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect if zero is a multiplicative absorber.  <a href="structpiranha_1_1zero__is__absorbing.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01fp__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html">piranha::zero_is_absorbing&lt; T, fp_zero_is_absorbing_enabler&lt; T &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of <a class="el" href="structpiranha_1_1zero__is__absorbing.html" title="Detect if zero is a multiplicative absorber. ">piranha::zero_is_absorbing</a> for floating-point types.  <a href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01fp__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
@@ -295,7 +301,7 @@ Typedefs</h2></td></tr>
 <p>For instance: </p><div class="fragment"><div class="line"><a class="code" href="type__traits_8hpp.html#a495588fa727310858a8d390095c6fe21">PIRANHA_DECLARE_HAS_TYPEDEF</a>(foo_type);</div><div class="line"><span class="keyword">struct </span>foo</div><div class="line">{</div><div class="line">        <span class="keyword">typedef</span> <span class="keywordtype">int</span> foo_type;</div><div class="line">};</div><div class="line"><span class="keyword">struct </span>bar {};</div></div><!-- fragment --><p> <code>has_typedef_foo_type&lt;foo&gt;::value</code> will be true and <code>has_typedef_foo_type&lt;bar&gt;::value</code> will be false.</p>
 <p>The decay type of the template argument is considered by the class defined by the macro. </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00723">723</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00729">729</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>
@@ -328,7 +334,7 @@ Typedefs</h2></td></tr>
 <p>Macro for static type trait checks. </p>
 <p>This macro will check via a <code>static_assert</code> that the template type trait <code>tt</code> provides a <code>true</code> <code>value</code>. The variadic arguments are interpreted as the template arguments of <code>tt</code>. </p>
 
-<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00741">741</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>Definition at line <a class="el" href="type__traits_8hpp_source.html#l00747">747</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>

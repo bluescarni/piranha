@@ -85,7 +85,7 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a10993ca1f90f3880124475d96d4fa4c4"><td class="memItemLeft" align="right" valign="top"><a id="a10993ca1f90f3880124475d96d4fa4c4"></a>
-static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1series__is__rebindable.html#a10993ca1f90f3880124475d96d4fa4c4">value</a> = detail::series_is_rebindable_impl&lt;T, Cf&gt;::value</td></tr>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1series__is__rebindable.html#a10993ca1f90f3880124475d96d4fa4c4">value</a> = implementation_defined</td></tr>
 <tr class="memdesc:a10993ca1f90f3880124475d96d4fa4c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
 <tr class="separator:a10993ca1f90f3880124475d96d4fa4c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -100,9 +100,9 @@ struct piranha::series_is_rebindable&lt; T, Cf &gt;</h3>
 <li><code>T::rebind&lt;Cf&gt;</code> is a series types,</li>
 <li>the coefficient type of <code>T::rebind&lt;Cf&gt;</code> is <code>Cf</code>.</li>
 </ul>
-<p>The decay types of <code>T</code> and <code>Cf</code> are considered in this type trait. If <code>T</code> is not an instance of <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a> or <code>Cf</code> does not satisfy <a class="el" href="classpiranha_1_1is__cf.html" title="Type trait to detect coefficient types. ">piranha::is_cf</a>, then the value of the type trait will be <code>false</code>. </p>
+<p><code>T</code> and <code>Cf</code> are considered after the removal of cv/reference qualifiers in this type trait. If <code>T</code> is not an instance of <a class="el" href="classpiranha_1_1series.html" title="Series class. ">piranha::series</a> or <code>Cf</code> does not satisfy <a class="el" href="classpiranha_1_1is__cf.html" title="Type trait to detect coefficient types. ">piranha::is_cf</a>, then the value of the type trait will be <code>false</code>. </p>
 
-<p>Definition at line <a class="el" href="series_8hpp_source.html#l00205">205</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="series_8hpp_source.html#l00198">198</a> of file <a class="el" href="series_8hpp_source.html">series.hpp</a>.</p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li><a class="el" href="series_8hpp_source.html">series.hpp</a></li>
 </ul>
