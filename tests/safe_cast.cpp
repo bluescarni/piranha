@@ -31,9 +31,6 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE safe_cast_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/fusion/algorithm.hpp>
-#include <boost/fusion/include/algorithm.hpp>
-#include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <climits>
 #include <limits>
@@ -66,13 +63,13 @@ namespace piranha
 
 // Good specialisation.
 template <>
-struct safe_cast_impl<conv2, conv1, void> {
+struct safe_cast_impl<conv2, conv1> {
     conv2 operator()(const conv1 &) const;
 };
 
 // Bad specialisation.
 template <>
-struct safe_cast_impl<conv3, conv1, void> {
+struct safe_cast_impl<conv3, conv1> {
     int operator()(const conv1 &) const;
 };
 
@@ -83,20 +80,20 @@ struct safe_cast_impl<conv4, conv1, void> {
 };
 }
 
-using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
-                                      std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(PIRANHA_UINT128_T)
-                                      ,
-                                      std::integral_constant<int, 64>
-#endif
-                                      >;
-
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(safe_cast_main_test)
 {
     init();
     BOOST_CHECK((has_safe_cast<int, int>::value));
+    BOOST_CHECK((has_safe_cast<int, int &>::value));
+    BOOST_CHECK((has_safe_cast<const int, int &>::value));
+    BOOST_CHECK((has_safe_cast<const int &, int &&>::value));
+    BOOST_CHECK((has_safe_cast<int &, int &&>::value));
+    BOOST_CHECK((!has_safe_cast<int &, void>::value));
+    BOOST_CHECK((!has_safe_cast<void, int &&>::value));
+    BOOST_CHECK((!has_safe_cast<void, void>::value));
+
     BOOST_CHECK((has_safe_cast<int, char>::value));
     BOOST_CHECK((has_safe_cast<char, unsigned long long>::value));
     BOOST_CHECK((!has_safe_cast<int, std::string>::value));
@@ -113,13 +110,14 @@ BOOST_AUTO_TEST_CASE(safe_cast_main_test)
     BOOST_CHECK_EQUAL(safe_cast<unsigned>(4l), 4u);
     BOOST_CHECK_EQUAL(safe_cast<short>(-4ll), -4);
     // Out of bounds.
-    BOOST_CHECK_THROW(safe_cast<unsigned>(-1), std::invalid_argument);
+    BOOST_CHECK_THROW(safe_cast<unsigned>(-1), safe_cast_failure);
     if (CHAR_BIT == 8) {
-        BOOST_CHECK_THROW(safe_cast<unsigned char>(300), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<unsigned char>(300ull), std::invalid_argument);
+        BOOST_CHECK_THROW(safe_cast<unsigned char>(300), safe_cast_failure);
+        BOOST_CHECK_THROW(safe_cast<unsigned char>(300ull), safe_cast_failure);
     }
 }
 
+#if 0
 struct safe_cast_int_float_tester {
     template <typename T>
     void operator()(const T &)
@@ -162,11 +160,16 @@ struct safe_cast_int_float_tester {
         }
     }
 };
+#endif
 
 BOOST_AUTO_TEST_CASE(safe_cast_int_float_test)
 {
-    boost::mpl::for_each<size_types>(safe_cast_int_float_tester());
+    // boost::mpl::for_each<size_types>(safe_cast_int_float_tester());
     // Casts from floating point to C++ ints.
+    safe_cast<int>(std::numeric_limits<double>::quiet_NaN());
+
+
+
     BOOST_CHECK((has_safe_cast<int, double>::value));
     BOOST_CHECK((has_safe_cast<char, float>::value));
     BOOST_CHECK((!has_safe_cast<double, int>::value));
