@@ -31,63 +31,27 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE exceptions_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <string>
+#include <type_traits>
 
 #include "../src/init.hpp"
 
 using namespace piranha;
 
-struct custom_exception0 : public base_exception {
-    explicit custom_exception0() : base_exception(std::string())
-    {
-    }
-};
-
-struct custom_exception1 : public base_exception {
-    explicit custom_exception1() : base_exception(std::string())
-    {
-    }
-    explicit custom_exception1(const std::string &msg) : base_exception(std::string(msg))
-    {
-    }
-};
-
-struct custom_exception2 : public base_exception {
-    explicit custom_exception2() : base_exception(std::string())
-    {
-    }
-    explicit custom_exception2(const std::string &msg) : base_exception(msg)
-    {
-    }
-    explicit custom_exception2(const std::string &msg, int) : base_exception(std::string(msg))
-    {
-    }
-};
-
-struct custom_exception3 : public base_exception {
-    explicit custom_exception3() : base_exception(std::string())
-    {
-    }
-    explicit custom_exception3(const std::string &msg) : base_exception(msg)
-    {
-    }
-    explicit custom_exception3(const std::string &msg, int) : base_exception(std::string(msg))
-    {
-    }
-    explicit custom_exception3(int, const std::string &msg) : base_exception(std::string(msg))
-    {
-    }
-};
-
-struct custom_exception4 : public base_exception {
-    explicit custom_exception4(const char *msg) : base_exception(std::string(msg))
-    {
-    }
-};
-
-BOOST_AUTO_TEST_CASE(exception_main_test)
+BOOST_AUTO_TEST_CASE(exception_test_00)
 {
     init();
+    BOOST_CHECK((std::is_constructible<not_implemented_error,std::string>::value));
+    BOOST_CHECK((std::is_constructible<not_implemented_error,char *>::value));
+    BOOST_CHECK((std::is_constructible<not_implemented_error,const char *>::value));
+    BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, "foobar"),not_implemented_error,[](const not_implemented_error &e) {
+        return boost::contains(e.what(),"foobar");
+    });
+    BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, std::string("foobar")),not_implemented_error,[](const not_implemented_error &e) {
+        return boost::contains(e.what(),"foobar");
+    });
+/*
     BOOST_CHECK_THROW(piranha_throw(custom_exception0, ), custom_exception0);
     BOOST_CHECK_THROW(piranha_throw(custom_exception1, ), custom_exception1);
     BOOST_CHECK_THROW(piranha_throw(custom_exception1, std::string("")), custom_exception1);
@@ -149,5 +113,5 @@ BOOST_AUTO_TEST_CASE(exception_main_test)
         piranha_throw(custom_exception4, "");
     } catch (const base_exception &e) {
         BOOST_CHECK(e.what() == empty);
-    }
+    }*/
 }

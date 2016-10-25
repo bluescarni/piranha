@@ -35,14 +35,14 @@ see https://www.gnu.org/licenses/. */
  * This header contains custom exceptions used within piranha and related utilities.
  */
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
 
 namespace piranha
 {
-namespace detail
+inline namespace impl
 {
 
 template <typename Exception>
@@ -92,7 +92,6 @@ struct ex_thrower {
  * from the variadic arguments, and will produce a compilation error in case no suitable constructor is found.
  *
  * Additionally, given a set of variadic arguments <tt>[arg0,arg1,...]</tt>, and
- *
  * - if the first variadic argument \p arg0 is a string type (either C or C++),
  * - and if the exception can be constructed from the set of arguments <tt>[str,arg1,...]</tt>,
  *   where \p str is an instance of \p std::string,
@@ -116,74 +115,25 @@ struct ex_thrower {
 // there could be situations in which the throwing function would be called with a set of arguments (a,b,c,), which
 // would be invalid syntax.
 #define piranha_throw(exception_type, ...)                                                                             \
-    piranha::detail::ex_thrower<exception_type>(__FILE__, __LINE__, __func__)(__VA_ARGS__)
+    piranha::ex_thrower<exception_type>(__FILE__, __LINE__, __func__)(__VA_ARGS__)
 
 namespace piranha
 {
 
-/// Base exception class.
-/**
- * All piranha exceptions derive from this class.
- */
-class base_exception : public std::exception
-{
-public:
-    /// Constructor.
-    /**
-     * The string parameter is an error message that will be stored intenally.
-     *
-     * @param[in] s std::string representing an error message.
-     *
-     * @throws unspecified any exception thrown by the copy constructor of \p std::string.
-     */
-    explicit base_exception(const std::string &s) : m_what(s)
-    {
-    }
-    /// Defaulted copy constructor.
-    base_exception(const base_exception &) = default;
-    /// Defaulted move constructor.
-    base_exception(base_exception &&) = default;
-    /// Error description.
-    /**
-     * @return const pointer to the internal error message.
-     */
-    virtual const char *what() const noexcept override final
-    {
-        return m_what.c_str();
-    }
-    /// Trivial destructor.
-    virtual ~base_exception()
-    {
-    }
-
-private:
-    const std::string m_what;
-};
-
 /// Exception for functionality not implemented or not available on the current platform.
-struct not_implemented_error : public base_exception {
-    /// Constructor.
-    /**
-     * @param[in] s std::string representing an error message.
-     *
-     * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
-     */
-    explicit not_implemented_error(const std::string &s) : base_exception(s)
-    {
-    }
+/**
+ * This class inherits the constructors from \p std::runtime_error.
+ */
+struct not_implemented_error : std::runtime_error {
+    using std::runtime_error::runtime_error;
 };
 
 /// Exception for signalling division by zero.
-struct zero_division_error : public base_exception {
-    /// Constructor.
-    /**
-     * @param[in] s std::string representing an error message.
-     *
-     * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
-     */
-    explicit zero_division_error(const std::string &s) : base_exception(s)
-    {
-    }
+/**
+ * This class inherits the constructors from \p std::invalid_argument.
+ */
+struct zero_division_error : std::invalid_argument {
+    using std::invalid_argument::invalid_argument;
 };
 }
 

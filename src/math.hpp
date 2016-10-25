@@ -2790,9 +2790,9 @@ inline auto div3(T &a, const T &b, const T &c) -> decltype(div3_impl<T>()(a, b, 
 }
 
 /// Exception to signal an inexact division.
-struct inexact_division : public base_exception {
+struct inexact_division : std::invalid_argument {
     /// Default constructor.
-    explicit inexact_division() : base_exception("inexact division")
+    explicit inexact_division() : std::invalid_argument("inexact division")
     {
     }
 };
