@@ -435,7 +435,7 @@ inline polynomial<Cf, Key> poly_from_univariate(const polynomial<Cf, k_monomial>
 }
 
 // Exception to signal that heuristic GCD failed.
-struct gcdheu_failure : std::runtime_error {
+struct gcdheu_failure final : std::runtime_error {
     explicit gcdheu_failure() : std::runtime_error("")
     {
     }
