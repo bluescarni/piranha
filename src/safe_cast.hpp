@@ -31,13 +31,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
-#include <exception>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <typeinfo>
 #include <utility>
 
-#include "config.hpp"
 #include "detail/demangle.hpp"
 #include "exceptions.hpp"
 #include "type_traits.hpp"
@@ -47,31 +45,13 @@ namespace piranha
 
 /// Exception to signal failure in piranha::safe_cast().
 /**
- * This exception is thrown by piranha::safe_cast() in case a value-preserving type conversion cannot be performed.
+ * This exception should be thrown by specialisations of piranha::safe_cast() in case a value-preserving type
+ * conversion cannot be performed.
+ *
+ * This exception inherits the constructors from \p std::invalid_argument.
  */
-class safe_cast_failure : public std::bad_cast
-{
-public:
-    /// Constructor.
-    /**
-     * @param s a string that represents the error message.
-     *
-     * @throws unspecified any exception thrown by the constructor of \p std::string.
-     */
-    explicit safe_cast_failure(const std::string &s) : m_what(s)
-    {
-    }
-    /// Access the error message.
-    /**
-     * @return a pointer to the error message stored internally.
-     */
-    virtual const char *what() const noexcept override final
-    {
-        return m_what.c_str();
-    }
-
-private:
-    const std::string m_what;
+struct safe_cast_failure final : std::invalid_argument {
+    using std::invalid_argument::invalid_argument;
 };
 
 /// Default implementation of piranha::safe_cast().
@@ -93,7 +73,7 @@ public:
      * - \p To and \p From are the same type,
      * - \p To is copy-constructible.
      *
-     * @param[in] f conversion argument.
+     * @param f conversion argument.
      *
      * @return a copy of \p f.
      *
@@ -124,11 +104,11 @@ struct safe_cast_impl<To, From, sc_int_int_enabler<To, From>> {
      * The call operator uses \p boost::numeric_cast() to perform a safe conversion
      * between integral types.
      *
-     * @param[in] f conversion argument.
+     * @param f conversion argument.
      *
      * @return a copy of \p f cast safely to \p To.
      *
-     * @throws safe_cast_failure if \p boost::numeric_cast() raises an error.
+     * @throws piranha::safe_cast_failure if \p boost::numeric_cast() raises an error.
      */
     To operator()(const From &f) const
     {
@@ -137,7 +117,7 @@ struct safe_cast_impl<To, From, sc_int_int_enabler<To, From>> {
         } catch (...) {
             piranha_throw(safe_cast_failure, "the integral value " + std::to_string(f)
                                                  + " cannot be converted to the type '" + detail::demangle<To>()
-                                                 + "' while preserving the original value");
+                                                 + "', as the conversion cannot preserve the original value");
         }
     }
 };
@@ -165,9 +145,9 @@ struct safe_cast_impl<To, From, sc_float_to_int_enabler<To, From>> {
      *
      * @return \p f safely converted to \p To.
      *
-     * @throws safe_cast_failure if:
-     * - \p boost::numeric_cast() raises an error,
-     * - \p f is not finite or it has a nonzero fractional part.
+     * @throws piranha::safe_cast_failure if:
+     * - \p f is not finite or it has a nonzero fractional part,
+     * - \p boost::numeric_cast() raises an error.
      */
     To operator()(const From &f) const
     {
@@ -180,14 +160,15 @@ struct safe_cast_impl<To, From, sc_float_to_int_enabler<To, From>> {
             piranha_throw(safe_cast_failure, "the floating-point value with nonzero fractional part "
                                                  + std::to_string(f) + " cannot be converted to the integral type '"
                                                  + detail::demangle<To>()
-                                                 + "', as the conversion does not preserve the original value");
+                                                 + "', as the conversion cannot preserve the original value");
         }
         try {
             return boost::numeric_cast<To>(f);
         } catch (...) {
             piranha_throw(safe_cast_failure, "the floating-point value " + std::to_string(f)
                                                  + " cannot be converted to the integral type '"
-                                                 + detail::demangle<To>() + "' while preserving the original value");
+                                                 + detail::demangle<To>()
+                                                 + "', as the conversion cannot preserve the original value");
         }
     }
 };
@@ -223,35 +204,26 @@ using safe_cast_type
  * an instance of type \p uncvref_t<To>, otherwise this function will be disabled. The function will also be disabled
  * if \p uncvref_t<To> does not satisfy piranha::is_returnable.
  *
- * Any exception thrown by the implementation will be caught and a piranha::safe_cast_failure exception
- * will be raised instead.
+ * Specialisations of piranha::safe_cast_impl are encouraged to raise an exception of type piranha::safe_cast_failure
+ * in case the type conversion fails.
  *
- * @param[in] x argument for the conversion.
+ * @param x argument for the conversion.
  *
  * @return \p x converted to \p To.
  *
- * @throws piranha::safe_cast_failure if the conversion fails.
+ * @throws unspecified any exception throw by the call operator of piranha::safe_cast_impl.
  */
 template <typename To, typename From>
 inline safe_cast_type<To, From> safe_cast(const From &x)
 {
-    try {
-        return safe_cast_impl<uncvref_t<To>, From>{}(x);
-    } catch (const safe_cast_failure &) {
-        throw;
-    } catch (const std::exception &e) {
-        piranha_throw(safe_cast_failure,
-                      std::string("safe_cast() failure detected, the full error message is:\n") + e.what() + "\n");
-    } catch (...) {
-        piranha_throw(safe_cast_failure, "safe_cast() failure detected");
-    }
+    return safe_cast_impl<uncvref_t<To>, From>{}(x);
 }
 
 inline namespace impl
 {
 
 template <typename To, typename From>
-using safe_cast_t = decltype(safe_cast<To>(std::declval<const From &>()));
+using safe_cast_t = decltype(safe_cast<To>(std::declval<From>()));
 }
 
 /// Type trait to detect piranha::safe_cast().

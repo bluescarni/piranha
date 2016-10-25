@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/unit_test.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <new>
 #include <string>
 #include <type_traits>
 
@@ -39,79 +40,49 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
+struct exc0 {
+    exc0(int, double)
+    {
+    }
+};
+
+struct exc1 {
+    exc1(int)
+    {
+    }
+};
+
 BOOST_AUTO_TEST_CASE(exception_test_00)
 {
     init();
-    BOOST_CHECK((std::is_constructible<not_implemented_error,std::string>::value));
-    BOOST_CHECK((std::is_constructible<not_implemented_error,char *>::value));
-    BOOST_CHECK((std::is_constructible<not_implemented_error,const char *>::value));
-    BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, "foobar"),not_implemented_error,[](const not_implemented_error &e) {
-        return boost::contains(e.what(),"foobar");
-    });
-    BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, std::string("foobar")),not_implemented_error,[](const not_implemented_error &e) {
-        return boost::contains(e.what(),"foobar");
-    });
-/*
-    BOOST_CHECK_THROW(piranha_throw(custom_exception0, ), custom_exception0);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception1, ), custom_exception1);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception1, std::string("")), custom_exception1);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception1, ""), custom_exception1);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception2, ), custom_exception2);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception2, std::string("")), custom_exception2);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception2, std::string(""), 3), custom_exception2);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception3, ), custom_exception3);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception3, std::string("")), custom_exception3);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception3, std::string(""), 3), custom_exception3);
-    BOOST_CHECK_THROW(piranha_throw(custom_exception3, 3, std::string("")), custom_exception3);
-    const std::string empty;
-    try {
-        piranha_throw(custom_exception0, );
-    } catch (const base_exception &e) {
-        BOOST_CHECK_EQUAL(e.what(), empty);
-    }
-    try {
-        piranha_throw(custom_exception1, );
-    } catch (const base_exception &e) {
-        BOOST_CHECK_EQUAL(e.what(), empty);
-    }
-    try {
-        piranha_throw(custom_exception1, std::string(""));
-    } catch (const base_exception &e) {
-        BOOST_CHECK(e.what() != empty);
-    }
-    try {
-        piranha_throw(custom_exception1, "");
-    } catch (const base_exception &e) {
-        BOOST_CHECK(e.what() != empty);
-    }
-    try {
-        piranha_throw(custom_exception2, );
-    } catch (const base_exception &e) {
-        BOOST_CHECK(e.what() == empty);
-    }
-    try {
-        piranha_throw(custom_exception2, "");
-    } catch (const base_exception &e) {
-        BOOST_CHECK(e.what() != empty);
-    }
-    try {
-        piranha_throw(custom_exception2, "", 3);
-    } catch (const base_exception &e) {
-        BOOST_CHECK(e.what() != empty);
-    }
-    try {
-        piranha_throw(custom_exception3, "", 3);
-    } catch (const base_exception &e) {
-        BOOST_CHECK(e.what() != empty);
-    }
-    try {
-        piranha_throw(custom_exception3, 3, empty);
-    } catch (const base_exception &e) {
-        BOOST_CHECK(e.what() == empty);
-    }
-    try {
-        piranha_throw(custom_exception4, "");
-    } catch (const base_exception &e) {
-        BOOST_CHECK(e.what() == empty);
-    }*/
+    // not_implemented_error.
+    BOOST_CHECK((std::is_constructible<not_implemented_error, std::string>::value));
+    BOOST_CHECK((std::is_constructible<not_implemented_error, char *>::value));
+    BOOST_CHECK((std::is_constructible<not_implemented_error, const char *>::value));
+    BOOST_CHECK((!std::is_constructible<not_implemented_error>::value));
+    BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, "foobar"), not_implemented_error,
+                          [](const not_implemented_error &e) { return boost::contains(e.what(), "foobar"); });
+    BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, std::string("foobar")), not_implemented_error,
+                          [](const not_implemented_error &e) { return boost::contains(e.what(), "foobar"); });
+    BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, "foobar"), std::runtime_error,
+                          [](const std::runtime_error &e) { return boost::contains(e.what(), "foobar"); });
+    BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, std::string("foobar")), std::runtime_error,
+                          [](const std::runtime_error &e) { return boost::contains(e.what(), "foobar"); });
+    // zero_division_error.
+    BOOST_CHECK((std::is_constructible<zero_division_error, std::string>::value));
+    BOOST_CHECK((std::is_constructible<zero_division_error, char *>::value));
+    BOOST_CHECK((std::is_constructible<zero_division_error, const char *>::value));
+    BOOST_CHECK((!std::is_constructible<zero_division_error>::value));
+    BOOST_CHECK_EXCEPTION(piranha_throw(zero_division_error, "foobar"), zero_division_error,
+                          [](const zero_division_error &e) { return boost::contains(e.what(), "foobar"); });
+    BOOST_CHECK_EXCEPTION(piranha_throw(zero_division_error, std::string("foobar")), zero_division_error,
+                          [](const zero_division_error &e) { return boost::contains(e.what(), "foobar"); });
+    BOOST_CHECK_EXCEPTION(piranha_throw(zero_division_error, "foobar"), std::invalid_argument,
+                          [](const std::invalid_argument &e) { return boost::contains(e.what(), "foobar"); });
+    BOOST_CHECK_EXCEPTION(piranha_throw(zero_division_error, std::string("foobar")), std::invalid_argument,
+                          [](const std::invalid_argument &e) { return boost::contains(e.what(), "foobar"); });
+    // A couple of tests with exceptions that do not accept string ctor.
+    BOOST_CHECK_THROW(piranha_throw(std::bad_alloc, ), std::bad_alloc);
+    BOOST_CHECK_THROW(piranha_throw(exc0, 1, 2.3), exc0);
+    BOOST_CHECK_THROW(piranha_throw(exc1, 1), exc1);
 }
