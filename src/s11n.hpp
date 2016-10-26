@@ -105,7 +105,7 @@ template <typename A>
 using get_helper_t_1 = decltype(std::declval<A &>().template get_helper<helper>());
 
 template <typename A>
-using get_helper_t_2 = decltype(std::declval<A &>().template get_helper<helper>(static_cast<void *const>(nullptr)));
+using get_helper_t_2 = decltype(std::declval<A &>().template get_helper<helper>(static_cast<void *>(nullptr)));
 
 template <typename Archive, typename T>
 using impl = std::

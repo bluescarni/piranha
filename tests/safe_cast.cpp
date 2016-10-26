@@ -170,7 +170,15 @@ struct fp_int_checker {
                     safe_cast<T>(std::numeric_limits<U>::infinity()), safe_cast_failure,
                     [](const safe_cast_failure &e) { return boost::contains(e.what(), "non-finite"); });
             }
+#if defined(PIRANHA_COMPILER_IS_GCC)
+// GCC complains about int to float conversions here.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             if (std::numeric_limits<U>::max() > std::numeric_limits<T>::max()) {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
                 BOOST_CHECK_EXCEPTION(
                     safe_cast<T>(std::numeric_limits<U>::max()), safe_cast_failure,
                     [](const safe_cast_failure &e) { return boost::contains(e.what(), "cannot be converted"); });

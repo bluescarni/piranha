@@ -63,14 +63,14 @@ template <typename To, typename From, typename = void>
 struct safe_cast_impl {
 private:
     template <typename T>
-    using enabler = enable_if_t<conjunction<std::is_same<To, T>, std::is_copy_constructible<T>>::value, int>;
+    using enabler = enable_if_t<conjunction<std::is_same<To, T>, std::is_same<From, T>, std::is_copy_constructible<T>>::value, int>;
 
 public:
     /// Call operator.
     /**
      * \note
      * This call operator is enabled only if:
-     * - \p To and \p From are the same type,
+     * - \p T, \p To and \p From are the same type,
      * - \p To is copy-constructible.
      *
      * @param f conversion argument.
@@ -79,8 +79,8 @@ public:
      *
      * @throws unspecified any exception thrown by the copy/move constructor of \p From.
      */
-    template <typename T = From, enabler<T> = 0>
-    To operator()(const From &f) const
+    template <typename T, enabler<T> = 0>
+    To operator()(const T &f) const
     {
         return f;
     }
