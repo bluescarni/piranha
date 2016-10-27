@@ -29,12 +29,12 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_CACHE_ALIGNING_ALLOCATOR_HPP
 #define PIRANHA_CACHE_ALIGNING_ALLOCATOR_HPP
 
-#include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 #include <utility>
 
 #include "dynamic_aligning_allocator.hpp"
 #include "memory.hpp"
+#include "safe_cast.hpp"
 #include "settings.hpp"
 
 namespace piranha
@@ -56,7 +56,7 @@ class cache_aligning_allocator : public dynamic_aligning_allocator<T>
         return 0u;
 #endif
         try {
-            const std::size_t alignment = boost::numeric_cast<std::size_t>(settings::get_cache_line_size());
+            const std::size_t alignment = safe_cast<std::size_t>(settings::get_cache_line_size());
             if (!alignment_check<T>(alignment)) {
                 return 0u;
             }

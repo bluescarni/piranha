@@ -29,13 +29,13 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_THREAD_MANAGEMENT_HPP
 #define PIRANHA_THREAD_MANAGEMENT_HPP
 
-#include <boost/numeric/conversion/cast.hpp>
 #include <stdexcept>
 #include <utility>
 
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
+#include "safe_cast.hpp"
 #include "thread_management.hpp"
 
 #if defined(PIRANHA_HAVE_PTHREAD_AFFINITY)
@@ -90,9 +90,9 @@ inline void bind_to_proc(unsigned n)
     unsigned cpu_setsize;
     int n_int;
     try {
-        cpu_setsize = boost::numeric_cast<unsigned>(CPU_SETSIZE);
-        n_int = boost::numeric_cast<int>(n);
-    } catch (const boost::numeric::bad_numeric_cast &) {
+        cpu_setsize = safe_cast<unsigned>(CPU_SETSIZE);
+        n_int = safe_cast<int>(n);
+    } catch (const safe_cast_failure &) {
         piranha_throw(std::runtime_error, "numeric conversion error");
     }
     if (n >= cpu_setsize) {
@@ -109,9 +109,9 @@ inline void bind_to_proc(unsigned n)
     unsigned cpu_setsize;
     int n_int;
     try {
-        cpu_setsize = boost::numeric_cast<unsigned>(CPU_SETSIZE);
-        n_int = boost::numeric_cast<int>(n);
-    } catch (const boost::numeric::bad_numeric_cast &) {
+        cpu_setsize = safe_cast<unsigned>(CPU_SETSIZE);
+        n_int = safe_cast<int>(n);
+    } catch (const safe_cast_failure &) {
         piranha_throw(std::runtime_error, "numeric conversion error");
     }
     if (n >= cpu_setsize) {
@@ -166,8 +166,8 @@ inline std::pair<bool, unsigned> bound_proc()
     }
     int cpu_setsize;
     try {
-        cpu_setsize = boost::numeric_cast<int>(CPU_SETSIZE);
-    } catch (const boost::numeric::bad_numeric_cast &) {
+        cpu_setsize = safe_cast<int>(CPU_SETSIZE);
+    } catch (const safe_cast_failure &) {
         piranha_throw(std::runtime_error, "numeric conversion error");
     }
     for (int i = 0; i < cpu_setsize; ++i) {
@@ -187,8 +187,8 @@ inline std::pair<bool, unsigned> bound_proc()
     }
     int cpu_setsize;
     try {
-        cpu_setsize = boost::numeric_cast<int>(CPU_SETSIZE);
-    } catch (const boost::numeric::bad_numeric_cast &) {
+        cpu_setsize = safe_cast<int>(CPU_SETSIZE);
+    } catch (const safe_cast_failure &) {
         piranha_throw(std::runtime_error, "numeric conversion error");
     }
     unsigned bound_cpus = 0;

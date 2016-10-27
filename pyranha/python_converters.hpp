@@ -32,7 +32,6 @@ see https://www.gnu.org/licenses/. */
 #include "python_includes.hpp"
 
 #include <boost/lexical_cast.hpp>
-#include <boost/numeric/conversion/cast.hpp>
 #include <boost/python/converter/registry.hpp>
 #include <boost/python/converter/rvalue_from_python_data.hpp>
 #include <boost/python/extract.hpp>
@@ -47,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
+#include "../src/safe_cast.hpp"
 
 // NOTE: useful resources for python converters and C API:
 // - http://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters
@@ -228,8 +228,8 @@ struct real_converter {
         // for obj_ptr goes back to the original value instead of decreasing by 1.
         bp::handle<> obj_handle(bp::borrowed(obj_ptr));
         bp::object obj(obj_handle);
-        const ::mpfr_prec_t prec = boost::numeric_cast<::mpfr_prec_t>(
-            static_cast<long>(bp::extract<long>(obj.attr("context").attr("prec"))));
+        const ::mpfr_prec_t prec
+            = piranha::safe_cast<::mpfr_prec_t>(static_cast<long>(bp::extract<long>(obj.attr("context").attr("prec"))));
         // NOTE: here we use repr instead of str because the repr seems to give the most accurate representation
         // in base 10 for the object.
         ::PyObject *str_obj = ::PyObject_Repr(obj.ptr());

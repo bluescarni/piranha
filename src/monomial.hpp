@@ -536,6 +536,9 @@ public:
      * @return name of the linear variable.
      *
      * @throws std::invalid_argument if the monomial is not linear or if the sizes of \p args and \p this differ.
+     * @throws unspecified any exception thrown by:
+     * - piranha::safe_cast(),
+     * - piranha::math::is_zero() or piranha::is_unitary().
      */
     template <typename U = T, linarg_enabler<U> = 0>
     std::string linear_argument(const symbol_set &args) const
@@ -550,13 +553,13 @@ public:
             integer tmp;
             try {
                 tmp = safe_cast<integer>((*this)[i]);
-            } catch (const std::invalid_argument &) {
+            } catch (const safe_cast_failure &) {
                 piranha_throw(std::invalid_argument, "exponent is not an integer");
             }
-            if (tmp == 0) {
+            if (math::is_zero(tmp)) {
                 continue;
             }
-            if (tmp != 1) {
+            if (!math::is_unitary(tmp)) {
                 piranha_throw(std::invalid_argument, "exponent is not unitary");
             }
             candidate = i;

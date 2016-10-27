@@ -63,7 +63,9 @@ template <typename To, typename From, typename = void>
 struct safe_cast_impl {
 private:
     template <typename T>
-    using enabler = enable_if_t<conjunction<std::is_same<To, T>, std::is_same<From, T>, std::is_copy_constructible<T>>::value, int>;
+    using enabler
+        = enable_if_t<conjunction<std::is_same<To, T>, std::is_same<From, T>, std::is_copy_constructible<T>>::value,
+                      int>;
 
 public:
     /// Call operator.

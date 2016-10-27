@@ -32,7 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <array>
 #include <boost/functional/hash.hpp>
-#include <boost/numeric/conversion/cast.hpp>
+#include <boost/lexical_cast.hpp>
 #include <climits>
 #include <cmath>
 #include <cstddef>
@@ -51,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/demangle.hpp"
 #include "detail/is_digit.hpp"
 #include "detail/mp_rational_fwd.hpp"
 #include "detail/mpfr.hpp"
@@ -61,6 +62,7 @@ see https://www.gnu.org/licenses/. */
 #include "is_key.hpp"
 #include "math.hpp"
 #include "s11n.hpp"
+#include "safe_cast.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -305,10 +307,10 @@ struct static_integer {
         try {
             if (n >= T(0)) {
                 // We can attempt conversion of a non-negative signed directly into limb_t.
-                m_limbs[0u] = boost::numeric_cast<limb_t>(n);
+                m_limbs[0u] = safe_cast<limb_t>(n);
             } else if (n >= -safe_abs_sint<T>::value) {
                 // Conversion of a negative signed whose value can be safely negated.
-                m_limbs[0u] = boost::numeric_cast<limb_t>(-n);
+                m_limbs[0u] = safe_cast<limb_t>(-n);
             } else {
                 // We cannot convert safely n to a limb_t in this case.
                 return false;
@@ -333,7 +335,7 @@ struct static_integer {
     {
         try {
             // For unsigned, directly attempt a cast to the limb type.
-            m_limbs[0u] = boost::numeric_cast<limb_t>(n);
+            m_limbs[0u] = safe_cast<limb_t>(n);
             // With an unsigned input, the size can be either 0 or 1.
             if (n) {
                 _mp_size = mpz_size_t(1);
@@ -1537,7 +1539,7 @@ class mp_integer
         // NOTE: the zero case is handled in the upper function.
         if (m_int.g_st()._mp_size == 1) {
             try {
-                retval = boost::numeric_cast<T>(m_int.g_st().m_limbs[0u]);
+                retval = safe_cast<T>(m_int.g_st().m_limbs[0u]);
                 flag = true;
             } catch (...) {
                 piranha_throw(std::overflow_error, "overflow in conversion to integral type");
@@ -1550,7 +1552,7 @@ class mp_integer
         // Like above for the 1 positive limb case.
         if (m_int.g_st()._mp_size == 1) {
             try {
-                retval = boost::numeric_cast<T>(m_int.g_st().m_limbs[0u]);
+                retval = safe_cast<T>(m_int.g_st().m_limbs[0u]);
                 flag = true;
             } catch (...) {
                 piranha_throw(std::overflow_error, "overflow in conversion to integral type");
@@ -1560,7 +1562,7 @@ class mp_integer
         if (m_int.g_st()._mp_size == -1) {
             try {
                 // This will first be the negative of the final value, if computable.
-                retval = boost::numeric_cast<T>(m_int.g_st().m_limbs[0u]);
+                retval = safe_cast<T>(m_int.g_st().m_limbs[0u]);
                 piranha_assert(retval > 0);
                 // Now check if we can negate it.
                 if (retval <= detail::safe_abs_sint<T>::value) {
@@ -1632,7 +1634,7 @@ class mp_integer
                 }
                 ::mp_bitcnt_t bit_idx;
                 try {
-                    bit_idx = boost::numeric_cast<::mp_bitcnt_t>(i);
+                    bit_idx = safe_cast<::mp_bitcnt_t>(i);
                 } catch (...) {
                     piranha_throw(std::overflow_error, "overflow in conversion to integral type");
                 }
@@ -1680,7 +1682,7 @@ class mp_integer
         // The exact number should be  + 1 instead of + 10, but let's be conservative.
         // http://en.cppreference.com/w/cpp/types/numeric_limits/digits10
         constexpr int d2 = std::numeric_limits<long double>::digits10 * 3 + 10;
-        const auto prec = boost::numeric_cast<::mpfr_prec_t>(d2);
+        const auto prec = safe_cast<::mpfr_prec_t>(d2);
         auto v = get_mpz_view();
         // All the rest will be noexcept.
         ::mpfr_t tmp;
@@ -2058,8 +2060,8 @@ class mp_integer
     mp_integer &in_place_lshift(const T &other)
     {
         try {
-            return in_place_lshift_mp_bitcnt_t(boost::numeric_cast<::mp_bitcnt_t>(other));
-        } catch (const boost::numeric::bad_numeric_cast &) {
+            return in_place_lshift_mp_bitcnt_t(safe_cast<::mp_bitcnt_t>(other));
+        } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument, "invalid argument for left bit shifting");
         }
     }
@@ -2112,8 +2114,8 @@ class mp_integer
     mp_integer &in_place_rshift(const T &other)
     {
         try {
-            return in_place_rshift_mp_bitcnt_t(boost::numeric_cast<::mp_bitcnt_t>(other));
-        } catch (const boost::numeric::bad_numeric_cast &) {
+            return in_place_rshift_mp_bitcnt_t(safe_cast<::mp_bitcnt_t>(other));
+        } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument, "invalid argument for right bit shifting");
         }
     }
@@ -2293,8 +2295,8 @@ class mp_integer
     {
         unsigned long exp;
         try {
-            exp = boost::numeric_cast<unsigned long>(ui);
-        } catch (const boost::numeric::bad_numeric_cast &) {
+            exp = safe_cast<unsigned long>(ui);
+        } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument, "invalid argument for exponentiation");
         }
         return ebs(exp);
@@ -2502,7 +2504,7 @@ public:
      *
      * @throws std::overflow_error if the conversion fails (e.g., the range of the target integral type
      * is insufficient to represent the value of <tt>this</tt>).
-     * @throws unspecified any exception raised by <tt>boost::numeric_cast()</tt> in case of (unlikely)
+     * @throws unspecified any exception raised by piranha::safe_cast() in case of (unlikely)
      * overflow errors while converting between integral types.
      */
     template <typename T, cast_enabler<T> = 0>
@@ -3879,7 +3881,7 @@ private:
                                         typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
     {
         try {
-            return boost::numeric_cast<unsigned long>(k);
+            return safe_cast<unsigned long>(k);
         } catch (...) {
             piranha_throw(std::invalid_argument, "invalid k argument for binomial coefficient");
         }
@@ -4220,7 +4222,7 @@ private:
     using msgpack_pack_enabler
         = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, bool>,
                                   has_msgpack_pack<Stream, typename detail::integer_union<NBits>::s_storage::limb_t>,
-                                  /*has_safe_cast<std::uint32_t, detail::mpz_size_t>,*/
+                                  has_safe_cast<std::uint32_t, detail::mpz_size_t>,
                                   has_msgpack_pack<Stream, ::mp_limb_t>, has_msgpack_pack<Stream, std::string>>::value,
                       int>;
     template <typename U>
@@ -4228,7 +4230,9 @@ private:
         = enable_if_t<conjunction<std::is_same<U, U>, // Just for SFINAE.
                                   has_msgpack_convert<bool>,
                                   has_msgpack_convert<typename detail::integer_union<NBits>::s_storage::limb_t>,
-                                  has_msgpack_convert<::mp_limb_t>, has_msgpack_convert<std::string>>::value,
+                                  has_msgpack_convert<::mp_limb_t>, has_msgpack_convert<std::string>,
+                                  has_safe_cast<detail::mpz_size_t,
+                                                typename std::vector<msgpack::object>::size_type>>::value,
                       int>;
 
 public:
@@ -4281,8 +4285,7 @@ public:
                 const auto size = m_int.g_dy()._mp_size;
                 std::uint32_t usize;
                 try {
-                    // TODO: safe_cast.
-                    usize = boost::numeric_cast<std::uint32_t>(safe_abs_size(size));
+                    usize = safe_cast<std::uint32_t>(safe_abs_size(size));
                 } catch (...) {
                     piranha_throw(std::overflow_error, "the number of limbs is too large");
                 }
@@ -4301,8 +4304,11 @@ public:
     /// Convert from msgpack object.
     /**
      * \note
-     * This method is enabled only if the integral types used in the internal representation of the integer, \p bool
-     * and \p std::string satisfy piranha::has_msgpack_convert.
+     * This method is enabled only if:
+     * - the integral types used in the internal representation of the integer, \p bool
+     *   and \p std::string satisfy piranha::has_msgpack_convert,
+     * - the size type of \p std::vector<msgpack::object> can be safely converted to the integral type representing the
+     *   size of the integer.
      *
      * This method will convert the object \p o into \p this. If \p f is piranha::msgpack_format::binary,
      * this method offers the basic exception safety guarantee and it performs minimal checking on the input data.
@@ -4377,7 +4383,7 @@ public:
             } else {
                 detail::mpz_size_t sz;
                 try {
-                    sz = boost::numeric_cast<detail::mpz_size_t>(size);
+                    sz = safe_cast<detail::mpz_size_t>(size);
                     // We need to be able to negate this.
                     if (unlikely(sz > detail::safe_abs_sint<detail::mpz_size_t>::value)) {
                         throw std::overflow_error("");
@@ -5088,6 +5094,96 @@ struct msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>> {
 };
 
 #endif
+
+inline namespace impl
+{
+
+// NOTE: restrict to supported integral/floats in the new type.
+template <typename To, typename From>
+using mp_integer_safe_cast_enabler
+    = enable_if_t<disjunction<conjunction<detail::is_mp_integer<To>, std::is_floating_point<From>>,
+                              conjunction<detail::is_mp_integer<To>, std::is_integral<From>>,
+                              conjunction<detail::is_mp_integer<From>, std::is_integral<To>>>::value>;
+}
+
+/// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_integer.
+/**
+ * \note
+ * This specialisation is enabled in the following cases:
+ * - \p To is an instance of piranha::mp_integer and \p From is a C++ floating-point type,
+ * - \p To is an instance of piranha::mp_integer and \p From is a C++ integral type,
+ * - \p From is an instance of piranha::mp_integer and \p To is a C++ integral type.
+ */
+template <typename To, typename From>
+struct safe_cast_impl<To, From, mp_integer_safe_cast_enabler<To, From>> {
+private:
+    // NOTE: fix also these enablers for the new type.
+    template <typename T>
+    using float_enabler = enable_if_t<std::is_floating_point<T>::value, int>;
+    template <typename T>
+    using mp_int_enabler = enable_if_t<detail::is_mp_integer<T>::value, int>;
+    template <typename T>
+    using int_enabler = enable_if_t<std::is_integral<T>::value, int>;
+
+public:
+    /// Float to piranha::mp_integer conversion.
+    /**
+     * @param f input float to be converted.
+     *
+     * @return \p f converted to \p To.
+     *
+     * @throws piranha::safe_cast_failure is the input float is not finite or if it has a nonzero fractional part.
+     * @throws unspecified any exception thrown by the constructor of piranha::mp_integer from a floating-point.
+     */
+    template <typename T, float_enabler<T> = 0>
+    To operator()(const T &f) const
+    {
+        if (!std::isfinite(f)) {
+            piranha_throw(safe_cast_failure, "the non-finite floating-point value " + std::to_string(f)
+                                                 + " cannot be converted to an arbitrary-precision integer");
+        }
+        if (f != std::trunc(f)) {
+            piranha_throw(safe_cast_failure, "the floating-point value with nonzero fractional part "
+                                                 + std::to_string(f)
+                                                 + " cannot be converted to an arbitrary-precision integer");
+        }
+        // NOTE: in the new type, check this never fails (apart from memory allocation errors, etc.).
+        return To{f};
+    }
+    /// piranha::mp_integer to integral conversion.
+    /**
+     * @param n input piranha::mp_integer.
+     *
+     * @return \p n converted to the C++ integral type \p To.
+     *
+     * @throws piranha::safe_cast_failure if the target integral type cannot represent the value of \p n.
+     */
+    template <typename T, mp_int_enabler<T> = 0>
+    To operator()(const T &n) const
+    {
+        try {
+            return static_cast<To>(n);
+        } catch (const std::overflow_error &) {
+            // NOTE: check the exception that is thrown here by the new type.
+            piranha_throw(safe_cast_failure, "the arbitrary-precision integer " + boost::lexical_cast<std::string>(n)
+                                                 + " cannot be converted to the type '" + detail::demangle<To>()
+                                                 + "', as the conversion cannot preserve the original value");
+        }
+    }
+    /// Integral to piranha::mp_integer conversion.
+    /**
+     * @param n input C++ integral.
+     *
+     * @return \p n converted to \p To.
+     *
+     * @throws unspecified any exception thrown by the constructor of piranha::mp_integer from C++ integral types.
+     */
+    template <typename T, int_enabler<T> = 0>
+    To operator()(const T &n) const
+    {
+        return To{n};
+    }
+};
 }
 
 namespace std

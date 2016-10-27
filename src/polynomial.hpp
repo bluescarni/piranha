@@ -732,6 +732,8 @@ class polynomial
             return retval;
         } catch (const std::invalid_argument &) {
             piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
+        } catch (const safe_cast_failure &) {
+            piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
         }
     }
     template <
@@ -834,7 +836,7 @@ class polynomial
         const symbol_set::positions pos(this->m_symbol_set, symbol_set{s});
         try {
             degree = safe_cast<integer>(term.m_key.degree(pos, this->m_symbol_set));
-        } catch (const std::invalid_argument &) {
+        } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument,
                           "unable to perform polynomial integration: cannot extract the integral form of an exponent");
         }
