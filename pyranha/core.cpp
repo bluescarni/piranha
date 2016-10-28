@@ -87,7 +87,7 @@ PYRANHA_DECLARE_TT_NAMER(piranha::divisor, "divisor")
 
 static inline void test_safe_cast_failure()
 {
-    piranha_throw(piranha::safe_cast_failure,"");
+    piranha_throw(piranha::safe_cast_failure, "");
 }
 
 BOOST_PYTHON_MODULE(_core)

@@ -691,7 +691,7 @@ struct safe_cast_impl<time_bomb2, int, void> {
         try {
             return time_bomb2(n);
         } catch (...) {
-            piranha_throw(safe_cast_failure,"noooo");
+            piranha_throw(safe_cast_failure, "noooo");
         }
     }
 };
