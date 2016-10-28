@@ -12,6 +12,9 @@ New
 Changes
 ~~~~~~~
 
+- Reduce the usage of boost::numeric_cast() in favour of
+  piranha::safe_cast(). [Francesco Biscani]
+
 - Change series multiplication and division to behave like coefficient
   mult/div in case of zero operands. [Francesco Biscani]
 
