@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "binomial.hpp"
 #include "config.hpp"
+#include "detail/demangle.hpp"
 #include "detail/is_digit.hpp"
 #include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"
@@ -943,8 +944,7 @@ public:
      *
      * Conversion to \p bool is always successful, and returns <tt>sign() != 0</tt>.
      * Conversion to the other integral types is truncated (i.e., rounded to zero), its success depending on whether or
-     * not
-     * the target type can represent the truncated value.
+     * not the target type can represent the truncated value.
      *
      * Conversion to floating point types is exact if the target type can represent exactly the current value.
      * If that is not the case, the output value will be the nearest adjacent. If \p this is not finite,
@@ -952,8 +952,7 @@ public:
      * an error will be produced.
      *
      * Conversion of finite values to piranha::mp_rational will be exact. Conversion of non-finite values will result in
-     * runtime
-     * errors.
+     * runtime errors.
      *
      * @return result of the conversion to target type T.
      *
@@ -2247,33 +2246,35 @@ inline real real::binomial(const real &y) const
     return real{0, max_prec};
 }
 
-namespace detail
+inline namespace impl
 {
 
 template <typename To, typename From>
-using sc_real_enabler =
-    typename std::enable_if<(std::is_integral<To>::value || is_mp_integer<To>::value || is_mp_rational<To>::value)
-                            && std::is_same<From, real>::value>::type;
+using sc_real_enabler
+    = enable_if_t<conjunction<disjunction<std::is_integral<To>, detail::is_mp_integer<To>, detail::is_mp_rational<To>>,
+                              std::is_same<From, real>>::value>;
 }
 
 /// Specialisation of piranha::safe_cast() for conversions involving piranha::real.
 /**
+ * \note
  * This specialisation is enabled if \p To is an integral type, piranha::mp_integer or piranha::mp_rational, and \p From
- * is
- * piranha::real.
+ * is piranha::real.
  */
 template <typename To, typename From>
-struct safe_cast_impl<To, From, detail::sc_real_enabler<To, From>> {
+struct safe_cast_impl<To, From, sc_real_enabler<To, From>> {
 private:
     template <typename T>
-    using integral_enabler =
-        typename std::enable_if<std::is_integral<T>::value || detail::is_mp_integer<T>::value, int>::type;
+    using integral_enabler = enable_if_t<disjunction<std::is_integral<T>, detail::is_mp_integer<T>>::value, int>;
     template <typename T>
-    using rational_enabler = typename std::enable_if<detail::is_mp_rational<T>::value, int>::type;
+    using rational_enabler = enable_if_t<detail::is_mp_rational<T>::value, int>;
 
 public:
     /// Call operator, real to integral overload.
     /**
+     * \note
+     * This operator is enabled if \p To is an integral type or an instance of piranha::mp_integer.
+     *
      * The conversion will succeed if \p r is a finite integral value representable by
      * the target type.
      *
@@ -2281,8 +2282,8 @@ public:
      *
      * @return \p r converted to \p To.
      *
-     * @throws std::invalid_argument if \p r is not a finite integral value.
-     * @throws unspecified any exception thrown by the conversion operator of piranha::real.
+     * @throws piranha::safe_cast_failure if the conversion fails.
+     * @throws unspecified any exception thrown by \p boost::lexical_cast().
      */
     template <typename T = To, integral_enabler<T> = 0>
     T operator()(const real &r) const
@@ -2290,23 +2291,40 @@ public:
         // NOTE: the finiteness check here is repeated in the cast below, but we need it here in order
         // to make sure that we can compute the truncated r.
         if (unlikely(r.is_inf() || r.is_nan() || r.truncated() != r)) {
-            piranha_throw(std::invalid_argument, "the input real does not represent a finite integral value");
+            piranha_throw(safe_cast_failure, "cannot convert the input real " + boost::lexical_cast<std::string>(r)
+                                                 + " to the integral type '" + detail::demangle<To>()
+                                                 + "', as the input real does not represent a finite integral value");
         }
-        return static_cast<T>(r);
+        try {
+            return static_cast<T>(r);
+        } catch (const std::overflow_error &) {
+            piranha_throw(safe_cast_failure, "cannot convert the input real " + boost::lexical_cast<std::string>(r)
+                                                 + " to the integral type '" + detail::demangle<To>()
+                                                 + "', as the conversion would not preserve the value");
+        }
     }
     /// Call operator, real to rational overload.
     /**
+     * \note
+     * This operator is enabled if \p To is an instance of piranha::mp_rational.
      *
      * @param[in] r conversion argument.
      *
      * @return \p r converted to piranha::mp_rational.
      *
-     * @throws unspecified any exception thrown by the conversion operator of piranha::real.
+     * @throws piranha::safe_cast_failure if the conversion fails.
+     * @throws unspecified any exception thrown by \p boost::lexical_cast().
      */
     template <typename T = To, rational_enabler<T> = 0>
     T operator()(const real &r) const
     {
-        return static_cast<T>(r);
+        try {
+            return static_cast<T>(r);
+        } catch (const std::overflow_error &) {
+            piranha_throw(safe_cast_failure, "cannot convert the input real " + boost::lexical_cast<std::string>(r)
+                                                 + " to the rational type '" + detail::demangle<To>()
+                                                 + "', as the conversion would not preserve the value");
+        }
     }
 };
 

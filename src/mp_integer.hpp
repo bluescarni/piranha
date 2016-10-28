@@ -5128,6 +5128,9 @@ private:
 public:
     /// Float to piranha::mp_integer conversion.
     /**
+     * \note
+     * This operator is enabled if \p T is a C++ floating-point type.
+     *
      * @param f input float to be converted.
      *
      * @return \p f converted to \p To.
@@ -5152,6 +5155,9 @@ public:
     }
     /// piranha::mp_integer to integral conversion.
     /**
+     * \note
+     * This operator is enabled if \p T is an instance of piranha::mp_integer.
+     *
      * @param n input piranha::mp_integer.
      *
      * @return \p n converted to the C++ integral type \p To.
@@ -5172,6 +5178,9 @@ public:
     }
     /// Integral to piranha::mp_integer conversion.
     /**
+     * \note
+     * This operator is enabled if \p T is a C++ integral type.
+     *
      * @param n input C++ integral.
      *
      * @return \p n converted to \p To.

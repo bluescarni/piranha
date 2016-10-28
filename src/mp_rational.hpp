@@ -2248,6 +2248,7 @@ using sc_rat_enabler
 
 /// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_rational.
 /**
+ * \note
  * This specialisation is enabled in the following cases:
  * - \p To is a rational type and \p From is either an arithmetic type or piranha::mp_integer,
  * - \p To is an integral type or piranha::mp_integer, and \p From is piranha::mp_rational.
