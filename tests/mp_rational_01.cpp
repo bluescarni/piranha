@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 
 #define FUSION_MAX_VECTOR_SIZE 20
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
@@ -2153,7 +2154,13 @@ struct safe_cast_tester {
         using z_type = mp_integer<T::value>;
         // From q conversions.
         BOOST_CHECK((has_safe_cast<int, q_type>::value));
+        BOOST_CHECK((has_safe_cast<int &, const q_type>::value));
+        BOOST_CHECK((has_safe_cast<int &&, const q_type &>::value));
+        BOOST_CHECK((!has_safe_cast<void, const q_type &>::value));
         BOOST_CHECK((has_safe_cast<unsigned, q_type>::value));
+        BOOST_CHECK((has_safe_cast<unsigned &, const q_type>::value));
+        BOOST_CHECK((has_safe_cast<unsigned &&, const q_type &>::value));
+        BOOST_CHECK((has_safe_cast<const unsigned &, const q_type &>::value));
         BOOST_CHECK((has_safe_cast<z_type, q_type>::value));
         BOOST_CHECK_EQUAL(safe_cast<int>(q_type{0}), 0);
         BOOST_CHECK_EQUAL(safe_cast<int>(q_type{-4}), -4);
@@ -2162,14 +2169,26 @@ struct safe_cast_tester {
         BOOST_CHECK_EQUAL(safe_cast<z_type>(q_type{0} / 2), 0);
         BOOST_CHECK_EQUAL(safe_cast<z_type>(q_type{-42} / 2), -21);
         // Various types of failures.
-        BOOST_CHECK_THROW(safe_cast<int>(q_type{std::numeric_limits<int>::max()} + 1), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<int>(q_type{std::numeric_limits<int>::min()} - 1), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<int>(q_type{-4} / 3), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{-4}), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{4} / 3), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<z_type>(q_type{4} / 3), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(safe_cast<int>(q_type{std::numeric_limits<int>::max()} + 1), safe_cast_failure,
+                              [](const safe_cast_failure &e) {
+                                  return boost::contains(e.what(), "as the conversion cannot preserve the valu");
+                              });
+        BOOST_CHECK_EXCEPTION(safe_cast<int>(q_type{std::numeric_limits<int>::min()} - 1), safe_cast_failure,
+                              [](const safe_cast_failure &e) {
+                                  return boost::contains(e.what(), "as the conversion cannot preserve the valu");
+                              });
+        BOOST_CHECK_EXCEPTION(safe_cast<int>(q_type{-4} / 3), safe_cast_failure, [](const safe_cast_failure &e) {
+            return boost::contains(e.what(), "as the rational value as non-unitary denominator");
+        });
+        BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{-4}), safe_cast_failure);
+        BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{4} / 3), safe_cast_failure);
+        BOOST_CHECK_THROW(safe_cast<z_type>(q_type{4} / 3), safe_cast_failure);
         // To q conversions.
         BOOST_CHECK((has_safe_cast<q_type, int>::value));
+        BOOST_CHECK((has_safe_cast<const q_type, int &>::value));
+        BOOST_CHECK((has_safe_cast<const q_type &, int &&>::value));
+        BOOST_CHECK((has_safe_cast<const q_type &, const int &>::value));
+        BOOST_CHECK((!has_safe_cast<q_type, void>::value));
         BOOST_CHECK((has_safe_cast<q_type, unsigned>::value));
         BOOST_CHECK((has_safe_cast<q_type, z_type>::value));
         BOOST_CHECK((has_safe_cast<q_type, double>::value));
@@ -2184,8 +2203,12 @@ struct safe_cast_tester {
         BOOST_CHECK_EQUAL(safe_cast<q_type>(1. / r), q_type(1, r));
         BOOST_CHECK_EQUAL(safe_cast<q_type>(-13. / (r * r * r)), q_type(-13, r * r * r));
         if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
-            BOOST_CHECK_THROW(safe_cast<q_type>(std::numeric_limits<double>::infinity()), std::invalid_argument);
-            BOOST_CHECK_THROW(safe_cast<q_type>(std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(safe_cast<q_type>(std::numeric_limits<double>::infinity()), safe_cast_failure,
+                                  [](const safe_cast_failure &e) {
+                                      return boost::contains(e.what(),
+                                                             "as the conversion would not preserve the value");
+                                  });
+            BOOST_CHECK_THROW(safe_cast<q_type>(std::numeric_limits<double>::quiet_NaN()), safe_cast_failure);
         }
     }
 };

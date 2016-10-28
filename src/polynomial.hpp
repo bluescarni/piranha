@@ -731,8 +731,8 @@ class polynomial
             }
             return retval;
         } catch (const std::invalid_argument &) {
-            piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
-        } catch (const safe_cast_failure &) {
+            // NOTE: this currently catches failures both in lin_arg and safe_cast, as safe_cast_failure
+            // inherits from std::invalid_argument.
             piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
         }
     }

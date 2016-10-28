@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <array>
 #include <boost/functional/hash.hpp>
+#include <boost/lexical_cast.hpp>
 #include <climits>
 #include <cmath>
 #include <cstddef>
@@ -46,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "binomial.hpp"
 #include "config.hpp"
+#include "detail/demangle.hpp"
 #include "detail/mp_rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -2233,13 +2235,15 @@ template <typename T>
 const bool has_exact_ring_operations<T, typename std::enable_if<detail::is_mp_rational<
                                             typename std::decay<T>::type>::value>::type>::value;
 
-namespace detail
+inline namespace impl
 {
 
 template <typename To, typename From>
-using sc_rat_enabler = typename std::
-    enable_if<(is_mp_rational<To>::value && (std::is_arithmetic<From>::value || is_mp_integer<From>::value))
-              || ((std::is_integral<To>::value || is_mp_integer<To>::value) && is_mp_rational<From>::value)>::type;
+using sc_rat_enabler
+    = enable_if_t<disjunction<conjunction<detail::is_mp_rational<To>,
+                                          disjunction<std::is_arithmetic<From>, detail::is_mp_integer<From>>>,
+                              conjunction<detail::is_mp_rational<From>,
+                                          disjunction<std::is_integral<To>, detail::is_mp_integer<To>>>>::value>;
 }
 
 /// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_rational.
@@ -2249,33 +2253,45 @@ using sc_rat_enabler = typename std::
  * - \p To is an integral type or piranha::mp_integer, and \p From is piranha::mp_rational.
  */
 template <typename To, typename From>
-struct safe_cast_impl<To, From, detail::sc_rat_enabler<To, From>> {
+struct safe_cast_impl<To, From, sc_rat_enabler<To, From>> {
 private:
     template <typename T>
-    using to_enabler =
-        typename std::enable_if<std::is_arithmetic<T>::value || detail::is_mp_integer<T>::value, int>::type;
+    using to_enabler = enable_if_t<disjunction<std::is_arithmetic<T>, detail::is_mp_integer<T>>::value, int>;
     template <typename T>
-    using from_enabler = typename std::enable_if<detail::is_mp_rational<T>::value, int>::type;
+    using from_enabler = enable_if_t<detail::is_mp_rational<T>::value, int>;
 
 public:
     /// Call operator, to-rational overload.
     /**
+     * \note
+     * This operator is enabled if \p T is an arithmetic type or an instance of piranha::mp_integer.
+     *
      * The conversion is performed via piranha::mp_rational's constructor.
      *
      * @param[in] x input value.
      *
      * @return a rational constructed from \p x.
      *
-     * @throws unspecified any exception thrown by the invoked constructor.
+     * @throws piranha::safe_cast_failure if the conversion fails.
+     * @throws unspecified any exception thrown by \p boost::lexical_cast().
      */
-    template <typename From2, to_enabler<From2> = 0>
-    To operator()(const From2 &x) const
+    template <typename T, to_enabler<T> = 0>
+    To operator()(const T &x) const
     {
-        // NOTE: checks for finiteness of an fp value are in the ctor.
-        return To(x);
+        try {
+            // NOTE: checks for finiteness of an fp value are in the ctor.
+            return To(x);
+        } catch (const std::invalid_argument &) {
+            piranha_throw(safe_cast_failure, "cannot convert value " + boost::lexical_cast<std::string>(x)
+                                                 + " of type '" + detail::demangle<T>()
+                                                 + "' to a rational, as the conversion would not preserve the value");
+        }
     }
     /// Call operator, from-rational overload.
     /**
+     * \note
+     * This operator is enabled if \p T is an instance of piranha::mp_rational.
+     *
      * The conversion, performed via the conversion operator of piranha::mp_rational,
      * will fail if the denominator of \p q is not unitary.
      *
@@ -2283,16 +2299,24 @@ public:
      *
      * @return an integral value converted from \p q.
      *
-     * @throws std::invalid_argument if the denominator of \p q is not unitary.
-     * @throws unspecified any exception thrown by the conversion operator.
+     * @throws safe_cast_failure if the conversion fails.
+     * @throws unspecified any exception thrown by \p boost::lexical_cast().
      */
-    template <typename From2, from_enabler<From2> = 0>
-    To operator()(const From2 &q) const
+    template <typename T, from_enabler<T> = 0>
+    To operator()(const T &q) const
     {
         if (unlikely(!q.den().is_unitary())) {
-            piranha_throw(std::invalid_argument, "non-unitary denominator in rational to integral conversion");
+            piranha_throw(safe_cast_failure, "cannot convert the rational value " + boost::lexical_cast<std::string>(q)
+                                                 + " to the integral type '" + detail::demangle<To>()
+                                                 + "', as the rational value as non-unitary denominator");
         }
-        return static_cast<To>(q);
+        try {
+            return static_cast<To>(q);
+        } catch (const std::overflow_error &) {
+            piranha_throw(safe_cast_failure, "cannot convert the rational value " + boost::lexical_cast<std::string>(q)
+                                                 + " to the integral type '" + detail::demangle<To>()
+                                                 + "', as the conversion cannot preserve the value");
+        }
     }
 };
 
