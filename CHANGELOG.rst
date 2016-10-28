@@ -1,6 +1,20 @@
 Changelog
 =========
 
+%%version%% (unreleased)
+------------------------
+
+New
+~~~
+
+- New serialization API. [Francesco Biscani]
+
+Changes
+~~~~~~~
+
+- Change series multiplication and division to behave like coefficient
+  mult/div in case of zero operands. [Francesco Biscani]
+
 v0.5 (2016-10-05)
 -----------------
 
