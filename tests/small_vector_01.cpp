@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/detail/prepare_for_print.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -687,7 +688,11 @@ template <>
 struct safe_cast_impl<time_bomb2, int, void> {
     time_bomb2 operator()(int n) const
     {
-        return time_bomb2(n);
+        try {
+            return time_bomb2(n);
+        } catch (...) {
+            piranha_throw(safe_cast_failure,"noooo");
+        }
     }
 };
 }
