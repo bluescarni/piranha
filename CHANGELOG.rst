@@ -15,6 +15,13 @@ Changes
 - Change series multiplication and division to behave like coefficient
   mult/div in case of zero operands. [Francesco Biscani]
 
+Fix
+~~~
+
+- Various safe_cast() improvements: remove dependency from mp_integer,
+  introduce specific exception to signal failure, misc implementation
+  and doc improvements. [Francesco Biscani]
+
 v0.5 (2016-10-05)
 -----------------
 
