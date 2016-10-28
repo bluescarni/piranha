@@ -169,6 +169,9 @@ class basic_test_case(_ut.TestCase):
         x = tp_q('x')
         self.assertEqual(evaluate(x, {'x': 3}), 3)
         self.assertEqual(evaluate(2 * x, {'x': Fraction(3, 2)}), Fraction(3))
+        # Test the safe_cast_failure exception translation.
+        from ._core import _test_safe_cast_failure
+        self.assertRaises(ValueError, _test_safe_cast_failure)
 
 
 class series_division_test_case(_ut.TestCase):

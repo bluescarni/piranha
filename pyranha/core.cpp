@@ -57,6 +57,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 #include "../src/s11n.hpp"
+#include "../src/safe_cast.hpp"
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
@@ -82,6 +83,11 @@ namespace pyranha
 
 PYRANHA_DECLARE_TT_NAMER(piranha::monomial, "monomial")
 PYRANHA_DECLARE_TT_NAMER(piranha::divisor, "divisor")
+}
+
+static inline void test_safe_cast_failure()
+{
+    piranha_throw(piranha::safe_cast_failure,"");
 }
 
 BOOST_PYTHON_MODULE(_core)
@@ -150,6 +156,7 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::negative_overflow>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::bad_numeric_cast>();
     pyranha::generic_translate<&PyExc_ArithmeticError, piranha::math::inexact_division>();
+    pyranha::generic_translate<&PyExc_ValueError, piranha::safe_cast_failure>();
 #if defined(PIRANHA_WITH_MSGPACK)
     pyranha::generic_translate<&PyExc_TypeError, msgpack::type_error>();
 #endif
@@ -268,4 +275,6 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_gcd", &piranha::math::gcd<piranha::integer, piranha::integer>);
     // Cleanup function.
     bp::def("_cleanup_type_system", &cleanup_type_system);
+    // Test for safe_cast_failure translation.
+    bp::def("_test_safe_cast_failure", &test_safe_cast_failure);
 }
