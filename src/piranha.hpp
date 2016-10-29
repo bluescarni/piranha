@@ -235,12 +235,8 @@ see https://www.gnu.org/licenses/. */
  * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that
  * iteratively always increases).
  * Not sure there's a general solution.
- * \todo safe_cast should probably have its own special exception. As it stands, when we do try { safe_cast() } catch {}
- * we are catching other
- * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails
- * because of unsafe cast
- * rather than other errors, see e.g. how it is used in the poly linear arg combination.
- * \todo same above applies for linear arg combination
+ * \todo linear arg combination needs to be made a generic monomial requirement and it needs to throw its own
+ * exception type.
  * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a
  * time.
  * \todo when we rework division/gcd with the ordered poly representation, we need also to solve the issue of the
@@ -287,9 +283,6 @@ see https://www.gnu.org/licenses/. */
  * \todo it seems like in C++17 we can finally have an automatically inited global class in which to tuck the init
  * code (and probably the thread pool as well), via inline variables. Probably we will need to define it in a separate
  * header and then make sure to include that header in every piranha public header.
- * \todo safe_cast fixages: remove the dependency on mp_integer, fix the exception usage as explained above,
- * and once this is done check all uses of boost numeric_cast, which should now be replaceable by safe_cast.
- * Check also the fwd declaration usages which work around the current issues.
  * \todo checkout the --enable-fat GMP build option - it looks like this is the way to go for a generic GMP lib
  * for binary windows distributions. UPDATE: this does not seem to work properly in mingw, but keep it in mind
  * for manylinux1.
