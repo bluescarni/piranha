@@ -435,8 +435,8 @@ inline polynomial<Cf, Key> poly_from_univariate(const polynomial<Cf, k_monomial>
 }
 
 // Exception to signal that heuristic GCD failed.
-struct gcdheu_failure : public base_exception {
-    explicit gcdheu_failure() : base_exception("")
+struct gcdheu_failure final : std::runtime_error {
+    explicit gcdheu_failure() : std::runtime_error("")
     {
     }
 };
@@ -731,6 +731,8 @@ class polynomial
             }
             return retval;
         } catch (const std::invalid_argument &) {
+            // NOTE: this currently catches failures both in lin_arg and safe_cast, as safe_cast_failure
+            // inherits from std::invalid_argument.
             piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
         }
     }
@@ -834,7 +836,7 @@ class polynomial
         const symbol_set::positions pos(this->m_symbol_set, symbol_set{s});
         try {
             degree = safe_cast<integer>(term.m_key.degree(pos, this->m_symbol_set));
-        } catch (const std::invalid_argument &) {
+        } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument,
                           "unable to perform polynomial integration: cannot extract the integral form of an exponent");
         }

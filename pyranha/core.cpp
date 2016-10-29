@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 #include "../src/binomial.hpp"
 #include "../src/config.hpp"
@@ -57,6 +58,8 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 #include "../src/s11n.hpp"
+#include "../src/safe_cast.hpp"
+#include "../src/type_traits.hpp"
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
@@ -82,6 +85,18 @@ namespace pyranha
 
 PYRANHA_DECLARE_TT_NAMER(piranha::monomial, "monomial")
 PYRANHA_DECLARE_TT_NAMER(piranha::divisor, "divisor")
+}
+
+template <typename Exc, piranha::enable_if_t<std::is_constructible<Exc,std::string>::value,int> = 0>
+static inline void test_exception()
+{
+    piranha_throw(Exc, "hello world");
+}
+
+template <typename Exc, piranha::enable_if_t<!std::is_constructible<Exc,std::string>::value,int> = 0>
+static inline void test_exception()
+{
+    piranha_throw(Exc,);
 }
 
 BOOST_PYTHON_MODULE(_core)
@@ -150,6 +165,7 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::negative_overflow>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::bad_numeric_cast>();
     pyranha::generic_translate<&PyExc_ArithmeticError, piranha::math::inexact_division>();
+    pyranha::generic_translate<&PyExc_ValueError, piranha::safe_cast_failure>();
 #if defined(PIRANHA_WITH_MSGPACK)
     pyranha::generic_translate<&PyExc_TypeError, msgpack::type_error>();
 #endif
@@ -268,4 +284,13 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_gcd", &piranha::math::gcd<piranha::integer, piranha::integer>);
     // Cleanup function.
     bp::def("_cleanup_type_system", &cleanup_type_system);
+    // Tests for exception translation.
+    bp::def("_test_safe_cast_failure", &test_exception<piranha::safe_cast_failure>);
+    bp::def("_test_zero_division_error", &test_exception<piranha::zero_division_error>);
+    bp::def("_test_not_implemented_error", &test_exception<piranha::not_implemented_error>);
+    bp::def("_test_overflow_error", &test_exception<std::overflow_error>);
+    bp::def("_test_bn_poverflow_error", &test_exception<boost::numeric::positive_overflow>);
+    bp::def("_test_bn_noverflow_error", &test_exception<boost::numeric::negative_overflow>);
+    bp::def("_test_bn_bnc", &test_exception<boost::numeric::bad_numeric_cast>);
+    bp::def("_test_inexact_division", &test_exception<piranha::math::inexact_division>);
 }

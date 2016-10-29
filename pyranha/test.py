@@ -169,6 +169,26 @@ class basic_test_case(_ut.TestCase):
         x = tp_q('x')
         self.assertEqual(evaluate(x, {'x': 3}), 3)
         self.assertEqual(evaluate(2 * x, {'x': Fraction(3, 2)}), Fraction(3))
+        # Test exception translation.
+        # NOTE: the msgpack exception translation is tested elsewhere.
+        from ._core import _test_safe_cast_failure, _test_zero_division_error, _test_not_implemented_error, _test_overflow_error, \
+            _test_bn_poverflow_error, _test_bn_noverflow_error, _test_bn_bnc, _test_inexact_division
+        self.assertRaisesRegexp(
+            ValueError, "hello world", _test_safe_cast_failure)
+        self.assertRaisesRegexp(
+            ZeroDivisionError, "hello world", _test_zero_division_error)
+        self.assertRaisesRegexp(
+            NotImplementedError, "hello world", _test_not_implemented_error)
+        self.assertRaisesRegexp(
+            OverflowError, "hello world", _test_overflow_error)
+        self.assertRaisesRegexp(
+            OverflowError, "positive overflow", _test_bn_poverflow_error)
+        self.assertRaisesRegexp(
+            OverflowError, "negative overflow", _test_bn_noverflow_error)
+        self.assertRaisesRegexp(
+            OverflowError, "overflow", _test_bn_bnc)
+        self.assertRaisesRegexp(
+            ArithmeticError, "inexact division", _test_inexact_division)
 
 
 class series_division_test_case(_ut.TestCase):

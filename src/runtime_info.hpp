@@ -69,13 +69,13 @@ extern "C" {
 
 #endif
 
-#include <boost/numeric/conversion/cast.hpp>
 #include <memory>
 #include <thread>
 
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
+#include "safe_cast.hpp"
 
 namespace piranha
 {
@@ -132,14 +132,14 @@ public:
         // http://msdn.microsoft.com/en-us/library/cc230318(v=prot.10).aspx
         unsigned retval = 0u;
         try {
-            retval = boost::numeric_cast<unsigned>(info.dwNumberOfProcessors);
+            retval = safe_cast<unsigned>(info.dwNumberOfProcessors);
         } catch (...) {
             // Do not do anything, just keep zero.
         }
         return retval;
 #elif defined(__APPLE_CC__)
         try {
-            return boost::numeric_cast<unsigned>(::sysconf(_SC_NPROCESSORS_ONLN));
+            return safe_cast<unsigned>(::sysconf(_SC_NPROCESSORS_ONLN));
         } catch (...) {
             return 0u;
         }
@@ -173,7 +173,7 @@ public:
         if (ls > 0) {
             unsigned retval = 0u;
             try {
-                retval = boost::numeric_cast<unsigned>(ls);
+                retval = safe_cast<unsigned>(ls);
             } catch (...) {
             }
             return retval;
@@ -192,8 +192,7 @@ public:
             return 0u;
         }
         try {
-            buffer
-                = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(boost::numeric_cast<std::size_t>(buffer_size));
+            buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(safe_cast<std::size_t>(buffer_size));
             if (unlikely(!buffer)) {
                 piranha_throw(std::bad_alloc, );
             }
@@ -209,7 +208,7 @@ public:
                 }
             }
             std::free(buffer);
-            return boost::numeric_cast<unsigned>(line_size);
+            return safe_cast<unsigned>(line_size);
         } catch (...) {
         }
         return 0u;
@@ -219,7 +218,7 @@ public:
         // Compare to the usage above for the FreeBSD cpu count, were we expect ints.
         std::size_t ls, size = sizeof(ls);
         try {
-            return ::sysctlbyname("hw.cachelinesize", &ls, &size, NULL, 0) ? 0u : boost::numeric_cast<unsigned>(ls);
+            return ::sysctlbyname("hw.cachelinesize", &ls, &size, NULL, 0) ? 0u : safe_cast<unsigned>(ls);
         } catch (...) {
             return 0u;
         }

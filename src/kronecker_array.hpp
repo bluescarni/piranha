@@ -30,7 +30,6 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_KRONECKER_ARRAY_HPP
 
 #include <algorithm>
-#include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 #include <iterator>
 #include <limits>
@@ -44,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "mp_integer.hpp"
+#include "safe_cast.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -260,8 +260,7 @@ public:
      *
      * Encode input vector \p v into an instance of \p SignedInteger. If the value type of \p Vector
      * is not \p SignedInteger, the values of \p v will be converted to \p SignedInteger using
-     * <tt>boost::numeric_cast</tt>.
-     * A vector of size 0 is always encoded as 0.
+     * piranha::safe_cast(). A vector of size 0 is always encoded as 0.
      *
      * @param[in] v vector to be encoded.
      *
@@ -270,8 +269,7 @@ public:
      * @throws std::invalid_argument if any of these conditions hold:
      * - the size of \p v is equal to or greater than the size of the output of get_limits(),
      * - one of the components of \p v is outside the bounds reported by get_limits().
-     * @throws unspecified any exception thrown by <tt>boost::numeric_cast</tt> in case the value type of
-     * \p Vector is not \p SignedInteger.
+     * @throws unspecified any exception thrown by piranha::safe_cast().
      */
     template <typename Vector>
     static int_type encode(const Vector &v)
@@ -291,17 +289,16 @@ public:
         // Check that the vector's components are compatible with the limits.
         // NOTE: here size is not greater than m_limits.size(), which in turn is compatible with the minmax vectors.
         for (min_int<decltype(v.size()), decltype(minmax_vec.size())> i = 0u; i < size; ++i) {
-            if (unlikely(boost::numeric_cast<int_type>(v[i]) < -minmax_vec[i]
-                         || boost::numeric_cast<int_type>(v[i]) > minmax_vec[i])) {
+            if (unlikely(safe_cast<int_type>(v[i]) < -minmax_vec[i] || safe_cast<int_type>(v[i]) > minmax_vec[i])) {
                 piranha_throw(std::invalid_argument, "a component of the vector to be encoded is out of bounds");
             }
         }
         piranha_assert(minmax_vec[0u] > 0);
-        int_type retval = static_cast<int_type>(boost::numeric_cast<int_type>(v[0u]) + minmax_vec[0u]),
+        int_type retval = static_cast<int_type>(safe_cast<int_type>(v[0u]) + minmax_vec[0u]),
                  cur_c = static_cast<int_type>(2 * minmax_vec[0u] + 1);
         piranha_assert(retval >= 0);
         for (decltype(v.size()) i = 1u; i < size; ++i) {
-            retval = static_cast<int_type>(retval + ((boost::numeric_cast<int_type>(v[i]) + minmax_vec[i]) * cur_c));
+            retval = static_cast<int_type>(retval + ((safe_cast<int_type>(v[i]) + minmax_vec[i]) * cur_c));
             piranha_assert(minmax_vec[i] > 0);
             cur_c = static_cast<int_type>(cur_c * (2 * minmax_vec[i] + 1));
         }
@@ -315,7 +312,7 @@ public:
      *
      * Decode input code \p n into \p retval. If the value type of \p Vector
      * is not \p SignedInteger, the components decoded from \p n will be converted to the value type of \p Vector
-     * using <tt>boost::numeric_cast</tt>.
+     * using piranha::safe_cast().
      *
      * In case of exceptions, \p retval will be left in a valid but undefined state.
      *
@@ -326,8 +323,7 @@ public:
      * - the size of \p retval is equal to or greater than the size of the output of get_limits(),
      * - the size of \p retval is zero and \p n is not zero,
      * - \p n is out of the allowed bounds reported by get_limits().
-     * @throws unspecified any exception thrown by <tt>boost::numeric_cast</tt> in case the value type of
-     * \p Vector is not \p SignedInteger.
+     * @throws unspecified any exception thrown by piranha::safe_cast().
      */
     template <typename Vector>
     static void decode(Vector &retval, const int_type &n)
@@ -358,11 +354,10 @@ public:
         piranha_assert(minmax_vec[0u] > 0);
         int_type mod_arg = static_cast<int_type>(2 * minmax_vec[0u] + 1);
         // Do the first value manually.
-        retval[0u] = boost::numeric_cast<v_type>((code % mod_arg) - minmax_vec[0u]);
+        retval[0u] = safe_cast<v_type>((code % mod_arg) - minmax_vec[0u]);
         for (min_int<typename Vector::size_type, decltype(minmax_vec.size())> i = 1u; i < m; ++i) {
             piranha_assert(minmax_vec[i] > 0);
-            retval[i]
-                = boost::numeric_cast<v_type>((code % (mod_arg * (2 * minmax_vec[i] + 1))) / mod_arg - minmax_vec[i]);
+            retval[i] = safe_cast<v_type>((code % (mod_arg * (2 * minmax_vec[i] + 1))) / mod_arg - minmax_vec[i]);
             mod_arg = static_cast<int_type>(mod_arg * (2 * minmax_vec[i] + 1));
         }
     }

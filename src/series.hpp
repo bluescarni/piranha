@@ -2371,7 +2371,7 @@ public:
         integer n;
         try {
             n = safe_cast<integer>(x);
-        } catch (const std::invalid_argument &) {
+        } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument, "invalid argument for series exponentiation: non-integral value");
         }
         if (n.sign() < 0) {

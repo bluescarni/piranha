@@ -401,7 +401,7 @@ class poisson_series
         integer degree;
         try {
             degree = safe_cast<integer>(math::degree(term.m_cf, {s.get_name()}));
-        } catch (const std::invalid_argument &) {
+        } catch (const safe_cast_failure &) {
             piranha_throw(
                 std::invalid_argument,
                 "unable to perform Poisson series integration: cannot convert polynomial degree to an integer");
@@ -681,12 +681,11 @@ public:
      * This method will attempt to compute the antiderivative of the Poisson series term by term using the
      * following procedure:
      * - if the term's monomial does not depend on the integration variable, the integration will be deferred to the
-     * coefficient;
+     *   coefficient;
      * - otherwise:
      *   - if the coefficient does not depend on the integration variable, the monomial is integrated;
      *   - if the coefficient is a polynomial, a strategy of integration by parts is attempted, its success depending on
-     * whether
-     *     the degree of the polynomial is a non-negative integral value;
+     *     whether the degree of the polynomial is a non-negative integral value;
      *   - otherwise, an error will be produced.
      *
      * @param[in] name integration variable.

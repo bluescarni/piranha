@@ -1,6 +1,34 @@
 Changelog
 =========
 
+%%version%% (unreleased)
+------------------------
+
+New
+~~~
+
+- New serialization API. [Francesco Biscani]
+
+Changes
+~~~~~~~
+
+- Reduce the usage of boost::numeric_cast() in favour of
+  piranha::safe_cast(). [Francesco Biscani]
+
+- Change series multiplication and division to behave like coefficient
+  mult/div in case of zero operands. [Francesco Biscani]
+
+Fix
+~~~
+
+- Simplify the exception hierarchy by removing the base_exception class
+  in favour of inheriting directly from std exceptions. [Francesco
+  Biscani]
+
+- Various safe_cast() improvements: remove dependency from mp_integer,
+  introduce specific exception to signal failure, misc implementation
+  and doc improvements. [Francesco Biscani]
+
 v0.5 (2016-10-05)
 -----------------
 
