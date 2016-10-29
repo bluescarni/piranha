@@ -371,7 +371,7 @@ template&lt;typename U , container_ctor_enabler&lt; U &gt;  = 0&gt; </div>
 
 <p>Constructor from container. </p>
 <dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if <code>U</code> satisfies <a class="el" href="classpiranha_1_1has__begin__end.html" title="Detect the availability of std::begin() and std::end(). ">piranha::has_begin_end</a>, and the value type of the iterator type of <code>U</code> can be safely cast to <code>T</code>.</dd></dl>
-<p>This constructor will build internally a vector of values from the input container <code>c</code>, encode it and assign the result to the internal integer instance. The value type of the container is converted to <code>T</code> using <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
+<p>This constructor will build internally a vector of values from the input container <code>c</code>, encode it and assign the result to the internal integer instance. The value type of the container is converted to <code>T</code> using <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">c</td><td>the input container.</td></tr>
@@ -383,7 +383,7 @@ template&lt;typename U , container_ctor_enabler&lt; U &gt;  = 0&gt; </div>
     <tr><td class="paramname">std::overflow_error</td><td>if the container has a size greater than an implementation-defined value. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>,</li>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>. </li>
 </ul>
 </td></tr>
@@ -483,7 +483,7 @@ template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </div
 
 <p>Constructor from range. </p>
 <dl class="section note"><dt>Note</dt><dd>This constructor is enabled only if <code>Iterator</code> is an input iterator whose value type is safely convertible to <code>T</code>.</dd></dl>
-<p>This constructor will build internally a vector of values from the input iterators, encode it and assign the result to the internal integer instance. The value type of the iterator is converted to <code>T</code> using <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
+<p>This constructor will build internally a vector of values from the input iterators, encode it and assign the result to the internal integer instance. The value type of the iterator is converted to <code>T</code> using <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">begin</td><td>beginning of the range. </td></tr>
@@ -496,7 +496,7 @@ template&lt;typename Iterator , it_ctor_enabler&lt; Iterator &gt;  = 0&gt; </div
     <tr><td class="paramname">std::overflow_error</td><td>if the distance between <code>begin</code> and <code>end</code> is greater than an implementation-defined value. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>,</li>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>,</li>
 <li>increment and dereference of the input iterators. </li>
 </ul>
@@ -1010,7 +1010,7 @@ template&lt;typename T = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li>the resizing of <code>out</code>,</li>
 <li><a class="el" href="classpiranha_1_1kronecker__monomial.html#a896bc9d38e3071215e2a86ed78ae8c3d" title="Unpack internal integer instance. ">unpack()</a>. </li>
 </ul>
@@ -1271,7 +1271,7 @@ template&lt;typename U &gt; </div>
 <li><a class="el" href="classpiranha_1_1kronecker__monomial.html#a896bc9d38e3071215e2a86ed78ae8c3d" title="Unpack internal integer instance. ">unpack()</a>,</li>
 <li>construction and assignment of the return value,</li>
 <li>construction of <a class="el" href="namespacepiranha.html#ae329702ab296cd14e0e6d780ef09d5eb" title="Alias for piranha::mp_rational with default bit size. ">piranha::rational</a>,</li>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li><a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a>,</li>
 <li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>,</li>
 <li>the in-place subtraction operator of the exponent type,</li>
@@ -2018,7 +2018,7 @@ template&lt;typename U , pow_enabler&lt; U &gt;  = 0&gt; </div>
 
 <p>Exponentiation. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is enabled only if <code>U</code> is multipliable by <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a> and the result type can be safely cast back to <code>T</code>.</dd></dl>
-<p>Will return a monomial corresponding to <code>this</code> raised to the <code>x</code>-th power. The exponentiation is computed via the multiplication of the exponents promoted to <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a> by <code>x</code>. The result will be cast back to <code>T</code> via <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
+<p>Will return a monomial corresponding to <code>this</code> raised to the <code>x</code>-th power. The exponentiation is computed via the multiplication of the exponents promoted to <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a> by <code>x</code>. The result will be cast back to <code>T</code> via <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>exponent. </td></tr>
@@ -2031,7 +2031,7 @@ template&lt;typename U , pow_enabler&lt; U &gt;  = 0&gt; </div>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1kronecker__monomial.html#a896bc9d38e3071215e2a86ed78ae8c3d" title="Unpack internal integer instance. ">unpack()</a>,</li>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li>the constructor and multiplication operator of <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>,</li>
 <li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>. </li>
 </ul>

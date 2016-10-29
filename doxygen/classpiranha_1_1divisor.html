@@ -562,7 +562,7 @@ template&lt;typename It , typename Exponent , insert_enabler&lt; It, Exponent &g
 <li><code>Exponent</code> can be safely cast to <a class="el" href="classpiranha_1_1divisor.html#a3f418c243692d2e44c4c408f33f14ce9" title="Alias for T. ">piranha::divisor::value_type</a>.</li>
 </ul>
 </dd></dl>
-<p>This method will construct and insert a term into the divisor. The elements in the range <code>[begin,end)</code> will be used to construct the \( a_{i,j} \) of the term, while <code>e</code> will be used to construct the exponent (after a call to <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>). If no term with the same set of \( a_{i,j} \) exists, then a new term will be inserted; otherwise, <code>e</code> will be added to the exponent of the existing term.</p>
+<p>This method will construct and insert a term into the divisor. The elements in the range <code>[begin,end)</code> will be used to construct the \( a_{i,j} \) of the term, while <code>e</code> will be used to construct the exponent (after a call to <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>). If no term with the same set of \( a_{i,j} \) exists, then a new term will be inserted; otherwise, <code>e</code> will be added to the exponent of the existing term.</p>
 <p>This method provides the basic exception safety guarantee.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -577,7 +577,7 @@ template&lt;typename It , typename Exponent , insert_enabler&lt; It, Exponent &g
     <tr><td class="paramname">std::invalid_argument</td><td>if the term to be inserted is not in canonical form, or if the insertion leads to an overflow in the value of an exponent. </td></tr>
     <tr><td class="paramname">std::overflow_error</td><td>if the insertion results in the container to be resized over an implementation-defined limit. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li>manipulations of <a class="el" href="classpiranha_1_1small__vector.html" title="Small vector class. ">piranha::small_vector</a>,</li>
 <li>the public interface of <a class="el" href="classpiranha_1_1hash__set.html" title="Hash set. ">piranha::hash_set</a>,</li>
 <li>arithmetic operations on the exponent. </li>

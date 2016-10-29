@@ -185,7 +185,7 @@ template&lt;typename Vector &gt; </div>
 
 <p>Decode into vector. </p>
 <dl class="section note"><dt>Note</dt><dd>This method can be called only if <code>Vector</code> is a type with a vector-like interface. Specifically, it must have a <code>size()</code> method and overloaded mutable index operator.</dd></dl>
-<p>Decode input code <code>n</code> into <code>retval</code>. If the value type of <code>Vector</code> is not <code>SignedInteger</code>, the components decoded from <code>n</code> will be converted to the value type of <code>Vector</code> using <code>boost::numeric_cast</code>.</p>
+<p>Decode input code <code>n</code> into <code>retval</code>. If the value type of <code>Vector</code> is not <code>SignedInteger</code>, the components decoded from <code>n</code> will be converted to the value type of <code>Vector</code> using <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>.</p>
 <p>In case of exceptions, <code>retval</code> will be left in a valid but undefined state.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -202,12 +202,12 @@ template&lt;typename Vector &gt; </div>
 <li><code>n</code> is out of the allowed bounds reported by <a class="el" href="classpiranha_1_1kronecker__array.html#aec29ca4e115d959648346c0e3352cd7d" title="Get the limits of the Kronecker codification. ">get_limits()</a>. </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <code>boost::numeric_cast</code> in case the value type of <code>Vector</code> is not <code>SignedInteger</code>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__array_8hpp_source.html#l00333">333</a> of file <a class="el" href="kronecker__array_8hpp_source.html">kronecker_array.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__array_8hpp_source.html#l00329">329</a> of file <a class="el" href="kronecker__array_8hpp_source.html">kronecker_array.hpp</a>.</p>
 
 </div>
 </div>
@@ -241,7 +241,7 @@ template&lt;typename Vector &gt; </div>
 
 <p>Encode vector. </p>
 <dl class="section note"><dt>Note</dt><dd>This method can be called only if <code>Vector</code> is a type with a vector-like interface. Specifically, it must have a <code>size()</code> method and overloaded const index operator.</dd></dl>
-<p>Encode input vector <code>v</code> into an instance of <code>SignedInteger</code>. If the value type of <code>Vector</code> is not <code>SignedInteger</code>, the values of <code>v</code> will be converted to <code>SignedInteger</code> using <code>boost::numeric_cast</code>. A vector of size 0 is always encoded as 0.</p>
+<p>Encode input vector <code>v</code> into an instance of <code>SignedInteger</code>. If the value type of <code>Vector</code> is not <code>SignedInteger</code>, the values of <code>v</code> will be converted to <code>SignedInteger</code> using <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>. A vector of size 0 is always encoded as 0.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>vector to be encoded.</td></tr>
@@ -256,12 +256,12 @@ template&lt;typename Vector &gt; </div>
 <li>one of the components of <code>v</code> is outside the bounds reported by <a class="el" href="classpiranha_1_1kronecker__array.html#aec29ca4e115d959648346c0e3352cd7d" title="Get the limits of the Kronecker codification. ">get_limits()</a>. </li>
 </ul>
 </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <code>boost::numeric_cast</code> in case the value type of <code>Vector</code> is not <code>SignedInteger</code>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="kronecker__array_8hpp_source.html#l00277">277</a> of file <a class="el" href="kronecker__array_8hpp_source.html">kronecker_array.hpp</a>.</p>
+<p>Definition at line <a class="el" href="kronecker__array_8hpp_source.html#l00275">275</a> of file <a class="el" href="kronecker__array_8hpp_source.html">kronecker_array.hpp</a>.</p>
 
 </div>
 </div>

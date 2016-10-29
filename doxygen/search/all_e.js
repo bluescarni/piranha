@@ -8,7 +8,6 @@ var searchData=
   ['negate_5fimpl_3c_20t_2c_20typename_20std_3a_3aenable_5fif_3c_20std_3a_3ais_5fsame_3c_20t_2c_20real_20_3e_3a_3avalue_20_3e_3a_3atype_20_3e',['negate_impl&lt; T, typename std::enable_if&lt; std::is_same&lt; T, real &gt;::value &gt;::type &gt;',['../structpiranha_1_1math_1_1negate__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__sa0c299022750663470c1226628bce710f.html',1,'piranha::math']]],
   ['nextprime',['nextprime',['../classpiranha_1_1mp__integer.html#a3caa13556e61ad4f2a041f3107532f98',1,'piranha::mp_integer']]],
   ['none',['none',['../namespacepiranha.html#a6acfbeb0c26b634e270f69f0ab13126ea334c4a4c42fdb79d7ebc3e73b517e6f8',1,'piranha']]],
-  ['not_5fimplemented_5ferror',['not_implemented_error',['../structpiranha_1_1not__implemented__error.html#a072fe4b33e4313b641786483c8b3f0d6',1,'piranha::not_implemented_error']]],
   ['not_5fimplemented_5ferror',['not_implemented_error',['../structpiranha_1_1not__implemented__error.html',1,'piranha']]],
   ['num',['num',['../classpiranha_1_1mp__rational.html#a6650cbd5db4f7438b0d84f85cfef2e7f',1,'piranha::mp_rational::num()'],['../classpiranha_1_1rational__function.html#aacf9d020e395356611ece3beffd933e9',1,'piranha::rational_function::num()']]]
 ];

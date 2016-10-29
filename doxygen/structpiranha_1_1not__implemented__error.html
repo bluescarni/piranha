@@ -69,11 +69,8 @@ $(function() {
 </div>
 </div><!-- top -->
 <div class="header">
-  <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="structpiranha_1_1not__implemented__error-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::not_implemented_error Struct Reference</div>  </div>
+<div class="title">piranha::not_implemented_error Struct Reference<span class="mlabels"><span class="mlabel">final</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -81,111 +78,14 @@ $(function() {
  <a href="structpiranha_1_1not__implemented__error.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>&gt;</code></p>
-<div class="dynheader">
-Inheritance diagram for piranha::not_implemented_error:</div>
-<div class="dyncontent">
-<div class="center"><img src="structpiranha_1_1not__implemented__error__inherit__graph.png" border="0" usemap="#piranha_1_1not__implemented__error_inherit__map" alt="Inheritance graph"/></div>
-<map name="piranha_1_1not__implemented__error_inherit__map" id="piranha_1_1not__implemented__error_inherit__map">
-<area shape="rect" id="node2" href="classpiranha_1_1base__exception.html" title="Base exception class. " alt="" coords="9,5,172,35"/>
-</map>
-<center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
-<div class="dynheader">
-Collaboration diagram for piranha::not_implemented_error:</div>
-<div class="dyncontent">
-<div class="center"><img src="structpiranha_1_1not__implemented__error__coll__graph.png" border="0" usemap="#piranha_1_1not__implemented__error_coll__map" alt="Collaboration graph"/></div>
-<map name="piranha_1_1not__implemented__error_coll__map" id="piranha_1_1not__implemented__error_coll__map">
-<area shape="rect" id="node2" href="classpiranha_1_1base__exception.html" title="Base exception class. " alt="" coords="9,5,172,35"/>
-</map>
-<center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:a072fe4b33e4313b641786483c8b3f0d6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1not__implemented__error.html#a072fe4b33e4313b641786483c8b3f0d6">not_implemented_error</a> (const std::string &amp;s)</td></tr>
-<tr class="memdesc:a072fe4b33e4313b641786483c8b3f0d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#a072fe4b33e4313b641786483c8b3f0d6">More...</a><br /></td></tr>
-<tr class="separator:a072fe4b33e4313b641786483c8b3f0d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2e1132020091eb10b2e82336f5735c1"><td class="memItemLeft" align="right" valign="top">virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1base__exception.html#ac2e1132020091eb10b2e82336f5735c1">what</a> () const noexcept override final</td></tr>
-<tr class="memdesc:ac2e1132020091eb10b2e82336f5735c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error description.  <a href="#ac2e1132020091eb10b2e82336f5735c1">More...</a><br /></td></tr>
-<tr class="separator:ac2e1132020091eb10b2e82336f5735c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
+
+<p>Inherits std::runtime_error.</p>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Exception for functionality not implemented or not available on the current platform. </p>
+<p>This class inherits the constructors from <code>std::runtime_error</code>. </p>
 
-<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00164">164</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a072fe4b33e4313b641786483c8b3f0d6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a072fe4b33e4313b641786483c8b3f0d6">&sect;&nbsp;</a></span>not_implemented_error()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">piranha::not_implemented_error::not_implemented_error </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>s</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Constructor. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>std::string representing an error message.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by the constructor from string of <a class="el" href="classpiranha_1_1base__exception.html" title="Base exception class. ">piranha::base_exception</a>. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00171">171</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
-
-</div>
-</div>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac2e1132020091eb10b2e82336f5735c1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac2e1132020091eb10b2e82336f5735c1">&sect;&nbsp;</a></span>what()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual const char* piranha::base_exception::what </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">final</span><span class="mlabel">override</span><span class="mlabel">virtual</span><span class="mlabel">noexcept</span><span class="mlabel">inherited</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Error description. </p>
-<dl class="section return"><dt>Returns</dt><dd>const pointer to the internal error message. </dd></dl>
-
-<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00150">150</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
-
-</div>
-</div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<p>Definition at line <a class="el" href="exceptions_8hpp_source.html#l00126">126</a> of file <a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a>.</p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li><a class="el" href="exceptions_8hpp_source.html">exceptions.hpp</a></li>
 </ul>
 </div><!-- contents -->

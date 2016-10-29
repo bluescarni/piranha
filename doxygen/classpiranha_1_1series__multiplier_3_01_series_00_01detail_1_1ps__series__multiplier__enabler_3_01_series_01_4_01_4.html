@@ -184,7 +184,7 @@ class piranha::series_multiplier&lt; Series, detail::ps_series_multiplier_enable
 
 <p>Specialisation of <a class="el" href="classpiranha_1_1series__multiplier.html" title="Series multiplier. ">piranha::series_multiplier</a> for <a class="el" href="classpiranha_1_1poisson__series.html" title="Poisson series class. ">piranha::poisson_series</a>. </p>
 
-<p>Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00833">833</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00832">832</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a449c755e0923553efc310154ea83c25b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a449c755e0923553efc310154ea83c25b">&sect;&nbsp;</a></span>blocked_multiplication() <span class="overload">[1/2]</span></h2>
@@ -254,7 +254,7 @@ template&lt;typename MultFunctor , typename LimitFunctor &gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if <code>start1</code> is greater than <code>end1</code> or greater than the size of <a class="el" href="classpiranha_1_1base__series__multiplier.html#ab0a3e37b54cb6c111229924666756de0" title="Vector of const pointers to the terms in the larger series. ">base_series_multiplier::m_v1</a>, or if <code>end1</code> is greater than the size of <a class="el" href="classpiranha_1_1base__series__multiplier.html#ab0a3e37b54cb6c111229924666756de0" title="Vector of const pointers to the terms in the larger series. ">base_series_multiplier::m_v1</a>. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by the call operator of <code>mf</code> or <code>sf</code>, or <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by the call operator of <code>mf</code> or <code>sf</code>, or <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast</a>. </td></tr>
   </table>
   </dd>
 </dl>
@@ -517,7 +517,7 @@ template&lt;typename T  = Series, call_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00923">923</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p>Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00922">922</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -563,7 +563,7 @@ template&lt;typename LimitFunctor &gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li><a class="el" href="classpiranha_1_1base__series__multiplier.html#a9ff9799081d495f98f3c3568d6a1ce4e" title="Estimate size of series multiplication. ">base_series_multiplier::estimate_final_series_size()</a>,</li>
 <li><code>boost::numeric_cast()</code>,</li>
 <li>the public interface of <a class="el" href="classpiranha_1_1hash__set.html" title="Hash set. ">piranha::hash_set</a>,</li>

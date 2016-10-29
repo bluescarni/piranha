@@ -77,35 +77,36 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>Default functor for the implementation of <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>.  
+<p>Default implementation of <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>.  
  <a href="structpiranha_1_1safe__cast__impl.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a8aadaea9e9c1305c2de809dbc518c234"><td class="memTemplParams" colspan="2">template&lt;typename From2 , typename std::enable_if&lt; std::is_same&lt; To, From2 &gt;::value &amp;&amp;std::is_copy_constructible&lt; From2 &gt;::value, int &gt;::type  = 0&gt; </td></tr>
-<tr class="memitem:a8aadaea9e9c1305c2de809dbc518c234"><td class="memTemplItemLeft" align="right" valign="top">To&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1safe__cast__impl.html#a8aadaea9e9c1305c2de809dbc518c234">operator()</a> (const From2 &amp;f) const</td></tr>
-<tr class="memdesc:a8aadaea9e9c1305c2de809dbc518c234"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a8aadaea9e9c1305c2de809dbc518c234">More...</a><br /></td></tr>
-<tr class="separator:a8aadaea9e9c1305c2de809dbc518c234"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06ec8a66145ad5b7620d8434a3e27af1"><td class="memTemplParams" colspan="2">template&lt;typename T , enabler&lt; T &gt;  = 0&gt; </td></tr>
+<tr class="memitem:a06ec8a66145ad5b7620d8434a3e27af1"><td class="memTemplItemLeft" align="right" valign="top">To&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1safe__cast__impl.html#a06ec8a66145ad5b7620d8434a3e27af1">operator()</a> (const T &amp;f) const</td></tr>
+<tr class="memdesc:a06ec8a66145ad5b7620d8434a3e27af1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a06ec8a66145ad5b7620d8434a3e27af1">More...</a><br /></td></tr>
+<tr class="separator:a06ec8a66145ad5b7620d8434a3e27af1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename To, typename From, typename = void&gt;<br />
 struct piranha::safe_cast_impl&lt; To, From, typename &gt;</h3>
 
-<p>Default functor for the implementation of <a class="el" href="namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d" title="Safe cast. ">piranha::safe_cast()</a>. </p>
+<p>Default implementation of <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>. </p>
+<p>The default implementation of <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a> is activated only when the source type coincides with the target type. A copy of the input value will be returned. </p>
 
-<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00045">45</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
+<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00063">63</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a8aadaea9e9c1305c2de809dbc518c234"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8aadaea9e9c1305c2de809dbc518c234">&sect;&nbsp;</a></span>operator()()</h2>
+<a id="a06ec8a66145ad5b7620d8434a3e27af1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06ec8a66145ad5b7620d8434a3e27af1">&sect;&nbsp;</a></span>operator()()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename To , typename From , typename  = void&gt; </div>
 <div class="memtemplate">
-template&lt;typename From2 , typename std::enable_if&lt; std::is_same&lt; To, From2 &gt;::value &amp;&amp;std::is_copy_constructible&lt; From2 &gt;::value, int &gt;::type  = 0&gt; </div>
+template&lt;typename T , enabler&lt; T &gt;  = 0&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -113,7 +114,7 @@ template&lt;typename From2 , typename std::enable_if&lt; std::is_same&lt; To, Fr
         <tr>
           <td class="memname">To <a class="el" href="structpiranha_1_1safe__cast__impl.html">piranha::safe_cast_impl</a>&lt; To, From, typename &gt;::operator() </td>
           <td>(</td>
-          <td class="paramtype">const From2 &amp;&#160;</td>
+          <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"><em>f</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -126,22 +127,26 @@ template&lt;typename From2 , typename std::enable_if&lt; std::is_same&lt; To, Fr
 </div><div class="memdoc">
 
 <p>Call operator. </p>
-<dl class="section note"><dt>Note</dt><dd>This call operator is enabled only if <code>To</code> and <code>From2</code> are the same type and <code>From2</code> is copy-constructible.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This call operator is enabled only if:<ul>
+<li><code>T</code>, <code>To</code> and <code>From</code> are the same type,</li>
+<li><code>To</code> is copy-constructible.</li>
+</ul>
+</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>conversion argument.</td></tr>
+    <tr><td class="paramname">f</td><td>conversion argument.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a copy of <code>f</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by the copy constructor of <code>From2</code>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by the copy/move constructor of <code>From</code>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00062">62</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
+<p>Definition at line <a class="el" href="safe__cast_8hpp_source.html#l00085">85</a> of file <a class="el" href="safe__cast_8hpp_source.html">safe_cast.hpp</a>.</p>
 
 </div>
 </div>

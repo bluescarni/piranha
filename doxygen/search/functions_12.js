@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['safe_5fcast',['safe_cast',['../namespacepiranha.html#a712714b1e1348f73ec01687d5d5c9b2d',1,'piranha']]],
+  ['safe_5fcast',['safe_cast',['../namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d',1,'piranha']]],
   ['sanitise_5fseries',['sanitise_series',['../classpiranha_1_1base__series__multiplier.html#a97a2a9458cf1f78bc0fe33b70b867367',1,'piranha::base_series_multiplier']]],
   ['save_5ffile',['save_file',['../namespacepiranha.html#a67f2ecefa914ba62915679f357a51cff',1,'piranha::save_file(const T &amp;x, const std::string &amp;filename, data_format f, compression c)'],['../namespacepiranha.html#a79031e0fe15c4794ce9e3d4f3298e599',1,'piranha::save_file(const T &amp;x, const std::string &amp;filename)']]],
   ['series',['series',['../classpiranha_1_1series.html#a17222371bab8534b2047c8c02ca8601d',1,'piranha::series::series()=default'],['../classpiranha_1_1series.html#a052750279ee9bcabd6f700f1233af862',1,'piranha::series::series(const series &amp;)=default'],['../classpiranha_1_1series.html#a3f144843ddbe1f9b49ae6542496e83c4',1,'piranha::series::series(series &amp;&amp;)=default'],['../classpiranha_1_1series.html#a4c893768f55bb988d5cf85d172f0c196',1,'piranha::series::series(const T &amp;x)']]],
