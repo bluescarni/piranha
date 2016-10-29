@@ -174,6 +174,7 @@ struct fp_int_checker {
 // GCC complains about int to float conversions here.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #endif
             if (std::numeric_limits<U>::max() > std::numeric_limits<T>::max()) {
 #if defined(PIRANHA_COMPILER_IS_GCC)
