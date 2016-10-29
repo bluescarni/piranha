@@ -57,10 +57,7 @@ see https://www.gnu.org/licenses/. */
  * calling free(), then the behaviour
  * might not be exception-safe.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,
- * e.g., importing the module from multiple Python threads). In particular, access to the coefficient list (construct on
- * first
- * use with mutex protection instead of at register time? or maybe avoid using static variable and build each time)
- * and python converters (protect the inited flags with mutexes).
+ * e.g., importing the module from multiple Python threads).
  * \todo instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
  * atexit() function to clean up custom derivatives before static destruction starts. We could register the atexit
  * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each
@@ -213,9 +210,8 @@ see https://www.gnu.org/licenses/. */
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo the following items still remain to be finished up after the truncation rework:
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes.
- * Right now we are using
- *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be
- * running in some overhead.
+ *     Right now we are using the heuristic for series multiplication, but, at least in case of fill_term_pointers,
+ *     it seems like we might be running in some overhead.
  *   - the fill_term_pointers parallelisation + deterministic ordering has not been done yet for rational coefficients.
  * \todo in a bunch of generic constructors all over the place, we enable them only if the argument is not the same type
  * as the calling class.
