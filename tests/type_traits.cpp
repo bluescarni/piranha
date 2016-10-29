@@ -2041,6 +2041,7 @@ struct unreturnable_01 {
 
 BOOST_AUTO_TEST_CASE(type_traits_is_returnable_test)
 {
+    BOOST_CHECK(is_returnable<void>::value);
     BOOST_CHECK(is_returnable<int>::value);
     BOOST_CHECK(is_returnable<int &>::value);
     BOOST_CHECK(is_returnable<const int &>::value);
@@ -2121,6 +2122,11 @@ BOOST_AUTO_TEST_CASE(type_traits_ref_mod_t)
     BOOST_CHECK((std::is_same<int &, addlref_t<int &>>::value));
     BOOST_CHECK((std::is_same<int &, addlref_t<int &&>>::value));
     BOOST_CHECK((std::is_same<void, addlref_t<void>>::value));
+    BOOST_CHECK((std::is_same<int, decay_t<int>>::value));
+    BOOST_CHECK((std::is_same<int, decay_t<int &>>::value));
+    BOOST_CHECK((std::is_same<int, decay_t<const int &>>::value));
+    BOOST_CHECK((std::is_same<int, decay_t<int &&>>::value));
+    BOOST_CHECK((std::is_same<int *, decay_t<int[2]>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_void_t)

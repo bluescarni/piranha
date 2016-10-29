@@ -178,6 +178,9 @@ template <typename T>
 using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 template <typename T>
+using decay_t = typename std::decay<T>::type;
+
+template <typename T>
 using unref_t = typename std::remove_reference<T>::type;
 
 template <typename T>
@@ -1230,14 +1233,15 @@ template <typename T>
 struct is_returnable {
 private:
     static const bool implementation_defined
-        = std::is_destructible<T>::value
-          && (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value);
+        = disjunction<std::is_same<T, void>,
+                      conjunction<std::is_destructible<T>,
+                                  disjunction<std::is_copy_constructible<T>, std::is_move_constructible<T>>>>::value;
 
 public:
     /// Value of the type trait.
     /**
      * The type trait will be true if \p T is destructible and copy or move
-     * constructible.
+     * constructible, or if \p T is \p void.
      */
     static const bool value = implementation_defined;
 };
