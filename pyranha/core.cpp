@@ -87,16 +87,16 @@ PYRANHA_DECLARE_TT_NAMER(piranha::monomial, "monomial")
 PYRANHA_DECLARE_TT_NAMER(piranha::divisor, "divisor")
 }
 
-template <typename Exc, piranha::enable_if_t<std::is_constructible<Exc,std::string>::value,int> = 0>
+template <typename Exc, piranha::enable_if_t<std::is_constructible<Exc, std::string>::value, int> = 0>
 static inline void test_exception()
 {
     piranha_throw(Exc, "hello world");
 }
 
-template <typename Exc, piranha::enable_if_t<!std::is_constructible<Exc,std::string>::value,int> = 0>
+template <typename Exc, piranha::enable_if_t<!std::is_constructible<Exc, std::string>::value, int> = 0>
 static inline void test_exception()
 {
-    piranha_throw(Exc,);
+    piranha_throw(Exc, );
 }
 
 BOOST_PYTHON_MODULE(_core)
