@@ -45,8 +45,13 @@ see https://www.gnu.org/licenses/. */
 #include "../src/real.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/thread_management.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
+
+// Typedef for detection idiom.
+template <typename F, typename... Args>
+using enqueue_t = decltype(thread_pool::enqueue(0u, std::declval<F>(), std::declval<Args>()...));
 
 struct noncopyable {
     noncopyable() = default;
@@ -57,9 +62,69 @@ struct noncopyable {
     noncopyable &operator=(noncopyable &&) = delete;
 };
 
+struct noncopyable_functor {
+    noncopyable_functor() = default;
+    noncopyable_functor(const noncopyable_functor &) = delete;
+    noncopyable_functor(noncopyable_functor &&) = delete;
+    ~noncopyable_functor() = default;
+    noncopyable_functor &operator=(const noncopyable_functor &) = delete;
+    noncopyable_functor &operator=(noncopyable_functor &&) = delete;
+    void operator()() const;
+};
+
+noncopyable noncopyable_ret_f();
+
+void requires_move(int &&);
+
+static int n = 5;
+
+struct ref_test_functor
+{
+    template <typename T>
+    void operator()(T &arg)
+    {
+        BOOST_CHECK((std::is_same<T,int>::value));
+        BOOST_CHECK(&arg == &n);
+    }
+};
+
+struct cref_test_functor
+{
+    template <typename T>
+    void operator()(T &arg)
+    {
+        BOOST_CHECK((std::is_same<T,const int>::value));
+        BOOST_CHECK(&arg == &n);
+    }
+};
+
 BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 {
     init();
+    // A few simple tests.
+    auto simple_00 = []() {};
+    BOOST_CHECK((is_detected<enqueue_t, decltype(simple_00)>::value));
+    BOOST_CHECK((is_detected<enqueue_t, decltype(simple_00) &>::value));
+    BOOST_CHECK((is_detected<enqueue_t, const decltype(simple_00) &>::value));
+    BOOST_CHECK((is_detected<enqueue_t, const decltype(simple_00)>::value));
+    BOOST_CHECK((!is_detected<enqueue_t, decltype(simple_00) &, int>::value));
+    BOOST_CHECK((!is_detected<enqueue_t, decltype(simple_00) &, void>::value));
+    BOOST_CHECK((!is_detected<enqueue_t, void, int>::value));
+    BOOST_CHECK((!is_detected<enqueue_t, decltype(simple_00) &, void>::value));
+    // Check that noncopyable functor disables enqueue.
+    BOOST_CHECK((!is_detected<enqueue_t, noncopyable_functor &>::value));
+    BOOST_CHECK((!is_detected<enqueue_t, noncopyable_functor &&>::value));
+    BOOST_CHECK((!is_detected<enqueue_t, noncopyable_functor>::value));
+    // Check that noncopyable return type disables enqueue.
+    BOOST_CHECK((!is_detected<enqueue_t, decltype(noncopyable_ret_f)>::value));
+    // Check that if a function argument must be passed as rvalue ref, then enqueue is disabled.
+    BOOST_CHECK((!is_detected<enqueue_t, decltype(requires_move), int>::value));
+    // Test that std::ref/cref works as intended (i.e., it does not copy the value) and that
+    // reference_wrapper is removed when the argument is passed to the functor.
+    auto fut_ref = thread_pool::enqueue(0,ref_test_functor{},std::ref(n));
+    fut_ref.get();
+    fut_ref = thread_pool::enqueue(0,cref_test_functor{},std::cref(n));
+    fut_ref.get();
     auto slow_task = []() { std::this_thread::sleep_for(std::chrono::milliseconds(250)); };
     auto fast_task = [](int n) -> int {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -67,51 +132,51 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
     };
     auto instant_task = []() {};
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         tq.stop();
         tq.stop();
         tq.stop();
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         tq.enqueue([]() {});
         tq.stop();
         tq.stop();
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         tq.enqueue(slow_task);
         tq.stop();
         tq.stop();
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         tq.enqueue(slow_task);
         tq.enqueue(slow_task);
         tq.enqueue(slow_task);
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         auto f1 = tq.enqueue(slow_task);
         auto f2 = tq.enqueue(slow_task);
         auto f3 = tq.enqueue(slow_task);
         f3.get();
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         auto f1 = tq.enqueue([](int) { throw std::runtime_error(""); }, 1);
         BOOST_CHECK_THROW(f1.get(), std::runtime_error);
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         auto f1 = tq.enqueue([](int n) { return n + n; }, 45);
         BOOST_CHECK(f1.get() == 90);
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         using f_type = decltype(tq.enqueue(fast_task, 0));
         std::list<f_type> l;
         for (int i = 0; i < 100; ++i) {
@@ -125,7 +190,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
         BOOST_CHECK(result == 4950);
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         for (int i = 0; i < 10000; ++i) {
             tq.enqueue(instant_task);
         }
@@ -133,13 +198,13 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
         BOOST_CHECK_THROW(tq.enqueue(instant_task), std::runtime_error);
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         noncopyable nc;
         tq.enqueue([](noncopyable &) {}, std::ref(nc));
         tq.enqueue([](const noncopyable &) {}, std::cref(nc));
     }
     {
-        detail::task_queue tq(0);
+        task_queue tq(0);
         for (int i = 0; i < 100; ++i) {
             tq.enqueue([]() { real{}.pi(); });
         }
@@ -154,11 +219,11 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
         }
     };
     for (unsigned i = 0u; i < hc; ++i) {
-        detail::task_queue tq(i);
+        task_queue tq(i);
         BOOST_CHECK_NO_THROW(tq.enqueue(bind_checker, i).get());
     }
     if (hc != 0) {
-        detail::task_queue tq(hc);
+        task_queue tq(hc);
         BOOST_CHECK_THROW(tq.enqueue(bind_checker, hc).get(), std::runtime_error);
     }
 #endif

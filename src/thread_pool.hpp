@@ -55,7 +55,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
 // Task queue class. Inspired by:
@@ -126,16 +126,51 @@ public:
             std::abort();
         }
     }
+    // Small utility to remove reference_wrapper.
+    template <typename T>
+    struct unwrap_ref {
+        using type = T;
+    };
+    template <typename T>
+    struct unwrap_ref<std::reference_wrapper<T>> {
+        using type = T;
+    };
+    template <typename T>
+    using unwrap_ref_t = typename unwrap_ref<T>::type;
+    // NOTE: the functor F will be forwarded to std::bind in order to create a nullary wrapper. The nullary wrapper
+    // will create copies of the input arguments, and it will then pass these copies as lvalue refs to a copy of the
+    // original functor when the call operator is invoked (with special handling of reference wrappers). Thus, the
+    // real invocation of F is not simply F(args), but this more complicated type below.
+    // NOTE: this is one place where it seems we really want decay instead of uncvref, as decay is applied
+    // also by std::bind() to F.
     template <typename F, typename... Args>
-    auto enqueue(F &&f, Args &&... args) -> std::future<decltype(f(args...))>
+    using f_ret_type = decltype(std::declval<decay_t<F> &>()(std::declval<unwrap_ref_t<uncvref_t<Args>> &>()...));
+    // enqueue() will be enabled if:
+    // - f_ret_type is a valid type (checked in the return type),
+    // - we can construct the nullary wrapper via std::bind() (this requires F and Args to be ctible from the input
+    //   arguments),
+    // - we can build a packaged_task from the nullary wrapper (requires F and Args to be move/copy ctible),
+    // - the return type of F is returnable.
+    template <typename F, typename... Args>
+    using enabler
+        = enable_if_t<conjunction<std::is_constructible<decay_t<F>, F>, std::is_constructible<uncvref_t<Args>, Args>...,
+                                  disjunction<std::is_copy_constructible<decay_t<F>>,
+                                              std::is_move_constructible<decay_t<F>>>,
+                                  conjunction<disjunction<std::is_copy_constructible<uncvref_t<Args>>,
+                                                          std::is_move_constructible<uncvref_t<Args>>>>...,
+                                  is_returnable<f_ret_type<F, Args...>>>::value,
+                      int>;
+    // Main enqueue function.
+    template <typename F, typename... Args, enabler<F &&, Args &&...> = 0>
+    std::future<f_ret_type<F &&, Args &&...>> enqueue(F &&f, Args &&... args)
     {
-        using f_ret_type = decltype(f(args...));
-        using p_task_type = std::packaged_task<f_ret_type()>;
+        using ret_type = f_ret_type<F &&, Args &&...>;
+        using p_task_type = std::packaged_task<ret_type()>;
         auto task = std::make_shared<p_task_type>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-        std::future<f_ret_type> res = task->get_future();
+        std::future<ret_type> res = task->get_future();
         {
             std::unique_lock<std::mutex> lock(m_mutex);
-            if (m_stop) {
+            if (unlikely(m_stop)) {
                 // Enqueueing is not allowed if the queue is stopped.
                 piranha_throw(std::runtime_error, "cannot enqueue task while task queue is stopping");
             }
@@ -216,40 +251,49 @@ std::mutex thread_pool_base<T>::s_mutex;
 // detach() and wait as a workaround?
 // \todo try to understand if we can suppress the future list class below in favour of STL-like algorithms.
 template <typename = void>
-class thread_pool_ : private detail::thread_pool_base<>
+class thread_pool_ : private thread_pool_base<>
 {
-    using base = detail::thread_pool_base<>;
+    using base = thread_pool_base<>;
     // Enabler for use_threads.
     template <typename Int>
-    using use_threads_enabler = typename std::enable_if<(std::is_integral<Int>::value && std::is_unsigned<Int>::value)
-                                                            || std::is_same<Int, integer>::value,
-                                                        int>::type;
+    using use_threads_enabler
+        = enable_if_t<disjunction<std::is_same<Int, integer>,
+                                  conjunction<std::is_integral<Int>, std::is_unsigned<Int>>>::value,
+                      int>;
+    // The return type for enqueue().
+    template <typename F, typename... Args>
+    using enqueue_t = decltype(std::declval<task_queue &>().enqueue(std::declval<F>(), std::declval<Args>()...));
 
 public:
-    /// Append task
+    /// Enqueue task.
     /**
      * \note
-     * This method is enabled only if the expression <tt>f(args...)</tt> is well-formed.
+     * This method is enabled only if:
+     * - a nullary wrapper for <tt>F(args...)</tt> can be created via \p std::bind() (which requires \p F and
+     *   \p Args to be copy/move constructible, and <tt>F(args...)</tt> to be a well-formed expression),
+     * - the type returned by <tt>F(args...)</tt> satisfies piranha::is_returnable.
      *
      * This method will add a task to the <tt>n</tt>-th thread in the pool. The task is represented
-     * by a callable \p F and its arguments \p args, which will be copied into an execution queue
-     * consumed by the thread to which the task is assigned.
+     * by a callable \p F and its arguments \p args, which will be copied/moved via an \p std::bind() wrapper into an
+     * execution queue consumed by the thread to which the task is assigned. The return value is an \p std::future
+     * which can be used to retrieve the return value of (or the exception throw by) the callable.
      *
-     * @param[in] n index of the thread that will consume the task.
-     * @param[in] f callable object representing the task.
-     * @param[in] args arguments to \p f.
+     * @param n index of the thread that will consume the task.
+     * @param f callable object representing the task.
+     * @param args arguments to \p f.
      *
-     * @return an <tt>std::future</tt> that will store the result of <tt>f(args...)</tt>.
+     * @return an \p std::future that will store the result of <tt>f(args...)</tt>.
      *
      * @throws std::invalid_argument if the thread index is equal to or larger than the current pool size.
+     * @throws std::runtime_error if a task is being enqueued while the task queue is stopping (e.g., during
+     * program shutdown).
      * @throws unspecified any exception thrown by:
+     * - \p std::bind() or the constructor of \p std::packaged_task or \p std::function,
      * - threading primitives,
-     * - memory allocation errors,
-     * - the constructors of \p f or \p args.
+     * - memory allocation errors.
      */
     template <typename F, typename... Args>
-    static auto enqueue(unsigned n, F &&f, Args &&... args)
-        -> decltype(base::s_queues[0u]->enqueue(std::forward<F>(f), std::forward<Args>(args)...))
+    static enqueue_t<F &&, Args &&...> enqueue(unsigned n, F &&f, Args &&... args)
     {
         std::lock_guard<std::mutex> lock(s_mutex);
         using size_type = decltype(base::s_queues.size());
@@ -277,9 +321,9 @@ public:
      * and it will then create a new pool of size \p new_size. The new threads will be
      * bound, if possible, to the processor corresponding to their index in the pool.
      *
-     * @param[in] new_size the new size of the pool.
+     * @param new_size the new size of the pool.
      *
-     * @throws std::invalid_argument if \p new_size is larger than an implementation-defined value or zero.
+     * @throws std::invalid_argument if \p new_size is zero or larger than an implementation-defined value.
      * @throws unspecified any exception thrown by:
      * - threading primitives,
      * - memory allocation errors.
@@ -295,10 +339,10 @@ public:
         if (unlikely(new_s != new_size)) {
             piranha_throw(std::invalid_argument, "invalid size");
         }
-        std::vector<std::unique_ptr<detail::task_queue>> new_queues;
+        std::vector<std::unique_ptr<task_queue>> new_queues;
         new_queues.reserve(new_s);
         for (size_type i = 0u; i < new_s; ++i) {
-            new_queues.emplace_back(::new detail::task_queue(static_cast<unsigned>(i)));
+            new_queues.emplace_back(::new task_queue(static_cast<unsigned>(i)));
         }
         // NOTE: here the allocator is not swapped, as std::allocator won't propagate on swap.
         // Besides, all instances of std::allocator are equal, so the operation is well-defined.
@@ -312,16 +356,14 @@ public:
      * This function is enabled only if \p Int is an unsigned integer type or piranha::integer.
      *
      * This function computes the suggested number of threads to use, given an amount of total \p work_size units of
-     * work
-     * and a minimum amount of work units per thread \p min_work_per_thread.
+     * work and a minimum amount of work units per thread \p min_work_per_thread.
      *
      * The returned value will always be 1 if the calling thread is not the main thread; otherwise, a number of threads
      * such that each thread has at least \p min_work_per_thread units of work to consume will be returned. In any case,
-     * the return
-     * value is always greater than zero.
+     * the return value is always greater than zero.
      *
-     * @param[in] work_size total number of work units.
-     * @param[in] min_work_per_thread minimum number of work units to be consumed by a thread in the pool.
+     * @param work_size total number of work units.
+     * @param min_work_per_thread minimum number of work units to be consumed by a thread in the pool.
      *
      * @return the suggested number of threads to be used, always greater than zero.
      *
@@ -411,7 +453,7 @@ public:
      * If the insertion fails due to memory allocation errors and \p f is a valid
      * future, then the method will wait on \p f before throwing the exception.
      *
-     * @param[in] f std::future to be move-inserted.
+     * @param f std::future to be move-inserted.
      *
      * @throws unspecified any exception thrown by memory allocation errors.
      */
