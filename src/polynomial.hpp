@@ -50,7 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include "base_series_multiplier.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
-#include "detail/atomic_utils.hpp"
+#include "detail/atomic_flag_array.hpp"
 #include "detail/cf_mult_impl.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/parallel_vector_transform.hpp"
