@@ -41,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <thread>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -60,8 +61,7 @@ inline namespace impl
 
 // Task queue class. Inspired by:
 // https://github.com/progschj/ThreadPool
-class task_queue
-{
+struct task_queue {
     struct runner {
         runner(task_queue *ptr, unsigned n) : m_ptr(ptr), m_n(n)
         {
@@ -111,9 +111,14 @@ class task_queue
         const unsigned m_n;
     };
 
-public:
     task_queue(unsigned n) : m_stop(false)
     {
+        // NOTE: this seems to be ok wrt order of evaluation, since the ctor of runner cannot throw.
+        // In general, it could happen that:
+        // - new allocates,
+        // - runner is constructed and throws,
+        // - the memory allocated by new is not freed.
+        // See the classic: http://gotw.ca/gotw/056.htm
         m_thread.reset(new std::thread(runner{this, n}));
     }
     ~task_queue()
@@ -202,7 +207,6 @@ public:
         m_thread->join();
     }
 
-private:
     bool m_stop;
     std::condition_variable m_cond;
     std::mutex m_mutex;
@@ -210,25 +214,35 @@ private:
     std::unique_ptr<std::thread> m_thread;
 };
 
-inline std::vector<std::unique_ptr<task_queue>> get_initial_thread_queues()
+// Type to represent thread queues: a vector of task queues paired with a set of thread ids.
+using thread_queues_t = std::pair<std::vector<std::unique_ptr<task_queue>>, std::unordered_set<std::thread::id>>;
+
+inline thread_queues_t get_initial_thread_queues()
 {
-    std::vector<std::unique_ptr<task_queue>> retval;
+    thread_queues_t retval;
+    // Create the vector of queues.
     const unsigned candidate = runtime_info::get_hardware_concurrency(), hc = (candidate > 0u) ? candidate : 1u;
-    retval.reserve(static_cast<decltype(retval.size())>(hc));
+    retval.first.reserve(static_cast<decltype(retval.first.size())>(hc));
     for (unsigned i = 0u; i < hc; ++i) {
-        retval.emplace_back(::new task_queue(i));
+        retval.first.emplace_back(::new task_queue(i));
+    }
+    // Generate the set of thread IDs.
+    for (const auto &ptr : retval.first) {
+        auto p = retval.second.insert(ptr->m_thread->get_id());
+        (void)p;
+        piranha_assert(p.second);
     }
     return retval;
 }
 
-template <typename = int>
+template <typename = void>
 struct thread_pool_base {
-    static std::vector<std::unique_ptr<task_queue>> s_queues;
+    static thread_queues_t s_queues;
     static std::mutex s_mutex;
 };
 
 template <typename T>
-std::vector<std::unique_ptr<task_queue>> thread_pool_base<T>::s_queues = get_initial_thread_queues();
+thread_queues_t thread_pool_base<T>::s_queues = get_initial_thread_queues();
 
 template <typename T>
 std::mutex thread_pool_base<T>::s_mutex;
@@ -300,11 +314,12 @@ public:
     static enqueue_t<F &&, Args &&...> enqueue(unsigned n, F &&f, Args &&... args)
     {
         std::lock_guard<std::mutex> lock(s_mutex);
-        using size_type = decltype(base::s_queues.size());
-        if (n >= s_queues.size()) {
+        using size_type = decltype(base::s_queues.first.size());
+        if (n >= s_queues.first.size()) {
             piranha_throw(std::invalid_argument, "thread index is out of range");
         }
-        return base::s_queues[static_cast<size_type>(n)]->enqueue(std::forward<F>(f), std::forward<Args>(args)...);
+        return base::s_queues.first[static_cast<size_type>(n)]->enqueue(std::forward<F>(f),
+                                                                        std::forward<Args>(args)...);
     }
     /// Size
     /**
@@ -315,7 +330,7 @@ public:
     static unsigned size()
     {
         std::lock_guard<std::mutex> lock(s_mutex);
-        return static_cast<unsigned>(base::s_queues.size());
+        return static_cast<unsigned>(base::s_queues.first.size());
     }
     /// Pool resize
     /**
@@ -338,19 +353,25 @@ public:
             piranha_throw(std::invalid_argument, "cannot resize the thread pool to zero");
         }
         std::lock_guard<std::mutex> lock(s_mutex);
-        using size_type = decltype(base::s_queues.size());
+        using size_type = decltype(base::s_queues.first.size());
         const size_type new_s = static_cast<size_type>(new_size);
         if (unlikely(new_s != new_size)) {
             piranha_throw(std::invalid_argument, "invalid size");
         }
-        std::vector<std::unique_ptr<task_queue>> new_queues;
-        new_queues.reserve(new_s);
+        thread_queues_t new_queues;
+        new_queues.first.reserve(new_s);
         for (size_type i = 0u; i < new_s; ++i) {
-            new_queues.emplace_back(::new task_queue(static_cast<unsigned>(i)));
+            new_queues.first.emplace_back(::new task_queue(static_cast<unsigned>(i)));
+        }
+        for (const auto &ptr : new_queues.first) {
+            auto p = new_queues.second.insert(ptr->m_thread->get_id());
+            (void)p;
+            piranha_assert(p.second);
         }
         // NOTE: here the allocator is not swapped, as std::allocator won't propagate on swap.
         // Besides, all instances of std::allocator are equal, so the operation is well-defined.
         // http://en.cppreference.com/w/cpp/container/vector/swap
+        // This holds for both std::vector and std::unordered_set.
         // If an exception gets actually thrown, no big deal.
         new_queues.swap(base::s_queues);
     }
@@ -362,9 +383,9 @@ public:
      * This function computes the suggested number of threads to use, given an amount of total \p work_size units of
      * work and a minimum amount of work units per thread \p min_work_per_thread.
      *
-     * The returned value will always be 1 if the calling thread is not the main thread; otherwise, a number of threads
-     * such that each thread has at least \p min_work_per_thread units of work to consume will be returned. In any case,
-     * the return value is always greater than zero.
+     * The returned value will always be 1 if the calling thread belongs to the thread pool; otherwise, a number of
+     * threads such that each thread has at least \p min_work_per_thread units of work to consume will be returned.
+     * In any case, the return value is always greater than zero.
      *
      * @param work_size total number of work units.
      * @param min_work_per_thread minimum number of work units to be consumed by a thread in the pool.
@@ -384,12 +405,12 @@ public:
         if (unlikely(min_work_per_thread <= Int(0))) {
             piranha_throw(std::invalid_argument, "invalid value for minimum work per thread");
         }
-        // Don't use threads if we are not in the main thread.
-        if (std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        // Don't use threads if the calling thread belongs to the pool.
+        if (base::s_queues.second.find(std::this_thread::get_id()) != base::s_queues.second.end()) {
             return 1u;
         }
-        std::lock_guard<std::mutex> lock(s_mutex);
-        const auto n_threads = static_cast<unsigned>(base::s_queues.size());
+        const auto n_threads = static_cast<unsigned>(base::s_queues.first.size());
         piranha_assert(n_threads);
         if (work_size / n_threads >= min_work_per_thread) {
             // Enough work per thread, use them all.
