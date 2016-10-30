@@ -114,7 +114,7 @@ class task_queue
 public:
     task_queue(unsigned n) : m_stop(false)
     {
-        m_thread.reset(::new std::thread(runner{this, n}));
+        m_thread.reset(new std::thread(runner{this, n}));
     }
     ~task_queue()
     {
@@ -166,6 +166,10 @@ public:
     {
         using ret_type = f_ret_type<F &&, Args &&...>;
         using p_task_type = std::packaged_task<ret_type()>;
+        // NOTE: here we have a multi-stage construction of the task:
+        // - std::bind() turns F into a nullary functor,
+        // - std::packaged_task gives us the std::future machinery,
+        // - std::function (in m_tasks) gives the uniform type interface via type erasure.
         auto task = std::make_shared<p_task_type>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
         std::future<ret_type> res = task->get_future();
         {

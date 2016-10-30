@@ -70,11 +70,6 @@ see https://www.gnu.org/licenses/. */
  * override any other
  * converter that might be registered in boost python. We need to query the registry and check at runtime.
  * \todo initializer_list ctors: should they be explicit or not?
- * \todo review usage of new, we probably want to switch to unqualified new() in order to account for possible overloads
- * to be found via ADL -> note that placement new cannot be overloaded:
- * http://stackoverflow.com/questions/3675059/how-could-i-sensibly-overload-placement-operator-new (and 18.6.1.3 in the
- * standard)
- * so we might as well keep ::new in those cases.
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting
  * constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must
