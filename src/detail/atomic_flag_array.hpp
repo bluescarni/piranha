@@ -90,7 +90,6 @@ struct atomic_flag_array {
     value_type *m_ptr;
     const std::size_t m_size;
 };
-
 }
 }
 

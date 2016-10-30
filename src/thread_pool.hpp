@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_THREAD_POOL_HPP
 
 #include <algorithm>
+#include <atomic>
 #include <condition_variable>
 #include <cstdlib>
 #include <functional>
@@ -46,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "config.hpp"
+#include "detail/atomic_lock_guard.hpp"
 #include "detail/mpfr.hpp"
 #include "exceptions.hpp"
 #include "mp_integer.hpp"
@@ -238,14 +240,14 @@ inline thread_queues_t get_initial_thread_queues()
 template <typename = void>
 struct thread_pool_base {
     static thread_queues_t s_queues;
-    static std::mutex s_mutex;
+    static std::atomic_flag s_atf;
 };
 
 template <typename T>
 thread_queues_t thread_pool_base<T>::s_queues = get_initial_thread_queues();
 
 template <typename T>
-std::mutex thread_pool_base<T>::s_mutex;
+std::atomic_flag thread_pool_base<T>::s_atf = ATOMIC_FLAG_INIT;
 }
 
 /// Static thread pool.
@@ -313,7 +315,7 @@ public:
     template <typename F, typename... Args>
     static enqueue_t<F &&, Args &&...> enqueue(unsigned n, F &&f, Args &&... args)
     {
-        std::lock_guard<std::mutex> lock(s_mutex);
+        detail::atomic_lock_guard lock(s_atf);
         using size_type = decltype(base::s_queues.first.size());
         if (n >= s_queues.first.size()) {
             piranha_throw(std::invalid_argument, "thread index is out of range");
@@ -329,7 +331,7 @@ public:
      */
     static unsigned size()
     {
-        std::lock_guard<std::mutex> lock(s_mutex);
+        detail::atomic_lock_guard lock(s_atf);
         return static_cast<unsigned>(base::s_queues.first.size());
     }
     /// Pool resize
@@ -352,7 +354,7 @@ public:
         if (unlikely(new_size == 0u)) {
             piranha_throw(std::invalid_argument, "cannot resize the thread pool to zero");
         }
-        std::lock_guard<std::mutex> lock(s_mutex);
+        detail::atomic_lock_guard lock(s_atf);
         using size_type = decltype(base::s_queues.first.size());
         const size_type new_s = static_cast<size_type>(new_size);
         if (unlikely(new_s != new_size)) {
@@ -405,7 +407,7 @@ public:
         if (unlikely(min_work_per_thread <= Int(0))) {
             piranha_throw(std::invalid_argument, "invalid value for minimum work per thread");
         }
-        std::lock_guard<std::mutex> lock(s_mutex);
+        detail::atomic_lock_guard lock(s_atf);
         // Don't use threads if the calling thread belongs to the pool.
         if (base::s_queues.second.find(std::this_thread::get_id()) != base::s_queues.second.end()) {
             return 1u;
