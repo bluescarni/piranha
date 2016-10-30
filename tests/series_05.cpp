@@ -37,6 +37,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
+#include "../src/config.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/init.hpp"
@@ -45,6 +46,11 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/type_traits.hpp"
+
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
 
 using namespace piranha;
 
@@ -298,3 +304,7 @@ BOOST_AUTO_TEST_CASE(series_evaluation_test)
                     != std::string::npos);
     }
 }
+
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
