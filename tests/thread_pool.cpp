@@ -76,7 +76,7 @@ noncopyable noncopyable_ret_f();
 
 void requires_move(int &&);
 
-static int n = 5;
+static int nn = 5;
 
 struct ref_test_functor
 {
@@ -84,7 +84,7 @@ struct ref_test_functor
     void operator()(T &arg)
     {
         BOOST_CHECK((std::is_same<T,int>::value));
-        BOOST_CHECK(&arg == &n);
+        BOOST_CHECK(&arg == &nn);
     }
 };
 
@@ -94,7 +94,7 @@ struct cref_test_functor
     void operator()(T &arg)
     {
         BOOST_CHECK((std::is_same<T,const int>::value));
-        BOOST_CHECK(&arg == &n);
+        BOOST_CHECK(&arg == &nn);
     }
 };
 
@@ -121,9 +121,9 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
     BOOST_CHECK((!is_detected<enqueue_t, decltype(requires_move), int>::value));
     // Test that std::ref/cref works as intended (i.e., it does not copy the value) and that
     // reference_wrapper is removed when the argument is passed to the functor.
-    auto fut_ref = thread_pool::enqueue(0,ref_test_functor{},std::ref(n));
+    auto fut_ref = thread_pool::enqueue(0,ref_test_functor{},std::ref(nn));
     fut_ref.get();
-    fut_ref = thread_pool::enqueue(0,cref_test_functor{},std::cref(n));
+    fut_ref = thread_pool::enqueue(0,cref_test_functor{},std::cref(nn));
     fut_ref.get();
     auto slow_task = []() { std::this_thread::sleep_for(std::chrono::milliseconds(250)); };
     auto fast_task = [](int n) -> int {
