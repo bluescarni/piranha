@@ -125,6 +125,35 @@ public:
         const auto candidate = runtime_info::get_hardware_concurrency();
         set_n_threads((candidate > 0u) ? candidate : 1u);
     }
+    /// Set the thread binding policy.
+    /**
+     * This method is an alias for piranha::thread_pool::set_binding(). If \p flag is \p true, each
+     * thread used by piranha will be bound to a different processor/core. If \p flag is \p false,
+     * this method will unbind piranha's threads from any processor/core to which they might be bound.
+     *
+     * By default piranha's threads are not bound to any specific processor/core.
+     *
+     * @param flag the desired thread binding policy.
+     *
+     * @throws unspecified any exception thrown by piranha::thread_pool::set_binding().
+     */
+    static void set_thread_binding(bool flag)
+    {
+        thread_pool::set_binding(flag);
+    }
+    /// Get the thread binding policy.
+    /**
+     * This method is an alias for piranha::thread_pool::get_binding(). It will return the flag set by
+     * settings::set_thread_binding() (which is \p false by default on program startup).
+     *
+     * @return the active thread binding policy.
+     *
+     * @throws unspecified any exception thrown by piranha::thread_pool::get_binding().
+     */
+    static bool get_thread_binding()
+    {
+        return thread_pool::get_binding();
+    }
     /// Get the cache line size.
     /**
      * The initial value is set to the output of piranha::runtime_info::get_cache_line_size(). The value

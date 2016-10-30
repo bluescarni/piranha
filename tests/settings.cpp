@@ -52,6 +52,13 @@ BOOST_AUTO_TEST_CASE(settings_thread_number_test)
     settings::set_n_threads(10u);
     settings::reset_n_threads();
     BOOST_CHECK_EQUAL(original, settings::get_n_threads());
+    BOOST_CHECK(!settings::get_thread_binding());
+    settings::set_thread_binding(true);
+    settings::set_thread_binding(true);
+    BOOST_CHECK(settings::get_thread_binding());
+    settings::set_thread_binding(false);
+    settings::set_thread_binding(false);
+    BOOST_CHECK(!settings::get_thread_binding());
 }
 
 BOOST_AUTO_TEST_CASE(settings_cache_line_size_test)

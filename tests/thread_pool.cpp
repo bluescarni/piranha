@@ -32,8 +32,9 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <chrono>
+#include <limits>
 #include <list>
 #include <stdexcept>
 #include <thread>
@@ -130,51 +131,51 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
     };
     auto instant_task = []() {};
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         tq.stop();
         tq.stop();
         tq.stop();
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         tq.enqueue([]() {});
         tq.stop();
         tq.stop();
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         tq.enqueue(slow_task);
         tq.stop();
         tq.stop();
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         tq.enqueue(slow_task);
         tq.enqueue(slow_task);
         tq.enqueue(slow_task);
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         auto f1 = tq.enqueue(slow_task);
         auto f2 = tq.enqueue(slow_task);
         auto f3 = tq.enqueue(slow_task);
         f3.get();
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         auto f1 = tq.enqueue([](int) { throw std::runtime_error(""); }, 1);
         BOOST_CHECK_THROW(f1.get(), std::runtime_error);
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         auto f1 = tq.enqueue([](int n) { return n + n; }, 45);
         BOOST_CHECK(f1.get() == 90);
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         using f_type = decltype(tq.enqueue(fast_task, 0));
         std::list<f_type> l;
         for (int i = 0; i < 100; ++i) {
@@ -188,21 +189,23 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
         BOOST_CHECK(result == 4950);
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         for (int i = 0; i < 10000; ++i) {
             tq.enqueue(instant_task);
         }
         tq.stop();
-        BOOST_CHECK_THROW(tq.enqueue(instant_task), std::runtime_error);
+        BOOST_CHECK_EXCEPTION(tq.enqueue(instant_task), std::runtime_error, [](const std::runtime_error &e) {
+            return boost::contains(e.what(), "cannot enqueue task while the task queue is stopping");
+        });
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         noncopyable nc;
         tq.enqueue([](noncopyable &) {}, std::ref(nc));
         tq.enqueue([](const noncopyable &) {}, std::cref(nc));
     }
     {
-        task_queue tq(0);
+        task_queue tq(0, true);
         for (int i = 0; i < 100; ++i) {
             tq.enqueue([]() { real{}.pi(); });
         }
@@ -217,12 +220,22 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
         }
     };
     for (unsigned i = 0u; i < hc; ++i) {
-        task_queue tq(i);
+        task_queue tq(i, true);
         BOOST_CHECK_NO_THROW(tq.enqueue(bind_checker, i).get());
     }
     if (hc != 0) {
-        task_queue tq(hc);
+        task_queue tq(hc, true);
         BOOST_CHECK_THROW(tq.enqueue(bind_checker, hc).get(), std::runtime_error);
+    }
+    auto unbound_checker = []() {
+        auto res = bound_proc();
+        if (res.first) {
+            throw std::runtime_error("");
+        }
+    };
+    for (unsigned i = 0u; i < hc; ++i) {
+        task_queue tq(i, false);
+        BOOST_CHECK_NO_THROW(tq.enqueue(unbound_checker).get());
     }
 #endif
 }
@@ -236,12 +249,20 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 {
     const unsigned initial_size = thread_pool::size();
     BOOST_CHECK(initial_size > 0u);
+    BOOST_CHECK_EQUAL(thread_pool::get_binding(), false);
     BOOST_CHECK(thread_pool::enqueue(0, adder, 1, 2).get() == 3);
     thread_pool::enqueue(0, []() { std::this_thread::sleep_for(std::chrono::milliseconds(100)); });
     BOOST_CHECK(thread_pool::enqueue(0, adder, 4, -5).get() == -1);
-    BOOST_CHECK_THROW(thread_pool::enqueue(initial_size, adder, 4, -5), std::invalid_argument);
+    BOOST_CHECK_EXCEPTION(
+        thread_pool::enqueue(initial_size, adder, 4, -5), std::invalid_argument,
+        [](const std::invalid_argument &e) { return boost::contains(e.what(), "the thread pool contains only "); });
 #if !defined(__APPLE_CC__)
+    BOOST_CHECK(thread_pool::enqueue(0, []() { return bound_proc(); }).get().first == false);
+    thread_pool::set_binding(true);
     BOOST_CHECK(thread_pool::enqueue(0, []() { return bound_proc(); }).get() == std::make_pair(true, 0u));
+    BOOST_CHECK_EQUAL(thread_pool::get_binding(), true);
+    thread_pool::set_binding(false);
+    BOOST_CHECK_EQUAL(thread_pool::get_binding(), false);
 #endif
     BOOST_CHECK_THROW(thread_pool::enqueue(0, []() { throw std::runtime_error(""); }).get(), std::runtime_error);
     auto fast_task = [](int n) -> int {
@@ -258,9 +279,21 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
     }
     auto slow_task = []() { std::this_thread::sleep_for(std::chrono::milliseconds(250)); };
     thread_pool::resize(1);
+    BOOST_CHECK_EQUAL(thread_pool::get_binding(), false);
     thread_pool::enqueue(0, slow_task);
     thread_pool::resize(20u);
+    BOOST_CHECK_EQUAL(thread_pool::get_binding(), false);
     BOOST_CHECK(thread_pool::size() == 20u);
+    thread_pool::set_binding(true);
+    thread_pool::set_binding(true);
+    thread_pool::resize(1);
+    BOOST_CHECK_EQUAL(thread_pool::get_binding(), true);
+    thread_pool::enqueue(0, slow_task);
+    thread_pool::resize(20u);
+    BOOST_CHECK_EQUAL(thread_pool::get_binding(), true);
+    BOOST_CHECK(thread_pool::size() == 20u);
+    thread_pool::set_binding(false);
+    thread_pool::set_binding(false);
     for (unsigned i = 0u; i < 20u; ++i) {
         thread_pool::enqueue(0u, slow_task);
         for (int n = 1; n < 1000; ++n) {
@@ -271,7 +304,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
     thread_pool::resize(10u);
     BOOST_CHECK(thread_pool::size() == 10u);
 #if !defined(__APPLE_CC__)
-    if (initial_size != boost::integer_traits<unsigned>::const_max) {
+    if (initial_size != std::numeric_limits<unsigned>::max()) {
         thread_pool::resize(initial_size + 1u);
         auto func = []() { return bound_proc(); };
         std::vector<decltype(thread_pool::enqueue(0u, func))> list;
@@ -283,7 +316,9 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
         BOOST_CHECK(!(list.begin() + initial_size)->get().second);
     }
 #endif
-    BOOST_CHECK_THROW(thread_pool::resize(0u), std::invalid_argument);
+    BOOST_CHECK_EXCEPTION(thread_pool::resize(0u), std::invalid_argument, [](const std::invalid_argument &e) {
+        return boost::contains(e.what(), "cannot resize the thread pool to zero");
+    });
     BOOST_CHECK(thread_pool::size() != 0u);
 }
 
@@ -334,8 +369,15 @@ BOOST_AUTO_TEST_CASE(thread_pool_use_threads_test)
 {
     thread_pool::resize(4u);
     BOOST_CHECK(thread_pool::use_threads(100u, 3u) == 4u);
-    BOOST_CHECK_THROW(thread_pool::use_threads(100u, 0u), std::invalid_argument);
-    BOOST_CHECK_THROW(thread_pool::use_threads(0u, 100u), std::invalid_argument);
+    BOOST_CHECK_EXCEPTION(
+        thread_pool::use_threads(100u, 0u), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(),
+                                   "invalid value of 0 for minimum work per thread (it must be strictly positive)");
+        });
+    BOOST_CHECK_EXCEPTION(
+        thread_pool::use_threads(0u, 100u), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "invalid value of 0 for work size (it must be strictly positive)");
+        });
     BOOST_CHECK_THROW(thread_pool::use_threads(0u, 0u), std::invalid_argument);
     BOOST_CHECK_THROW(thread_pool::use_threads(100_z, 0_z), std::invalid_argument);
     BOOST_CHECK_THROW(thread_pool::use_threads(0_z, 100_z), std::invalid_argument);

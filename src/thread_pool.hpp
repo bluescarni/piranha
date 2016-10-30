@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <atomic>
+#include <boost/lexical_cast.hpp>
 #include <condition_variable>
 #include <cstdlib>
 #include <functional>
@@ -40,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <mutex>
 #include <queue>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include <type_traits>
 #include <unordered_set>
@@ -65,16 +67,18 @@ inline namespace impl
 // https://github.com/progschj/ThreadPool
 struct task_queue {
     struct runner {
-        runner(task_queue *ptr, unsigned n) : m_ptr(ptr), m_n(n)
+        runner(task_queue *ptr, unsigned n, bool bind) : m_ptr(ptr), m_n(n), m_bind(bind)
         {
         }
         void operator()() const
         {
-            // Don't stop if we cannot bind.
-            try {
-                bind_to_proc(m_n);
-            } catch (...) {
-                // NOTE: logging candidate.
+            if (m_bind) {
+                try {
+                    bind_to_proc(m_n);
+                } catch (...) {
+                    // Don't stop if we cannot bind.
+                    // NOTE: logging candidate.
+                }
             }
             try {
                 while (true) {
@@ -111,9 +115,10 @@ struct task_queue {
         }
         task_queue *m_ptr;
         const unsigned m_n;
+        const bool m_bind;
     };
 
-    task_queue(unsigned n) : m_stop(false)
+    task_queue(unsigned n, bool bind) : m_stop(false)
     {
         // NOTE: this seems to be ok wrt order of evaluation, since the ctor of runner cannot throw.
         // In general, it could happen that:
@@ -121,7 +126,7 @@ struct task_queue {
         // - runner is constructed and throws,
         // - the memory allocated by new is not freed.
         // See the classic: http://gotw.ca/gotw/056.htm
-        m_thread.reset(new std::thread(runner{this, n}));
+        m_thread.reset(new std::thread(runner{this, n, bind}));
     }
     ~task_queue()
     {
@@ -183,7 +188,7 @@ struct task_queue {
             std::unique_lock<std::mutex> lock(m_mutex);
             if (unlikely(m_stop)) {
                 // Enqueueing is not allowed if the queue is stopped.
-                piranha_throw(std::runtime_error, "cannot enqueue task while task queue is stopping");
+                piranha_throw(std::runtime_error, "cannot enqueue task while the task queue is stopping");
             }
             m_tasks.push([task]() { (*task)(); });
         }
@@ -226,7 +231,8 @@ inline thread_queues_t get_initial_thread_queues()
     const unsigned candidate = runtime_info::get_hardware_concurrency(), hc = (candidate > 0u) ? candidate : 1u;
     retval.first.reserve(static_cast<decltype(retval.first.size())>(hc));
     for (unsigned i = 0u; i < hc; ++i) {
-        retval.first.emplace_back(::new task_queue(i));
+        // NOTE: thread binding is disabled on startup.
+        retval.first.emplace_back(::new task_queue(i, false));
     }
     // Generate the set of thread IDs.
     for (const auto &ptr : retval.first) {
@@ -240,6 +246,7 @@ inline thread_queues_t get_initial_thread_queues()
 template <typename = void>
 struct thread_pool_base {
     static thread_queues_t s_queues;
+    static bool s_bind;
     static std::atomic_flag s_atf;
 };
 
@@ -248,6 +255,9 @@ thread_queues_t thread_pool_base<T>::s_queues = get_initial_thread_queues();
 
 template <typename T>
 std::atomic_flag thread_pool_base<T>::s_atf = ATOMIC_FLAG_INIT;
+
+template <typename T>
+bool thread_pool_base<T>::s_bind = false;
 }
 
 /// Static thread pool.
@@ -258,13 +268,12 @@ std::atomic_flag thread_pool_base<T>::s_atf = ATOMIC_FLAG_INIT;
  * piranha::thread_pool alias.
  *
  * This class manages, via a set of static methods, a pool of threads created at program startup.
- * The number of threads created initially is equal to piranha::runtime_info::get_hardware_concurrency(),
- * and, if possible, each thread is bound to a different processor. If the hardware concurrency cannot be determined,
- * the size of the thread pool will be one.
+ * The number of threads created initially is equal to piranha::runtime_info::get_hardware_concurrency().
+ * If the hardware concurrency cannot be determined, the size of the thread pool will be one.
  *
- * This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool
- * and resize the pool. All methods, unless otherwise specified, are thread-safe, and they provide the strong
- * exception safety guarantee.
+ * This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool,
+ * resize the pool and configure the thread binding policy. All methods, unless otherwise specified, are thread-safe,
+ * and they provide the strong exception safety guarantee.
  */
 // \todo work around MSVC bug in destruction of statically allocated threads (if needed once we support MSVC), as per:
 // http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc
@@ -316,35 +325,53 @@ public:
     static enqueue_t<F &&, Args &&...> enqueue(unsigned n, F &&f, Args &&... args)
     {
         detail::atomic_lock_guard lock(s_atf);
-        using size_type = decltype(base::s_queues.first.size());
         if (n >= s_queues.first.size()) {
-            piranha_throw(std::invalid_argument, "thread index is out of range");
+            piranha_throw(std::invalid_argument, "the thread index " + std::to_string(n)
+                                                     + " is out of range, the thread pool contains only "
+                                                     + std::to_string(s_queues.first.size()) + " threads");
         }
-        return base::s_queues.first[static_cast<size_type>(n)]->enqueue(std::forward<F>(f),
-                                                                        std::forward<Args>(args)...);
+        return base::s_queues.first[static_cast<decltype(base::s_queues.first.size())>(n)]->enqueue(
+            std::forward<F>(f), std::forward<Args>(args)...);
     }
     /// Size
     /**
      * @return the number of threads in the pool.
-     *
-     * @throws unspecified any exception thrown by threading primitives.
      */
     static unsigned size()
     {
         detail::atomic_lock_guard lock(s_atf);
         return static_cast<unsigned>(base::s_queues.first.size());
     }
-    /// Pool resize
+
+private:
+    // Helper function to create 'new_size' new queues with thread binding set to 'bind'.
+    static thread_queues_t create_new_queues(unsigned new_size, bool bind)
+    {
+        thread_queues_t new_queues;
+        // Create the task queues.
+        new_queues.first.reserve(static_cast<decltype(new_queues.first.size())>(new_size));
+        for (auto i = 0u; i < new_size; ++i) {
+            new_queues.first.emplace_back(::new task_queue(i, bind));
+        }
+        // Fill in the thread ids set.
+        for (const auto &ptr : new_queues.first) {
+            auto p = new_queues.second.insert(ptr->m_thread->get_id());
+            (void)p;
+            piranha_assert(p.second);
+        }
+        return new_queues;
+    }
+
+public:
+    /// Change the number of threads.
     /**
-     * This method will resize the internal pool to contain \p new_size threads.
-     * The method will first wait for the threads to consume all the pending tasks
-     * (while forbidding the addition of new tasks),
-     * and it will then create a new pool of size \p new_size. The new threads will be
-     * bound, if possible, to the processor corresponding to their index in the pool.
+     * This method will resize the internal pool to contain \p new_size threads. The method will first wait for
+     * the threads to consume all the pending tasks (while forbidding the addition of new tasks), and it will then
+     * create a new pool of size \p new_size.
      *
      * @param new_size the new size of the pool.
      *
-     * @throws std::invalid_argument if \p new_size is zero or larger than an implementation-defined value.
+     * @throws std::invalid_argument if \p new_size is zero.
      * @throws unspecified any exception thrown by:
      * - threading primitives,
      * - memory allocation errors.
@@ -354,28 +381,56 @@ public:
         if (unlikely(new_size == 0u)) {
             piranha_throw(std::invalid_argument, "cannot resize the thread pool to zero");
         }
+        // NOTE: need to lock here as we are reading the s_bind member.
         detail::atomic_lock_guard lock(s_atf);
-        using size_type = decltype(base::s_queues.first.size());
-        const size_type new_s = static_cast<size_type>(new_size);
-        if (unlikely(new_s != new_size)) {
-            piranha_throw(std::invalid_argument, "invalid size");
-        }
-        thread_queues_t new_queues;
-        new_queues.first.reserve(new_s);
-        for (size_type i = 0u; i < new_s; ++i) {
-            new_queues.first.emplace_back(::new task_queue(static_cast<unsigned>(i)));
-        }
-        for (const auto &ptr : new_queues.first) {
-            auto p = new_queues.second.insert(ptr->m_thread->get_id());
-            (void)p;
-            piranha_assert(p.second);
-        }
+        auto new_queues = create_new_queues(new_size, base::s_bind);
         // NOTE: here the allocator is not swapped, as std::allocator won't propagate on swap.
         // Besides, all instances of std::allocator are equal, so the operation is well-defined.
         // http://en.cppreference.com/w/cpp/container/vector/swap
         // This holds for both std::vector and std::unordered_set.
         // If an exception gets actually thrown, no big deal.
+        // NOTE: the dtor of the queues is effectively noexcept, as the program will just abort in case of errors
+        // in the dtor.
         new_queues.swap(base::s_queues);
+    }
+    /// Set the thread binding policy.
+    /**
+     * If \p flag is \p true, this method will bind each thread in the pool to a different processor/core via
+     * piranha::bind_to_proc(). If \p flag is \p false, then this method will unbind the threads in the pool from any
+     * processor/core to which they might be bound.
+     *
+     * The threads created at program startup are not bound to any specific processor/core. Any error raised by
+     * piranha::bind_to_proc() (e.g., because the number of threads in the pool is larger than the number of logical
+     * cores or because the thread binding functionality is not available on the platform) is silently ignored.
+     *
+     * @param flag the desired thread binding policy.
+     *
+     * @throws unspecified any exception thrown by:
+     * - threading primitives,
+     * - memory allocation errors.
+     */
+    static void set_binding(bool flag)
+    {
+        detail::atomic_lock_guard lock(s_atf);
+        if (flag == base::s_bind) {
+            // Don't do anything if we are not changing the binding policy.
+            return;
+        }
+        auto new_queues = create_new_queues(static_cast<unsigned>(base::s_queues.first.size()), flag);
+        new_queues.swap(base::s_queues);
+        base::s_bind = flag;
+    }
+    /// Get the thread binding policy.
+    /**
+     * This method returns the flag set by set_binding(). The threads created on program startup are not bound to
+     * specific processors/cores.
+     *
+     * @return a boolean flag representing the active thread binding policy.
+     */
+    static bool get_binding()
+    {
+        detail::atomic_lock_guard lock(s_atf);
+        return base::s_bind;
     }
     /// Compute number of threads to use.
     /**
@@ -395,17 +450,20 @@ public:
      * @return the suggested number of threads to be used, always greater than zero.
      *
      * @throws std::invalid_argument if \p work_size or \p min_work_per_thread are not strictly positive.
-     * @throws unspecified any exception thrown by threading primitives.
+     * @throws unspecified any exception thrown by \p boost::lexical_cast().
      */
     template <typename Int, use_threads_enabler<Int> = 0>
     static unsigned use_threads(const Int &work_size, const Int &min_work_per_thread)
     {
         // Check input params.
         if (unlikely(work_size <= Int(0))) {
-            piranha_throw(std::invalid_argument, "invalid value for work size");
+            piranha_throw(std::invalid_argument, "invalid value of " + boost::lexical_cast<std::string>(work_size)
+                                                     + " for work size (it must be strictly positive)");
         }
         if (unlikely(min_work_per_thread <= Int(0))) {
-            piranha_throw(std::invalid_argument, "invalid value for minimum work per thread");
+            piranha_throw(std::invalid_argument, "invalid value of "
+                                                     + boost::lexical_cast<std::string>(min_work_per_thread)
+                                                     + " for minimum work per thread (it must be strictly positive)");
         }
         detail::atomic_lock_guard lock(s_atf);
         // Don't use threads if the calling thread belongs to the pool.
