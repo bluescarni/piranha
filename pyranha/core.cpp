@@ -244,6 +244,10 @@ BOOST_PYTHON_MODULE(_core)
         .staticmethod("_get_min_work_per_thread");
     settings_class.def("_reset_min_work_per_thread", piranha::settings::reset_min_work_per_thread)
         .staticmethod("_reset_min_work_per_thread");
+    settings_class.def("_set_thread_binding", piranha::settings::set_thread_binding)
+        .staticmethod("_set_thread_binding");
+    settings_class.def("_get_thread_binding", piranha::settings::get_thread_binding)
+        .staticmethod("_get_thread_binding");
     // Factorial.
     bp::def("_factorial", &piranha::math::factorial<0>);
 // Binomial coefficient.

@@ -34,7 +34,7 @@ __all__ = ['celmec', 'math', 'test', 'types']
 
 import threading as _thr
 from ._common import _cpp_type_catcher, _monkey_patching, _cleanup
-from ._core import polynomial_gcd_algorithm, data_format, compression, _load_file as load_file, _save_file as save_file
+from ._core import polynomial_gcd_algorithm, data_format as _df, compression as _cf
 
 # Run the monkey patching.
 _monkey_patching()
@@ -166,16 +166,16 @@ class settings(object):
 
     @staticmethod
     def get_latex_repr():
-        r"""Check if exposed types have a ``_repr_latex_()`` method.
+        r"""Check if the TeX representation of exposed types is enabled.
 
-        The ``_repr_latex_()`` method, if present, is used by the IPython notebook to display the TeX
+        The ``_repr_latex_()`` method, if present, is used by the Jupyter notebook to display the TeX
         representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable
-        to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX
-        representation is disabled, IPython will fall back to the PNG-based representation of the object, which
+        to disable the TeX representation in order to improve the performance of the notebook UI. When the TeX
+        representation is disabled, Jupyter will fall back to the PNG-based representation of the object, which
         leverages - if available - a local installation of TeX for increased performance via a static rendering
         of the TeX representation of the object to a PNG bitmap.
 
-        By default, the TeX representation is enabled.
+        By default, the TeX representation is enabled. See also :py:meth:`pyranha.settings.set_latex_repr`.
 
         >>> settings.get_latex_repr()
         True
@@ -289,6 +289,101 @@ class settings(object):
         """
         from ._core import _settings as _s
         return _s._reset_min_work_per_thread()
+
+    @staticmethod
+    def set_thread_binding(flag):
+        """Set the thread binding policy.
+
+        By default, the threads created by piranha are not bound to specific processors/cores.
+        Calling this method with a ``True`` *flag* will instruct piranha to attempt to bind each
+        thread to a different processor/core (which can result in increased performance
+        in certain circumstances). If *flag* is ``False``, the threads created by piranha will be
+        free to migrate across processors/cores.
+
+        :param flag: the desired thread binding policy
+        :type flag: ``bool``
+        :raises: any exception raised by the invoked low-level function
+
+        >>> settings.get_thread_binding()
+        False
+        >>> settings.set_thread_binding(True)
+        >>> settings.get_thread_binding()
+        True
+        >>> settings.set_thread_binding(False)
+        >>> settings.get_thread_binding()
+        False
+        >>> settings.set_thread_binding(4.56) # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+          ...
+        TypeError: invalid argument type(s)
+
+        """
+        from ._core import _settings as _s
+        return _cpp_type_catcher(_s._set_thread_binding, flag)
+
+    @staticmethod
+    def get_thread_binding():
+        """Get the thread binding policy.
+
+        This method will return the flag set by :py:meth:`pyranha.settings.set_thread_binding`.
+        On program startup, the value returned by this function will be ``False``.
+
+        :returns: the thread binding policy
+        :rtype: ``bool``
+        :raises: any exception raised by the invoked low-level function
+
+        >>> settings.get_thread_binding()
+        False
+        >>> settings.set_thread_binding(True)
+        >>> settings.get_thread_binding()
+        True
+        >>> settings.set_thread_binding(False)
+        >>> settings.get_thread_binding()
+        False
+
+        """
+        from ._core import _settings as _s
+        return _s._get_thread_binding()
+
+
+class data_format(object):
+    """
+    Data format.
+    """
+
+    #: Boost portable format.
+    boost_portable = _df.boost_portable
+    #: Boost binary format.
+    boost_binary = _df.boost_binary
+    #: msgpack portable format.
+    msgpack_portable = _df.msgpack_portable
+    #: msgpack binary format.
+    msgpack_binary = _df.msgpack_binary
+
+
+class compression(object):
+    """
+    Compression format.
+    """
+
+    #: No compression.
+    none = _cf.none
+    #: zlib compression.
+    zlib = _cf.zlib
+    #: gzip compression.
+    gzip = _cf.gzip
+    #: bzip2 compression.
+    bzip2 = _cf.bzip2
+
+def save_file(name, df = None, cf = None):
+    from ._core import _save_file
+    if not isinstance(name, str):
+        raise TypeError("the file name must be a string")
+    if df is None and not cf is None:
+        raise ValueError("the compression format was provided but the data format was not: please specify both of them (or none)")
+    if cf is None and not df is None:
+        raise ValueError("the data format was provided but the compression format was not: please specify both of them (or none)")
+    _cpp_type_catcher(_save_file, name, df, cf)
 
 import atexit as _atexit
 _atexit.register(lambda: _cleanup())
