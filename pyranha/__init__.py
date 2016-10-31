@@ -347,8 +347,16 @@ class settings(object):
 
 
 class data_format(object):
-    """
-    Data format.
+    """Data format.
+
+    The members of this class identify the data formats that can be used when saving/loading
+    to/from disk symbolic objects via :py:func:`pyranha.save_file` and :py:func:`pyranha.load_file`.
+    The Boost formats are based on the Boost serialization library and they are always available.
+    The msgpack formats rely on the msgpack-c library (which is an optional dependency).
+
+    The portable variants are slower but suitable for use across architectures and piranha versions, the binary
+    variants are faster but they are not portable across architectures and piranha versions.
+
     """
 
     #: Boost portable format.
@@ -362,8 +370,13 @@ class data_format(object):
 
 
 class compression(object):
-    """
-    Compression format.
+    """Compression format.
+
+    The members of this class identify the compression formats that can be used when saving/loading
+    to/from disk symbolic objects via :py:func:`pyranha.save_file` and :py:func:`pyranha.load_file`.
+    The compression formats are available only if piranha was compiled with the corresponding optional
+    compression options enabled.
+
     """
 
     #: No compression.
@@ -375,15 +388,113 @@ class compression(object):
     #: bzip2 compression.
     bzip2 = _cf.bzip2
 
-def save_file(name, df = None, cf = None):
-    from ._core import _save_file
+
+def _save_load_check_params(name, df, cf):
     if not isinstance(name, str):
         raise TypeError("the file name must be a string")
     if df is None and not cf is None:
-        raise ValueError("the compression format was provided but the data format was not: please specify both of them (or none)")
+        raise ValueError(
+            "the compression format was provided but the data format was not: please specify both of them (or none)")
     if cf is None and not df is None:
-        raise ValueError("the data format was provided but the compression format was not: please specify both of them (or none)")
-    _cpp_type_catcher(_save_file, name, df, cf)
+        raise ValueError(
+            "the data format was provided but the compression format was not: please specify both of them (or none)")
+
+
+def save_file(obj, name, df=None, cf=None):
+    """Save to file.
+
+    This function will save the symbolic object *obj* to the file called *name* using *df* as data format
+    and *cf* as compression format. The possible values for *df* and *cf* are listed in the
+    :py:class:`pyranha.data_format` and :py:class:`pyranha.compression` classes respectively.
+
+    If *df* and *cf* are both ``None``, then the data and compression formats are inferred from the filename:
+
+    * if *name* ends in one of the suffixes ``.bz2``, ``.gz`` or ``.zip`` then the suffix is removed
+      for further considerations from *name*, and the corresponding :py:class:`pyranha.compression` format is assumed
+      (respectively, :py:attr:`pyranha.compression.bzip2`, :py:attr:`pyranha.compression.gzip` and
+      :py:attr:`pyranha.compression.zlib`). Otherwise, :py:attr:`pyranha.compression.none` is assumed;
+    * after the removal of any compression suffix, the extension of *name* is examined again: if the extension is
+      one of ``.boostp``, ``.boostb``, ``.mpackp`` and ``.mpackb``, then the corresponding data format is selected
+      (respectively, :py:attr:`pyranha.data_format.boost_portable`, :py:attr:`pyranha.data_format.boost_binary`,
+      :py:attr:`pyranha.data_format.msgpack_portable`, :py:attr:`pyranha.data_format.msgpack_binary`). Othwewise, an
+      error will be produced.
+
+    Examples of file names:
+
+    * ``foo.boostb.bz2`` deduces :py:attr:`pyranha.data_format.boost_binary` and :py:attr:`pyranha.compression.bzip2`;
+    * ``foo.mpackp`` deduces :py:attr:`pyranha.data_format.msgpack_portable` and :py:attr:`pyranha.compression.none`;
+    * ``foo.txt`` produces an error;
+    * ``foo.bz2`` produces an error.
+
+    :param obj: the symbolic object that will be saved to file
+    :type obj: a supported symbolic type
+    :param name: the file name
+    :type name: ``str``
+    :param df: the desired data format (see :py:class:`pyranha.data_format`)
+    :param cf: the desired compression format (see :py:class:`pyranha.compression`)
+
+    :raises: :exc:`TypeError` if the file name is not a string
+    :raises: :exc:`ValueError` if only one of *df* and *cf* is ``None``
+    :raises: any exception raised by the invoked low-level C++ function
+
+    >>> from pyranha.types import polynomial, rational, k_monomial
+    >>> import tempfile, os
+    >>> x = polynomial(rational,k_monomial)()('x')
+    >>> p = (x + 1)**10
+    >>> f = tempfile.NamedTemporaryFile(delete=False) # Generate a temporary file name
+    >>> f.close()
+    >>> save_file(p, f.name, data_format.boost_portable, compression.none)
+    >>> p_load = type(p)()
+    >>> load_file(p_load, f.name, data_format.boost_portable, compression.none)
+    >>> p_load == p
+    True
+    >>> save_file(p, 123) # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+      ...
+    TypeError: the file name must be a string
+    >>> save_file(p, "foo", df = data_format.boost_portable) # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+      ...
+    ValueError: the data format was provided but the compression format was not
+    >>> os.remove(f.name) # Cleanup
+
+    """
+    from ._core import _save_file
+    _save_load_check_params(name, df, cf)
+    if not df is None:
+        _cpp_type_catcher(_save_file, obj, name, df, cf)
+    else:
+        _cpp_type_catcher(_save_file, obj, name)
+
+
+def load_file(obj, name, df=None, cf=None):
+    """Load from file.
+
+    This function will load into the symbolic object *obj* the data stored in the file called *name* using *df*
+    as data format and *cf* as compression format. The possible values for *df* and *cf* are listed in the
+    :py:class:`pyranha.data_format` and :py:class:`pyranha.compression` classes respectively.
+
+    If *df* and *cf* are both ``None``, then the data and compression formats are inferred from the filename (see
+    :py:func:`pyranha.save_file` for a detailed explanation and examples).
+
+    :param obj: the symbolic object into which the file's data will be loaded
+    :type obj: a supported symbolic type
+    :param name: the source file name
+    :type name: ``str``
+    :param df: the desired data format (see :py:class:`pyranha.data_format`)
+    :param cf: the desired compression format (see :py:class:`pyranha.compression`)
+
+    :raises: :exc:`TypeError` if the file name is not a string
+    :raises: :exc:`ValueError` if only one of *df* and *cf* is ``None``
+    :raises: any exception raised by the invoked low-level C++ function
+
+    """
+    from ._core import _load_file
+    _save_load_check_params(name, df, cf)
+    if not df is None:
+        _cpp_type_catcher(_load_file, obj, name, df, cf)
+    else:
+        _cpp_type_catcher(_load_file, obj, name)
 
 import atexit as _atexit
 _atexit.register(lambda: _cleanup())

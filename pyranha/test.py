@@ -67,6 +67,13 @@ def _s11n_load_save_test(self, p):
         shutil.rmtree(temp_dir)
     self.assertRaises(ValueError, lambda: save_file(p, "foo"))
     self.assertRaises(ValueError, lambda: load_file(p, "foo"))
+    # Input args checking.
+    self.assertRaisesRegexp(
+        TypeError, "the file name must be a string", lambda: save_file(p, 123))
+    self.assertRaisesRegexp(
+        ValueError, "the data format was provided but the compression format was not", lambda: save_file(p, "foo", df=1))
+    self.assertRaisesRegexp(
+        ValueError, "the compression format was provided but the data format was not", lambda: save_file(p, "foo", cf=1, df=None))
 
 # Helper to check that pickle roundtrips.
 
