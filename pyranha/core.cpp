@@ -87,6 +87,7 @@ PYRANHA_DECLARE_TT_NAMER(piranha::monomial, "monomial")
 PYRANHA_DECLARE_TT_NAMER(piranha::divisor, "divisor")
 }
 
+// A couple of utils to test exception translation.
 template <typename Exc, piranha::enable_if_t<std::is_constructible<Exc, std::string>::value, int> = 0>
 static inline void test_exception()
 {
@@ -97,6 +98,11 @@ template <typename Exc, piranha::enable_if_t<!std::is_constructible<Exc, std::st
 static inline void test_exception()
 {
     piranha_throw(Exc, );
+}
+
+// Small helper to retrieve the argument error exception from python.
+static inline void generate_argument_error(int)
+{
 }
 
 BOOST_PYTHON_MODULE(_core)
@@ -297,4 +303,6 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_test_bn_noverflow_error", &test_exception<boost::numeric::negative_overflow>);
     bp::def("_test_bn_bnc", &test_exception<boost::numeric::bad_numeric_cast>);
     bp::def("_test_inexact_division", &test_exception<piranha::math::inexact_division>);
+    // Helper to generate an argument error.
+    bp::def("_generate_argument_error", &generate_argument_error);
 }
