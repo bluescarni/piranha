@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include "detail/demangle.hpp"
 #include "exceptions.hpp"
 #include "is_key.hpp"
+#include "safe_cast.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -105,18 +106,17 @@ template <typename A>
 using get_helper_t_1 = decltype(std::declval<A &>().template get_helper<helper>());
 
 template <typename A>
-using get_helper_t_2 = decltype(std::declval<A &>().template get_helper<helper>(static_cast<void *const>(nullptr)));
+using get_helper_t_2 = decltype(std::declval<A &>().template get_helper<helper>(static_cast<void *>(nullptr)));
 
 template <typename Archive, typename T>
 using impl = std::
     integral_constant<bool,
-                      conjunction<std::is_same<is_detected_t<is_saving_t, uncvref_t<Archive>>, boost::mpl::bool_<true>>,
-                                  std::is_same<is_detected_t<is_loading_t, uncvref_t<Archive>>,
-                                               boost::mpl::bool_<false>>,
+                      conjunction<std::is_same<detected_t<is_saving_t, uncvref_t<Archive>>, boost::mpl::bool_<true>>,
+                                  std::is_same<detected_t<is_loading_t, uncvref_t<Archive>>, boost::mpl::bool_<false>>,
                                   // NOTE: add lvalue ref instead of using Archive &, so we avoid a hard
                                   // error if Archive is void.
-                                  std::is_same<is_detected_t<lshift_t, Archive, T>, addlref_t<Archive>>,
-                                  std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>,
+                                  std::is_same<detected_t<lshift_t, Archive, T>, addlref_t<Archive>>,
+                                  std::is_same<detected_t<and_t, Archive, T>, addlref_t<Archive>>,
                                   is_detected<save_binary_t, Archive, unref_t<T>>,
                                   is_detected<register_type_t, Archive, uncvref_t<T>>,
                                   // NOTE: the docs here mention that get_library_version() is supposed to
@@ -124,7 +124,7 @@ using impl = std::
                                   // return a type which is implicitly convertible to some unsigned int.
                                   // This seems to work and it should cover also the cases in which the
                                   // return type is a real unsigned int.
-                                  std::is_convertible<is_detected_t<get_library_version_t, Archive>, unsigned long long>
+                                  std::is_convertible<detected_t<get_library_version_t, Archive>, unsigned long long>
 #if BOOST_VERSION >= 105700
                                   //  Helper support is available since 1.57.
                                   ,
@@ -179,15 +179,15 @@ using delete_created_pointers_t = decltype(std::declval<A &>().delete_created_po
 template <typename Archive, typename T>
 using impl
     = std::integral_constant<bool,
-                             conjunction<std::is_same<is_detected_t<ibsa_impl::is_saving_t, uncvref_t<Archive>>,
+                             conjunction<std::is_same<detected_t<ibsa_impl::is_saving_t, uncvref_t<Archive>>,
                                                       boost::mpl::bool_<false>>,
-                                         std::is_same<is_detected_t<ibsa_impl::is_loading_t, uncvref_t<Archive>>,
+                                         std::is_same<detected_t<ibsa_impl::is_loading_t, uncvref_t<Archive>>,
                                                       boost::mpl::bool_<true>>,
-                                         std::is_same<is_detected_t<rshift_t, Archive, T>, addlref_t<Archive>>,
-                                         std::is_same<is_detected_t<and_t, Archive, T>, addlref_t<Archive>>,
+                                         std::is_same<detected_t<rshift_t, Archive, T>, addlref_t<Archive>>,
+                                         std::is_same<detected_t<and_t, Archive, T>, addlref_t<Archive>>,
                                          is_detected<load_binary_t, Archive, unref_t<T>>,
                                          is_detected<ibsa_impl::register_type_t, Archive, uncvref_t<T>>,
-                                         std::is_convertible<is_detected_t<ibsa_impl::get_library_version_t, Archive>,
+                                         std::is_convertible<detected_t<ibsa_impl::get_library_version_t, Archive>,
                                                              unsigned long long>,
                                          is_detected<reset_object_address_t, Archive, unref_t<T>>,
                                          is_detected<delete_created_pointers_t, Archive>
@@ -592,7 +592,6 @@ private:
 #include <algorithm>
 #include <array>
 #include <boost/iostreams/device/mapped_file.hpp>
-#include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstdint>
 #include <ios>
@@ -627,9 +626,7 @@ public:
     auto write(const typename Stream::char_type *p, std::size_t count)
         -> decltype(std::declval<Stream &>().write(p, std::streamsize(0)))
     {
-        // NOTE: we need numeric_cast because of circular dep problem if including safe_cast.
-        // NOTE: this can probably be again a safe_cast, once we sanitize safe_cast.
-        return static_cast<Stream *>(this)->write(p, boost::numeric_cast<std::streamsize>(count));
+        return static_cast<Stream *>(this)->write(p, safe_cast<std::streamsize>(count));
     }
 };
 
@@ -1399,7 +1396,7 @@ inline void load_file_msgpack_compress_impl(T &x, const std::string &filename, m
     in.push(DecompressionFilter{});
     in.push(ifile);
     std::copy(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>(), std::back_inserter(vchar));
-    auto oh = msgpack::unpack(vchar.data(), boost::numeric_cast<std::size_t>(vchar.size()));
+    auto oh = msgpack::unpack(vchar.data(), safe_cast<std::size_t>(vchar.size()));
     msgpack_convert(x, oh.get(), mf);
 }
 
@@ -1474,7 +1471,7 @@ inline void load_file_msgpack_impl(T &x, const std::string &filename, data_forma
             if (unlikely(!mmap->is_open())) {
                 piranha_throw(std::runtime_error, "file '" + filename + "' could not be opened for loading");
             }
-            auto oh = msgpack::unpack(mmap->const_data(), boost::numeric_cast<std::size_t>(mmap->size()));
+            auto oh = msgpack::unpack(mmap->const_data(), safe_cast<std::size_t>(mmap->size()));
             msgpack_convert(x, oh.get(), mf);
         }
     }
@@ -1563,7 +1560,7 @@ inline std::pair<compression, data_format> get_cdf_from_filename(std::string fil
  *   is not available on the host platform.
  * @throws std::runtime_error in case the file cannot be opened for writing.
  * @throws unspecified any exception thrown by:
- * - <tt>boost::numeric_cast()</tt>,
+ * - piranha::safe_cast(),
  * - the invoked low-level serialization function,
  * - the public interface of the Boost iostreams library.
  */
@@ -1635,7 +1632,7 @@ inline void save_file(const T &x, const std::string &filename)
  *   is not available on the host platform.
  * @throws std::runtime_error in case the file cannot be opened for reading.
  * @throws unspecified any exception thrown by:
- * - <tt>boost::numeric_cast()</tt>,
+ * - piranha::safe_cast(),
  * - the invoked low-level serialization function,
  * - the \p new operator,
  * - the public interface of the Boost iostreams library.
@@ -1738,8 +1735,7 @@ using boost_load_vector_enabler = enable_if_t<conjunction<has_boost_load<Archive
 template <typename Stream, typename It, typename Size>
 inline void msgpack_pack_range(msgpack::packer<Stream> &p, It begin, It end, Size s, msgpack_format f)
 {
-    // NOTE: replace with safe_cast.
-    p.pack_array(boost::numeric_cast<std::uint32_t>(s));
+    p.pack_array(safe_cast<std::uint32_t>(s));
     for (; begin != end; ++begin) {
         msgpack_pack(p, *begin, f);
     }
@@ -1758,28 +1754,22 @@ inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format
     // First extract a vector of objects from o.
     PIRANHA_MAYBE_TLS std::vector<msgpack::object> tmp_obj;
     o.convert(tmp_obj);
-    // NOTE: replace with safe_cast.
-    v.resize(boost::numeric_cast<decltype(v.size())>(tmp_obj.size()));
+    v.resize(safe_cast<decltype(v.size())>(tmp_obj.size()));
     for (decltype(v.size()) i = 0; i < v.size(); ++i) {
         piranha::msgpack_convert(v[i], tmp_obj[static_cast<decltype(v.size())>(i)], f);
     }
 }
 
-// NOTE: fix safe_cast detection - tag numeric_cast.
 template <typename Stream, typename V, typename T = void>
 using msgpack_pack_vector_enabler
-    = enable_if_t<conjunction<is_msgpack_stream<Stream>,
-                              has_msgpack_pack<Stream,
-                                               typename V::
-                                                   value_type> /*,has_safe_cast<std::uint32_t,typename V::size_type>*/>::
-                      value,
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename V::value_type>,
+                              has_safe_cast<std::uint32_t, typename V::size_type>>::value,
                   T>;
 
 template <typename V, typename T = void>
 using msgpack_convert_array_enabler
-    = enable_if_t<conjunction<
-                      /*has_safe_cast<typename V::size_type, typename std::vector<msgpack::object>::size_type>,*/
-                      has_msgpack_convert<typename V::value_type>>::value,
+    = enable_if_t<conjunction<has_safe_cast<typename V::size_type, typename std::vector<msgpack::object>::size_type>,
+                              has_msgpack_convert<typename V::value_type>>::value,
                   T>;
 
 #endif

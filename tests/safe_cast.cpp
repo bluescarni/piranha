@@ -31,18 +31,21 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE safe_cast_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/fusion/algorithm.hpp>
-#include <boost/fusion/include/algorithm.hpp>
-#include <boost/fusion/include/sequence.hpp>
-#include <boost/fusion/sequence.hpp>
-#include <climits>
+#include <boost/algorithm/string/predicate.hpp>
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 
 #include "../src/config.hpp"
 #include "../src/init.hpp"
+#include "../src/type_traits.hpp"
+
+using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,
+                             unsigned long, long long, unsigned long long>;
+
+using fp_types = std::tuple<float, double, long double>;
 
 struct foo {
 };
@@ -54,10 +57,13 @@ struct foo_nc {
 
 struct conv1 {
 };
+
 struct conv2 {
 };
+
 struct conv3 {
 };
+
 struct conv4 {
 };
 
@@ -66,123 +72,163 @@ namespace piranha
 
 // Good specialisation.
 template <>
-struct safe_cast_impl<conv2, conv1, void> {
+struct safe_cast_impl<conv2, conv1> {
     conv2 operator()(const conv1 &) const;
 };
 
 // Bad specialisation.
 template <>
-struct safe_cast_impl<conv3, conv1, void> {
+struct safe_cast_impl<conv3, conv1> {
     int operator()(const conv1 &) const;
 };
 
 // Bad specialisation.
 template <>
-struct safe_cast_impl<conv4, conv1, void> {
+struct safe_cast_impl<conv4, conv1> {
     conv4 operator()(conv1 &) const;
 };
 }
 
-using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
-                                      std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(PIRANHA_UINT128_T)
-                                      ,
-                                      std::integral_constant<int, 64>
-#endif
-                                      >;
-
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(safe_cast_main_test)
-{
-    init();
-    BOOST_CHECK((has_safe_cast<int, int>::value));
-    BOOST_CHECK((has_safe_cast<int, char>::value));
-    BOOST_CHECK((has_safe_cast<char, unsigned long long>::value));
-    BOOST_CHECK((!has_safe_cast<int, std::string>::value));
-    BOOST_CHECK((has_safe_cast<std::string, std::string>::value));
-    BOOST_CHECK((has_safe_cast<foo, foo>::value));
-    BOOST_CHECK((!has_safe_cast<foo_nc, foo_nc>::value));
-    BOOST_CHECK((!has_safe_cast<double, int>::value));
-    // Check with custom specialisations.
-    BOOST_CHECK((has_safe_cast<conv2, conv1>::value));
-    BOOST_CHECK((!has_safe_cast<conv3, conv1>::value));
-    BOOST_CHECK((!has_safe_cast<conv4, conv1>::value));
-    // Some simple tests.
-    BOOST_CHECK_EQUAL(safe_cast<int>(4l), 4);
-    BOOST_CHECK_EQUAL(safe_cast<unsigned>(4l), 4u);
-    BOOST_CHECK_EQUAL(safe_cast<short>(-4ll), -4);
-    // Out of bounds.
-    BOOST_CHECK_THROW(safe_cast<unsigned>(-1), std::invalid_argument);
-    if (CHAR_BIT == 8) {
-        BOOST_CHECK_THROW(safe_cast<unsigned char>(300), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<unsigned char>(300ull), std::invalid_argument);
-    }
-}
-
-struct safe_cast_int_float_tester {
+struct int_checker {
     template <typename T>
-    void operator()(const T &)
-    {
-        typedef mp_integer<T::value> int_type;
-        // Check casts between integral types.
-        BOOST_CHECK((has_safe_cast<int_type, int>::value));
-        BOOST_CHECK((has_safe_cast<int_type, unsigned long>::value));
-        BOOST_CHECK((has_safe_cast<char, int_type>::value));
-        BOOST_CHECK((has_safe_cast<long long, int_type>::value));
-        BOOST_CHECK_EQUAL(safe_cast<int_type>(3u), 3u);
-        BOOST_CHECK_EQUAL(safe_cast<int_type>(-3l), -3);
-        BOOST_CHECK_EQUAL(safe_cast<unsigned>(int_type(3)), 3u);
-        BOOST_CHECK_EQUAL(safe_cast<short>(int_type(-3)), -3);
-        BOOST_CHECK_THROW(safe_cast<int>(int_type{std::numeric_limits<int>::max()} + 1), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<int>(int_type{std::numeric_limits<int>::min()} - 1), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<unsigned>(int_type{std::numeric_limits<unsigned>::max()} + 1),
-                          std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<unsigned>(int_type{-1}), std::invalid_argument);
-        // Float to mp_integer.
-        BOOST_CHECK((has_safe_cast<int_type, float>::value));
-        BOOST_CHECK((has_safe_cast<int_type, double>::value));
-        BOOST_CHECK((!has_safe_cast<float, int_type>::value));
-        BOOST_CHECK((!has_safe_cast<double, int_type>::value));
-        BOOST_CHECK_EQUAL(safe_cast<int_type>(3.), 3);
-        BOOST_CHECK_EQUAL(safe_cast<int_type>(-3.f), -3);
-        BOOST_CHECK_THROW(safe_cast<int_type>(1. / std::numeric_limits<double>::radix), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<int_type>(1.f / std::numeric_limits<float>::radix), std::invalid_argument);
-        BOOST_CHECK_THROW(
-            safe_cast<int_type>((1. + std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),
-            std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<int_type>(-1. / std::numeric_limits<double>::radix), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<int_type>(-1.f / std::numeric_limits<float>::radix), std::invalid_argument);
-        BOOST_CHECK_THROW(
-            safe_cast<int_type>(-(1. + std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),
-            std::invalid_argument);
-        if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
-            BOOST_CHECK_THROW(safe_cast<int_type>(std::numeric_limits<double>::infinity()), std::invalid_argument);
-            BOOST_CHECK_THROW(safe_cast<int_type>(std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
+    struct runner {
+        template <typename U>
+        void operator()(const U &) const
+        {
+            BOOST_CHECK((has_safe_cast<T, U>::value));
+            BOOST_CHECK((has_safe_cast<T &, const U>::value));
+            BOOST_CHECK((has_safe_cast<const T &, U &&>::value));
+            BOOST_CHECK((has_safe_cast<T &, U &&>::value));
+            BOOST_CHECK((!has_safe_cast<void, U>::value));
+            BOOST_CHECK_EQUAL(safe_cast<T>(U(12)), T(12));
+            if (std::is_unsigned<T>::value && std::is_signed<U>::value) {
+                BOOST_CHECK_EXCEPTION(safe_cast<T>(U(-1)), safe_cast_failure, [](const safe_cast_failure &e) {
+                    return boost::contains(e.what(), "cannot be converted");
+                });
+                BOOST_CHECK_EXCEPTION(safe_cast<T &>(U(-10)), safe_cast_failure, [](const safe_cast_failure &e) {
+                    return boost::contains(e.what(), "the integral value");
+                });
+                BOOST_CHECK_EXCEPTION(
+                    safe_cast<const T>(U(-1)), std::invalid_argument,
+                    [](const std::invalid_argument &e) { return boost::contains(e.what(), "the integral value"); });
+                BOOST_CHECK_EXCEPTION(
+                    safe_cast<T &&>(U(-10)), std::invalid_argument,
+                    [](const std::invalid_argument &e) { return boost::contains(e.what(), "cannot be converted"); });
+            }
+            if (std::is_signed<T>::value == std::is_signed<U>::value
+                && std::numeric_limits<T>::max() < std::numeric_limits<U>::max()) {
+                BOOST_CHECK_EXCEPTION(
+                    safe_cast<T>(std::numeric_limits<U>::max()), safe_cast_failure,
+                    [](const safe_cast_failure &e) { return boost::contains(e.what(), "cannot be converted"); });
+            }
         }
+    };
+    template <typename T>
+    void operator()(const T &) const
+    {
+        BOOST_CHECK((!has_safe_cast<T, void>::value));
+        BOOST_CHECK((!has_safe_cast<T, std::string>::value));
+        BOOST_CHECK((!has_safe_cast<std::string, T>::value));
+        tuple_for_each(int_types{}, runner<T>{});
     }
 };
 
-BOOST_AUTO_TEST_CASE(safe_cast_int_float_test)
-{
-    boost::mpl::for_each<size_types>(safe_cast_int_float_tester());
-    // Casts from floating point to C++ ints.
-    BOOST_CHECK((has_safe_cast<int, double>::value));
-    BOOST_CHECK((has_safe_cast<char, float>::value));
-    BOOST_CHECK((!has_safe_cast<double, int>::value));
-    BOOST_CHECK((!has_safe_cast<float, char>::value));
-    BOOST_CHECK_EQUAL(safe_cast<int>(2.), 2);
-    BOOST_CHECK_EQUAL(safe_cast<int>(-2.), -2);
-    BOOST_CHECK_THROW(safe_cast<int>(1. / std::numeric_limits<double>::radix), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(1.f / std::numeric_limits<float>::radix), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>((1. + std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),
-                      std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(-1. / std::numeric_limits<double>::radix), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(-1.f / std::numeric_limits<float>::radix), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(-(1. + std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),
-                      std::invalid_argument);
-    if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
-        BOOST_CHECK_THROW(safe_cast<int>(std::numeric_limits<double>::infinity()), std::invalid_argument);
-        BOOST_CHECK_THROW(safe_cast<long>(std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
+struct fp_int_checker {
+    template <typename T>
+    struct runner {
+        template <typename U>
+        void operator()(const U &) const
+        {
+            BOOST_CHECK((has_safe_cast<T, U>::value));
+            BOOST_CHECK((has_safe_cast<T &, const U>::value));
+            BOOST_CHECK((has_safe_cast<T &&, const U &>::value));
+            BOOST_CHECK((has_safe_cast<const T &&, U &>::value));
+            BOOST_CHECK((!has_safe_cast<U, T>::value));
+            BOOST_CHECK((!has_safe_cast<U &, T &&>::value));
+            BOOST_CHECK((!has_safe_cast<const U &, T &&>::value));
+            BOOST_CHECK((!has_safe_cast<const U, const T>::value));
+            // This should work with any fp type.
+            BOOST_CHECK_EQUAL((safe_cast<T>(U(23))), U(23));
+            BOOST_CHECK_EQUAL((safe_cast<T const>(U(23))), U(23));
+            BOOST_CHECK_EQUAL((safe_cast<T &>(U(23))), U(23));
+            BOOST_CHECK_EQUAL((safe_cast<T &&>(U(23))), U(23));
+            BOOST_CHECK_EXCEPTION(safe_cast<T>(U(1.5)), safe_cast_failure, [](const safe_cast_failure &e) {
+                return boost::contains(e.what(), "fractional part");
+            });
+            if (std::is_unsigned<T>::value) {
+                BOOST_CHECK_EXCEPTION(safe_cast<T>(U(-23)), safe_cast_failure, [](const safe_cast_failure &e) {
+                    return boost::contains(e.what(), "cannot be converted");
+                });
+            }
+            if (std::numeric_limits<U>::is_iec559) {
+                BOOST_CHECK_EXCEPTION(
+                    safe_cast<T>(std::numeric_limits<U>::quiet_NaN()), safe_cast_failure,
+                    [](const safe_cast_failure &e) { return boost::contains(e.what(), "non-finite"); });
+                BOOST_CHECK_EXCEPTION(
+                    safe_cast<T>(std::numeric_limits<U>::infinity()), safe_cast_failure,
+                    [](const safe_cast_failure &e) { return boost::contains(e.what(), "non-finite"); });
+            }
+#if defined(PIRANHA_COMPILER_IS_GCC)
+// GCC complains about int to float conversions here.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#endif
+            if (std::numeric_limits<U>::max() > std::numeric_limits<T>::max()) {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
+                BOOST_CHECK_EXCEPTION(
+                    safe_cast<T>(std::numeric_limits<U>::max()), safe_cast_failure,
+                    [](const safe_cast_failure &e) { return boost::contains(e.what(), "cannot be converted"); });
+            }
+        }
+    };
+    template <typename T>
+    void operator()(const T &) const
+    {
+        tuple_for_each(fp_types{}, runner<T>{});
     }
+};
+
+BOOST_AUTO_TEST_CASE(safe_cast_test_00)
+{
+    init();
+    // Same type.
+    BOOST_CHECK((has_safe_cast<std::string, std::string>::value));
+    BOOST_CHECK((has_safe_cast<std::string, const std::string>::value));
+    BOOST_CHECK((has_safe_cast<std::string &, const std::string>::value));
+    BOOST_CHECK((has_safe_cast<const std::string &, std::string &&>::value));
+    BOOST_CHECK((has_safe_cast<foo, foo>::value));
+    BOOST_CHECK_EQUAL(safe_cast<std::string>(std::string("hello")), "hello");
+    BOOST_CHECK_EQUAL(safe_cast<const std::string>(std::string("hello")), "hello");
+    BOOST_CHECK_EQUAL(safe_cast<const std::string &>(std::string("hello")), "hello");
+
+    // Check with custom specialisations.
+    BOOST_CHECK((has_safe_cast<conv2, conv1>::value));
+    BOOST_CHECK((has_safe_cast<conv2 &, const conv1>::value));
+    BOOST_CHECK((has_safe_cast<conv2 &, const conv1 &>::value));
+    BOOST_CHECK((!has_safe_cast<conv3, conv1>::value));
+    BOOST_CHECK((!has_safe_cast<conv3 &, const conv1>::value));
+    BOOST_CHECK((!has_safe_cast<conv3, conv1 &&>::value));
+    BOOST_CHECK((!has_safe_cast<conv4, conv1>::value));
+    BOOST_CHECK((!has_safe_cast<conv4, conv1 &>::value));
+    BOOST_CHECK((!has_safe_cast<const conv4, const conv1 &>::value));
+
+    // Missing copy/move ctor.
+    BOOST_CHECK((!has_safe_cast<foo_nc, foo_nc>::value));
+    BOOST_CHECK((!has_safe_cast<foo_nc, const foo_nc>::value));
+    BOOST_CHECK((!has_safe_cast<foo_nc &, const foo_nc &>::value));
+    BOOST_CHECK((!has_safe_cast<const foo_nc &, const foo_nc &>::value));
+
+    // void test.
+    BOOST_CHECK((!has_safe_cast<void, void>::value));
+
+    // Integral conversions.
+    tuple_for_each(int_types{}, int_checker{});
+
+    // FP conversions.
+    tuple_for_each(int_types{}, fp_int_checker{});
 }

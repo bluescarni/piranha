@@ -26,7 +26,8 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/detail/atomic_utils.hpp"
+#include "../src/detail/atomic_flag_array.hpp"
+#include "../src/detail/atomic_lock_guard.hpp"
 
 #define BOOST_TEST_MODULE atomic_utils_test
 #include <boost/test/unit_test.hpp>

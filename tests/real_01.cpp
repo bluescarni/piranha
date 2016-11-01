@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 
 #define FUSION_MAX_VECTOR_SIZE 20
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
@@ -2131,15 +2132,23 @@ BOOST_AUTO_TEST_CASE(real_literal_test)
 BOOST_AUTO_TEST_CASE(real_safe_cast_test)
 {
     BOOST_CHECK((has_safe_cast<int, real>::value));
+    BOOST_CHECK((has_safe_cast<int &, real &&>::value));
+    BOOST_CHECK((has_safe_cast<const int &, const real &>::value));
+    BOOST_CHECK((has_safe_cast<const int, const real>::value));
+    BOOST_CHECK((!has_safe_cast<void, real>::value));
     BOOST_CHECK((has_safe_cast<unsigned, real>::value));
     BOOST_CHECK((has_safe_cast<integer, real>::value));
     BOOST_CHECK((has_safe_cast<rational, real>::value));
+    BOOST_CHECK((has_safe_cast<rational &, real>::value));
+    BOOST_CHECK((has_safe_cast<rational &&, const real>::value));
+    BOOST_CHECK((has_safe_cast<const rational &, const real &>::value));
     BOOST_CHECK((!has_safe_cast<double, real>::value));
     BOOST_CHECK((!has_safe_cast<float, real>::value));
     BOOST_CHECK((!has_safe_cast<real, int>::value));
     BOOST_CHECK((!has_safe_cast<real, float>::value));
     BOOST_CHECK((!has_safe_cast<real, integer>::value));
     BOOST_CHECK((!has_safe_cast<real, rational>::value));
+    BOOST_CHECK((!has_safe_cast<real, void>::value));
     BOOST_CHECK_EQUAL(safe_cast<int>(3_r), 3);
     BOOST_CHECK_EQUAL(safe_cast<int>(-3_r), -3);
     BOOST_CHECK_EQUAL(safe_cast<unsigned>(4_r), 4u);
@@ -2150,23 +2159,32 @@ BOOST_AUTO_TEST_CASE(real_safe_cast_test)
     BOOST_CHECK_EQUAL(safe_cast<rational>(5_r / 2), 5_q / 2);
     BOOST_CHECK_EQUAL(safe_cast<rational>(-5_r / 2), -5_q / 2);
     // Various types of failures.
-    BOOST_CHECK_THROW(safe_cast<int>(3.1_r), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(-3.1_r), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(real{"inf"}), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(real{"nan"}), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(real{std::numeric_limits<int>::max()} * 2), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<int>(real{std::numeric_limits<int>::min()} * 2), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<unsigned>(3.1_r), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<unsigned>(-3_r), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<unsigned>(real{"inf"}), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<unsigned>(real{"nan"}), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<unsigned>(real{std::numeric_limits<unsigned>::max()} * 2), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<integer>(3.1_r), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<integer>(-3.1_r), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<integer>(real{"inf"}), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<integer>(real{"nan"}), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<rational>(real{"inf"}), std::invalid_argument);
-    BOOST_CHECK_THROW(safe_cast<rational>(real{"nan"}), std::invalid_argument);
+    BOOST_CHECK_EXCEPTION(safe_cast<int>(3.1_r), safe_cast_failure, [](const safe_cast_failure &e) {
+        return boost::contains(e.what(), "as the input real does not represent a finite integral value");
+    });
+    BOOST_CHECK_THROW(safe_cast<int>(-3.1_r), safe_cast_failure);
+    BOOST_CHECK_EXCEPTION(safe_cast<int>(real{"inf"}), safe_cast_failure, [](const safe_cast_failure &e) {
+        return boost::contains(e.what(), "as the input real does not represent a finite integral value");
+    });
+    BOOST_CHECK_THROW(safe_cast<int>(real{"nan"}), safe_cast_failure);
+    BOOST_CHECK_EXCEPTION(safe_cast<int>(real{std::numeric_limits<int>::max()} * 2), safe_cast_failure,
+                          [](const safe_cast_failure &e) {
+                              return boost::contains(e.what(), "as the conversion would not preserve the value");
+                          });
+    BOOST_CHECK_THROW(safe_cast<int>(real{std::numeric_limits<int>::min()} * 2), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<unsigned>(3.1_r), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<unsigned>(-3_r), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<unsigned>(real{"inf"}), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<unsigned>(real{"nan"}), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<unsigned>(real{std::numeric_limits<unsigned>::max()} * 2), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<integer>(3.1_r), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<integer>(-3.1_r), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<integer>(real{"inf"}), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<integer>(real{"nan"}), safe_cast_failure);
+    BOOST_CHECK_THROW(safe_cast<rational>(real{"inf"}), safe_cast_failure);
+    BOOST_CHECK_EXCEPTION(safe_cast<rational>(real{"nan"}), safe_cast_failure, [](const safe_cast_failure &e) {
+        return boost::contains(e.what(), "as the conversion would not preserve the value");
+    });
 }
 
 BOOST_AUTO_TEST_CASE(real_serialization_test)

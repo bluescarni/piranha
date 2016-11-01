@@ -1,6 +1,42 @@
 Changelog
 =========
 
+v0.6 (2016-11-01)
+-----------------
+
+New
+~~~
+
+- New serialization API. [Francesco Biscani]
+
+Changes
+~~~~~~~
+
+- Thread binding is now disabled by default, and it can be enabled at
+  runtime. [Francesco Biscani]
+
+- The thread pool does not use anymore the main thread id in order to
+  determine the suggested number of threads to use for a task. Rather,
+  it checks whether the calling thread belongs to the pool. [Francesco
+  Biscani]
+
+- Reduce the usage of boost::numeric_cast() in favour of
+  piranha::safe_cast(). [Francesco Biscani]
+
+- Change series multiplication and division to behave like coefficient
+  mult/div in case of zero operands. [Francesco Biscani]
+
+Fix
+~~~
+
+- Simplify the exception hierarchy by removing the base_exception class
+  in favour of inheriting directly from std exceptions. [Francesco
+  Biscani]
+
+- Various safe_cast() improvements: remove dependency from mp_integer,
+  introduce specific exception to signal failure, misc implementation
+  and doc improvements. [Francesco Biscani]
+
 v0.5 (2016-10-05)
 -----------------
 

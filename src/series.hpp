@@ -143,7 +143,7 @@ template <typename T>
 class is_series
 {
     static const bool implementation_defined
-        = std::is_base_of<detail::series_tag, T>::value && is_container_element<T>::value;
+        = conjunction<std::is_base_of<detail::series_tag, T>, is_container_element<T>>::value;
 
 public:
     /// Value of the type trait.
@@ -153,33 +153,25 @@ public:
 template <typename T>
 const bool is_series<T>::value;
 
-namespace detail
+// Implementation of the series_is_rebindable tt.
+inline namespace impl
 {
 
-// Implementation of the series_is_rebindable tt.
+template <typename T, typename Cf>
+using series_rebind_t = typename uncvref_t<T>::template rebind<uncvref_t<Cf>>;
+
+template <typename T, typename Cf>
+using series_rebind_cf_t = typename series_rebind_t<T, Cf>::term_type::cf_type;
+
 template <typename T, typename Cf, typename = void>
-struct series_is_rebindable_impl : detail::sfinae_types {
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-    using Td = typename std::decay<T>::type;
-    using Cfd = typename std::decay<Cf>::type;
-    template <typename T1>
-    using rebound_type = typename T1::template rebind<Cfd>;
-    template <typename T1,
-              typename std::enable_if<is_series<rebound_type<T1>>::value
-                                          && std::is_same<typename rebound_type<T1>::term_type::cf_type, Cfd>::value,
-                                      int>::type
-              = 0>
-    static rebound_type<T1> test(const T1 &);
-    static no test(...);
-#endif
-    // Value of the type trait.
-    static const bool value = !std::is_same<no, decltype(test(std::declval<Td>()))>::value;
+struct series_is_rebindable_impl {
+    static const bool value = conjunction<is_series<detected_t<series_rebind_t, T, Cf>>,
+                                          std::is_same<detected_t<series_rebind_cf_t, T, Cf>, uncvref_t<Cf>>>::value;
 };
 
 template <typename T, typename Cf>
-struct series_is_rebindable_impl<T, Cf,
-                                 typename std::enable_if<!is_cf<typename std::decay<Cf>::type>::value
-                                                         || !is_series<typename std::decay<T>::type>::value>::type> {
+struct series_is_rebindable_impl<T, Cf, enable_if_t<disjunction<negation<is_cf<uncvref_t<Cf>>>,
+                                                                negation<is_series<uncvref_t<T>>>>::value>> {
     static const bool value = false;
 };
 }
@@ -194,8 +186,9 @@ struct series_is_rebindable_impl<T, Cf,
  * - <tt>T::rebind<Cf></tt> is a series types,
  * - the coefficient type of <tt>T::rebind<Cf></tt> is \p Cf.
  *
- * The decay types of \p T and \p Cf are considered in this type trait. If \p T is not an instance of piranha::series
- * or \p Cf does not satisfy piranha::is_cf, then the value of the type trait will be \p false.
+ * \p T and \p Cf are considered after the removal of cv/reference qualifiers in this type trait.
+ * If \p T is not an instance of piranha::series or \p Cf does not satisfy piranha::is_cf, then the value of the type
+ * trait will be \p false.
  */
 // NOTE: the behaviour when T and Cf do not satisfy the requirements is to allow this type trait
 // to be used an all types. The trait is used in the metaprogramming of generic series arithmetics,
@@ -203,22 +196,24 @@ struct series_is_rebindable_impl<T, Cf,
 // class not fire static asserts when non-series arguments are substituted.
 template <typename T, typename Cf>
 struct series_is_rebindable {
+private:
+    static const bool implementation_defined = series_is_rebindable_impl<T, Cf>::value;
+
+public:
     /// Value of the type trait.
-    static const bool value = detail::series_is_rebindable_impl<T, Cf>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename Cf>
 const bool series_is_rebindable<T, Cf>::value;
 
-namespace detail
+inline namespace impl
 {
 
 // Implementation of the series_rebind alias, with SFINAE to soft-disable it in case
 // the series is not rebindable.
 template <typename T, typename Cf>
-using series_rebind_ =
-    typename std::enable_if<series_is_rebindable<T, Cf>::value,
-                            typename std::decay<T>::type::template rebind<typename std::decay<Cf>::type>>::type;
+using series_rebind_implementation = enable_if_t<series_is_rebindable<T, Cf>::value, series_rebind_t<T, Cf>>;
 }
 
 /// Rebind series.
@@ -228,7 +223,7 @@ using series_rebind_ =
  * also check that \p T and \p Cf satisfy the piranha::series_is_rebindable type traits.
  */
 template <typename T, typename Cf>
-using series_rebind = detail::series_rebind_<T, Cf>;
+using series_rebind = series_rebind_implementation<T, Cf>;
 
 /// Series recursion index.
 /**
@@ -303,8 +298,7 @@ namespace detail
 // Some notes on this machinery:
 // - this is only for determining the type of the result, but it does not guarantee that we can actually compute it.
 //   In general we should separate the algorithmic requirements from the determination of the type. Note that we still
-//   use
-//   the operators on the coefficients to determine the return type, but that's inevitable.
+//   use the operators on the coefficients to determine the return type, but that's inevitable.
 
 // Alias for getting the cf type from a series. Will generate a type error if S is not a series.
 // NOTE: the is_series check is an extra safe guard to really assert we are
@@ -492,8 +486,7 @@ struct binary_series_op_return_type<S1, S2, N,
  * The operators defined here, similarly to the builtin operators in C++, promote one or both operands to a common
  * type, if necessary, before actually performing the operation. The promotion rules are dependent on
  * the recursion indices and coefficient types of the series, and they rely on the series rebinding mechanism to promote
- * a series
- * as needed (see piranha::series_is_rebindable and piranha::series_recursion_index).
+ * a series as needed (see piranha::series_is_rebindable and piranha::series_recursion_index).
  *
  * These are the scenarios handled by the type promotion mechanism:
  * - the two arguments are of the same series type and the operator on the coefficient type of the series results in the
@@ -844,18 +837,19 @@ class series_operators
     static series_common_type<T, U, 3> dispatch_binary_div(T &&x, U &&y)
     {
         using ret_type = series_common_type<T, U, 3>;
-        // NOTE: is_zero() is always available for series.
-        if (math::is_zero(y)) {
-            piranha_throw(zero_division_error, "zero denominator in series division");
-        }
-        if (math::is_zero(x)) {
-            return ret_type{};
-        }
+        using term_type = typename ret_type::term_type;
+        using cf_type = typename term_type::cf_type;
+        using key_type = typename term_type::key_type;
         if (!y.is_single_coefficient()) {
-            piranha_throw(std::invalid_argument, "divisor in series division does not "
-                                                 "consist of a single coefficient");
+            piranha_throw(std::invalid_argument, "divisor in series division does not consist of a single coefficient");
         }
-        return x / y._container().begin()->m_cf;
+        const auto y_cf = y.empty() ? cf_type(0) : y._container().begin()->m_cf;
+        if (x.empty()) {
+            ret_type retval;
+            retval.insert(term_type{cf_type{0} / y_cf, key_type{retval.get_symbol_set()}});
+            return retval;
+        }
+        return x / y_cf;
     }
     // Same recursion, first coefficient wins.
     template <typename T, typename U,
@@ -901,30 +895,31 @@ class series_operators
         return dispatch_binary_div(std::move(x1), std::move(y1));
     }
     // The implementation of these two cases 4 and 5 is different from the other operations, as we cannot promote to a
-    // common
-    // type (true series division is not implemented).
+    // common type (true series division is not implemented).
     // NOTE: the use of the old syntax for the enable_if with nullptr is because of a likely GCC bug:
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59366
     // In real.hpp, there are a few uses of operator/= on reals (e.g., in binary_div) *before* the is_zero_impl
     // specialisation for real is declared. These operators are immediately instantiated when parsed because they are
-    // not
-    // templated. During the overload resolution of operator/=, the operator defined in this class is considered - which
-    // is wrong, as the operators here should be found only via ADL and this class is in no way associated to real. What
-    // happens
-    // then is that is_zero_impl is instantiated for a real type before the real specialisation is seen, and GCC errors
-    // out.
-    // I *think* the nullptr syntax works because the bso_type enable_if disables the function before has_is_zero is
-    // encountered,
-    // or maybe because it does not participate in template deduction.
+    // not templated. During the overload resolution of operator/=, the operator defined in this class is considered -
+    // which is wrong, as the operators here should be found only via ADL and this class is in no way associated to
+    // real. What happens then is that is_zero_impl is instantiated for a real type before the real specialisation is
+    // seen, and GCC errors out. I *think* the nullptr syntax works because the bso_type enable_if disables the function
+    // before has_is_zero is encountered, or maybe because it does not participate in template deduction.
     template <typename T, typename U, typename std::enable_if<bso_type<T, U, 3>::value == 4u, int>::type = 0>
     static series_common_type<T, U, 3>
     dispatch_binary_div(T &&x, U &&y,
                         typename std::enable_if<has_is_zero<typename std::decay<U>::type>::value>::type * = nullptr)
     {
-        if (unlikely(x.size() == 0u) && math::is_zero(y)) {
-            piranha_throw(zero_division_error, "cannot divide empty series by zero");
-        }
         using ret_type = series_common_type<T, U, 3>;
+        if (x.empty()) {
+            // Special case: if x is empty, then we will just insert a single term consisting of 0 / y.
+            using term_type = typename ret_type::term_type;
+            using cf_type = typename term_type::cf_type;
+            using key_type = typename term_type::key_type;
+            ret_type retval;
+            retval.insert(term_type{cf_type{0} / y, key_type{retval.get_symbol_set()}});
+            return retval;
+        }
         static_assert(std::is_same<typename std::decay<T>::type, ret_type>::value, "Invalid type.");
         // Create a copy of x and work on it. This is always possible.
         ret_type retval(std::forward<T>(x));
@@ -1186,10 +1181,9 @@ public:
      *
      * @return <tt>x / y</tt>.
      *
-     * @throws piranha::zero_division_error if \p x is and empty series and \p y is zero.
      * @throws unspecified any exception thrown by:
-     * - any invoked series constructor,
-     * - piranha::math::is_zero(),
+     * - any invoked series, coefficient, term and key constructor,
+     * - piranha::series::insert(),
      * - piranha::hash_set::erase(),
      * - the division operator on the coefficient type of the result.
      */
@@ -1948,7 +1942,7 @@ private:
     using pow_m_type = decltype(std::declval<const U &>() * std::declval<const U &>());
     // Common checks on the exponent.
     template <typename T>
-    using pow_expo_checks = typename std::enable_if<has_is_zero<T>::value && has_safe_cast<integer, T>::value>::type;
+    using pow_expo_checks = std::integral_constant<bool, conjunction<has_is_zero<T>, has_safe_cast<integer, T>>::value>;
     // Hashing utils for series.
     struct series_hasher {
         template <typename T>
@@ -1982,38 +1976,36 @@ private:
     };
     // Case 0: the exponentiation of the coefficient does not change its type.
     template <typename T, typename U>
-    struct
-        pow_ret_type_<T, U,
-                      typename std::
-                          enable_if<std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>::value
-                                    && detail::true_tt<pow_expo_checks<T>>::value &&
-                                    // Check we can construct the return value from the type stored in the cache.
-                                    std::is_constructible<U, pow_m_type<U>>::value &&
-                                    // Check that when we multiply the type stored in the cache by *this, we get again
-                                    // the type stored in the cache.
-                                    std::is_same<pow_m_type<U>, decltype(std::declval<const pow_m_type<U> &>()
-                                                                         * std::declval<const U &>())>::value
-                                    &&
-                                    // Check we can use is_identical.
-                                    std::is_same<is_identical_enabler<U>, int>::value>::type> {
+    struct pow_ret_type_<T, U, enable_if_t<conjunction<std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>,
+                                                       pow_expo_checks<T>,
+                                                       // Check we can construct the return value from the type stored
+                                                       // in the cache.
+                                                       std::is_constructible<U, pow_m_type<U>>,
+                                                       // Check that when we multiply the type stored in the cache by
+                                                       // *this, we get again the type stored in the cache.
+                                                       std::is_same<pow_m_type<U>,
+                                                                    decltype(std::declval<const pow_m_type<U> &>()
+                                                                             * std::declval<const U &>())>,
+                                                       // Check we can use is_identical.
+                                                       std::is_same<is_identical_enabler<U>, int>>::value>> {
         using type = U;
     };
     // Case 1: the exponentiation of the coefficient does change its type.
     template <typename T, typename U>
-    struct
-        pow_ret_type_<T, U,
-                      typename std::
-                          enable_if<!std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>::value
-                                    && detail::true_tt<pow_expo_checks<T>>::value &&
-                                    // Check we can construct the return value from the type stored in the cache.
-                                    std::is_constructible<series_rebind<U, pow_cf_type<T, U>>, pow_m_type<U>>::value &&
-                                    // Check that when we multiply the type stored in the cache by *this, we get again
-                                    // the type stored in the cache.
-                                    std::is_same<pow_m_type<U>, decltype(std::declval<const pow_m_type<U> &>()
-                                                                         * std::declval<const U &>())>::value
-                                    &&
-                                    // Check we can use is_identical.
-                                    std::is_same<is_identical_enabler<U>, int>::value>::type> {
+    struct pow_ret_type_<T, U, enable_if_t<conjunction<negation<std::is_same<pow_cf_type<T, U>,
+                                                                             typename U::term_type::cf_type>>,
+                                                       pow_expo_checks<T>,
+                                                       // Check we can construct the return value from the type stored
+                                                       // in the cache.
+                                                       std::is_constructible<series_rebind<U, pow_cf_type<T, U>>,
+                                                                             pow_m_type<U>>,
+                                                       // Check that when we multiply the type stored in the cache by
+                                                       // *this, we get again the type stored in the cache.
+                                                       std::is_same<pow_m_type<U>,
+                                                                    decltype(std::declval<const pow_m_type<U> &>()
+                                                                             * std::declval<const U &>())>,
+                                                       // Check we can use is_identical.
+                                                       std::is_same<is_identical_enabler<U>, int>>::value>> {
         using type = series_rebind<U, pow_cf_type<T, U>>;
     };
     // Final typedef.
@@ -2025,7 +2017,7 @@ public:
     /**
      * Used to represent the number of terms in the series. Equivalent to piranha::hash_set::size_type.
      */
-    typedef typename container_type::size_type size_type;
+    using size_type = typename container_type::size_type;
     /// Const iterator.
     /**
      * Iterator type that can be used to iterate over the terms of the series.
@@ -2038,7 +2030,7 @@ public:
      *
      * @see piranha::series::begin() and piranha::series::end().
      */
-    typedef const_iterator_impl const_iterator;
+    using const_iterator = const_iterator_impl;
     /// Defaulted default constructor.
     series() = default;
     /// Defaulted copy constructor.
@@ -2314,20 +2306,17 @@ public:
      *
      * Return \p this raised to the <tt>x</tt>-th power. The type of the result is either the calling series type,
      * or the calling series type rebound to the type resulting from the exponentiation of the coefficient of the
-     * calling
-     * type to the power of \p x. The exponentiation algorithm proceeds as follows:
+     * calling type to the power of \p x. The exponentiation algorithm proceeds as follows:
      * - if the series is single-coefficient, the result is a single-coefficient series in which the coefficient
      *   is the original coefficient (or zero, if the calling series is empty) raised to the power of \p x;
      * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
      *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised
-     * to
-     *   the power of zero is 1 - including empty series);
+     *   to the power of zero is 1 - including empty series);
      * - if \p x represents a non-negative integral value, the return value is constructed via repeated multiplications;
      * - otherwise, an exception will be raised.
      *
      * An internal thread-safe cache of natural powers of series is maintained in order to improve performance during,
-     * e.g., substitution operations.
-     * This cache can be cleared with clear_pow_cache().
+     * e.g., substitution operations. This cache can be cleared with clear_pow_cache().
      *
      * @param[in] x exponent.
      *
@@ -2382,7 +2371,7 @@ public:
         integer n;
         try {
             n = safe_cast<integer>(x);
-        } catch (const std::invalid_argument &) {
+        } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument, "invalid argument for series exponentiation: non-integral value");
         }
         if (n.sign() < 0) {
@@ -3050,14 +3039,16 @@ struct is_zero_impl<Series, typename std::enable_if<is_series<Series>::value>::t
 };
 }
 
-namespace detail
+inline namespace impl
 {
 
 // Enabler for the pow() specialisation for series.
 template <typename Series, typename T>
-using pow_series_enabler =
-    typename std::enable_if<is_series<Series>::value && true_tt<decltype(std::declval<const Series &>().pow(
-                                                            std::declval<const T &>()))>::value>::type;
+using series_pow_member_t = decltype(std::declval<const Series &>().pow(std::declval<const T &>()));
+
+template <typename Series, typename T>
+using pow_series_enabler
+    = enable_if_t<conjunction<is_series<Series>, is_detected<series_pow_member_t, Series, T>>::value>;
 }
 
 namespace math
@@ -3069,10 +3060,18 @@ namespace math
  * a method with the same signature as piranha::series::pow().
  */
 template <typename Series, typename T>
-struct pow_impl<Series, T, detail::pow_series_enabler<Series, T>> {
+struct pow_impl<Series, T, pow_series_enabler<Series, T>> {
+private:
+    using pow_type = series_pow_member_t<Series, T>;
+
+public:
     /// Call operator.
     /**
-     * The exponentiation will be computed via the series' <tt>pow()</tt> method.
+     * The exponentiation will be computed via the series' <tt>pow()</tt> method. The body of this method
+     * is equivalent to:
+     * @code
+     * return s.pow(x);
+     * @endcode
      *
      * @param[in] s base.
      * @param[in] x exponent.
@@ -3081,8 +3080,7 @@ struct pow_impl<Series, T, detail::pow_series_enabler<Series, T>> {
      *
      * @throws unspecified any exception resulting from the series' <tt>pow()</tt> method.
      */
-    template <typename S, typename U>
-    auto operator()(const S &s, const U &x) const -> decltype(s.pow(x))
+    pow_type operator()(const Series &s, const T &x) const
     {
         return s.pow(x);
     }
@@ -3723,6 +3721,35 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
 };
 
 #endif
+
+inline namespace impl
+{
+
+template <typename T>
+using series_zero_is_absorbing_enabler = enable_if_t<is_series<uncvref_t<T>>::value>;
+}
+
+/// Specialisation of piranha::zero_is_absorbing for piranha::series.
+/**
+ * \note
+ * This specialisation is enabled if \p T, after the removal of cv/reference qualifiers, satisfies piranha::is_series.
+ *
+ * The value of the type trait will be the value of piranha::zero_is_absorbing for the coefficient type of \p T. This
+ * type trait requires \p T to satisfy piranha::is_multipliable, after the removal of cv/reference qualifiers.
+ */
+template <typename T>
+struct zero_is_absorbing<T, series_zero_is_absorbing_enabler<T>> {
+private:
+    PIRANHA_TT_CHECK(is_multipliable, uncvref_t<T>);
+    static const bool implementation_defined = zero_is_absorbing<typename uncvref_t<T>::term_type::cf_type>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename T>
+const bool zero_is_absorbing<T, series_zero_is_absorbing_enabler<T>>::value;
 }
 
 #endif

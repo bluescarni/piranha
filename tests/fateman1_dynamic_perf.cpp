@@ -48,6 +48,7 @@ using namespace piranha;
 BOOST_AUTO_TEST_CASE(fateman1_test)
 {
     init();
+    settings::set_thread_binding(true);
     using limb_t = typename detail::integer_union<0>::s_storage::limb_t;
     if (boost::unit_test::framework::master_test_suite().argc > 1) {
         settings::set_n_threads(

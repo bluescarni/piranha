@@ -2041,6 +2041,7 @@ struct unreturnable_01 {
 
 BOOST_AUTO_TEST_CASE(type_traits_is_returnable_test)
 {
+    BOOST_CHECK(is_returnable<void>::value);
     BOOST_CHECK(is_returnable<int>::value);
     BOOST_CHECK(is_returnable<int &>::value);
     BOOST_CHECK(is_returnable<const int &>::value);
@@ -2121,6 +2122,11 @@ BOOST_AUTO_TEST_CASE(type_traits_ref_mod_t)
     BOOST_CHECK((std::is_same<int &, addlref_t<int &>>::value));
     BOOST_CHECK((std::is_same<int &, addlref_t<int &&>>::value));
     BOOST_CHECK((std::is_same<void, addlref_t<void>>::value));
+    BOOST_CHECK((std::is_same<int, decay_t<int>>::value));
+    BOOST_CHECK((std::is_same<int, decay_t<int &>>::value));
+    BOOST_CHECK((std::is_same<int, decay_t<const int &>>::value));
+    BOOST_CHECK((std::is_same<int, decay_t<int &&>>::value));
+    BOOST_CHECK((std::is_same<int *, decay_t<int[2]>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_void_t)
@@ -2140,13 +2146,13 @@ using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
 BOOST_AUTO_TEST_CASE(type_traits_is_detected)
 {
     BOOST_CHECK((is_detected<add_t, int, int>::value));
-    BOOST_CHECK((std::is_same<is_detected_t<add_t, int, int>, int>::value));
+    BOOST_CHECK((std::is_same<detected_t<add_t, int, int>, int>::value));
     BOOST_CHECK((is_detected<add_t, double, int>::value));
-    BOOST_CHECK((std::is_same<is_detected_t<add_t, int, double>, double>::value));
+    BOOST_CHECK((std::is_same<detected_t<add_t, int, double>, double>::value));
     BOOST_CHECK((is_detected<add_t, char, char>::value));
-    BOOST_CHECK((std::is_same<is_detected_t<add_t, char, char>, int>::value));
+    BOOST_CHECK((std::is_same<detected_t<add_t, char, char>, int>::value));
     BOOST_CHECK((!is_detected<add_t, double, std::string>::value));
-    BOOST_CHECK((std::is_same<is_detected_t<add_t, double, std::string>, nonesuch>::value));
+    BOOST_CHECK((std::is_same<detected_t<add_t, double, std::string>, nonesuch>::value));
 }
 
 template <typename T>
@@ -2188,4 +2194,34 @@ BOOST_AUTO_TEST_CASE(type_traits_tuple_for_each)
     BOOST_CHECK(t == std::make_tuple(2, 4., 6l, 8ll));
     tuple_for_each(t, minus_one{});
     BOOST_CHECK(t == std::make_tuple(1, 3., 5l, 7ll));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_zero_is_absorbing)
+{
+    BOOST_CHECK((zero_is_absorbing<int>::value));
+    BOOST_CHECK((zero_is_absorbing<short>::value));
+    BOOST_CHECK((zero_is_absorbing<long long>::value));
+    BOOST_CHECK((zero_is_absorbing<unsigned long>::value));
+    BOOST_CHECK((zero_is_absorbing<int &>::value));
+    BOOST_CHECK((zero_is_absorbing<const short>::value));
+    BOOST_CHECK((zero_is_absorbing<long long &&>::value));
+    BOOST_CHECK((zero_is_absorbing<const unsigned long &>::value));
+    if (std::numeric_limits<double>::has_quiet_NaN || std::numeric_limits<double>::has_signaling_NaN) {
+        BOOST_CHECK((!zero_is_absorbing<double>::value));
+        BOOST_CHECK((!zero_is_absorbing<double &>::value));
+        BOOST_CHECK((!zero_is_absorbing<const double &>::value));
+        BOOST_CHECK((!zero_is_absorbing<double &&>::value));
+    }
+    if (std::numeric_limits<long double>::has_quiet_NaN || std::numeric_limits<long double>::has_signaling_NaN) {
+        BOOST_CHECK((!zero_is_absorbing<long double>::value));
+        BOOST_CHECK((!zero_is_absorbing<long double &>::value));
+        BOOST_CHECK((!zero_is_absorbing<const long double &>::value));
+        BOOST_CHECK((!zero_is_absorbing<long double &&>::value));
+    }
+    if (std::numeric_limits<float>::has_quiet_NaN || std::numeric_limits<float>::has_signaling_NaN) {
+        BOOST_CHECK((!zero_is_absorbing<float>::value));
+        BOOST_CHECK((!zero_is_absorbing<float &>::value));
+        BOOST_CHECK((!zero_is_absorbing<const float &>::value));
+        BOOST_CHECK((!zero_is_absorbing<float &&>::value));
+    }
 }

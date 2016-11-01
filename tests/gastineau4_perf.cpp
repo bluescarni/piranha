@@ -49,6 +49,7 @@ using namespace piranha;
 BOOST_AUTO_TEST_CASE(gastineau4_test)
 {
     init();
+    settings::set_thread_binding(true);
     if (boost::unit_test::framework::master_test_suite().argc > 1) {
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));

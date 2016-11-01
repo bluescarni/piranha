@@ -57,10 +57,7 @@ see https://www.gnu.org/licenses/. */
  * calling free(), then the behaviour
  * might not be exception-safe.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,
- * e.g., importing the module from multiple Python threads). In particular, access to the coefficient list (construct on
- * first
- * use with mutex protection instead of at register time? or maybe avoid using static variable and build each time)
- * and python converters (protect the inited flags with mutexes).
+ * e.g., importing the module from multiple Python threads).
  * \todo instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
  * atexit() function to clean up custom derivatives before static destruction starts. We could register the atexit
  * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each
@@ -73,11 +70,6 @@ see https://www.gnu.org/licenses/. */
  * override any other
  * converter that might be registered in boost python. We need to query the registry and check at runtime.
  * \todo initializer_list ctors: should they be explicit or not?
- * \todo review usage of new, we probably want to switch to unqualified new() in order to account for possible overloads
- * to be found via ADL -> note that placement new cannot be overloaded:
- * http://stackoverflow.com/questions/3675059/how-could-i-sensibly-overload-placement-operator-new (and 18.6.1.3 in the
- * standard)
- * so we might as well keep ::new in those cases.
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting
  * constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must
@@ -213,27 +205,20 @@ see https://www.gnu.org/licenses/. */
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo the following items still remain to be finished up after the truncation rework:
  *   - re-evaluate the heuristic for choosing n_threads in fill_term_pointers, estimate_series_size, and the likes.
- * Right now we are using
- *     the heuristic for series multiplication, but, at least in case of fill_term_pointers, it seems like we might be
- * running in some overhead.
+ *     Right now we are using the heuristic for series multiplication, but, at least in case of fill_term_pointers,
+ *     it seems like we might be running in some overhead.
  *   - the fill_term_pointers parallelisation + deterministic ordering has not been done yet for rational coefficients.
  * \todo in a bunch of generic constructors all over the place, we enable them only if the argument is not the same type
  * as the calling class.
  * This should probably be an is_base_of check, as done in forwarding.hpp, so that if one derives from the class then we
  * are still not mixing
  * up generic ctor and standard copy/move ones in the derived class.
- * \todo in order to circumvent the problem of the lack of thread local storage on osx, we should probably just create a
- * local variable ad-hoc.
  * It will be suboptimal but at least it should work on osx.
  * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs,
  * e.g., implementing the test() method
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type
  * traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
- * Once we have this, we could
- * also think about re-implementing multiplication by zero by an actual coefficient multiplication, thus solving the
- * incosistency with double
- * coefficients reported in audi (0 * inf = 0 --> empty polynomial, instead of NaN).
  * \todo in mp_integer probably the ternary operations (and multadd and divexact etc.) should be modified so that the
  * return value is demoted to
  * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times,
@@ -241,12 +226,8 @@ see https://www.gnu.org/licenses/. */
  * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that
  * iteratively always increases).
  * Not sure there's a general solution.
- * \todo safe_cast should probably have its own special exception. As it stands, when we do try { safe_cast() } catch {}
- * we are catching other
- * errors as unsafe cast where they might not be (e.g., a memory error). It is important to know when safe_cast fails
- * because of unsafe cast
- * rather than other errors, see e.g. how it is used in the poly linear arg combination.
- * \todo same above applies for linear arg combination
+ * \todo linear arg combination needs to be made a generic monomial requirement and it needs to throw its own
+ * exception type.
  * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a
  * time.
  * \todo when we rework division/gcd with the ordered poly representation, we need also to solve the issue of the
@@ -284,7 +265,9 @@ see https://www.gnu.org/licenses/. */
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.
  * \todo in the pyranha doc improvements, we should probably handle better unspecified exceptions and document
- * the return type as well for consistency (see lambdify docs) -> actually start using sphinx napoleon
+ * the return type as well for consistency (see lambdify docs) -> actually start using sphinx napoleon - UPDATE:
+ * note also that the settings' methods' docstrings need to be filled out properly with exception specs, return types,
+ * etc.
  * \todo "quick install" should not be the title of the getting started section in sphinx
  * \todo consider poly::udivrem(5*x**2,2*x). This throws an inexact division error triggered by inexact integral cf
  * division, but maybe it should just return (0,5*x**2).
@@ -295,11 +278,9 @@ see https://www.gnu.org/licenses/. */
  * header and then make sure to include that header in every piranha public header.
  * \todo see if in series we can make container_type public (yes) and make the other protected members private, now that
  * we have functions to manipulate the container and the symbol set.
- * \todo safe_cast fixages: remove the dependency on mp_integer, fix the exception usage as explained above,
- * and once this is done check all uses of boost numeric_cast, which should now be replaceable by safe_cast.
- * Check also the fwd declaration usages which work around the current issues.
  * \todo checkout the --enable-fat GMP build option - it looks like this is the way to go for a generic GMP lib
- * for binary windows distributions.
+ * for binary windows distributions. UPDATE: this does not seem to work properly in mingw, but keep it in mind
+ * for manylinux1.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
  * \todo guidelines for type traits modernization:
  * - beautify enablers,

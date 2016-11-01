@@ -26,8 +26,8 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_DETAIL_ATOMIC_UTILS_HPP
-#define PIRANHA_DETAIL_ATOMIC_UTILS_HPP
+#ifndef PIRANHA_DETAIL_ATOMIC_FLAG_ARRAY_HPP
+#define PIRANHA_DETAIL_ATOMIC_FLAG_ARRAY_HPP
 
 #include <atomic>
 #include <cstddef>
@@ -89,31 +89,6 @@ struct atomic_flag_array {
     // Data members.
     value_type *m_ptr;
     const std::size_t m_size;
-};
-
-// A simple spinlock built on top of std::atomic_flag. See for reference:
-// http://en.cppreference.com/w/cpp/atomic/atomic_flag
-// http://stackoverflow.com/questions/26583433/c11-implementation-of-spinlock-using-atomic
-// The memory order specification is to squeeze out some extra performance with respect to the
-// default behaviour of atomic types.
-struct atomic_lock_guard {
-    explicit atomic_lock_guard(std::atomic_flag &af) : m_af(af)
-    {
-        while (m_af.test_and_set(std::memory_order_acquire)) {
-        }
-    }
-    ~atomic_lock_guard()
-    {
-        m_af.clear(std::memory_order_release);
-    }
-    // Delete explicitly all other ctors/assignment operators.
-    atomic_lock_guard() = delete;
-    atomic_lock_guard(const atomic_lock_guard &) = delete;
-    atomic_lock_guard(atomic_lock_guard &&) = delete;
-    atomic_lock_guard &operator=(const atomic_lock_guard &) = delete;
-    atomic_lock_guard &operator=(atomic_lock_guard &&) = delete;
-    // Data members.
-    std::atomic_flag &m_af;
 };
 }
 }

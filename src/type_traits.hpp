@@ -77,13 +77,19 @@ struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
     using type = Op<Args...>;
 };
 
-struct nonesuch;
+// http://en.cppreference.com/w/cpp/experimental/nonesuch
+struct nonesuch {
+    nonesuch() = delete;
+    ~nonesuch() = delete;
+    nonesuch(nonesuch const &) = delete;
+    void operator=(nonesuch const &) = delete;
+};
 
 template <template <class...> class Op, class... Args>
 using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
 
 template <template <class...> class Op, class... Args>
-using is_detected_t = typename detector<nonesuch, void, Op, Args...>::type;
+using detected_t = typename detector<nonesuch, void, Op, Args...>::type;
 
 // http://en.cppreference.com/w/cpp/types/conjunction
 template <class...>
@@ -170,6 +176,9 @@ void tuple_for_each(Tuple &&t, const F &f)
 // Some handy aliases.
 template <typename T>
 using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+
+template <typename T>
+using decay_t = typename std::decay<T>::type;
 
 template <typename T>
 using unref_t = typename std::remove_reference<T>::type;
@@ -522,7 +531,7 @@ using ostreamable_t = decltype(std::declval<std::ostream &>() << std::declval<co
 template <typename T>
 class is_ostreamable
 {
-    static const bool implementation_defined = std::is_same<is_detected_t<ostreamable_t, T>, std::ostream &>::value;
+    static const bool implementation_defined = std::is_same<detected_t<ostreamable_t, T>, std::ostream &>::value;
 
 public:
     /// Value of the type trait.
@@ -1224,14 +1233,15 @@ template <typename T>
 struct is_returnable {
 private:
     static const bool implementation_defined
-        = std::is_destructible<T>::value
-          && (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value);
+        = disjunction<std::is_same<T, void>,
+                      conjunction<std::is_destructible<T>,
+                                  disjunction<std::is_copy_constructible<T>, std::is_move_constructible<T>>>>::value;
 
 public:
     /// Value of the type trait.
     /**
      * The type trait will be true if \p T is destructible and copy or move
-     * constructible.
+     * constructible, or if \p T is \p void.
      */
     static const bool value = implementation_defined;
 };
@@ -1266,6 +1276,63 @@ public:
 
 template <typename T>
 const bool is_mappable<T>::value;
+
+/// Detect if zero is a multiplicative absorber.
+/**
+ * This type trait, defaulting to \p true, establishes if the zero element of the type \p T is a multiplicative
+ * absorber. That is, if for any value \f$ x \f$ of type \p T the relation
+ * \f[
+ * x \times 0 = 0
+ * \f]
+ * holds, then this type trait should be \p true.
+ *
+ * This type trait requires \p T to satsify piranha::is_multipliable, after removal of cv/reference qualifiers.
+ * This type trait can be specialised via \p std::enable_if.
+ */
+template <typename T, typename = void>
+struct zero_is_absorbing {
+private:
+    PIRANHA_TT_CHECK(is_multipliable, uncvref_t<T>);
+
+public:
+    /// Value of the type trait.
+    static const bool value = true;
+};
+
+template <typename T, typename Enable>
+const bool zero_is_absorbing<T, Enable>::value;
+
+inline namespace impl
+{
+
+template <typename T>
+using fp_zero_is_absorbing_enabler = enable_if_t<std::is_floating_point<uncvref_t<T>>::value
+                                                 && (std::numeric_limits<uncvref_t<T>>::has_quiet_NaN
+                                                     || std::numeric_limits<uncvref_t<T>>::has_signaling_NaN)>;
+}
+
+/// Specialisation of piranha::zero_is_absorbing for floating-point types.
+/**
+ * \note
+ * This specialisation is enabled if \p T, after the removal of cv/reference qualifiers, is a C++ floating-point type
+ * supporting NaN.
+ *
+ * In the presence of NaN, a floating-point zero is not the multiplicative absorbing element.
+ *
+ * This type traits requires \p T to satsify piranha::is_multipliable, after the removal of cv/reference qualifiers.
+ */
+template <typename T>
+struct zero_is_absorbing<T, fp_zero_is_absorbing_enabler<T>> {
+private:
+    PIRANHA_TT_CHECK(is_multipliable, uncvref_t<T>);
+
+public:
+    /// Value of the type trait.
+    static const bool value = false;
+};
+
+template <typename T>
+const bool zero_is_absorbing<T, fp_zero_is_absorbing_enabler<T>>::value;
 }
 
 #endif

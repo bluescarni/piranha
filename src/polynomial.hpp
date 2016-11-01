@@ -50,7 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include "base_series_multiplier.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
-#include "detail/atomic_utils.hpp"
+#include "detail/atomic_flag_array.hpp"
 #include "detail/cf_mult_impl.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/parallel_vector_transform.hpp"
@@ -435,8 +435,8 @@ inline polynomial<Cf, Key> poly_from_univariate(const polynomial<Cf, k_monomial>
 }
 
 // Exception to signal that heuristic GCD failed.
-struct gcdheu_failure : public base_exception {
-    explicit gcdheu_failure() : base_exception("")
+struct gcdheu_failure final : std::runtime_error {
+    explicit gcdheu_failure() : std::runtime_error("")
     {
     }
 };
@@ -731,6 +731,8 @@ class polynomial
             }
             return retval;
         } catch (const std::invalid_argument &) {
+            // NOTE: this currently catches failures both in lin_arg and safe_cast, as safe_cast_failure
+            // inherits from std::invalid_argument.
             piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
         }
     }
@@ -834,7 +836,7 @@ class polynomial
         const symbol_set::positions pos(this->m_symbol_set, symbol_set{s});
         try {
             degree = safe_cast<integer>(term.m_key.degree(pos, this->m_symbol_set));
-        } catch (const std::invalid_argument &) {
+        } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument,
                           "unable to perform polynomial integration: cannot extract the integral form of an exponent");
         }
@@ -874,14 +876,14 @@ class polynomial
                       "unable to perform polynomial integration: coefficient type is not integrable");
     }
     // Template alias for use in pow() overload. Will check via SFINAE that the base pow() method can be called with
-    // argument T
-    // and that exponentiation of key type is legal.
-    template <typename T, typename Series>
-    using pow_ret_type = typename std::
-        enable_if<detail::true_tt<decltype(std::declval<typename Series::term_type::key_type const &>().pow(
-                      std::declval<const T &>(), std::declval<const symbol_set &>()))>::value,
-                  decltype(std::declval<series<Cf, Key, polynomial<Cf, Key>> const &>().pow(
-                      std::declval<const T &>()))>::type;
+    // argument T and that exponentiation of key type is legal.
+    template <typename T>
+    using key_pow_t
+        = decltype(std::declval<Key const &>().pow(std::declval<const T &>(), std::declval<const symbol_set &>()));
+    template <typename T>
+    using pow_ret_type = enable_if_t<is_detected<key_pow_t, T>::value,
+                                     decltype(std::declval<series<Cf, Key, polynomial<Cf, Key>> const &>().pow(
+                                         std::declval<const T &>()))>;
     // Invert utils.
     template <typename Series>
     using inverse_type = decltype(std::declval<const Series &>().pow(-1));
@@ -1335,9 +1337,8 @@ public:
      *
      * This exponentiation override will check if the polynomial consists of a single-term with non-unitary
      * key. In that case, the return polynomial will consist of a single term with coefficient computed via
-     * piranha::math::pow() and key computed via the monomial exponentiation method.
-     *
-     * Otherwise, the base (i.e., default) exponentiation method will be used.
+     * piranha::math::pow() and key computed via the monomial exponentiation method. Otherwise, the base
+     * (i.e., default) exponentiation method will be used.
      *
      * @param[in] x exponent.
      *
@@ -1350,10 +1351,10 @@ public:
      * - the copy assignment operator of piranha::symbol_set,
      * - piranha::series::insert() and piranha::series::pow().
      */
-    template <typename T, typename Series = polynomial>
-    pow_ret_type<T, Series> pow(const T &x) const
+    template <typename T>
+    pow_ret_type<T> pow(const T &x) const
     {
-        using ret_type = pow_ret_type<T, Series>;
+        using ret_type = pow_ret_type<T>;
         typedef typename ret_type::term_type term_type;
         typedef typename term_type::cf_type cf_type;
         typedef typename term_type::key_type key_type;
