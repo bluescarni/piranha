@@ -123,7 +123,7 @@ class piranha::future_list&lt; T &gt;</h3>
 <p>Class to store a list of futures. </p>
 <p>This class is a minimal thin wrapper around an <code>std::list</code> of <code>std::future&lt;T&gt;</code> objects. The class provides convenience methods to interact with the set of futures in an exception-safe manner. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00372">372</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00499">499</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a6d7365c1d6df28620d4cbd53479b55bd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6d7365c1d6df28620d4cbd53479b55bd">&sect;&nbsp;</a></span>future_list()</h2>
@@ -183,7 +183,7 @@ template&lt;typename T&gt; </div>
 <p>Destructor. </p>
 <p>Will call <a class="el" href="classpiranha_1_1future__list.html#a586a47c1d4f2f4b069018ced3495bc8c" title="Wait on all the futures. ">wait_all()</a>. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00404">404</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00531">531</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -222,7 +222,7 @@ template&lt;typename T&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00454">454</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00581">581</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -256,7 +256,7 @@ template&lt;typename T&gt; </div>
 <p>Will move-insert the input future <code>f</code> into the internal container. If the insertion fails due to memory allocation errors and <code>f</code> is a valid future, then the method will wait on <code>f</code> before throwing the exception.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>std::future to be move-inserted.</td></tr>
+    <tr><td class="paramname">f</td><td>std::future to be move-inserted.</td></tr>
   </table>
   </dd>
 </dl>
@@ -267,7 +267,7 @@ template&lt;typename T&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00418">418</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00545">545</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -299,7 +299,7 @@ template&lt;typename T&gt; </div>
 <p>Wait on all the futures. </p>
 <p>This method will call <code>wait()</code> on all the valid futures stored within the object. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00439">439</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00566">566</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>

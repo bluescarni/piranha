@@ -82,20 +82,26 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>&gt;</code></p>
 
-<p>Inherits piranha::detail::thread_pool_base&lt;&gt;.</p>
+<p>Inherits thread_pool_base&lt;&gt;.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a763d2e5090060ea1e2f6357b15a5fe84"><td class="memTemplParams" colspan="2">template&lt;typename F , typename... Args&gt; </td></tr>
-<tr class="memitem:a763d2e5090060ea1e2f6357b15a5fe84"><td class="memTemplItemLeft" align="right" valign="top">static auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a763d2e5090060ea1e2f6357b15a5fe84">enqueue</a> (unsigned n, F &amp;&amp;f, Args &amp;&amp;... args) -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt; F &gt;(f), std::forward&lt; Args &gt;(args)...))</td></tr>
-<tr class="memdesc:a763d2e5090060ea1e2f6357b15a5fe84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append task.  <a href="#a763d2e5090060ea1e2f6357b15a5fe84">More...</a><br /></td></tr>
-<tr class="separator:a763d2e5090060ea1e2f6357b15a5fe84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac597652dff171823af93189ba022ec5d"><td class="memTemplParams" colspan="2">template&lt;typename F , typename... Args&gt; </td></tr>
+<tr class="memitem:ac597652dff171823af93189ba022ec5d"><td class="memTemplItemLeft" align="right" valign="top">static enqueue_t&lt; F &amp;&amp;, Args &amp;&amp;... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#ac597652dff171823af93189ba022ec5d">enqueue</a> (unsigned n, F &amp;&amp;f, Args &amp;&amp;... args)</td></tr>
+<tr class="memdesc:ac597652dff171823af93189ba022ec5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueue task.  <a href="#ac597652dff171823af93189ba022ec5d">More...</a><br /></td></tr>
+<tr class="separator:ac597652dff171823af93189ba022ec5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a2a1765622d427968dba7e49ffa5da0"><td class="memItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">size</a> ()</td></tr>
 <tr class="memdesc:a4a2a1765622d427968dba7e49ffa5da0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size.  <a href="#a4a2a1765622d427968dba7e49ffa5da0">More...</a><br /></td></tr>
 <tr class="separator:a4a2a1765622d427968dba7e49ffa5da0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a103d3b72ea9564dc55566f3ab303189e"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e">resize</a> (unsigned new_size)</td></tr>
-<tr class="memdesc:a103d3b72ea9564dc55566f3ab303189e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pool resize.  <a href="#a103d3b72ea9564dc55566f3ab303189e">More...</a><br /></td></tr>
+<tr class="memdesc:a103d3b72ea9564dc55566f3ab303189e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the number of threads.  <a href="#a103d3b72ea9564dc55566f3ab303189e">More...</a><br /></td></tr>
 <tr class="separator:a103d3b72ea9564dc55566f3ab303189e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9f0cd0aa8327e627caf5648c72bb8d4"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#af9f0cd0aa8327e627caf5648c72bb8d4">set_binding</a> (bool flag)</td></tr>
+<tr class="memdesc:af9f0cd0aa8327e627caf5648c72bb8d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the thread binding policy.  <a href="#af9f0cd0aa8327e627caf5648c72bb8d4">More...</a><br /></td></tr>
+<tr class="separator:af9f0cd0aa8327e627caf5648c72bb8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e460d3d7d62bb586f24468e17add004"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a0e460d3d7d62bb586f24468e17add004">get_binding</a> ()</td></tr>
+<tr class="memdesc:a0e460d3d7d62bb586f24468e17add004"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the thread binding policy.  <a href="#a0e460d3d7d62bb586f24468e17add004">More...</a><br /></td></tr>
+<tr class="separator:a0e460d3d7d62bb586f24468e17add004"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="memTemplParams" colspan="2">template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </td></tr>
 <tr class="memitem:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="memTemplItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b">use_threads</a> (const Int &amp;work_size, const Int &amp;min_work_per_thread)</td></tr>
 <tr class="memdesc:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute number of threads to use.  <a href="#a03d28eff2b4c7636f8219c656cdd2f4b">More...</a><br /></td></tr>
@@ -107,13 +113,13 @@ class piranha::thread_pool_&lt; typename &gt;</h3>
 
 <p>Static thread pool. </p>
 <dl class="section note"><dt>Note</dt><dd>The template parameter in this class is unused: its only purpose is to prevent the instantiation of the class' methods if they are not explicitly used. Client code should always employ the <a class="el" href="namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6" title="Alias for piranha::thread_pool_. ">piranha::thread_pool</a> alias.</dd></dl>
-<p>This class manages, via a set of static methods, a pool of threads created at program startup. The number of threads created initially is equal to <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>, and, if possible, each thread is bound to a different processor. If the hardware concurrency cannot be determined, the size of the thread pool will be one.</p>
-<p>This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool and resize the pool. All methods, unless otherwise specified, are thread-safe, and they provide the strong exception safety guarantee. </p>
+<p>This class manages, via a set of static methods, a pool of threads created at program startup. The number of threads created initially is equal to <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>. If the hardware concurrency cannot be determined, the size of the thread pool will be one.</p>
+<p>This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool, resize the pool and configure the thread binding policy. All methods, unless otherwise specified, are thread-safe, and they provide the strong exception safety guarantee. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00219">219</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00283">283</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a763d2e5090060ea1e2f6357b15a5fe84"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a763d2e5090060ea1e2f6357b15a5fe84">&sect;&nbsp;</a></span>enqueue()</h2>
+<a id="ac597652dff171823af93189ba022ec5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac597652dff171823af93189ba022ec5d">&sect;&nbsp;</a></span>enqueue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -126,7 +132,7 @@ template&lt;typename F , typename... Args&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static auto <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::enqueue </td>
+          <td class="memname">static enqueue_t&lt;F &amp;&amp;, Args &amp;&amp;...&gt; <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::enqueue </td>
           <td>(</td>
           <td class="paramtype">unsigned&#160;</td>
           <td class="paramname"><em>n</em>, </td>
@@ -146,8 +152,7 @@ template&lt;typename F , typename... Args&gt; </div>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; decltype(base::s_queues[0u]-&gt;enqueue(std::forward&lt;F&gt;(f), std::forward&lt;Args&gt;(args)...))
-    </td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -157,14 +162,18 @@ template&lt;typename F , typename... Args&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Append task. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is enabled only if the expression <code>f(args...)</code> is well-formed.</dd></dl>
-<p>This method will add a task to the <code>n</code>-th thread in the pool. The task is represented by a callable <code>F</code> and its arguments <code>args</code>, which will be copied into an execution queue consumed by the thread to which the task is assigned.</p>
+<p>Enqueue task. </p>
+<dl class="section note"><dt>Note</dt><dd>This method is enabled only if:<ul>
+<li>a nullary wrapper for <code>F(args...)</code> can be created via <code>std::bind()</code> (which requires <code>F</code> and <code>Args</code> to be copy/move constructible, and <code>F(args...)</code> to be a well-formed expression),</li>
+<li>the type returned by <code>F(args...)</code> satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</li>
+</ul>
+</dd></dl>
+<p>This method will add a task to the <code>n</code>-th thread in the pool. The task is represented by a callable <code>F</code> and its arguments <code>args</code>, which will be copied/moved via an <code>std::bind()</code> wrapper into an execution queue consumed by the thread to which the task is assigned. The return value is an <code>std::future</code> which can be used to retrieve the return value of (or the exception throw by) the callable.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>index of the thread that will consume the task. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>callable object representing the task. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">args</td><td>arguments to <code>f</code>.</td></tr>
+    <tr><td class="paramname">n</td><td>index of the thread that will consume the task. </td></tr>
+    <tr><td class="paramname">f</td><td>callable object representing the task. </td></tr>
+    <tr><td class="paramname">args</td><td>arguments to <code>f</code>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -172,17 +181,51 @@ template&lt;typename F , typename... Args&gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the thread index is equal to or larger than the current pool size. </td></tr>
+    <tr><td class="paramname">std::runtime_error</td><td>if a task is being enqueued while the task queue is stopping (e.g., during program shutdown). </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
+<li><code>std::bind()</code> or the constructor of <code>std::packaged_task</code> or <code>std::function</code>,</li>
 <li>threading primitives,</li>
-<li>memory allocation errors,</li>
-<li>the constructors of <code>f</code> or <code>args</code>. </li>
+<li>memory allocation errors. </li>
 </ul>
 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00251">251</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00325">325</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+
+</div>
+</div>
+<a id="a0e460d3d7d62bb586f24468e17add004"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e460d3d7d62bb586f24468e17add004">&sect;&nbsp;</a></span>get_binding()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename  = void&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::get_binding </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the thread binding policy. </p>
+<p>This method returns the flag set by <a class="el" href="classpiranha_1_1thread__pool__.html#af9f0cd0aa8327e627caf5648c72bb8d4" title="Set the thread binding policy. ">set_binding()</a>. The threads created on program startup are not bound to specific processors/cores.</p>
+<dl class="section return"><dt>Returns</dt><dd>a boolean flag representing the active thread binding policy. </dd></dl>
+
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00430">430</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -212,17 +255,17 @@ template&lt;typename  = void&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Pool resize. </p>
-<p>This method will resize the internal pool to contain <code>new_size</code> threads. The method will first wait for the threads to consume all the pending tasks (while forbidding the addition of new tasks), and it will then create a new pool of size <code>new_size</code>. The new threads will be bound, if possible, to the processor corresponding to their index in the pool.</p>
+<p>Change the number of threads. </p>
+<p>This method will resize the internal pool to contain <code>new_size</code> threads. The method will first wait for the threads to consume all the pending tasks (while forbidding the addition of new tasks), and it will then create a new pool of size <code>new_size</code>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">new_size</td><td>the new size of the pool.</td></tr>
+    <tr><td class="paramname">new_size</td><td>the new size of the pool.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">std::invalid_argument</td><td>if <code>new_size</code> is larger than an implementation-defined value or zero. </td></tr>
+    <tr><td class="paramname">std::invalid_argument</td><td>if <code>new_size</code> is zero. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>threading primitives,</li>
 <li>memory allocation errors. </li>
@@ -232,7 +275,57 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00287">287</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00379">379</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+
+</div>
+</div>
+<a id="af9f0cd0aa8327e627caf5648c72bb8d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9f0cd0aa8327e627caf5648c72bb8d4">&sect;&nbsp;</a></span>set_binding()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename  = void&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::set_binding </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>flag</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set the thread binding policy. </p>
+<p>If <code>flag</code> is <code>true</code>, this method will bind each thread in the pool to a different processor/core via <a class="el" href="namespacepiranha.html#a553c424ad011d73ff3a66359835faa31" title="Bind thread to specific processor. ">piranha::bind_to_proc()</a>. If <code>flag</code> is <code>false</code>, then this method will unbind the threads in the pool from any processor/core to which they might be bound.</p>
+<p>The threads created at program startup are not bound to any specific processor/core. Any error raised by <a class="el" href="namespacepiranha.html#a553c424ad011d73ff3a66359835faa31" title="Bind thread to specific processor. ">piranha::bind_to_proc()</a> (e.g., because the number of threads in the pool is larger than the number of logical cores or because the thread binding functionality is not available on the platform) is silently ignored.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">flag</td><td>the desired thread binding policy.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
+<li>threading primitives,</li>
+<li>memory allocation errors. </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00412">412</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -262,15 +355,9 @@ template&lt;typename  = void&gt; </div>
 </div><div class="memdoc">
 
 <p>Size. </p>
-<dl class="section return"><dt>Returns</dt><dd>the number of threads in the pool.</dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by threading primitives. </td></tr>
-  </table>
-  </dd>
-</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of threads in the pool. </dd></dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00267">267</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00340">340</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -315,11 +402,11 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
 <p>Compute number of threads to use. </p>
 <dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>Int</code> is an unsigned integer type or <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>.</dd></dl>
 <p>This function computes the suggested number of threads to use, given an amount of total <code>work_size</code> units of work and a minimum amount of work units per thread <code>min_work_per_thread</code>.</p>
-<p>The returned value will always be 1 if the calling thread is not the main thread; otherwise, a number of threads such that each thread has at least <code>min_work_per_thread</code> units of work to consume will be returned. In any case, the return value is always greater than zero.</p>
+<p>The returned value will always be 1 if the calling thread belongs to the thread pool; otherwise, a number of threads such that each thread has at least <code>min_work_per_thread</code> units of work to consume will be returned. In any case, the return value is always greater than zero.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">work_size</td><td>total number of work units. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">min_work_per_thread</td><td>minimum number of work units to be consumed by a thread in the pool.</td></tr>
+    <tr><td class="paramname">work_size</td><td>total number of work units. </td></tr>
+    <tr><td class="paramname">min_work_per_thread</td><td>minimum number of work units to be consumed by a thread in the pool.</td></tr>
   </table>
   </dd>
 </dl>
@@ -327,12 +414,12 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if <code>work_size</code> or <code>min_work_per_thread</code> are not strictly positive. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by threading primitives. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <code>boost::lexical_cast()</code>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00332">332</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00456">456</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>

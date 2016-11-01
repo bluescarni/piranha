@@ -5,6 +5,7 @@ var searchData=
   ['gcd3',['gcd3',['../namespacepiranha_1_1math.html#aed326292eae1eeef5a46fd472a6e3165',1,'piranha::math']]],
   ['get_5fall',['get_all',['../classpiranha_1_1future__list.html#a24702db33f17b26d7e43b378ba2a27ac',1,'piranha::future_list']]],
   ['get_5fauto_5ftruncate_5fdegree',['get_auto_truncate_degree',['../classpiranha_1_1polynomial.html#a1448978bc7f49ee46d3099cd8580dd1a',1,'piranha::polynomial']]],
+  ['get_5fbinding',['get_binding',['../classpiranha_1_1thread__pool__.html#a0e460d3d7d62bb586f24468e17add004',1,'piranha::thread_pool_']]],
   ['get_5fcache_5fline_5fsize',['get_cache_line_size',['../classpiranha_1_1runtime__info.html#aac7510b135cddd7cdb28a9bea7e6d889',1,'piranha::runtime_info::get_cache_line_size()'],['../classpiranha_1_1settings__.html#a7416d94ce5d919f7f1bd1c80e95a24fe',1,'piranha::settings_::get_cache_line_size()']]],
   ['get_5fdefault_5fgcd_5falgorithm',['get_default_gcd_algorithm',['../classpiranha_1_1polynomial.html#a2f8720b75662fd74c3b34dd17174729b',1,'piranha::polynomial']]],
   ['get_5festimate_5fthreshold',['get_estimate_threshold',['../classpiranha_1_1tuning.html#ae52b6a8240816c547472fa5194a48f3b',1,'piranha::tuning']]],
@@ -14,7 +15,6 @@ var searchData=
   ['get_5fhardware_5fconcurrency',['get_hardware_concurrency',['../classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b',1,'piranha::runtime_info']]],
   ['get_5fint',['get_int',['../classpiranha_1_1kronecker__monomial.html#a52c977d1c9fd6b26e5484e790fa12319',1,'piranha::kronecker_monomial::get_int()'],['../classpiranha_1_1real__trigonometric__kronecker__monomial.html#a55e05416342a189716aa0789e301ca38',1,'piranha::real_trigonometric_kronecker_monomial::get_int()']]],
   ['get_5flimits',['get_limits',['../classpiranha_1_1kronecker__array.html#aec29ca4e115d959648346c0e3352cd7d',1,'piranha::kronecker_array']]],
-  ['get_5fmain_5fthread_5fid',['get_main_thread_id',['../classpiranha_1_1runtime__info.html#a22dc7ca3be0fcaa901702c5cd48291a6',1,'piranha::runtime_info']]],
   ['get_5fmax_5fterm_5foutput',['get_max_term_output',['../classpiranha_1_1settings__.html#a511786ba228e56986e36b1d2b85c48f7',1,'piranha::settings_']]],
   ['get_5fmin_5fwork_5fper_5fthread',['get_min_work_per_thread',['../classpiranha_1_1settings__.html#a8151c49aeea4abf6ca892f7862aa06f4',1,'piranha::settings_']]],
   ['get_5fmpfr_5ft',['get_mpfr_t',['../classpiranha_1_1real.html#ad3786478cf5ee88f7a3a83a75c7515c0',1,'piranha::real::get_mpfr_t()'],['../classpiranha_1_1real.html#a9d1f72bcb738eeb9b4b09a686de5c36c',1,'piranha::real::get_mpfr_t() const']]],
@@ -26,5 +26,6 @@ var searchData=
   ['get_5fnames',['get_names',['../classpiranha_1_1math_1_1lambdified.html#a0648bd20da2bc3cfea4d9c9ae254dd14',1,'piranha::math::lambdified']]],
   ['get_5fparallel_5fmemory_5fset',['get_parallel_memory_set',['../classpiranha_1_1tuning.html#a0332c484abd2cffbb81df0ff847019bd',1,'piranha::tuning']]],
   ['get_5fprec',['get_prec',['../classpiranha_1_1real.html#ab0477cca2636a57bd548a2363a9cf85f',1,'piranha::real']]],
-  ['get_5fsymbol_5fset',['get_symbol_set',['../classpiranha_1_1series.html#a44128f48b629d89fcc0be3659affd0e5',1,'piranha::series']]]
+  ['get_5fsymbol_5fset',['get_symbol_set',['../classpiranha_1_1series.html#a44128f48b629d89fcc0be3659affd0e5',1,'piranha::series']]],
+  ['get_5fthread_5fbinding',['get_thread_binding',['../classpiranha_1_1settings__.html#a88d717932f260a18176b6b8f0c833da1',1,'piranha::settings_']]]
 ];

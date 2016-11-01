@@ -81,14 +81,9 @@ $(function() {
  <a href="classpiranha_1_1runtime__info.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="runtime__info_8hpp_source.html">runtime_info.hpp</a>&gt;</code></p>
-
-<p>Inherits piranha::detail::base_runtime_info&lt;&gt;.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a22dc7ca3be0fcaa901702c5cd48291a6"><td class="memItemLeft" align="right" valign="top">static const std::thread::id &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1runtime__info.html#a22dc7ca3be0fcaa901702c5cd48291a6">get_main_thread_id</a> ()</td></tr>
-<tr class="memdesc:a22dc7ca3be0fcaa901702c5cd48291a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main thread ID.  <a href="#a22dc7ca3be0fcaa901702c5cd48291a6">More...</a><br /></td></tr>
-<tr class="separator:a22dc7ca3be0fcaa901702c5cd48291a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac3fd942fc4483b8b12a1214e13acea9b"><td class="memItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b">get_hardware_concurrency</a> ()</td></tr>
 <tr class="memdesc:ac3fd942fc4483b8b12a1214e13acea9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hardware concurrency.  <a href="#ac3fd942fc4483b8b12a1214e13acea9b">More...</a><br /></td></tr>
 <tr class="separator:ac3fd942fc4483b8b12a1214e13acea9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -100,7 +95,7 @@ Static Public Member Functions</h2></td></tr>
 <div class="textblock"><p>Runtime information. </p>
 <p>This class allows to query information about the runtime environment. </p>
 
-<p>Definition at line <a class="el" href="runtime__info_8hpp_source.html#l00099">99</a> of file <a class="el" href="runtime__info_8hpp_source.html">runtime_info.hpp</a>.</p>
+<p>Definition at line <a class="el" href="runtime__info_8hpp_source.html#l00087">87</a> of file <a class="el" href="runtime__info_8hpp_source.html">runtime_info.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="aac7510b135cddd7cdb28a9bea7e6d889"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aac7510b135cddd7cdb28a9bea7e6d889">&sect;&nbsp;</a></span>get_cache_line_size()</h2>
@@ -128,7 +123,7 @@ Static Public Member Functions</h2></td></tr>
 <p>Size of the data cache line. </p>
 <dl class="section return"><dt>Returns</dt><dd>data cache line size (in bytes), or 0 if the value cannot be determined. </dd></dl>
 
-<p>Definition at line <a class="el" href="runtime__info_8hpp_source.html#l00156">156</a> of file <a class="el" href="runtime__info_8hpp_source.html">runtime_info.hpp</a>.</p>
+<p>Definition at line <a class="el" href="runtime__info_8hpp_source.html#l00133">133</a> of file <a class="el" href="runtime__info_8hpp_source.html">runtime_info.hpp</a>.</p>
 
 </div>
 </div>
@@ -158,37 +153,7 @@ Static Public Member Functions</h2></td></tr>
 <p>Hardware concurrency. </p>
 <dl class="section return"><dt>Returns</dt><dd>number of concurrent threads supported by the environment (typically equal to the number of logical CPU cores), or 0 if the detection fails. </dd></dl>
 
-<p>Definition at line <a class="el" href="runtime__info_8hpp_source.html#l00119">119</a> of file <a class="el" href="runtime__info_8hpp_source.html">runtime_info.hpp</a>.</p>
-
-</div>
-</div>
-<a id="a22dc7ca3be0fcaa901702c5cd48291a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22dc7ca3be0fcaa901702c5cd48291a6">&sect;&nbsp;</a></span>get_main_thread_id()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static const std::thread::id&amp; piranha::runtime_info::get_main_thread_id </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Main thread ID. </p>
-<dl class="section return"><dt>Returns</dt><dd>const reference to an instance of the ID of the main thread of execution. </dd></dl>
-
-<p>Definition at line <a class="el" href="runtime__info_8hpp_source.html#l00108">108</a> of file <a class="el" href="runtime__info_8hpp_source.html">runtime_info.hpp</a>.</p>
+<p>Definition at line <a class="el" href="runtime__info_8hpp_source.html#l00096">96</a> of file <a class="el" href="runtime__info_8hpp_source.html">runtime_info.hpp</a>.</p>
 
 </div>
 </div>

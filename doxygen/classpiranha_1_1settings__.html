@@ -95,6 +95,12 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a906ced1de208a8ae1b50674a52618036"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1settings__.html#a906ced1de208a8ae1b50674a52618036">reset_n_threads</a> ()</td></tr>
 <tr class="memdesc:a906ced1de208a8ae1b50674a52618036"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reset the number of threads available for use by piranha.  <a href="#a906ced1de208a8ae1b50674a52618036">More...</a><br /></td></tr>
 <tr class="separator:a906ced1de208a8ae1b50674a52618036"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41094a39208fa460986d22f0bc0c2b85"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1settings__.html#a41094a39208fa460986d22f0bc0c2b85">set_thread_binding</a> (bool flag)</td></tr>
+<tr class="memdesc:a41094a39208fa460986d22f0bc0c2b85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the thread binding policy.  <a href="#a41094a39208fa460986d22f0bc0c2b85">More...</a><br /></td></tr>
+<tr class="separator:a41094a39208fa460986d22f0bc0c2b85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88d717932f260a18176b6b8f0c833da1"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1settings__.html#a88d717932f260a18176b6b8f0c833da1">get_thread_binding</a> ()</td></tr>
+<tr class="memdesc:a88d717932f260a18176b6b8f0c833da1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the thread binding policy.  <a href="#a88d717932f260a18176b6b8f0c833da1">More...</a><br /></td></tr>
+<tr class="separator:a88d717932f260a18176b6b8f0c833da1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7416d94ce5d919f7f1bd1c80e95a24fe"><td class="memItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1settings__.html#a7416d94ce5d919f7f1bd1c80e95a24fe">get_cache_line_size</a> ()</td></tr>
 <tr class="memdesc:a7416d94ce5d919f7f1bd1c80e95a24fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the cache line size.  <a href="#a7416d94ce5d919f7f1bd1c80e95a24fe">More...</a><br /></td></tr>
 <tr class="separator:a7416d94ce5d919f7f1bd1c80e95a24fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -168,7 +174,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00137">137</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00166">166</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -206,7 +212,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00173">173</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00202">202</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -238,7 +244,7 @@ template&lt;typename  = void&gt; </div>
 <p>Get the minimum work per thread. </p>
 <dl class="section return"><dt>Returns</dt><dd>the minimum work per thread. </dd></dl>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00204">204</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00233">233</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -281,6 +287,45 @@ template&lt;typename  = void&gt; </div>
 
 </div>
 </div>
+<a id="a88d717932f260a18176b6b8f0c833da1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a88d717932f260a18176b6b8f0c833da1">&sect;&nbsp;</a></span>get_thread_binding()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename  = void&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool <a class="el" href="classpiranha_1_1settings__.html">piranha::settings_</a>&lt; typename &gt;::get_thread_binding </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the thread binding policy. </p>
+<p>This method is an alias for <a class="el" href="classpiranha_1_1thread__pool__.html#a0e460d3d7d62bb586f24468e17add004" title="Get the thread binding policy. ">piranha::thread_pool::get_binding()</a>. It will return the flag set by <a class="el" href="classpiranha_1_1settings__.html#a41094a39208fa460986d22f0bc0c2b85" title="Set the thread binding policy. ">settings::set_thread_binding()</a> (which is <code>false</code> by default on program startup).</p>
+<dl class="section return"><dt>Returns</dt><dd>the active thread binding policy.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a0e460d3d7d62bb586f24468e17add004" title="Get the thread binding policy. ">piranha::thread_pool::get_binding()</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00153">153</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+
+</div>
+</div>
 <a id="a80ee027e6df1050f18e3862b34d83e26"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a80ee027e6df1050f18e3862b34d83e26">&sect;&nbsp;</a></span>reset_cache_line_size()</h2>
 
@@ -315,7 +360,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00162">162</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00191">191</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -353,7 +398,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00195">195</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00224">224</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -385,7 +430,7 @@ template&lt;typename  = void&gt; </div>
 <p>Reset the minimum work per thread. </p>
 <p>The value will be reset to the default initial value. </p>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00225">225</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00254">254</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -468,7 +513,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00151">151</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00180">180</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -512,7 +557,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00184">184</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00213">213</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -557,7 +602,7 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00214">214</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00243">243</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>
@@ -588,7 +633,7 @@ template&lt;typename  = void&gt; </div>
 </div><div class="memdoc">
 
 <p>Set the number of threads available for use by piranha. </p>
-<p>This function is equivalent to <a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e" title="Pool resize. ">piranha::thread_pool::resize()</a>.</p>
+<p>This function is equivalent to <a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e" title="Change the number of threads. ">piranha::thread_pool::resize()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>the desired number of threads.</td></tr>
@@ -597,12 +642,58 @@ template&lt;typename  = void&gt; </div>
 </dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e" title="Pool resize. ">piranha::thread_pool::resize()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e" title="Change the number of threads. ">piranha::thread_pool::resize()</a>. </td></tr>
   </table>
   </dd>
 </dl>
 
 <p>Definition at line <a class="el" href="settings_8hpp_source.html#l00113">113</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
+
+</div>
+</div>
+<a id="a41094a39208fa460986d22f0bc0c2b85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a41094a39208fa460986d22f0bc0c2b85">&sect;&nbsp;</a></span>set_thread_binding()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename  = void&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void <a class="el" href="classpiranha_1_1settings__.html">piranha::settings_</a>&lt; typename &gt;::set_thread_binding </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>flag</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set the thread binding policy. </p>
+<p>This method is an alias for <a class="el" href="classpiranha_1_1thread__pool__.html#af9f0cd0aa8327e627caf5648c72bb8d4" title="Set the thread binding policy. ">piranha::thread_pool::set_binding()</a>. If <code>flag</code> is <code>true</code>, each thread used by piranha will be bound to a different processor/core. If <code>flag</code> is <code>false</code>, this method will unbind piranha's threads from any processor/core to which they might be bound.</p>
+<p>By default piranha's threads are not bound to any specific processor/core.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">flag</td><td>the desired thread binding policy.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#af9f0cd0aa8327e627caf5648c72bb8d4" title="Set the thread binding policy. ">piranha::thread_pool::set_binding()</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="settings_8hpp_source.html#l00140">140</a> of file <a class="el" href="settings_8hpp_source.html">settings.hpp</a>.</p>
 
 </div>
 </div>

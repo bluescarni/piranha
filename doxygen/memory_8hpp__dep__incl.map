@@ -1,7 +1,7 @@
 <map id="memory.hpp" name="memory.hpp">
 <area shape="rect" id="node3" href="$small__vector_8hpp_source.html" title="small_vector.hpp" alt="" coords="172,83,292,112"/>
 <area shape="rect" id="node9" href="$piranha_8hpp.html" title="Global piranha header file. " alt="" coords="275,547,363,576"/>
-<area shape="rect" id="node28" href="$atomic__utils_8hpp_source.html" title="atomic_utils.hpp" alt="" coords="328,160,445,189"/>
+<area shape="rect" id="node28" href="$atomic__flag__array_8hpp_source.html" title="atomic_flag_array.hpp" alt="" coords="312,160,461,189"/>
 <area shape="rect" id="node37" href="$dynamic__aligning__allocator_8hpp_source.html" title="dynamic_aligning_allocator.hpp" alt="" coords="613,83,816,112"/>
 <area shape="rect" id="node39" href="$cache__aligning__allocator_8hpp_source.html" title="cache_aligning_allocator.hpp" alt="" coords="759,160,948,189"/>
 <area shape="rect" id="node5" href="$array__key_8hpp_source.html" title="array_key.hpp" alt="" coords="148,160,252,189"/>
