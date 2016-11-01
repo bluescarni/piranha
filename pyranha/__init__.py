@@ -394,10 +394,10 @@ def _save_load_check_params(name, df, cf):
         raise TypeError("the file name must be a string")
     if df is None and not cf is None:
         raise ValueError(
-            "the compression format was provided but the data format was not: please specify both of them (or none)")
+            "the compression format was provided but the data format was not: please specify both or none")
     if cf is None and not df is None:
         raise ValueError(
-            "the data format was provided but the compression format was not: please specify both of them (or none)")
+            "the data format was provided but the compression format was not: please specify both or none")
 
 
 def save_file(obj, name, df=None, cf=None):
