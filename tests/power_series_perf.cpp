@@ -42,6 +42,7 @@ using namespace piranha;
 BOOST_AUTO_TEST_CASE(pearce1_test)
 {
     init();
+    settings::set_thread_binding(true);
     std::cout << "Timing multiplication:\n";
     auto ret1 = pearce1<integer, kronecker_monomial<>>();
     decltype(ret1) ret2;

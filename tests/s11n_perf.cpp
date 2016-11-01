@@ -71,6 +71,7 @@ struct tmp_file {
 BOOST_AUTO_TEST_CASE(s11n_series_memory_test)
 {
     init();
+    settings::set_thread_binding(true);
     std::cout << "Multiplication time: ";
     const auto res = pearce1<integer, monomial<signed char>>();
     std::cout << '\n';

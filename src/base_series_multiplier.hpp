@@ -44,7 +44,8 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "config.hpp"
-#include "detail/atomic_utils.hpp"
+#include "detail/atomic_flag_array.hpp"
+#include "detail/atomic_lock_guard.hpp"
 #include "exceptions.hpp"
 #include "key_is_multipliable.hpp"
 #include "math.hpp"

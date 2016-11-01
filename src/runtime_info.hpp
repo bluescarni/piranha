@@ -80,41 +80,18 @@ extern "C" {
 namespace piranha
 {
 
-namespace detail
-{
-
-template <typename = int>
-struct base_runtime_info {
-    static const std::thread::id m_main_thread_id;
-};
-
-template <typename T>
-const std::thread::id base_runtime_info<T>::m_main_thread_id = std::this_thread::get_id();
-}
-
 /// Runtime information.
 /**
  * This class allows to query information about the runtime environment.
  */
-class runtime_info : private detail::base_runtime_info<>
+class runtime_info
 {
-    using base = detail::base_runtime_info<>;
 
 public:
-    /// Main thread ID.
-    /**
-     * @return const reference to an instance of the ID of the main thread of execution.
-     */
-    static const std::thread::id &get_main_thread_id()
-    {
-        return m_main_thread_id;
-    }
-    // NOTE: here we do not use boost's as we do not want to depend on Boost thread.
     /// Hardware concurrency.
     /**
      * @return number of concurrent threads supported by the environment (typically equal to the number of logical CPU
-     * cores), or 0 if
-     * the detection fails.
+     * cores), or 0 if the detection fails.
      */
     static unsigned get_hardware_concurrency()
     {

@@ -87,16 +87,22 @@ PYRANHA_DECLARE_TT_NAMER(piranha::monomial, "monomial")
 PYRANHA_DECLARE_TT_NAMER(piranha::divisor, "divisor")
 }
 
-template <typename Exc, piranha::enable_if_t<std::is_constructible<Exc,std::string>::value,int> = 0>
+// A couple of utils to test exception translation.
+template <typename Exc, piranha::enable_if_t<std::is_constructible<Exc, std::string>::value, int> = 0>
 static inline void test_exception()
 {
     piranha_throw(Exc, "hello world");
 }
 
-template <typename Exc, piranha::enable_if_t<!std::is_constructible<Exc,std::string>::value,int> = 0>
+template <typename Exc, piranha::enable_if_t<!std::is_constructible<Exc, std::string>::value, int> = 0>
 static inline void test_exception()
 {
-    piranha_throw(Exc,);
+    piranha_throw(Exc, );
+}
+
+// Small helper to retrieve the argument error exception from python.
+static inline void generate_argument_error(int)
+{
 }
 
 BOOST_PYTHON_MODULE(_core)
@@ -244,6 +250,10 @@ BOOST_PYTHON_MODULE(_core)
         .staticmethod("_get_min_work_per_thread");
     settings_class.def("_reset_min_work_per_thread", piranha::settings::reset_min_work_per_thread)
         .staticmethod("_reset_min_work_per_thread");
+    settings_class.def("_set_thread_binding", piranha::settings::set_thread_binding)
+        .staticmethod("_set_thread_binding");
+    settings_class.def("_get_thread_binding", piranha::settings::get_thread_binding)
+        .staticmethod("_get_thread_binding");
     // Factorial.
     bp::def("_factorial", &piranha::math::factorial<0>);
 // Binomial coefficient.
@@ -293,4 +303,6 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_test_bn_noverflow_error", &test_exception<boost::numeric::negative_overflow>);
     bp::def("_test_bn_bnc", &test_exception<boost::numeric::bad_numeric_cast>);
     bp::def("_test_inexact_division", &test_exception<piranha::math::inexact_division>);
+    // Helper to generate an argument error.
+    bp::def("_generate_argument_error", &generate_argument_error);
 }

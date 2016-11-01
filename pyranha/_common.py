@@ -31,46 +31,49 @@ from __future__ import absolute_import as _ai
 
 from . import _core
 
-# Decorator to prettify the type errors resulting when calling a C++ exposed function
-# with an invalid signature.
+# Trick to infer the type of the Boost ArgumentError exception.
+# https://mail.python.org/pipermail/cplusplus-sig/2010-April/015471.html
+try:
+    _core._generate_argument_error()
+except Exception as e:
+    _BAE_type = type(e)
 
 
 def _cpp_type_catcher(func, *args):
+    # Decorator to prettify the type errors resulting when calling a C++ exposed function
+    # with an invalid signature.
     try:
         return func(*args)
-    except TypeError:
+    except _BAE_type:
         raise TypeError('invalid argument type(s) for the C++ function \'{0}\': {1}'
                         .format(func.__name__, [type(_).__name__ for _ in args]))
 
-# Function to be run at module unload to clear registered custom derivatives.
-# The rationale is that custom derivatives will contain Python objects, and we
-# want to remove them before the C++ library exits.
-
 
 def _cleanup_custom_derivatives():
+    # Function to be run at module unload to clear registered custom derivatives.
+    # The rationale is that custom derivatives will contain Python objects, and we
+    # want to remove them before the C++ library exits.
     from ._core import _get_exposed_types_list as getl
     for s_type in getl():
         if hasattr(s_type, 'unregister_all_custom_derivatives'):
             s_type.unregister_all_custom_derivatives()
     print('Custom derivatives cleanup completed.')
 
-# NOTE: this is probably not needed at the moment as there is no way Python objects
-# end up in the cache, but it might happen in the future.
-
 
 def _cleanup_pow_caches():
+    # NOTE: this is probably not needed at the moment as there is no way Python objects
+    # end up in the cache, but it might happen in the future.
     from ._core import _get_exposed_types_list as getl
     for s_type in getl():
         if hasattr(s_type, 'clear_pow_cache'):
             s_type.clear_pow_cache()
     print('Pow caches cleanup completed.')
 
-# Render a series in png format using latex + dvipng.
-# Code adapted from and inspired by:
-# http://xyne.archlinux.ca/projects/tex2png
-
 
 def _repr_png_(self):
+    # Render a series in png format using latex + dvipng.
+    # Code adapted from and inspired by:
+    # http://xyne.archlinux.ca/projects/tex2png
     from tempfile import mkdtemp, NamedTemporaryFile
     from subprocess import Popen, PIPE, STDOUT
     from shlex import split
@@ -129,35 +132,31 @@ def _repr_png_(self):
         # content.
         rmtree(tempd_name)
 
-# Register the png representation method.
-
 
 def _register_repr_png():
+    # Register the png representation method.
     from ._core import _get_exposed_types_list as getl
     for s_type in getl():
         setattr(s_type, '_repr_png_', _repr_png_)
 
-# Register the latex representation method.
-
 
 def _register_repr_latex():
+    # Register the latex representation method.
     from ._core import _get_exposed_types_list as getl
     for s_type in getl():
         setattr(s_type, '_repr_latex_',
                 lambda self: r'\[ ' + self._latex_() + r' \]')
 
-# Register common wrappers.
-
 
 def _register_wrappers():
+    # Register common wrappers.
     _register_repr_png()
     _register_repr_latex()
 
-# Monkey patch the generic type generator class to accept normal args
-# instead of a list.
-
 
 def _replace_gtg_call():
+    # Monkey patch the generic type generator class to accept normal args
+    # instead of a list.
     _orig_gtg_call = _core._generic_type_generator.__call__
 
     def _gtg_call_wrapper(self, *args):
@@ -167,10 +166,9 @@ def _replace_gtg_call():
         return _orig_gtg_call(self, l_args)
     _core._generic_type_generator.__call__ = _gtg_call_wrapper
 
-# Remove hashing from exposed types.
-
 
 def _remove_hash():
+    # Remove hashing from exposed types.
     from ._core import _get_exposed_types_list as getl
     for s_type in getl():
         setattr(s_type, '__hash__', None)
@@ -185,10 +183,9 @@ def _monkey_patching():
     _replace_gtg_call()
     _remove_hash()
 
-# Cleanup function.
-
 
 def _cleanup():
+    # Cleanup function.
     _cleanup_custom_derivatives()
     _cleanup_pow_caches()
     _core._cleanup_type_system()

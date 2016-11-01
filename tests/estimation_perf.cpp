@@ -115,6 +115,7 @@ struct multiplier : base_series_multiplier<p_type> {
 BOOST_AUTO_TEST_CASE(initial_setup)
 {
     init();
+    settings::set_thread_binding(true);
     std::cout << "Max number of threads: " << max_nt() << '\n';
     settings::set_min_work_per_thread(1u);
 }
