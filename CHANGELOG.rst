@@ -1,8 +1,8 @@
 Changelog
 =========
 
-%%version%% (unreleased)
-------------------------
+v0.6 (2016-11-01)
+-----------------
 
 New
 ~~~
@@ -11,6 +11,14 @@ New
 
 Changes
 ~~~~~~~
+
+- Thread binding is now disabled by default, and it can be enabled at
+  runtime. [Francesco Biscani]
+
+- The thread pool does not use anymore the main thread id in order to
+  determine the suggested number of threads to use for a task. Rather,
+  it checks whether the calling thread belongs to the pool. [Francesco
+  Biscani]
 
 - Reduce the usage of boost::numeric_cast() in favour of
   piranha::safe_cast(). [Francesco Biscani]
