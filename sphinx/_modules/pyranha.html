@@ -155,7 +155,7 @@
 
 <span class="kn">import</span> <span class="nn">threading</span> <span class="k">as</span> <span class="nn">_thr</span>
 <span class="kn">from</span> <span class="nn">._common</span> <span class="k">import</span> <span class="n">_cpp_type_catcher</span><span class="p">,</span> <span class="n">_monkey_patching</span><span class="p">,</span> <span class="n">_cleanup</span>
-<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">polynomial_gcd_algorithm</span><span class="p">,</span> <span class="n">data_format</span><span class="p">,</span> <span class="n">compression</span><span class="p">,</span> <span class="n">_load_file</span> <span class="k">as</span> <span class="n">load_file</span><span class="p">,</span> <span class="n">_save_file</span> <span class="k">as</span> <span class="n">save_file</span>
+<span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">polynomial_gcd_algorithm</span><span class="p">,</span> <span class="n">data_format</span> <span class="k">as</span> <span class="n">_df</span><span class="p">,</span> <span class="n">compression</span> <span class="k">as</span> <span class="n">_cf</span>
 
 <span class="c1"># Run the monkey patching.</span>
 <span class="n">_monkey_patching</span><span class="p">()</span>
@@ -287,16 +287,16 @@
 
     <span class="nd">@staticmethod</span>
 <div class="viewcode-block" id="settings.get_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_latex_repr">[docs]</a>    <span class="k">def</span> <span class="nf">get_latex_repr</span><span class="p">():</span>
-        <span class="sd">r&quot;&quot;&quot;Check if exposed types have a ``_repr_latex_()`` method.</span>
+        <span class="sd">r&quot;&quot;&quot;Check if the TeX representation of exposed types is enabled.</span>
 
-<span class="sd">        The ``_repr_latex_()`` method, if present, is used by the IPython notebook to display the TeX</span>
+<span class="sd">        The ``_repr_latex_()`` method, if present, is used by the Jupyter notebook to display the TeX</span>
 <span class="sd">        representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable</span>
-<span class="sd">        to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX</span>
-<span class="sd">        representation is disabled, IPython will fall back to the PNG-based representation of the object, which</span>
+<span class="sd">        to disable the TeX representation in order to improve the performance of the notebook UI. When the TeX</span>
+<span class="sd">        representation is disabled, Jupyter will fall back to the PNG-based representation of the object, which</span>
 <span class="sd">        leverages - if available - a local installation of TeX for increased performance via a static rendering</span>
 <span class="sd">        of the TeX representation of the object to a PNG bitmap.</span>
 
-<span class="sd">        By default, the TeX representation is enabled.</span>
+<span class="sd">        By default, the TeX representation is enabled. See also :py:meth:`pyranha.settings.set_latex_repr`.</span>
 
 <span class="sd">        &gt;&gt;&gt; settings.get_latex_repr()</span>
 <span class="sd">        True</span>
@@ -409,7 +409,213 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
-        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_min_work_per_thread</span><span class="p">()</span></div></div>
+        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_min_work_per_thread</span><span class="p">()</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.set_thread_binding"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_thread_binding">[docs]</a>    <span class="k">def</span> <span class="nf">set_thread_binding</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the thread binding policy.</span>
+
+<span class="sd">        By default, the threads created by piranha are not bound to specific processors/cores.</span>
+<span class="sd">        Calling this method with a ``True`` *flag* will instruct piranha to attempt to bind each</span>
+<span class="sd">        thread to a different processor/core (which can result in increased performance</span>
+<span class="sd">        in certain circumstances). If *flag* is ``False``, the threads created by piranha will be</span>
+<span class="sd">        free to migrate across processors/cores.</span>
+
+<span class="sd">        :param flag: the desired thread binding policy</span>
+<span class="sd">        :type flag: ``bool``</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
+
+<span class="sd">        &gt;&gt;&gt; settings.get_thread_binding()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_thread_binding(True)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_thread_binding()</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_thread_binding(False)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_thread_binding()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_thread_binding(4.56) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        TypeError: invalid argument type(s)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_thread_binding</span><span class="p">,</span> <span class="n">flag</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="settings.get_thread_binding"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_thread_binding">[docs]</a>    <span class="k">def</span> <span class="nf">get_thread_binding</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Get the thread binding policy.</span>
+
+<span class="sd">        This method will return the flag set by :py:meth:`pyranha.settings.set_thread_binding`.</span>
+<span class="sd">        On program startup, the value returned by this function will be ``False``.</span>
+
+<span class="sd">        :returns: the thread binding policy</span>
+<span class="sd">        :rtype: ``bool``</span>
+<span class="sd">        :raises: any exception raised by the invoked low-level function</span>
+
+<span class="sd">        &gt;&gt;&gt; settings.get_thread_binding()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_thread_binding(True)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_thread_binding()</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; settings.set_thread_binding(False)</span>
+<span class="sd">        &gt;&gt;&gt; settings.get_thread_binding()</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
+        <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_thread_binding</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="data_format"><a class="viewcode-back" href="../pyranha_root.html#pyranha.data_format">[docs]</a><span class="k">class</span> <span class="nc">data_format</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Data format.</span>
+
+<span class="sd">    The members of this class identify the data formats that can be used when saving/loading</span>
+<span class="sd">    to/from disk symbolic objects via :py:func:`pyranha.save_file` and :py:func:`pyranha.load_file`.</span>
+<span class="sd">    The Boost formats are based on the Boost serialization library and they are always available.</span>
+<span class="sd">    The msgpack formats rely on the msgpack-c library (which is an optional dependency).</span>
+
+<span class="sd">    The portable variants are slower but suitable for use across architectures and piranha versions, the binary</span>
+<span class="sd">    variants are faster but they are not portable across architectures and piranha versions.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: Boost portable format.</span>
+    <span class="n">boost_portable</span> <span class="o">=</span> <span class="n">_df</span><span class="o">.</span><span class="n">boost_portable</span>
+    <span class="c1">#: Boost binary format.</span>
+    <span class="n">boost_binary</span> <span class="o">=</span> <span class="n">_df</span><span class="o">.</span><span class="n">boost_binary</span>
+    <span class="c1">#: msgpack portable format.</span>
+    <span class="n">msgpack_portable</span> <span class="o">=</span> <span class="n">_df</span><span class="o">.</span><span class="n">msgpack_portable</span>
+    <span class="c1">#: msgpack binary format.</span>
+    <span class="n">msgpack_binary</span> <span class="o">=</span> <span class="n">_df</span><span class="o">.</span><span class="n">msgpack_binary</span></div>
+
+
+<div class="viewcode-block" id="compression"><a class="viewcode-back" href="../pyranha_root.html#pyranha.compression">[docs]</a><span class="k">class</span> <span class="nc">compression</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compression format.</span>
+
+<span class="sd">    The members of this class identify the compression formats that can be used when saving/loading</span>
+<span class="sd">    to/from disk symbolic objects via :py:func:`pyranha.save_file` and :py:func:`pyranha.load_file`.</span>
+<span class="sd">    The compression formats are available only if piranha was compiled with the corresponding optional</span>
+<span class="sd">    compression options enabled.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: No compression.</span>
+    <span class="n">none</span> <span class="o">=</span> <span class="n">_cf</span><span class="o">.</span><span class="n">none</span>
+    <span class="c1">#: zlib compression.</span>
+    <span class="n">zlib</span> <span class="o">=</span> <span class="n">_cf</span><span class="o">.</span><span class="n">zlib</span>
+    <span class="c1">#: gzip compression.</span>
+    <span class="n">gzip</span> <span class="o">=</span> <span class="n">_cf</span><span class="o">.</span><span class="n">gzip</span>
+    <span class="c1">#: bzip2 compression.</span>
+    <span class="n">bzip2</span> <span class="o">=</span> <span class="n">_cf</span><span class="o">.</span><span class="n">bzip2</span></div>
+
+
+<span class="k">def</span> <span class="nf">_save_load_check_params</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">cf</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;the file name must be a string&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;the compression format was provided but the data format was not: please specify both or none&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cf</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;the data format was provided but the compression format was not: please specify both or none&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="save_file"><a class="viewcode-back" href="../pyranha_root.html#pyranha.save_file">[docs]</a><span class="k">def</span> <span class="nf">save_file</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save to file.</span>
+
+<span class="sd">    This function will save the symbolic object *obj* to the file called *name* using *df* as data format</span>
+<span class="sd">    and *cf* as compression format. The possible values for *df* and *cf* are listed in the</span>
+<span class="sd">    :py:class:`pyranha.data_format` and :py:class:`pyranha.compression` classes respectively.</span>
+
+<span class="sd">    If *df* and *cf* are both ``None``, then the data and compression formats are inferred from the filename:</span>
+
+<span class="sd">    * if *name* ends in one of the suffixes ``.bz2``, ``.gz`` or ``.zip`` then the suffix is removed</span>
+<span class="sd">      for further considerations from *name*, and the corresponding :py:class:`pyranha.compression` format is assumed</span>
+<span class="sd">      (respectively, :py:attr:`pyranha.compression.bzip2`, :py:attr:`pyranha.compression.gzip` and</span>
+<span class="sd">      :py:attr:`pyranha.compression.zlib`). Otherwise, :py:attr:`pyranha.compression.none` is assumed;</span>
+<span class="sd">    * after the removal of any compression suffix, the extension of *name* is examined again: if the extension is</span>
+<span class="sd">      one of ``.boostp``, ``.boostb``, ``.mpackp`` and ``.mpackb``, then the corresponding data format is selected</span>
+<span class="sd">      (respectively, :py:attr:`pyranha.data_format.boost_portable`, :py:attr:`pyranha.data_format.boost_binary`,</span>
+<span class="sd">      :py:attr:`pyranha.data_format.msgpack_portable`, :py:attr:`pyranha.data_format.msgpack_binary`). Othwewise, an</span>
+<span class="sd">      error will be produced.</span>
+
+<span class="sd">    Examples of file names:</span>
+
+<span class="sd">    * ``foo.boostb.bz2`` deduces :py:attr:`pyranha.data_format.boost_binary` and :py:attr:`pyranha.compression.bzip2`;</span>
+<span class="sd">    * ``foo.mpackp`` deduces :py:attr:`pyranha.data_format.msgpack_portable` and :py:attr:`pyranha.compression.none`;</span>
+<span class="sd">    * ``foo.txt`` produces an error;</span>
+<span class="sd">    * ``foo.bz2`` produces an error.</span>
+
+<span class="sd">    :param obj: the symbolic object that will be saved to file</span>
+<span class="sd">    :type obj: a supported symbolic type</span>
+<span class="sd">    :param name: the file name</span>
+<span class="sd">    :type name: ``str``</span>
+<span class="sd">    :param df: the desired data format (see :py:class:`pyranha.data_format`)</span>
+<span class="sd">    :param cf: the desired compression format (see :py:class:`pyranha.compression`)</span>
+
+<span class="sd">    :raises: :exc:`TypeError` if the file name is not a string</span>
+<span class="sd">    :raises: :exc:`ValueError` if only one of *df* and *cf* is ``None``</span>
+<span class="sd">    :raises: any exception raised by the invoked low-level C++ function</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile, os</span>
+<span class="sd">    &gt;&gt;&gt; x = polynomial(rational,k_monomial)()(&#39;x&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; p = (x + 1)**10</span>
+<span class="sd">    &gt;&gt;&gt; f = tempfile.NamedTemporaryFile(delete=False) # Generate a temporary file name</span>
+<span class="sd">    &gt;&gt;&gt; f.close()</span>
+<span class="sd">    &gt;&gt;&gt; save_file(p, f.name, data_format.boost_portable, compression.none)</span>
+<span class="sd">    &gt;&gt;&gt; p_load = type(p)()</span>
+<span class="sd">    &gt;&gt;&gt; load_file(p_load, f.name, data_format.boost_portable, compression.none)</span>
+<span class="sd">    &gt;&gt;&gt; p_load == p</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; save_file(p, 123) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    TypeError: the file name must be a string</span>
+<span class="sd">    &gt;&gt;&gt; save_file(p, &quot;foo&quot;, df = data_format.boost_portable) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    ValueError: the data format was provided but the compression format was not</span>
+<span class="sd">    &gt;&gt;&gt; os.remove(f.name) # Cleanup</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_save_file</span>
+    <span class="n">_save_load_check_params</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_save_file</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_save_file</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_file"><a class="viewcode-back" href="../pyranha_root.html#pyranha.load_file">[docs]</a><span class="k">def</span> <span class="nf">load_file</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load from file.</span>
+
+<span class="sd">    This function will load into the symbolic object *obj* the data stored in the file called *name* using *df*</span>
+<span class="sd">    as data format and *cf* as compression format. The possible values for *df* and *cf* are listed in the</span>
+<span class="sd">    :py:class:`pyranha.data_format` and :py:class:`pyranha.compression` classes respectively.</span>
+
+<span class="sd">    If *df* and *cf* are both ``None``, then the data and compression formats are inferred from the filename (see</span>
+<span class="sd">    :py:func:`pyranha.save_file` for a detailed explanation and examples).</span>
+
+<span class="sd">    :param obj: the symbolic object into which the file&#39;s data will be loaded</span>
+<span class="sd">    :type obj: a supported symbolic type</span>
+<span class="sd">    :param name: the source file name</span>
+<span class="sd">    :type name: ``str``</span>
+<span class="sd">    :param df: the desired data format (see :py:class:`pyranha.data_format`)</span>
+<span class="sd">    :param cf: the desired compression format (see :py:class:`pyranha.compression`)</span>
+
+<span class="sd">    :raises: :exc:`TypeError` if the file name is not a string</span>
+<span class="sd">    :raises: :exc:`ValueError` if only one of *df* and *cf* is ``None``</span>
+<span class="sd">    :raises: any exception raised by the invoked low-level C++ function</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_load_file</span>
+    <span class="n">_save_load_check_params</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_load_file</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">cf</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_load_file</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
 <span class="kn">import</span> <span class="nn">atexit</span> <span class="k">as</span> <span class="nn">_atexit</span>
 <span class="n">_atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">_cleanup</span><span class="p">())</span>

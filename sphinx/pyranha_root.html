@@ -153,14 +153,14 @@ The methods are thread-safe.</p>
 <dl class="staticmethod">
 <dt id="pyranha.settings.get_latex_repr">
 <em class="property">static </em><code class="descname">get_latex_repr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_latex_repr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_latex_repr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if exposed types have a <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method.</p>
-<p>The <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method, if present, is used by the IPython notebook to display the TeX
+<dd><p>Check if the TeX representation of exposed types is enabled.</p>
+<p>The <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method, if present, is used by the Jupyter notebook to display the TeX
 representation of an exposed type via a Javascript library. If an object is very large, it might be preferrable
-to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX
-representation is disabled, IPython will fall back to the PNG-based representation of the object, which
+to disable the TeX representation in order to improve the performance of the notebook UI. When the TeX
+representation is disabled, Jupyter will fall back to the PNG-based representation of the object, which
 leverages - if available - a local installation of TeX for increased performance via a static rendering
 of the TeX representation of the object to a PNG bitmap.</p>
-<p>By default, the TeX representation is enabled.</p>
+<p>By default, the TeX representation is enabled. See also <a class="reference internal" href="#pyranha.settings.set_latex_repr" title="pyranha.settings.set_latex_repr"><code class="xref py py-meth docutils literal"><span class="pre">pyranha.settings.set_latex_repr()</span></code></a>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
@@ -217,6 +217,36 @@ of the TeX representation of the object to a PNG bitmap.</p>
 </table>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span> 
 <span class="go">16 # This will be a platform-dependent value.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.get_thread_binding">
+<em class="property">static </em><code class="descname">get_thread_binding</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_thread_binding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_thread_binding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the thread binding policy.</p>
+<p>This method will return the flag set by <a class="reference internal" href="#pyranha.settings.set_thread_binding" title="pyranha.settings.set_thread_binding"><code class="xref py py-meth docutils literal"><span class="pre">pyranha.settings.set_thread_binding()</span></code></a>.
+On program startup, the value returned by this function will be <code class="docutils literal"><span class="pre">False</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the thread binding policy</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_thread_binding</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_thread_binding</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_thread_binding</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_thread_binding</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_thread_binding</span><span class="p">()</span>
+<span class="go">False</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -409,6 +439,218 @@ description of how the method is used.</p>
 </div>
 </dd></dl>
 
+<dl class="staticmethod">
+<dt id="pyranha.settings.set_thread_binding">
+<em class="property">static </em><code class="descname">set_thread_binding</code><span class="sig-paren">(</span><em>flag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.set_thread_binding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.set_thread_binding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the thread binding policy.</p>
+<p>By default, the threads created by piranha are not bound to specific processors/cores.
+Calling this method with a <code class="docutils literal"><span class="pre">True</span></code> <em>flag</em> will instruct piranha to attempt to bind each
+thread to a different processor/core (which can result in increased performance
+in certain circumstances). If <em>flag</em> is <code class="docutils literal"><span class="pre">False</span></code>, the threads created by piranha will be
+free to migrate across processors/cores.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) &#8211; the desired thread binding policy</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_thread_binding</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_thread_binding</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_thread_binding</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_thread_binding</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_thread_binding</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_thread_binding</span><span class="p">(</span><span class="mf">4.56</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.data_format">
+<em class="property">class </em><code class="descclassname">pyranha.</code><code class="descname">data_format</code><a class="reference internal" href="_modules/pyranha.html#data_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.data_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data format.</p>
+<p>The members of this class identify the data formats that can be used when saving/loading
+to/from disk symbolic objects via <a class="reference internal" href="#pyranha.save_file" title="pyranha.save_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.save_file()</span></code></a> and <a class="reference internal" href="#pyranha.load_file" title="pyranha.load_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.load_file()</span></code></a>.
+The Boost formats are based on the Boost serialization library and they are always available.
+The msgpack formats rely on the msgpack-c library (which is an optional dependency).</p>
+<p>The portable variants are slower but suitable for use across architectures and piranha versions, the binary
+variants are faster but they are not portable across architectures and piranha versions.</p>
+<dl class="attribute">
+<dt id="pyranha.data_format.boost_binary">
+<code class="descname">boost_binary</code><em class="property"> = pyranha._core.data_format.boost_binary</em><a class="headerlink" href="#pyranha.data_format.boost_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Boost binary format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyranha.data_format.boost_portable">
+<code class="descname">boost_portable</code><em class="property"> = pyranha._core.data_format.boost_portable</em><a class="headerlink" href="#pyranha.data_format.boost_portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Boost portable format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyranha.data_format.msgpack_binary">
+<code class="descname">msgpack_binary</code><em class="property"> = pyranha._core.data_format.msgpack_binary</em><a class="headerlink" href="#pyranha.data_format.msgpack_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>msgpack binary format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyranha.data_format.msgpack_portable">
+<code class="descname">msgpack_portable</code><em class="property"> = pyranha._core.data_format.msgpack_portable</em><a class="headerlink" href="#pyranha.data_format.msgpack_portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>msgpack portable format.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.compression">
+<em class="property">class </em><code class="descclassname">pyranha.</code><code class="descname">compression</code><a class="reference internal" href="_modules/pyranha.html#compression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.compression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compression format.</p>
+<p>The members of this class identify the compression formats that can be used when saving/loading
+to/from disk symbolic objects via <a class="reference internal" href="#pyranha.save_file" title="pyranha.save_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.save_file()</span></code></a> and <a class="reference internal" href="#pyranha.load_file" title="pyranha.load_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.load_file()</span></code></a>.
+The compression formats are available only if piranha was compiled with the corresponding optional
+compression options enabled.</p>
+<dl class="attribute">
+<dt id="pyranha.compression.bzip2">
+<code class="descname">bzip2</code><em class="property"> = pyranha._core.compression.bzip2</em><a class="headerlink" href="#pyranha.compression.bzip2" title="Permalink to this definition">¶</a></dt>
+<dd><p>bzip2 compression.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyranha.compression.gzip">
+<code class="descname">gzip</code><em class="property"> = pyranha._core.compression.gzip</em><a class="headerlink" href="#pyranha.compression.gzip" title="Permalink to this definition">¶</a></dt>
+<dd><p>gzip compression.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyranha.compression.none">
+<code class="descname">none</code><em class="property"> = pyranha._core.compression.none</em><a class="headerlink" href="#pyranha.compression.none" title="Permalink to this definition">¶</a></dt>
+<dd><p>No compression.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyranha.compression.zlib">
+<code class="descname">zlib</code><em class="property"> = pyranha._core.compression.zlib</em><a class="headerlink" href="#pyranha.compression.zlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>zlib compression.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.save_file">
+<code class="descclassname">pyranha.</code><code class="descname">save_file</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>df=None</em>, <em>cf=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#save_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.save_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save to file.</p>
+<p>This function will save the symbolic object <em>obj</em> to the file called <em>name</em> using <em>df</em> as data format
+and <em>cf</em> as compression format. The possible values for <em>df</em> and <em>cf</em> are listed in the
+<a class="reference internal" href="#pyranha.data_format" title="pyranha.data_format"><code class="xref py py-class docutils literal"><span class="pre">pyranha.data_format</span></code></a> and <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a> classes respectively.</p>
+<p>If <em>df</em> and <em>cf</em> are both <code class="docutils literal"><span class="pre">None</span></code>, then the data and compression formats are inferred from the filename:</p>
+<ul class="simple">
+<li>if <em>name</em> ends in one of the suffixes <code class="docutils literal"><span class="pre">.bz2</span></code>, <code class="docutils literal"><span class="pre">.gz</span></code> or <code class="docutils literal"><span class="pre">.zip</span></code> then the suffix is removed
+for further considerations from <em>name</em>, and the corresponding <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a> format is assumed
+(respectively, <a class="reference internal" href="#pyranha.compression.bzip2" title="pyranha.compression.bzip2"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.compression.bzip2</span></code></a>, <a class="reference internal" href="#pyranha.compression.gzip" title="pyranha.compression.gzip"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.compression.gzip</span></code></a> and
+<a class="reference internal" href="#pyranha.compression.zlib" title="pyranha.compression.zlib"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.compression.zlib</span></code></a>). Otherwise, <a class="reference internal" href="#pyranha.compression.none" title="pyranha.compression.none"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.compression.none</span></code></a> is assumed;</li>
+<li>after the removal of any compression suffix, the extension of <em>name</em> is examined again: if the extension is
+one of <code class="docutils literal"><span class="pre">.boostp</span></code>, <code class="docutils literal"><span class="pre">.boostb</span></code>, <code class="docutils literal"><span class="pre">.mpackp</span></code> and <code class="docutils literal"><span class="pre">.mpackb</span></code>, then the corresponding data format is selected
+(respectively, <a class="reference internal" href="#pyranha.data_format.boost_portable" title="pyranha.data_format.boost_portable"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.data_format.boost_portable</span></code></a>, <a class="reference internal" href="#pyranha.data_format.boost_binary" title="pyranha.data_format.boost_binary"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.data_format.boost_binary</span></code></a>,
+<a class="reference internal" href="#pyranha.data_format.msgpack_portable" title="pyranha.data_format.msgpack_portable"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.data_format.msgpack_portable</span></code></a>, <a class="reference internal" href="#pyranha.data_format.msgpack_binary" title="pyranha.data_format.msgpack_binary"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.data_format.msgpack_binary</span></code></a>). Othwewise, an
+error will be produced.</li>
+</ul>
+<p>Examples of file names:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">foo.boostb.bz2</span></code> deduces <a class="reference internal" href="#pyranha.data_format.boost_binary" title="pyranha.data_format.boost_binary"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.data_format.boost_binary</span></code></a> and <a class="reference internal" href="#pyranha.compression.bzip2" title="pyranha.compression.bzip2"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.compression.bzip2</span></code></a>;</li>
+<li><code class="docutils literal"><span class="pre">foo.mpackp</span></code> deduces <a class="reference internal" href="#pyranha.data_format.msgpack_portable" title="pyranha.data_format.msgpack_portable"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.data_format.msgpack_portable</span></code></a> and <a class="reference internal" href="#pyranha.compression.none" title="pyranha.compression.none"><code class="xref py py-attr docutils literal"><span class="pre">pyranha.compression.none</span></code></a>;</li>
+<li><code class="docutils literal"><span class="pre">foo.txt</span></code> produces an error;</li>
+<li><code class="docutils literal"><span class="pre">foo.bz2</span></code> produces an error.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>a supported symbolic type</em>) &#8211; the symbolic object that will be saved to file</li>
+<li><strong>name</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; the file name</li>
+<li><strong>df</strong> &#8211; the desired data format (see <a class="reference internal" href="#pyranha.data_format" title="pyranha.data_format"><code class="xref py py-class docutils literal"><span class="pre">pyranha.data_format</span></code></a>)</li>
+<li><strong>cf</strong> &#8211; the desired compression format (see <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a>)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if the file name is not a string</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> if only one of <em>df</em> and <em>cf</em> is <code class="docutils literal"><span class="pre">None</span></code></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">any exception raised by the invoked low-level C++ function</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tempfile</span><span class="o">,</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># Generate a temporary file name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">save_file</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data_format</span><span class="o">.</span><span class="n">boost_portable</span><span class="p">,</span> <span class="n">compression</span><span class="o">.</span><span class="n">none</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p_load</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">p</span><span class="p">)()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">load_file</span><span class="p">(</span><span class="n">p_load</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data_format</span><span class="o">.</span><span class="n">boost_portable</span><span class="p">,</span> <span class="n">compression</span><span class="o">.</span><span class="n">none</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p_load</span> <span class="o">==</span> <span class="n">p</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">save_file</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">123</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">the file name must be a string</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">save_file</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="n">df</span> <span class="o">=</span> <span class="n">data_format</span><span class="o">.</span><span class="n">boost_portable</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">the data format was provided but the compression format was not</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="c1"># Cleanup</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyranha.load_file">
+<code class="descclassname">pyranha.</code><code class="descname">load_file</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>df=None</em>, <em>cf=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#load_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.load_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load from file.</p>
+<p>This function will load into the symbolic object <em>obj</em> the data stored in the file called <em>name</em> using <em>df</em>
+as data format and <em>cf</em> as compression format. The possible values for <em>df</em> and <em>cf</em> are listed in the
+<a class="reference internal" href="#pyranha.data_format" title="pyranha.data_format"><code class="xref py py-class docutils literal"><span class="pre">pyranha.data_format</span></code></a> and <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a> classes respectively.</p>
+<p>If <em>df</em> and <em>cf</em> are both <code class="docutils literal"><span class="pre">None</span></code>, then the data and compression formats are inferred from the filename (see
+<a class="reference internal" href="#pyranha.save_file" title="pyranha.save_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.save_file()</span></code></a> for a detailed explanation and examples).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>a supported symbolic type</em>) &#8211; the symbolic object into which the file&#8217;s data will be loaded</li>
+<li><strong>name</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; the source file name</li>
+<li><strong>df</strong> &#8211; the desired data format (see <a class="reference internal" href="#pyranha.data_format" title="pyranha.data_format"><code class="xref py py-class docutils literal"><span class="pre">pyranha.data_format</span></code></a>)</li>
+<li><strong>cf</strong> &#8211; the desired compression format (see <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a>)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if the file name is not a string</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> if only one of <em>df</em> and <em>cf</em> is <code class="docutils literal"><span class="pre">None</span></code></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">any exception raised by the invoked low-level C++ function</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
