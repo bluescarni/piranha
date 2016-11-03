@@ -48,7 +48,7 @@ see https://www.gnu.org/licenses/. */
 namespace pyranha
 {
 
-PYRANHA_DECLARE_TT_NAMER(piranha::rational_function, "rational_function")
+PYRANHA_DECLARE_T_NAME(piranha::rational_function, "rational_function")
 
 namespace bp = boost::python;
 

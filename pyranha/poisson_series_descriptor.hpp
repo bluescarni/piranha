@@ -48,7 +48,7 @@ see https://www.gnu.org/licenses/. */
 namespace pyranha
 {
 
-PYRANHA_DECLARE_TT_NAMER(piranha::poisson_series, "poisson_series")
+PYRANHA_DECLARE_T_NAME(piranha::poisson_series, "poisson_series")
 
 struct poisson_series_descriptor {
     using params = std::tuple<

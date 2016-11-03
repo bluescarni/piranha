@@ -83,8 +83,8 @@ static inline void cleanup_type_system()
 namespace pyranha
 {
 
-PYRANHA_DECLARE_TT_NAMER(piranha::monomial, "monomial")
-PYRANHA_DECLARE_TT_NAMER(piranha::divisor, "divisor")
+PYRANHA_DECLARE_T_NAME(piranha::monomial, "monomial")
+PYRANHA_DECLARE_T_NAME(piranha::divisor, "divisor")
 }
 
 // A couple of utils to test exception translation.

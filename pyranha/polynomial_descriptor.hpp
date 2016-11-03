@@ -44,7 +44,7 @@ see https://www.gnu.org/licenses/. */
 namespace pyranha
 {
 
-PYRANHA_DECLARE_TT_NAMER(piranha::polynomial, "polynomial")
+PYRANHA_DECLARE_T_NAME(piranha::polynomial, "polynomial")
 
 // Descriptor for polynomial exposition.
 struct polynomial_descriptor {
