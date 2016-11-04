@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/errors.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/stl_iterator.hpp>
+#include <boost/python/tuple.hpp>
 #include <cstddef>
 #include <functional>
 #include <string>
@@ -81,30 +82,50 @@ std::size_t v_idx_hasher::operator()(const std::vector<std::type_index> &v) cons
     return retval;
 }
 
-type_generator generic_type_generator::operator()(bp::list l) const
+// Small utility to convert a vector of type indices to a string representation, only for error reporting purposes.
+static inline std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t_idx)
 {
-    // We assume that this is created concurrently with the exposition of the gtg
-    // (and hence its registration on the C++ and Python sides).
-    piranha_assert(gtg_map.find(m_name) != gtg_map.end());
-    // Convert the list to a vector of type idx objects.
+    std::string tv_name = "[";
+    for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
+        tv_name += piranha::detail::demangle(v_t_idx[i]);
+        if (i != v_t_idx.size() - 1u) {
+            tv_name += ",";
+        }
+    }
+    tv_name += "]";
+    return tv_name;
+}
+
+type_generator type_generator_template::getitem_t(bp::tuple t) const
+{
+    if (ti_map.find(m_name) == ti_map.end()) {
+        ::PyErr_SetString(PyExc_TypeError,
+                          ("no instance of the C++ class template '" + m_name + "' has been registered").c_str());
+        bp::throw_error_already_set();
+    }
+    // Convert the tuple of generators to a vector of type idx objects.
     std::vector<std::type_index> v_t_idx;
-    bp::stl_input_iterator<type_generator> it(l), end;
+    bp::stl_input_iterator<type_generator> it(t), end;
     for (; it != end; ++it) {
         v_t_idx.push_back((*it).m_t_idx);
     }
-    const auto it1 = gtg_map[m_name].find(v_t_idx);
-    if (it1 == gtg_map[m_name].end()) {
-        ::PyErr_SetString(PyExc_TypeError,
-                          ("the generic type generator '" + m_name + "' has not been instantiated with the type pack "
-                           + v_t_idx_to_str(v_t_idx))
-                              .c_str());
+    const auto it1 = ti_map[m_name].find(v_t_idx);
+    if (it1 == ti_map[m_name].end()) {
+        ::PyErr_SetString(PyExc_TypeError, ("no instance of the C++ class template '" + m_name
+                                            + "' has been registered with arguments " + v_t_idx_to_str(v_t_idx))
+                                               .c_str());
         bp::throw_error_already_set();
     }
     return type_generator{it1->second};
 }
 
-std::string generic_type_generator::repr() const
+type_generator type_generator_template::getitem_o(bp::object o) const
 {
-    return "Type generator for the generic C++ type '" + m_orig_name + "'";
+    return getitem_t(bp::make_tuple(o));
+}
+
+std::string type_generator_template::repr() const
+{
+    return "Type generator template for the C++ class template '" + m_name + "'";
 }
 }

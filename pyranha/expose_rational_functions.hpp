@@ -48,9 +48,9 @@ see https://www.gnu.org/licenses/. */
 namespace pyranha
 {
 
-PYRANHA_DECLARE_T_NAME(piranha::rational_function, "rational_function")
-
 namespace bp = boost::python;
+
+PYRANHA_DECLARE_T_NAME(piranha::rational_function, "rational_function")
 
 void expose_rational_functions_0();
 void expose_rational_functions_1();
@@ -176,8 +176,8 @@ inline void expose_rational_functions_impl()
     using r_type = rational_function<Key>;
     using p_type = typename r_type::p_type;
     using q_type = typename r_type::q_type;
-    // Register in the generic type generator map.
-    expose_generic_type_generator<rational_function, Key>();
+    // Register the template instance.
+    register_template_instance<rational_function, Key>();
     // Initial class exposition, with def ctor.
     auto rf_class = expose_class<r_type>();
     // Add the _is_exposed_type tag.

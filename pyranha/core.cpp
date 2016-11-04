@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/binomial.hpp"
 #include "../src/config.hpp"
 #include "../src/divisor.hpp"
+#include "../src/divisor_series.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/invert.hpp"
@@ -56,6 +57,9 @@ see https://www.gnu.org/licenses/. */
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/poisson_series.hpp"
+#include "../src/polynomial.hpp"
+#include "../src/rational_function.hpp"
 #include "../src/real.hpp"
 #include "../src/s11n.hpp"
 #include "../src/safe_cast.hpp"
@@ -126,10 +130,11 @@ BOOST_PYTHON_MODULE(_core)
     bp::class_<pyranha::type_generator> tg_class("_type_generator", bp::no_init);
     tg_class.def("__call__", &pyranha::type_generator::operator());
     tg_class.def("__repr__", &pyranha::type_generator::repr);
-    // Generic type generator class.
-    bp::class_<pyranha::generic_type_generator> gtg_class("_generic_type_generator", bp::no_init);
-    gtg_class.def("__call__", &pyranha::generic_type_generator::operator());
-    gtg_class.def("__repr__", &pyranha::generic_type_generator::repr);
+    // Type generator template class.
+    bp::class_<pyranha::type_generator_template> tgt_class("_type_generator_template", bp::no_init);
+    tgt_class.def("__getitem__", &pyranha::type_generator_template::getitem_o);
+    tgt_class.def("__getitem__", &pyranha::type_generator_template::getitem_t);
+    tgt_class.def("__repr__", &pyranha::type_generator_template::repr);
     // Create the types submodule.
     std::string types_module_name = bp::extract<std::string>(bp::scope().attr("__name__") + ".types");
     // NOTE: the nested namespace is created if not there, otherwise it will be returned.
@@ -144,7 +149,7 @@ BOOST_PYTHON_MODULE(_core)
     // borrowed, both in Python 2 and 3.
     auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr)));
     bp::scope().attr("types") = types_module;
-    // Expose concrete instances of the type generator.
+    // Expose concrete instances of type generators.
     pyranha::instantiate_type_generator<signed char>("signed_char", types_module);
     pyranha::instantiate_type_generator<short>("short", types_module);
     pyranha::instantiate_type_generator<float>("float", types_module);
@@ -154,11 +159,13 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::instantiate_type_generator<piranha::rational>("rational", types_module);
     pyranha::instantiate_type_generator<piranha::real>("real", types_module);
     pyranha::instantiate_type_generator<piranha::k_monomial>("k_monomial", types_module);
-    // The generic type generator for monomial instances.
-    pyranha::expose_generic_type_generator<piranha::monomial, piranha::rational>();
-    pyranha::expose_generic_type_generator<piranha::monomial, short>();
-    // The generic type generator for divisor instances.
-    pyranha::expose_generic_type_generator<piranha::divisor, short>();
+    // Register template instances of monomial, and instantiate the type generator template.
+    pyranha::instantiate_type_generator_template<piranha::monomial>("monomial", types_module);
+    pyranha::register_template_instance<piranha::monomial, piranha::rational>();
+    pyranha::register_template_instance<piranha::monomial, short>();
+    // Same for divisor.
+    pyranha::instantiate_type_generator_template<piranha::divisor>("divisor", types_module);
+    pyranha::register_template_instance<piranha::divisor, short>();
     // Arithmetic converters.
     pyranha::integer_converter i_c;
     pyranha::rational_converter ra_c;
@@ -189,6 +196,7 @@ BOOST_PYTHON_MODULE(_core)
         .value("gzip", piranha::compression::gzip)
         .value("bzip2", piranha::compression::bzip2);
     // Expose polynomials.
+    pyranha::instantiate_type_generator_template<piranha::polynomial>("polynomial", types_module);
     pyranha::expose_polynomials_0();
     pyranha::expose_polynomials_1();
     pyranha::expose_polynomials_2();
@@ -204,6 +212,7 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_polynomials_12();
     pyranha::expose_polynomials_13();
     // Expose Poisson series.
+    pyranha::instantiate_type_generator_template<piranha::poisson_series>("poisson_series", types_module);
     pyranha::expose_poisson_series_0();
     pyranha::expose_poisson_series_1();
     pyranha::expose_poisson_series_2();
@@ -221,6 +230,7 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_poisson_series_14();
     pyranha::expose_poisson_series_15();
     // Expose divisor series.
+    pyranha::instantiate_type_generator_template<piranha::divisor_series>("divisor_series", types_module);
     pyranha::expose_divisor_series_0();
     pyranha::expose_divisor_series_1();
     pyranha::expose_divisor_series_2();
@@ -231,6 +241,7 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_divisor_series_7();
     pyranha::expose_divisor_series_8();
     // Expose rational function.
+    pyranha::instantiate_type_generator_template<piranha::rational_function>("rational_function", types_module);
     pyranha::expose_rational_functions_0();
     pyranha::expose_rational_functions_1();
     // Expose the settings class.

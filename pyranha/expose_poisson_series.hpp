@@ -38,11 +38,14 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/detail/sfinae_types.hpp"
+#include "type_system.hpp"
 
 namespace pyranha
 {
 
 namespace bp = boost::python;
+
+PYRANHA_DECLARE_T_NAME(piranha::poisson_series, "poisson_series")
 
 // Custom hook for Poisson series.
 struct ps_custom_hook {

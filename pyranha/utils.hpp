@@ -53,7 +53,7 @@ inline bp::object builtin()
 // Check if object has attribute.
 inline bool hasattr(const bp::object &o, const char *name)
 {
-    return bp::extract<bool>(builtin().attr("hasattr")(o,name));
+    return bp::extract<bool>(builtin().attr("hasattr")(o, name));
 }
 
 // Get string representation.
@@ -61,7 +61,6 @@ inline std::string str(const bp::object &o)
 {
     return bp::extract<std::string>(builtin().attr("str")(o));
 }
-
 }
 
 #endif

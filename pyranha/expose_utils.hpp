@@ -1043,10 +1043,13 @@ class series_exposer
         void operator()(const std::tuple<Args...> &) const
         {
             using s_type = Series<Args...>;
-            // Register in the generic type generator map.
-            expose_generic_type_generator<Series, Args...>();
             // Start exposing.
             auto series_class = expose_class<s_type>();
+            // Connect the Python type to the C++ type.
+            register_exposed_type(series_class);
+            // Register the template instance corresponding to the series, so that we can
+            // fetch its type generator via the type system machinery.
+            register_template_instance<Series, Args...>();
             // Add the _is_exposed_type tag.
             series_class.attr("_is_exposed_type") = true;
             // Constructor from string, if available.

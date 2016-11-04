@@ -33,15 +33,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/python/class.hpp>
 #include <boost/python/errors.hpp>
-#include <boost/python/extract.hpp>
-#include <boost/python/handle.hpp>
-#include <boost/python/list.hpp>
 #include <boost/python/object.hpp>
-#include <boost/python/scope.hpp>
+#include <boost/python/tuple.hpp>
 #include <cstddef>
 #include <initializer_list>
 #include <string>
-#include <type_traits>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
@@ -73,7 +69,7 @@ struct type_generator {
 // Register into et_map a C++ type that was exposed to Python, recording the corresponding Python type.
 // Will error out if the type has already been registered.
 template <typename T, typename... Args>
-inline void register_exposed_type(const bp::class_<T, Args..> &c)
+inline void register_exposed_type(const bp::class_<T, Args...> &c)
 {
     std::type_index t_idx(typeid(T));
     if (et_map.find(t_idx) != et_map.end()) {
@@ -93,16 +89,19 @@ inline void instantiate_type_generator(const std::string &name, bp::object &o)
 {
     // We do not want to have duplicate instances on the Python side.
     if (hasattr(o, name.c_str())) {
-        ::PyErr_SetString(PyExc_RuntimeError,
-                          ("an attribute called '" + name + "' already exists in the object '" + str(o) + "'").c_str());
+        ::PyErr_SetString(PyExc_AttributeError, ("error while trying to instantiate a type generator for the C++ type '"
+                                                 + piranha::detail::demangle<T>() + "': an attribute called '" + name
+                                                 + "' already exists in the object '" + str(o) + "'")
+                                                    .c_str());
         bp::throw_error_already_set();
     }
     o.attr(name.c_str()) = type_generator{std::type_index(typeid(T))};
 }
 
-// Meta/macro programming to establish a 1-to-1 connection between a class template and a string.
-// This needs to be specialised (via the macro below) in order to be usable, otherwise
-// a compile-time error will be generated.
+// Meta/macro programming to establish a 1-to-1 connection between a class template and a string. The string will be
+// used as a surrogate identifier for the class template, as we don't have objects in the standard to represent at
+// runtime the "type" of class templates. This needs to be specialised (via the macro below) in order to be usable,
+// otherwise a compile-time error will be generated.
 // NOTE: this needs the second template param so that the specialisations below are still templates and we don't
 // get funky error messages about name/orig_name being defined in more than 1 translation unit.
 template <template <typename...> class TT, typename = void>
@@ -150,22 +149,40 @@ void register_template_instance()
     if (ti_map[name].find(v_t_idx) != ti_map[name].end()) {
         ::PyErr_SetString(
             PyExc_TypeError,
-            ("the template instance '" + piranha::detail::demangle(t_idx) + "' has already been registered").c_str());
+            ("the template instance '" + piranha::detail::demangle(tidx) + "' has already been registered").c_str());
         bp::throw_error_already_set();
     }
-    ti_map[name].emplace(std::move(v_t_idx), std::move(t_idx));
+    ti_map[name].emplace(std::move(v_t_idx), std::move(tidx));
 }
 
-// Like above, but this instead establishes the connection between a class template instantiated
-// with a certain set of params and a type_generator.
-struct generic_type_generator {
-    // Get the type generator corresponding to the C++ type defined by name<l[0],l[1],...>,
-    // where l is a list of type generators.
-    type_generator operator()(bp::list) const;
+// The purpose of this structure is to go look into ti_map for a template instance and,
+// if found, return a type generator corresponding to that instance. The template instance
+// will be constructed from:
+// - the class template connected to the string m_name (via t_name),
+// - one or more type generators passed in as arguments to the getitem() method, representing
+//   the parameters of the template instance.
+struct type_generator_template {
+    type_generator getitem_t(bp::tuple) const;
+    type_generator getitem_o(bp::object) const;
     std::string repr() const;
     const std::string m_name;
-    const std::string m_orig_name;
 };
+
+// Instantiate a type generator template for the class template TT into the object. If an attribute with the same
+// name already exists, it will error out.
+template <template <typename...> class TT>
+inline void instantiate_type_generator_template(const std::string &name, bp::object &o)
+{
+    if (hasattr(o, name.c_str())) {
+        ::PyErr_SetString(PyExc_AttributeError,
+                          ("error while trying to instantiate a type generator for the C++ class template '"
+                           + t_name<TT>::name + "': an attribute called '" + name + "' already exists in the object '"
+                           + str(o) + "'")
+                              .c_str());
+        bp::throw_error_already_set();
+    }
+    o.attr(name.c_str()) = type_generator_template{t_name<TT>::name};
+}
 }
 
 #endif

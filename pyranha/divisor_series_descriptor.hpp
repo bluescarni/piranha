@@ -41,13 +41,9 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
-#include "expose_utils.hpp"
 
 namespace pyranha
 {
-
-PYRANHA_DECLARE_T_NAME(piranha::divisor_series, "divisor_series")
-
 struct divisor_series_descriptor {
     using d_type = piranha::divisor<short>;
     using params = std::tuple<

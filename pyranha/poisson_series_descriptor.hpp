@@ -43,12 +43,9 @@ see https://www.gnu.org/licenses/. */
 #include "../src/polynomial.hpp"
 #include "../src/rational_function.hpp"
 #include "../src/real.hpp"
-#include "type_system.hpp"
 
 namespace pyranha
 {
-
-PYRANHA_DECLARE_T_NAME(piranha::poisson_series, "poisson_series")
 
 struct poisson_series_descriptor {
     using params = std::tuple<

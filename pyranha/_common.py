@@ -154,19 +154,6 @@ def _register_wrappers():
     _register_repr_latex()
 
 
-def _replace_gtg_call():
-    # Monkey patch the generic type generator class to accept normal args
-    # instead of a list.
-    _orig_gtg_call = _core._generic_type_generator.__call__
-
-    def _gtg_call_wrapper(self, *args):
-        l_args = list(args)
-        if not all([isinstance(_, _core._type_generator) for _ in l_args]):
-            raise TypeError('all the arguments must be type generators')
-        return _orig_gtg_call(self, l_args)
-    _core._generic_type_generator.__call__ = _gtg_call_wrapper
-
-
 def _remove_hash():
     # Remove hashing from exposed types.
     from ._core import _get_exposed_types_list as getl
@@ -180,7 +167,6 @@ def _monkey_patching():
     # NOTE: it seems like concurrent import is not an issue:
     # http://stackoverflow.com/questions/12389526/import-inside-of-a-python-thread
     _register_wrappers()
-    _replace_gtg_call()
     _remove_hash()
 
 
