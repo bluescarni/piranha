@@ -117,30 +117,8 @@ extern std::size_t exposed_types_counter;
 template <typename T>
 inline bp::class_<T> expose_class()
 {
-    const auto t_idx = std::type_index(typeid(T));
-    if (et_map.find(t_idx) != et_map.end()) {
-        // NOTE: it is ok here and elsewhere to use c_str(), as PyErr_SetString will convert the second argument to a
-        // Python
-        // string object.
-        ::PyErr_SetString(PyExc_RuntimeError,
-                          ("the C++ type '" + piranha::detail::demangle(t_idx) + "' has already been exposed").c_str());
-        bp::throw_error_already_set();
-    }
     bp::class_<T> class_inst(("_exposed_type_" + std::to_string(exposed_types_counter)).c_str(), bp::init<>());
     ++exposed_types_counter;
-    // NOTE: class_ inherits from bp::object, here the "call operator" of a class type will construct an instance
-    // of that object. We then get the Python type out of that. It seems like another possible way of achieving
-    // this is directly through the class' attributes:
-    // http://stackoverflow.com/questions/17968091/boostpythonclass-programatically-obtaining-the-class-name
-    auto ptr = ::PyObject_Type(class_inst().ptr());
-    if (!ptr) {
-        ::PyErr_SetString(PyExc_RuntimeError, "cannot extract the Python type of an instantiated class");
-        bp::throw_error_already_set();
-    }
-    // This is always a new reference being returned.
-    auto type_object = bp::object(bp::handle<>(ptr));
-    // Map the C++ type to the Python type.
-    et_map[t_idx] = type_object;
     return class_inst;
 }
 

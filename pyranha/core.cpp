@@ -145,15 +145,15 @@ BOOST_PYTHON_MODULE(_core)
     auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr)));
     bp::scope().attr("types") = types_module;
     // Expose concrete instances of the type generator.
-    pyranha::expose_type_generator<signed char>("signed_char");
-    pyranha::expose_type_generator<short>("short");
-    pyranha::expose_type_generator<float>("float");
-    pyranha::expose_type_generator<double>("double");
-    pyranha::expose_type_generator<long double>("long_double");
-    pyranha::expose_type_generator<piranha::integer>("integer");
-    pyranha::expose_type_generator<piranha::rational>("rational");
-    pyranha::expose_type_generator<piranha::real>("real");
-    pyranha::expose_type_generator<piranha::k_monomial>("k_monomial");
+    pyranha::instantiate_type_generator<signed char>("signed_char", types_module);
+    pyranha::instantiate_type_generator<short>("short", types_module);
+    pyranha::instantiate_type_generator<float>("float", types_module);
+    pyranha::instantiate_type_generator<double>("double", types_module);
+    pyranha::instantiate_type_generator<long double>("long_double", types_module);
+    pyranha::instantiate_type_generator<piranha::integer>("integer", types_module);
+    pyranha::instantiate_type_generator<piranha::rational>("rational", types_module);
+    pyranha::instantiate_type_generator<piranha::real>("real", types_module);
+    pyranha::instantiate_type_generator<piranha::k_monomial>("k_monomial", types_module);
     // The generic type generator for monomial instances.
     pyranha::expose_generic_type_generator<piranha::monomial, piranha::rational>();
     pyranha::expose_generic_type_generator<piranha::monomial, short>();
