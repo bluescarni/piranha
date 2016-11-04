@@ -52,7 +52,7 @@ namespace pyranha
 
 namespace bp = boost::python;
 
-PYRANHA_DECLARE_T_NAME(piranha::polynomial, "polynomial")
+PYRANHA_DECLARE_T_NAME(piranha::polynomial)
 
 // Custom hook for polynomials.
 template <typename Descriptor>

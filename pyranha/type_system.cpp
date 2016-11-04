@@ -89,7 +89,7 @@ static inline std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t
     for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
         tv_name += piranha::detail::demangle(v_t_idx[i]);
         if (i != v_t_idx.size() - 1u) {
-            tv_name += ",";
+            tv_name += ", ";
         }
     }
     tv_name += "]";

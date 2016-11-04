@@ -32,18 +32,16 @@ from __future__ import absolute_import as _ai
 
 from ._common import _cpp_type_catcher
 
-# This is used in a few functions below.
-
 
 def __check_names_argument(names):
+    # This is used in a few functions below.
     if not names is None and (not isinstance(names, list) or not all([isinstance(_, str) for _ in names])):
         raise TypeError(
             'the optional \'names\' argument must be a list of strings')
 
-# Helper to check that d is a dictionary suitable for use in evaluation.
-
 
 def __check_eval_dict(d):
+    # Helper to check that d is a dictionary suitable for use in evaluation.
     # Type checks.
     if not isinstance(d, dict):
         raise TypeError('evaluation dictionary must be a dict object')
@@ -79,7 +77,7 @@ def cos(arg):
     >>> cos(2.) # doctest: +ELLIPSIS
     -0.4161468...
     >>> from pyranha.types import poisson_series, polynomial, rational, short, monomial
-    >>> t = poisson_series(polynomial(rational,monomial(short)))()
+    >>> t = poisson_series[polynomial[rational,monomial[short]]]()
     >>> cos(2 * t('x'))
     cos(2*x)
     >>> cos('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -113,7 +111,7 @@ def sin(arg):
     >>> sin(2.) # doctest: +ELLIPSIS
     0.9092974...
     >>> from pyranha.types import poisson_series, polynomial, rational, short, monomial
-    >>> t = poisson_series(polynomial(rational,monomial(short)))()
+    >>> t = poisson_series[polynomial[rational,monomial[short]]]()
     >>> sin(2 * t('x'))
     sin(2*x)
     >>> sin('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -177,7 +175,7 @@ def gcd(x, y):
     >>> gcd(12,9)
     3
     >>> from pyranha.types import polynomial, integer, k_monomial
-    >>> pt = polynomial(integer,k_monomial)()
+    >>> pt = polynomial[integer,k_monomial]()
     >>> x,y = pt('x'), pt('y')
     >>> gcd((x**2-y**2)*(x**3+1),(x+1)*(x+2*y)) # doctest: +SKIP
     x+1
@@ -210,7 +208,7 @@ def partial(arg, name):
             low-level function
 
     >>> from pyranha.types import polynomial, integer, short, monomial
-    >>> pt = polynomial(integer,monomial(short))()
+    >>> pt = polynomial[integer,monomial[short]]()
     >>> x,y = pt('x'), pt('y')
     >>> partial(x + 2*x*y,'y')
     2*x
@@ -240,7 +238,7 @@ def integrate(arg, name):
             low-level function
 
     >>> from pyranha.types import polynomial, rational, k_monomial
-    >>> pt = polynomial(rational,k_monomial)()
+    >>> pt = polynomial[rational,k_monomial]()
     >>> x,y = pt('x'), pt('y')
     >>> integrate(x + 2*x*y,'x') == x**2/2 + x**2*y
     True
@@ -313,7 +311,7 @@ def pbracket(f, g, p_list, q_list):
     :raises: any exception raised by the invoked low-level function
 
     >>> from pyranha.types import polynomial, rational, short, monomial
-    >>> pt = polynomial(rational,monomial(short))()
+    >>> pt = polynomial[rational,monomial[short]]()
     >>> x,v = pt('x'), pt('v')
     >>> pbracket(x+v,x+v,['v'],['x']) == 0
     True
@@ -359,7 +357,7 @@ def transformation_is_canonical(new_p, new_q, p_list, q_list):
     :raises: any exception raised by the invoked low-level function
 
     >>> from pyranha.types import polynomial, rational, k_monomial
-    >>> pt = polynomial(rational,k_monomial)()
+    >>> pt = polynomial[rational,k_monomial]()
     >>> L,G,H,l,g,h = [pt(_) for _ in 'LGHlgh']
     >>> transformation_is_canonical([-l],[L],['L'],['l'])
     True
@@ -435,13 +433,13 @@ def truncate_degree(arg, max_degree, names=None):
     :raises: any exception raised by the invoked low-level function
 
     >>> from pyranha.types import polynomial, rational, k_monomial, poisson_series
-    >>> pt = polynomial(rational,k_monomial)()
+    >>> pt = polynomial[rational,k_monomial]()
     >>> x,y,z = pt('x'), pt('y'), pt('z')
     >>> truncate_degree(x**2*y+x*y+z,2) # doctest: +SKIP
     x*y+z
     >>> truncate_degree(x**2*y+x*y+z,0,['x'])
     z
-    >>> pt = poisson_series(polynomial(rational,k_monomial))()
+    >>> pt = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z,a,b = pt('x'), pt('y'), pt('z'), pt('a'), pt('b')
     >>> truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),3) # doctest: +SKIP
     (x+x*y+x**2*z)*cos(a+b)+(-y*z+y)*sin(2*a+b)
@@ -485,7 +483,7 @@ def evaluate(arg, eval_dict):
     :raises: any exception raised by the invoked low-level function
 
     >>> from pyranha.types import polynomial, rational, k_monomial
-    >>> pt = polynomial(rational,k_monomial)()
+    >>> pt = polynomial[rational,k_monomial]()
     >>> x,y,z = pt('x'), pt('y'), pt('z')
     >>> evaluate(x*y+4*(y/4)**2*z,{'x':3,'y':-3,'z':5})
     Fraction(9, 4)
@@ -541,7 +539,7 @@ def subs(arg, name, x):
     :raises: any exception raised by the invoked low-level function
 
     >>> from pyranha.types import polynomial, rational, k_monomial
-    >>> pt = polynomial(rational,k_monomial)()
+    >>> pt = polynomial[rational,k_monomial]()
     >>> x,y = pt('x'), pt('y')
     >>> subs(x/2+1,'x',3)
     5/2
@@ -577,7 +575,7 @@ def t_subs(arg, name, x, y):
     :raises: any exception raised by the invoked low-level function
 
     >>> from pyranha.types import poisson_series, rational, polynomial, short, monomial
-    >>> pt = poisson_series(polynomial(rational,monomial(short)))()
+    >>> pt = poisson_series[polynomial[rational,monomial[short]]]()
     >>> x,y = pt('x'), pt('y')
     >>> t_subs(cos(x+y),'x',1,0)
     cos(y)
@@ -613,7 +611,7 @@ def ipow_subs(arg, name, n, x):
     :raises: any exception raised by the invoked low-level function
 
     >>> from pyranha.types import rational, polynomial, short, monomial
-    >>> pt = polynomial(rational,monomial(short))()
+    >>> pt = polynomial[rational,monomial[short]]()
     >>> x,y,z = pt('x'), pt('y'), pt('z')
     >>> ipow_subs(x**5*y,'x',2,z)
     x*y*z**2
@@ -656,10 +654,10 @@ def invert(arg):
        ...
     ZeroDivisionError: division by zero
     >>> from pyranha.types import polynomial, rational, short, monomial, divisor, divisor_series
-    >>> t = polynomial(rational,monomial(short))()
+    >>> t = polynomial[rational,monomial[short]]()
     >>> invert(t('x'))
     x**-1
-    >>> t = divisor_series(polynomial(rational,monomial(short)),divisor(short))()
+    >>> t = divisor_series[polynomial[rational,monomial[short]],divisor[short]]()
     >>> invert(-2*t('x')+8*t('y'))
     -1/2*1/[(x-4*y)]
     >>> invert(t('x')+1) # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -693,7 +691,7 @@ def degree(arg, names=None):
             low-level function
 
     >>> from pyranha.types import polynomial, rational, k_monomial
-    >>> t = polynomial(rational,k_monomial)()
+    >>> t = polynomial[rational,k_monomial]()
     >>> x,y,z = t('x'),t('y'),t('z')
     >>> degree(x**3+y*z)
     3
@@ -731,7 +729,7 @@ def ldegree(arg, names=None):
             low-level function
 
     >>> from pyranha.types import polynomial, rational, k_monomial
-    >>> t = polynomial(rational,k_monomial)()
+    >>> t = polynomial[rational,k_monomial]()
     >>> x,y,z = t('x'),t('y'),t('z')
     >>> ldegree(x**3+y*z)
     2
@@ -769,7 +767,7 @@ def t_degree(arg, names=None):
 
     >>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
     >>> from pyranha.math import cos
-    >>> t = poisson_series(polynomial(rational,k_monomial))()
+    >>> t = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z = t('x'),t('y'),t('z')
     >>> t_degree(cos(3*x+y-z)+cos(2*x))
     3
@@ -807,7 +805,7 @@ def t_ldegree(arg, names=None):
 
     >>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
     >>> from pyranha.math import cos
-    >>> t = poisson_series(polynomial(rational,k_monomial))()
+    >>> t = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z = t('x'),t('y'),t('z')
     >>> t_ldegree(cos(3*x+y-z)+cos(2*x))
     2
@@ -845,7 +843,7 @@ def t_order(arg, names=None):
 
     >>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
     >>> from pyranha.math import cos
-    >>> t = poisson_series(polynomial(rational,k_monomial))()
+    >>> t = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z = t('x'),t('y'),t('z')
     >>> t_order(cos(3*x+y-z)+cos(x))
     5
@@ -883,7 +881,7 @@ def t_lorder(arg, names=None):
 
     >>> from pyranha.types import poisson_series, polynomial, rational, k_monomial
     >>> from pyranha.math import cos
-    >>> t = poisson_series(polynomial(rational,k_monomial))()
+    >>> t = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z = t('x'),t('y'),t('z')
     >>> t_lorder(cos(4*x+y-z)+cos(2*x))
     2
@@ -918,7 +916,7 @@ def lambdify(t, x, names, extra_map={}):
     the expression :math:`x+y+z` as follows:
 
     >>> from pyranha.types import polynomial, rational, k_monomial
-    >>> pt = polynomial(rational,k_monomial)()
+    >>> pt = polynomial[rational,k_monomial]()
     >>> x,y,z = x,y,z = pt('x'),pt('y'),pt('z')
     >>> l = lambdify(float,x+y+z,['x','y'],{'z': lambda a: (3.*a[0] + a[1])**.5})
     >>> l([1.,2.]) # doctest: +ELLIPSIS
@@ -943,7 +941,7 @@ def lambdify(t, x, names, extra_map={}):
             callables in *extra_map*
 
     >>> from pyranha.types import polynomial, rational, k_monomial
-    >>> pt = polynomial(rational,k_monomial)()
+    >>> pt = polynomial[rational,k_monomial]()
     >>> x,y,z = x,y,z = pt('x'),pt('y'),pt('z')
     >>> l = lambdify(int,2*x-y+3*z,['z','y','x'])
     >>> l([1,2,3])

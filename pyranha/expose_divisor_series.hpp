@@ -36,7 +36,7 @@ see https://www.gnu.org/licenses/. */
 namespace pyranha
 {
 
-PYRANHA_DECLARE_T_NAME(piranha::divisor_series, "divisor_series")
+PYRANHA_DECLARE_T_NAME(piranha::divisor_series)
 
 void expose_divisor_series_0();
 void expose_divisor_series_1();

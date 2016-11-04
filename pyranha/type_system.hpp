@@ -113,13 +113,13 @@ struct t_name {
     static_assert(assert_failure<TT>::value, "No name defined for this class template.");
 };
 
-#define PYRANHA_DECLARE_T_NAME(TT, tn)                                                                                 \
+#define PYRANHA_DECLARE_T_NAME(TT)                                                                                     \
     template <typename T>                                                                                              \
     struct t_name<TT, T> {                                                                                             \
         static const std::string name;                                                                                 \
     };                                                                                                                 \
     template <typename T>                                                                                              \
-    const std::string t_name<TT, T>::name = tn;
+    const std::string t_name<TT, T>::name = #TT;
 
 // Hasher for vector of type indices.
 struct v_idx_hasher {
