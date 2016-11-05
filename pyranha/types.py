@@ -31,28 +31,12 @@ from __future__ import absolute_import as _ai
 
 from ._core import types as _t
 
-#: This type generator represents the standard C++ type ``float``.
-float = _t.float
-
 #: This type generator represents the standard C++ type ``double``.
 double = _t.double
 
-#: This type generator represents the standard C++ type ``long double``.
-long_double = _t.long_double
-
-try:
-    #: This type generator represents the 128-bit floating-point type from GCC's ``libquadmath``.
-    float128 = _t.float128
-except AttributeError:
-    pass
-
-#: This type generator represents the standard C++ type ``signed char`` (a signed integer type
-#: whose width is usually 8 bits).
-signed_char = _t.signed_char
-
-#: This type generator represents the standard C++ type ``short`` (a signed integer type
-#: whose width is usually 16 bits).
-short = _t.short
+#: This type generator represents a signed integral C++ type whose width is at least 16 bits (it will
+# be exactly 16 bits on most platforms).
+int16 = _t.int16
 
 #: This type generator represents the arbitrary-precision integer type provided by the piranha C++ library.
 integer = _t.integer

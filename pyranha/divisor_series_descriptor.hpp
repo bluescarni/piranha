@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
+#include <cstdint>
 #include <tuple>
 
 #include "../src/divisor.hpp"
@@ -45,19 +46,19 @@ see https://www.gnu.org/licenses/. */
 namespace pyranha
 {
 struct divisor_series_descriptor {
-    using d_type = piranha::divisor<short>;
+    using d_type = piranha::divisor<std::int_least16_t>;
     using params = std::tuple<
         // Poly double.
         std::tuple<piranha::polynomial<double, piranha::monomial<piranha::rational>>, d_type>,
-        std::tuple<piranha::polynomial<double, piranha::monomial<short>>, d_type>,
+        std::tuple<piranha::polynomial<double, piranha::monomial<std::int_least16_t>>, d_type>,
         std::tuple<piranha::polynomial<double, piranha::kronecker_monomial<>>, d_type>,
         // Poly rational.
         std::tuple<piranha::polynomial<piranha::rational, piranha::monomial<piranha::rational>>, d_type>,
-        std::tuple<piranha::polynomial<piranha::rational, piranha::monomial<short>>, d_type>,
+        std::tuple<piranha::polynomial<piranha::rational, piranha::monomial<std::int_least16_t>>, d_type>,
         std::tuple<piranha::polynomial<piranha::rational, piranha::kronecker_monomial<>>, d_type>,
         // Poly real.
         std::tuple<piranha::polynomial<piranha::real, piranha::monomial<piranha::rational>>, d_type>,
-        std::tuple<piranha::polynomial<piranha::real, piranha::monomial<short>>, d_type>,
+        std::tuple<piranha::polynomial<piranha::real, piranha::monomial<std::int_least16_t>>, d_type>,
         std::tuple<piranha::polynomial<piranha::real, piranha::kronecker_monomial<>>, d_type>>;
     using interop_types = std::tuple<double, piranha::integer, piranha::real, piranha::rational>;
     using pow_types = interop_types;

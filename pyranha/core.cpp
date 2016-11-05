@@ -40,6 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/module.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/scope.hpp>
+#include <cstdint>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -125,7 +126,7 @@ BOOST_PYTHON_MODULE(_core)
     // Piranha init.
     piranha::init();
     // Docstring options setup.
-    bp::docstring_options doc_options(true, true, false);
+    bp::docstring_options doc_options(false, false, false);
     // Type generator class.
     bp::class_<pyranha::type_generator> tg_class("_type_generator", bp::no_init);
     tg_class.def("__call__", &pyranha::type_generator::operator());
@@ -150,11 +151,8 @@ BOOST_PYTHON_MODULE(_core)
     auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr)));
     bp::scope().attr("types") = types_module;
     // Expose concrete instances of type generators.
-    pyranha::instantiate_type_generator<signed char>("signed_char", types_module);
-    pyranha::instantiate_type_generator<short>("short", types_module);
-    pyranha::instantiate_type_generator<float>("float", types_module);
+    pyranha::instantiate_type_generator<std::int_least16_t>("int16", types_module);
     pyranha::instantiate_type_generator<double>("double", types_module);
-    pyranha::instantiate_type_generator<long double>("long_double", types_module);
     pyranha::instantiate_type_generator<piranha::integer>("integer", types_module);
     pyranha::instantiate_type_generator<piranha::rational>("rational", types_module);
     pyranha::instantiate_type_generator<piranha::real>("real", types_module);
@@ -162,10 +160,10 @@ BOOST_PYTHON_MODULE(_core)
     // Register template instances of monomial, and instantiate the type generator template.
     pyranha::instantiate_type_generator_template<piranha::monomial>("monomial", types_module);
     pyranha::register_template_instance<piranha::monomial, piranha::rational>();
-    pyranha::register_template_instance<piranha::monomial, short>();
+    pyranha::register_template_instance<piranha::monomial, std::int_least16_t>();
     // Same for divisor.
     pyranha::instantiate_type_generator_template<piranha::divisor>("divisor", types_module);
-    pyranha::register_template_instance<piranha::divisor, short>();
+    pyranha::register_template_instance<piranha::divisor, std::int_least16_t>();
     // Arithmetic converters.
     pyranha::integer_converter i_c;
     pyranha::rational_converter ra_c;

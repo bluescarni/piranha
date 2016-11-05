@@ -76,8 +76,8 @@ def cos(arg):
     ValueError: cannot compute the cosine of a non-zero integer
     >>> cos(2.) # doctest: +ELLIPSIS
     -0.4161468...
-    >>> from pyranha.types import poisson_series, polynomial, rational, short, monomial
-    >>> t = poisson_series[polynomial[rational,monomial[short]]]()
+    >>> from pyranha.types import poisson_series, polynomial, rational, int16, monomial
+    >>> t = poisson_series[polynomial[rational,monomial[int16]]]()
     >>> cos(2 * t('x'))
     cos(2*x)
     >>> cos('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -110,8 +110,8 @@ def sin(arg):
     ValueError: cannot compute the cosine of a non-zero integer
     >>> sin(2.) # doctest: +ELLIPSIS
     0.9092974...
-    >>> from pyranha.types import poisson_series, polynomial, rational, short, monomial
-    >>> t = poisson_series[polynomial[rational,monomial[short]]]()
+    >>> from pyranha.types import poisson_series, polynomial, rational, int16, monomial
+    >>> t = poisson_series[polynomial[rational,monomial[int16]]]()
     >>> sin(2 * t('x'))
     sin(2*x)
     >>> sin('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -207,8 +207,8 @@ def partial(arg, name):
     :raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
             low-level function
 
-    >>> from pyranha.types import polynomial, integer, short, monomial
-    >>> pt = polynomial[integer,monomial[short]]()
+    >>> from pyranha.types import polynomial, integer, int16, monomial
+    >>> pt = polynomial[integer,monomial[int16]]()
     >>> x,y = pt('x'), pt('y')
     >>> partial(x + 2*x*y,'y')
     2*x
@@ -310,8 +310,8 @@ def pbracket(f, g, p_list, q_list):
     :raises: :exc:`TypeError` if the types of the arguments are invalid
     :raises: any exception raised by the invoked low-level function
 
-    >>> from pyranha.types import polynomial, rational, short, monomial
-    >>> pt = polynomial[rational,monomial[short]]()
+    >>> from pyranha.types import polynomial, rational, int16, monomial
+    >>> pt = polynomial[rational,monomial[int16]]()
     >>> x,v = pt('x'), pt('v')
     >>> pbracket(x+v,x+v,['v'],['x']) == 0
     True
@@ -574,8 +574,8 @@ def t_subs(arg, name, x, y):
     :raises: :exc:`TypeError` in case the input types are not supported or invalid
     :raises: any exception raised by the invoked low-level function
 
-    >>> from pyranha.types import poisson_series, rational, polynomial, short, monomial
-    >>> pt = poisson_series[polynomial[rational,monomial[short]]]()
+    >>> from pyranha.types import poisson_series, rational, polynomial, int16, monomial
+    >>> pt = poisson_series[polynomial[rational,monomial[int16]]]()
     >>> x,y = pt('x'), pt('y')
     >>> t_subs(cos(x+y),'x',1,0)
     cos(y)
@@ -610,8 +610,8 @@ def ipow_subs(arg, name, n, x):
     :raises: :exc:`TypeError` in case the input types are not supported or invalid
     :raises: any exception raised by the invoked low-level function
 
-    >>> from pyranha.types import rational, polynomial, short, monomial
-    >>> pt = polynomial[rational,monomial[short]]()
+    >>> from pyranha.types import rational, polynomial, int16, monomial
+    >>> pt = polynomial[rational,monomial[int16]]()
     >>> x,y,z = pt('x'), pt('y'), pt('z')
     >>> ipow_subs(x**5*y,'x',2,z)
     x*y*z**2
@@ -653,11 +653,11 @@ def invert(arg):
     Traceback (most recent call last):
        ...
     ZeroDivisionError: division by zero
-    >>> from pyranha.types import polynomial, rational, short, monomial, divisor, divisor_series
-    >>> t = polynomial[rational,monomial[short]]()
+    >>> from pyranha.types import polynomial, rational, int16, monomial, divisor, divisor_series
+    >>> t = polynomial[rational,monomial[int16]]()
     >>> invert(t('x'))
     x**-1
-    >>> t = divisor_series[polynomial[rational,monomial[short]],divisor[short]]()
+    >>> t = divisor_series[polynomial[rational,monomial[int16]],divisor[int16]]()
     >>> invert(-2*t('x')+8*t('y'))
     -1/2*1/[(x-4*y)]
     >>> invert(t('x')+1) # doctest: +IGNORE_EXCEPTION_DETAIL

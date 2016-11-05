@@ -28,6 +28,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
+#include <cstdint>
+
 #include "../src/monomial.hpp"
 #include "expose_rational_functions.hpp"
 
@@ -36,6 +38,6 @@ namespace pyranha
 
 void expose_rational_functions_1()
 {
-    expose_rational_functions_impl<piranha::monomial<short>>();
+    expose_rational_functions_impl<piranha::monomial<std::int_least16_t>>();
 }
 }
