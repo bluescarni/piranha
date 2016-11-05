@@ -26,37 +26,41 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/init.hpp"
+#ifndef PIRANHA_DETAIL_INIT_DATA_HPP
+#define PIRANHA_DETAIL_INIT_DATA_HPP
 
-#define BOOST_TEST_MODULE init_test
-#include <boost/test/unit_test.hpp>
+#include <atomic>
 
-#include "../src/config.hpp"
-#include "../src/settings.hpp"
-#include "../src/thread_pool.hpp"
+namespace piranha
+{
 
-using namespace piranha;
+inline namespace impl
+{
 
-struct dummy {
-    ~dummy()
-    {
-        // NOTE: cannot use BOOST_CHECK here because this gets invoked outside the test case.
-        piranha_assert(shutdown());
-    }
+// Global variables for init/shutdown.
+template <typename = void>
+struct piranha_init_statics {
+    static std::atomic_flag s_init_flag;
+    static std::atomic<bool> s_shutdown_flag;
+    static std::atomic<unsigned> s_failed;
 };
 
-static dummy d;
+// Static init of the global flags.
+template <typename T>
+std::atomic_flag piranha_init_statics<T>::s_init_flag = ATOMIC_FLAG_INIT;
 
-BOOST_AUTO_TEST_CASE(init_main_test)
+template <typename T>
+std::atomic<bool> piranha_init_statics<T>::s_shutdown_flag(false);
+
+template <typename T>
+std::atomic<unsigned> piranha_init_statics<T>::s_failed(0u);
+
+// Query if we are at shutdown.
+inline bool shutdown()
 {
-    settings::set_n_threads(3);
-    // Multiple concurrent constructions.
-    auto f0 = thread_pool::enqueue(0, []() { init(); });
-    auto f1 = thread_pool::enqueue(1, []() { init(); });
-    auto f2 = thread_pool::enqueue(2, []() { init(); });
-    f0.wait();
-    f1.wait();
-    f2.wait();
-    BOOST_CHECK(!shutdown());
-    BOOST_CHECK_EQUAL(piranha_init_statics<>::s_failed.load(), 2u);
+    return piranha_init_statics<>::s_shutdown_flag.load();
 }
+}
+}
+
+#endif

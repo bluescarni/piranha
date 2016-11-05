@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <cstdlib>
 #include <functional>
 #include <future>
+#include <iostream>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -226,6 +227,7 @@ using thread_queues_t = std::pair<std::vector<std::unique_ptr<task_queue>>, std:
 
 inline thread_queues_t get_initial_thread_queues()
 {
+    std::cout << "Initializing the thread pool.\n";
     thread_queues_t retval;
     // Create the vector of queues.
     const unsigned candidate = runtime_info::get_hardware_concurrency(), hc = (candidate > 0u) ? candidate : 1u;
@@ -258,6 +260,9 @@ std::atomic_flag thread_pool_base<T>::s_atf = ATOMIC_FLAG_INIT;
 
 template <typename T>
 bool thread_pool_base<T>::s_bind = false;
+
+template <typename>
+void thread_pool_shutdown();
 }
 
 /// Static thread pool.
@@ -279,9 +284,10 @@ bool thread_pool_base<T>::s_bind = false;
 // http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc
 // detach() and wait as a workaround?
 // \todo try to understand if we can suppress the future list class below in favour of STL-like algorithms.
-template <typename = void>
+template <typename T = void>
 class thread_pool_ : private thread_pool_base<>
 {
+    friend void piranha::impl::thread_pool_shutdown<T>();
     using base = thread_pool_base<>;
     // Enabler for use_threads.
     template <typename Int>
@@ -360,6 +366,13 @@ private:
             piranha_assert(p.second);
         }
         return new_queues;
+    }
+    // Shutdown. This is used to stop the threads at program shutdown.
+    static void shutdown()
+    {
+        thread_queues_t new_queues;
+        detail::atomic_lock_guard lock(s_atf);
+        new_queues.swap(base::s_queues);
     }
 
 public:
@@ -487,6 +500,17 @@ public:
  * This is the alias through which the methods in piranha::thread_pool_ should be called.
  */
 using thread_pool = thread_pool_<>;
+
+inline namespace impl
+{
+
+template <typename>
+inline void thread_pool_shutdown()
+{
+    thread_pool::shutdown();
+}
+
+}
 
 /// Class to store a list of futures.
 /**
