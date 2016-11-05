@@ -7,6 +7,9 @@ Changelog
 Changes
 ~~~~~~~
 
+- In pyranha, use square brackets [] instead of round brackets () in the
+  syntax that emulates C++ templates. [Francesco Biscani]
+
 - In pyranha use std::int_least16_t (exported as 'int16' in the type
   system) rather than short int. Also, remove a few unused types.
   [Francesco Biscani]
