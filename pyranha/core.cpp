@@ -40,6 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/module.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/scope.hpp>
+#include <boost/python/stl_iterator.hpp>
 #include <cstdint>
 #include <mutex>
 #include <stdexcept>
@@ -74,17 +75,12 @@ see https://www.gnu.org/licenses/. */
 #include "expose_utils.hpp"
 #include "python_converters.hpp"
 #include "type_system.hpp"
+#include "utils.hpp"
 
 namespace bp = boost::python;
 
 static std::mutex global_mutex;
 static bool inited = false;
-
-// Cleanup function to be called on module unload.
-static inline void cleanup_type_system()
-{
-    pyranha::et_map.clear();
-}
 
 namespace pyranha
 {
@@ -302,8 +298,6 @@ BOOST_PYTHON_MODULE(_core)
 #undef PYRANHA_EXPOSE_INVERT
     // GCD.
     bp::def("_gcd", &piranha::math::gcd<piranha::integer, piranha::integer>);
-    // Cleanup function.
-    bp::def("_cleanup_type_system", &cleanup_type_system);
     // Tests for exception translation.
     bp::def("_test_safe_cast_failure", &test_exception<piranha::safe_cast_failure>);
     bp::def("_test_zero_division_error", &test_exception<piranha::zero_division_error>);
@@ -316,16 +310,37 @@ BOOST_PYTHON_MODULE(_core)
     // Helper to generate an argument error.
     bp::def("_generate_argument_error", &generate_argument_error);
 
-    struct cleanupper {
+    // Define a cleanup functor to be run when the module is unloaded.
+    struct cleanup_functor {
         void operator()() const
         {
+            // First let's shut down the thread pool.
             piranha::thread_pool_shutdown<void>();
+            // Then we clean up the custom derivatives.
+            auto e_types = pyranha::get_exposed_types_list();
+            bp::stl_input_iterator<bp::object> end_it;
+            for (bp::stl_input_iterator<bp::object> it(e_types); it != end_it; ++it) {
+                if (pyranha::hasattr(*it, "unregister_all_custom_derivatives")) {
+                    it->attr("unregister_all_custom_derivatives")();
+                }
+            }
+            pyranha::builtin().attr("print")("Custom derivatives cleanup completed.");
+            // Next we clean up the pow caches.
+            for (bp::stl_input_iterator<bp::object> it(e_types); it != end_it; ++it) {
+                if (pyranha::hasattr(*it, "clear_pow_cache")) {
+                    it->attr("clear_pow_cache")();
+                }
+            }
+            pyranha::builtin().attr("print")("Pow caches cleanup completed.");
+            // Finally, clean up the pyranha type system.
+            pyranha::et_map.clear();
+            pyranha::builtin().attr("print")("Pyranha's type system cleanup completed.");
         }
     };
-
-    bp::class_<cleanupper> cl_c("_cleanupper", bp::init<>());
-    cl_c.def("__call__", &cleanupper::operator());
-
+    // Expose it.
+    bp::class_<cleanup_functor> cl_c("_cleanup_functor", bp::init<>());
+    cl_c.def("__call__", &cleanup_functor::operator());
+    // Register it.
     bp::object atexit_mod = bp::import("atexit");
-    atexit_mod.attr("register")(cleanupper{});
+    atexit_mod.attr("register")(cleanup_functor{});
 }

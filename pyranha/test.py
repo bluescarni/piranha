@@ -1346,7 +1346,7 @@ class rational_function_test_case(_ut.TestCase):
         pt = polynomial[integer, k_monomial]()
         qt = polynomial[rational, k_monomial]()
         x, y, z = [rt(_) for _ in 'xyz']
-        self.assertEqual(rt._is_exposed_type, True)
+        self.assertEqual(rt._is_exposed_pyranha_type, True)
         # Unary construction.
         self.assertEqual(rt(-3), -3)
         self.assertEqual(rt(F(1, 2)), F(1, 2))

@@ -72,6 +72,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 #include "type_system.hpp"
+#include "utils.hpp"
 
 namespace pyranha
 {
@@ -1050,8 +1051,8 @@ class series_exposer
             // Register the template instance corresponding to the series, so that we can
             // fetch its type generator via the type system machinery.
             register_template_instance<Series, Args...>();
-            // Add the _is_exposed_type tag.
-            series_class.attr("_is_exposed_type") = true;
+            // Add the _is_exposed_pyranha_type tag.
+            series_class.attr("_is_exposed_pyranha_type") = true;
             // Constructor from string, if available.
             expose_ctor<const std::string &>(series_class);
             // Copy constructor.
@@ -1151,7 +1152,10 @@ inline bp::list get_exposed_types_list()
 {
     bp::list retval;
     for (const auto &p : et_map) {
-        if (::PyObject_HasAttrString(p.second.ptr(), "_is_exposed_type")) {
+        // NOTE: the idea here is that in the future we might want to use the et_map
+        // for other than pyranha types, so we need a way to distinguish in et_map between
+        // pyranha and non-pyranha types. Currently all types in et_map are exposed pyranha types.
+        if (hasattr(p.second, "_is_exposed_pyranha_type")) {
             retval.append(p.second);
         }
     }

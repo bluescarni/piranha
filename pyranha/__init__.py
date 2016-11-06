@@ -33,7 +33,7 @@ from __future__ import absolute_import as _ai
 __all__ = ['celmec', 'math', 'test', 'types']
 
 import threading as _thr
-from ._common import _cpp_type_catcher, _monkey_patching, _cleanup
+from ._common import _cpp_type_catcher, _monkey_patching
 from ._core import polynomial_gcd_algorithm, data_format as _df, compression as _cf
 
 # Run the monkey patching.
@@ -495,6 +495,3 @@ def load_file(obj, name, df=None, cf=None):
         _cpp_type_catcher(_load_file, obj, name, df, cf)
     else:
         _cpp_type_catcher(_load_file, obj, name)
-
-import atexit as _atexit
-_atexit.register(lambda: _cleanup())

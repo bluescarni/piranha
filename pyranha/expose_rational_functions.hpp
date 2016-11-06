@@ -182,8 +182,8 @@ inline void expose_rational_functions_impl()
     register_exposed_type(rf_class);
     // Register the template instance.
     register_template_instance<rational_function, Key>();
-    // Add the _is_exposed_type tag.
-    rf_class.attr("_is_exposed_type") = true;
+    // Add the _is_exposed_pyranha_type tag.
+    rf_class.attr("_is_exposed_pyranha_type") = true;
     // Unary ctors.
     using unary_ctor_types = std::tuple<std::string, piranha::integer, piranha::rational, p_type, q_type>;
     tuple_for_each(unary_ctor_types{}, rf_unary_ctor_exposer<r_type>(rf_class));
