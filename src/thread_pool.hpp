@@ -509,7 +509,6 @@ inline void thread_pool_shutdown()
 {
     thread_pool::shutdown();
 }
-
 }
 
 /// Class to store a list of futures.

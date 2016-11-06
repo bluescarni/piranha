@@ -323,8 +323,8 @@ BOOST_PYTHON_MODULE(_core)
         }
     };
 
-    bp::class_<cleanupper> cl_c("_cleanupper",bp::init<>());
-    cl_c.def("__call__",&cleanupper::operator());
+    bp::class_<cleanupper> cl_c("_cleanupper", bp::init<>());
+    cl_c.def("__call__", &cleanupper::operator());
 
     bp::object atexit_mod = bp::import("atexit");
     atexit_mod.attr("register")(cleanupper{});

@@ -52,7 +52,6 @@ inline void cleanup_function()
     std::cout << "Setting shutdown flag.\n";
     piranha_init_statics<>::s_shutdown_flag.store(true);
 }
-
 }
 
 /// Main initialisation function.
