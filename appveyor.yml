@@ -34,12 +34,15 @@ install:
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/x86_64-6.2.0-release-posix-seh-rt_v5-rev1.7z" -FileName mw64.7z
 - 7z x -oC:\ mw64.7z > NUL
 - set PATH=C:\mingw64\bin;%PATH%
-# Download precompiled deps.
+# Download deps.
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/gmp_mingw_64.7z" -FileName gmp.7z
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/mpfr_mingw_64.7z" -FileName mpfr.7z
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/boost_mingw_64.7z" -FileName boost.7z
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/msgpack_mingw_64.7z" -FileName msgpack.7z
 - if [%BUILD_TYPE%]==[Python35] call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/python35_mingw_64.7z" -FileName python.7z
+- if [%BUILD_TYPE%]==[Python35] call tools\appveyor-download.cmd "https://bootstrap.pypa.io/get-pip.py"
+- if [%BUILD_TYPE%]==[Python35] c:\Python35\python.exe get-pip.py
+- if [%BUILD_TYPE%]==[Python35] c:\Python35\scripts\pip install numpy
 # Extract them.
 - 7z x -aoa -oC:\ gmp.7z > NUL
 - 7z x -aoa -oC:\ mpfr.7z > NUL
