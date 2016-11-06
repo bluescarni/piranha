@@ -14,6 +14,14 @@ Changes
   system) rather than short int. Also, remove a few unused types.
   [Francesco Biscani]
 
+Fix
+~~~
+
+- Fix pyranha hanging on the shutdown of the python interpreter on
+  Windows. [Francesco Biscani]
+
+- Fix the installation path of pyranha on Windows. [Francesco Biscani]
+
 v0.6 (2016-11-01)
 -----------------
 
