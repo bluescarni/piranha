@@ -40,9 +40,6 @@ install:
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/boost_mingw_64.7z" -FileName boost.7z
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/msgpack_mingw_64.7z" -FileName msgpack.7z
 - if [%BUILD_TYPE%]==[Python35] call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/python35_mingw_64.7z" -FileName python.7z
-- if [%BUILD_TYPE%]==[Python35] call tools\appveyor-download.cmd "https://bootstrap.pypa.io/get-pip.py"
-- if [%BUILD_TYPE%]==[Python35] c:\Python35\python.exe get-pip.py
-- if [%BUILD_TYPE%]==[Python35] c:\Python35\scripts\pip install numpy
 # Extract them.
 - 7z x -aoa -oC:\ gmp.7z > NUL
 - 7z x -aoa -oC:\ mpfr.7z > NUL
@@ -50,6 +47,10 @@ install:
 - 7z x -aoa -oC:\ msgpack.7z > NUL
 - if [%BUILD_TYPE%]==[Python35] rd "c:\Python35" /s /q
 - if [%BUILD_TYPE%]==[Python35] 7z x -aoa -oC:\ python.7z > NUL
+# Setup pip/numpy if needed.
+- if [%BUILD_TYPE%]==[Python35] call tools\appveyor-download.cmd "https://bootstrap.pypa.io/get-pip.py"
+- if [%BUILD_TYPE%]==[Python35] c:\Python35\python.exe get-pip.py
+- if [%BUILD_TYPE%]==[Python35] c:\Python35\scripts\pip install numpy
 # Set the path so that the precompiled libs can be found.
 - set PATH=%PATH%;c:\local\lib
 
