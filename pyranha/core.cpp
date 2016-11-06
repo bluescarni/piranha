@@ -64,6 +64,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/real.hpp"
 #include "../src/s11n.hpp"
 #include "../src/safe_cast.hpp"
+#include "../src/thread_pool.hpp"
 #include "../src/type_traits.hpp"
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
@@ -314,4 +315,17 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_test_inexact_division", &test_exception<piranha::math::inexact_division>);
     // Helper to generate an argument error.
     bp::def("_generate_argument_error", &generate_argument_error);
+
+    struct cleanupper {
+        void operator()() const
+        {
+            piranha::thread_pool_shutdown<void>();
+        }
+    };
+
+    bp::class_<cleanupper> cl_c("_cleanupper",bp::init<>());
+    cl_c.def("__call__",&cleanupper::operator());
+
+    bp::object atexit_mod = bp::import("atexit");
+    atexit_mod.attr("register")(cleanupper{});
 }
