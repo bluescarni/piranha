@@ -223,4 +223,8 @@ endif()
 
 IF(BUILD_PYRANHA)
 	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/pyranha")
+	if(MINGW)
+		message(STATUS "Creating the 'setup.py' file for the generation of a binary wheel for MinGW.")
+		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/setup_mingw.py" "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
+	endif()
 ENDIF()
