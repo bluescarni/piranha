@@ -10,8 +10,7 @@ def run_unbuffered_command(raw_command, directory):
         line = proc.stdout.readline()
         if not line:
             break
-        if VERBOSE:
-            print(line)
+        print(str(line,'utf-8'))
         output.append(line)
     proc.communicate()
     if proc.returncode:
