@@ -33,8 +33,7 @@ install:
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/python35_mingw_64.7z" -FileName python.7z
 - rd "c:\Python35" /s /q
 - 7z x -aoa -oC:\ python.7z > NUL
-# Run the script.
-- c:\Python35\python.exe tools\install_appveyor.py
+
 
 # Download MinGW-w64 toolchain.
 # - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/x86_64-6.2.0-release-posix-seh-rt_v5-rev1.7z" -FileName mw64.7z
@@ -59,9 +58,11 @@ install:
 # - if [%BUILD_TYPE%]==[Python35] c:\Python35\scripts\pip install mpmath
 # # Set the path so that the precompiled libs can be found.
 # - set PATH=%PATH%;c:\local\lib
-#
-# build_script:
-# - cd C:\projects\piranha
+
+build_script:
+
+- cd C:\projects\piranha
+- c:\Python35\python.exe tools\install_appveyor.py
 # - mkdir build
 # - cd build
 #

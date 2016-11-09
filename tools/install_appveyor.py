@@ -9,25 +9,29 @@ def run_unbuffered_command(raw_command, directory = None, verbose = True):
     # Helper function to run a command and display optionally its output
     # unbuffered.
     import shlex
+    import sys
     from subprocess import Popen, PIPE, STDOUT
     proc = Popen(shlex.split(raw_command), cwd=directory,
                  stdout=PIPE, stderr=STDOUT)
-    output = []
-    while True:
-        line = proc.stdout.readline()
-        if not line:
-            break
-        if verbose:
-            print(str(line,'utf-8'))
-        output.append(line)
-    proc.communicate()
+    if verbose:
+        output = ''
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            line = str(line,'utf-8')
+            print(line)
+            sys.stdout.flush()
+            output += line
+    else:
+        output = str(proc.communicate()[0],'utf-8')
     if proc.returncode:
         raise RuntimeError(output)
     return output
 
 # Get mingw and set the path.
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/x86_64-6.2.0-release-posix-seh-rt_v5-rev1.7z', 'mw64.7z')
-run_unbuffered_command(r'7z x -oC:\\ mw64.7z > NUL')
+run_unbuffered_command(r'7z x -oC:\\ mw64.7z', verbose = False)
 os.environ['PATH'] = r'C:\\mingw64\\bin;'+os.environ['PATH']
 
 # Download deps.
@@ -37,10 +41,10 @@ wget(r'https://github.com/bluescarni/binary_deps/raw/master/boost_mingw_64.7z', 
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/msgpack_mingw_64.7z', 'msgpack.7z')
 
 # Extract them.
-run_unbuffered_command(r'7z x -aoa -oC:\\ gmp.7z > NUL')
-run_unbuffered_command(r'7z x -aoa -oC:\\ mpfr.7z > NUL')
-run_unbuffered_command(r'7z x -aoa -oC:\\ boost.7z > NUL')
-run_unbuffered_command(r'7z x -aoa -oC:\\ msgpack.7z > NUL')
+run_unbuffered_command(r'7z x -aoa -oC:\\ gmp.7z', verbose = False)
+run_unbuffered_command(r'7z x -aoa -oC:\\ mpfr.7z', verbose = False)
+run_unbuffered_command(r'7z x -aoa -oC:\\ boost.7z', verbose = False)
+run_unbuffered_command(r'7z x -aoa -oC:\\ msgpack.7z', verbose = False)
 
 # Set the path so that the precompiled libs can be found.
 os.environ['PATH'] = os.environ['PATH'] + r'c:\\local\\lib'
@@ -58,3 +62,10 @@ if 'Python' in BUILD_TYPE:
     pip = r'c:\\Python35\\scripts\\pip'
     run_unbuffered_command(pip + ' install numpy')
     run_unbuffered_command(pip + ' install mpmath')
+
+# Proceed to the build.
+os.makedirs('build')
+os.chdir('build')
+
+if BUILD_TYPE == 'Python35':
+    run_unbuffered_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE_DIR=c:\\local\\include -DGMP_INCLUDE_DIR=c:\\local\\include -DGMP_LIBRARIES=c:\\local\\lib\\libgmp.a -DMPFR_INCLUDE_DIR=c:\\local\\include -DMPFR_LIBRARIES=c:\\local\\lib\\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=c:\\local\\include -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python35\\python.exe -DPYTHON_LIBRARY=C:\\Python35\\libs\\python35.dll')
