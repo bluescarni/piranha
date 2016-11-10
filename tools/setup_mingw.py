@@ -46,7 +46,7 @@ class BinaryDistribution(Distribution):
 
 # The nambe of the Boost Python library depends on the Python version.
 BOOST_PYTHON_LIB = 'libboost_python'+ str(sys.version_info[0]) + '-mgw62-mt-1_62.dll'
-DLL_LIST =
+DLL_LIST = ['libboost_iostreams-mgw62-mt-1_62.dll',BOOST_PYTHON_LIB,'libboost_serialization-mgw62-mt-1_62.dll','libboost_zlib-mgw62-mt-1_62.dll','libboost_bzip2-mgw62-mt-1_62.dll','libgcc_s_seh-1.dll','libstdc++-6.dll','libwinpthread-1.dll']
 
 setup(name=NAME,
     version=VERSION,
