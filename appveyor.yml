@@ -1,6 +1,8 @@
 version: '{build}'
 
 environment:
+  PYPI_PASSWORD:
+    secure: rcb0UlxG/p8yoPsvhAdsHA==
   matrix:
     # - BUILD_TYPE: "Release"
     #   TEST_NSPLIT: "3"

@@ -47,7 +47,7 @@ run_unbuffered_command(r'7z x -aoa -oC:\\ boost.7z', verbose = False)
 run_unbuffered_command(r'7z x -aoa -oC:\\ msgpack.7z', verbose = False)
 
 # Set the path so that the precompiled libs can be found.
-os.environ['PATH'] = os.environ['PATH'] + r'c:\\local\\lib'
+os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
 
 # Build type setup.
 BUILD_TYPE = os.environ['BUILD_TYPE']
@@ -62,6 +62,7 @@ if 'Python' in BUILD_TYPE:
     pip = r'c:\\Python35\\scripts\\pip'
     run_unbuffered_command(pip + ' install numpy')
     run_unbuffered_command(pip + ' install mpmath')
+    run_unbuffered_command(pip + ' install twine')
 
 # Proceed to the build.
 os.makedirs('build')
