@@ -32,14 +32,14 @@ def run_unbuffered_command(raw_command, directory = None, verbose = True):
 # Get mingw and set the path.
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/x86_64-6.2.0-release-posix-seh-rt_v5-rev1.7z', 'mw64.7z')
 run_unbuffered_command(r'7z x -oC:\\ mw64.7z', verbose = False)
+ORIGINAL_PATH = os.environ['PATH']
 os.environ['PATH'] = r'C:\\mingw64\\bin;'+os.environ['PATH']
 
-# Download deps.
+# Download common deps.
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/gmp_mingw_64.7z', 'gmp.7z')
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/mpfr_mingw_64.7z', 'mpfr.7z')
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/boost_mingw_64.7z', 'boost.7z')
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/msgpack_mingw_64.7z', 'msgpack.7z')
-
 # Extract them.
 run_unbuffered_command(r'7z x -aoa -oC:\\ gmp.7z', verbose = False)
 run_unbuffered_command(r'7z x -aoa -oC:\\ mpfr.7z', verbose = False)
@@ -63,6 +63,7 @@ if 'Python' in BUILD_TYPE:
     run_unbuffered_command(pip + ' install numpy')
     run_unbuffered_command(pip + ' install mpmath')
     run_unbuffered_command(pip + ' install twine')
+    twine = r'c:\\Python35\\scripts\\twine'
 
 # Proceed to the build.
 os.makedirs('build')
@@ -74,4 +75,18 @@ if BUILD_TYPE == 'Python35':
 run_unbuffered_command(r'cmake --build . --target install')
 
 if is_python_build:
+    # Run the Python tests.
     run_unbuffered_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
+    # Build the wheel.
+    import shutil
+    os.chdir('wheel')
+    shutil.move(r'C:\\Python35\\Lib\\site-packages\\pyranha',r'.')
+    DLL_LIST = [_[:-1] for _ in open('mingw_wheel_libs.txt','r').readlines()]
+    for _ in DLL_LIST:
+        shutil.copy(_,'pyranha')
+    run_unbuffered_command(pinterp + r' setup.py bdist_wheel')
+    os.environ['PATH'] = ORIGINAL_PATH
+    run_unbuffered_command(pip + r' install dist\\*')
+    run_unbuffered_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
+    if os.environ['APPVEYOR_REPO_BRANCH'] == 'master':
+        run_unbuffered_command(twine + r' upload --repository-url https://testpypi.python.org/pypi -u bluescarni  dist\\*')

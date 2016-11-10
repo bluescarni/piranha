@@ -1,7 +1,6 @@
 from setuptools import setup
 from setuptools.dist import Distribution
 from distutils import util
-import sys
 
 NAME = 'pyranha'
 VERSION = '@piranha_VERSION@'
@@ -20,19 +19,15 @@ CLASSIFIERS = [
 
     'Operating System :: OS Independent',
 
-    # Indicate who your project is intended for
     'Intended Audience :: Science/Research',
     'Topic :: Scientific/Engineering',
     'Topic :: Scientific/Engineering :: Astronomy',
     'Topic :: Scientific/Engineering :: Mathematics',
     'Topic :: Scientific/Engineering :: Physics',
 
-    # Pick your license as you wish (should match "license" above)
     'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
     'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
 
-    # Specify the Python versions you support here. In particular, ensure
-    # that you indicate whether you support Python 2, Python 3 or both.
     'Programming Language :: Python :: 2',
     'Programming Language :: Python :: 3'
 ]
@@ -44,9 +39,10 @@ class BinaryDistribution(Distribution):
     def has_ext_modules(foo):
         return True
 
-# The nambe of the Boost Python library depends on the Python version.
-BOOST_PYTHON_LIB = 'libboost_python'+ str(sys.version_info[0]) + '-mgw62-mt-1_62.dll'
-DLL_LIST = ['libboost_iostreams-mgw62-mt-1_62.dll',BOOST_PYTHON_LIB,'libboost_serialization-mgw62-mt-1_62.dll','libboost_zlib-mgw62-mt-1_62.dll','libboost_bzip2-mgw62-mt-1_62.dll','libgcc_s_seh-1.dll','libstdc++-6.dll','libwinpthread-1.dll']
+# Setup the list of external dlls.
+import os.path
+l = open('mingw_wheel_libs.txt','r').readlines()
+DLL_LIST = [os.path.basename(_[:-1]) for _ in l]
 
 setup(name=NAME,
     version=VERSION,
