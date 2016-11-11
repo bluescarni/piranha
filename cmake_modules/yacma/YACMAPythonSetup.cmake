@@ -58,7 +58,7 @@ message(STATUS "Python modules install path: " "${YACMA_PYTHON_MODULES_INSTALL_P
 macro(YACMA_PYTHON_MODULE name)
     message(STATUS "Setting up the compilation of the Python module \"${name}\".")
     # A Python module is a shared library.
-    add_library("${name}" MODULE ${ARGN})
+    add_library("${name}" SHARED ${ARGN})
     # Any "lib" prefix normally added by CMake must be removed.
     set_target_properties("${name}" PROPERTIES PREFIX "")
     if(NOT ${YACMA_PY_MODULE_EXTENSION} STREQUAL "")
