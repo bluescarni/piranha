@@ -678,7 +678,7 @@ def degree(arg, names=None):
     """Degree.
 
     This function will return the degree of the input argument. Various symbolic types are supported as input
-    (e.g., polynomials, Poisson series, rational functions). If *names* is ``None``, then the total degree is
+    (e.g., polynomials, Poisson series, etc.). If *names* is ``None``, then the total degree is
     returned. Otherwise, *names* must be a list of strings enumerating the variables to be considered for the
     computation of the partial degree.
 
@@ -716,7 +716,7 @@ def ldegree(arg, names=None):
     """Low degree.
 
     This function will return the low degree of the input argument. Various symbolic types are supported as input
-    (e.g., polynomials, Poisson series, rational functions). If *names* is ``None``, then the total low degree is
+    (e.g., polynomials, Poisson series, etc.). If *names* is ``None``, then the total low degree is
     returned. Otherwise, *names* must be a list of strings enumerating the variables to be considered for the
     computation of the partial low degree.
 

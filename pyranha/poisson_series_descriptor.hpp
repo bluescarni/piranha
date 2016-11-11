@@ -42,7 +42,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/rational_function.hpp"
 #include "../src/real.hpp"
 
 namespace pyranha
@@ -76,9 +75,7 @@ struct poisson_series_descriptor {
         std::tuple<piranha::divisor_series<piranha::polynomial<double, piranha::monomial<std::int_least16_t>>,
                                            piranha::divisor<std::int_least16_t>>>,
         std::tuple<piranha::divisor_series<piranha::polynomial<double, piranha::kronecker_monomial<>>,
-                                           piranha::divisor<std::int_least16_t>>>,
-        // Rational function coefficient.
-        std::tuple<piranha::rational_function<piranha::k_monomial>>>;
+                                           piranha::divisor<std::int_least16_t>>>>;
     using interop_types = std::tuple<double, piranha::integer, piranha::real, piranha::rational>;
     using pow_types = interop_types;
     using eval_types = interop_types;

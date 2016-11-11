@@ -65,6 +65,3 @@ divisor = _t.divisor
 
 #: Type generator template for divisor series.
 divisor_series = _t.divisor_series
-
-#: Type generator template for rational functions.
-rational_function = _t.rational_function

@@ -580,7 +580,7 @@ class math_test_case(_ut.TestCase):
     def lambdifyTest(self):
         from .math import lambdify
         from fractions import Fraction as F
-        from .types import polynomial, k_monomial, rational, rational_function
+        from .types import polynomial, k_monomial, rational
         pt = polynomial[rational, k_monomial]()
         x, y, z = [pt(_) for _ in 'xyz']
         l = lambdify(F, 3 * x**4 / 2 - y / 3 + z**2, ['y', 'z', 'x'])
@@ -652,12 +652,6 @@ class math_test_case(_ut.TestCase):
             self.assertEqual(type(l(array([1.2, 3.4, 5.6]))), float)
         except ImportError:
             pass
-        # Double check the evaluation bug with rational functions.
-        rt = rational_function[k_monomial]()
-        x, y, z = [rt(_) for _ in 'xyz']
-        l = lambdify(int, x / y, ['y', 'x'])
-        self.assertEqual(type(l([1, 2])), int)
-        self.assertEqual(l([2, 4]), 2)
 
 
 class polynomial_test_case(_ut.TestCase):
@@ -826,7 +820,7 @@ class poisson_series_test_case(_ut.TestCase):
 
     def runTest(self):
         from .types import poisson_series, rational, monomial, int16, divisor_series, divisor, polynomial, \
-            rational_function, k_monomial
+            k_monomial
         from .math import partial, integrate, sin, cos, invert
         # A couple of tests with eps.
         eps = poisson_series[divisor_series[polynomial[
@@ -854,17 +848,6 @@ class poisson_series_test_case(_ut.TestCase):
             y * invert(x) * cos(2 * z), 'x'))
         self.assertRaises(ValueError, lambda: integrate(
             z * invert(x) * cos(2 * z), 'z'))
-        # A check with custom derivative for rational function coefficients.
-        prt = poisson_series[rational_function[k_monomial]]()
-        x, y, z = [prt(_) for _ in "xyz"]
-        prt.register_custom_derivative(
-            "x", lambda p: p.partial("x") + p.partial("y") * 4)
-        from .math import partial
-        tmp = partial((x + 3 * y - z) / (4 * z + x) *
-                      cos(x - 2 * y + z), "x").subs("y", 4 * x)
-        self.assertEqual(tmp, -7 * (13 * x - z) * sin(7 * x - z) / (x + 4 * z) + 13 * cos(
-            7 * x - z) / (x + 4 * z) - (13 * x - z) * cos(7 * x - z) / (x + 4 * z)**2)
-        prt.unregister_all_custom_derivatives()
         # s11n.
         p = (x + 3 * invert(y) - 4 * cos(z))**4
         _s11n_load_save_test(self, p)
@@ -1171,7 +1154,7 @@ class t_integrate_test_case(_ut.TestCase):
         from fractions import Fraction as F
         from .math import sin, cos
         from .types import polynomial, int16, rational, poisson_series, monomial, divisor, divisor_series, \
-            rational_function, k_monomial
+            k_monomial
         pt = poisson_series[divisor_series[polynomial[
             rational, monomial[int16]], divisor[int16]]]()
         x, y, z = pt('x'), pt('y'), pt('z')
@@ -1194,21 +1177,6 @@ class t_integrate_test_case(_ut.TestCase):
         self.assertEqual(str(st), '-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
         st = s.t_integrate(['a', 'a', 'b'])
         self.assertEqual(str(st), '-1/6*z*1/[(2*a-b)]*cos(4*x-2*y)')
-        # A couple of tests with rational function coefficients.
-        prt = poisson_series[rational_function[k_monomial]]()
-        x, y, z = prt('x'), prt('y'), prt('z')
-        nux, nuy = prt('\\nu_{x}'), prt('\\nu_{y}')
-        a, b = prt('a'), prt('b')
-        s = F(1, 3) * z * sin(4 * x - 2 * y)
-        st = s.t_integrate()
-        self.assertEqual(st, F(-1, 6) * z * 1 /
-                         (2 * nux - nuy) * cos(4 * x - 2 * y))
-        st = s.t_integrate(['a', 'b'])
-        self.assertEqual(st, F(-1, 6) * z * 1 /
-                         (2 * a - b) * cos(4 * x - 2 * y))
-        self.assertRaises(ValueError, lambda: s.t_integrate([]))
-        self.assertRaises(ValueError, lambda: s.t_integrate(['a', 'b', 'c']))
-        self.assertRaises(ValueError, lambda: s.t_integrate(['b', 'a']))
 
 
 class doctests_test_case(_ut.TestCase):
@@ -1328,180 +1296,6 @@ class t_degree_order_test_case(_ut.TestCase):
         self.assertRaises(TypeError, lambda: t_lorder(cos(3 * x - y), [11]))
 
 
-class rational_function_test_case(_ut.TestCase):
-    """Test case for rational functions.
-
-    To be used within the :mod:`unittest` framework.
-
-    >>> import unittest as ut
-    >>> suite = ut.TestLoader().loadTestsFromTestCase(rational_function_test_case)
-
-    """
-
-    def runTest(self):
-        from .types import rational_function, k_monomial, monomial, int16, polynomial, integer, rational
-        from fractions import Fraction as F
-        import sys
-        rt = rational_function[k_monomial]()
-        pt = polynomial[integer, k_monomial]()
-        qt = polynomial[rational, k_monomial]()
-        x, y, z = [rt(_) for _ in 'xyz']
-        self.assertEqual(rt._is_exposed_pyranha_type, True)
-        # Unary construction.
-        self.assertEqual(rt(-3), -3)
-        self.assertEqual(rt(F(1, 2)), F(1, 2))
-        self.assertEqual(rt(pt('x')), x)
-        self.assertEqual(rt(x), x)
-        self.assertEqual(rt(qt('y')), y)
-        self.assertRaises(TypeError, lambda: rt(1.23))
-        # Binary construction.
-        self.assertEqual(rt(-3, -2), F(3, 2))
-        self.assertEqual(rt(F(-3, -2), 2), F(3, 4))
-        self.assertEqual(rt(F(-3, -2), x), 3 / (2 * x))
-        self.assertEqual(rt("x", 2), x / 2)
-        self.assertEqual(rt("x", "y"), x / y)
-        self.assertEqual(rt(pt("x"), qt("y")), x / y)
-        self.assertEqual(rt(qt("x"), pt("y")), x / y)
-        self.assertRaises(TypeError, lambda: rt(1.23, 1))
-        # Copy/deepcopy.
-        from copy import copy, deepcopy
-        self.assert_(id(x) != id(copy(x)))
-        self.assert_(id(x) != id(deepcopy(x)))
-        # Repr.
-        self.assertEqual(repr(3 * x), "3*x")
-        # Arithmetics.
-        tmp = copy(x)
-        id_tmp = id(tmp)
-        tmp += 1
-        self.assertEqual(tmp, x + 1)
-        self.assertEqual(tmp, 1 + x)
-        self.assertEqual(id(tmp), id_tmp)
-        tmp -= 2
-        self.assertEqual(tmp, +(x - 1))
-        self.assertEqual(tmp, -(1 - x))
-        self.assertEqual(id(tmp), id_tmp)
-        tmp += 1
-        tmp *= 2
-        self.assertEqual(tmp, x * 2)
-        self.assertEqual(tmp, 2 * x)
-        self.assertEqual(id(tmp), id_tmp)
-        tmp /= 2
-        tmp /= 3
-        self.assertEqual(tmp, x / 3)
-        self.assertEqual(tmp, 1 / (3 / x))
-        self.assertEqual(id(tmp), id_tmp)
-        self.assert_(x / 3 == tmp)
-        self.assert_(x / 4 != tmp)
-        self.assert_(tmp != x / 4)
-        self.assert_(x / 4 != 1)
-        self.assert_(1 != x / 4)
-        self.assertRaises(TypeError, lambda: x + 1.2)
-        # Check in-place id wrt series arguments.
-        tmp = copy(x)
-        id_tmp = id(tmp)
-        tmp += y
-        self.assertEqual(tmp, x + y)
-        self.assertEqual(id(tmp), id_tmp)
-        tmp -= y
-        self.assertEqual(tmp, x)
-        self.assertEqual(id(tmp), id_tmp)
-        tmp *= y
-        self.assertEqual(tmp, x * y)
-        self.assertEqual(id(tmp), id_tmp)
-        tmp /= y
-        self.assertEqual(tmp, x)
-        self.assertEqual(id(tmp), id_tmp)
-        # Exponentiation.
-        self.assertEqual(((x + y) / (x - y))**2, (x + y)
-                         * (x + y) / ((x - y) * (x - y)))
-        self.assertEqual(((x + y) / (x - y))**-2, (x - y)
-                         * (x - y) / ((x + y) * (x + y)))
-        self.assertRaises(TypeError, lambda: x ** F(3, 4))
-        # Try clearing the cache.
-        rt.clear_pow_cache()
-        self.assertEqual(((x + y) / (x - y))**2, (x + y)
-                         * (x + y) / ((x - y) * (x - y)))
-        # Evaluation.
-        from .math import evaluate
-        self.assertEqual(evaluate(x, {"x": 2}), 2)
-        self.assertEqual(evaluate(x, {"x": F(3, 4)}), F(3, 4))
-        self.assertEqual(evaluate(x, {"x": rt(3)}), pt(3))
-        self.assertEqual(evaluate(x, {"x": 3.}), 3.)
-        # This was an evaluation bug: the overloading in Boost.Python would transform
-        # the evaluation argument into double.
-        if sys.version_info[0] == 2:
-            self.assert_(isinstance(evaluate(x, {"x": 2}), (int, long)))
-        else:
-            self.assert_(isinstance(evaluate(x, {"x": 2}), int))
-        # Subs.
-        from .math import subs
-        self.assertEqual(subs(x, "x", 4), 4)
-        self.assertEqual(subs(x, "x", F(4, 5)), F(4, 5))
-        self.assertEqual(subs(x, "x", pt(5)), 5)
-        self.assertEqual(subs(x, "x", qt(F(5, 4))), F(5, 4))
-        self.assertEqual(subs(x, "x", y), y)
-        # Ipow subs.
-        from .math import ipow_subs as ips
-        self.assertEqual(ips(x, "x", 1, 4), 4)
-        self.assertEqual(ips(x**3, "x", 2, F(4, 5)), F(4, 5) * x)
-        self.assertEqual(ips(x**4, "x", 2, pt(5)), 25)
-        self.assertEqual(ips(x, "x", 1, qt(F(5, 4))), F(5, 4))
-        self.assertEqual(ips(x**2, "x", 2, y), y)
-        # Integration.
-        from .math import integrate
-        self.assertEqual(integrate(x, "x"), x * x / 2)
-        self.assertEqual(integrate(x / y, "x"), x * x / (2 * y))
-        self.assertRaises(ValueError, lambda: integrate(x / y, "y"))
-        # Partial.
-        from .math import partial
-        self.assertEqual(partial(x, "x"), 1)
-        self.assertEqual(partial(x, "y"), 0)
-        rt.register_custom_derivative("x", lambda r: rt(42))
-        self.assertEqual(partial(x, "x"), 42)
-        rt.register_custom_derivative("y", lambda r: r.partial("z") + 2)
-        self.assertEqual(partial(y + z, "y"), 3)
-        rt.unregister_custom_derivative("x")
-        rt.unregister_all_custom_derivatives()
-        # Pbracket.
-        from .math import pbracket as pbr
-        self.assertEqual(pbr(x + y, x + y, ['y'], ['x']), 0)
-        # Canonical tr check.
-        from .math import transformation_is_canonical as tic
-        L, G, H, l, g, h = [rt(_) for _ in 'LGHlgh']
-        self.assert_(tic([2 * L + 3 * G + 2 * H, 4 * L + 2 * G + 3 * H, 9 * L + 6 * G + 7 * H], [-4 * l -
-                                                                                                 g + 6 * h, -9 * l - 4 * g + 15 * h, 5 * l + 2 * g - 8 * h], ['L', 'G', 'H'], ['l', 'g', 'h']))
-        # Trim.
-        self.assertEqual((x - x).num.symbol_set, ['x'])
-        self.assertEqual((x - x).trim().num.symbol_set, [])
-        # sin/cos
-        from .math import sin, cos
-        self.assertEqual(sin(rt()), 0)
-        self.assertEqual(cos(rt()), 1)
-        self.assertRaises(ValueError, lambda: sin(x))
-        # Degree.
-        from .math import degree
-        self.assertEqual(degree(x), 1)
-        self.assertEqual(degree(x * x / (z * z * z)), 3)
-        # Latex repr.
-        self.assertEqual((x / (y + z))._latex_(), '\\frac{{x}}{{z}+{y}}')
-        # Pickle.
-        from pickle import dumps, loads
-        tmp = (x + 3 * y - 4 * z) / (x - 5 * y)
-        self.assertEqual(loads(dumps(tmp)), tmp)
-        # Invert.
-        from .math import invert
-        self.assertEqual(invert(tmp), (x - 5 * y) / (x + 3 * y - 4 * z))
-        # Num/den.
-        self.assert_(tmp.num == x + 3 * y - 4 * z or -
-                     tmp.num == x + 3 * y - 4 * z)
-        self.assert_(tmp.den == x - 5 * y or -tmp.den == x - 5 * y)
-        self.assertEqual(type(tmp.den), pt)
-        # s11n.
-        p = (x + 3 * y - 4 * z) / (x - 5 * y)
-        _s11n_load_save_test(self, p)
-        _pickle_test(self, p)
-
-
 def run_test_suite():
     """Run the full test suite.
 
@@ -1525,7 +1319,6 @@ def run_test_suite():
     suite.addTest(truncate_degree_test_case())
     suite.addTest(degree_test_case())
     suite.addTest(t_degree_order_test_case())
-    suite.addTest(rational_function_test_case())
     suite.addTest(doctests_test_case())
     test_result = _ut.TextTestRunner(verbosity=2).run(suite)
     if len(test_result.failures) > 0:

@@ -61,7 +61,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/rational_function.hpp"
 #include "../src/real.hpp"
 #include "../src/s11n.hpp"
 #include "../src/safe_cast.hpp"
@@ -71,7 +70,6 @@ see https://www.gnu.org/licenses/. */
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_polynomials.hpp"
-#include "expose_rational_functions.hpp"
 #include "expose_utils.hpp"
 #include "python_converters.hpp"
 #include "type_system.hpp"
@@ -223,7 +221,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_poisson_series_12();
     pyranha::expose_poisson_series_13();
     pyranha::expose_poisson_series_14();
-    pyranha::expose_poisson_series_15();
     // Expose divisor series.
     pyranha::instantiate_type_generator_template<piranha::divisor_series>("divisor_series", types_module);
     pyranha::expose_divisor_series_0();
@@ -235,10 +232,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_divisor_series_6();
     pyranha::expose_divisor_series_7();
     pyranha::expose_divisor_series_8();
-    // Expose rational function.
-    pyranha::instantiate_type_generator_template<piranha::rational_function>("rational_function", types_module);
-    pyranha::expose_rational_functions_0();
-    pyranha::expose_rational_functions_1();
     // Expose the settings class.
     bp::class_<piranha::settings> settings_class("_settings", bp::init<>());
     settings_class.def("_get_max_term_output", piranha::settings::get_max_term_output)
