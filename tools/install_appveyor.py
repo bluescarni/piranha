@@ -13,12 +13,13 @@ def rm_fr(path):
     elif os.path.exists(path):
         os.remove(path)
 
-def run_unbuffered_command(raw_command, directory = None, verbose = True):
+def run_command(raw_command, directory = None, verbose = True):
     # Helper function to run a command and display optionally its output
     # unbuffered.
     import shlex
     import sys
     from subprocess import Popen, PIPE, STDOUT
+    print(raw_command)
     proc = Popen(shlex.split(raw_command), cwd=directory,
                  stdout=PIPE, stderr=STDOUT)
     if verbose:
@@ -40,7 +41,7 @@ def run_unbuffered_command(raw_command, directory = None, verbose = True):
 
 # Get mingw and set the path.
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/x86_64-6.2.0-release-posix-seh-rt_v5-rev1.7z', 'mw64.7z')
-run_unbuffered_command(r'7z x -oC:\\ mw64.7z', verbose = False)
+run_command(r'7z x -oC:\\ mw64.7z', verbose = False)
 ORIGINAL_PATH = os.environ['PATH']
 os.environ['PATH'] = r'C:\\mingw64\\bin;'+os.environ['PATH']
 
@@ -50,19 +51,19 @@ wget(r'https://github.com/bluescarni/binary_deps/raw/master/mpfr_mingw_64.7z', '
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/boost_mingw_64.7z', 'boost.7z')
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/msgpack_mingw_64.7z', 'msgpack.7z')
 # Extract them.
-run_unbuffered_command(r'7z x -aoa -oC:\\ gmp.7z', verbose = False)
-run_unbuffered_command(r'7z x -aoa -oC:\\ mpfr.7z', verbose = False)
-run_unbuffered_command(r'7z x -aoa -oC:\\ boost.7z', verbose = False)
-run_unbuffered_command(r'7z x -aoa -oC:\\ msgpack.7z', verbose = False)
+run_command(r'7z x -aoa -oC:\\ gmp.7z', verbose = False)
+run_command(r'7z x -aoa -oC:\\ mpfr.7z', verbose = False)
+run_command(r'7z x -aoa -oC:\\ boost.7z', verbose = False)
+run_command(r'7z x -aoa -oC:\\ msgpack.7z', verbose = False)
 
 # Set the path so that the precompiled libs can be found.
 os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
 
 # Build type setup.
 BUILD_TYPE = os.environ['BUILD_TYPE']
-is_python_build = False
-if 'Python' in BUILD_TYPE:
-    is_python_build = True
+is_master_build = (os.environ['APPVEYOR_REPO_BRANCH'] == 'master')
+is_python_build = 'Python' in BUILD_TYPE
+if is_python_build:
     if BUILD_TYPE == 'Python35':
         python_version = '35'
     else:
@@ -78,30 +79,42 @@ if 'Python' in BUILD_TYPE:
     pyranha_install_path = r'C:\\Python'+python_version+r'\\Lib\\site-packages\\pyranha'
     # Get Python.
     wget(r'https://github.com/bluescarni/binary_deps/raw/master/' + python_package, 'python.7z')
-    run_unbuffered_command(r'7z x -aoa -oC:\\ python.7z', verbose = False)
+    run_command(r'7z x -aoa -oC:\\ python.7z', verbose = False)
     # Get Boost Python.
     wget(r'https://github.com/bluescarni/binary_deps/raw/master/' + boost_python_package, 'boost_python.7z')
-    run_unbuffered_command(r'7z x -aoa -oC:\\ boost_python.7z', verbose = False)
+    run_command(r'7z x -aoa -oC:\\ boost_python.7z', verbose = False)
     # Install pip and deps.
     wget(r'https://bootstrap.pypa.io/get-pip.py','get-pip.py')
-    run_unbuffered_command(pinterp + ' get-pip.py')
-    run_unbuffered_command(pip + ' install numpy')
-    run_unbuffered_command(pip + ' install mpmath')
-    run_unbuffered_command(pip + ' install twine')
+    run_command(pinterp + ' get-pip.py')
+    run_command(pip + ' install numpy')
+    run_command(pip + ' install mpmath')
+    if is_master_build:
+        run_command(pip + ' install twine')
 
 # Proceed to the build.
 os.makedirs('build')
 os.chdir('build')
 
+common_cmake_opts = r'-DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE_DIR=c:\\local\\include -DGMP_INCLUDE_DIR=c:\\local\\include -DGMP_LIBRARIES=c:\\local\\lib\\libgmp.a -DMPFR_INCLUDE_DIR=c:\\local\\include -DMPFR_LIBRARIES=c:\\local\\lib\\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DMSGPACK-C_INCLUDE_DIR=c:\\local\\include -DPIRANHA_WITH_ZLIB=yes -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll'
+
+# Configuration step.
 if BUILD_TYPE == 'Python35':
-    run_unbuffered_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s -DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE_DIR=c:\\local\\include -DGMP_INCLUDE_DIR=c:\\local\\include -DGMP_LIBRARIES=c:\\local\\lib\\libgmp.a -DMPFR_INCLUDE_DIR=c:\\local\\include -DMPFR_LIBRARIES=c:\\local\\lib\\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=c:\\local\\include -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python3-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python35\\python.exe -DPYTHON_LIBRARY=C:\\Python35\\libs\\python35.dll')
+    run_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s ' + common_cmake_opts + r' -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python3-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python35\\python.exe -DPYTHON_LIBRARY=C:\\Python35\\libs\\python35.dll')
+elif BUILD_TYPE in ['Release','Debug']:
+    TEST_NSPLIT = os.environ['TEST_NSPLIT']
+    SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
+    run_command(r'cmake -G "MinGW Makefiles" ..  -DCMAKE_BUILD_TYPE=' + BUILD_TYPE + r' -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DTEST_NSPLIT=' + TEST_NSPLIT + r' -DPIRANHA_TEST_SPLIT_NUM=' + SPLIT_TEST_NUM + r' ' + common_cmake_opts)
+else:
+    raise RuntimeError('Unsupported build type: ' + BUILD_TYPE)
 
-#run_unbuffered_command(r'cmake --build . --target install')
-run_unbuffered_command(r'mingw32-make install VERBOSE=1')
+# Build+install step.
+#run_command(r'cmake --build . --target install')
+run_command(r'mingw32-make install VERBOSE=1')
 
+# Testing, packaging.
 if is_python_build:
     # Run the Python tests.
-    run_unbuffered_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
+    run_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
     # Build the wheel.
     import shutil
     os.chdir('wheel')
@@ -109,9 +122,15 @@ if is_python_build:
     DLL_LIST = [_[:-1] for _ in open('mingw_wheel_libs.txt','r').readlines()]
     for _ in DLL_LIST:
         shutil.copy(_,'pyranha')
-    run_unbuffered_command(pinterp + r' setup.py bdist_wheel')
+    run_command(pinterp + r' setup.py bdist_wheel')
     os.environ['PATH'] = ORIGINAL_PATH
-    run_unbuffered_command(pip + r' install dist\\' + os.listdir('dist')[0])
-    run_unbuffered_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
-    if os.environ['APPVEYOR_REPO_BRANCH'] == 'master':
-        run_unbuffered_command(twine + r' upload -u bluescarni  dist\\' + os.listdir('dist')[0])
+    run_command(pip + r' install dist\\' + os.listdir('dist')[0])
+    run_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
+    if is_master_build:
+        run_command(twine + r' upload -u bluescarni  dist\\' + os.listdir('dist')[0])
+elif BUILD_TYPE == 'Release':
+    run_command(r'ctest -VV -E "gastineau|pearce2_unpacked"')
+elif BUILD_TYPE == 'Debug':
+    run_command(r'ctest -VV')
+else:
+    raise RuntimeError('Unsupported build type: ' + BUILD_TYPE)
