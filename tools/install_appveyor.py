@@ -23,6 +23,7 @@ def run_unbuffered_command(raw_command, directory = None, verbose = True):
             print(line)
             sys.stdout.flush()
             output += line
+        proc.communicate()
     else:
         output = str(proc.communicate()[0],'utf-8')
     if proc.returncode:
@@ -70,7 +71,7 @@ os.makedirs('build')
 os.chdir('build')
 
 if BUILD_TYPE == 'Python35':
-    run_unbuffered_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE_DIR=c:\\local\\include -DGMP_INCLUDE_DIR=c:\\local\\include -DGMP_LIBRARIES=c:\\local\\lib\\libgmp.a -DMPFR_INCLUDE_DIR=c:\\local\\include -DMPFR_LIBRARIES=c:\\local\\lib\\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=c:\\local\\include -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python35\\python.exe -DPYTHON_LIBRARY=C:\\Python35\\libs\\python35.dll')
+    run_unbuffered_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE_DIR=c:\\local\\include -DGMP_INCLUDE_DIR=c:\\local\\include -DGMP_LIBRARIES=c:\\local\\lib\\libgmp.a -DMPFR_INCLUDE_DIR=c:\\local\\include -DMPFR_LIBRARIES=c:\\local\\lib\\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=c:\\local\\include -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python35\\python.exe')
 
 run_unbuffered_command(r'cmake --build . --target install')
 

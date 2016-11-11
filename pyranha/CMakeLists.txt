@@ -81,7 +81,7 @@ YACMA_PYTHON_MODULE(_core SHARED
 set(PYRANHA_INSTALL_PATH "${YACMA_PYTHON_MODULES_INSTALL_PATH}/pyranha")
 
 # The module needs Boost.Python and the Python libs, plus the mandatory libraries.
-target_link_libraries(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES})
+target_link_libraries(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY})
 install(TARGETS _core
 	RUNTIME DESTINATION ${PYRANHA_INSTALL_PATH}
 	LIBRARY DESTINATION ${PYRANHA_INSTALL_PATH}
