@@ -33,8 +33,7 @@ install:
 - rename "C:\Program Files\Git\usr\bin\sh.exe" "sh2.exe"
 # Get a Python version to run the script.
 - call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/python35_mingw_64.7z" -FileName python.7z
-- rd "c:\Python35" /s /q
-- 7z x -aoa -oC:\ python.7z > NUL
+- 7z x -aoa -oC:\python4appveyor\ python.7z > NUL
 
 
 # Download MinGW-w64 toolchain.
@@ -64,7 +63,7 @@ install:
 build_script:
 
 - cd C:\projects\piranha
-- c:\Python35\python.exe tools\install_appveyor.py
+- C:\python4appveyor\Python35\python.exe tools\install_appveyor.py
 # - mkdir build
 # - cd build
 #

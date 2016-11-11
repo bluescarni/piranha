@@ -5,6 +5,14 @@ def wget(url,out):
     print('Downloading "' + url + '" as "' + out + '"')
     urllib.request.urlretrieve(url,out)
 
+def rm_fr(path):
+    import os
+    import shutil
+    if os.path.isdir(path) and not os.path.islink(path):
+        shutil.rmtree(path)
+    elif os.path.exists(path):
+        os.remove(path)
+
 def run_unbuffered_command(raw_command, directory = None, verbose = True):
     # Helper function to run a command and display optionally its output
     # unbuffered.
@@ -55,25 +63,41 @@ BUILD_TYPE = os.environ['BUILD_TYPE']
 is_python_build = False
 if 'Python' in BUILD_TYPE:
     is_python_build = True
-    # Hard code this for the moment, eventually we'll have different choices.
-    pinterp = r'c:\\Python35\\python.exe'
-    # NOTE: the dep for Python35 is there already, no need to fetch and unpack.
+    if BUILD_TYPE == 'Python35':
+        python_version = '35'
+    else:
+        raise RuntimeError('Unsupported Python build: ' + BUILD_TYPE)
+    python_package = r'python'+python_version+r'_mingw_64.7z'
+    boost_python_package = r'boost_python_'+python_version+r'_mingw_64.7z'
+    # Remove any existing Python installation.
+    rm_fr(r'c:\\Python'+python_version)
+    # Set paths.
+    pinterp = r'c:\\Python'+python_version+r'\\python.exe'
+    pip = r'c:\\Python'+python_version+r'\\scripts\\pip'
+    twine = r'c:\\Python'+python_version+r'\\scripts\\twine'
+    pyranha_install_path = r'C:\\Python'+python_version+r'\\Lib\\site-packages\\pyranha'
+    # Get Python.
+    wget(r'https://github.com/bluescarni/binary_deps/raw/master/' + python_package, 'python.7z')
+    run_unbuffered_command(r'7z x -aoa -oC:\\ python.7z', verbose = False)
+    # Get Boost Python.
+    wget(r'https://github.com/bluescarni/binary_deps/raw/master/' + boost_python_package, 'boost_python.7z')
+    run_unbuffered_command(r'7z x -aoa -oC:\\ boost_python.7z', verbose = False)
+    # Install pip and deps.
     wget(r'https://bootstrap.pypa.io/get-pip.py','get-pip.py')
     run_unbuffered_command(pinterp + ' get-pip.py')
-    pip = r'c:\\Python35\\scripts\\pip'
     run_unbuffered_command(pip + ' install numpy')
     run_unbuffered_command(pip + ' install mpmath')
     run_unbuffered_command(pip + ' install twine')
-    twine = r'c:\\Python35\\scripts\\twine'
 
 # Proceed to the build.
 os.makedirs('build')
 os.chdir('build')
 
 if BUILD_TYPE == 'Python35':
-    run_unbuffered_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE_DIR=c:\\local\\include -DGMP_INCLUDE_DIR=c:\\local\\include -DGMP_LIBRARIES=c:\\local\\lib\\libgmp.a -DMPFR_INCLUDE_DIR=c:\\local\\include -DMPFR_LIBRARIES=c:\\local\\lib\\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=c:\\local\\include -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python3-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python35\\python.exe -DPYTHON_LIBRARY=C:\\Python35\\libs\\python35.dll')
+    run_unbuffered_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s -DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE_DIR=c:\\local\\include -DGMP_INCLUDE_DIR=c:\\local\\include -DGMP_LIBRARIES=c:\\local\\lib\\libgmp.a -DMPFR_INCLUDE_DIR=c:\\local\\include -DMPFR_LIBRARIES=c:\\local\\lib\\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=c:\\local\\include -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python3-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python35\\python.exe -DPYTHON_LIBRARY=C:\\Python35\\libs\\python35.dll')
 
-run_unbuffered_command(r'cmake --build . --target install')
+#run_unbuffered_command(r'cmake --build . --target install')
+run_unbuffered_command(r'mingw32-make install VERBOSE=1')
 
 if is_python_build:
     # Run the Python tests.
@@ -81,7 +105,7 @@ if is_python_build:
     # Build the wheel.
     import shutil
     os.chdir('wheel')
-    shutil.move(r'C:\\Python35\\Lib\\site-packages\\pyranha',r'.')
+    shutil.move(pyranha_install_path,r'.')
     DLL_LIST = [_[:-1] for _ in open('mingw_wheel_libs.txt','r').readlines()]
     for _ in DLL_LIST:
         shutil.copy(_,'pyranha')
@@ -89,5 +113,5 @@ if is_python_build:
     os.environ['PATH'] = ORIGINAL_PATH
     run_unbuffered_command(pip + r' install dist\\' + os.listdir('dist')[0])
     run_unbuffered_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
-    if os.environ['APPVEYOR_REPO_BRANCH'] == 'master' or True:
-        run_unbuffered_command(twine + r' upload --repository-url https://testpypi.python.org/pypi -u bluescarni  dist\\' + os.listdir('dist')[0])
+    if os.environ['APPVEYOR_REPO_BRANCH'] == 'master':
+        run_unbuffered_command(twine + r' upload -u bluescarni  dist\\' + os.listdir('dist')[0])
