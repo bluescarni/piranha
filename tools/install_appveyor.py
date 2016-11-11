@@ -23,6 +23,7 @@ def run_unbuffered_command(raw_command, directory = None, verbose = True):
             print(line)
             sys.stdout.flush()
             output += line
+        proc.communicate()
     else:
         output = str(proc.communicate()[0],'utf-8')
     if proc.returncode:
@@ -85,8 +86,8 @@ if is_python_build:
     for _ in DLL_LIST:
         shutil.copy(_,'pyranha')
     run_unbuffered_command(pinterp + r' setup.py bdist_wheel')
-    # os.environ['PATH'] = ORIGINAL_PATH
-    # run_unbuffered_command(pip + r' install dist\\*')
-    # run_unbuffered_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
+    os.environ['PATH'] = ORIGINAL_PATH
+    run_unbuffered_command(pip + r' install dist\\' + os.listdir('dist')[0])
+    run_unbuffered_command(pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
     # if os.environ['APPVEYOR_REPO_BRANCH'] == 'master' or True:
     #     run_unbuffered_command(twine + r' upload --repository-url https://testpypi.python.org/pypi -u bluescarni  dist\\*')
