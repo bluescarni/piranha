@@ -693,10 +693,10 @@ def degree(arg, names=None):
     >>> from pyranha.types import polynomial, rational, k_monomial
     >>> t = polynomial[rational,k_monomial]()
     >>> x,y,z = t('x'),t('y'),t('z')
-    >>> degree(x**3+y*z)
-    3
-    >>> degree(x**3+y*z,['z'])
-    1
+    >>> degree(x**3+y*z) == 3
+    True
+    >>> degree(x**3+y*z,['z']) == 1
+    True
     >>> from fractions import Fraction as F
     >>> degree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
@@ -731,10 +731,10 @@ def ldegree(arg, names=None):
     >>> from pyranha.types import polynomial, rational, k_monomial
     >>> t = polynomial[rational,k_monomial]()
     >>> x,y,z = t('x'),t('y'),t('z')
-    >>> ldegree(x**3+y*z)
-    2
-    >>> ldegree(x**3+y*x,['x'])
-    1
+    >>> ldegree(x**3+y*z) == 2
+    True
+    >>> ldegree(x**3+y*x,['x']) == 1
+    True
     >>> from fractions import Fraction as F
     >>> ldegree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
@@ -769,10 +769,10 @@ def t_degree(arg, names=None):
     >>> from pyranha.math import cos
     >>> t = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z = t('x'),t('y'),t('z')
-    >>> t_degree(cos(3*x+y-z)+cos(2*x))
-    3
-    >>> t_degree(cos(3*x+y+z)+cos(x),['z'])
-    1
+    >>> t_degree(cos(3*x+y-z)+cos(2*x)) == 3
+    True
+    >>> t_degree(cos(3*x+y+z)+cos(x),['z']) == 1
+    True
     >>> from fractions import Fraction as F
     >>> t_degree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
@@ -807,10 +807,10 @@ def t_ldegree(arg, names=None):
     >>> from pyranha.math import cos
     >>> t = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z = t('x'),t('y'),t('z')
-    >>> t_ldegree(cos(3*x+y-z)+cos(2*x))
-    2
-    >>> t_ldegree(cos(3*x+y-z)+cos(2*y+z),['y'])
-    1
+    >>> t_ldegree(cos(3*x+y-z)+cos(2*x)) == 2
+    True
+    >>> t_ldegree(cos(3*x+y-z)+cos(2*y+z),['y']) == 1
+    True
     >>> from fractions import Fraction as F
     >>> t_ldegree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
@@ -845,10 +845,10 @@ def t_order(arg, names=None):
     >>> from pyranha.math import cos
     >>> t = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z = t('x'),t('y'),t('z')
-    >>> t_order(cos(3*x+y-z)+cos(x))
-    5
-    >>> t_order(cos(3*x+y-z)-sin(y),['z'])
-    1
+    >>> t_order(cos(3*x+y-z)+cos(x)) == 5
+    True
+    >>> t_order(cos(3*x+y-z)-sin(y),['z']) == 1
+    True
     >>> from fractions import Fraction as F
     >>> t_order(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
@@ -883,10 +883,10 @@ def t_lorder(arg, names=None):
     >>> from pyranha.math import cos
     >>> t = poisson_series[polynomial[rational,k_monomial]]()
     >>> x,y,z = t('x'),t('y'),t('z')
-    >>> t_lorder(cos(4*x+y-z)+cos(2*x))
-    2
-    >>> t_lorder(cos(3*x+y-z)+cos(2*y+z),['y'])
-    1
+    >>> t_lorder(cos(4*x+y-z)+cos(2*x)) == 2
+    True
+    >>> t_lorder(cos(3*x+y-z)+cos(2*y+z),['y']) == 1
+    True
     >>> from fractions import Fraction as F
     >>> t_lorder(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
