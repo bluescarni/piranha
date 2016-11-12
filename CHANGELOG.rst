@@ -4,6 +4,12 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+New
+~~~
+
+- Windows packages of pyranha are now built and uploaded automatically
+  via appveyor after every push to master. [Francesco Biscani]
+
 Changes
 ~~~~~~~
 
@@ -16,6 +22,8 @@ Changes
 
 Fix
 ~~~
+
+- Various fixes for pyranha's doctests in Windows. [Francesco Biscani]
 
 - Fix pyranha hanging on the shutdown of the python interpreter on
   Windows. [Francesco Biscani]
