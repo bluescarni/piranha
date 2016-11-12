@@ -35,7 +35,7 @@ from ._core import types as _t
 double = _t.double
 
 #: This type generator represents a signed integral C++ type whose width is at least 16 bits (it will
-# be exactly 16 bits on most platforms).
+#: be exactly 16 bits on most platforms).
 int16 = _t.int16
 
 #: This type generator represents the arbitrary-precision integer type provided by the piranha C++ library.
