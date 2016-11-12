@@ -13,6 +13,9 @@ New
 Changes
 ~~~~~~~
 
+- Disable the exposition of rational functions in pyranha. [Francesco
+  Biscani]
+
 - In pyranha, use square brackets [] instead of round brackets () in the
   syntax that emulates C++ templates. [Francesco Biscani]
 
