@@ -552,8 +552,8 @@ class math_test_case(_ut.TestCase):
         from .math import invert
         self.assertEqual(invert(F(3, 4)), F(4, 3))
         self.assertEqual(invert(F(3, -4)), -F(4, 3))
-        self.assertEqual(invert(1.234), 1.234**-1.)
-        self.assertEqual(invert(-3.456), -3.456**-1.)
+        self.assertAlmostEqual(invert(1.234), 1.234**-1.)
+        self.assertAlmostEqual(invert(-3.456), -3.456**-1.)
         try:
             from mpmath import mpf
             self.assertEqual(type(invert(mpf(1.23))), mpf)
@@ -720,7 +720,7 @@ class polynomial_test_case(_ut.TestCase):
         self.assertEqual(pt.udivrem(x, x + 1)[1], -1)
         self.assertRaises(ValueError, lambda: pt.udivrem(x + y, x + y))
         # GCD.
-        self.assert_(gcd((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y)) == x -
+        self.assertTrue(gcd((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y)) == x -
                      y or gcd((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y)) == -x + y)
         self.assertRaises(TypeError, lambda: gcd(x, 1))
         self.assertRaises(ValueError, lambda: gcd(x**-1, y))
@@ -734,9 +734,9 @@ class polynomial_test_case(_ut.TestCase):
         def gcd_check(a, b, cmp):
             for algo in [pga.automatic, pga.prs_sr, pga.heuristic]:
                 res = pt.gcd(a, b, algo)
-                self.assert_(res[0] == cmp or res[0] == -cmp)
+                self.assertTrue(res[0] == cmp or res[0] == -cmp)
                 res = pt.gcd(a, b, True, algo)
-                self.assert_(res[0] == cmp or res[0] == -cmp)
+                self.assertTrue(res[0] == cmp or res[0] == -cmp)
                 self.assertEqual(res[1], a / res[0])
                 self.assertEqual(res[2], b / res[0])
         gcd_check((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y), x - y)
@@ -958,7 +958,7 @@ class converters_test_case(_ut.TestCase):
             # mpmath are close.
             tmp = binomial(mpf(5.1), mpf(3.2))
             self.assertEqual(tmp.context.dps, 100)
-            self.assert_(fabs(tmp - bin(mpf(5.1), mpf(3.2))) < mpf('5e-100'))
+            self.assertTrue(fabs(tmp - bin(mpf(5.1), mpf(3.2))) < mpf('5e-100'))
         # This will create a coefficient with dps equal to the current value.
         tmp = 3 * pt('x')
         self.assertEqual(evaluate(tmp, {'x': mpf(1)}).context.dps, orig_dps)
