@@ -65,10 +65,9 @@ struct ps_term_score {
 
 // Common checks on degree/ldegree type for use in enabling conditions below.
 template <typename T>
-struct common_degree_type_checks {
-    static const bool value
-        = std::is_constructible<T, int>::value && is_less_than_comparable<T>::value && is_container_element<T>::value;
-};
+using common_degree_type_checks
+    = std::integral_constant<bool, conjunction<std::is_constructible<T, int>, is_less_than_comparable<T>,
+                                               is_container_element<T>>::value>;
 
 // Total (low) degree computation.
 #define PIRANHA_DEFINE_PS_PROPERTY_GETTER(property)                                                                    \
