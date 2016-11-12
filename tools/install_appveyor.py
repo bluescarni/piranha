@@ -108,7 +108,7 @@ common_cmake_opts = r'-DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE
 # Configuration step.
 if is_python_build:
     run_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s ' + common_cmake_opts + r' -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python' +
-                python_version[0] + r'-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + r'\\libs\\python' + python_version + r'.dll')
+                (python_version[0] if python_version[0] == '3' else r'') + r'-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + r'\\libs\\python' + python_version + r'.dll')
 elif BUILD_TYPE in ['Release', 'Debug']:
     TEST_NSPLIT = os.environ['TEST_NSPLIT']
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
@@ -130,7 +130,8 @@ if is_python_build:
     import shutil
     os.chdir('wheel')
     shutil.move(pyranha_install_path, r'.')
-    DLL_LIST = [_[:-1] for _ in open('mingw_wheel_libs.txt', 'r').readlines()]
+    wheel_libs = 'mingw_wheel_libs_python{}.txt'.format(python_version[0])
+    DLL_LIST = [_[:-1] for _ in open(wheel_libs, 'r').readlines()]
     for _ in DLL_LIST:
         shutil.copy(_, 'pyranha')
     run_command(pinterp + r' setup.py bdist_wheel')

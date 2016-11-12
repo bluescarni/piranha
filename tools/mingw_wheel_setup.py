@@ -1,6 +1,7 @@
 from setuptools import setup
 from setuptools.dist import Distribution
 from distutils import util
+import sys
 
 NAME = 'pyranha'
 VERSION = '@piranha_VERSION@'
@@ -41,7 +42,8 @@ class BinaryDistribution(Distribution):
 
 # Setup the list of external dlls.
 import os.path
-l = open('mingw_wheel_libs.txt','r').readlines()
+mingw_wheel_libs = 'mingw_wheel_libs_python{}.txt'.format(sys.version_info[0])
+l = open(mingw_wheel_libs,'r').readlines()
 DLL_LIST = [os.path.basename(_[:-1]) for _ in l]
 
 setup(name=NAME,
