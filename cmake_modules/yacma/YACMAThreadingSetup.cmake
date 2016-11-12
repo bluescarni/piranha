@@ -61,13 +61,20 @@ endif()
 
 message(STATUS "Extra compiler flags for threading: ${YACMA_THREADING_CXX_FLAGS}")
 
-# Detect thread_local availability.
-try_compile(YACMA_HAS_THREAD_LOCAL ${CMAKE_BINARY_DIR}
-	"${CMAKE_CURRENT_LIST_DIR}/yacma_thread_local_tests.cpp")
-if(YACMA_HAS_THREAD_LOCAL)
-	message(STATUS "The 'thread_local' keyword is available.")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	# NOTE: the story here is that on OSX our test for detecting thread_local fails,
+	# for reasons to be investigated. Disable thread_local unconditionally for now.
+	message(STATUS "The 'thread_local' is forcibly disabled on OSX.")
+  set(YACMA_HAS_THREAD_LOCAL FALSE)
 else()
-	message(STATUS "The 'thread_local' keyword is not available.")
+  # Detect thread_local availability.
+  try_compile(YACMA_HAS_THREAD_LOCAL ${CMAKE_BINARY_DIR}
+  	"${CMAKE_CURRENT_LIST_DIR}/yacma_thread_local_tests.cpp")
+  if(YACMA_HAS_THREAD_LOCAL)
+  	message(STATUS "The 'thread_local' keyword is available.")
+  else()
+  	message(STATUS "The 'thread_local' keyword is not available.")
+  endif()
 endif()
 
 # Mark as included.
