@@ -25,7 +25,8 @@ environment:
     # - BUILD_TYPE: "Debug"
     #   TEST_NSPLIT: "4"
     #   SPLIT_TEST_NUM: "3"
-    - BUILD_TYPE: "Python35"
+    # BUILD_TYPE: "Python35"
+    - BUILD_TYPE: "Python27"
 
 install:
 

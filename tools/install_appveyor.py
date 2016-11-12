@@ -136,8 +136,8 @@ if is_python_build:
     run_command(pip + r' install dist\\' + os.listdir('dist')[0])
     run_command(
         pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
-    if is_master_build:
-        run_command(twine + r' upload -u bluescarni  dist\\' +
+    if is_master_build or True:
+        run_command(twine + r' upload -u bluescarni dist\\' +
                     os.listdir('dist')[0])
 elif BUILD_TYPE == 'Release':
     run_command(r'ctest -VV -E "gastineau|pearce2_unpacked"')
