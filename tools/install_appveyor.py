@@ -69,6 +69,8 @@ is_python_build = 'Python' in BUILD_TYPE
 if is_python_build:
     if BUILD_TYPE == 'Python35':
         python_version = '35'
+    elif BUILD_TYPE == 'Python27':
+        python_version = '27'
     else:
         raise RuntimeError('Unsupported Python build: ' + BUILD_TYPE)
     python_package = r'python' + python_version + r'_mingw_64.7z'
