@@ -34,7 +34,6 @@ see https://www.gnu.org/licenses/. */
 
 #include "detail/init_data.hpp"
 #include "detail/mpfr.hpp"
-#include "thread_pool.hpp"
 
 namespace piranha
 {
@@ -47,8 +46,6 @@ inline void cleanup_function()
 {
     std::cout << "Freeing MPFR caches.\n";
     ::mpfr_free_cache();
-    std::cout << "Shutting down the thread pool.\n";
-    thread_pool_shutdown<void>();
     std::cout << "Setting shutdown flag.\n";
     piranha_init_statics<>::s_shutdown_flag.store(true);
 }

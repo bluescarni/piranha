@@ -307,8 +307,6 @@ BOOST_PYTHON_MODULE(_core)
     struct cleanup_functor {
         void operator()() const
         {
-            // First let's shut down the thread pool.
-            piranha::thread_pool_shutdown<void>();
             // Then we clean up the custom derivatives.
             auto e_types = pyranha::get_exposed_types_list();
             bp::stl_input_iterator<bp::object> end_it;
@@ -325,9 +323,12 @@ BOOST_PYTHON_MODULE(_core)
                 }
             }
             pyranha::builtin().attr("print")("Pow caches cleanup completed.");
-            // Finally, clean up the pyranha type system.
+            // Clean up the pyranha type system.
             pyranha::et_map.clear();
             pyranha::builtin().attr("print")("Pyranha's type system cleanup completed.");
+            // Finally, shut down the thread pool.
+            std::cout << "Shutting down the thread pool.\n";
+            piranha::thread_pool_shutdown<void>();
         }
     };
     // Expose it.
