@@ -367,7 +367,7 @@ private:
         }
         return new_queues;
     }
-    // Shutdown. This is used to stop the threads at program shutdown.
+    // Shutdown. This can be used to stop the threads at program shutdown.
     static void shutdown()
     {
         thread_queues_t new_queues;
