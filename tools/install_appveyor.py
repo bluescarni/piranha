@@ -65,7 +65,6 @@ os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
 # Build type setup.
 BUILD_TYPE = os.environ['BUILD_TYPE']
 is_master_build = (os.environ['APPVEYOR_REPO_BRANCH'] == 'master') and not os.environ['APPVEYOR_PULL_REQUEST_NUMBER']
-print(os.environ['APPVEYOR_PULL_REQUEST_NUMBER'])
 if is_master_build:
     print("Master build detected.")
 is_python_build = 'Python' in BUILD_TYPE
