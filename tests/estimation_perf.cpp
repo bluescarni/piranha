@@ -77,13 +77,13 @@ struct multiplier : base_series_multiplier<p_type> {
         {
             // Sort the term pointers in the second series according to the degree.
             std::sort(m_m->m_v2.begin(), m_m->m_v2.end(), [m](const term_type *t1, const term_type *t2) {
-                return detail::ps_get_degree(*t1, m->m_ss) < detail::ps_get_degree(*t2, m->m_ss);
+                return ps_get_degree(*t1, m->m_ss) < ps_get_degree(*t2, m->m_ss);
             });
             // Create the degree vectors.
             std::transform(m_m->m_v1.begin(), m_m->m_v1.end(), std::back_inserter(m_v_d1),
-                           [m](const term_type *t) { return detail::ps_get_degree(*t, m->m_ss); });
+                           [m](const term_type *t) { return ps_get_degree(*t, m->m_ss); });
             std::transform(m_m->m_v2.begin(), m_m->m_v2.end(), std::back_inserter(m_v_d2),
-                           [m](const term_type *t) { return detail::ps_get_degree(*t, m->m_ss); });
+                           [m](const term_type *t) { return ps_get_degree(*t, m->m_ss); });
             // Create the index vector into d2.
             m_idx_vector.resize(m->m_v2.size());
             std::iota(m_idx_vector.begin(), m_idx_vector.end(), size_type(0));
