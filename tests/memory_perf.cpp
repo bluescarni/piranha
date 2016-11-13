@@ -128,8 +128,10 @@ BOOST_AUTO_TEST_CASE(memory_parallel_array_test)
             auto ptr1 = make_parallel_array<array_wrap>(alloc_size, i + 1u);
         }
     } catch (const std::exception &e) {
-        std::cerr << "Exception caught, type is '" << detail::demangle(typeid(e)) << "', message is: " << e.what() << '\n';
-        std::cout << "Exception caught, type is '" << detail::demangle(typeid(e)) << "', message is: " << e.what() << '\n';
+        std::cerr << "Exception caught, type is '" << detail::demangle(typeid(e)) << "', message is: " << e.what()
+                  << '\n';
+        std::cout << "Exception caught, type is '" << detail::demangle(typeid(e)) << "', message is: " << e.what()
+                  << '\n';
         throw;
     }
 }
