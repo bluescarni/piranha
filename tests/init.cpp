@@ -41,7 +41,7 @@ struct dummy {
     ~dummy()
     {
         // NOTE: cannot use BOOST_CHECK here because this gets invoked outside the test case.
-        piranha_assert(detail::shutdown());
+        piranha_assert(shutdown());
     }
 };
 
@@ -57,6 +57,6 @@ BOOST_AUTO_TEST_CASE(init_main_test)
     f0.wait();
     f1.wait();
     f2.wait();
-    BOOST_CHECK(!detail::shutdown());
-    BOOST_CHECK_EQUAL(detail::piranha_init_statics<>::s_failed.load(), 2u);
+    BOOST_CHECK(!shutdown());
+    BOOST_CHECK_EQUAL(piranha_init_statics<>::s_failed.load(), 2u);
 }

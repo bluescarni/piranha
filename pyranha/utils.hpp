@@ -26,16 +26,41 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
+#ifndef PYRANHA_UTILS_HPP
+#define PYRANHA_UTILS_HPP
+
 #include "python_includes.hpp"
 
-#include "../src/kronecker_monomial.hpp"
-#include "expose_rational_functions.hpp"
+#include <boost/python/extract.hpp>
+#include <boost/python/import.hpp>
+#include <boost/python/object.hpp>
 
 namespace pyranha
 {
 
-void expose_rational_functions_0()
+namespace bp = boost::python;
+
+// Import and return the builtin module.
+inline bp::object builtin()
 {
-    expose_rational_functions_impl<piranha::k_monomial>();
+#if PY_MAJOR_VERSION < 3
+    return bp::import("__builtin__");
+#else
+    return bp::import("builtins");
+#endif
+}
+
+// Check if object has attribute.
+inline bool hasattr(const bp::object &o, const char *name)
+{
+    return bp::extract<bool>(builtin().attr("hasattr")(o, name));
+}
+
+// Get string representation.
+inline std::string str(const bp::object &o)
+{
+    return bp::extract<std::string>(builtin().attr("str")(o));
 }
 }
+
+#endif

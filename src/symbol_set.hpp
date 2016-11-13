@@ -41,9 +41,9 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "config.hpp"
+#include "detail/init_data.hpp"
 #include "detail/symbol_set_fwd.hpp"
 #include "exceptions.hpp"
-#include "init.hpp"
 #include "symbol.hpp"
 #include "type_traits.hpp"
 
@@ -539,7 +539,7 @@ private:
     bool run_destruction_checks() const
     {
         // Run destruction checks only if we are not in the shutdown phase.
-        if (detail::shutdown()) {
+        if (shutdown()) {
             return true;
         }
         return check();

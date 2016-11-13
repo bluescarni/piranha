@@ -1,6 +1,8 @@
 version: '{build}'
 
 environment:
+  TWINE_PASSWORD:
+    secure: rcb0UlxG/p8yoPsvhAdsHA==
   matrix:
     - BUILD_TYPE: "Release"
       TEST_NSPLIT: "3"
@@ -23,45 +25,25 @@ environment:
     - BUILD_TYPE: "Debug"
       TEST_NSPLIT: "4"
       SPLIT_TEST_NUM: "3"
+    - BUILD_TYPE: "Python27"
+    - BUILD_TYPE: "Python34"
+    - BUILD_TYPE: "Python35"
 
 install:
 
 # Rename sh.exe as sh.exe in PATH interferes with MinGW.
 - rename "C:\Program Files\Git\usr\bin\sh.exe" "sh2.exe"
-
-# Download MinGW-w64 toolchain.
-- call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/x86_64-6.2.0-release-posix-seh-rt_v5-rev1.7z" -FileName mw64.7z
-- 7z x -oC:\ mw64.7z > NUL
-- set PATH=C:\mingw64\bin;%PATH%
-# Download precompiled deps.
-- call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/gmp_mingw_64.7z" -FileName gmp.7z
-- call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/mpfr_mingw_64.7z" -FileName mpfr.7z
-- call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/boost_mingw_64.7z" -FileName boost.7z
-- call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/msgpack_mingw_64.7z" -FileName msgpack.7z
-# Extract them.
-- 7z x -aoa -oC:\ gmp.7z > NUL
-- 7z x -aoa -oC:\ mpfr.7z > NUL
-- 7z x -aoa -oC:\ boost.7z > NUL
-- 7z x -aoa -oC:\ msgpack.7z > NUL
-# Set the path so that the precompiled libs can be found.
-- set PATH=%PATH%;c:\local\lib
+# Get a Python version to run the script.
+- call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/python35_mingw_64.7z" -FileName python.7z
+- 7z x -aoa -oC:\python4appveyor\ python.7z > NUL
 
 build_script:
+
 - cd C:\projects\piranha
-- mkdir build
-- cd build
-
-#- cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DPIRANHA_TEST_SPLIT=yes -DTEST_NSPLIT=%TEST_NSPLIT% -DPIRANHA_TEST_SPLIT_NUM=%SPLIT_TEST_NUM% -DBoost_ADDITIONAL_VERSIONS=1.60.0;1.60 -DBoost_USE_MULTITHREADED=yes -DBoost_USE_STATIC_LIBS=yes -DCMAKE_PREFIX_PATH=C:\bzip2;C:\boost ..
-- cmake -G "MinGW Makefiles" ..  -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DTEST_NSPLIT=%TEST_NSPLIT% -DPIRANHA_TEST_SPLIT_NUM=%SPLIT_TEST_NUM% -DBoost_LIBRARY_DIR_RELEASE=c:\local\lib -DBoost_INCLUDE_DIR=c:\local\include -DGMP_INCLUDE_DIR=c:\local\include -DGMP_LIBRARIES=c:\local\lib\libgmp.a -DMPFR_INCLUDE_DIR=c:\local\include -DMPFR_LIBRARIES=c:\local\lib\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\local\include -DBZIP2_LIBRARY_RELEASE=c:\local\lib\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=c:\local\include -DZLIB_INCLUDE_DIR=c:\local\include -DZLIB_LIBRARY_RELEASE=c:\local\lib\libboost_zlib-mgw62-mt-1_62.dll
-#- cmake --build . --target install
-- mingw32-make install
-
-test_script:
-- if [%BUILD_TYPE%]==[Release] ctest -VV -E "gastineau|pearce2_unpacked";
-- if [%BUILD_TYPE%]==[Debug] ctest -VV;
+- C:\python4appveyor\Python35\python.exe tools\install_appveyor.py
 
 # Enable this to be able to login to the build worker. You can use the
 # `remmina` program in Ubuntu, use the login information that the line below
 # prints into the log.
-#on_finish:
-#- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# on_finish:
+# - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

@@ -45,7 +45,8 @@ elseif(WIN32)
     message(STATUS "Windows platform detected.")
     message(STATUS "Output extension for compiled modules will be '.pyd'.")
     set(YACMA_PY_MODULE_EXTENSION "pyd")
-    # TODO fill in.
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
+        OUTPUT_VARIABLE YACMA_PYTHON_MODULES_INSTALL_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 
 if("${YACMA_PYTHON_MODULES_INSTALL_PATH}" STREQUAL "")

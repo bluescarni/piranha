@@ -31,56 +31,37 @@ from __future__ import absolute_import as _ai
 
 from ._core import types as _t
 
-#: This generator represents the standard C++ type ``float``.
-float = _t.float
-
-#: This generator represents the standard C++ type ``double``.
+#: This type generator represents the standard C++ type ``double``.
 double = _t.double
 
-#: This generator represents the standard C++ type ``long double``.
-long_double = _t.long_double
+#: This type generator represents a signed integral C++ type whose width is at least 16 bits (it will
+#: be exactly 16 bits on most platforms).
+int16 = _t.int16
 
-try:
-    #: This generator represents the 128-bit floating-point type from GCC's ``libquadmath``.
-    float128 = _t.float128
-except AttributeError:
-    pass
-
-#: This generator represents the standard C++ type ``signed char`` (a signed integer type
-#: whose width is usually 8 bits).
-signed_char = _t.signed_char
-
-#: This generator represents the standard C++ type ``short`` (a signed integer type
-#: whose width is usually 16 bits).
-short = _t.short
-
-#: This generator represents the arbitrary-precision integer type provided by the piranha C++ library.
+#: This type generator represents the arbitrary-precision integer type provided by the piranha C++ library.
 integer = _t.integer
 
-#: This generator represents the arbitrary-precision rational type provided by the piranha C++ library.
+#: This type generator represents the arbitrary-precision rational type provided by the piranha C++ library.
 rational = _t.rational
 
-#: This generator represents the multiprecision floating-point type provided by the piranha C++ library.
+#: This type generator represents the multiprecision floating-point type provided by the piranha C++ library.
 real = _t.real
 
-#: This generator represents the Kronecker monomial type (that is, a monomial "compressed" into a single
+#: This type generator represents the Kronecker monomial type (that is, a monomial "compressed" into a single
 #: signed integral value).
 k_monomial = _t.k_monomial
 
-#: Generic type generator for polynomials.
+#: Type generator template for polynomials.
 polynomial = _t.polynomial
 
-#: Generic type generator for monomials.
+#: Type generator template for monomials.
 monomial = _t.monomial
 
-#: Generic type generator for Poisson series.
+#: Type generator template for Poisson series.
 poisson_series = _t.poisson_series
 
-#: Generic type generator for divisors.
+#: Type generator template for divisors.
 divisor = _t.divisor
 
-#: Generic type generator for divisor series.
+#: Type generator template for divisor series.
 divisor_series = _t.divisor_series
-
-#: Generic type generator for rational functions.
-rational_function = _t.rational_function

@@ -45,11 +45,14 @@ see https://www.gnu.org/licenses/. */
 #include "../src/polynomial.hpp"
 #include "../src/type_traits.hpp"
 #include "expose_utils.hpp"
+#include "type_system.hpp"
 
 namespace pyranha
 {
 
 namespace bp = boost::python;
+
+PYRANHA_DECLARE_T_NAME(piranha::polynomial)
 
 // Custom hook for polynomials.
 template <typename Descriptor>

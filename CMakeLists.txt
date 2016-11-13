@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project(piranha VERSION 0.6)
+project(piranha VERSION 0.7)
 
 enable_testing()
 
@@ -223,4 +223,9 @@ endif()
 
 IF(BUILD_PYRANHA)
 	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/pyranha")
+	if(MINGW)
+		message(STATUS "Creating the files for the generation of a binary wheel for MinGW.")
+		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/mingw_wheel_setup.py" "${CMAKE_CURRENT_BINARY_DIR}/wheel/setup.py")
+		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/mingw_wheel_libs_python${PYTHON_VERSION_MAJOR}.txt" "${CMAKE_CURRENT_BINARY_DIR}/wheel/mingw_wheel_libs_python${PYTHON_VERSION_MAJOR}.txt")
+	endif()
 ENDIF()

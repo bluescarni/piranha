@@ -58,12 +58,6 @@ see https://www.gnu.org/licenses/. */
  * might not be exception-safe.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,
  * e.g., importing the module from multiple Python threads).
- * \todo instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
- * atexit() function to clean up custom derivatives before static destruction starts. We could register the atexit
- * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each
- * time.
- * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
- * work in a more generic fashion.
  * \todo pyranha: enable math for numpy's floating point type, and arrays. Also, think about enabling conversion from
  * the numpy float
  * in the from-python converters? -> if we do this last bit, we must make sure that our custom converter does not
@@ -287,6 +281,13 @@ see https://www.gnu.org/licenses/. */
  * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
  *   in the same fashion as the s11n type traits.
  * \todo just replace @param[in]/@param[out] with just @param
+ * \todo instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
+ * atexit() function to clean up custom derivatives before static destruction starts. We could register the atexit
+ * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each
+ * time. Or maybe when the static derivative registry is constructed the first time. Same goes for pow_caches.
+ * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
+ * work in a more generic fashion (or otherwise we need to make clear). More generally, we need to think if there's
+ * a robust way of sorting out the init/destruction sequence for the global state. Destruction is harder.
  */
 namespace piranha
 {

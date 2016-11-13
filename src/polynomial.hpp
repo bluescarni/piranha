@@ -2797,7 +2797,7 @@ public:
         // advantage of faster Kronecker multiplication, if the series are suitable.
         using term_type = typename Series::term_type;
         // NOTE: degree type is the same in total and partial.
-        using degree_type = decltype(detail::ps_get_degree(term_type{}, this->m_ss));
+        using degree_type = decltype(ps_get_degree(term_type{}, this->m_ss));
         using size_type = typename base::size_type;
         namespace sph = std::placeholders;
         static_assert(std::is_same<T, degree_type>::value, "Invalid degree type");
@@ -2967,16 +2967,16 @@ private:
         template <typename... Args>
         bool operator()(term_type const *p1, term_type const *p2, const symbol_set &ss, const Args &... args) const
         {
-            return detail::ps_get_degree(*p1, args..., ss) < detail::ps_get_degree(*p2, args..., ss);
+            return ps_get_degree(*p1, args..., ss) < ps_get_degree(*p2, args..., ss);
         }
     };
     struct term_degree_getter {
         using term_type = typename Series::term_type;
         template <typename... Args>
         auto operator()(term_type const *p, const symbol_set &ss, const Args &... args) const
-            -> decltype(detail::ps_get_degree(*p, args..., ss))
+            -> decltype(ps_get_degree(*p, args..., ss))
         {
-            return detail::ps_get_degree(*p, args..., ss);
+            return ps_get_degree(*p, args..., ss);
         }
     };
     // execute() is the top level dispatch for the actual multiplication.

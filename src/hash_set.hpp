@@ -49,8 +49,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/init_data.hpp"
 #include "exceptions.hpp"
-#include "init.hpp"
 #include "s11n.hpp"
 #include "safe_cast.hpp"
 #include "thread_pool.hpp"
@@ -596,7 +596,7 @@ private:
     bool sanity_check() const
     {
         // Ignore sanity checks on shutdown.
-        if (detail::shutdown()) {
+        if (shutdown()) {
             return true;
         }
         size_type count = 0u;

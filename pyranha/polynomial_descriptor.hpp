@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
+#include <cstdint>
 #include <tuple>
 
 #include "../src/kronecker_monomial.hpp"
@@ -39,35 +40,34 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
-#include "type_system.hpp"
 
 namespace pyranha
 {
-
-PYRANHA_DECLARE_TT_NAMER(piranha::polynomial, "polynomial")
 
 // Descriptor for polynomial exposition.
 struct polynomial_descriptor {
     using params = std::tuple<
         // Double precision.
-        std::tuple<double, piranha::monomial<piranha::rational>>, std::tuple<double, piranha::monomial<short>>,
-        std::tuple<double, piranha::kronecker_monomial<>>,
+        std::tuple<double, piranha::monomial<piranha::rational>>,
+        std::tuple<double, piranha::monomial<std::int_least16_t>>, std::tuple<double, piranha::kronecker_monomial<>>,
         // Integer.
         std::tuple<piranha::integer, piranha::monomial<piranha::rational>>,
-        std::tuple<piranha::integer, piranha::monomial<short>>,
+        std::tuple<piranha::integer, piranha::monomial<std::int_least16_t>>,
         std::tuple<piranha::integer, piranha::kronecker_monomial<>>,
         // Integer recursive.
         // NOTE: this is not really part of the public API, but it can be useful when experimenting
         // with recursive poly algorithms.
-        std::tuple<piranha::polynomial<piranha::integer, piranha::monomial<short>>, piranha::monomial<short>>,
+        std::tuple<piranha::polynomial<piranha::integer, piranha::monomial<std::int_least16_t>>,
+                   piranha::monomial<std::int_least16_t>>,
         std::tuple<piranha::polynomial<piranha::integer, piranha::kronecker_monomial<>>, piranha::kronecker_monomial<>>,
         // Rational.
         std::tuple<piranha::rational, piranha::monomial<piranha::rational>>,
-        std::tuple<piranha::rational, piranha::monomial<short>>,
+        std::tuple<piranha::rational, piranha::monomial<std::int_least16_t>>,
         std::tuple<piranha::rational, piranha::kronecker_monomial<>>,
         // Real.
         std::tuple<piranha::real, piranha::monomial<piranha::rational>>,
-        std::tuple<piranha::real, piranha::monomial<short>>, std::tuple<piranha::real, piranha::kronecker_monomial<>>>;
+        std::tuple<piranha::real, piranha::monomial<std::int_least16_t>>,
+        std::tuple<piranha::real, piranha::kronecker_monomial<>>>;
     using interop_types = std::tuple<double, piranha::integer, piranha::real, piranha::rational>;
     using pow_types = interop_types;
     using eval_types = interop_types;

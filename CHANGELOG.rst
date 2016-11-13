@@ -1,6 +1,38 @@
 Changelog
 =========
 
+%%version%% (unreleased)
+------------------------
+
+New
+~~~
+
+- Windows packages of pyranha are now built and uploaded automatically
+  via appveyor after every push to master. [Francesco Biscani]
+
+Changes
+~~~~~~~
+
+- Disable the exposition of rational functions in pyranha. [Francesco
+  Biscani]
+
+- In pyranha, use square brackets [] instead of round brackets () in the
+  syntax that emulates C++ templates. [Francesco Biscani]
+
+- In pyranha use std::int_least16_t (exported as 'int16' in the type
+  system) rather than short int. Also, remove a few unused types.
+  [Francesco Biscani]
+
+Fix
+~~~
+
+- Various fixes for pyranha's doctests in Windows. [Francesco Biscani]
+
+- Fix pyranha hanging on the shutdown of the python interpreter on
+  Windows. [Francesco Biscani]
+
+- Fix the installation path of pyranha on Windows. [Francesco Biscani]
+
 v0.6 (2016-11-01)
 -----------------
 

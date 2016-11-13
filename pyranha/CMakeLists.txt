@@ -25,10 +25,6 @@ YACMA_PYTHON_MODULE(_core SHARED
 	type_system.hpp
 	expose_utils.hpp
 	expose_utils.cpp
-	# Rational functions.
-	expose_rational_functions.hpp
-	expose_rational_functions_0.cpp
-	expose_rational_functions_1.cpp
 	# Polynomials.
 	polynomial_descriptor.hpp
 	expose_polynomials.hpp
@@ -64,7 +60,6 @@ YACMA_PYTHON_MODULE(_core SHARED
 	expose_poisson_series_12.cpp
 	expose_poisson_series_13.cpp
 	expose_poisson_series_14.cpp
-	expose_poisson_series_15.cpp
 	# Divisor series.
 	divisor_series_descriptor.hpp
 	expose_divisor_series.hpp

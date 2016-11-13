@@ -40,6 +40,8 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/module.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/scope.hpp>
+#include <boost/python/stl_iterator.hpp>
+#include <cstdint>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -48,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/binomial.hpp"
 #include "../src/config.hpp"
 #include "../src/divisor.hpp"
+#include "../src/divisor_series.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/invert.hpp"
@@ -56,35 +59,32 @@ see https://www.gnu.org/licenses/. */
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/poisson_series.hpp"
+#include "../src/polynomial.hpp"
 #include "../src/real.hpp"
 #include "../src/s11n.hpp"
 #include "../src/safe_cast.hpp"
+#include "../src/thread_pool.hpp"
 #include "../src/type_traits.hpp"
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_polynomials.hpp"
-#include "expose_rational_functions.hpp"
 #include "expose_utils.hpp"
 #include "python_converters.hpp"
 #include "type_system.hpp"
+#include "utils.hpp"
 
 namespace bp = boost::python;
 
 static std::mutex global_mutex;
 static bool inited = false;
 
-// Cleanup function to be called on module unload.
-static inline void cleanup_type_system()
-{
-    pyranha::et_map.clear();
-}
-
 namespace pyranha
 {
 
-PYRANHA_DECLARE_TT_NAMER(piranha::monomial, "monomial")
-PYRANHA_DECLARE_TT_NAMER(piranha::divisor, "divisor")
+PYRANHA_DECLARE_T_NAME(piranha::monomial)
+PYRANHA_DECLARE_T_NAME(piranha::divisor)
 }
 
 // A couple of utils to test exception translation.
@@ -121,15 +121,16 @@ BOOST_PYTHON_MODULE(_core)
     // Piranha init.
     piranha::init();
     // Docstring options setup.
-    bp::docstring_options doc_options(true, true, false);
+    bp::docstring_options doc_options(false, false, false);
     // Type generator class.
     bp::class_<pyranha::type_generator> tg_class("_type_generator", bp::no_init);
     tg_class.def("__call__", &pyranha::type_generator::operator());
     tg_class.def("__repr__", &pyranha::type_generator::repr);
-    // Generic type generator class.
-    bp::class_<pyranha::generic_type_generator> gtg_class("_generic_type_generator", bp::no_init);
-    gtg_class.def("__call__", &pyranha::generic_type_generator::operator());
-    gtg_class.def("__repr__", &pyranha::generic_type_generator::repr);
+    // Type generator template class.
+    bp::class_<pyranha::type_generator_template> tgt_class("_type_generator_template", bp::no_init);
+    tgt_class.def("__getitem__", &pyranha::type_generator_template::getitem_o);
+    tgt_class.def("__getitem__", &pyranha::type_generator_template::getitem_t);
+    tgt_class.def("__repr__", &pyranha::type_generator_template::repr);
     // Create the types submodule.
     std::string types_module_name = bp::extract<std::string>(bp::scope().attr("__name__") + ".types");
     // NOTE: the nested namespace is created if not there, otherwise it will be returned.
@@ -144,21 +145,20 @@ BOOST_PYTHON_MODULE(_core)
     // borrowed, both in Python 2 and 3.
     auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr)));
     bp::scope().attr("types") = types_module;
-    // Expose concrete instances of the type generator.
-    pyranha::expose_type_generator<signed char>("signed_char");
-    pyranha::expose_type_generator<short>("short");
-    pyranha::expose_type_generator<float>("float");
-    pyranha::expose_type_generator<double>("double");
-    pyranha::expose_type_generator<long double>("long_double");
-    pyranha::expose_type_generator<piranha::integer>("integer");
-    pyranha::expose_type_generator<piranha::rational>("rational");
-    pyranha::expose_type_generator<piranha::real>("real");
-    pyranha::expose_type_generator<piranha::k_monomial>("k_monomial");
-    // The generic type generator for monomial instances.
-    pyranha::expose_generic_type_generator<piranha::monomial, piranha::rational>();
-    pyranha::expose_generic_type_generator<piranha::monomial, short>();
-    // The generic type generator for divisor instances.
-    pyranha::expose_generic_type_generator<piranha::divisor, short>();
+    // Expose concrete instances of type generators.
+    pyranha::instantiate_type_generator<std::int_least16_t>("int16", types_module);
+    pyranha::instantiate_type_generator<double>("double", types_module);
+    pyranha::instantiate_type_generator<piranha::integer>("integer", types_module);
+    pyranha::instantiate_type_generator<piranha::rational>("rational", types_module);
+    pyranha::instantiate_type_generator<piranha::real>("real", types_module);
+    pyranha::instantiate_type_generator<piranha::k_monomial>("k_monomial", types_module);
+    // Register template instances of monomial, and instantiate the type generator template.
+    pyranha::instantiate_type_generator_template<piranha::monomial>("monomial", types_module);
+    pyranha::register_template_instance<piranha::monomial, piranha::rational>();
+    pyranha::register_template_instance<piranha::monomial, std::int_least16_t>();
+    // Same for divisor.
+    pyranha::instantiate_type_generator_template<piranha::divisor>("divisor", types_module);
+    pyranha::register_template_instance<piranha::divisor, std::int_least16_t>();
     // Arithmetic converters.
     pyranha::integer_converter i_c;
     pyranha::rational_converter ra_c;
@@ -189,6 +189,7 @@ BOOST_PYTHON_MODULE(_core)
         .value("gzip", piranha::compression::gzip)
         .value("bzip2", piranha::compression::bzip2);
     // Expose polynomials.
+    pyranha::instantiate_type_generator_template<piranha::polynomial>("polynomial", types_module);
     pyranha::expose_polynomials_0();
     pyranha::expose_polynomials_1();
     pyranha::expose_polynomials_2();
@@ -204,6 +205,7 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_polynomials_12();
     pyranha::expose_polynomials_13();
     // Expose Poisson series.
+    pyranha::instantiate_type_generator_template<piranha::poisson_series>("poisson_series", types_module);
     pyranha::expose_poisson_series_0();
     pyranha::expose_poisson_series_1();
     pyranha::expose_poisson_series_2();
@@ -219,8 +221,8 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_poisson_series_12();
     pyranha::expose_poisson_series_13();
     pyranha::expose_poisson_series_14();
-    pyranha::expose_poisson_series_15();
     // Expose divisor series.
+    pyranha::instantiate_type_generator_template<piranha::divisor_series>("divisor_series", types_module);
     pyranha::expose_divisor_series_0();
     pyranha::expose_divisor_series_1();
     pyranha::expose_divisor_series_2();
@@ -230,9 +232,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_divisor_series_6();
     pyranha::expose_divisor_series_7();
     pyranha::expose_divisor_series_8();
-    // Expose rational function.
-    pyranha::expose_rational_functions_0();
-    pyranha::expose_rational_functions_1();
     // Expose the settings class.
     bp::class_<piranha::settings> settings_class("_settings", bp::init<>());
     settings_class.def("_get_max_term_output", piranha::settings::get_max_term_output)
@@ -292,8 +291,6 @@ BOOST_PYTHON_MODULE(_core)
 #undef PYRANHA_EXPOSE_INVERT
     // GCD.
     bp::def("_gcd", &piranha::math::gcd<piranha::integer, piranha::integer>);
-    // Cleanup function.
-    bp::def("_cleanup_type_system", &cleanup_type_system);
     // Tests for exception translation.
     bp::def("_test_safe_cast_failure", &test_exception<piranha::safe_cast_failure>);
     bp::def("_test_zero_division_error", &test_exception<piranha::zero_division_error>);
@@ -305,4 +302,42 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_test_inexact_division", &test_exception<piranha::math::inexact_division>);
     // Helper to generate an argument error.
     bp::def("_generate_argument_error", &generate_argument_error);
+
+    // Define a cleanup functor to be run when the module is unloaded.
+    struct cleanup_functor {
+        void operator()() const
+        {
+            // First we clean up the custom derivatives.
+            auto e_types = pyranha::get_exposed_types_list();
+            bp::stl_input_iterator<bp::object> end_it;
+            for (bp::stl_input_iterator<bp::object> it(e_types); it != end_it; ++it) {
+                if (pyranha::hasattr(*it, "unregister_all_custom_derivatives")) {
+                    it->attr("unregister_all_custom_derivatives")();
+                }
+            }
+            pyranha::builtin().attr("print")("Custom derivatives cleanup completed.");
+            // Next we clean up the pow caches.
+            for (bp::stl_input_iterator<bp::object> it(e_types); it != end_it; ++it) {
+                if (pyranha::hasattr(*it, "clear_pow_cache")) {
+                    it->attr("clear_pow_cache")();
+                }
+            }
+            pyranha::builtin().attr("print")("Pow caches cleanup completed.");
+            // Clean up the pyranha type system.
+            pyranha::et_map.clear();
+            pyranha::builtin().attr("print")("Pyranha's type system cleanup completed.");
+            // Finally, shut down the thread pool.
+            // NOTE: this is necessary in Windows/MinGW currently, otherwise the python
+            // interpreter hangs on exit (possibly due to either some implementation-defined
+            // static order destruction fiasco, or maybe a threading bug in MinGW).
+            std::cout << "Shutting down the thread pool.\n";
+            piranha::thread_pool_shutdown<void>();
+        }
+    };
+    // Expose it.
+    bp::class_<cleanup_functor> cl_c("_cleanup_functor", bp::init<>());
+    cl_c.def("__call__", &cleanup_functor::operator());
+    // Register it.
+    bp::object atexit_mod = bp::import("atexit");
+    atexit_mod.attr("register")(cleanup_functor{});
 }

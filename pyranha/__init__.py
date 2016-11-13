@@ -33,7 +33,7 @@ from __future__ import absolute_import as _ai
 __all__ = ['celmec', 'math', 'test', 'types']
 
 import threading as _thr
-from ._common import _cpp_type_catcher, _monkey_patching, _cleanup
+from ._common import _cpp_type_catcher, _monkey_patching
 from ._core import polynomial_gcd_algorithm, data_format as _df, compression as _cf
 
 # Run the monkey patching.
@@ -180,7 +180,7 @@ class settings(object):
         >>> settings.get_latex_repr()
         True
         >>> from .types import polynomial, rational, k_monomial
-        >>> pt = polynomial(rational,k_monomial)()
+        >>> pt = polynomial[rational,k_monomial]()
         >>> x = pt('x')
         >>> (x**2/2)._repr_latex_()
         '\\[ \\frac{1}{2}{x}^{2} \\]'
@@ -207,7 +207,7 @@ class settings(object):
         >>> settings.get_latex_repr()
         False
         >>> from .types import polynomial, rational, k_monomial
-        >>> pt = polynomial(rational,k_monomial)()
+        >>> pt = polynomial[rational,k_monomial]()
         >>> x = pt('x')
         >>> (x**2/2)._repr_latex_() # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
@@ -439,7 +439,7 @@ def save_file(obj, name, df=None, cf=None):
 
     >>> from pyranha.types import polynomial, rational, k_monomial
     >>> import tempfile, os
-    >>> x = polynomial(rational,k_monomial)()('x')
+    >>> x = polynomial[rational,k_monomial]()('x')
     >>> p = (x + 1)**10
     >>> f = tempfile.NamedTemporaryFile(delete=False) # Generate a temporary file name
     >>> f.close()
@@ -495,6 +495,3 @@ def load_file(obj, name, df=None, cf=None):
         _cpp_type_catcher(_load_file, obj, name, df, cf)
     else:
         _cpp_type_catcher(_load_file, obj, name)
-
-import atexit as _atexit
-_atexit.register(lambda: _cleanup())
