@@ -29,6 +29,14 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make VERBOSE=1;
     ctest -E "gastineau|pearce2_unpacked" -V;
+    # Do the release here.
+    export PIRANHA_RELEASE_VERSION=`echo "${TRAVIS_TAG}"|grep -E 'v[0-9]+\.[0-9]+.*'|cut -c 2-`
+    if [[ "${PIRANHA_RELEASE_VERSION}" != "" ]]; then
+      echo "Creating new piranha release: ${PIRANHA_RELEASE_VERSION}"
+      set +x
+      curl -s --data '{"tag_name": "'${TRAVIS_TAG}'","name": "piranha-'${PIRANHA_RELEASE_VERSION}'","body": "Release of version '${PIRANHA_RELEASE_VERSION}'.","prerelease": true}' "https://api.github.com/repos/bluescarni/piranha/releases?access_token=${GH_RELEASE_TOKEN}" 2>&1 > /dev/null
+      set -x
+    fi
 elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
     cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DPYTHON_EXECUTABLE=/usr/bin/python2 ../;
     make VERBOSE=1;

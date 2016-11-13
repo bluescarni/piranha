@@ -1,4 +1,5 @@
 import os
+import re
 
 
 def wget(url, out):
@@ -64,10 +65,9 @@ os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
 
 # Build type setup.
 BUILD_TYPE = os.environ['BUILD_TYPE']
-is_master_build = (os.environ['APPVEYOR_REPO_BRANCH'] == 'master') and not os.environ[
-    'APPVEYOR_PULL_REQUEST_NUMBER']
-if is_master_build:
-    print("Master build detected.")
+is_release_build = (os.environ['APPVEYOR_REPO_TAG'] == 'true') and bool(re.match(r'v[0-9]+\.[0-9]+.*',os.environ['APPVEYOR_REPO_TAG_NAME']))
+if is_release_build:
+    print("Release build detected, tag is '" + os.environ['APPVEYOR_REPO_TAG_NAME'] + "'")
 is_python_build = 'Python' in BUILD_TYPE
 if is_python_build:
     if BUILD_TYPE == 'Python35':
@@ -101,7 +101,7 @@ if is_python_build:
     run_command(pinterp + ' get-pip.py')
     run_command(pip + ' install numpy')
     run_command(pip + ' install mpmath')
-    if is_master_build:
+    if is_release_build:
         run_command(pip + ' install twine')
 
 # Proceed to the build.
@@ -146,7 +146,7 @@ if is_python_build:
     run_command(pip + r' install dist\\' + os.listdir('dist')[0])
     run_command(
         pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
-    if is_master_build:
+    if is_release_build:
         run_command(twine + r' upload -u bluescarni dist\\' +
                     os.listdir('dist')[0])
 elif BUILD_TYPE == 'Release':
