@@ -48,3 +48,6 @@ if [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     make -j2;
     make install;
 fi
+
+set +e
+set +x

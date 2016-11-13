@@ -146,3 +146,6 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
         fi
     done
 fi
+
+set +e
+set +x
