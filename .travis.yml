@@ -4,30 +4,12 @@ addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
-    - boost-latest
     - llvm-toolchain-precise-3.8
-    - george-edison55-precise-backports
     packages:
-    - libgmp-dev
-    - libmpfr-dev
-    - libboost1.55-all-dev
-    - libboost-serialization1.55-dev
-    - libboost-system1.55-dev
-    - libboost-chrono1.55-dev
-    - libboost-timer1.55-dev
-    # This includes both Boost.Python 2 and 3.
-    - libboost-python1.55-dev
-    - python3-dev
-    - python-numpy
-    - python3-numpy
-    - python-pip
     - g++-4.8
     - clang-3.8
-    - doxygen
     - graphviz
     - graphviz-dev
-    - cmake
-    - cmake-data
     - texlive
     - gcc-5
     - g++-5

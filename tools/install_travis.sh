@@ -5,18 +5,39 @@ set -e
 # Echo each command
 set -x
 
+
+if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+    wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;
+else
+    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+fi
+export deps_dir=$HOME/.local
+bash miniconda.sh -b -p $deps_dir
+export PATH="$deps_dir/bin:$PATH"
+conda config --add channels conda-forge --force
+
+conda_pkgs="gmp mpfr boost>=1.55 cmake>=3.0 bzip2 zlib"
+
+if [[ "${BUILD_TYPE}" == "Python2" ]]; then
+    conda_pkgs=$conda_pkgs python=2.7 numpy mpmath sphinx sphinx_bootstrap_theme
+elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
+    conda_pkgs=$conda_pkgs python=3.5 numpy mpmath sphinx sphinx_bootstrap_theme
+fi
+
+conda install -y $conda_pkgs
+
 if [[ "${BUILD_TYPE}" == "Debug" ]]; then
     if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make VERBOSE=1;
         ctest -E "thread|memory" -V;
     elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make VERBOSE=1;
         ctest -E "thread" -V;
     fi
 elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-Og --coverage" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="--coverage" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make VERBOSE=1;
         ctest -E "thread" -V;
         wget https://codecov.io/bash;
@@ -26,7 +47,7 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         find ./ -iname '*usr*include*.gcov' | xargs rm;
         bash bash -p ./tests -X gcov -g CMakeFiles || echo "Codecov did not collect coverage reports";
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make VERBOSE=1;
     ctest -E "gastineau|pearce2_unpacked" -V;
     # Do the release here.
@@ -38,18 +59,10 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
       set -x
     fi
 elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py27.so -DPYTHON_EXECUTABLE=/usr/bin/python2 ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make VERBOSE=1;
     make install;
-    # Install mpmath via pip.
-    pip install --user mpmath;
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
-    # Install sphinx and the rtd theme.
-    pip install --user sphinx
-    # Workaround? This should be amongst the deps of sphinx but travis complains.
-    pip install --user utils
-    pip install --user sphinx_bootstrap_theme
-    export PATH=$PATH:/home/travis/.local/bin
     cd ../doc/sphinx;
     export SPHINX_OUTPUT=`make html 2>&1 >/dev/null`;
     if [[ "${SPHINX_OUTPUT}" != "" ]]; then
@@ -95,18 +108,12 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
         fi
     done
 elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
-    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=/home/travis/.local -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py32.so -DPYTHON_EXECUTABLE=/usr/bin/python3 ../;
+    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_INSTALL_PREFIX=$deps_dir;
     make VERBOSE=1;
     make install;
-    # Install mpmath manually.
-    wget "http://mpmath.org/files/mpmath-0.19.tar.gz";
-    tar xzf mpmath-0.19.tar.gz;
-    cd mpmath-0.19;
-    python3 setup.py install --user;
-    cd ..;
-    python3 -c "import pyranha.test; pyranha.test.run_test_suite()";
+    python -c "import pyranha.test; pyranha.test.run_test_suite()";
 elif [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DMSGPACK-C_INCLUDE_DIR=/home/travis/.local/include -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes ../;
     make VERBOSE=1;
     ctest -V;
 elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
@@ -118,12 +125,12 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     cd doxygen-1.8.12;
     mkdir build;
     cd build;
-    cmake -DCMAKE_INSTALL_PREFIX=/home/travis/.local -Duse_libclang=YES ../;
+    cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -Duse_libclang=YES ../;
     make -j2;
     make install;
     # Now run it.
     cd ../../../doc/doxygen;
-    export DOXYGEN_OUTPUT=`/home/travis/.local/bin/doxygen 2>&1 >/dev/null`;
+    export DOXYGEN_OUTPUT=`$deps_dir/bin/doxygen 2>&1 >/dev/null`;
     if [[ "${DOXYGEN_OUTPUT}" != "" ]]; then
         echo "Doxygen encountered some problem:";
         echo "${DOXYGEN_OUTPUT}";
@@ -139,7 +146,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
         exit 0;
     fi
     # Move out the resulting documentation.
-    mv html /home/travis/doxygen;
+    mv html $HOME/doxygen;
     # Checkout a new copy of the repo, for pushing to gh-pages.
     cd ../../../;
     git config --global push.default simple
@@ -151,7 +158,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     cd piranha_gh_pages
     git checkout -b gh-pages --track origin/gh-pages;
     git rm -fr doxygen;
-    mv /home/travis/doxygen .;
+    mv $HOME/doxygen .;
     git add doxygen;
     # We assume here that a failure in commit means that there's nothing
     # to commit.
