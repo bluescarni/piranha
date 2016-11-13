@@ -18,9 +18,9 @@ conda config --add channels conda-forge --force
 conda_pkgs="gmp mpfr boost>=1.55 cmake>=3.0 bzip2 zlib"
 
 if [[ "${BUILD_TYPE}" == "Python2" ]]; then
-    conda_pkgs=$conda_pkgs python=2.7 numpy mpmath sphinx sphinx_bootstrap_theme
+    conda_pkgs="$conda_pkgs python=2.7 numpy mpmath sphinx sphinx-bootstrap-theme"
 elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
-    conda_pkgs=$conda_pkgs python=3.5 numpy mpmath sphinx sphinx_bootstrap_theme
+    conda_pkgs="$conda_pkgs python=3.5 numpy mpmath sphinx sphinx-bootstrap-theme"
 fi
 
 conda install -y $conda_pkgs
