@@ -51,6 +51,10 @@ matrix:
     - compiler: clang
       env: BUILD_TYPE="Python2"
     - compiler: clang
+      os: osx
+      osx_image: beta-xcode6.1
+      env: BUILD_TYPE="Python2"
+    - compiler: clang
       env: BUILD_TYPE="Python3"
     - compiler: clang
       env: BUILD_TYPE="Tutorial"

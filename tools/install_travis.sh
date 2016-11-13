@@ -45,11 +45,15 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
       curl -s --data '{"tag_name": "'"${TRAVIS_TAG}"'","name": "piranha-'"${PIRANHA_RELEASE_VERSION}"'","body": "Release of version '"${PIRANHA_RELEASE_VERSION}"'.","prerelease": true}' "https://api.github.com/repos/bluescarni/piranha/releases?access_token=${GH_RELEASE_TOKEN}" 2>&1 > /dev/null
       set -x
     fi
-elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
-    make VERBOSE=1;
+fi
+
+if [[ "${BUILD_TYPE}" == "Python2" || "${BUILD_TYPE}" == "Python3" ]]; then
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=$deps_dir  ../;
     make install;
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
+fi
+
+if [[ "${BUILD_TYPE}" == "Python2" && "${TRAVIS_OS_NAME}" != "osx" ]]; then
     cd ../doc/sphinx;
     export SPHINX_OUTPUT=`make html 2>&1 >/dev/null`;
     if [[ "${SPHINX_OUTPUT}" != "" ]]; then
@@ -94,12 +98,9 @@ elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
             exit 1
         fi
     done
-elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
-    cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_INSTALL_PREFIX=$deps_dir;
-    make VERBOSE=1;
-    make install;
-    python -c "import pyranha.test; pyranha.test.run_test_suite()";
-elif [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
+fi
+
+if [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
     cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TUTORIAL=yes ../;
     make VERBOSE=1;
     ctest -V;
