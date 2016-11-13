@@ -47,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/tuple.hpp>
 #include <cstddef>
 #include <limits>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -111,14 +112,27 @@ struct generic_pickle_suite : bp::pickle_suite {
     }
 };
 
-// Counter of exposed types, used for naming said types.
+// Counter of exposed types, used for naming them.
 extern std::size_t exposed_types_counter;
 
-// Expose class with a default constructor and map it into the pyranha type system.
+// This is a replacement for std::to_string that guarantees that the input n is formatted
+// according to the C locale. std::to_string respects the locale settings, so in principle it could
+// produce a string representation of n containing funny stuff (commas maybe?) that would make it
+// unusuable to build a valid Python identifier.
+inline std::string to_c_locale_string(std::size_t n)
+{
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << n;
+    return oss.str();
+}
+
+// Expose class with a default constructor, and give it an implementation-defined name
+// in Python guaranteed to be unique.
 template <typename T>
 inline bp::class_<T> expose_class()
 {
-    bp::class_<T> class_inst(("_exposed_type_" + std::to_string(exposed_types_counter)).c_str(), bp::init<>());
+    bp::class_<T> class_inst(("_exposed_type_" + to_c_locale_string(exposed_types_counter)).c_str(), bp::init<>());
     ++exposed_types_counter;
     return class_inst;
 }
@@ -255,7 +269,7 @@ template <typename S, typename U>
 inline void generic_expose_lambdified()
 {
     using l_type = piranha::math::lambdified<S, U>;
-    bp::class_<l_type> class_inst(("_lambdified_" + std::to_string(lambdified_counter)).c_str(), bp::no_init);
+    bp::class_<l_type> class_inst(("_lambdified_" + to_c_locale_string(lambdified_counter)).c_str(), bp::no_init);
     // Expose copy/deepcopy.
     class_inst.def("__copy__", generic_copy_wrapper<l_type>);
     class_inst.def("__deepcopy__", generic_deepcopy_wrapper<l_type>);

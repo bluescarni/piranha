@@ -307,7 +307,7 @@ BOOST_PYTHON_MODULE(_core)
     struct cleanup_functor {
         void operator()() const
         {
-            // Then we clean up the custom derivatives.
+            // First we clean up the custom derivatives.
             auto e_types = pyranha::get_exposed_types_list();
             bp::stl_input_iterator<bp::object> end_it;
             for (bp::stl_input_iterator<bp::object> it(e_types); it != end_it; ++it) {
@@ -327,6 +327,9 @@ BOOST_PYTHON_MODULE(_core)
             pyranha::et_map.clear();
             pyranha::builtin().attr("print")("Pyranha's type system cleanup completed.");
             // Finally, shut down the thread pool.
+            // NOTE: this is necessary in Windows/MinGW currently, otherwise the python
+            // interpreter hangs on exit (possibly due to either some implementation-defined
+            // static order destruction fiasco, or maybe a threading bug in MinGW).
             std::cout << "Shutting down the thread pool.\n";
             piranha::thread_pool_shutdown<void>();
         }

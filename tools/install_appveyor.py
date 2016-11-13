@@ -64,7 +64,8 @@ os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
 
 # Build type setup.
 BUILD_TYPE = os.environ['BUILD_TYPE']
-is_master_build = (os.environ['APPVEYOR_REPO_BRANCH'] == 'master') and not os.environ['APPVEYOR_PULL_REQUEST_NUMBER']
+is_master_build = (os.environ['APPVEYOR_REPO_BRANCH'] == 'master') and not os.environ[
+    'APPVEYOR_PULL_REQUEST_NUMBER']
 if is_master_build:
     print("Master build detected.")
 is_python_build = 'Python' in BUILD_TYPE
@@ -116,8 +117,9 @@ if is_python_build:
 elif BUILD_TYPE in ['Release', 'Debug']:
     TEST_NSPLIT = os.environ['TEST_NSPLIT']
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
-    cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + r' -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DTEST_NSPLIT=' +
-                TEST_NSPLIT + r' -DPIRANHA_TEST_SPLIT_NUM=' + SPLIT_TEST_NUM + r' ' + common_cmake_opts
+    cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + r' -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DTEST_NSPLIT=' + \
+        TEST_NSPLIT + r' -DPIRANHA_TEST_SPLIT_NUM=' + \
+        SPLIT_TEST_NUM + r' ' + common_cmake_opts
     if BUILD_TYPE == 'Debug':
         cmake_opts += r' -DCMAKE_CXX_FLAGS_DEBUG="-g -Og"'
     run_command(r'cmake -G "MinGW Makefiles" .. ' + cmake_opts)
