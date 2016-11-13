@@ -31,6 +31,7 @@ addons:
     - texlive
     - gcc-5
     - g++-5
+    - curl
 
 env:
   global:

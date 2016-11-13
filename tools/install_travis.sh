@@ -34,7 +34,7 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     if [[ "${PIRANHA_RELEASE_VERSION}" != "" ]]; then
       echo "Creating new piranha release: ${PIRANHA_RELEASE_VERSION}"
       set +x
-      curl -s --data '{"tag_name": "'${TRAVIS_TAG}'","name": "piranha-'${PIRANHA_RELEASE_VERSION}'","body": "Release of version '${PIRANHA_RELEASE_VERSION}'.","prerelease": true}' "https://api.github.com/repos/bluescarni/piranha/releases?access_token=${GH_RELEASE_TOKEN}" 2>&1 > /dev/null
+      curl -s --data '{"tag_name": "'"${TRAVIS_TAG}"'","name": "piranha-'"${PIRANHA_RELEASE_VERSION}"'","body": "Release of version '"${PIRANHA_RELEASE_VERSION}"'.","prerelease": true}' "https://api.github.com/repos/bluescarni/piranha/releases?access_token=${GH_RELEASE_TOKEN}" 2>&1 > /dev/null
       set -x
     fi
 elif [[ "${BUILD_TYPE}" == "Python2" ]]; then
