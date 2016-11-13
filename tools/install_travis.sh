@@ -30,7 +30,13 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make VERBOSE=1;
-    ctest -E "gastineau|pearce2_unpacked" -V;
+
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+        ctest -E "gastineau|pearce2_unpacked|s11n_perf" -V;
+    else
+        ctest -E "gastineau|pearce2_unpacked" -V;
+    fi
+
     # Do the release here.
     export PIRANHA_RELEASE_VERSION=`echo "${TRAVIS_TAG}"|grep -E 'v[0-9]+\.[0-9]+.*'|cut -c 2-`
     if [[ "${PIRANHA_RELEASE_VERSION}" != "" ]]; then
