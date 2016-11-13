@@ -130,5 +130,6 @@ BOOST_AUTO_TEST_CASE(memory_parallel_array_test)
     } catch (const std::exception &e) {
         std::cerr << "Exception caught, type is '" << detail::demangle(typeid(e)) << "', message is: " << e.what() << '\n';
         std::cout << "Exception caught, type is '" << detail::demangle(typeid(e)) << "', message is: " << e.what() << '\n';
+        throw;
     }
 }
