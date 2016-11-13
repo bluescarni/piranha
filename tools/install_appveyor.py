@@ -107,7 +107,7 @@ if is_python_build:
 os.makedirs('build')
 os.chdir('build')
 
-common_cmake_opts = r'-DBoost_LIBRARY_DIR_RELEASE=c:\\local\\lib -DBoost_INCLUDE_DIR=c:\\local\\include -DGMP_INCLUDE_DIR=c:\\local\\include -DGMP_LIBRARIES=c:\\local\\lib\\libgmp.a -DMPFR_INCLUDE_DIR=c:\\local\\include -DMPFR_LIBRARIES=c:\\local\\lib\\libmpfr.a -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DMSGPACK-C_INCLUDE_DIR=c:\\local\\include -DPIRANHA_WITH_ZLIB=yes -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll'
+common_cmake_opts = r'-DCMAKE_PREFIX_PATH=c:\\local -DPIRANHA_WITH_BZIP2=yes -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll'
 
 # Configuration step.
 if is_python_build:
