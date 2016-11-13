@@ -58,10 +58,14 @@ matrix:
       env: BUILD_TYPE="Doxygen"
 
 install:
-    - if [[ "${CC}" == "clang" ]]; then
+    - if [[ "${CC}" == "clang" && "${TRAVIS_OS_NAME}" == "linux" ]]; then
           export PIRANHA_COMPILER=clang;
           export CC=clang-3.8;
           export CXX=clang++-3.8;
+      elif [[ "${CC}" == "clang" && "${TRAVIS_OS_NAME}" == "osx" ]]; then
+          export PIRANHA_COMPILER=clang;
+          export CC=clang;
+          export CXX=clang++;
       elif [[ "${CC}" == "gcc" && "${BUILD_TYPE}" == "Coverage" ]]; then
           export PIRANHA_COMPILER=gcc;
           export CC=gcc-5;
