@@ -11,8 +11,8 @@ else
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
 fi
 export deps_dir=$HOME/.local
-bash miniconda.sh -b -p $deps_dir
-export PATH="$deps_dir/bin:$PATH"
+bash miniconda.sh -b -p $HOME/miniconda
+export PATH="$HOME/miniconda/bin:$PATH"
 conda config --add channels conda-forge --force
 
 conda_pkgs="gmp mpfr boost>=1.55 cmake>=3.0 bzip2 zlib"
@@ -23,7 +23,8 @@ elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
     conda_pkgs="$conda_pkgs python=3.5 numpy mpmath sphinx sphinx-bootstrap-theme"
 fi
 
-conda install -y $conda_pkgs
+conda create -q -p $deps_dir -y $conda_pkgs
+source activate $deps_dir
 
 wget https://github.com/msgpack/msgpack-c/releases/download/cpp-2.0.0/msgpack-2.0.0.tar.gz
 tar xzf msgpack-2.0.0.tar.gz
