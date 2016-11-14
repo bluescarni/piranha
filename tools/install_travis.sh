@@ -25,7 +25,7 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         # Run gcov manually, then remove all coverage information pertaining
         # include files in deps_dir.
         find ./ -type f -name '*.gcno' -not -path CMakeFiles -exec "${GCOV_EXECUTABLE}" -pb {} +
-        find ./ -iname '*.local*include*.gcov' | xargs rm;
+        find ./ -iname '*local*include*.gcov' | xargs rm;
         bash bash -p ./tests -X gcov -g CMakeFiles || echo "Codecov did not collect coverage reports";
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
