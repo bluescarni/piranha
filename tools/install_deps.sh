@@ -10,7 +10,7 @@ if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
 else
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
 fi
-export deps_dir=$HOME/.local
+export deps_dir=$HOME/local
 bash miniconda.sh -b -p $HOME/miniconda
 export PATH="$HOME/miniconda/bin:$PATH"
 conda config --add channels conda-forge --force
@@ -32,7 +32,7 @@ cd msgpack-2.0.0
 
 mkdir build
 cd build
-cmake ../ -DCMAKE_BUILD_TYPE=Release -DMSGPACK_BUILD_EXAMPLES=FALSE -DMSGPACK_CXX11=TRUE -DMSGPACK_ENABLE_CXX=TRUE -DMSGPACK_ENABLE_SHARED=FALSE -DCMAKE_INSTALL_PREFIX=$HOME/.local
+cmake ../ -DCMAKE_BUILD_TYPE=Release -DMSGPACK_BUILD_EXAMPLES=FALSE -DMSGPACK_CXX11=TRUE -DMSGPACK_ENABLE_CXX=TRUE -DMSGPACK_ENABLE_SHARED=FALSE -DCMAKE_INSTALL_PREFIX=$deps_dir
 make
 make install
 cd ..
