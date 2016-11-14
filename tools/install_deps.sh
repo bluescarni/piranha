@@ -47,6 +47,8 @@ if [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -Duse_libclang=YES ../;
     make -j2;
     make install;
+    cd ..
+    cd ..
 fi
 
 set +e

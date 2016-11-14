@@ -108,7 +108,7 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     # Configure.
     cmake ../;
     # Now run it.
-    cd ../../../doc/doxygen;
+    cd ../doc/doxygen;
     export DOXYGEN_OUTPUT=`$deps_dir/bin/doxygen 2>&1 >/dev/null`;
     if [[ "${DOXYGEN_OUTPUT}" != "" ]]; then
         echo "Doxygen encountered some problem:";
