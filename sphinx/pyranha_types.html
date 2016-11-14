@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyranha.types &#8212; Piranha 0.6 documentation</title>
+    <title>pyranha.types &#8212; Piranha 0.7 documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.6',
+        VERSION:     '0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="Piranha 0.6 documentation" href="index.html" />
+    <link rel="top" title="Piranha 0.7 documentation" href="index.html" />
     <link rel="up" title="Python reference" href="pyranha_reference.html" />
     <link rel="prev" title="pyranha.test" href="pyranha_test.html" />
 <meta charset='utf-8'>
@@ -53,7 +53,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Piranha</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.6</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.7</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -135,95 +135,70 @@
 <p>Types module.</p>
 <span class="target" id="module-pyranha.types"></span><dl class="data">
 <dt id="pyranha.types.divisor">
-<code class="descclassname">pyranha.types.</code><code class="descname">divisor</code><em class="property"> = Type generator for the generic C++ type 'piranha::divisor'</em><a class="headerlink" href="#pyranha.types.divisor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic type generator for divisors.</p>
+<code class="descclassname">pyranha.types.</code><code class="descname">divisor</code><em class="property"> = Type generator template for the C++ class template 'piranha::divisor'</em><a class="headerlink" href="#pyranha.types.divisor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type generator template for divisors.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pyranha.types.divisor_series">
-<code class="descclassname">pyranha.types.</code><code class="descname">divisor_series</code><em class="property"> = Type generator for the generic C++ type 'piranha::divisor_series'</em><a class="headerlink" href="#pyranha.types.divisor_series" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic type generator for divisor series.</p>
+<code class="descclassname">pyranha.types.</code><code class="descname">divisor_series</code><em class="property"> = Type generator template for the C++ class template 'piranha::divisor_series'</em><a class="headerlink" href="#pyranha.types.divisor_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type generator template for divisor series.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pyranha.types.double">
 <code class="descclassname">pyranha.types.</code><code class="descname">double</code><em class="property"> = Type generator for the C++ type 'double'</em><a class="headerlink" href="#pyranha.types.double" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the standard C++ type <code class="docutils literal"><span class="pre">double</span></code>.</p>
+<dd><p>This type generator represents the standard C++ type <code class="docutils literal"><span class="pre">double</span></code>.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyranha.types.float">
-<code class="descclassname">pyranha.types.</code><code class="descname">float</code><em class="property"> = Type generator for the C++ type 'float'</em><a class="headerlink" href="#pyranha.types.float" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the standard C++ type <code class="docutils literal"><span class="pre">float</span></code>.</p>
+<dt id="pyranha.types.int16">
+<code class="descclassname">pyranha.types.</code><code class="descname">int16</code><em class="property"> = Type generator for the C++ type 'short'</em><a class="headerlink" href="#pyranha.types.int16" title="Permalink to this definition">¶</a></dt>
+<dd><p>This type generator represents a signed integral C++ type whose width is at least 16 bits (it will
+be exactly 16 bits on most platforms).</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pyranha.types.integer">
 <code class="descclassname">pyranha.types.</code><code class="descname">integer</code><em class="property"> = Type generator for the C++ type 'piranha::mp_integer&lt;0&gt;'</em><a class="headerlink" href="#pyranha.types.integer" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the arbitrary-precision integer type provided by the piranha C++ library.</p>
+<dd><p>This type generator represents the arbitrary-precision integer type provided by the piranha C++ library.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pyranha.types.k_monomial">
 <code class="descclassname">pyranha.types.</code><code class="descname">k_monomial</code><em class="property"> = Type generator for the C++ type 'piranha::kronecker_monomial&lt;long&gt;'</em><a class="headerlink" href="#pyranha.types.k_monomial" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the Kronecker monomial type (that is, a monomial &#8220;compressed&#8221; into a single
+<dd><p>This type generator represents the Kronecker monomial type (that is, a monomial &#8220;compressed&#8221; into a single
 signed integral value).</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyranha.types.long_double">
-<code class="descclassname">pyranha.types.</code><code class="descname">long_double</code><em class="property"> = Type generator for the C++ type 'long double'</em><a class="headerlink" href="#pyranha.types.long_double" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the standard C++ type <code class="docutils literal"><span class="pre">long</span> <span class="pre">double</span></code>.</p>
-</dd></dl>
-
-<dl class="data">
 <dt id="pyranha.types.monomial">
-<code class="descclassname">pyranha.types.</code><code class="descname">monomial</code><em class="property"> = Type generator for the generic C++ type 'piranha::monomial'</em><a class="headerlink" href="#pyranha.types.monomial" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic type generator for monomials.</p>
+<code class="descclassname">pyranha.types.</code><code class="descname">monomial</code><em class="property"> = Type generator template for the C++ class template 'piranha::monomial'</em><a class="headerlink" href="#pyranha.types.monomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type generator template for monomials.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pyranha.types.poisson_series">
-<code class="descclassname">pyranha.types.</code><code class="descname">poisson_series</code><em class="property"> = Type generator for the generic C++ type 'piranha::poisson_series'</em><a class="headerlink" href="#pyranha.types.poisson_series" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic type generator for Poisson series.</p>
+<code class="descclassname">pyranha.types.</code><code class="descname">poisson_series</code><em class="property"> = Type generator template for the C++ class template 'piranha::poisson_series'</em><a class="headerlink" href="#pyranha.types.poisson_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type generator template for Poisson series.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pyranha.types.polynomial">
-<code class="descclassname">pyranha.types.</code><code class="descname">polynomial</code><em class="property"> = Type generator for the generic C++ type 'piranha::polynomial'</em><a class="headerlink" href="#pyranha.types.polynomial" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic type generator for polynomials.</p>
+<code class="descclassname">pyranha.types.</code><code class="descname">polynomial</code><em class="property"> = Type generator template for the C++ class template 'piranha::polynomial'</em><a class="headerlink" href="#pyranha.types.polynomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type generator template for polynomials.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pyranha.types.rational">
 <code class="descclassname">pyranha.types.</code><code class="descname">rational</code><em class="property"> = Type generator for the C++ type 'piranha::mp_rational&lt;0&gt;'</em><a class="headerlink" href="#pyranha.types.rational" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the arbitrary-precision rational type provided by the piranha C++ library.</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pyranha.types.rational_function">
-<code class="descclassname">pyranha.types.</code><code class="descname">rational_function</code><em class="property"> = Type generator for the generic C++ type 'piranha::rational_function'</em><a class="headerlink" href="#pyranha.types.rational_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic type generator for rational functions.</p>
+<dd><p>This type generator represents the arbitrary-precision rational type provided by the piranha C++ library.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="pyranha.types.real">
 <code class="descclassname">pyranha.types.</code><code class="descname">real</code><em class="property"> = Type generator for the C++ type 'piranha::real'</em><a class="headerlink" href="#pyranha.types.real" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the multiprecision floating-point type provided by the piranha C++ library.</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pyranha.types.short">
-<code class="descclassname">pyranha.types.</code><code class="descname">short</code><em class="property"> = Type generator for the C++ type 'short'</em><a class="headerlink" href="#pyranha.types.short" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the standard C++ type <code class="docutils literal"><span class="pre">short</span></code> (a signed integer type
-whose width is usually 16 bits).</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="pyranha.types.signed_char">
-<code class="descclassname">pyranha.types.</code><code class="descname">signed_char</code><em class="property"> = Type generator for the C++ type 'signed char'</em><a class="headerlink" href="#pyranha.types.signed_char" title="Permalink to this definition">¶</a></dt>
-<dd><p>This generator represents the standard C++ type <code class="docutils literal"><span class="pre">signed</span> <span class="pre">char</span></code> (a signed integer type
-whose width is usually 8 bits).</p>
+<dd><p>This type generator represents the multiprecision floating-point type provided by the piranha C++ library.</p>
 </dd></dl>
 
 </div>

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyranha.math &#8212; Piranha 0.6 documentation</title>
+    <title>pyranha.math &#8212; Piranha 0.7 documentation</title>
     
     <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.6',
+        VERSION:     '0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="top" title="Piranha 0.6 documentation" href="../../index.html" />
+    <link rel="top" title="Piranha 0.7 documentation" href="../../index.html" />
     <link rel="up" title="pyranha" href="../pyranha.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -52,7 +52,7 @@
         </button>
         <a class="navbar-brand" href="../../index.html">
           Piranha</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.6</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>0.7</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -153,18 +153,16 @@
 
 <span class="kn">from</span> <span class="nn">._common</span> <span class="k">import</span> <span class="n">_cpp_type_catcher</span>
 
-<span class="c1"># This is used in a few functions below.</span>
-
 
 <span class="k">def</span> <span class="nf">__check_names_argument</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+    <span class="c1"># This is used in a few functions below.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="s1">&#39;the optional </span><span class="se">\&#39;</span><span class="s1">names</span><span class="se">\&#39;</span><span class="s1"> argument must be a list of strings&#39;</span><span class="p">)</span>
 
-<span class="c1"># Helper to check that d is a dictionary suitable for use in evaluation.</span>
-
 
 <span class="k">def</span> <span class="nf">__check_eval_dict</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="c1"># Helper to check that d is a dictionary suitable for use in evaluation.</span>
     <span class="c1"># Type checks.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;evaluation dictionary must be a dict object&#39;</span><span class="p">)</span>
@@ -199,8 +197,8 @@
 <span class="sd">    ValueError: cannot compute the cosine of a non-zero integer</span>
 <span class="sd">    &gt;&gt;&gt; cos(2.) # doctest: +ELLIPSIS</span>
 <span class="sd">    -0.4161468...</span>
-<span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, short, monomial</span>
-<span class="sd">    &gt;&gt;&gt; t = poisson_series(polynomial(rational,monomial(short)))()</span>
+<span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, int16, monomial</span>
+<span class="sd">    &gt;&gt;&gt; t = poisson_series[polynomial[rational,monomial[int16]]]()</span>
 <span class="sd">    &gt;&gt;&gt; cos(2 * t(&#39;x&#39;))</span>
 <span class="sd">    cos(2*x)</span>
 <span class="sd">    &gt;&gt;&gt; cos(&#39;hello&#39;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
@@ -233,8 +231,8 @@
 <span class="sd">    ValueError: cannot compute the cosine of a non-zero integer</span>
 <span class="sd">    &gt;&gt;&gt; sin(2.) # doctest: +ELLIPSIS</span>
 <span class="sd">    0.9092974...</span>
-<span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, short, monomial</span>
-<span class="sd">    &gt;&gt;&gt; t = poisson_series(polynomial(rational,monomial(short)))()</span>
+<span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, int16, monomial</span>
+<span class="sd">    &gt;&gt;&gt; t = poisson_series[polynomial[rational,monomial[int16]]]()</span>
 <span class="sd">    &gt;&gt;&gt; sin(2 * t(&#39;x&#39;))</span>
 <span class="sd">    sin(2*x)</span>
 <span class="sd">    &gt;&gt;&gt; sin(&#39;hello&#39;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
@@ -298,7 +296,7 @@
 <span class="sd">    &gt;&gt;&gt; gcd(12,9)</span>
 <span class="sd">    3</span>
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, integer, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(integer,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[integer,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; gcd((x**2-y**2)*(x**3+1),(x+1)*(x+2*y)) # doctest: +SKIP</span>
 <span class="sd">    x+1</span>
@@ -330,8 +328,8 @@
 <span class="sd">    :raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked</span>
 <span class="sd">            low-level function</span>
 
-<span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, integer, short, monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(integer,monomial(short))()</span>
+<span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, integer, int16, monomial</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[integer,monomial[int16]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; partial(x + 2*x*y,&#39;y&#39;)</span>
 <span class="sd">    2*x</span>
@@ -361,7 +359,7 @@
 <span class="sd">            low-level function</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; integrate(x + 2*x*y,&#39;x&#39;) == x**2/2 + x**2*y</span>
 <span class="sd">    True</span>
@@ -433,8 +431,8 @@
 <span class="sd">    :raises: :exc:`TypeError` if the types of the arguments are invalid</span>
 <span class="sd">    :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, short, monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,monomial(short))()</span>
+<span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, int16, monomial</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,monomial[int16]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,v = pt(&#39;x&#39;), pt(&#39;v&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; pbracket(x+v,x+v,[&#39;v&#39;],[&#39;x&#39;]) == 0</span>
 <span class="sd">    True</span>
@@ -480,7 +478,7 @@
 <span class="sd">    :raises: any exception raised by the invoked low-level function</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; L,G,H,l,g,h = [pt(_) for _ in &#39;LGHlgh&#39;]</span>
 <span class="sd">    &gt;&gt;&gt; transformation_is_canonical([-l],[L],[&#39;L&#39;],[&#39;l&#39;])</span>
 <span class="sd">    True</span>
@@ -556,13 +554,13 @@
 <span class="sd">    :raises: any exception raised by the invoked low-level function</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial, poisson_series</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; truncate_degree(x**2*y+x*y+z,2) # doctest: +SKIP</span>
 <span class="sd">    x*y+z</span>
 <span class="sd">    &gt;&gt;&gt; truncate_degree(x**2*y+x*y+z,0,[&#39;x&#39;])</span>
 <span class="sd">    z</span>
-<span class="sd">    &gt;&gt;&gt; pt = poisson_series(polynomial(rational,k_monomial))()</span>
+<span class="sd">    &gt;&gt;&gt; pt = poisson_series[polynomial[rational,k_monomial]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z,a,b = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;), pt(&#39;a&#39;), pt(&#39;b&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),3) # doctest: +SKIP</span>
 <span class="sd">    (x+x*y+x**2*z)*cos(a+b)+(-y*z+y)*sin(2*a+b)</span>
@@ -606,7 +604,7 @@
 <span class="sd">    :raises: any exception raised by the invoked low-level function</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{&#39;x&#39;:3,&#39;y&#39;:-3,&#39;z&#39;:5})</span>
 <span class="sd">    Fraction(9, 4)</span>
@@ -662,7 +660,7 @@
 <span class="sd">    :raises: any exception raised by the invoked low-level function</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; subs(x/2+1,&#39;x&#39;,3)</span>
 <span class="sd">    5/2</span>
@@ -697,8 +695,8 @@
 <span class="sd">    :raises: :exc:`TypeError` in case the input types are not supported or invalid</span>
 <span class="sd">    :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, rational, polynomial, short, monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = poisson_series(polynomial(rational,monomial(short)))()</span>
+<span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, rational, polynomial, int16, monomial</span>
+<span class="sd">    &gt;&gt;&gt; pt = poisson_series[polynomial[rational,monomial[int16]]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; t_subs(cos(x+y),&#39;x&#39;,1,0)</span>
 <span class="sd">    cos(y)</span>
@@ -733,8 +731,8 @@
 <span class="sd">    :raises: :exc:`TypeError` in case the input types are not supported or invalid</span>
 <span class="sd">    :raises: any exception raised by the invoked low-level function</span>
 
-<span class="sd">    &gt;&gt;&gt; from pyranha.types import rational, polynomial, short, monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,monomial(short))()</span>
+<span class="sd">    &gt;&gt;&gt; from pyranha.types import rational, polynomial, int16, monomial</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,monomial[int16]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; ipow_subs(x**5*y,&#39;x&#39;,2,z)</span>
 <span class="sd">    x*y*z**2</span>
@@ -776,11 +774,11 @@
 <span class="sd">    Traceback (most recent call last):</span>
 <span class="sd">       ...</span>
 <span class="sd">    ZeroDivisionError: division by zero</span>
-<span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, short, monomial, divisor, divisor_series</span>
-<span class="sd">    &gt;&gt;&gt; t = polynomial(rational,monomial(short))()</span>
+<span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, int16, monomial, divisor, divisor_series</span>
+<span class="sd">    &gt;&gt;&gt; t = polynomial[rational,monomial[int16]]()</span>
 <span class="sd">    &gt;&gt;&gt; invert(t(&#39;x&#39;))</span>
 <span class="sd">    x**-1</span>
-<span class="sd">    &gt;&gt;&gt; t = divisor_series(polynomial(rational,monomial(short)),divisor(short))()</span>
+<span class="sd">    &gt;&gt;&gt; t = divisor_series[polynomial[rational,monomial[int16]],divisor[int16]]()</span>
 <span class="sd">    &gt;&gt;&gt; invert(-2*t(&#39;x&#39;)+8*t(&#39;y&#39;))</span>
 <span class="sd">    -1/2*1/[(x-4*y)]</span>
 <span class="sd">    &gt;&gt;&gt; invert(t(&#39;x&#39;)+1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
@@ -801,7 +799,7 @@
     <span class="sd">&quot;&quot;&quot;Degree.</span>
 
 <span class="sd">    This function will return the degree of the input argument. Various symbolic types are supported as input</span>
-<span class="sd">    (e.g., polynomials, Poisson series, rational functions). If *names* is ``None``, then the total degree is</span>
+<span class="sd">    (e.g., polynomials, Poisson series, etc.). If *names* is ``None``, then the total degree is</span>
 <span class="sd">    returned. Otherwise, *names* must be a list of strings enumerating the variables to be considered for the</span>
 <span class="sd">    computation of the partial degree.</span>
 
@@ -814,12 +812,12 @@
 <span class="sd">            low-level function</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; t = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; t = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = t(&#39;x&#39;),t(&#39;y&#39;),t(&#39;z&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; degree(x**3+y*z)</span>
-<span class="sd">    3</span>
-<span class="sd">    &gt;&gt;&gt; degree(x**3+y*z,[&#39;z&#39;])</span>
-<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; degree(x**3+y*z) == 3</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; degree(x**3+y*z,[&#39;z&#39;]) == 1</span>
+<span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; from fractions import Fraction as F</span>
 <span class="sd">    &gt;&gt;&gt; degree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
 <span class="sd">    Traceback (most recent call last):</span>
@@ -839,7 +837,7 @@
     <span class="sd">&quot;&quot;&quot;Low degree.</span>
 
 <span class="sd">    This function will return the low degree of the input argument. Various symbolic types are supported as input</span>
-<span class="sd">    (e.g., polynomials, Poisson series, rational functions). If *names* is ``None``, then the total low degree is</span>
+<span class="sd">    (e.g., polynomials, Poisson series, etc.). If *names* is ``None``, then the total low degree is</span>
 <span class="sd">    returned. Otherwise, *names* must be a list of strings enumerating the variables to be considered for the</span>
 <span class="sd">    computation of the partial low degree.</span>
 
@@ -852,12 +850,12 @@
 <span class="sd">            low-level function</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; t = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; t = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = t(&#39;x&#39;),t(&#39;y&#39;),t(&#39;z&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; ldegree(x**3+y*z)</span>
-<span class="sd">    2</span>
-<span class="sd">    &gt;&gt;&gt; ldegree(x**3+y*x,[&#39;x&#39;])</span>
-<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; ldegree(x**3+y*z) == 2</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; ldegree(x**3+y*x,[&#39;x&#39;]) == 1</span>
+<span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; from fractions import Fraction as F</span>
 <span class="sd">    &gt;&gt;&gt; ldegree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
 <span class="sd">    Traceback (most recent call last):</span>
@@ -890,12 +888,12 @@
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, k_monomial</span>
 <span class="sd">    &gt;&gt;&gt; from pyranha.math import cos</span>
-<span class="sd">    &gt;&gt;&gt; t = poisson_series(polynomial(rational,k_monomial))()</span>
+<span class="sd">    &gt;&gt;&gt; t = poisson_series[polynomial[rational,k_monomial]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = t(&#39;x&#39;),t(&#39;y&#39;),t(&#39;z&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; t_degree(cos(3*x+y-z)+cos(2*x))</span>
-<span class="sd">    3</span>
-<span class="sd">    &gt;&gt;&gt; t_degree(cos(3*x+y+z)+cos(x),[&#39;z&#39;])</span>
-<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; t_degree(cos(3*x+y-z)+cos(2*x)) == 3</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; t_degree(cos(3*x+y+z)+cos(x),[&#39;z&#39;]) == 1</span>
+<span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; from fractions import Fraction as F</span>
 <span class="sd">    &gt;&gt;&gt; t_degree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
 <span class="sd">    Traceback (most recent call last):</span>
@@ -928,12 +926,12 @@
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, k_monomial</span>
 <span class="sd">    &gt;&gt;&gt; from pyranha.math import cos</span>
-<span class="sd">    &gt;&gt;&gt; t = poisson_series(polynomial(rational,k_monomial))()</span>
+<span class="sd">    &gt;&gt;&gt; t = poisson_series[polynomial[rational,k_monomial]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = t(&#39;x&#39;),t(&#39;y&#39;),t(&#39;z&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; t_ldegree(cos(3*x+y-z)+cos(2*x))</span>
-<span class="sd">    2</span>
-<span class="sd">    &gt;&gt;&gt; t_ldegree(cos(3*x+y-z)+cos(2*y+z),[&#39;y&#39;])</span>
-<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; t_ldegree(cos(3*x+y-z)+cos(2*x)) == 2</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; t_ldegree(cos(3*x+y-z)+cos(2*y+z),[&#39;y&#39;]) == 1</span>
+<span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; from fractions import Fraction as F</span>
 <span class="sd">    &gt;&gt;&gt; t_ldegree(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
 <span class="sd">    Traceback (most recent call last):</span>
@@ -966,12 +964,12 @@
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, k_monomial</span>
 <span class="sd">    &gt;&gt;&gt; from pyranha.math import cos</span>
-<span class="sd">    &gt;&gt;&gt; t = poisson_series(polynomial(rational,k_monomial))()</span>
+<span class="sd">    &gt;&gt;&gt; t = poisson_series[polynomial[rational,k_monomial]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = t(&#39;x&#39;),t(&#39;y&#39;),t(&#39;z&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; t_order(cos(3*x+y-z)+cos(x))</span>
-<span class="sd">    5</span>
-<span class="sd">    &gt;&gt;&gt; t_order(cos(3*x+y-z)-sin(y),[&#39;z&#39;])</span>
-<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; t_order(cos(3*x+y-z)+cos(x)) == 5</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; t_order(cos(3*x+y-z)-sin(y),[&#39;z&#39;]) == 1</span>
+<span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; from fractions import Fraction as F</span>
 <span class="sd">    &gt;&gt;&gt; t_order(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
 <span class="sd">    Traceback (most recent call last):</span>
@@ -1004,12 +1002,12 @@
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import poisson_series, polynomial, rational, k_monomial</span>
 <span class="sd">    &gt;&gt;&gt; from pyranha.math import cos</span>
-<span class="sd">    &gt;&gt;&gt; t = poisson_series(polynomial(rational,k_monomial))()</span>
+<span class="sd">    &gt;&gt;&gt; t = poisson_series[polynomial[rational,k_monomial]]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = t(&#39;x&#39;),t(&#39;y&#39;),t(&#39;z&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; t_lorder(cos(4*x+y-z)+cos(2*x))</span>
-<span class="sd">    2</span>
-<span class="sd">    &gt;&gt;&gt; t_lorder(cos(3*x+y-z)+cos(2*y+z),[&#39;y&#39;])</span>
-<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; t_lorder(cos(4*x+y-z)+cos(2*x)) == 2</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; t_lorder(cos(3*x+y-z)+cos(2*y+z),[&#39;y&#39;]) == 1</span>
+<span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; from fractions import Fraction as F</span>
 <span class="sd">    &gt;&gt;&gt; t_lorder(F(1,2)) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
 <span class="sd">    Traceback (most recent call last):</span>
@@ -1039,7 +1037,7 @@
 <span class="sd">    the expression :math:`x+y+z` as follows:</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = x,y,z = pt(&#39;x&#39;),pt(&#39;y&#39;),pt(&#39;z&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; l = lambdify(float,x+y+z,[&#39;x&#39;,&#39;y&#39;],{&#39;z&#39;: lambda a: (3.*a[0] + a[1])**.5})</span>
 <span class="sd">    &gt;&gt;&gt; l([1.,2.]) # doctest: +ELLIPSIS</span>
@@ -1064,7 +1062,7 @@
 <span class="sd">            callables in *extra_map*</span>
 
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, rational, k_monomial</span>
-<span class="sd">    &gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">    &gt;&gt;&gt; pt = polynomial[rational,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y,z = x,y,z = pt(&#39;x&#39;),pt(&#39;y&#39;),pt(&#39;z&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; l = lambdify(int,2*x-y+3*z,[&#39;z&#39;,&#39;y&#39;,&#39;x&#39;])</span>
 <span class="sd">    &gt;&gt;&gt; l([1,2,3])</span>
