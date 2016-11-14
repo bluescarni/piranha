@@ -5,7 +5,7 @@ var searchData=
   ['gcd3',['gcd3',['../namespacepiranha_1_1math.html#aed326292eae1eeef5a46fd472a6e3165',1,'piranha::math']]],
   ['get_5fall',['get_all',['../classpiranha_1_1future__list.html#a24702db33f17b26d7e43b378ba2a27ac',1,'piranha::future_list']]],
   ['get_5fauto_5ftruncate_5fdegree',['get_auto_truncate_degree',['../classpiranha_1_1polynomial.html#a1448978bc7f49ee46d3099cd8580dd1a',1,'piranha::polynomial']]],
-  ['get_5fbinding',['get_binding',['../classpiranha_1_1thread__pool__.html#a0e460d3d7d62bb586f24468e17add004',1,'piranha::thread_pool_']]],
+  ['get_5fbinding',['get_binding',['../classpiranha_1_1thread__pool__.html#a7339d6be8dfe9c0fb90511594c1a7bd7',1,'piranha::thread_pool_']]],
   ['get_5fcache_5fline_5fsize',['get_cache_line_size',['../classpiranha_1_1runtime__info.html#aac7510b135cddd7cdb28a9bea7e6d889',1,'piranha::runtime_info::get_cache_line_size()'],['../classpiranha_1_1settings__.html#a7416d94ce5d919f7f1bd1c80e95a24fe',1,'piranha::settings_::get_cache_line_size()']]],
   ['get_5fdefault_5fgcd_5falgorithm',['get_default_gcd_algorithm',['../classpiranha_1_1polynomial.html#a2f8720b75662fd74c3b34dd17174729b',1,'piranha::polynomial']]],
   ['get_5festimate_5fthreshold',['get_estimate_threshold',['../classpiranha_1_1tuning.html#ae52b6a8240816c547472fa5194a48f3b',1,'piranha::tuning']]],

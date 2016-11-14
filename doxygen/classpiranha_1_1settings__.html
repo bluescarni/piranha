@@ -28,7 +28,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">piranha
-   &#160;<span id="projectnumber">0.6</span>
+   &#160;<span id="projectnumber">0.7</span>
    </div>
   </td>
  </tr>
@@ -274,11 +274,11 @@ template&lt;typename  = void&gt; </div>
 </div><div class="memdoc">
 
 <p>Get the number of threads available for use by piranha. </p>
-<p>The initial value is set to the maximum between 1 and <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>. This function is equivalent to <a class="el" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0" title="Size. ">piranha::thread_pool::size()</a>.</p>
+<p>The initial value is set to the maximum between 1 and <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>. This function is equivalent to <a class="el" href="classpiranha_1_1thread__pool__.html#a830dabf945bdc141fa61235c9440e983" title="Size. ">piranha::thread_pool::size()</a>.</p>
 <dl class="section return"><dt>Returns</dt><dd>the number of threads that will be available for use by piranha.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0" title="Size. ">piranha::thread_pool::size()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a830dabf945bdc141fa61235c9440e983" title="Size. ">piranha::thread_pool::size()</a>. </td></tr>
   </table>
   </dd>
 </dl>
@@ -313,11 +313,11 @@ template&lt;typename  = void&gt; </div>
 </div><div class="memdoc">
 
 <p>Get the thread binding policy. </p>
-<p>This method is an alias for <a class="el" href="classpiranha_1_1thread__pool__.html#a0e460d3d7d62bb586f24468e17add004" title="Get the thread binding policy. ">piranha::thread_pool::get_binding()</a>. It will return the flag set by <a class="el" href="classpiranha_1_1settings__.html#a41094a39208fa460986d22f0bc0c2b85" title="Set the thread binding policy. ">settings::set_thread_binding()</a> (which is <code>false</code> by default on program startup).</p>
+<p>This method is an alias for <a class="el" href="classpiranha_1_1thread__pool__.html#a7339d6be8dfe9c0fb90511594c1a7bd7" title="Get the thread binding policy. ">piranha::thread_pool::get_binding()</a>. It will return the flag set by <a class="el" href="classpiranha_1_1settings__.html#a41094a39208fa460986d22f0bc0c2b85" title="Set the thread binding policy. ">settings::set_thread_binding()</a> (which is <code>false</code> by default on program startup).</p>
 <dl class="section return"><dt>Returns</dt><dd>the active thread binding policy.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a0e460d3d7d62bb586f24468e17add004" title="Get the thread binding policy. ">piranha::thread_pool::get_binding()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a7339d6be8dfe9c0fb90511594c1a7bd7" title="Get the thread binding policy. ">piranha::thread_pool::get_binding()</a>. </td></tr>
   </table>
   </dd>
 </dl>
@@ -633,7 +633,7 @@ template&lt;typename  = void&gt; </div>
 </div><div class="memdoc">
 
 <p>Set the number of threads available for use by piranha. </p>
-<p>This function is equivalent to <a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e" title="Change the number of threads. ">piranha::thread_pool::resize()</a>.</p>
+<p>This function is equivalent to <a class="el" href="classpiranha_1_1thread__pool__.html#a37c9dfcd5645a9bb0f0b8bbae156bfff" title="Change the number of threads. ">piranha::thread_pool::resize()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>the desired number of threads.</td></tr>
@@ -642,7 +642,7 @@ template&lt;typename  = void&gt; </div>
 </dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e" title="Change the number of threads. ">piranha::thread_pool::resize()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#a37c9dfcd5645a9bb0f0b8bbae156bfff" title="Change the number of threads. ">piranha::thread_pool::resize()</a>. </td></tr>
   </table>
   </dd>
 </dl>
@@ -678,7 +678,7 @@ template&lt;typename  = void&gt; </div>
 </div><div class="memdoc">
 
 <p>Set the thread binding policy. </p>
-<p>This method is an alias for <a class="el" href="classpiranha_1_1thread__pool__.html#af9f0cd0aa8327e627caf5648c72bb8d4" title="Set the thread binding policy. ">piranha::thread_pool::set_binding()</a>. If <code>flag</code> is <code>true</code>, each thread used by piranha will be bound to a different processor/core. If <code>flag</code> is <code>false</code>, this method will unbind piranha's threads from any processor/core to which they might be bound.</p>
+<p>This method is an alias for <a class="el" href="classpiranha_1_1thread__pool__.html#acae84bb597dd00a9a0bb3ea5dcaa355c" title="Set the thread binding policy. ">piranha::thread_pool::set_binding()</a>. If <code>flag</code> is <code>true</code>, each thread used by piranha will be bound to a different processor/core. If <code>flag</code> is <code>false</code>, this method will unbind piranha's threads from any processor/core to which they might be bound.</p>
 <p>By default piranha's threads are not bound to any specific processor/core.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -688,7 +688,7 @@ template&lt;typename  = void&gt; </div>
 </dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#af9f0cd0aa8327e627caf5648c72bb8d4" title="Set the thread binding policy. ">piranha::thread_pool::set_binding()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1thread__pool__.html#acae84bb597dd00a9a0bb3ea5dcaa355c" title="Set the thread binding policy. ">piranha::thread_pool::set_binding()</a>. </td></tr>
   </table>
   </dd>
 </dl>

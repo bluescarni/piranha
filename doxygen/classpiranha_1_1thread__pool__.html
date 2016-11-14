@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.12"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>piranha: piranha::thread_pool_&lt; typename &gt; Class Template Reference</title>
+<title>piranha: piranha::thread_pool_&lt; T &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -28,7 +28,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">piranha
-   &#160;<span id="projectnumber">0.6</span>
+   &#160;<span id="projectnumber">0.7</span>
    </div>
   </td>
  </tr>
@@ -73,7 +73,7 @@ $(function() {
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classpiranha_1_1thread__pool__-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::thread_pool_&lt; typename &gt; Class Template Reference</div>  </div>
+<div class="title">piranha::thread_pool_&lt; T &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -86,45 +86,45 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ac597652dff171823af93189ba022ec5d"><td class="memTemplParams" colspan="2">template&lt;typename F , typename... Args&gt; </td></tr>
-<tr class="memitem:ac597652dff171823af93189ba022ec5d"><td class="memTemplItemLeft" align="right" valign="top">static enqueue_t&lt; F &amp;&amp;, Args &amp;&amp;... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#ac597652dff171823af93189ba022ec5d">enqueue</a> (unsigned n, F &amp;&amp;f, Args &amp;&amp;... args)</td></tr>
-<tr class="memdesc:ac597652dff171823af93189ba022ec5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueue task.  <a href="#ac597652dff171823af93189ba022ec5d">More...</a><br /></td></tr>
-<tr class="separator:ac597652dff171823af93189ba022ec5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a2a1765622d427968dba7e49ffa5da0"><td class="memItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a4a2a1765622d427968dba7e49ffa5da0">size</a> ()</td></tr>
-<tr class="memdesc:a4a2a1765622d427968dba7e49ffa5da0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size.  <a href="#a4a2a1765622d427968dba7e49ffa5da0">More...</a><br /></td></tr>
-<tr class="separator:a4a2a1765622d427968dba7e49ffa5da0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a103d3b72ea9564dc55566f3ab303189e"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a103d3b72ea9564dc55566f3ab303189e">resize</a> (unsigned new_size)</td></tr>
-<tr class="memdesc:a103d3b72ea9564dc55566f3ab303189e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the number of threads.  <a href="#a103d3b72ea9564dc55566f3ab303189e">More...</a><br /></td></tr>
-<tr class="separator:a103d3b72ea9564dc55566f3ab303189e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af9f0cd0aa8327e627caf5648c72bb8d4"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#af9f0cd0aa8327e627caf5648c72bb8d4">set_binding</a> (bool flag)</td></tr>
-<tr class="memdesc:af9f0cd0aa8327e627caf5648c72bb8d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the thread binding policy.  <a href="#af9f0cd0aa8327e627caf5648c72bb8d4">More...</a><br /></td></tr>
-<tr class="separator:af9f0cd0aa8327e627caf5648c72bb8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e460d3d7d62bb586f24468e17add004"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a0e460d3d7d62bb586f24468e17add004">get_binding</a> ()</td></tr>
-<tr class="memdesc:a0e460d3d7d62bb586f24468e17add004"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the thread binding policy.  <a href="#a0e460d3d7d62bb586f24468e17add004">More...</a><br /></td></tr>
-<tr class="separator:a0e460d3d7d62bb586f24468e17add004"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="memTemplParams" colspan="2">template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </td></tr>
-<tr class="memitem:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="memTemplItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a03d28eff2b4c7636f8219c656cdd2f4b">use_threads</a> (const Int &amp;work_size, const Int &amp;min_work_per_thread)</td></tr>
-<tr class="memdesc:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute number of threads to use.  <a href="#a03d28eff2b4c7636f8219c656cdd2f4b">More...</a><br /></td></tr>
-<tr class="separator:a03d28eff2b4c7636f8219c656cdd2f4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9d1fe61963e14532c7f18254c703b45"><td class="memTemplParams" colspan="2">template&lt;typename F , typename... Args&gt; </td></tr>
+<tr class="memitem:ab9d1fe61963e14532c7f18254c703b45"><td class="memTemplItemLeft" align="right" valign="top">static enqueue_t&lt; F &amp;&amp;, Args &amp;&amp;... &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#ab9d1fe61963e14532c7f18254c703b45">enqueue</a> (unsigned n, F &amp;&amp;f, Args &amp;&amp;... args)</td></tr>
+<tr class="memdesc:ab9d1fe61963e14532c7f18254c703b45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueue task.  <a href="#ab9d1fe61963e14532c7f18254c703b45">More...</a><br /></td></tr>
+<tr class="separator:ab9d1fe61963e14532c7f18254c703b45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a830dabf945bdc141fa61235c9440e983"><td class="memItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a830dabf945bdc141fa61235c9440e983">size</a> ()</td></tr>
+<tr class="memdesc:a830dabf945bdc141fa61235c9440e983"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size.  <a href="#a830dabf945bdc141fa61235c9440e983">More...</a><br /></td></tr>
+<tr class="separator:a830dabf945bdc141fa61235c9440e983"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37c9dfcd5645a9bb0f0b8bbae156bfff"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a37c9dfcd5645a9bb0f0b8bbae156bfff">resize</a> (unsigned new_size)</td></tr>
+<tr class="memdesc:a37c9dfcd5645a9bb0f0b8bbae156bfff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the number of threads.  <a href="#a37c9dfcd5645a9bb0f0b8bbae156bfff">More...</a><br /></td></tr>
+<tr class="separator:a37c9dfcd5645a9bb0f0b8bbae156bfff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acae84bb597dd00a9a0bb3ea5dcaa355c"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#acae84bb597dd00a9a0bb3ea5dcaa355c">set_binding</a> (bool flag)</td></tr>
+<tr class="memdesc:acae84bb597dd00a9a0bb3ea5dcaa355c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the thread binding policy.  <a href="#acae84bb597dd00a9a0bb3ea5dcaa355c">More...</a><br /></td></tr>
+<tr class="separator:acae84bb597dd00a9a0bb3ea5dcaa355c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7339d6be8dfe9c0fb90511594c1a7bd7"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#a7339d6be8dfe9c0fb90511594c1a7bd7">get_binding</a> ()</td></tr>
+<tr class="memdesc:a7339d6be8dfe9c0fb90511594c1a7bd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the thread binding policy.  <a href="#a7339d6be8dfe9c0fb90511594c1a7bd7">More...</a><br /></td></tr>
+<tr class="separator:a7339d6be8dfe9c0fb90511594c1a7bd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae99fb9a5fcb09377eac3a3b5281aa233"><td class="memTemplParams" colspan="2">template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </td></tr>
+<tr class="memitem:ae99fb9a5fcb09377eac3a3b5281aa233"><td class="memTemplItemLeft" align="right" valign="top">static unsigned&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1thread__pool__.html#ae99fb9a5fcb09377eac3a3b5281aa233">use_threads</a> (const Int &amp;work_size, const Int &amp;min_work_per_thread)</td></tr>
+<tr class="memdesc:ae99fb9a5fcb09377eac3a3b5281aa233"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute number of threads to use.  <a href="#ae99fb9a5fcb09377eac3a3b5281aa233">More...</a><br /></td></tr>
+<tr class="separator:ae99fb9a5fcb09377eac3a3b5281aa233"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename = void&gt;<br />
-class piranha::thread_pool_&lt; typename &gt;</h3>
+<div class="textblock"><h3>template&lt;typename T = void&gt;<br />
+class piranha::thread_pool_&lt; T &gt;</h3>
 
 <p>Static thread pool. </p>
 <dl class="section note"><dt>Note</dt><dd>The template parameter in this class is unused: its only purpose is to prevent the instantiation of the class' methods if they are not explicitly used. Client code should always employ the <a class="el" href="namespacepiranha.html#af1372bc168006768fa64731fe9f85fb6" title="Alias for piranha::thread_pool_. ">piranha::thread_pool</a> alias.</dd></dl>
 <p>This class manages, via a set of static methods, a pool of threads created at program startup. The number of threads created initially is equal to <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>. If the hardware concurrency cannot be determined, the size of the thread pool will be one.</p>
 <p>This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool, resize the pool and configure the thread binding policy. All methods, unless otherwise specified, are thread-safe, and they provide the strong exception safety guarantee. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00283">283</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00288">288</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac597652dff171823af93189ba022ec5d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac597652dff171823af93189ba022ec5d">&sect;&nbsp;</a></span>enqueue()</h2>
+<a id="ab9d1fe61963e14532c7f18254c703b45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9d1fe61963e14532c7f18254c703b45">&sect;&nbsp;</a></span>enqueue()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename  = void&gt; </div>
+template&lt;typename T  = void&gt; </div>
 <div class="memtemplate">
 template&lt;typename F , typename... Args&gt; </div>
 <table class="mlabels">
@@ -132,7 +132,7 @@ template&lt;typename F , typename... Args&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static enqueue_t&lt;F &amp;&amp;, Args &amp;&amp;...&gt; <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::enqueue </td>
+          <td class="memname">static enqueue_t&lt;F &amp;&amp;, Args &amp;&amp;...&gt; <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; T &gt;::enqueue </td>
           <td>(</td>
           <td class="paramtype">unsigned&#160;</td>
           <td class="paramname"><em>n</em>, </td>
@@ -192,23 +192,23 @@ template&lt;typename F , typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00325">325</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00331">331</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
-<a id="a0e460d3d7d62bb586f24468e17add004"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e460d3d7d62bb586f24468e17add004">&sect;&nbsp;</a></span>get_binding()</h2>
+<a id="a7339d6be8dfe9c0fb90511594c1a7bd7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7339d6be8dfe9c0fb90511594c1a7bd7">&sect;&nbsp;</a></span>get_binding()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename  = void&gt; </div>
+template&lt;typename T  = void&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static bool <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::get_binding </td>
+          <td class="memname">static bool <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; T &gt;::get_binding </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -222,26 +222,26 @@ template&lt;typename  = void&gt; </div>
 </div><div class="memdoc">
 
 <p>Get the thread binding policy. </p>
-<p>This method returns the flag set by <a class="el" href="classpiranha_1_1thread__pool__.html#af9f0cd0aa8327e627caf5648c72bb8d4" title="Set the thread binding policy. ">set_binding()</a>. The threads created on program startup are not bound to specific processors/cores.</p>
+<p>This method returns the flag set by <a class="el" href="classpiranha_1_1thread__pool__.html#acae84bb597dd00a9a0bb3ea5dcaa355c" title="Set the thread binding policy. ">set_binding()</a>. The threads created on program startup are not bound to specific processors/cores.</p>
 <dl class="section return"><dt>Returns</dt><dd>a boolean flag representing the active thread binding policy. </dd></dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00430">430</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00443">443</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
-<a id="a103d3b72ea9564dc55566f3ab303189e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a103d3b72ea9564dc55566f3ab303189e">&sect;&nbsp;</a></span>resize()</h2>
+<a id="a37c9dfcd5645a9bb0f0b8bbae156bfff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a37c9dfcd5645a9bb0f0b8bbae156bfff">&sect;&nbsp;</a></span>resize()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename  = void&gt; </div>
+template&lt;typename T  = void&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static void <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::resize </td>
+          <td class="memname">static void <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; T &gt;::resize </td>
           <td>(</td>
           <td class="paramtype">unsigned&#160;</td>
           <td class="paramname"><em>new_size</em></td><td>)</td>
@@ -275,23 +275,23 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00379">379</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00392">392</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
-<a id="af9f0cd0aa8327e627caf5648c72bb8d4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af9f0cd0aa8327e627caf5648c72bb8d4">&sect;&nbsp;</a></span>set_binding()</h2>
+<a id="acae84bb597dd00a9a0bb3ea5dcaa355c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acae84bb597dd00a9a0bb3ea5dcaa355c">&sect;&nbsp;</a></span>set_binding()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename  = void&gt; </div>
+template&lt;typename T  = void&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static void <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::set_binding </td>
+          <td class="memname">static void <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; T &gt;::set_binding </td>
           <td>(</td>
           <td class="paramtype">bool&#160;</td>
           <td class="paramname"><em>flag</em></td><td>)</td>
@@ -325,23 +325,23 @@ template&lt;typename  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00412">412</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00425">425</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
-<a id="a4a2a1765622d427968dba7e49ffa5da0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4a2a1765622d427968dba7e49ffa5da0">&sect;&nbsp;</a></span>size()</h2>
+<a id="a830dabf945bdc141fa61235c9440e983"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a830dabf945bdc141fa61235c9440e983">&sect;&nbsp;</a></span>size()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename  = void&gt; </div>
+template&lt;typename T  = void&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static unsigned <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::size </td>
+          <td class="memname">static unsigned <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; T &gt;::size </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -357,17 +357,17 @@ template&lt;typename  = void&gt; </div>
 <p>Size. </p>
 <dl class="section return"><dt>Returns</dt><dd>the number of threads in the pool. </dd></dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00340">340</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00346">346</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
-<a id="a03d28eff2b4c7636f8219c656cdd2f4b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a03d28eff2b4c7636f8219c656cdd2f4b">&sect;&nbsp;</a></span>use_threads()</h2>
+<a id="ae99fb9a5fcb09377eac3a3b5281aa233"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae99fb9a5fcb09377eac3a3b5281aa233">&sect;&nbsp;</a></span>use_threads()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename  = void&gt; </div>
+template&lt;typename T  = void&gt; </div>
 <div class="memtemplate">
 template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
 <table class="mlabels">
@@ -375,7 +375,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static unsigned <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; typename &gt;::use_threads </td>
+          <td class="memname">static unsigned <a class="el" href="classpiranha_1_1thread__pool__.html">piranha::thread_pool_</a>&lt; T &gt;::use_threads </td>
           <td>(</td>
           <td class="paramtype">const Int &amp;&#160;</td>
           <td class="paramname"><em>work_size</em>, </td>
@@ -419,7 +419,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00456">456</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00469">469</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>

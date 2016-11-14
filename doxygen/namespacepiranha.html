@@ -28,7 +28,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">piranha
-   &#160;<span id="projectnumber">0.6</span>
+   &#160;<span id="projectnumber">0.7</span>
    </div>
   </td>
  </tr>
@@ -1012,7 +1012,7 @@ template&lt;typename T , typename Cf &gt; </div>
 <p>Alias for <a class="el" href="classpiranha_1_1thread__pool__.html" title="Static thread pool. ">piranha::thread_pool_</a>. </p>
 <p>This is the alias through which the methods in <a class="el" href="classpiranha_1_1thread__pool__.html" title="Static thread pool. ">piranha::thread_pool_</a> should be called. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00489">489</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00502">502</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -1598,7 +1598,7 @@ template&lt;typename To , typename From , detail::convert_to_enabler&lt; To, Fro
 <p>This function should be called before accessing any Piranha functionality. It will register cleanup functions that will be run on program exit (e.g., the MPFR <code>mpfr_free_cache()</code> function).</p>
 <p>It is allowed to call this function concurrently from multiple threads: after the first invocation, additional invocations will not perform any action. </p>
 
-<p>Definition at line <a class="el" href="init_8hpp_source.html#l00087">87</a> of file <a class="el" href="init_8hpp_source.html">init.hpp</a>.</p>
+<p>Definition at line <a class="el" href="init_8hpp_source.html#l00081">81</a> of file <a class="el" href="init_8hpp_source.html">init.hpp</a>.</p>
 
 </div>
 </div>
@@ -2052,7 +2052,7 @@ template&lt;typename T , typename  = typename std::enable_if&lt;is_container_ele
     <tr><td class="paramname">std::bad_alloc</td><td>in case of memory allocation errors in multithreaded mode. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>the value initialisation of instances of type <code>T</code>,</li>
-<li><a class="el" href="classpiranha_1_1thread__pool__.html#ac597652dff171823af93189ba022ec5d" title="Enqueue task. ">piranha::thread_pool::enqueue()</a> and <a class="el" href="classpiranha_1_1future__list.html#a52161ce8fcc55a22299c9164a2ca4bd3" title="Move-insert a future. ">piranha::future_list::push_back()</a>, only in multithreaded mode. </li>
+<li><a class="el" href="classpiranha_1_1thread__pool__.html#ab9d1fe61963e14532c7f18254c703b45" title="Enqueue task. ">piranha::thread_pool::enqueue()</a> and <a class="el" href="classpiranha_1_1future__list.html#a52161ce8fcc55a22299c9164a2ca4bd3" title="Move-insert a future. ">piranha::future_list::push_back()</a>, only in multithreaded mode. </li>
 </ul>
 </td></tr>
   </table>
