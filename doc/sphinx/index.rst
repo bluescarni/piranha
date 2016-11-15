@@ -75,7 +75,7 @@ The equivalent Python code:
    10080*x**3*y**5*z**2-30240*x*y**2*z**2+720*x**7...
    >>> math.degree(res,['x','y'])
    10
-   >>> math.evaluate(res,{'x':1.5,"y":-3.5,"z":1.2})
+   >>> math.evaluate(res,{'x':1.5,'y':-3.5,'z':1.2})
    0.00604647211...
    >>> int_res_x = math.integrate(res,'x')
    >>> int_res_x
@@ -109,6 +109,12 @@ On the other hand, you might want to use other systems in these situations:
   operations commonly needed in celestial mechanics. If you need more advanced symbolic polynomial capabilities,
   you might want to check out projects such as `Singular <https://www.singular.uni-kl.de/>`__ and
   `PARI <http://pari.math.u-bordeaux.fr/>`__.
+
+Who is using Piranha?
+=====================
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
