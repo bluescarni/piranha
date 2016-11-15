@@ -49,27 +49,6 @@ def _cpp_type_catcher(func, *args):
                         .format(func.__name__, [type(_).__name__ for _ in args]))
 
 
-def _cleanup_custom_derivatives():
-    # Function to be run at module unload to clear registered custom derivatives.
-    # The rationale is that custom derivatives will contain Python objects, and we
-    # want to remove them before the C++ library exits.
-    from ._core import _get_exposed_types_list as getl
-    for s_type in getl():
-        if hasattr(s_type, 'unregister_all_custom_derivatives'):
-            s_type.unregister_all_custom_derivatives()
-    print('Custom derivatives cleanup completed.')
-
-
-def _cleanup_pow_caches():
-    # NOTE: this is probably not needed at the moment as there is no way Python objects
-    # end up in the cache, but it might happen in the future.
-    from ._core import _get_exposed_types_list as getl
-    for s_type in getl():
-        if hasattr(s_type, 'clear_pow_cache'):
-            s_type.clear_pow_cache()
-    print('Pow caches cleanup completed.')
-
-
 def _repr_png_(self):
     # Render a series in png format using latex + dvipng.
     # Code adapted from and inspired by:
@@ -154,19 +133,6 @@ def _register_wrappers():
     _register_repr_latex()
 
 
-def _replace_gtg_call():
-    # Monkey patch the generic type generator class to accept normal args
-    # instead of a list.
-    _orig_gtg_call = _core._generic_type_generator.__call__
-
-    def _gtg_call_wrapper(self, *args):
-        l_args = list(args)
-        if not all([isinstance(_, _core._type_generator) for _ in l_args]):
-            raise TypeError('all the arguments must be type generators')
-        return _orig_gtg_call(self, l_args)
-    _core._generic_type_generator.__call__ = _gtg_call_wrapper
-
-
 def _remove_hash():
     # Remove hashing from exposed types.
     from ._core import _get_exposed_types_list as getl
@@ -180,13 +146,4 @@ def _monkey_patching():
     # NOTE: it seems like concurrent import is not an issue:
     # http://stackoverflow.com/questions/12389526/import-inside-of-a-python-thread
     _register_wrappers()
-    _replace_gtg_call()
     _remove_hash()
-
-
-def _cleanup():
-    # Cleanup function.
-    _cleanup_custom_derivatives()
-    _cleanup_pow_caches()
-    _core._cleanup_type_system()
-    print("Pyranha type system cleanup completed.")

@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
+#include <cstdint>
 #include <tuple>
 
 #include "../src/divisor.hpp"
@@ -41,45 +42,40 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/rational_function.hpp"
 #include "../src/real.hpp"
-#include "type_system.hpp"
 
 namespace pyranha
 {
-
-PYRANHA_DECLARE_TT_NAMER(piranha::poisson_series, "poisson_series")
 
 struct poisson_series_descriptor {
     using params = std::tuple<
         // Polynomials with double coefficients.
         std::tuple<piranha::polynomial<double, piranha::monomial<piranha::rational>>>,
-        std::tuple<piranha::polynomial<double, piranha::monomial<short>>>,
+        std::tuple<piranha::polynomial<double, piranha::monomial<std::int_least16_t>>>,
         std::tuple<piranha::polynomial<double, piranha::kronecker_monomial<>>>,
         // Polynomials with rational coefficients.
         std::tuple<piranha::polynomial<piranha::rational, piranha::monomial<piranha::rational>>>,
-        std::tuple<piranha::polynomial<piranha::rational, piranha::monomial<short>>>,
+        std::tuple<piranha::polynomial<piranha::rational, piranha::monomial<std::int_least16_t>>>,
         std::tuple<piranha::polynomial<piranha::rational, piranha::kronecker_monomial<>>>,
         // Polynomials with real coefficients.
         std::tuple<piranha::polynomial<piranha::real, piranha::monomial<piranha::rational>>>,
-        std::tuple<piranha::polynomial<piranha::real, piranha::monomial<short>>>,
+        std::tuple<piranha::polynomial<piranha::real, piranha::monomial<std::int_least16_t>>>,
         std::tuple<piranha::polynomial<piranha::real, piranha::kronecker_monomial<>>>,
         // Divisor series for the rational polynomial coefficients.
         std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational, piranha::monomial<piranha::rational>>,
-                                           piranha::divisor<short>>>,
-        std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational, piranha::monomial<short>>,
-                                           piranha::divisor<short>>>,
+                                           piranha::divisor<std::int_least16_t>>>,
+        std::
+            tuple<piranha::divisor_series<piranha::polynomial<piranha::rational, piranha::monomial<std::int_least16_t>>,
+                                          piranha::divisor<std::int_least16_t>>>,
         std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational, piranha::kronecker_monomial<>>,
-                                           piranha::divisor<short>>>,
+                                           piranha::divisor<std::int_least16_t>>>,
         // Divisor series for the double polynomial coefficients.
         std::tuple<piranha::divisor_series<piranha::polynomial<double, piranha::monomial<piranha::rational>>,
-                                           piranha::divisor<short>>>,
-        std::tuple<piranha::divisor_series<piranha::polynomial<double, piranha::monomial<short>>,
-                                           piranha::divisor<short>>>,
+                                           piranha::divisor<std::int_least16_t>>>,
+        std::tuple<piranha::divisor_series<piranha::polynomial<double, piranha::monomial<std::int_least16_t>>,
+                                           piranha::divisor<std::int_least16_t>>>,
         std::tuple<piranha::divisor_series<piranha::polynomial<double, piranha::kronecker_monomial<>>,
-                                           piranha::divisor<short>>>,
-        // Rational function coefficient.
-        std::tuple<piranha::rational_function<piranha::k_monomial>>>;
+                                           piranha::divisor<std::int_least16_t>>>>;
     using interop_types = std::tuple<double, piranha::integer, piranha::real, piranha::rational>;
     using pow_types = interop_types;
     using eval_types = interop_types;

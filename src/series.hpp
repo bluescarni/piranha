@@ -59,11 +59,11 @@ see https://www.gnu.org/licenses/. */
 #include "config.hpp"
 #include "convert_to.hpp"
 #include "debug_access.hpp"
+#include "detail/init_data.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
-#include "init.hpp"
 #include "invert.hpp"
 #include "is_cf.hpp"
 #include "key_is_convertible.hpp"
@@ -1719,7 +1719,7 @@ private:
     bool destruction_checks() const
     {
         // Run destruction checks only if we are not in shutdown.
-        if (detail::shutdown()) {
+        if (shutdown()) {
             return true;
         }
         for (auto it = m_container.begin(); it != m_container.end(); ++it) {

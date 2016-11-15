@@ -29,35 +29,17 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_INIT_HPP
 #define PIRANHA_INIT_HPP
 
-#include <atomic>
 #include <cstdlib>
 #include <iostream>
 
+#include "detail/init_data.hpp"
 #include "detail/mpfr.hpp"
 
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
-
-// Global variables for init/shutdown.
-template <typename = void>
-struct piranha_init_statics {
-    static std::atomic_flag s_init_flag;
-    static std::atomic<bool> s_shutdown_flag;
-    static std::atomic<unsigned> s_failed;
-};
-
-// Static init of the global flags.
-template <typename T>
-std::atomic_flag piranha_init_statics<T>::s_init_flag = ATOMIC_FLAG_INIT;
-
-template <typename T>
-std::atomic<bool> piranha_init_statics<T>::s_shutdown_flag(false);
-
-template <typename T>
-std::atomic<unsigned> piranha_init_statics<T>::s_failed(0u);
 
 // The cleanup function.
 inline void cleanup_function()
@@ -66,12 +48,6 @@ inline void cleanup_function()
     ::mpfr_free_cache();
     std::cout << "Setting shutdown flag.\n";
     piranha_init_statics<>::s_shutdown_flag.store(true);
-}
-
-// Query if we are at shutdown.
-inline bool shutdown()
-{
-    return piranha_init_statics<>::s_shutdown_flag.load();
 }
 }
 
@@ -84,15 +60,34 @@ inline bool shutdown()
  * It is allowed to call this function concurrently from multiple threads: after the first
  * invocation, additional invocations will not perform any action.
  */
+// A few notes about the init function. The basic idea is that we want certain things to happen
+// when the program is shutting down but (crucially) *before* destruction of static objects starts.
+// The language guarantees that anything registered with std::atexit() runs before the destruction of
+// the statics, provided that the registration happens *after* the initialization of static objects.
+// The complication here is that, even if we run this function as first thing in main(), we are still
+// not 100% sure all statics have been initialised, because of potentially deferred dynamic init:
+//
+// http://en.cppreference.com/w/cpp/language/initialization#Deferred_dynamic_initialization
+//
+// The saving grace here seems to be in this quote:
+//
+// "If the initialization of a variable is deferred to happen after the first statement of main/thread function, it
+// happens before the first odr-use of any variable with static/thread storage duration defined in the same translation
+// unit as the variable to be initialized."
+//
+// In the init() function we are using indeed a static variable, the s_init_flag, and its use should guarantee the
+// initialisation of all other statics. That's my understanding anyway. I am not 100% sure how this all maps to the
+// init of pyranha, let's just keep the eyes open regarding this potential issue.
 inline void init()
 {
-    if (detail::piranha_init_statics<>::s_init_flag.test_and_set()) {
+    if (piranha_init_statics<>::s_init_flag.test_and_set()) {
         // If the previous value of the init flag was true, it means we already called
         // init() previously. Increase the failure count and exit.
-        ++detail::piranha_init_statics<>::s_failed;
+        ++piranha_init_statics<>::s_failed;
         return;
     }
-    if (std::atexit(detail::cleanup_function)) {
+    std::cout << "Initializing piranha.\n";
+    if (std::atexit(cleanup_function)) {
         std::cerr << "Unable to register cleanup function with std::atexit().\n";
         std::cerr.flush();
         std::abort();

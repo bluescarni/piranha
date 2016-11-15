@@ -46,7 +46,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
 // Tag for power series instances.
@@ -65,31 +65,29 @@ struct ps_term_score {
 
 // Common checks on degree/ldegree type for use in enabling conditions below.
 template <typename T>
-struct common_degree_type_checks {
-    static const bool value
-        = std::is_constructible<T, int>::value && is_less_than_comparable<T>::value && is_container_element<T>::value;
-};
+using common_degree_type_checks
+    = std::integral_constant<bool, conjunction<std::is_constructible<T, int>, is_less_than_comparable<T>,
+                                               is_container_element<T>>::value>;
 
 // Total (low) degree computation.
 #define PIRANHA_DEFINE_PS_PROPERTY_GETTER(property)                                                                    \
-    template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u, int>::type = 0>                 \
+    template <typename Term, enable_if_t<ps_term_score<Term>::value == 1u, int> = 0>                                   \
     inline auto ps_get_##property(const Term &t, const symbol_set &)->decltype(math::property(t.m_cf))                 \
     {                                                                                                                  \
         return math::property(t.m_cf);                                                                                 \
     }                                                                                                                  \
-    template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u, int>::type = 0>                 \
+    template <typename Term, enable_if_t<ps_term_score<Term>::value == 2u, int> = 0>                                   \
     inline auto ps_get_##property(const Term &t, const symbol_set &s)->decltype(t.m_key.property(s))                   \
     {                                                                                                                  \
         return t.m_key.property(s);                                                                                    \
     }                                                                                                                  \
     template <                                                                                                         \
         typename Term,                                                                                                 \
-        typename std::enable_if<ps_term_score<Term>::value == 3u && std::is_integral<decltype(math::property(          \
-                                                                        std::declval<const Term &>().m_cf))>::value    \
-                                    && std::is_integral<decltype(std::declval<const Term &>().m_key.property(          \
-                                           std::declval<const symbol_set &>()))>::value,                               \
-                                int>::type                                                                             \
-        = 0>                                                                                                           \
+        enable_if_t<ps_term_score<Term>::value == 3u                                                                   \
+                        && conjunction<std::is_integral<decltype(math::property(std::declval<const Term &>().m_cf))>,  \
+                                       std::is_integral<decltype(std::declval<const Term &>().m_key.property(          \
+                                           std::declval<const symbol_set &>()))>>::value,                              \
+                    int> = 0>                                                                                          \
     inline auto ps_get_##property(const Term &t, const symbol_set &s)                                                  \
         ->decltype(math::property(t.m_cf) + t.m_key.property(s))                                                       \
     {                                                                                                                  \
@@ -100,13 +98,12 @@ struct common_degree_type_checks {
     }                                                                                                                  \
     template <                                                                                                         \
         typename Term,                                                                                                 \
-        typename std::                                                                                                 \
-            enable_if<ps_term_score<Term>::value == 3u                                                                 \
-                          && (!std::is_integral<decltype(math::property(std::declval<const Term &>().m_cf))>::value    \
-                              || !std::is_integral<decltype(std::declval<const Term &>().m_key.property(               \
-                                     std::declval<const symbol_set &>()))>::value),                                    \
-                      int>::type                                                                                       \
-        = 0>                                                                                                           \
+        enable_if_t<ps_term_score<Term>::value == 3u                                                                   \
+                        && disjunction<negation<std::is_integral<decltype(                                             \
+                                           math::property(std::declval<const Term &>().m_cf))>>,                       \
+                                       negation<std::is_integral<decltype(std::declval<const Term &>().m_key.property( \
+                                           std::declval<const symbol_set &>()))>>>::value,                             \
+                    int> = 0>                                                                                          \
     inline auto ps_get_##property(const Term &t, const symbol_set &s)                                                  \
         ->decltype(math::property(t.m_cf) + t.m_key.property(s))                                                       \
     {                                                                                                                  \
@@ -116,22 +113,22 @@ struct common_degree_type_checks {
     using ps_##property##_type_ = decltype(                                                                            \
         ps_get_##property(std::declval<const typename T::term_type &>(), std::declval<const symbol_set &>()));         \
     template <typename T>                                                                                              \
-    using ps_##property##_type = typename std::enable_if<common_degree_type_checks<ps_##property##_type_<T>>::value,   \
-                                                         ps_##property##_type_<T>>::type;
+    using ps_##property##_type                                                                                         \
+        = enable_if_t<common_degree_type_checks<ps_##property##_type_<T>>::value, ps_##property##_type_<T>>;
 PIRANHA_DEFINE_PS_PROPERTY_GETTER(degree)
 PIRANHA_DEFINE_PS_PROPERTY_GETTER(ldegree)
 #undef PIRANHA_DEFINE_PS_PROPERTY_GETTER
 
 // Partial (low) degree computation.
 #define PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(property)                                                            \
-    template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u, int>::type = 0>                 \
+    template <typename Term, enable_if_t<ps_term_score<Term>::value == 1u, int> = 0>                                   \
     inline auto ps_get_##property(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &, \
                                   const symbol_set &)                                                                  \
         ->decltype(math::property(t.m_cf, names))                                                                      \
     {                                                                                                                  \
         return math::property(t.m_cf, names);                                                                          \
     }                                                                                                                  \
-    template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u, int>::type = 0>                 \
+    template <typename Term, enable_if_t<ps_term_score<Term>::value == 2u, int> = 0>                                   \
     inline auto ps_get_##property(const Term &t, const std::vector<std::string> &, const symbol_set::positions &p,     \
                                   const symbol_set &s)                                                                 \
         ->decltype(t.m_key.property(p, s))                                                                             \
@@ -139,15 +136,14 @@ PIRANHA_DEFINE_PS_PROPERTY_GETTER(ldegree)
         return t.m_key.property(p, s);                                                                                 \
     }                                                                                                                  \
     template <typename Term,                                                                                           \
-              typename std::enable_if<ps_term_score<Term>::value == 3u                                                 \
-                                          && std::is_integral<decltype(math::property(                                 \
-                                                 std::declval<const Term &>().m_cf,                                    \
-                                                 std::declval<const std::vector<std::string> &>()))>::value            \
-                                          && std::is_integral<decltype(std::declval<const Term &>().m_key.property(    \
+              enable_if_t<ps_term_score<Term>::value == 3u                                                             \
+                              && conjunction<std::is_integral<decltype(                                                \
+                                                 math::property(std::declval<const Term &>().m_cf,                     \
+                                                                std::declval<const std::vector<std::string> &>()))>,   \
+                                             std::is_integral<decltype(std::declval<const Term &>().m_key.property(    \
                                                  std::declval<const symbol_set::positions &>(),                        \
-                                                 std::declval<const symbol_set &>()))>::value,                         \
-                                      int>::type                                                                       \
-              = 0>                                                                                                     \
+                                                 std::declval<const symbol_set &>()))>>::value,                        \
+                          int> = 0>                                                                                    \
     inline auto ps_get_##property(const Term &t, const std::vector<std::string> &names,                                \
                                   const symbol_set::positions &p, const symbol_set &s)                                 \
         ->decltype(math::property(t.m_cf, names) + t.m_key.property(p, s))                                             \
@@ -159,15 +155,14 @@ PIRANHA_DEFINE_PS_PROPERTY_GETTER(ldegree)
     }                                                                                                                  \
     template <                                                                                                         \
         typename Term,                                                                                                 \
-        typename std::enable_if<ps_term_score<Term>::value == 3u                                                       \
-                                    && (!std::is_integral<decltype(                                                    \
-                                            math::property(std::declval<const Term &>().m_cf,                          \
-                                                           std::declval<const std::vector<std::string> &>()))>::value  \
-                                        || !std::is_integral<decltype(std::declval<const Term &>().m_key.property(     \
-                                               std::declval<const symbol_set::positions &>(),                          \
-                                               std::declval<const symbol_set &>()))>::value),                          \
-                                int>::type                                                                             \
-        = 0>                                                                                                           \
+        enable_if_t<ps_term_score<Term>::value == 3u                                                                   \
+                        && disjunction<negation<std::is_integral<decltype(                                             \
+                                           math::property(std::declval<const Term &>().m_cf,                           \
+                                                          std::declval<const std::vector<std::string> &>()))>>,        \
+                                       negation<std::is_integral<decltype(std::declval<const Term &>().m_key.property( \
+                                           std::declval<const symbol_set::positions &>(),                              \
+                                           std::declval<const symbol_set &>()))>>>::value,                             \
+                    int> = 0>                                                                                          \
     inline auto ps_get_##property(const Term &t, const std::vector<std::string> &names,                                \
                                   const symbol_set::positions &p, const symbol_set &s)                                 \
         ->decltype(math::property(t.m_cf, names) + t.m_key.property(p, s))                                             \
@@ -179,11 +174,112 @@ PIRANHA_DEFINE_PS_PROPERTY_GETTER(ldegree)
         std::declval<const typename T::term_type &>(), std::declval<const std::vector<std::string> &>(),               \
         std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()));                           \
     template <typename T>                                                                                              \
-    using ps_p##property##_type = typename std::enable_if<common_degree_type_checks<ps_p##property##_type_<T>>::value, \
-                                                          ps_p##property##_type_<T>>::type;
+    using ps_p##property##_type                                                                                        \
+        = enable_if_t<common_degree_type_checks<ps_p##property##_type_<T>>::value, ps_p##property##_type_<T>>;
 PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(degree)
 PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
 #undef PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER
+
+// Total degree truncation.
+// Case 1: coefficient can truncate, no degree or ldegree in key.
+template <typename Term, typename T,
+          enable_if_t<has_truncate_degree<typename Term::cf_type, T>::value && (ps_term_score<Term>::value >> 1u) == 0u,
+                      int> = 0>
+inline std::pair<bool, Term> ps_truncate_term(const Term &t, const T &max_degree, const symbol_set &)
+{
+    return std::make_pair(true, Term(math::truncate_degree(t.m_cf, max_degree), t.m_key));
+}
+
+// Case 2: coefficient cannot truncate, degree and ldegree in key, degrees are greater_than comparable.
+// NOTE: here we do not have support for key truncation (yet), so we decide based on the low degree of the key:
+// if it is larger than the max degree, remove the term, otherwise keep it - it is an all-or-nothing scenario.
+template <
+    typename Term, typename T,
+    enable_if_t<(ps_term_score<Term>::value >> 1u) == 1u
+                    && conjunction<negation<has_truncate_degree<typename Term::cf_type, T>>,
+                                   is_greater_than_comparable<decltype(
+                                                                  std::declval<const typename Term::key_type &>()
+                                                                      .ldegree(std::declval<const symbol_set &>())),
+                                                              T>>::value,
+                int> = 0>
+inline std::pair<bool, Term> ps_truncate_term(const Term &t, const T &max_degree, const symbol_set &s)
+{
+    if (t.m_key.ldegree(s) > max_degree) {
+        // Term must be discarded.
+        return std::make_pair(false, Term());
+    } else {
+        // Keep the term as it is.
+        return std::make_pair(true, Term(t.m_cf, t.m_key));
+    }
+}
+
+// Case 3: coefficient can truncate, degree and ldegree in key, the new max degree type can be used in the
+// coefficient truncation.
+// NOTE: again, no key truncation, thus we decrement the real degree of the coefficient by the low degree of the
+// key. This way we will keep all the important parts, plus some garbage.
+template <typename Term, typename T,
+          enable_if_t<has_truncate_degree<typename Term::cf_type,
+                                          decltype(std::declval<const T &>()
+                                                   - std::declval<const typename Term::key_type &>().ldegree(
+                                                         std::declval<const symbol_set &>()))>::value
+                          && (ps_term_score<Term>::value >> 1u) == 1u,
+                      int> = 0>
+inline std::pair<bool, Term> ps_truncate_term(const Term &t, const T &max_degree, const symbol_set &s)
+{
+    // The truncation level for the coefficient must be modified in order to take
+    // into account the degree of the key.
+    return std::make_pair(true, Term(math::truncate_degree(t.m_cf, max_degree - t.m_key.ldegree(s)), t.m_key));
+}
+
+// Partial degree truncation.
+// Case 1: coefficient can truncate, no degree or ldegree in key.
+template <typename Term, typename T,
+          enable_if_t<has_truncate_degree<typename Term::cf_type, T>::value && (ps_term_score<Term>::value >> 1u) == 0u,
+                      int> = 0>
+inline std::pair<bool, Term> ps_truncate_term(const Term &t, const T &max_degree, const std::vector<std::string> &names,
+                                              const symbol_set::positions &, const symbol_set &)
+{
+    return std::make_pair(true, Term(math::truncate_degree(t.m_cf, max_degree, names), t.m_key));
+}
+
+// Case 2: coefficient cannot truncate, degree and ldegree in key, degrees are greater_than comparable.
+template <
+    typename Term, typename T,
+    enable_if_t<(ps_term_score<Term>::value >> 1u) == 1u
+                    && conjunction<negation<has_truncate_degree<typename Term::cf_type, T>>,
+                                   is_greater_than_comparable<decltype(
+                                                                  std::declval<const typename Term::key_type &>()
+                                                                      .ldegree(
+                                                                          std::declval<const symbol_set::positions &>(),
+                                                                          std::declval<const symbol_set &>())),
+                                                              T>>::value,
+                int> = 0>
+inline std::pair<bool, Term> ps_truncate_term(const Term &t, const T &max_degree, const std::vector<std::string> &,
+                                              const symbol_set::positions &p, const symbol_set &s)
+{
+    if (t.m_key.ldegree(p, s) > max_degree) {
+        return std::make_pair(false, Term());
+    } else {
+        return std::make_pair(true, Term(t.m_cf, t.m_key));
+    }
+}
+
+// Case 3: coefficient can truncate, degree and ldegree in key, the new max degree type can be used in the
+// coefficient truncation.
+template <typename Term, typename T,
+          enable_if_t<has_truncate_degree<typename Term::cf_type,
+                                          decltype(std::declval<const T &>()
+                                                   - std::declval<const typename Term::key_type &>().ldegree(
+                                                         std::declval<const symbol_set::positions &>(),
+                                                         std::declval<const symbol_set &>()))>::value
+                          && (ps_term_score<Term>::value >> 1u) == 1u,
+                      int> = 0>
+inline std::pair<bool, Term> ps_truncate_term(const Term &t, const T &max_degree, const std::vector<std::string> &names,
+                                              const symbol_set::positions &p, const symbol_set &s)
+{
+    return std::make_pair(true,
+                          Term(math::truncate_degree(t.m_cf, max_degree - t.m_key.ldegree(p, s), names), t.m_key));
+}
 }
 
 /// Power series toolbox.
@@ -223,142 +319,33 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  * Move semantics is equivalent to the move semantics of \p Series.
  */
 template <typename Series, typename Derived>
-class power_series : public Series, detail::power_series_tag
+class power_series : public Series, power_series_tag
 {
     PIRANHA_TT_CHECK(is_series, Series);
-    typedef Series base;
-    // Total degree truncation.
-    // Case 1: coefficient can truncate, no degree or ldegree in key.
-    template <typename Term, typename T,
-              typename std::enable_if<has_truncate_degree<typename Term::cf_type, T>::value
-                                          && (detail::ps_term_score<Term>::value >> 1u) == 0u,
-                                      int>::type
-              = 0>
-    static std::pair<bool, Term> truncate_term(const Term &t, const T &max_degree, const symbol_set &)
-    {
-        return std::make_pair(true, Term(math::truncate_degree(t.m_cf, max_degree), t.m_key));
-    }
-    // Case 2: coefficient cannot truncate, degree and ldegree in key, degrees are greater_than comparable.
-    // NOTE: here we do not have support for key truncation (yet), so we decide based on the low degree of the key:
-    // if it is larger than the max degree, remove the term, otherwise keep it - it is an all-or-nothing scenario.
-    template <
-        typename Term, typename T,
-        typename std::
-            enable_if<!has_truncate_degree<typename Term::cf_type, T>::value
-                          && (detail::ps_term_score<Term>::value >> 1u) == 1u
-                          && is_greater_than_comparable<decltype(std::declval<const typename Term::key_type &>()
-                                                                     .ldegree(std::declval<const symbol_set &>())),
-                                                        T>::value,
-                      int>::type
-        = 0>
-    static std::pair<bool, Term> truncate_term(const Term &t, const T &max_degree, const symbol_set &s)
-    {
-        if (t.m_key.ldegree(s) > max_degree) {
-            // Term must be discarded.
-            return std::make_pair(false, Term());
-        } else {
-            // Keep the term as it is.
-            return std::make_pair(true, Term(t.m_cf, t.m_key));
-        }
-    }
-    // Case 3: coefficient can truncate, degree and ldegree in key, the new max degree type can be used in the
-    // coefficient truncation.
-    // NOTE: again, no key truncation, thus we decrement the real degree of the coefficient by the low degree of the
-    // key. This way we will keep
-    // all the important parts, plus some garbage.
-    template <
-        typename Term, typename T,
-        typename std::enable_if<has_truncate_degree<typename Term::cf_type,
-                                                    decltype(std::declval<const T &>()
-                                                             - std::declval<const typename Term::key_type &>().ldegree(
-                                                                   std::declval<const symbol_set &>()))>::value
-                                    && (detail::ps_term_score<Term>::value >> 1u) == 1u,
-                                int>::type
-        = 0>
-    static std::pair<bool, Term> truncate_term(const Term &t, const T &max_degree, const symbol_set &s)
-    {
-        // The truncation level for the coefficient must be modified in order to take
-        // into account the degree of the key.
-        return std::make_pair(true, Term(math::truncate_degree(t.m_cf, max_degree - t.m_key.ldegree(s)), t.m_key));
-    }
+    using base = Series;
     // Enabler for total degree truncation.
-    template <typename T, typename U>
-    using truncate_degree_enabler =
-        typename std::enable_if<detail::true_tt<decltype(truncate_term(std::declval<const typename U::term_type &>(),
-                                                                       std::declval<const T &>(),
-                                                                       std::declval<const symbol_set &>()))>::value,
-                                int>::type;
-    // Partial degree truncation.
-    // Case 1: coefficient can truncate, no degree or ldegree in key.
-    template <typename Term, typename T,
-              typename std::enable_if<has_truncate_degree<typename Term::cf_type, T>::value
-                                          && (detail::ps_term_score<Term>::value >> 1u) == 0u,
-                                      int>::type
-              = 0>
-    static std::pair<bool, Term> truncate_term(const Term &t, const T &max_degree,
-                                               const std::vector<std::string> &names, const symbol_set::positions &,
-                                               const symbol_set &)
-    {
-        return std::make_pair(true, Term(math::truncate_degree(t.m_cf, max_degree, names), t.m_key));
-    }
-    // Case 2: coefficient cannot truncate, degree and ldegree in key, degrees are greater_than comparable.
-    template <
-        typename Term, typename T,
-        typename std::
-            enable_if<!has_truncate_degree<typename Term::cf_type, T>::value
-                          && (detail::ps_term_score<Term>::value >> 1u) == 1u
-                          && is_greater_than_comparable<decltype(
-                                                            std::declval<const typename Term::key_type &>().ldegree(
-                                                                std::declval<const symbol_set::positions &>(),
-                                                                std::declval<const symbol_set &>())),
-                                                        T>::value,
-                      int>::type
-        = 0>
-    static std::pair<bool, Term> truncate_term(const Term &t, const T &max_degree, const std::vector<std::string> &,
-                                               const symbol_set::positions &p, const symbol_set &s)
-    {
-        if (t.m_key.ldegree(p, s) > max_degree) {
-            return std::make_pair(false, Term());
-        } else {
-            return std::make_pair(true, Term(t.m_cf, t.m_key));
-        }
-    }
-    // Case 3: coefficient can truncate, degree and ldegree in key, the new max degree type can be used in the
-    // coefficient truncation.
-    template <
-        typename Term, typename T,
-        typename std::enable_if<has_truncate_degree<typename Term::cf_type,
-                                                    decltype(std::declval<const T &>()
-                                                             - std::declval<const typename Term::key_type &>().ldegree(
-                                                                   std::declval<const symbol_set::positions &>(),
-                                                                   std::declval<const symbol_set &>()))>::value
-                                    && (detail::ps_term_score<Term>::value >> 1u) == 1u,
-                                int>::type
-        = 0>
-    static std::pair<bool, Term> truncate_term(const Term &t, const T &max_degree,
-                                               const std::vector<std::string> &names, const symbol_set::positions &p,
-                                               const symbol_set &s)
-    {
-        return std::make_pair(true,
-                              Term(math::truncate_degree(t.m_cf, max_degree - t.m_key.ldegree(p, s), names), t.m_key));
-    }
+    template <typename T>
+    using t_truncate_term_t = decltype(ps_truncate_term(std::declval<const typename base::term_type &>(),
+                                                        std::declval<const T &>(), std::declval<const symbol_set &>()));
+    template <typename T>
+    using truncate_degree_enabler = enable_if_t<is_detected<t_truncate_term_t, T>::value, int>;
     // Enabler for partial degree truncation.
-    template <typename T, typename U>
-    using truncate_pdegree_enabler = typename std::
-        enable_if<detail::true_tt<decltype(truncate_term(
-                      std::declval<const typename U::term_type &>(), std::declval<const T &>(),
-                      std::declval<const std::vector<std::string> &>(), std::declval<const symbol_set::positions &>(),
-                      std::declval<const symbol_set &>()))>::value,
-                  int>::type;
-    // Lift definitions from the detail namespace.
     template <typename T>
-    using degree_type = detail::ps_degree_type<T>;
+    using p_truncate_term_t
+        = decltype(ps_truncate_term(std::declval<const typename base::term_type &>(), std::declval<const T &>(),
+                                    std::declval<const std::vector<std::string> &>(),
+                                    std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()));
     template <typename T>
-    using ldegree_type = detail::ps_ldegree_type<T>;
+    using truncate_pdegree_enabler = enable_if_t<is_detected<p_truncate_term_t, T>::value, int>;
+    // Lift definitions from the impl namespace.
     template <typename T>
-    using pdegree_type = detail::ps_pdegree_type<T>;
+    using degree_type = ps_degree_type<T>;
     template <typename T>
-    using pldegree_type = detail::ps_pldegree_type<T>;
+    using ldegree_type = ps_ldegree_type<T>;
+    template <typename T>
+    using pdegree_type = ps_pdegree_type<T>;
+    template <typename T>
+    using pldegree_type = ps_pldegree_type<T>;
 
 public:
     /// Defaulted default constructor.
@@ -400,9 +387,9 @@ public:
         using term_type = typename T::term_type;
         auto it = std::max_element(
             this->m_container.begin(), this->m_container.end(), [this](const term_type &t1, const term_type &t2) {
-                return detail::ps_get_degree(t1, this->m_symbol_set) < detail::ps_get_degree(t2, this->m_symbol_set);
+                return ps_get_degree(t1, this->m_symbol_set) < ps_get_degree(t2, this->m_symbol_set);
             });
-        return (it == this->m_container.end()) ? degree_type<T>(0) : detail::ps_get_degree(*it, this->m_symbol_set);
+        return (it == this->m_container.end()) ? degree_type<T>(0) : ps_get_degree(*it, this->m_symbol_set);
     }
     /// Total low degree.
     /**
@@ -426,9 +413,9 @@ public:
         using term_type = typename T::term_type;
         auto it = std::min_element(
             this->m_container.begin(), this->m_container.end(), [this](const term_type &t1, const term_type &t2) {
-                return detail::ps_get_ldegree(t1, this->m_symbol_set) < detail::ps_get_ldegree(t2, this->m_symbol_set);
+                return ps_get_ldegree(t1, this->m_symbol_set) < ps_get_ldegree(t2, this->m_symbol_set);
             });
-        return (it == this->m_container.end()) ? ldegree_type<T>(0) : detail::ps_get_ldegree(*it, this->m_symbol_set);
+        return (it == this->m_container.end()) ? ldegree_type<T>(0) : ps_get_ldegree(*it, this->m_symbol_set);
     }
     /// Partial degree.
     /**
@@ -455,11 +442,10 @@ public:
         const symbol_set::positions p(this->m_symbol_set, symbol_set(names.begin(), names.end()));
         auto it = std::max_element(this->m_container.begin(), this->m_container.end(),
                                    [this, &p, &names](const term_type &t1, const term_type &t2) {
-                                       return detail::ps_get_degree(t1, names, p, this->m_symbol_set)
-                                              < detail::ps_get_degree(t2, names, p, this->m_symbol_set);
+                                       return ps_get_degree(t1, names, p, this->m_symbol_set)
+                                              < ps_get_degree(t2, names, p, this->m_symbol_set);
                                    });
-        return (it == this->m_container.end()) ? pdegree_type<T>(0)
-                                               : detail::ps_get_degree(*it, names, p, this->m_symbol_set);
+        return (it == this->m_container.end()) ? pdegree_type<T>(0) : ps_get_degree(*it, names, p, this->m_symbol_set);
     }
     /// Partial low degree.
     /**
@@ -486,11 +472,11 @@ public:
         const symbol_set::positions p(this->m_symbol_set, symbol_set(names.begin(), names.end()));
         auto it = std::min_element(this->m_container.begin(), this->m_container.end(),
                                    [this, &p, &names](const term_type &t1, const term_type &t2) {
-                                       return detail::ps_get_ldegree(t1, names, p, this->m_symbol_set)
-                                              < detail::ps_get_ldegree(t2, names, p, this->m_symbol_set);
+                                       return ps_get_ldegree(t1, names, p, this->m_symbol_set)
+                                              < ps_get_ldegree(t2, names, p, this->m_symbol_set);
                                    });
         return (it == this->m_container.end()) ? pldegree_type<T>(0)
-                                               : detail::ps_get_ldegree(*it, names, p, this->m_symbol_set);
+                                               : ps_get_ldegree(*it, names, p, this->m_symbol_set);
     }
     /// Total degree truncation.
     /**
@@ -501,9 +487,8 @@ public:
      * This includes the elimination of whole terms, but also the recursive truncation of coefficients
      * via the piranha::math::truncate_degree() function, if supported by the coefficient. It must be noted
      * that, in general, this method is not guaranteed to eliminate all the parts whose degree is greater than \p
-     * max_degree
-     * (in particular, in the current implementation there is no truncation implemented for keys - a key is kept
-     * as-is or completely eliminated).
+     * max_degree (in particular, in the current implementation there is no truncation implemented for keys -
+     * a key is kept as-is or completely eliminated).
      *
      * @param[in] max_degree maximum allowed total degree.
      *
@@ -515,14 +500,14 @@ public:
      * - the computation and comparison of degree types,
      * - piranha::series::insert().
      */
-    template <typename T, typename U = power_series, truncate_degree_enabler<T, U> = 0>
+    template <typename T, truncate_degree_enabler<T> = 0>
     Derived truncate_degree(const T &max_degree) const
     {
         Derived retval;
         retval.m_symbol_set = this->m_symbol_set;
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            auto tmp = this->truncate_term(*it, max_degree, retval.m_symbol_set);
+            auto tmp = ps_truncate_term(*it, max_degree, retval.m_symbol_set);
             if (tmp.first) {
                 retval.insert(std::move(tmp.second));
             }
@@ -548,7 +533,7 @@ public:
      * - the computation and comparison of degree types,
      * - piranha::series::insert().
      */
-    template <typename T, typename U = power_series, truncate_pdegree_enabler<T, U> = 0>
+    template <typename T, truncate_pdegree_enabler<T> = 0>
     Derived truncate_degree(const T &max_degree, const std::vector<std::string> &names) const
     {
         Derived retval;
@@ -556,7 +541,7 @@ public:
         const symbol_set::positions p(this->m_symbol_set, symbol_set(names.begin(), names.end()));
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            auto tmp = this->truncate_term(*it, max_degree, names, p, retval.m_symbol_set);
+            auto tmp = ps_truncate_term(*it, max_degree, names, p, retval.m_symbol_set);
             if (tmp.first) {
                 retval.insert(std::move(tmp.second));
             }
@@ -564,6 +549,14 @@ public:
         return retval;
     }
 };
+
+inline namespace impl
+{
+
+// Enabler for the implementation of degree-related math functions for power_series.
+template <typename Series>
+using ps_degree_enabler = enable_if_t<std::is_base_of<power_series_tag, Series>::value>;
+}
 
 namespace math
 {
@@ -574,7 +567,7 @@ namespace math
  * does not fulfill the requirements outlined in piranha::power_series, the call operator will be disabled.
  */
 template <typename Series>
-struct degree_impl<Series, typename std::enable_if<std::is_base_of<detail::power_series_tag, Series>::value>::type> {
+struct degree_impl<Series, ps_degree_enabler<Series>> {
     /// Call operator.
     /**
      * If available, it will call piranha::power_series::degree().
@@ -599,7 +592,7 @@ struct degree_impl<Series, typename std::enable_if<std::is_base_of<detail::power
  * does not fulfill the requirements outlined in piranha::power_series, the call operator will be disabled.
  */
 template <typename Series>
-struct ldegree_impl<Series, typename std::enable_if<std::is_base_of<detail::power_series_tag, Series>::value>::type> {
+struct ldegree_impl<Series, ps_degree_enabler<Series>> {
     /// Call operator.
     /**
      * If available, it will call piranha::power_series::ldegree().
@@ -624,8 +617,7 @@ struct ldegree_impl<Series, typename std::enable_if<std::is_base_of<detail::powe
  * does not fulfill the requirements outlined in piranha::power_series, the call operator will be disabled.
  */
 template <typename Series, typename T>
-struct truncate_degree_impl<Series, T,
-                            typename std::enable_if<std::is_base_of<detail::power_series_tag, Series>::value>::type> {
+struct truncate_degree_impl<Series, T, ps_degree_enabler<Series>> {
     /// Call operator.
     /**
      * If available, it will call piranha::power_series::truncate_degree().

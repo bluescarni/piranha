@@ -47,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/tuple.hpp>
 #include <cstddef>
 #include <limits>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -72,6 +73,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 #include "type_system.hpp"
+#include "utils.hpp"
 
 namespace pyranha
 {
@@ -110,37 +112,28 @@ struct generic_pickle_suite : bp::pickle_suite {
     }
 };
 
-// Counter of exposed types, used for naming said types.
+// Counter of exposed types, used for naming them.
 extern std::size_t exposed_types_counter;
 
-// Expose class with a default constructor and map it into the pyranha type system.
+// This is a replacement for std::to_string that guarantees that the input n is formatted
+// according to the C locale. std::to_string respects the locale settings, so in principle it could
+// produce a string representation of n containing funny stuff (commas maybe?) that would make it
+// unusuable to build a valid Python identifier.
+inline std::string to_c_locale_string(std::size_t n)
+{
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << n;
+    return oss.str();
+}
+
+// Expose class with a default constructor, and give it an implementation-defined name
+// in Python guaranteed to be unique.
 template <typename T>
 inline bp::class_<T> expose_class()
 {
-    const auto t_idx = std::type_index(typeid(T));
-    if (et_map.find(t_idx) != et_map.end()) {
-        // NOTE: it is ok here and elsewhere to use c_str(), as PyErr_SetString will convert the second argument to a
-        // Python
-        // string object.
-        ::PyErr_SetString(PyExc_RuntimeError,
-                          ("the C++ type '" + piranha::detail::demangle(t_idx) + "' has already been exposed").c_str());
-        bp::throw_error_already_set();
-    }
-    bp::class_<T> class_inst(("_exposed_type_" + std::to_string(exposed_types_counter)).c_str(), bp::init<>());
+    bp::class_<T> class_inst(("_exposed_type_" + to_c_locale_string(exposed_types_counter)).c_str(), bp::init<>());
     ++exposed_types_counter;
-    // NOTE: class_ inherits from bp::object, here the "call operator" of a class type will construct an instance
-    // of that object. We then get the Python type out of that. It seems like another possible way of achieving
-    // this is directly through the class' attributes:
-    // http://stackoverflow.com/questions/17968091/boostpythonclass-programatically-obtaining-the-class-name
-    auto ptr = ::PyObject_Type(class_inst().ptr());
-    if (!ptr) {
-        ::PyErr_SetString(PyExc_RuntimeError, "cannot extract the Python type of an instantiated class");
-        bp::throw_error_already_set();
-    }
-    // This is always a new reference being returned.
-    auto type_object = bp::object(bp::handle<>(ptr));
-    // Map the C++ type to the Python type.
-    et_map[t_idx] = type_object;
     return class_inst;
 }
 
@@ -276,7 +269,7 @@ template <typename S, typename U>
 inline void generic_expose_lambdified()
 {
     using l_type = piranha::math::lambdified<S, U>;
-    bp::class_<l_type> class_inst(("_lambdified_" + std::to_string(lambdified_counter)).c_str(), bp::no_init);
+    bp::class_<l_type> class_inst(("_lambdified_" + to_c_locale_string(lambdified_counter)).c_str(), bp::no_init);
     // Expose copy/deepcopy.
     class_inst.def("__copy__", generic_copy_wrapper<l_type>);
     class_inst.def("__deepcopy__", generic_deepcopy_wrapper<l_type>);
@@ -1065,12 +1058,15 @@ class series_exposer
         void operator()(const std::tuple<Args...> &) const
         {
             using s_type = Series<Args...>;
-            // Register in the generic type generator map.
-            expose_generic_type_generator<Series, Args...>();
             // Start exposing.
             auto series_class = expose_class<s_type>();
-            // Add the _is_exposed_type tag.
-            series_class.attr("_is_exposed_type") = true;
+            // Connect the Python type to the C++ type.
+            register_exposed_type(series_class);
+            // Register the template instance corresponding to the series, so that we can
+            // fetch its type generator via the type system machinery.
+            register_template_instance<Series, Args...>();
+            // Add the _is_exposed_pyranha_type tag.
+            series_class.attr("_is_exposed_pyranha_type") = true;
             // Constructor from string, if available.
             expose_ctor<const std::string &>(series_class);
             // Copy constructor.
@@ -1170,7 +1166,10 @@ inline bp::list get_exposed_types_list()
 {
     bp::list retval;
     for (const auto &p : et_map) {
-        if (::PyObject_HasAttrString(p.second.ptr(), "_is_exposed_type")) {
+        // NOTE: the idea here is that in the future we might want to use the et_map
+        // for other than pyranha types, so we need a way to distinguish in et_map between
+        // pyranha and non-pyranha types. Currently all types in et_map are exposed pyranha types.
+        if (hasattr(p.second, "_is_exposed_pyranha_type")) {
             retval.append(p.second);
         }
     }

@@ -26,18 +26,41 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "python_includes.hpp"
+#ifndef PIRANHA_DETAIL_INIT_DATA_HPP
+#define PIRANHA_DETAIL_INIT_DATA_HPP
 
-#include "../src/poisson_series.hpp"
-#include "expose_poisson_series.hpp"
-#include "expose_utils.hpp"
-#include "poisson_series_descriptor.hpp"
+#include <atomic>
 
-namespace pyranha
+namespace piranha
 {
 
-void expose_poisson_series_15()
+inline namespace impl
 {
-    series_exposer<piranha::poisson_series, poisson_series_descriptor, 15u, 16u, ps_custom_hook> ps_exposer;
+
+// Global variables for init/shutdown.
+template <typename = void>
+struct piranha_init_statics {
+    static std::atomic_flag s_init_flag;
+    static std::atomic<bool> s_shutdown_flag;
+    static std::atomic<unsigned> s_failed;
+};
+
+// Static init of the global flags.
+template <typename T>
+std::atomic_flag piranha_init_statics<T>::s_init_flag = ATOMIC_FLAG_INIT;
+
+template <typename T>
+std::atomic<bool> piranha_init_statics<T>::s_shutdown_flag(false);
+
+template <typename T>
+std::atomic<unsigned> piranha_init_statics<T>::s_failed(0u);
+
+// Query if we are at shutdown.
+inline bool shutdown()
+{
+    return piranha_init_statics<>::s_shutdown_flag.load();
 }
 }
+}
+
+#endif
