@@ -98,6 +98,9 @@ class basic_test_case(_ut.TestCase):
     def runTest(self):
         from fractions import Fraction
         from copy import copy, deepcopy
+        # Test version number.
+        import pyranha
+        self.assertTrue(pyranha.__version__)
         # Use polynomial for testing.
         from .types import polynomial, integer, rational, int16, double, monomial
         # Arithmetic with int and Fraction, len, str and comparisons.
