@@ -8,7 +8,7 @@ Welcome to the Piranha documentation!
 
 Piranha is a computer-algebra library for the symbolic manipulation of sparse
 multivariate polynomials and other closely-related symbolic objects
-(such as Poisson series).
+(such as Poisson series) commonly encountered in celestial mechanics.
 
 Piranha is written in modern C++, with emphasis on portability, correctness
 and performance. Piranha also includes a set of optional bindings for the
@@ -24,8 +24,9 @@ A quick taste of Piranha from C++:
 
 .. code-block:: c++
 
-   #include <ios>
+   #include <cstdint>
    #include <iostream>
+
    #include <piranha/piranha.hpp>
 
    using namespace piranha;
@@ -35,8 +36,8 @@ A quick taste of Piranha from C++:
       // Initialise the library.
       init();
 
-      // Define a polynomial type over Q, with int exponents.
-      using pt = polynomial<rational,monomial<int>>;
+      // Define a polynomial type over Q, with 16-bit signed exponents.
+      using pt = polynomial<rational,monomial<std::int16_t>>;
 
       // Create polynomials representing the symbolic
       // variables 'x', 'y' and 'z'.
@@ -58,9 +59,29 @@ A quick taste of Piranha from C++:
       std::cout << int_res_x << '\n';
 
       // Verify consistency with partial differentiation.
-      std::cout << std::boolalpha;
       std::cout << (res == math::partial(int_res_x,"x")) << '\n';
    }
+
+The equivalent Python code:
+
+.. code-block:: python
+
+   >>> from pyranha.types import polynomial, rational, monomial, int16
+   >>> import pyranha.math as math
+   >>> pt = polynomial[rational,monomial[int16]]()
+   >>> x,y,z = pt('x'), pt('y'), pt('z')
+   >>> res = (x + y + 2*z - 1)**10
+   >>> res
+   10080*x**3*y**5*z**2-30240*x*y**2*z**2+720*x**7...
+   >>> math.degree(res,['x','y'])
+   10
+   >>> math.evaluate(res,{'x':1.5,"y":-3.5,"z":1.2})
+   0.00604647211...
+   >>> int_res_x = math.integrate(res,'x')
+   >>> int_res_x
+   -10080*x**3*y**5*z**2+5040*x*y**2*z**2-720*x**7*y**2*z+...
+   >>> res == math.partial(int_res_x,'x')
+   True
 
 Scope and limitations
 =====================
