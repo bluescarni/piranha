@@ -227,7 +227,7 @@ using thread_queues_t = std::pair<std::vector<std::unique_ptr<task_queue>>, std:
 
 inline thread_queues_t get_initial_thread_queues()
 {
-    std::cout << "Initializing the thread pool.\n";
+    // std::cout << "Initializing the thread pool.\n";
     thread_queues_t retval;
     // Create the vector of queues.
     const unsigned candidate = runtime_info::get_hardware_concurrency(), hc = (candidate > 0u) ? candidate : 1u;

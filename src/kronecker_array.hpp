@@ -125,7 +125,7 @@ private:
     static limit_type determine_limit(const size_type &m)
     {
         piranha_assert(m >= 1u);
-        std::mt19937 engine(static_cast<unsigned long>(m));
+        std::mt19937 engine(static_cast<std::mt19937::result_type>(m));
         std::uniform_int_distribution<int> dist(-5, 5);
         // Perturb integer value: add random quantity and then take next prime.
         auto perturb = [&engine, &dist](integer &arg) {
