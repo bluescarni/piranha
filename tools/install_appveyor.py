@@ -32,8 +32,9 @@ def run_command(raw_command, directory=None, verbose=True):
             line = proc.stdout.readline()
             if not line:
                 break
-            line = str(line[:-1], 'utf-8')
-            print(line)
+            line = str(line, 'utf-8')
+            # Don't print the newline character.
+            print(line[:-1])
             sys.stdout.flush()
             output += line
         proc.communicate()
