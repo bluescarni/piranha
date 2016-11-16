@@ -30,13 +30,13 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/timer/timer.hpp>
 
 #include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/pow.hpp"
 #include "../src/settings.hpp"
+#include "simple_timer.hpp"
 
 using namespace piranha;
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(audi_test)
     auto g = math::pow(1 - x1 - x2 - x3 - x4 - x5 - x6 - x7 - x8 - x9 - x10, 10);
     p_type h;
     {
-        boost::timer::auto_cpu_timer r;
+        simple_timer t;
         h = f * g;
     }
     BOOST_CHECK_EQUAL(h.size(), 122464u);

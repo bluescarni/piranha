@@ -29,9 +29,8 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_FATEMAN1_HPP
 #define PIRANHA_FATEMAN1_HPP
 
-#include <boost/timer/timer.hpp>
-
 #include "../src/polynomial.hpp"
+#include "simple_timer.hpp"
 
 namespace piranha
 {
@@ -50,7 +49,7 @@ inline polynomial<Cf, Key> fateman1(unsigned long long factor = 1u)
         f *= factor;
     }
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         return f * (f + 1);
     }
 }

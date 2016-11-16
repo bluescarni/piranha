@@ -33,7 +33,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <array>
 #include <boost/lexical_cast.hpp>
-#include <boost/timer/timer.hpp>
 #include <cstddef>
 #include <exception>
 #include <iostream>
@@ -44,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/init.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
+#include "simple_timer.hpp"
 
 using namespace piranha;
 
@@ -96,35 +96,35 @@ BOOST_AUTO_TEST_CASE(memory_parallel_array_test)
                      "===========\n";
         for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
             std::cout << "n = " << i + 1u << '\n';
-            boost::timer::auto_cpu_timer t;
+            simple_timer t;
             auto ptr1 = make_parallel_array<int>(alloc_size, i + 1u);
         }
         std::cout << "Testing string\n"
                      "==============\n";
         for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
             std::cout << "n = " << i + 1u << '\n';
-            boost::timer::auto_cpu_timer t;
+            simple_timer t;
             auto ptr1 = make_parallel_array<custom_string>(alloc_size, i + 1u);
         }
         std::cout << "Testing integer\n"
                      "===============\n";
         for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
             std::cout << "n = " << i + 1u << '\n';
-            boost::timer::auto_cpu_timer t;
+            simple_timer t;
             auto ptr1 = make_parallel_array<integer>(alloc_size, i + 1u);
         }
         std::cout << "Testing mp_integer\n"
                      "==================\n";
         for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
             std::cout << "n = " << i + 1u << '\n';
-            boost::timer::auto_cpu_timer t;
+            simple_timer t;
             auto ptr1 = make_parallel_array<mp_integer<>>(alloc_size, i + 1u);
         }
         std::cout << "Testing array wrap\n"
                      "==================\n";
         for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
             std::cout << "n = " << i + 1u << '\n';
-            boost::timer::auto_cpu_timer t;
+            simple_timer t;
             auto ptr1 = make_parallel_array<array_wrap>(alloc_size, i + 1u);
         }
     } catch (const std::exception &e) {

@@ -32,7 +32,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/filesystem.hpp>
-#include <boost/timer/timer.hpp>
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
@@ -46,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 #include "../src/polynomial.hpp"
 #include "pearce1.hpp"
+#include "simple_timer.hpp"
 
 using namespace piranha;
 namespace bfs = boost::filesystem;
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_memory_test)
     std::stringstream ss;
     {
         boost::archive::binary_oarchive oa(ss);
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         boost_save(oa, res);
         std::cout << "Boost save, binary, timing: ";
     }
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_memory_test)
     pt tmp;
     {
         boost::archive::binary_iarchive ia(ss);
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         boost_load(ia, tmp);
         std::cout << "Boost load, binary, timing: ";
     }
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_memory_test)
     std::cout << '\n';
     {
         boost::archive::text_oarchive oa(ss);
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         boost_save(oa, res);
         std::cout << "Boost save, text, timing: ";
     }
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_memory_test)
     tmp = pt{};
     {
         boost::archive::text_iarchive ia(ss);
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         boost_load(ia, tmp);
         std::cout << "Boost load, text, timing: ";
     }
@@ -117,13 +117,13 @@ BOOST_AUTO_TEST_CASE(s11n_series_memory_test)
     msgpack::sbuffer sbuf;
     {
         msgpack::packer<msgpack::sbuffer> p(sbuf);
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         msgpack_pack(p, res, msgpack_format::binary);
         std::cout << "msgpack pack, sbuffer, binary, timing: ";
     }
     std::cout << "msgpack pack, binary, size: " << sbuf.size() << '\n';
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
         msgpack_convert(tmp, oh.get(), msgpack_format::binary);
         std::cout << "msgpack convert, sbuffer, binary, timing: ";
@@ -133,13 +133,13 @@ BOOST_AUTO_TEST_CASE(s11n_series_memory_test)
     std::cout << '\n';
     {
         msgpack::packer<msgpack::sbuffer> p(sbuf);
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         msgpack_pack(p, res, msgpack_format::portable);
         std::cout << "msgpack pack, sbuffer, portable, timing: ";
     }
     std::cout << "msgpack pack, portable, size: " << sbuf.size() << '\n';
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
         msgpack_convert(tmp, oh.get(), msgpack_format::portable);
         std::cout << "msgpack convert, sbuffer, portable, timing: ";
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_file_test)
             auto cn = static_cast<int>(c);
             tmp_file file;
             try {
-                boost::timer::auto_cpu_timer t;
+                simple_timer t;
                 save_file(res, file.name(), f, c);
                 std::cout << "File save, " << fn << ", " << cn << ": ";
             } catch (const not_implemented_error &) {
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(s11n_series_file_test)
                 continue;
             }
             {
-                boost::timer::auto_cpu_timer t;
+                simple_timer t;
                 load_file(tmp, file.name(), f, c);
                 std::cout << "File load, " << fn << ", " << cn << ": ";
             }

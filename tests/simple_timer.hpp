@@ -26,30 +26,35 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_FATEMAN2_HPP
-#define PIRANHA_FATEMAN2_HPP
+#ifndef PIRANHA_SIMPLE_TIMER_HPP
+#define PIRANHA_SIMPLE_TIMER_HPP
 
-#include "../src/polynomial.hpp"
-#include "simple_timer.hpp"
+#include <chrono>
+#include <iostream>
 
 namespace piranha
 {
 
-template <typename Cf, typename Key>
-inline polynomial<Cf, Key> fateman2()
+// A simple RAII timer class, using std::chrono. It will print, upon destruction,
+// the time elapsed since construction (in ms).
+class simple_timer
 {
-    typedef polynomial<Cf, Key> p_type;
-    p_type x("x"), y("y"), z("z"), t("t");
-    auto f = x + y + z + t + 1;
-    auto tmp(f);
-    for (auto i = 1; i < 30; ++i) {
-        f *= tmp;
-    }
+public:
+    simple_timer() : m_start(std::chrono::high_resolution_clock::now())
     {
-        simple_timer t;
-        return f * (f + 1);
     }
-}
+    ~simple_timer()
+    {
+        std::cout << "Elapsed time: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()
+                                                                           - m_start)
+                         .count()
+                  << "ms\n";
+    }
+
+private:
+    const std::chrono::high_resolution_clock::time_point m_start;
+};
 }
 
 #endif
