@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/small_vector.hpp"
 
 #define BOOST_TEST_MODULE small_vector_02_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <cstddef>
 #include <initializer_list>

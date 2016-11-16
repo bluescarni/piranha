@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/thread_pool.hpp"
 
 #define BOOST_TEST_MODULE thread_pool_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>

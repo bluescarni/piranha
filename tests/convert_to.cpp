@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/convert_to.hpp"
 
 #define BOOST_TEST_MODULE convert_to_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <string>
 #include <type_traits>

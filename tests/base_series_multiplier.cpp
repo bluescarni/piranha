@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/base_series_multiplier.hpp"
 
 #define BOOST_TEST_MODULE base_series_multiplier_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <array>

@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/static_vector.hpp"
 
 #define BOOST_TEST_MODULE static_vector_01_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>

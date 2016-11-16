@@ -30,7 +30,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/detail/atomic_lock_guard.hpp"
 
 #define BOOST_TEST_MODULE atomic_utils_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <cstddef>

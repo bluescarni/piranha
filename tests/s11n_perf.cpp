@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/s11n.hpp"
 
 #define BOOST_TEST_MODULE s11n_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/timer/timer.hpp>

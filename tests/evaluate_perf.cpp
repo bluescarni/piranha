@@ -27,7 +27,7 @@ GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
 #define BOOST_TEST_MODULE evaluate_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/timer/timer.hpp>
 

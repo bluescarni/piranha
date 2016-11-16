@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/dynamic_aligning_allocator.hpp"
 
 #define BOOST_TEST_MODULE dynamic_aligning_allocator_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <boost/integer_traits.hpp>

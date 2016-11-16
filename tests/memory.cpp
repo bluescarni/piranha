@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/memory.hpp"
 
 #define BOOST_TEST_MODULE memory_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <atomic>

@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/safe_cast.hpp"
 
 #define BOOST_TEST_MODULE safe_cast_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <limits>

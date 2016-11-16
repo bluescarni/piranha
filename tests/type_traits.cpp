@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/type_traits.hpp"
 
 #define BOOST_TEST_MODULE type_traits_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/integer_traits.hpp>
 #include <complex>

@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/cache_aligning_allocator.hpp"
 
 #define BOOST_TEST_MODULE cache_aligning_allocator_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <string>
 #include <type_traits>

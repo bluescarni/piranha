@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/symbol_set.hpp"
 
 #define BOOST_TEST_MODULE symbol_set_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <boost/lexical_cast.hpp>

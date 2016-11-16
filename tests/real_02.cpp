@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/real.hpp"
 
 #define BOOST_TEST_MODULE real_02_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <cstdint>
