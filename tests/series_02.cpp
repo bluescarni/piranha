@@ -951,7 +951,7 @@ public:
     template <typename Cf>
     void operator()(const Cf &) const
     {
-        tuple_for_each(expo_types{},runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -961,7 +961,7 @@ typedef debug_access<arithmetics_add_tag> arithmetics_add_tester;
 BOOST_AUTO_TEST_CASE(series_arithmetics_add_test)
 {
     // Functional testing.
-    tuple_for_each(cf_types{},arithmetics_add_tester());
+    tuple_for_each(cf_types{}, arithmetics_add_tester());
     // Type testing for binary addition.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<int, rational> p_type2;
@@ -1364,7 +1364,7 @@ public:
     template <typename Cf>
     void operator()(const Cf &) const
     {
-        tuple_for_each(expo_types{},runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -1374,7 +1374,7 @@ typedef debug_access<arithmetics_sub_tag> arithmetics_sub_tester;
 BOOST_AUTO_TEST_CASE(series_arithmetics_sub_test)
 {
     // Functional testing.
-    tuple_for_each(cf_types{},arithmetics_sub_tester());
+    tuple_for_each(cf_types{}, arithmetics_sub_tester());
     // Type testing for binary subtraction.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<int, rational> p_type2;
@@ -1689,7 +1689,7 @@ public:
     template <typename Cf>
     void operator()(const Cf &) const
     {
-        tuple_for_each(expo_types{},runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -1699,7 +1699,7 @@ typedef debug_access<arithmetics_mul_tag> arithmetics_mul_tester;
 BOOST_AUTO_TEST_CASE(series_arithmetics_mul_test)
 {
     // Functional testing.
-    tuple_for_each(cf_types{},arithmetics_mul_tester());
+    tuple_for_each(cf_types{}, arithmetics_mul_tester());
     // Type testing for binary multiplication.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<int, rational> p_type2;
@@ -1818,7 +1818,7 @@ public:
     template <typename Cf>
     void operator()(const Cf &) const
     {
-        tuple_for_each(expo_types{},runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -1828,7 +1828,7 @@ typedef debug_access<arithmetics_div_tag> arithmetics_div_tester;
 BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 {
     // Functional testing.
-    tuple_for_each(cf_types{},arithmetics_div_tester());
+    tuple_for_each(cf_types{}, arithmetics_div_tester());
     // Type testing for binary division.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<p_type1, int> p_type11;
@@ -1944,7 +1944,7 @@ public:
     template <typename Cf>
     void operator()(const Cf &) const
     {
-        tuple_for_each(expo_types{},runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -1954,7 +1954,7 @@ typedef debug_access<eq_tag> eq_tester;
 BOOST_AUTO_TEST_CASE(series_eq_test)
 {
     // Functional testing.
-    tuple_for_each(cf_types{},eq_tester());
+    tuple_for_each(cf_types{}, eq_tester());
     // Type testing for binary addition.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<int, rational> p_type2;
