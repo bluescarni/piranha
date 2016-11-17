@@ -15,9 +15,9 @@ set(PIRANHA_TEST_NUM "0")
 # Check splitting options. These need to be set from the command line.
 # - PIRANHA_TEST_NSPLIT: number of chunks into which the unit tests will be divided (must be > 1).
 # - PIRANHA_TEST_SPLIT_NUM: 0-based index of the chunk to run.
-if(PIRANHA_TEST_NSPLIT AND PIRANHA_TEST_SPLIT_NUM STREQUAL "")
+if(PIRANHA_TEST_NSPLIT AND "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "")
 	message(FATAL_ERROR "Test splitting was requested, but the PIRANHA_TEST_SPLIT_NUM variable was not set.")
-elseif(NOT PIRANHA_TEST_NSPLIT AND NOT PIRANHA_TEST_SPLIT_NUM STREQUAL "")
+elseif(NOT PIRANHA_TEST_NSPLIT AND NOT "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "")
 	message(FATAL_ERROR "The PIRANHA_TEST_SPLIT_NUM variable was set, but test splitting was not requested.")
 endif()
 
