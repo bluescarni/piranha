@@ -29,11 +29,13 @@ matrix:
       osx_image: beta-xcode6.1
       env: BUILD_TYPE="Release"
     - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0"
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
     - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1"
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
     - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2"
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
+    - compiler: gcc
+      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
     - compiler: gcc
       env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="0"
     - compiler: gcc
