@@ -52,7 +52,7 @@ matrix:
       env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1" TEST_NSPLIT="3"
     - compiler: clang
       env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2" TEST_NSPLIT="3"
-    - compiler: clang
+    - compiler: gcc
       env: BUILD_TYPE="Python2"
     - compiler: clang
       os: osx
