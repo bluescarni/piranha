@@ -118,7 +118,7 @@ if is_python_build:
 elif BUILD_TYPE in ['Release', 'Debug']:
     TEST_NSPLIT = os.environ['TEST_NSPLIT']
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
-    cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + r' -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DTEST_NSPLIT=' + \
+    cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + r' -DBUILD_TESTS=yes -DPIRANHA_TEST_NSPLIT=' + \
         TEST_NSPLIT + r' -DPIRANHA_TEST_SPLIT_NUM=' + \
         SPLIT_TEST_NUM + r' ' + common_cmake_opts
     run_command(r'cmake -G "MinGW Makefiles" .. ' + cmake_opts)

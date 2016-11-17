@@ -8,26 +8,43 @@ endif()
 add_definitions(-DPIRANHA_TESTS_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Setup for the split compilation of tests.
-SET(TEST_NUM "0")
-SET(TEST_NSPLIT "3" CACHE INTERNAL "Number of test chunks.")
-SET(PIRANHA_TEST_SPLIT no CACHE INTERNAL "Split compilation of piranha test cases for CI.")
+
+# This is just a simple counter variable, internal use only.
+set(PIRANHA_TEST_NUM "0")
+
+# Check splitting options. These need to be set from the command line.
+# - PIRANHA_TEST_NSPLIT: number of chunks into which the unit tests will be divided (must be > 1).
+# - PIRANHA_TEST_SPLIT_NUM: 0-based index of the chunk to run.
+if(PIRANHA_TEST_NSPLIT AND PIRANHA_TEST_SPLIT_NUM STREQUAL "")
+	message(FATAL_ERROR "Test splitting was requested, but the PIRANHA_TEST_SPLIT_NUM variable was not set.")
+elseif(NOT PIRANHA_TEST_NSPLIT AND NOT PIRANHA_TEST_SPLIT_NUM STREQUAL "")
+	message(FATAL_ERROR "The PIRANHA_TEST_SPLIT_NUM variable was set, but test splitting was not requested.")
+endif()
+
+if(PIRANHA_TEST_NSPLIT)
+	message(STATUS "Tests will be split into ${PIRANHA_TEST_NSPLIT} chunks. The chunk with index ${PIRANHA_TEST_SPLIT_NUM} will be processed.")
+endif()
 
 MACRO(ADD_PIRANHA_TESTCASE arg1)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		math(EXPR TEST_NUM "(${TEST_NUM} + 1) % ${TEST_NSPLIT}")
-		IF((NOT PIRANHA_TEST_SPLIT) OR ("${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${TEST_NUM}"))
-			ADD_EXECUTABLE(${arg1} ${arg1}.cpp)
-			TARGET_LINK_LIBRARIES(${arg1} ${MANDATORY_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
-			ADD_TEST(${arg1} ${arg1})
-	        ENDIF()
+		if(PIRANHA_TEST_NSPLIT)
+			math(EXPR PIRANHA_TEST_NUM "(${PIRANHA_TEST_NUM} + 1) % ${PIRANHA_TEST_NSPLIT}")
+		endif()
+		if(NOT PIRANHA_TEST_NSPLIT OR "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${PIRANHA_TEST_NUM}")
+			ADD_EXECUTABLE("${arg1}" "${arg1}.cpp")
+			TARGET_LINK_LIBRARIES("${arg1}" ${MANDATORY_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
+			ADD_TEST("${arg1}" "${arg1}")
+		endif()
 	ENDIF()
-ENDMACRO(ADD_PIRANHA_TESTCASE)
+ENDMACRO()
 
 MACRO(ADD_PIRANHA_PERFORMANCE_TESTCASE arg1)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Release")
-		math(EXPR TEST_NUM "(${TEST_NUM} + 1) % ${TEST_NSPLIT}")
-		IF((NOT PIRANHA_TEST_SPLIT) OR ("${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${TEST_NUM}"))
-			ADD_EXECUTABLE("${arg1}_perf" "${arg1}_perf.cpp" "monagan.hpp" "fateman1.hpp" "fateman2.hpp" "gastineau1.hpp" "gastineau2.hpp" "gastineau3.hpp" "gastineau4.hpp" "pearce1.hpp" "pearce2.hpp")
+		if(PIRANHA_TEST_NSPLIT)
+			math(EXPR PIRANHA_TEST_NUM "(${PIRANHA_TEST_NUM} + 1) % ${PIRANHA_TEST_NSPLIT}")
+		endif()
+		if(NOT PIRANHA_TEST_NSPLIT OR "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${PIRANHA_TEST_NUM}")
+			ADD_EXECUTABLE("${arg1}_perf" "${arg1}_perf.cpp")
 			TARGET_LINK_LIBRARIES("${arg1}_perf" ${MANDATORY_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
 			ADD_TEST("${arg1}_perf" "${arg1}_perf")
 		ENDIF()
