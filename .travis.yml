@@ -5,14 +5,18 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.8
+    - llvm-toolchain-precise-3.9
     packages:
     - g++-4.8
     - clang-3.8
+    - clang-3.9
     - graphviz
     - graphviz-dev
     - texlive
     - gcc-5
     - g++-5
+    - gcc-6
+    - g++-6
     - curl
 
 env:
@@ -66,8 +70,13 @@ matrix:
 install:
     - if [[ "${CC}" == "clang" && "${TRAVIS_OS_NAME}" == "linux" ]]; then
           export PIRANHA_COMPILER=clang;
-          export CC=clang-3.8;
-          export CXX=clang++-3.8;
+          if [[ "${BUILD_TYPE}" == "Python3" ]]; then
+            export CC=clang-3.9;
+            export CXX=clang++-3.9;
+          else
+            export CC=clang-3.8;
+            export CXX=clang++-3.8;
+          fi
       elif [[ "${CC}" == "clang" && "${TRAVIS_OS_NAME}" == "osx" ]]; then
           export PIRANHA_COMPILER=clang;
           export CC=clang;
@@ -79,8 +88,13 @@ install:
           export GCOV_EXECUTABLE=gcov-5;
       else
           export PIRANHA_COMPILER=gcc;
-          export CC=gcc-4.8;
-          export CXX=g++-4.8;
+          if [[ "${BUILD_TYPE}" == "Python2" ]]; then
+            export CC=gcc-6;
+            export CXX=g++-6;
+          else
+            export CC=gcc-4.8;
+            export CXX=g++-4.8;
+          fi
       fi
 script:
     - mkdir build
