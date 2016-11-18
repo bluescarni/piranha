@@ -1,3 +1,5 @@
 coverage:
   ignore:
   - tests/.*
+
+comment: off
