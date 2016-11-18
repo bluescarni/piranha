@@ -71,15 +71,19 @@ matrix:
     - compiler: gcc
       env: BUILD_TYPE="Python2"
     - compiler: clang
-      os: osx
-      osx_image: xcode6.4
-      env: BUILD_TYPE="Python2"
-    - compiler: clang
       env: BUILD_TYPE="Python3"
     - compiler: clang
       env: BUILD_TYPE="Tutorial"
     - compiler: gcc
       env: BUILD_TYPE="Doxygen"
+    - compiler: clang
+      os: osx
+      osx_image: xcode6.4
+      env: BUILD_TYPE="Python2"
+    - compiler: clang
+      os: osx
+      osx_image: xcode6.4
+      env: BUILD_TYPE="Python3"
 
 install:
     - if [[ "${CC}" == "clang" && "${TRAVIS_OS_NAME}" == "linux" ]]; then
