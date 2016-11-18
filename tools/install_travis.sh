@@ -23,13 +23,27 @@ elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
         ctest -E "thread" -V;
         bash <(curl -s https://codecov.io/bash) -x $GCOV_EXECUTABLE
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
-    make VERBOSE=1;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
+    make install VERBOSE=1;
 
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
         ctest -E "gastineau|pearce2_unpacked|s11n_perf" -V;
     else
         ctest -E "gastineau|pearce2_unpacked" -V;
+    fi
+
+    # Check that all headers are really installed.
+    # NOTE: this will have to be adapted in the cmake overhaul (fix src/ dir and check for config.hpp).
+    for f in `find $deps_dir/include/piranha -iname '*.hpp'`; do basename $f; done|grep -v config.hpp|sort  > inst_list.txt
+    for f in `find ../src -iname '*.hpp'`; do basename $f; done|grep -v config.hpp|sort > src_list.txt
+    export INSTALL_DIFF=`diff -Nru inst_list.txt src_list.txt`
+    if [[ "${INSTALL_DIFF}" != "" ]]; then
+        echo "Not all headers were installed. The diff is:";
+        echo "--------";
+        echo "${INSTALL_DIFF}";
+        echo "--------";
+        echo "Aborting.";
+        exit 1;
     fi
 
     # Do the release here.
