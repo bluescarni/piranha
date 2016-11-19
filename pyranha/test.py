@@ -169,11 +169,8 @@ class basic_test_case(_ut.TestCase):
         self.assertEqual(deepcopy(s1), s1)
         # Latex renderer, if available.
         x = tp_int('x')
-        try:
-            tmp = x._repr_png_()
-            self.assertTrue(len(tmp) != 0)
-        except OSError:
-            pass
+        tmp = x._repr_png_()
+        self.assertTrue(tmp is None or len(tmp) != 0)
         # Evaluation.
         from .math import evaluate
         x = tp_q('x')
