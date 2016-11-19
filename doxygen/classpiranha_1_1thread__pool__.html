@@ -28,7 +28,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">piranha
-   &#160;<span id="projectnumber">0.7</span>
+   &#160;<span id="projectnumber">0.8</span>
    </div>
   </td>
  </tr>
@@ -116,7 +116,7 @@ class piranha::thread_pool_&lt; T &gt;</h3>
 <p>This class manages, via a set of static methods, a pool of threads created at program startup. The number of threads created initially is equal to <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>. If the hardware concurrency cannot be determined, the size of the thread pool will be one.</p>
 <p>This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool, resize the pool and configure the thread binding policy. All methods, unless otherwise specified, are thread-safe, and they provide the strong exception safety guarantee. </p>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00288">288</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00295">295</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="ab9d1fe61963e14532c7f18254c703b45"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab9d1fe61963e14532c7f18254c703b45">&sect;&nbsp;</a></span>enqueue()</h2>
@@ -192,7 +192,7 @@ template&lt;typename F , typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00331">331</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00338">338</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -225,7 +225,7 @@ template&lt;typename T  = void&gt; </div>
 <p>This method returns the flag set by <a class="el" href="classpiranha_1_1thread__pool__.html#acae84bb597dd00a9a0bb3ea5dcaa355c" title="Set the thread binding policy. ">set_binding()</a>. The threads created on program startup are not bound to specific processors/cores.</p>
 <dl class="section return"><dt>Returns</dt><dd>a boolean flag representing the active thread binding policy. </dd></dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00443">443</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00450">450</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -275,7 +275,7 @@ template&lt;typename T  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00392">392</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00399">399</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -325,7 +325,7 @@ template&lt;typename T  = void&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00425">425</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00432">432</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -357,7 +357,7 @@ template&lt;typename T  = void&gt; </div>
 <p>Size. </p>
 <dl class="section return"><dt>Returns</dt><dd>the number of threads in the pool. </dd></dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00346">346</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00353">353</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -419,7 +419,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00469">469</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p>Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00476">476</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
