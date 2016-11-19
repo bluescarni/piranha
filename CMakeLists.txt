@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project(piranha VERSION 0.7)
+project(piranha VERSION 0.8)
 
 enable_testing()
 
