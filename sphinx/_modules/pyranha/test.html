@@ -290,11 +290,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">s1</span><span class="p">),</span> <span class="n">s1</span><span class="p">)</span>
         <span class="c1"># Latex renderer, if available.</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">tp_int</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">tmp</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">_repr_png_</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-            <span class="k">pass</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">_repr_png_</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">tmp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
         <span class="c1"># Evaluation.</span>
         <span class="kn">from</span> <span class="nn">.math</span> <span class="k">import</span> <span class="n">evaluate</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">tp_q</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
@@ -1446,7 +1443,7 @@
     <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">t_degree_order_test_case</span><span class="p">())</span>
     <span class="n">suite</span><span class="o">.</span><span class="n">addTest</span><span class="p">(</span><span class="n">doctests_test_case</span><span class="p">())</span>
     <span class="n">test_result</span> <span class="o">=</span> <span class="n">_ut</span><span class="o">.</span><span class="n">TextTestRunner</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">suite</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_result</span><span class="o">.</span><span class="n">failures</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_result</span><span class="o">.</span><span class="n">failures</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_result</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">retval</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">suite</span> <span class="o">=</span> <span class="n">_ut</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span><span class="o">.</span><span class="n">loadTestsFromTestCase</span><span class="p">(</span><span class="n">tutorial_test_case</span><span class="p">)</span>
     <span class="c1"># Context for the suppression of output while running the tutorials. Inspired by:</span>
