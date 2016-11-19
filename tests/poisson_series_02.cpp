@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/poisson_series.hpp"
 
 #define BOOST_TEST_MODULE poisson_series_02_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <iostream>

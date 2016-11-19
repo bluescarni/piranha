@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/divisor.hpp"
 
 #define BOOST_TEST_MODULE divisor_02_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>

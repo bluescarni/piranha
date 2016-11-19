@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/ipow_substitutable_series.hpp"
 
 #define BOOST_TEST_MODULE ipow_substitutable_series_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <array>

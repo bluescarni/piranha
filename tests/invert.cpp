@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/invert.hpp"
 
 #define BOOST_TEST_MODULE invert_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <string>
 #include <type_traits>

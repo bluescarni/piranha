@@ -29,9 +29,8 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_MONAGAN_HPP
 #define PIRANHA_MONAGAN_HPP
 
-#include <boost/timer/timer.hpp>
-
 #include "../src/polynomial.hpp"
+#include "simple_timer.hpp"
 
 namespace piranha
 {
@@ -47,7 +46,7 @@ inline polynomial<Cf, Key> monagan1()
     auto f1 = (x + y + z + 1).pow(20) + 1;
     auto g = f1 + 1;
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         return f1 * g;
     }
 }
@@ -60,7 +59,7 @@ inline polynomial<Cf, Key> monagan2()
     auto f2 = (x * x + y * y + z * z + 1).pow(20) + 1;
     auto g = f2 + 1;
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         return f2 * g;
     }
 }
@@ -73,7 +72,7 @@ inline polynomial<Cf, Key> monagan3()
     auto f3 = (x + y + z + 1).pow(30) + 1;
     auto g = f3 + 1;
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         return f3 * g;
     }
 }
@@ -86,7 +85,7 @@ inline polynomial<Cf, Key> monagan4()
     auto f4 = (x + y + z + t + 1).pow(20) + 1;
     auto g = f4 + 1;
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         return f4 * g;
     }
 }
@@ -99,7 +98,7 @@ inline polynomial<Cf, Key> monagan5()
     auto f5 = (1 + u * u + v + w * w + x - y).pow(10) + 1;
     auto g5 = (1 + u + v * v + w + x * x + y).pow(10) + 1;
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         return f5 * g5;
     }
 }

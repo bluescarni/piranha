@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/hash_set.hpp"
 
 #define BOOST_TEST_MODULE hash_set_01_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <boost/integer_traits.hpp>

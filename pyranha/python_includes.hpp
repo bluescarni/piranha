@@ -32,13 +32,15 @@ see https://www.gnu.org/licenses/. */
 // NOTE: the order of inclusion in the first two items here is forced by these two issues:
 // http://mail.python.org/pipermail/python-list/2004-March/907592.html
 // http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
+// clang-format off
 #if defined(_WIN32)
-#include <Python.h>
 #include <cmath>
+#include <Python.h>
 #else
 #include <Python.h>
 #include <cmath>
 #endif
+// clang-format on
 
 #if PY_MAJOR_VERSION < 2 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6)
 #error Minimum supported Python version is 2.6.

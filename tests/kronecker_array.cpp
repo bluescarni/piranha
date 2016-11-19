@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/kronecker_array.hpp"
 
 #define BOOST_TEST_MODULE kronecker_array_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/integer_traits.hpp>
 #include <boost/mpl/for_each.hpp>

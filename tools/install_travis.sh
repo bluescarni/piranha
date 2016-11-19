@@ -9,32 +9,41 @@ export PATH="$deps_dir/bin:$PATH"
 
 if [[ "${BUILD_TYPE}" == "Debug" ]]; then
     if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make VERBOSE=1;
         ctest -E "thread|memory" -V;
     elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make VERBOSE=1;
         ctest -E "thread" -V;
     fi
 elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-Og --coverage" -DPIRANHA_TEST_SPLIT=yes -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-Og --coverage" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make VERBOSE=1;
         ctest -E "thread" -V;
-        wget https://codecov.io/bash;
-        # Run gcov manually, then remove all coverage information pertaining
-        # include files in deps_dir.
-        find ./ -type f -name '*.gcno' -not -path CMakeFiles -exec "${GCOV_EXECUTABLE}" -pb {} +
-        find ./ -iname '*local*include*.gcov' | xargs rm;
-        bash bash -p ./tests -X gcov -g CMakeFiles || echo "Codecov did not collect coverage reports";
+        bash <(curl -s https://codecov.io/bash) -x $GCOV_EXECUTABLE
 elif [[ "${BUILD_TYPE}" == "Release" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
-    make VERBOSE=1;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
+    make install VERBOSE=1;
 
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
         ctest -E "gastineau|pearce2_unpacked|s11n_perf" -V;
     else
         ctest -E "gastineau|pearce2_unpacked" -V;
+    fi
+
+    # Check that all headers are really installed.
+    # NOTE: this will have to be adapted in the cmake overhaul (fix src/ dir and check for config.hpp).
+    for f in `find $deps_dir/include/piranha -iname '*.hpp'`; do basename $f; done|grep -v config.hpp|sort  > inst_list.txt
+    for f in `find ../src -iname '*.hpp'`; do basename $f; done|grep -v config.hpp|sort > src_list.txt
+    export INSTALL_DIFF=`diff -Nru inst_list.txt src_list.txt`
+    if [[ "${INSTALL_DIFF}" != "" ]]; then
+        echo "Not all headers were installed. The diff is:";
+        echo "--------";
+        echo "${INSTALL_DIFF}";
+        echo "--------";
+        echo "Aborting.";
+        exit 1;
     fi
 
     # Do the release here.
@@ -49,7 +58,7 @@ fi
 
 if [[ "${BUILD_TYPE}" == "Python2" || "${BUILD_TYPE}" == "Python3" ]]; then
     cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DCMAKE_CXX_FLAGS=-Os -DCMAKE_INSTALL_PREFIX=$deps_dir  ../;
-    make install;
+    make install VERBOSE=1;
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
 fi
 

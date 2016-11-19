@@ -7,6 +7,9 @@ if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTH
 	message(FATAL_ERROR "Minimum supported Python version is 2.6.")
 endif()
 
+# Helper file with version number.
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/_version.py.in" "${CMAKE_CURRENT_BINARY_DIR}/_version.py")
+
 # Tutorial files.
 set(PYRANHA_TUTORIAL_FILES
 	tutorial/__init__.py
@@ -73,7 +76,7 @@ YACMA_PYTHON_MODULE(_core SHARED
 	expose_divisor_series_7.cpp
 	expose_divisor_series_8.cpp
 	# Python files.
-	__init__.py _common.py celmec.py math.py test.py types.py
+	__init__.py _common.py celmec.py math.py test.py types.py "${CMAKE_CURRENT_BINARY_DIR}/_version.py"
 	${PYRANHA_TUTORIAL_FILES}
 )
 
@@ -88,7 +91,7 @@ install(TARGETS _core
 )
 
 # Add the global init file and the additional submodules.
-install(FILES __init__.py _common.py celmec.py math.py test.py types.py DESTINATION ${PYRANHA_INSTALL_PATH})
+install(FILES __init__.py _common.py celmec.py math.py test.py types.py "${CMAKE_CURRENT_BINARY_DIR}/_version.py" DESTINATION ${PYRANHA_INSTALL_PATH})
 
 # Install the tutorial files.
 install(FILES ${PYRANHA_TUTORIAL_FILES} DESTINATION "${PYRANHA_INSTALL_PATH}/_tutorial")

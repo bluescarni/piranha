@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/real.hpp"
 
 #define BOOST_TEST_MODULE real_01_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #define FUSION_MAX_VECTOR_SIZE 20
 
@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include "../src/binomial.hpp"
+#include "../src/config.hpp"
 #include "../src/detail/mpfr.hpp"
 #include "../src/init.hpp"
 #include "../src/math.hpp"
@@ -489,8 +490,14 @@ BOOST_AUTO_TEST_CASE(real_conversion_test)
     BOOST_CHECK_THROW((void)static_cast<rational>(real{"nan"}), std::overflow_error);
     BOOST_CHECK_THROW((void)static_cast<rational>(real{"inf"}), std::overflow_error);
     BOOST_CHECK_THROW((void)static_cast<rational>(real{"-inf"}), std::overflow_error);
-    // Type traits.
+// Type traits.
+// This should be the same problem as in the explicit integer conversion: IIRC older clang/libc++ versions
+// did not consider explicit conversion operators when checking for constructability.
+#if !defined(PIRANHA_COMPILER_IS_CLANG)
     BOOST_CHECK((std::is_constructible<float, real>::value));
+#endif
+    // Check that the type trait above actually works in practice.
+    (void)float(real{12});
     BOOST_CHECK((!std::is_constructible<std::vector<float>, real>::value));
 }
 

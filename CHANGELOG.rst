@@ -1,6 +1,34 @@
 Changelog
 =========
 
+%%version%% (unreleased)
+------------------------
+
+New
+~~~
+
+- Add version number to pyranha, via the usual '__version__' attribute.
+  [Francesco Biscani]
+
+Changes
+~~~~~~~
+
+- Remove the dependency on boost timer and chrono in favour of a simple
+  timer class based on C++11's <chrono>. [Francesco Biscani]
+
+- Use the header-only variant of the boost unit test library. [Francesco
+  Biscani]
+
+Fix
+~~~
+
+- Silence an error being raised in Pyranha when latex/dvipng are not
+  installed. [Francesco Biscani]
+
+- A header file was not being installed. [Francesco Biscani]
+
+- Fix a real test for older libc++/clang. [Francesco Biscani]
+
 v0.7 (2016-11-13)
 -----------------
 

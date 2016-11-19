@@ -29,15 +29,14 @@ see https://www.gnu.org/licenses/. */
 #include "../src/poisson_series.hpp"
 
 #define BOOST_TEST_MODULE poisson_series_01_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 
@@ -53,19 +52,18 @@ see https://www.gnu.org/licenses/. */
 #include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/series.hpp"
+#include "../src/type_traits.hpp"
 
 struct foo {
 };
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double, rational, real, polynomial<rational, monomial<int>>,
-                           polynomial<real, monomial<signed char>>>
-    cf_types;
+using cf_types = std::tuple<double, rational, polynomial<rational, monomial<int>>>;
 
 struct constructor_tester {
-    template <typename Cf>
-    void poly_ctor_test(typename std::enable_if<std::is_base_of<detail::polynomial_tag, Cf>::value>::type * = nullptr)
+    template <typename Cf, enable_if_t<std::is_base_of<detail::polynomial_tag, Cf>::value, int> = 0>
+    void poly_ctor_test() const
     {
         typedef poisson_series<Cf> p_type;
         // Construction from symbol name.
@@ -80,8 +78,8 @@ struct constructor_tester {
         BOOST_CHECK((std::is_assignable<p_type, std::string>::value));
         BOOST_CHECK((!std::is_assignable<p_type, foo>::value));
     }
-    template <typename Cf>
-    void poly_ctor_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag, Cf>::value>::type * = nullptr)
+    template <typename Cf, enable_if_t<!std::is_base_of<detail::polynomial_tag, Cf>::value, int> = 0>
+    void poly_ctor_test() const
     {
         typedef poisson_series<Cf> p_type;
         if (!std::is_constructible<Cf, std::string>::value) {
@@ -93,7 +91,7 @@ struct constructor_tester {
         BOOST_CHECK((std::is_assignable<p_type, int>::value));
     }
     template <typename Cf>
-    void operator()(const Cf &)
+    void operator()(const Cf &) const
     {
         typedef poisson_series<Cf> p_type;
         BOOST_CHECK(is_series<p_type>::value);
@@ -130,26 +128,24 @@ struct constructor_tester {
 BOOST_AUTO_TEST_CASE(poisson_series_constructors_test)
 {
     init();
-    boost::mpl::for_each<cf_types>(constructor_tester());
+    tuple_for_each(cf_types{}, constructor_tester());
 }
 
 struct assignment_tester {
-    template <typename Cf>
-    void
-    poly_assignment_test(typename std::enable_if<std::is_base_of<detail::polynomial_tag, Cf>::value>::type * = nullptr)
+    template <typename Cf, enable_if_t<std::is_base_of<detail::polynomial_tag, Cf>::value, int> = 0>
+    void poly_assignment_test() const
     {
         typedef poisson_series<Cf> p_type;
         p_type p1;
         p1 = "x";
         BOOST_CHECK(p1 == p_type("x"));
     }
-    template <typename Cf>
-    void
-    poly_assignment_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag, Cf>::value>::type * = nullptr)
+    template <typename Cf, enable_if_t<!std::is_base_of<detail::polynomial_tag, Cf>::value, int> = 0>
+    void poly_assignment_test() const
     {
     }
     template <typename Cf>
-    void operator()(const Cf &)
+    void operator()(const Cf &) const
     {
         typedef poisson_series<Cf> p_type;
         p_type p1;
@@ -163,7 +159,7 @@ struct assignment_tester {
 
 BOOST_AUTO_TEST_CASE(poisson_series_assignment_test)
 {
-    boost::mpl::for_each<cf_types>(assignment_tester());
+    tuple_for_each(cf_types{}, assignment_tester());
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_stream_test)

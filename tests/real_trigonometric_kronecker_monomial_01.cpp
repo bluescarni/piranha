@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/real_trigonometric_kronecker_monomial.hpp"
 
 #define BOOST_TEST_MODULE real_trigonometric_kronecker_monomial_01_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <array>
 #include <boost/lexical_cast.hpp>

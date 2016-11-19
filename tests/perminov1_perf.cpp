@@ -27,11 +27,10 @@ GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
 #define BOOST_TEST_MODULE perminov1_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/timer/timer.hpp>
 #include <cstddef>
 #include <fstream>
 #include <tuple>
@@ -49,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/s11n.hpp"
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
+#include "simple_timer.hpp"
 
 using namespace piranha;
 namespace bfs = boost::filesystem;
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(perminov1_test)
 
     epst res;
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         res = f * g;
     }
 

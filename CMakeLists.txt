@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project(piranha VERSION 0.7)
+project(piranha VERSION 0.8)
 
 enable_testing()
 
@@ -83,18 +83,13 @@ endif()
 SET(REQUIRED_BOOST_LIBS serialization iostreams regex)
 IF(BUILD_TESTS)
 	# These libraries are needed only if building tests.
-	MESSAGE(STATUS "Linking unit tests to Boost.Test, Boost.Filesystem and Boost System")
-	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework filesystem system)
-	IF(CMAKE_BUILD_TYPE STREQUAL "Release")
-		MESSAGE(STATUS "Linking performance tests to Boost Timer and Boost.Chrono.")
-		SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} timer chrono)
-	ENDIF()
+	MESSAGE(STATUS "Linking unit tests to Boost.Filesystem and Boost System")
+	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} filesystem system)
 ENDIF()
 IF(BUILD_PYRANHA)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} python)
 ENDIF()
 MESSAGE(STATUS "Required Boost libraries: ${REQUIRED_BOOST_LIBS}")
-# Timers are available since 1.48.0.
 FIND_PACKAGE(Boost 1.48.0 REQUIRED COMPONENTS "${REQUIRED_BOOST_LIBS}")
 MESSAGE(STATUS "Detected Boost version: ${Boost_VERSION}")
 # Include system Boost headers.

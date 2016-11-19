@@ -29,16 +29,16 @@ see https://www.gnu.org/licenses/. */
 #include "../src/polynomial.hpp"
 
 #define BOOST_TEST_MODULE symengine_expand2b_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/timer/timer.hpp>
 
 #include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
+#include "simple_timer.hpp"
 
 using namespace piranha;
 using math::pow;
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(symengine_expand2b_test)
     auto f = pow(x + y + z + w, 15);
     auto g = f + w;
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         BOOST_CHECK_EQUAL((f * g).size(), 6272u);
     }
 }

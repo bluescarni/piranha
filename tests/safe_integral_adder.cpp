@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/detail/safe_integral_adder.hpp"
 
 #define BOOST_TEST_MODULE safe_integral_adder_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <limits>
 #include <stdexcept>

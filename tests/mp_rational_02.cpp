@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_rational.hpp"
 
 #define BOOST_TEST_MODULE mp_rational_02_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>

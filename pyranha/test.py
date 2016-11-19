@@ -98,6 +98,9 @@ class basic_test_case(_ut.TestCase):
     def runTest(self):
         from fractions import Fraction
         from copy import copy, deepcopy
+        # Test version number.
+        import pyranha
+        self.assertTrue(pyranha.__version__)
         # Use polynomial for testing.
         from .types import polynomial, integer, rational, int16, double, monomial
         # Arithmetic with int and Fraction, len, str and comparisons.
@@ -721,7 +724,7 @@ class polynomial_test_case(_ut.TestCase):
         self.assertRaises(ValueError, lambda: pt.udivrem(x + y, x + y))
         # GCD.
         self.assertTrue(gcd((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y)) == x -
-                     y or gcd((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y)) == -x + y)
+                        y or gcd((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y)) == -x + y)
         self.assertRaises(TypeError, lambda: gcd(x, 1))
         self.assertRaises(ValueError, lambda: gcd(x**-1, y))
         # Test the methods to get/set the default GCD algo.
@@ -958,7 +961,8 @@ class converters_test_case(_ut.TestCase):
             # mpmath are close.
             tmp = binomial(mpf(5.1), mpf(3.2))
             self.assertEqual(tmp.context.dps, 100)
-            self.assertTrue(fabs(tmp - bin(mpf(5.1), mpf(3.2))) < mpf('5e-100'))
+            self.assertTrue(fabs(tmp - bin(mpf(5.1), mpf(3.2)))
+                            < mpf('5e-100'))
         # This will create a coefficient with dps equal to the current value.
         tmp = 3 * pt('x')
         self.assertEqual(evaluate(tmp, {'x': mpf(1)}).context.dps, orig_dps)

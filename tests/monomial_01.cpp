@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/monomial.hpp"
 
 #define BOOST_TEST_MODULE monomial_01_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>

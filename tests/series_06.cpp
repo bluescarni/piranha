@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/series.hpp"
 
 #define BOOST_TEST_MODULE series_06_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/archive/xml_iarchive.hpp>

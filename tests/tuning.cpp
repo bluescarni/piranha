@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/tuning.hpp"
 
 #define BOOST_TEST_MODULE tuning_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <stdexcept>
 #include <thread>

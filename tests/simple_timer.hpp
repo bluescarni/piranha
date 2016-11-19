@@ -26,26 +26,35 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#define BOOST_TEST_MODULE monagan5_test
-#include <boost/test/included/unit_test.hpp>
+#ifndef PIRANHA_SIMPLE_TIMER_HPP
+#define PIRANHA_SIMPLE_TIMER_HPP
 
-#include <boost/lexical_cast.hpp>
+#include <chrono>
+#include <iostream>
 
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/settings.hpp"
-#include "monagan.hpp"
-
-using namespace piranha;
-
-BOOST_AUTO_TEST_CASE(monagan5_test)
+namespace piranha
 {
-    init();
-    settings::set_thread_binding(true);
-    if (boost::unit_test::framework::master_test_suite().argc > 1) {
-        settings::set_n_threads(
-            boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+
+// A simple RAII timer class, using std::chrono. It will print, upon destruction,
+// the time elapsed since construction (in ms).
+class simple_timer
+{
+public:
+    simple_timer() : m_start(std::chrono::high_resolution_clock::now())
+    {
     }
-    BOOST_CHECK_EQUAL((monagan5<integer, kronecker_monomial<>>().size()), 417311u);
+    ~simple_timer()
+    {
+        std::cout << "Elapsed time: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()
+                                                                           - m_start)
+                         .count()
+                  << "ms\n";
+    }
+
+private:
+    const std::chrono::high_resolution_clock::time_point m_start;
+};
 }
+
+#endif

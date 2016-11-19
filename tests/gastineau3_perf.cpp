@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "gastineau3.hpp"
 
 #define BOOST_TEST_MODULE gastineau3_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
 

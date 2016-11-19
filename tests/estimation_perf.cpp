@@ -29,11 +29,10 @@ see https://www.gnu.org/licenses/. */
 #include "../src/base_series_multiplier.hpp"
 
 #define BOOST_TEST_MODULE estimation_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
-#include <boost/timer/timer.hpp>
 #include <cstddef>
 #include <iostream>
 #include <iterator>
@@ -48,7 +47,6 @@ see https://www.gnu.org/licenses/. */
 #include "../src/settings.hpp"
 
 using namespace piranha;
-using t_type = boost::timer::auto_cpu_timer;
 using p_type = polynomial<double, k_monomial>;
 
 static auto max_nt = []() {

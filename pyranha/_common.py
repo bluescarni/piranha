@@ -106,6 +106,11 @@ def _repr_png_(self):
         retval = png_file.read()
         png_file.close()
         return retval
+    except Exception as e:
+        # Let's just return None in case of errors. These include latex/dvipng
+        # not being available, some problem in their execution (e.g., wrong tex syntax),
+        # filesystem errors, etc.
+        return None
     finally:
         # No matter what happens, always remove the temp directory with all the
         # content.

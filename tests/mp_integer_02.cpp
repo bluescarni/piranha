@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/mp_integer.hpp"
 
 #define BOOST_TEST_MODULE mp_integer_02_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #define FUSION_MAX_VECTOR_SIZE 20
 

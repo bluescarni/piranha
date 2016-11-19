@@ -29,9 +29,8 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_GASTINEAU1_HPP
 #define PIRANHA_GASTINEAU1_HPP
 
-#include <boost/timer/timer.hpp>
-
 #include "../src/polynomial.hpp"
+#include "simple_timer.hpp"
 
 namespace piranha
 {
@@ -47,7 +46,7 @@ inline polynomial<Cf, Key> gastineau1()
         f *= tmp;
     }
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         return f * (f + 1);
     }
 }

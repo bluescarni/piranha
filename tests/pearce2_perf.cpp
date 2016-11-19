@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "pearce2.hpp"
 
 #define BOOST_TEST_MODULE pearce2_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
 

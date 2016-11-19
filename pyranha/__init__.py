@@ -29,6 +29,8 @@
 
 from __future__ import absolute_import as _ai
 
+from ._version import __version__
+
 #: List of Pyranha submodules.
 __all__ = ['celmec', 'math', 'test', 'types']
 
