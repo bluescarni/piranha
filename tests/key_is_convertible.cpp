@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/key_is_convertible.hpp"
 
 #define BOOST_TEST_MODULE key_is_convertible_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <cstddef>
 #include <functional>

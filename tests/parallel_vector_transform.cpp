@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/detail/parallel_vector_transform.hpp"
 
 #define BOOST_TEST_MODULE parallel_vector_transform_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <stdexcept>
 #include <vector>

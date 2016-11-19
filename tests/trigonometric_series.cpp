@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/trigonometric_series.hpp"
 
 #define BOOST_TEST_MODULE trigonometric_series_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <cstddef>
 #include <iostream>

@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/rational_function.hpp"
 
 #define BOOST_TEST_MODULE rational_function_03_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <exception>
 #include <initializer_list>

@@ -29,9 +29,8 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_PEARCE2_HPP
 #define PIRANHA_PEARCE2_HPP
 
-#include <boost/timer/timer.hpp>
-
 #include "../src/polynomial.hpp"
+#include "simple_timer.hpp"
 
 namespace piranha
 {
@@ -51,7 +50,7 @@ inline polynomial<Cf, Key> pearce2()
         g *= tmp_g;
     }
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         return f * g;
     }
 }

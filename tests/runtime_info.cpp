@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/runtime_info.hpp"
 
 #define BOOST_TEST_MODULE runtime_info_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <iostream>
 

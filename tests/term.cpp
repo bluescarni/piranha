@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/term.hpp"
 
 #define BOOST_TEST_MODULE term_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>

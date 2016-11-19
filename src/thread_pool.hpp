@@ -36,7 +36,8 @@ see https://www.gnu.org/licenses/. */
 #include <cstdlib>
 #include <functional>
 #include <future>
-#include <iostream>
+// See old usage of cout below.
+// #include <iostream>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -227,6 +228,12 @@ using thread_queues_t = std::pair<std::vector<std::unique_ptr<task_queue>>, std:
 
 inline thread_queues_t get_initial_thread_queues()
 {
+    // NOTE: we used to have this print statement here, but it turns out that
+    // in certain setups the cout object is not yet constructed at this point,
+    // and a segfault is generated. I *think* it is possible to enforce the creation
+    // of cout via construction of an init object:
+    // http://en.cppreference.com/w/cpp/io/ios_base/Init
+    // However, this is hardly essential. Let's leave this disabled for the moment.
     // std::cout << "Initializing the thread pool.\n";
     thread_queues_t retval;
     // Create the vector of queues.

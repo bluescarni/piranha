@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/thread_management.hpp"
 
 #define BOOST_TEST_MODULE thread_management_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <mutex>
 

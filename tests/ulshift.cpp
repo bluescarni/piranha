@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/detail/ulshift.hpp"
 
 #define BOOST_TEST_MODULE ulshift_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <limits>
 #include <type_traits>

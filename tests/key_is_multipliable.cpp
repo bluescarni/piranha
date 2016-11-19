@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/key_is_multipliable.hpp"
 
 #define BOOST_TEST_MODULE key_is_multipliable_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <array>
 #include <cstddef>

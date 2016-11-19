@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/print_tex_coefficient.hpp"
 
 #define BOOST_TEST_MODULE print_tex_coefficient_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <sstream>

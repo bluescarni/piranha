@@ -29,10 +29,8 @@ see https://www.gnu.org/licenses/. */
 #include "../src/series.hpp"
 
 #define BOOST_TEST_MODULE series_02_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -40,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -67,8 +66,8 @@ static std::mt19937 rng;
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double, integer, rational, real> cf_types;
-typedef boost::mpl::vector<unsigned, integer> expo_types;
+using cf_types = std::tuple<double, integer, rational>;
+using expo_types = std::tuple<unsigned, integer>;
 
 template <typename Cf, typename Expo>
 class g_series_type : public series<Cf, monomial<Expo>, g_series_type<Cf, Expo>>
@@ -617,7 +616,7 @@ public:
     template <typename Cf>
     struct runner {
         template <typename Expo>
-        void operator()(const Expo &)
+        void operator()(const Expo &) const
         {
             typedef g_series_type<Cf, Expo> p_type1;
             typedef g_series_type2<Cf, Expo> p_type2;
@@ -950,9 +949,9 @@ public:
         }
     };
     template <typename Cf>
-    void operator()(const Cf &)
+    void operator()(const Cf &) const
     {
-        boost::mpl::for_each<expo_types>(runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -962,7 +961,7 @@ typedef debug_access<arithmetics_add_tag> arithmetics_add_tester;
 BOOST_AUTO_TEST_CASE(series_arithmetics_add_test)
 {
     // Functional testing.
-    boost::mpl::for_each<cf_types>(arithmetics_add_tester());
+    tuple_for_each(cf_types{}, arithmetics_add_tester());
     // Type testing for binary addition.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<int, rational> p_type2;
@@ -1036,7 +1035,7 @@ public:
     template <typename Cf>
     struct runner {
         template <typename Expo>
-        void operator()(const Expo &)
+        void operator()(const Expo &) const
         {
             typedef g_series_type<Cf, Expo> p_type1;
             typedef g_series_type2<Cf, Expo> p_type2;
@@ -1363,9 +1362,9 @@ public:
         }
     };
     template <typename Cf>
-    void operator()(const Cf &)
+    void operator()(const Cf &) const
     {
-        boost::mpl::for_each<expo_types>(runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -1375,7 +1374,7 @@ typedef debug_access<arithmetics_sub_tag> arithmetics_sub_tester;
 BOOST_AUTO_TEST_CASE(series_arithmetics_sub_test)
 {
     // Functional testing.
-    boost::mpl::for_each<cf_types>(arithmetics_sub_tester());
+    tuple_for_each(cf_types{}, arithmetics_sub_tester());
     // Type testing for binary subtraction.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<int, rational> p_type2;
@@ -1449,7 +1448,7 @@ public:
     template <typename Cf>
     struct runner {
         template <typename Expo>
-        void operator()(const Expo &)
+        void operator()(const Expo &) const
         {
             typedef g_series_type<Cf, Expo> p_type1;
             typedef g_series_type2<Cf, Expo> p_type2;
@@ -1688,9 +1687,9 @@ public:
         }
     };
     template <typename Cf>
-    void operator()(const Cf &)
+    void operator()(const Cf &) const
     {
-        boost::mpl::for_each<expo_types>(runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -1700,7 +1699,7 @@ typedef debug_access<arithmetics_mul_tag> arithmetics_mul_tester;
 BOOST_AUTO_TEST_CASE(series_arithmetics_mul_test)
 {
     // Functional testing.
-    boost::mpl::for_each<cf_types>(arithmetics_mul_tester());
+    tuple_for_each(cf_types{}, arithmetics_mul_tester());
     // Type testing for binary multiplication.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<int, rational> p_type2;
@@ -1774,7 +1773,7 @@ public:
     template <typename Cf>
     struct runner {
         template <typename Expo>
-        void operator()(const Expo &)
+        void operator()(const Expo &) const
         {
             typedef g_series_type<Cf, Expo> p_type1;
             p_type1 x{"x"};
@@ -1817,9 +1816,9 @@ public:
         }
     };
     template <typename Cf>
-    void operator()(const Cf &)
+    void operator()(const Cf &) const
     {
-        boost::mpl::for_each<expo_types>(runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -1829,7 +1828,7 @@ typedef debug_access<arithmetics_div_tag> arithmetics_div_tester;
 BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 {
     // Functional testing.
-    boost::mpl::for_each<cf_types>(arithmetics_div_tester());
+    tuple_for_each(cf_types{}, arithmetics_div_tester());
     // Type testing for binary division.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<p_type1, int> p_type11;
@@ -1886,7 +1885,7 @@ public:
     template <typename Cf>
     struct runner {
         template <typename Expo>
-        void operator()(const Expo &)
+        void operator()(const Expo &) const
         {
             typedef g_series_type<Cf, Expo> p_type1;
             typedef g_series_type2<Cf, Expo> p_type2;
@@ -1943,9 +1942,9 @@ public:
         }
     };
     template <typename Cf>
-    void operator()(const Cf &)
+    void operator()(const Cf &) const
     {
-        boost::mpl::for_each<expo_types>(runner<Cf>());
+        tuple_for_each(expo_types{}, runner<Cf>());
     }
 };
 }
@@ -1955,7 +1954,7 @@ typedef debug_access<eq_tag> eq_tester;
 BOOST_AUTO_TEST_CASE(series_eq_test)
 {
     // Functional testing.
-    boost::mpl::for_each<cf_types>(eq_tester());
+    tuple_for_each(cf_types{}, eq_tester());
     // Type testing for binary addition.
     typedef g_series_type<rational, int> p_type1;
     typedef g_series_type<int, rational> p_type2;

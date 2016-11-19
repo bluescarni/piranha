@@ -29,14 +29,14 @@ see https://www.gnu.org/licenses/. */
 #include "../src/polynomial.hpp"
 
 #define BOOST_TEST_MODULE rectangular_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/timer/timer.hpp>
 
 #include "../src/init.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/settings.hpp"
+#include "simple_timer.hpp"
 
 using namespace piranha;
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(rectangular_test)
         return curr;
     };
     {
-        boost::timer::auto_cpu_timer t;
+        simple_timer t;
         auto tmp = func();
     }
 }

@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/settings.hpp"
 
 #define BOOST_TEST_MODULE settings_test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <stdexcept>
 
