@@ -26,11 +26,8 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make install VERBOSE=1;
 
-    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-        ctest -E "gastineau|pearce2_unpacked|s11n_perf" -V;
-    else
-        ctest -E "gastineau|pearce2_unpacked" -V;
-    fi
+    # These test risk either timeout or they use too much ram.
+    ctest -E "gastineau|pearce2_unpacked|s11n_perf" -V;
 
     # Check that all headers are really installed.
     # NOTE: this will have to be adapted in the cmake overhaul (fix src/ dir and check for config.hpp).

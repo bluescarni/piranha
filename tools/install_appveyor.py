@@ -151,7 +151,7 @@ if is_python_build:
         run_command(twine + r' upload -u bluescarni dist\\' +
                     os.listdir('dist')[0])
 elif BUILD_TYPE == 'Release':
-    run_command(r'ctest -VV -E "gastineau|pearce2_unpacked"')
+    run_command(r'ctest -VV -E "gastineau|pearce2_unpacked|s11n_perf"')
 elif BUILD_TYPE == 'Debug':
     run_command(r'ctest -VV')
 else:
