@@ -127,7 +127,7 @@ else:
 
 # Build+install step.
 #run_command(r'cmake --build . --target install')
-run_command(r'mingw32-make install VERBOSE=1')
+run_command(r'mingw32-make install VERBOSE=1 -j2')
 
 # Testing, packaging.
 if is_python_build:
