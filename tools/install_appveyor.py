@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 
 def wget(url, out):
@@ -44,6 +45,19 @@ def run_command(raw_command, directory=None, verbose=True):
         raise RuntimeError(output)
     return output
 
+# Build type setup.
+BUILD_TYPE = os.environ['BUILD_TYPE']
+is_release_build = (os.environ['APPVEYOR_REPO_TAG'] == 'true') and bool(re.match(r'v[0-9]+\.[0-9]+.*',os.environ['APPVEYOR_REPO_TAG_NAME']))
+if is_release_build:
+    print("Release build detected, tag is '" + os.environ['APPVEYOR_REPO_TAG_NAME'] + "'")
+is_python_build = 'Python' in BUILD_TYPE
+
+# Just exit if this is a release build but not a Python one. The release of the source code
+# is done in travis, from appveyor we manage only the release of the pyranha packages for Windows.
+if is_release_build and not is_python_build:
+    print("Non-python release build detected, exiting.")
+    sys.exit()
+
 # Get mingw and set the path.
 wget(r'https://github.com/bluescarni/binary_deps/raw/master/x86_64-6.2.0-release-posix-seh-rt_v5-rev1.7z', 'mw64.7z')
 run_command(r'7z x -oC:\\ mw64.7z', verbose=False)
@@ -61,15 +75,7 @@ run_command(r'7z x -aoa -oC:\\ mpfr.7z', verbose=False)
 run_command(r'7z x -aoa -oC:\\ boost.7z', verbose=False)
 run_command(r'7z x -aoa -oC:\\ msgpack.7z', verbose=False)
 
-# Set the path so that the precompiled libs can be found.
-os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
-
-# Build type setup.
-BUILD_TYPE = os.environ['BUILD_TYPE']
-is_release_build = (os.environ['APPVEYOR_REPO_TAG'] == 'true') and bool(re.match(r'v[0-9]+\.[0-9]+.*',os.environ['APPVEYOR_REPO_TAG_NAME']))
-if is_release_build:
-    print("Release build detected, tag is '" + os.environ['APPVEYOR_REPO_TAG_NAME'] + "'")
-is_python_build = 'Python' in BUILD_TYPE
+# Setup of the dependencies for a Python build.
 if is_python_build:
     if BUILD_TYPE == 'Python35':
         python_version = '35'
@@ -104,6 +110,9 @@ if is_python_build:
     run_command(pip + ' install mpmath')
     if is_release_build:
         run_command(pip + ' install twine')
+
+# Set the path so that the precompiled libs can be found.
+os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
 
 # Proceed to the build.
 os.makedirs('build')
