@@ -47,13 +47,16 @@ def run_command(raw_command, directory=None, verbose=True):
 
 # Build type setup.
 BUILD_TYPE = os.environ['BUILD_TYPE']
-is_release_build = (os.environ['APPVEYOR_REPO_TAG'] == 'true') and bool(re.match(r'v[0-9]+\.[0-9]+.*',os.environ['APPVEYOR_REPO_TAG_NAME']))
+is_release_build = (os.environ['APPVEYOR_REPO_TAG'] == 'true') and bool(
+    re.match(r'v[0-9]+\.[0-9]+.*', os.environ['APPVEYOR_REPO_TAG_NAME']))
 if is_release_build:
-    print("Release build detected, tag is '" + os.environ['APPVEYOR_REPO_TAG_NAME'] + "'")
+    print("Release build detected, tag is '" +
+          os.environ['APPVEYOR_REPO_TAG_NAME'] + "'")
 is_python_build = 'Python' in BUILD_TYPE
 
 # Just exit if this is a release build but not a Python one. The release of the source code
-# is done in travis, from appveyor we manage only the release of the pyranha packages for Windows.
+# is done in travis, from appveyor we manage only the release of the
+# pyranha packages for Windows.
 if is_release_build and not is_python_build:
     print("Non-python release build detected, exiting.")
     sys.exit()
