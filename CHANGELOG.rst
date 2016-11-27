@@ -1,8 +1,8 @@
 Changelog
 =========
 
-%%version%% (unreleased)
-------------------------
+v0.8 (2016-11-19)
+-----------------
 
 New
 ~~~
@@ -21,6 +21,9 @@ Changes
 
 Fix
 ~~~
+
+- Fix main pyranha test function not throwing on errors in the test
+  suite code. [Francesco Biscani]
 
 - Silence an error being raised in Pyranha when latex/dvipng are not
   installed. [Francesco Biscani]

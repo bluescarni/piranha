@@ -169,11 +169,8 @@ class basic_test_case(_ut.TestCase):
         self.assertEqual(deepcopy(s1), s1)
         # Latex renderer, if available.
         x = tp_int('x')
-        try:
-            tmp = x._repr_png_()
-            self.assertTrue(len(tmp) != 0)
-        except OSError:
-            pass
+        tmp = x._repr_png_()
+        self.assertTrue(tmp is None or len(tmp) != 0)
         # Evaluation.
         from .math import evaluate
         x = tp_q('x')
@@ -1325,7 +1322,7 @@ def run_test_suite():
     suite.addTest(t_degree_order_test_case())
     suite.addTest(doctests_test_case())
     test_result = _ut.TextTestRunner(verbosity=2).run(suite)
-    if len(test_result.failures) > 0:
+    if len(test_result.failures) > 0 or len(test_result.errors) > 0:
         retval = 1
     suite = _ut.TestLoader().loadTestsFromTestCase(tutorial_test_case)
     # Context for the suppression of output while running the tutorials. Inspired by:

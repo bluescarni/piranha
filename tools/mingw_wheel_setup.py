@@ -1,6 +1,5 @@
 from setuptools import setup
 from setuptools.dist import Distribution
-from distutils import util
 import sys
 
 NAME = 'pyranha'
@@ -59,9 +58,6 @@ setup(name=NAME,
     platforms=PLATFORMS,
     install_requires=INSTALL_REQUIRES,
     packages=['pyranha','pyranha._tutorial'],
-    package_dir = {
-            'pyranha': 'pyranha',
-            'pyranha._tutorial': util.convert_path('pyranha/_tutorial')},
     # Include pre-compiled extension
     package_data={'pyranha': ['_core.pyd'] + DLL_LIST},
     distclass=BinaryDistribution)

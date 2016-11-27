@@ -7,6 +7,15 @@ set -x
 
 export PATH="$deps_dir/bin:$PATH"
 
+# This variable will contain something if this is a release build, otherwise it will be empty.
+export PIRANHA_RELEASE_VERSION=`echo "${TRAVIS_TAG}"|grep -E 'v[0-9]+\.[0-9]+.*'|cut -c 2-`
+
+# In a release build, do something only if the BUILD_TYPE is "Release" as well.
+if [[ "${PIRANHA_RELEASE_VERSION}" != "" && "${BUILD_TYPE}" != "Release" ]]; then
+    echo "Release build detected, skipping non-release jobs."
+    exit 0;
+fi
+
 if [[ "${BUILD_TYPE}" == "Debug" ]]; then
     if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
         cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=yes -DCMAKE_CXX_FLAGS="-fsanitize=address -Os" -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
@@ -26,11 +35,8 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=yes ../;
     make install VERBOSE=1;
 
-    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-        ctest -E "gastineau|pearce2_unpacked|s11n_perf" -V;
-    else
-        ctest -E "gastineau|pearce2_unpacked" -V;
-    fi
+    # These test risk either timeout or they use too much ram.
+    ctest -E "gastineau|pearce2_unpacked|s11n_perf" -V;
 
     # Check that all headers are really installed.
     # NOTE: this will have to be adapted in the cmake overhaul (fix src/ dir and check for config.hpp).
@@ -47,7 +53,6 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     fi
 
     # Do the release here.
-    export PIRANHA_RELEASE_VERSION=`echo "${TRAVIS_TAG}"|grep -E 'v[0-9]+\.[0-9]+.*'|cut -c 2-`
     if [[ "${PIRANHA_RELEASE_VERSION}" != "" ]]; then
       echo "Creating new piranha release: ${PIRANHA_RELEASE_VERSION}"
       set +x
@@ -103,8 +108,8 @@ if [[ "${BUILD_TYPE}" == "Python2" && "${TRAVIS_OS_NAME}" != "osx" ]]; then
         git pull -q
         PUSH_COUNTER=$((PUSH_COUNTER + 1))
         if [ "$PUSH_COUNTER" -gt 3 ]; then
-            echo "Push failed, aborting."
-            exit 1
+            echo "Push failed, aborting.";
+            exit 1;
         fi
     done
 fi
@@ -157,8 +162,8 @@ elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
         git pull -q
         PUSH_COUNTER=$((PUSH_COUNTER + 1))
         if [ "$PUSH_COUNTER" -gt 3 ]; then
-            echo "Push failed, aborting."
-            exit 1
+            echo "Push failed, aborting.";
+            exit 1;
         fi
     done
 fi
