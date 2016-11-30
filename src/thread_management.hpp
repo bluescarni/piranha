@@ -45,6 +45,22 @@ extern "C" {
 #include <sched.h>
 }
 
+// In old systems (CentOS 5) CPU_COUNT is not defined.
+// This patch, from http://www.redhat.com/archives/libvir-list/2012-August/msg01515.html
+// fixes that problem redefining it.
+# ifndef CPU_COUNT
+static int
+CPU_COUNT(cpu_set_t *set)
+{
+    int i, count = 0;
+
+    for (i = 0; i < CPU_SETSIZE; i++)
+        if (CPU_ISSET(i, set))
+            count++;
+    return count;
+}
+# endif /* !CPU_COUNT */
+
 #elif defined(__FreeBSD__)
 
 extern "C" {
@@ -60,6 +76,7 @@ extern "C" {
 #include <limits>
 
 #endif
+
 
 namespace piranha
 {
