@@ -45,21 +45,31 @@ extern "C" {
 #include <sched.h>
 }
 
-// In old systems (CentOS 5) CPU_COUNT is not defined.
-// This patch, from http://www.redhat.com/archives/libvir-list/2012-August/msg01515.html
-// fixes that problem redefining it.
-# ifndef CPU_COUNT
-static int
-CPU_COUNT(cpu_set_t *set)
+namespace piranha
 {
-    int i, count = 0;
 
-    for (i = 0; i < CPU_SETSIZE; i++)
-        if (CPU_ISSET(i, set))
-            count++;
+inline namespace impl
+{
+
+// In old systems (CentOS 5) CPU_COUNT is not defined. We define a small wrapper
+// that implements the functionality if it is missing. See:
+// http://www.redhat.com/archives/libvir-list/2012-August/msg01515.html
+inline int posix_cpu_count(::cpu_set_t *set)
+{
+#if defined(CPU_COUNT)
+    return CPU_COUNT(set);
+#else
+    int count = 0;
+    for (int i = 0; i < CPU_SETSIZE; ++i) {
+        if (CPU_ISSET(i, set)) {
+            ++count;
+        }
+    }
     return count;
+#endif
 }
-# endif /* !CPU_COUNT */
+}
+}
 
 #elif defined(__FreeBSD__)
 
@@ -76,7 +86,6 @@ extern "C" {
 #include <limits>
 
 #endif
-
 
 namespace piranha
 {
@@ -177,7 +186,7 @@ inline std::pair<bool, unsigned> bound_proc()
     if (errno_ != 0) {
         piranha_throw(std::runtime_error, "the call to pthread_getaffinity_np() failed");
     }
-    const int cpu_count = CPU_COUNT(&cpuset);
+    const int cpu_count = posix_cpu_count(&cpuset);
     if (cpu_count == 0 || cpu_count > 1) {
         return std::make_pair(false, static_cast<unsigned>(0));
     }
