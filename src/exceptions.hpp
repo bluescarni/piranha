@@ -129,10 +129,10 @@ struct not_implemented_error final : std::runtime_error {
 
 /// Exception for signalling division by zero.
 /**
- * This class inherits the constructors from \p std::invalid_argument.
+ * This class inherits the constructors from \p std::domain_error.
  */
-struct zero_division_error final : std::invalid_argument {
-    using std::invalid_argument::invalid_argument;
+struct zero_division_error final : std::domain_error {
+    using std::domain_error::domain_error;
 };
 }
 
