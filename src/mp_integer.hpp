@@ -1270,7 +1270,7 @@ struct is_mp_integer_interoperable_type {
  * ## Implementation details ##
  *
  * This class uses, for certain routines, the internal interface of GMP integers, which is not guaranteed to be stable
- * across different versions. GMP versions 4.x, 5.x and 6.x are explicitly supported by this class.
+ * across different versions. GMP versions 5.x and 6.x are explicitly supported by this class.
  *
  * @see http://gmplib.org/
  */
