@@ -47,6 +47,15 @@ see https://www.gnu.org/licenses/. */
 #include "../src/init.hpp"
 #include "../src/settings.hpp"
 
+// Helper to def-init as an array of T the raw storage returned by the memory alloc function.
+template <typename T>
+static inline void default_init(T *begin, T *end)
+{
+    for (; begin != end; ++begin) {
+        ::new (static_cast<void *>(begin)) T;
+    }
+}
+
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(memory_aligned_malloc_test)
@@ -69,10 +78,12 @@ BOOST_AUTO_TEST_CASE(memory_aligned_malloc_test)
     // For these tests, require that the alignment is valid for int and that it is a power of 2.
     if (sizeof(void *) % alignof(int) == 0 && !(sizeof(void *) & (sizeof(void *) - 1u))) {
         ptr = aligned_palloc(sizeof(void *), sizeof(int) * 10000u);
+        default_init(static_cast<int *>(ptr), static_cast<int *>(ptr) + 10000u);
         std::vector<int> v;
         std::generate_n(std::back_inserter(v), 10000u, std::rand);
         std::copy(v.begin(), v.end(), static_cast<int *>(ptr));
         BOOST_CHECK(std::equal(v.begin(), v.end(), static_cast<int *>(ptr)));
+        // NOTE: no need to call dtor, int has trivial destruction.
         BOOST_CHECK_NO_THROW(aligned_pfree(sizeof(void *), ptr));
     }
 #elif defined(_WIN32)
@@ -82,6 +93,7 @@ BOOST_AUTO_TEST_CASE(memory_aligned_malloc_test)
     // Check that the alignment is valid for int.
     if (16 % alignof(int) == 0) {
         ptr = aligned_palloc(16, sizeof(int) * 10000u);
+        default_init(static_cast<int *>(ptr), static_cast<int *>(ptr) + 10000u);
         std::vector<int> v;
         std::generate_n(std::back_inserter(v), 10000u, std::rand);
         std::copy(v.begin(), v.end(), static_cast<int *>(ptr));
