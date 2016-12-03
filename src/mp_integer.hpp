@@ -38,7 +38,6 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <gmp.h>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -52,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/demangle.hpp"
+#include "detail/gmp.hpp"
 #include "detail/is_digit.hpp"
 #include "detail/mp_rational_fwd.hpp"
 #include "detail/mpfr.hpp"

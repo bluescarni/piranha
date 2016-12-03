@@ -61,6 +61,7 @@ SET(DETAIL_HEADERS_LIST
 	detail/atomic_flag_array.hpp
 	detail/atomic_lock_guard.hpp
 	detail/series_multiplier_fwd.hpp
+	detail/gmp.hpp
 	detail/mpfr.hpp
 	detail/config_clang.hpp
 	detail/sfinae_types.hpp
