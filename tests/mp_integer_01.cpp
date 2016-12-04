@@ -41,7 +41,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/lexical_cast.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <gmp.h>
 #include <iostream>
 #include <limits>
 #include <random>
@@ -54,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include "../src/config.hpp"
 #include "../src/convert_to.hpp"
 #include "../src/debug_access.hpp"
+#include "../src/detail/gmp.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/math.hpp"

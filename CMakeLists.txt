@@ -39,6 +39,10 @@ option(PIRANHA_WITH_ZLIB "Enable support for zlib/gzip compression." OFF)
 # Enable bzip2 compression.
 option(PIRANHA_WITH_BZIP2 "Enable support for bzip2 compression." OFF)
 
+# Enable the installation of the headers.
+option(PIRANHA_INSTALL_HEADERS "Enable the installation of the headers." ON)
+mark_as_advanced(PIRANHA_INSTALL_HEADERS)
+
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
 # in the future it might become a more general-purpose flag.
@@ -106,6 +110,13 @@ FIND_PACKAGE(GMP REQUIRED)
 MESSAGE(STATUS "GMP library found.")
 MESSAGE(STATUS "GMP include dir is: ${GMP_INCLUDE_DIR}")
 MESSAGE(STATUS "GMP library is: ${GMP_LIBRARIES}")
+MESSAGE(STATUS "Checking GMP version.")
+TRY_COMPILE(GMP_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/gmp_check_version.cpp"
+	CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${GMP_INCLUDE_DIR}")
+IF(NOT GMP_VERSION_CHECK)
+	MESSAGE(FATAL_ERROR "Unsupported GMP version, please upgrade.")
+ENDIF()
+MESSAGE(STATUS "GMP version is ok.")
 # Same as Boost, mark as a system header.
 INCLUDE_DIRECTORIES(SYSTEM ${GMP_INCLUDE_DIR})
 

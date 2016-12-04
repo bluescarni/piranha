@@ -38,7 +38,6 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <gmp.h>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -52,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/demangle.hpp"
+#include "detail/gmp.hpp"
 #include "detail/is_digit.hpp"
 #include "detail/mp_rational_fwd.hpp"
 #include "detail/mpfr.hpp"
@@ -1270,7 +1270,7 @@ struct is_mp_integer_interoperable_type {
  * ## Implementation details ##
  *
  * This class uses, for certain routines, the internal interface of GMP integers, which is not guaranteed to be stable
- * across different versions. GMP versions 4.x, 5.x and 6.x are explicitly supported by this class.
+ * across different versions. GMP versions 5.x and 6.x are explicitly supported by this class.
  *
  * @see http://gmplib.org/
  */

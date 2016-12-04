@@ -40,7 +40,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cstddef>
-#include <gmp.h>
 #include <limits>
 #include <random>
 #include <sstream>
@@ -52,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
+#include "../src/detail/gmp.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/is_cf.hpp"
