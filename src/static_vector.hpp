@@ -140,8 +140,7 @@ private:
     //   which T can be constructed, the offsetting the initial address by multiples of the alignment value will
     //   still produce addresses at which the object can be constructed;
     // - in general, we are assuming here that we can handle contiguous storage the same way arrays can be handled
-    // (e.g.,
-    //   to get the end() iterator we get one past the last element);
+    //   (e.g., to get the end() iterator we get one past the last element);
     // - note that placement new will work as expected (i.e., it will construct the object exactly at the address passed
     //   in as parameter).
     using storage_type = typename std::aligned_storage<sizeof(T) * MaxSize, alignof(T)>::type;
@@ -159,6 +158,16 @@ private:
         boost_load_vector(ar, *this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+    // This is a small helper to default-init a range via positional new.
+    // We use this in various POD optimisations below in order to make sure
+    // objects of type T exist in the raw storage before doing anything with them.
+    static void default_init(T *begin, T *end)
+    {
+        for (; begin != end; ++begin) {
+            ::new (static_cast<void *>(begin)) T;
+        }
+    }
+
 public:
     /// Maximum size.
     /**
@@ -186,15 +195,20 @@ public:
      */
     static_vector(const static_vector &other) : m_tag(1u), m_size(0u)
     {
+        const auto size = other.size();
         // NOTE: here and elsewhere, the standard implies (3.9/2) that we can use this optimisation
         // for trivially copyable types. GCC does not support the type trait yet, so we restrict the
         // optimisation to POD types (which are trivially copyable).
         if (std::is_pod<T>::value) {
-            std::memcpy(vs(), other.vs(), other.m_size * sizeof(T));
-            m_size = other.m_size;
+            // NOTE: we need to def init objects of type T inside the buffer. Unlike in C, objects with trivial default
+            // constructors cannot be created by simply reinterpreting suitably aligned storage,
+            // such as memory allocated with std::malloc: placement-new is required to formally introduce a new objects
+            // and avoid potential undefined behavior. This is likely to be optimised away by the compiler.
+            default_init(ptr(), ptr() + size);
+            std::memcpy(vs(), other.vs(), size * sizeof(T));
+            m_size = size;
         } else {
             try {
-                const auto size = other.size();
                 for (size_type i = 0u; i < size; ++i) {
                     push_back(other[i]);
                 }
@@ -213,6 +227,7 @@ public:
     {
         const auto size = other.size();
         if (std::is_pod<T>::value) {
+            default_init(ptr(), ptr() + size);
             std::memcpy(vs(), other.vs(), size * sizeof(T));
             m_size = size;
         } else {
@@ -269,6 +284,11 @@ public:
     {
         if (likely(this != &other)) {
             if (std::is_pod<T>::value) {
+                if (other.m_size > m_size) {
+                    // If other is larger, we need to make sure we have created the excess objects
+                    // before writing into them.
+                    default_init(ptr() + m_size, ptr() + other.m_size);
+                }
                 std::memcpy(vs(), other.vs(), other.m_size * sizeof(T));
                 m_size = other.m_size;
             } else {
@@ -288,6 +308,9 @@ public:
     {
         if (likely(this != &other)) {
             if (std::is_pod<T>::value) {
+                if (other.m_size > m_size) {
+                    default_init(ptr() + m_size, ptr() + other.m_size);
+                }
                 std::memcpy(vs(), other.vs(), other.m_size * sizeof(T));
             } else {
                 const size_type old_size = m_size, new_size = other.m_size;

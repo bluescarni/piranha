@@ -43,7 +43,6 @@ see https://www.gnu.org/licenses/. */
 #include <cmath>
 #include <cstddef>
 #include <functional>
-#include <gmp.h>
 #include <iostream>
 #include <limits>
 #include <random>
@@ -55,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 
 #include "../src/binomial.hpp"
 #include "../src/config.hpp"
+#include "../src/detail/gmp.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/init.hpp"
 #include "../src/math.hpp"

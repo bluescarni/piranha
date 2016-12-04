@@ -169,6 +169,15 @@ public:
             return 0u;
         }
         try {
+            // NOTE: here probably it is the only place were we avoid calling a positional new on a memory
+            // buffer. The reason is that the documentation states that GetLogicalProcessorInformation needs a
+            // "buffer" as first argument (here interpreted as "raw storage"), and also the example uses this idiom:
+            // https://msdn.microsoft.com/en-us/library/windows/desktop/ms683194(v=vs.85).aspx
+            // In general, C++ prohibits to write directly to the output of malloc(), as no object has been created
+            // by the malloc call:
+            // http://en.cppreference.com/w/cpp/language/default_constructor#Trivial_default_constructor
+            // http://stackoverflow.com/questions/40873520/reinterpret-cast-creating-a-trivially-default-constructible-object
+            // http://wg21.link/p0137
             buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(safe_cast<std::size_t>(buffer_size));
             if (unlikely(!buffer)) {
                 piranha_throw(std::bad_alloc, );
