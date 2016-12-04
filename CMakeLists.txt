@@ -39,6 +39,10 @@ option(PIRANHA_WITH_ZLIB "Enable support for zlib/gzip compression." OFF)
 # Enable bzip2 compression.
 option(PIRANHA_WITH_BZIP2 "Enable support for bzip2 compression." OFF)
 
+# Enable the installation of the headers.
+option(PIRANHA_INSTALL_HEADERS "Enable the installation of the headers." ON)
+mark_as_advanced(PIRANHA_INSTALL_HEADERS)
+
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
 # in the future it might become a more general-purpose flag.
