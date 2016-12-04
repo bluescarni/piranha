@@ -82,10 +82,6 @@ if(YACMA_COMPILER_IS_CLANGXX)
 	message(STATUS "Clang version is ok.")
 	# Set the standard flag.
 	PIRANHA_SET_CPP_STD_FLAG()
-	# This used to be necessary with earlier versions of Clang which
-	# were not completely compatible with GCC's stdlib. Nowadays it seems
-	# unnecessary on most platforms.
-	# YACMA_CHECK_ENABLE_CXX_FLAG(-stdlib=libc++)
 	PIRANHA_CHECK_UINT128_T()
 endif()
 
