@@ -1600,11 +1600,12 @@ private:
         const_iterator_impl;
     // Evaluation utilities.
     // NOTE: here we need the Series template because otherwise, in case of missing eval on key or coefficient, the
-    // decltype
-    // will fail as series is not a template parameter.
+    // decltype will fail as series is not a template parameter.
     template <typename Series, typename U, typename = void>
     struct eval_type_ {
     };
+    // This is the candidate evaluation type: the product of the evaluation of the coefficient by the evaluation of
+    // the key.
     template <typename Series, typename U>
     using e_type
         = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
@@ -1612,23 +1613,9 @@ private:
                    * std::declval<const typename Series::term_type::key_type &>().evaluate(
                          std::declval<const symbol_set::positions_map<U> &>(), std::declval<const symbol_set &>()));
     template <typename Series, typename U>
-    struct eval_type_<Series, U,
-                      typename std::
-                          enable_if<has_multiply_accumulate<e_type<Series, U>,
-                                                            decltype(math::evaluate(
-                                                                std::declval<
-                                                                    typename Series::term_type::cf_type const &>(),
-                                                                std::declval<std::unordered_map<std::string, U> const
-                                                                                 &>())),
-                                                            decltype(
-                                                                std::declval<const typename Series::term_type::key_type
-                                                                                 &>()
-                                                                    .evaluate(
-                                                                        std::declval<const symbol_set::positions_map<U>
-                                                                                         &>(),
-                                                                        std::declval<const symbol_set &>()))>::value
-                                    && std::is_constructible<e_type<Series, U>, int>::value
-                                    && is_returnable<e_type<Series, U>>::value>::type> {
+    struct eval_type_<Series, U, enable_if_t<conjunction<is_addable_in_place<e_type<Series, U>>,
+                                                         std::is_constructible<e_type<Series, U>, int>,
+                                                         is_returnable<e_type<Series, U>>>::value>> {
         using type = e_type<Series, U>;
     };
     // Final typedef.
@@ -2685,7 +2672,8 @@ public:
         // Init return value and accumulate it.
         return_type retval = return_type(0);
         for (const auto &t : this->m_container) {
-            math::multiply_accumulate(retval, math::evaluate(t.m_cf, dict), t.m_key.evaluate(pmap, m_symbol_set));
+            // NOTE: restore use of multiply_accumulate once we sort out evaluation (enable it if supported).
+            retval += math::evaluate(t.m_cf, dict) * t.m_key.evaluate(pmap, m_symbol_set);
         }
         return retval;
     }

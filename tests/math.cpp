@@ -222,12 +222,6 @@ struct check_multiply_accumulate {
     {
         BOOST_CHECK(has_multiply_accumulate<T>::value);
         BOOST_CHECK(has_multiply_accumulate<T &>::value);
-        BOOST_CHECK((has_multiply_accumulate<T, T>::value));
-        BOOST_CHECK((has_multiply_accumulate<T &, T &>::value));
-        BOOST_CHECK((has_multiply_accumulate<T &, T const &>::value));
-        BOOST_CHECK((has_multiply_accumulate<T, T, T>::value));
-        BOOST_CHECK((has_multiply_accumulate<T &, const T, T &>::value));
-        BOOST_CHECK((has_multiply_accumulate<T &, const T, T const &>::value));
         BOOST_CHECK(!has_multiply_accumulate<const T>::value);
         BOOST_CHECK(!has_multiply_accumulate<const T &>::value);
         T x(2);

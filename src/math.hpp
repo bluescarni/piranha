@@ -335,60 +335,65 @@ inline void negate(T &x)
 
 /// Default functor for the implementation of piranha::math::multiply_accumulate().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism.
+ * This functor can be specialised via the \p std::enable_if mechanism.
  */
-template <typename T, typename U, typename V, typename = void>
+template <typename T, typename = void>
 struct multiply_accumulate_impl {
 private:
     // NOTE: as usual, we check the expression against const ref arguments.
-    template <typename T2, typename U2, typename V2>
-    using enabler =
-        typename std::enable_if<detail::true_tt<decltype(std::declval<T2 &>() += std::declval<const U2 &>()
-                                                                                 * std::declval<const V2 &>())>::value,
-                                int>::type;
+    template <typename U>
+    using addmul_t = decltype(std::declval<U &>() += std::declval<const U &>() * std::declval<const U &>());
+    template <typename U>
+    using enabler = enable_if_t<is_detected<addmul_t, U>::value, int>;
 
 public:
     /// Call operator.
     /**
      * \note
-     * This call operator is enabled only if the arguments support binary multiplication
-     * and in-place addition.
+     * This call operator is enabled only if the expression <tt>x += y * z</tt> is well-formed.
      *
      * The body of the operator is equivalent to:
      * @code
      * x += y * z;
      * @endcode
-     * where \p y and \p z are perfectly forwarded.
      *
-     * @param[in,out] x target value for accumulation.
-     * @param[in] y first argument.
-     * @param[in] z second argument.
+     * @param x target value for accumulation.
+     * @param y first argument.
+     * @param z second argument.
      *
      * @throws unspecified any exception resulting from in-place addition or
      * binary multiplication on the operands.
      */
-    template <typename T2, typename U2, typename V2, enabler<T2, U2, V2> = 0>
-    void operator()(T2 &x, U2 &&y, V2 &&z) const
+    template <typename U, enabler<U> = 0>
+    void operator()(U &x, const U &y, const U &z) const
     {
-        x += std::forward<U2>(y) * std::forward<V2>(z);
+        x += y * z;
     }
 };
 
 #if defined(FP_FAST_FMA) && defined(FP_FAST_FMAF) && defined(FP_FAST_FMAL)
+
+inline namespace impl
+{
+
+// Enabler for the fast floating-point implementation of multiply_accumulate().
+template <typename T>
+using math_multiply_accumulate_float_enabler = enable_if_t<std::is_floating_point<T>::value>;
+}
 
 /// Specialisation of the implementation of piranha::math::multiply_accumulate() for floating-point types.
 /**
  * This functor is enabled only if the macros \p FP_FAST_FMA, \p FP_FAST_FMAF and \p FP_FAST_FMAL are defined.
  */
 template <typename T>
-struct multiply_accumulate_impl<T, T, T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
+struct multiply_accumulate_impl<T, math_multiply_accumulate_float_enabler<T>> {
     /// Call operator.
     /**
      * This implementation will use the \p std::fma() function.
      *
-     * @param[in,out] x target value for accumulation.
-     * @param[in] y first argument.
-     * @param[in] z second argument.
+     * @param x target value for accumulation.
+     * @param y first argument.
+     * @param z second argument.
      */
     void operator()(T &x, const T &y, const T &z) const
     {
@@ -399,17 +404,16 @@ struct multiply_accumulate_impl<T, T, T, typename std::enable_if<std::is_floatin
 #endif
 }
 
-namespace detail
+inline namespace impl
 {
 
 // Enabler for multiply_accumulate.
-template <typename T, typename U, typename V>
-using math_multiply_accumulate_enabler = typename std::
-    enable_if<!std::is_const<T>::value
-                  && true_tt<decltype(math::multiply_accumulate_impl<T, typename std::decay<U>::type,
-                                                                     typename std::decay<V>::type>{}(
-                         std::declval<T &>(), std::declval<const U &>(), std::declval<const V &>()))>::value,
-              int>::type;
+template <typename T>
+using math_multiply_accumulate_t = decltype(
+    math::multiply_accumulate_impl<T>{}(std::declval<T &>(), std::declval<const T &>(), std::declval<const T &>()));
+
+template <typename T>
+using math_multiply_accumulate_enabler = enable_if_t<is_detected<math_multiply_accumulate_t, T>::value, int>;
 }
 
 namespace math
@@ -418,30 +422,24 @@ namespace math
 /// Multiply-accumulate.
 /**
  * \note
- * This function is enabled only if \p T is not const and the expression
- * <tt>multiply_accumulate_impl<T,Ud,Vd>>{}(x,y,z)</tt> is valid (where \p Ud and \p Vd
- * are the decay types of \p U and \p V).
+ * This function is enabled only if the expression <tt>multiply_accumulate_impl<T>{}(x, y, z)</tt> is valid.
  *
- * Will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the
- * piranha::math::multiply_accumulate_impl functor's
- * call operator. The body of this function is equivalent to:
+ * This function will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the
+ * piranha::math::multiply_accumulate_impl functor's call operator. The body of this function is equivalent to:
  * @code
- * multiply_accumulate_impl<T,Ud,Vd>{}(x,std::forward<U>(y),std::forward<V>(z));
+ * multiply_accumulate_impl<T>{}(x, y, z);
  * @endcode
- * (where \p Ud and \p Vd are the decay types of \p U and \p V). The result of the call operator of
- * piranha::math::multiply_accumulate_impl is ignored.
  *
- * @param[in,out] x target value for accumulation.
- * @param[in] y first argument.
- * @param[in] z second argument.
+ * @param x target value for accumulation.
+ * @param y first argument.
+ * @param z second argument.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::multiply_accumulate_impl.
  */
-template <typename T, typename U, typename V, detail::math_multiply_accumulate_enabler<T, U, V> = 0>
-inline void multiply_accumulate(T &x, U &&y, V &&z)
+template <typename T, math_multiply_accumulate_enabler<T> = 0>
+inline void multiply_accumulate(T &x, const T &y, const T &z)
 {
-    multiply_accumulate_impl<T, typename std::decay<U>::type, typename std::decay<V>::type>{}(x, std::forward<U>(y),
-                                                                                              std::forward<V>(z));
+    multiply_accumulate_impl<T>{}(x, y, z);
 }
 
 /// Default functor for the implementation of piranha::math::cos().
@@ -2358,28 +2356,27 @@ public:
 template <typename Key, typename T>
 const bool key_has_subs<Key, T>::value;
 
-/// Type trait to detect the availability of piranha::math::multiply_accumulate.
+/// Type trait to detect the availability of piranha::math::multiply_accumulate().
 /**
- * This type trait will be \p true if piranha::math::multiply_accumulate can be called with arguments of type \p T, \p U
- * and \p V,
+ * This type trait will be \p true if piranha::math::multiply_accumulate() can be called with arguments of type \p T,
  * \p false otherwise.
  */
-template <typename T, typename U = T, typename V = U>
-class has_multiply_accumulate : detail::sfinae_types
+template <typename T>
+class has_multiply_accumulate
 {
-    template <typename T2, typename U2, typename V2>
-    static auto test(T2 &t, const U2 &u, const V2 &v) -> decltype(math::multiply_accumulate(t, u, v), void(), yes());
-    static no test(...);
+    template <typename U>
+    using multiply_accumulate_t = decltype(
+        math::multiply_accumulate(std::declval<U &>(), std::declval<const U &>(), std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<multiply_accumulate_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = std::is_same<decltype(test(std::declval<T &>(), std::declval<U>(), std::declval<V>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
-template <typename T, typename U, typename V>
-const bool has_multiply_accumulate<T, U, V>::value;
+template <typename T>
+const bool has_multiply_accumulate<T>::value;
 
 /// Type trait to detect the availability of piranha::math::evaluate.
 /**

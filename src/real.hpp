@@ -2119,17 +2119,17 @@ struct binomial_impl<T, U, detail::real_binomial_enabler<T, U>> {
 };
 
 /// Specialisation of the implementation of piranha::math::multiply_accumulate() for piranha::real.
-template <typename T>
-struct multiply_accumulate_impl<T, T, T, typename std::enable_if<std::is_same<T, real>::value>::type> {
+template <>
+struct multiply_accumulate_impl<real> {
     /// Call operator.
     /**
      * This implementation will use piranha::real::multiply_accumulate().
      *
-     * @param[in,out] x target value for accumulation.
-     * @param[in] y first argument.
-     * @param[in] z second argument.
+     * @param x target value for accumulation.
+     * @param y first argument.
+     * @param z second argument.
      */
-    void operator()(T &x, const T &y, const T &z) const
+    void operator()(real &x, const real &y, const real &z) const
     {
         x.multiply_accumulate(y, z);
     }

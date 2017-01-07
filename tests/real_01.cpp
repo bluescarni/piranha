@@ -1825,12 +1825,9 @@ BOOST_AUTO_TEST_CASE(real_fma_test)
     math::multiply_accumulate(r3, real{-4}, real{2});
     BOOST_CHECK_EQUAL(r3, -3);
     BOOST_CHECK((has_multiply_accumulate<real>::value));
-    BOOST_CHECK((has_multiply_accumulate<real, integer>::value));
-    BOOST_CHECK((!has_multiply_accumulate<real, no_fma>::value));
-    BOOST_CHECK((has_multiply_accumulate<real &, real>::value));
-    BOOST_CHECK((has_multiply_accumulate<real &, real &, const real &>::value));
-    BOOST_CHECK((!has_multiply_accumulate<const real, real>::value));
-    BOOST_CHECK((!has_multiply_accumulate<const real &, real, real &>::value));
+    BOOST_CHECK((has_multiply_accumulate<real &>::value));
+    BOOST_CHECK((!has_multiply_accumulate<const real>::value));
+    BOOST_CHECK((!has_multiply_accumulate<const real &>::value));
     // Test for precision bug in mult_add after the thread_local changes.
     // NOTE: this could actually fail if/when we switch back to the fma() from MPFR,
     // as in that case there might be a single rounding in the whole operation.

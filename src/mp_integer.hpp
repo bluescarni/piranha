@@ -4442,14 +4442,14 @@ namespace math
  * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
  */
 template <typename T>
-struct multiply_accumulate_impl<T, T, T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
+struct multiply_accumulate_impl<T, enable_if_t<detail::is_mp_integer<T>::value>> {
     /// Call operator.
     /**
      * This implementation will use piranha::mp_integer::multiply_accumulate().
      *
-     * @param[in,out] x target value for accumulation.
-     * @param[in] y first argument.
-     * @param[in] z second argument.
+     * @param x target value for accumulation.
+     * @param y first argument.
+     * @param z second argument.
      */
     void operator()(T &x, const T &y, const T &z) const
     {
