@@ -296,10 +296,10 @@ class settings(object):
     def set_thread_binding(flag):
         """Set the thread binding policy.
 
-        By default, the threads created by piranha are not bound to specific processors/cores.
-        Calling this method with a ``True`` *flag* will instruct piranha to attempt to bind each
+        By default, the threads created by Piranha are not bound to specific processors/cores.
+        Calling this method with a ``True`` *flag* will instruct Piranha to attempt to bind each
         thread to a different processor/core (which can result in increased performance
-        in certain circumstances). If *flag* is ``False``, the threads created by piranha will be
+        in certain circumstances). If *flag* is ``False``, the threads created by Piranha will be
         free to migrate across processors/cores.
 
         :param flag: the desired thread binding policy
@@ -356,8 +356,8 @@ class data_format(object):
     The Boost formats are based on the Boost serialization library and they are always available.
     The msgpack formats rely on the msgpack-c library (which is an optional dependency).
 
-    The portable variants are slower but suitable for use across architectures and piranha versions, the binary
-    variants are faster but they are not portable across architectures and piranha versions.
+    The portable variants are slower but suitable for use across architectures and Piranha versions, the binary
+    variants are faster but they are not portable across architectures and Piranha versions.
 
     """
 
@@ -376,7 +376,7 @@ class compression(object):
 
     The members of this class identify the compression formats that can be used when saving/loading
     to/from disk symbolic objects via :py:func:`pyranha.save_file` and :py:func:`pyranha.load_file`.
-    The compression formats are available only if piranha was compiled with the corresponding optional
+    The compression formats are available only if Piranha was compiled with the corresponding optional
     compression options enabled.
 
     """
