@@ -40,9 +40,9 @@ cd ..
 
 if [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     # Install a recent version of Doxygen locally.
-    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.12.src.tar.gz";
-    tar xzf doxygen-1.8.12.src.tar.gz;
-    cd doxygen-1.8.12;
+    wget "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.13.src.tar.gz";
+    tar xzf doxygen-1.8.13.src.tar.gz;
+    cd doxygen-1.8.13;
     mkdir build;
     cd build;
     cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -Duse_libclang=YES ../;
