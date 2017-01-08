@@ -1742,12 +1742,9 @@ private:
     template <typename Series>
     using key_t = typename Series::term_type::key_type;
     // We have different implementations, depending on whether the computed derivative type is the same as the original
-    // one
-    // (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics). Adopt
-    // the usual scheme
-    // of providing an unspecialised value that sfinaes out if the enabler condition is malformed, and two
-    // specialisations
-    // that implement the logic above.
+    // one (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics).
+    // Adopt the usual scheme of providing an unspecialised value that sfinaes out if the enabler condition is
+    // malformed, and two specialisations that implement the logic above.
     template <typename Series, typename = void>
     struct partial_type_ {
     };
