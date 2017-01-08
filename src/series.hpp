@@ -1600,10 +1600,8 @@ private:
         const_iterator_impl;
     // Evaluation utilities.
     // NOTE: here we need the Series template because otherwise, in case of missing eval on key or coefficient, the
-    // decltype will fail as series is not a template parameter.
-    template <typename Series, typename U, typename = void>
-    struct eval_type_ {
-    };
+    // decltype will fail as series is not a template parameter. Probably we can get rid of the Series parameter
+    // if we ditch the evaluation method in favour of just the math::evaluate() functionality.
     // This is the candidate evaluation type: the product of the evaluation of the coefficient by the evaluation of
     // the key.
     template <typename Series, typename U>
@@ -1612,15 +1610,12 @@ private:
                                   std::declval<std::unordered_map<std::string, U> const &>())
                    * std::declval<const typename Series::term_type::key_type &>().evaluate(
                          std::declval<const symbol_set::positions_map<U> &>(), std::declval<const symbol_set &>()));
-    template <typename Series, typename U>
-    struct eval_type_<Series, U, enable_if_t<conjunction<is_addable_in_place<e_type<Series, U>>,
-                                                         std::is_constructible<e_type<Series, U>, int>,
-                                                         is_returnable<e_type<Series, U>>>::value>> {
-        using type = e_type<Series, U>;
-    };
     // Final typedef.
     template <typename Series, typename U>
-    using eval_type = typename eval_type_<Series, U>::type;
+    using eval_type
+        = enable_if_t<conjunction<is_addable_in_place<e_type<Series, U>>, std::is_constructible<e_type<Series, U>, int>,
+                                  is_returnable<e_type<Series, U>>>::value,
+                      e_type<Series, U>>;
     // Print utilities.
     template <bool TexMode, typename Iterator>
     static std::ostream &print_helper(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
