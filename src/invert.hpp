@@ -50,7 +50,7 @@ template <typename T, typename = void>
 struct invert_impl {
     /// Call operator.
     /**
-     * @param[in] x argument for the inversion,
+     * @param x argument for the inversion,
      *
      * @return piranha::math::pow(x,-1).
      *
@@ -69,7 +69,7 @@ struct invert_impl {
  * piranha::math::invert_impl functor's
  * call operator.
  *
- * @param[in] x argument.
+ * @param x argument.
  *
  * @return the multiplicative inverse of \p x.
  *

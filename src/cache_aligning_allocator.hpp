@@ -86,7 +86,7 @@ public:
     using const_reference = T const &;
     /// Destructor method.
     /**
-     * @param[in] p address of the object of type \p T to be destroyed.
+     * @param p address of the object of type \p T to be destroyed.
      */
     void destroy(pointer p)
     {
@@ -94,8 +94,8 @@ public:
     }
     /// Variadic construction method.
     /**
-     * @param[in] p address where the object will be constructed.
-     * @param[in] args arguments that will be forwarded for construction.
+     * @param p address where the object will be constructed.
+     * @param args arguments that will be forwarded for construction.
      */
     // NOTE: here, according to the standard, the allocator must be
     // able to construct objects of arbitrary type:
@@ -124,7 +124,7 @@ public:
     /**
      * Will forward the call to the corresponding constructor in piranha::dynamic_aligning_allocator.
      *
-     * @param[in] other construction argument.
+     * @param other construction argument.
      */
     template <typename U>
     explicit cache_aligning_allocator(const cache_aligning_allocator<U> &other) : base(other)
@@ -134,7 +134,7 @@ public:
     /**
      * Will forward the call to the corresponding constructor in piranha::dynamic_aligning_allocator.
      *
-     * @param[in] other construction argument.
+     * @param other construction argument.
      */
     template <typename U>
     explicit cache_aligning_allocator(cache_aligning_allocator<U> &&other) : base(std::move(other))

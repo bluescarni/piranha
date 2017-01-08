@@ -189,7 +189,7 @@ public:
     }
     /// Copy constructor.
     /**
-     * @param[in] other target of the copy operation.
+     * @param other target of the copy operation.
      *
      * @throws unspecified any exception thrown by the copy constructor of \p T.
      */
@@ -221,7 +221,7 @@ public:
     }
     /// Move constructor.
     /**
-     * @param[in] other target of the move operation.
+     * @param other target of the move operation.
      */
     static_vector(static_vector &&other) noexcept : m_tag(1u), m_size(0u)
     {
@@ -244,8 +244,8 @@ public:
     /**
      * Will construct a vector containing \p n copies of \p x.
      *
-     * @param[in] n number of copies of \p x that will be inserted in the vector.
-     * @param[in] x element whose copies will be inserted in the vector.
+     * @param n number of copies of \p x that will be inserted in the vector.
+     * @param x element whose copies will be inserted in the vector.
      *
      * @throws unspecified any exception thrown by push_back().
      */
@@ -274,7 +274,7 @@ public:
     }
     /// Copy assignment operator.
     /**
-     * @param[in] other target of the copy assignment operation.
+     * @param other target of the copy assignment operation.
      *
      * @return reference to \p this.
      *
@@ -300,7 +300,7 @@ public:
     }
     /// Move assignment operator.
     /**
-     * @param[in] other target of the move assignment operation.
+     * @param other target of the move assignment operation.
      *
      * @return reference to \p this.
      */
@@ -343,7 +343,7 @@ public:
     }
     /// Const index operator.
     /**
-     * @param[in] n index of the desired element.
+     * @param n index of the desired element.
      *
      * @return const reference to the element contained at index \p n;
      */
@@ -354,7 +354,7 @@ public:
     }
     /// Index operator.
     /**
-     * @param[in] n index of the desired element.
+     * @param n index of the desired element.
      *
      * @return reference to the element contained at index \p n;
      */
@@ -397,7 +397,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param[in] other argument for the comparison.
+     * @param other argument for the comparison.
      *
      * @return \p true if the sizes of the vectors are the same and all elements of \p this compare as equal
      * to the elements in \p other, \p false otherwise.
@@ -410,7 +410,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param[in] other argument for the comparison.
+     * @param other argument for the comparison.
      *
      * @return the opposite of operator==().
      *
@@ -424,7 +424,7 @@ public:
     /**
      * \p x is copy-inserted at the end of the container.
      *
-     * @param[in] x element to be inserted.
+     * @param x element to be inserted.
      *
      * @throws std::bad_alloc if the insertion of \p x would lead to a size greater than \p MaxSize.
      * @throws unspecified any exception thrown by the copy constructor of \p T.
@@ -441,7 +441,7 @@ public:
     /**
      * \p x is move-inserted at the end of the container.
      *
-     * @param[in] x element to be inserted.
+     * @param x element to be inserted.
      *
      * @throws std::bad_alloc if the insertion of \p x would lead to a size greater than \p MaxSize.
      */
@@ -466,7 +466,7 @@ public:
      *
      * Input parameters will be used to construct an instance of \p T at the end of the container.
      *
-     * @param[in] params arguments that will be used to construct the new element.
+     * @param params arguments that will be used to construct the new element.
      *
      * @throws std::bad_alloc if the insertion of the new element would lead to a size greater than \p MaxSize.
      * @throws unspecified any exception thrown by the constructor of \p T from the input parameters.
@@ -503,7 +503,7 @@ public:
      * at the end of the container. If \p new_size is smaller than the size of the object before the operation, the
      * first \p new_size object in the vector will be preserved.
      *
-     * @param[in] new_size new size for the vector.
+     * @param new_size new size for the vector.
      *
      * @throws std::bad_alloc if \p new_size is greater than \p MaxSize.
      * @throws unspecified any exception thrown by the default constructor of \p T.
@@ -553,7 +553,7 @@ public:
      *
      * \p it must be a valid iterator to an element in \p this.
      *
-     * @param[in] it iterator to the element of \p this to be removed.
+     * @param it iterator to the element of \p this to be removed.
      *
      * @return the iterator following the erased element.
      */
@@ -633,8 +633,8 @@ public:
      *
      * Will print to stream a human-readable representation of \p v.
      *
-     * @param[in] os target stream.
-     * @param[in] v vector to be streamed.
+     * @param os target stream.
+     * @param v vector to be streamed.
      *
      * @return reference to \p os.
      *

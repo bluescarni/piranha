@@ -331,7 +331,7 @@ public:
      * encoded using piranha::kronecker_array::encode() and the result assigned to the internal integer instance.
      * The flavour will be set to \p true.
      *
-     * @param[in] list initializer list representing the multipliers.
+     * @param list initializer list representing the multipliers.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::kronecker_array::encode(),
@@ -357,8 +357,8 @@ public:
      * to the internal integer instance. The value type of the iterator is converted to \p T using
      * piranha::safe_cast(). The flavour will be set to \p true.
      *
-     * @param[in] start beginning of the range.
-     * @param[in] end end of the range.
+     * @param start beginning of the range.
+     * @param end end of the range.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::kronecker_array::encode(),
@@ -379,7 +379,7 @@ public:
     /**
      * After construction all multipliers will be zero and the flavour will be set to \p true.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::kronecker_array::encode(),
@@ -398,8 +398,8 @@ public:
      * This constructor will initialise the internal integer instance
      * to \p n and the flavour to \p f.
      *
-     * @param[in] n initializer for the internal integer instance.
-     * @param[in] f desired flavour.
+     * @param n initializer for the internal integer instance.
+     * @param f desired flavour.
      */
     explicit real_trigonometric_kronecker_monomial(const value_type &n, bool f) : m_value(n), m_flavour(f)
     {
@@ -410,8 +410,8 @@ public:
      * set the internal integer instance and flavour to the same value of \p other, after having checked that
      * \p other is compatible with \p args.
      *
-     * @param[in] other construction argument.
-     * @param[in] args reference set of piranha::symbol.
+     * @param other construction argument.
+     * @param args reference set of piranha::symbol.
      *
      * @throws std::invalid_argument if \p other is not compatible with \p args.
      */
@@ -449,7 +449,7 @@ public:
     real_trigonometric_kronecker_monomial &operator=(real_trigonometric_kronecker_monomial &&other) = default;
     /// Set the internal integer instance.
     /**
-     * @param[in] n value to which the internal integer instance will be set.
+     * @param n value to which the internal integer instance will be set.
      */
     void set_int(const value_type &n)
     {
@@ -473,7 +473,7 @@ public:
     }
     /// Set flavour.
     /**
-     * @param[in] f value to which the flavour will be set.
+     * @param f value to which the flavour will be set.
      */
     void set_flavour(bool f)
     {
@@ -486,7 +486,7 @@ public:
      * the signs of all multipliers and return \p true.
      * Otherwise, \p this will not be modified and \p false will be returned.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return \p true if the monomial was canonicalised, \p false otherwise.
      *
@@ -515,7 +515,7 @@ public:
      *
      * Otherwise, the monomial is considered to be compatible for insertion.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return compatibility flag for the monomial.
      */
@@ -569,8 +569,8 @@ public:
      * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
      * \p orig_args.
      *
-     * @param[in] orig_args original arguments set.
-     * @param[in] new_args new arguments set.
+     * @param orig_args original arguments set.
+     * @param new_args new arguments set.
      *
      * @return monomial with merged arguments.
      *
@@ -589,7 +589,7 @@ public:
     }
     /// Check if monomial is unitary.
     /**
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return \p true if all the multipliers are zero and the flavour is \p true, \p false otherwise.
      *
@@ -607,7 +607,7 @@ public:
      * The type returned by this method is the type resulting from the addition of two instances
      * of \p T.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return trigonometric degree of the monomial.
      *
@@ -627,7 +627,7 @@ public:
     }
     /// Low trigonometric degree (equivalent to the trigonometric degree).
     /**
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return the output of t_degree(const symbol_set &) const.
      *
@@ -647,8 +647,8 @@ public:
      * The type returned by this method is the type resulting from the addition of two instances
      * of \p T.
      *
-     * @param[in] p positions of the symbols to be considered.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p positions of the symbols to be considered.
+     * @param args reference set of piranha::symbol.
      *
      * @return the summation of all the multipliers of the monomial corresponding to the symbols at the positions in
      * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
@@ -673,8 +673,8 @@ public:
     }
     /// Partial low trigonometric degree (equivalent to the partial trigonometric degree).
     /**
-     * @param[in] p positions of the symbols to be considered.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p positions of the symbols to be considered.
+     * @param args reference set of piranha::symbol.
      *
      * @return the output of t_degree(const symbol_set::positions &, const symbol_set &) const.
      *
@@ -689,7 +689,7 @@ public:
      * The type returned by this method is the type resulting from the addition of the absolute
      * values of two instances of \p T.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return trigonometric order of the monomial.
      *
@@ -710,7 +710,7 @@ public:
     }
     /// Low trigonometric order (equivalent to the trigonometric order).
     /**
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return the output of t_order(const symbol_set &) const.
      *
@@ -730,8 +730,8 @@ public:
      * The type returned by this method is the type resulting from the addition of the absolute
      * values of two instances of \p T.
      *
-     * @param[in] p positions of the symbols to be considered.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p positions of the symbols to be considered.
+     * @param args reference set of piranha::symbol.
      *
      * @return the summation of the absolute values of all the multipliers of the monomial corresponding to the symbols
      * at the positions in
@@ -757,8 +757,8 @@ public:
     }
     /// Partial low trigonometric order (equivalent to the partial trigonometric order).
     /**
-     * @param[in] p positions of the symbols to be considered.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p positions of the symbols to be considered.
+     * @param args reference set of piranha::symbol.
      *
      * @return the output of t_order(const symbol_set::positions &, const symbol_set &) const.
      *
@@ -784,10 +784,10 @@ public:
      * case
      * \p Cf is an instance of piranha::mp_rational, only the numerators of the coefficients will be multiplied.
      *
-     * @param[out] res result of the multiplication.
-     * @param[in] t1 first argument.
-     * @param[in] t2 second argument.
-     * @param[in] args reference set of piranha::symbol.
+     * @param res result of the multiplication.
+     * @param t1 first argument.
+     * @param t2 second argument.
+     * @param args reference set of piranha::symbol.
      *
      * @throws std::overflow_error if the computation of the result overflows type \p value_type.
      * @throws unspecified any exception thrown by:
@@ -864,7 +864,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return \p true if the internal integral instance and the flavour of \p this are the same of \p other,
      * \p false otherwise.
@@ -875,7 +875,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return the opposite of operator==().
      */
@@ -887,7 +887,7 @@ public:
     /**
      * Will decode the internal integral instance into a piranha::static_vector of size equal to the size of \p args.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return piranha::static_vector containing the result of decoding the internal integral instance via
      * piranha::kronecker_array.
@@ -903,8 +903,8 @@ public:
     /**
      * Will print to stream a human-readable representation of the monomial.
      *
-     * @param[in] os target stream.
-     * @param[in] args reference set of piranha::symbol.
+     * @param os target stream.
+     * @param args reference set of piranha::symbol.
      *
      * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
      */
@@ -947,8 +947,8 @@ public:
     /**
      * Will print to stream a TeX representation of the monomial.
      *
-     * @param[in] os target stream.
-     * @param[in] args reference set of piranha::symbol.
+     * @param os target stream.
+     * @param args reference set of piranha::symbol.
      *
      * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
      */
@@ -997,8 +997,8 @@ public:
      * If \p p is empty or if the multiplier associated to it is zero,
      * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{args})</tt>.
      *
-     * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p position of the symbol with respect to which the differentiation will be calculated.
+     * @param args reference set of piranha::symbol.
      *
      * @return result of the differentiation.
      *
@@ -1047,8 +1047,8 @@ public:
      * If \p s is not in \p args or if the multiplier associated to it is zero,
      * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{})</tt>.
      *
-     * @param[in] s symbol with respect to which the integration will be calculated.
-     * @param[in] args reference set of piranha::symbol.
+     * @param s symbol with respect to which the integration will be calculated.
+     * @param args reference set of piranha::symbol.
      *
      * @return result of the integration.
      *
@@ -1088,8 +1088,8 @@ public:
      * If the positions in \p pmap do not reference
      * only and all the multipliers in the monomial, an error will be thrown.
      *
-     * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
-     * @param[in] args reference set of piranha::symbol.
+     * @param pmap piranha::symbol_set::positions_map that will be used for substitution.
+     * @param args reference set of piranha::symbol.
      *
      * @return the result of evaluating \p this with the values provided in \p pmap.
      *
@@ -1164,9 +1164,9 @@ public:
      * multiplier
      * in \f$ b \f$ is negative, \f$ b \f$ will be negated and the other signs changed accordingly.
      *
-     * @param[in] s name of the symbol that will be substituted.
-     * @param[in] x quantity that will be substituted in place of \p s.
-     * @param[in] args reference set of piranha::symbol.
+     * @param s name of the symbol that will be substituted.
+     * @param x quantity that will be substituted in place of \p s.
+     * @param args reference set of piranha::symbol.
      *
      * @return the result of substituting \p x for \p s.
      *
@@ -1231,10 +1231,10 @@ public:
      * The substitution is performed using standard trigonometric formulae, and it will result in a list of two
      * (substitution result,new monomial) pairs.
      *
-     * @param[in] name symbol whose cosine and sine will be substituted.
-     * @param[in] c cosine of \p name.
-     * @param[in] s sine of \p name.
-     * @param[in] args reference set of piranha::symbol.
+     * @param name symbol whose cosine and sine will be substituted.
+     * @param c cosine of \p name.
+     * @param s sine of \p name.
+     * @param args reference set of piranha::symbol.
      *
      * @return the result of substituting \p c and \p s for the cosine and sine of \p name.
      *
@@ -1322,8 +1322,8 @@ public:
      * contains a set of symbols that are candidates for elimination. The method will remove
      * from \p candidates those symbols whose multiplier in \p this is not zero.
      *
-     * @param[in] candidates set of candidates for elimination.
-     * @param[in] args reference arguments set.
+     * @param candidates set of candidates for elimination.
+     * @param args reference arguments set.
      *
      * @throws unspecified any exception thrown by:
      * - unpack(),
@@ -1339,8 +1339,8 @@ public:
      * This method will return a copy of \p this with the multipliers associated to the symbols
      * in \p trim_args removed.
      *
-     * @param[in] trim_args arguments whose multipliers will be removed.
-     * @param[in] orig_args original arguments set.
+     * @param trim_args arguments whose multipliers will be removed.
+     * @param orig_args original arguments set.
      *
      * @return trimmed copy of \p this.
      *
@@ -1358,7 +1358,7 @@ public:
      * The values of the internal integral instances are used for comparison. If the values are the same,
      * the flavours of the monomials are compared to break the tie.
      *
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return \p true if \p this is less than \p other, \p false otherwise.
      */
@@ -1395,9 +1395,9 @@ public:
      *
      * This method will pack \p this into \p packer.
      *
-     * @param[in] packer the target packer.
-     * @param[in] f the serialization format.
-     * @param[in] s reference arguments set.
+     * @param packer the target packer.
+     * @param f the serialization format.
+     * @param s reference arguments set.
      *
      * @throws unspecified any exception thrown by:
      * - the public interface of <tt>msgpack::packer</tt>,
@@ -1426,9 +1426,9 @@ public:
      * and calling this method will result in undefined behaviour if \p o does not contain a monomial serialized via
      * msgpack_pack(). This method provides the basic exception safety guarantee.
      *
-     * @param[in] o msgpack object that will be deserialized.
-     * @param[in] f serialization format.
-     * @param[in] s reference arguments set.
+     * @param o msgpack object that will be deserialized.
+     * @param f serialization format.
+     * @param s reference arguments set.
      *
      * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
      * @throws unspecified any exception thrown by:
@@ -1538,7 +1538,7 @@ struct hash<piranha::real_trigonometric_kronecker_monomial<T>> {
     typedef piranha::real_trigonometric_kronecker_monomial<T> argument_type;
     /// Hash operator.
     /**
-     * @param[in] a argument whose hash value will be computed.
+     * @param a argument whose hash value will be computed.
      *
      * @return hash value of \p a computed via piranha::real_trigonometric_kronecker_monomial::hash().
      */

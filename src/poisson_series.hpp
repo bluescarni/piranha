@@ -700,7 +700,7 @@ public:
      *     whether the degree of the polynomial is a non-negative integral value;
      *   - otherwise, an error will be produced.
      *
-     * @param[in] name integration variable.
+     * @param name integration variable.
      *
      * @return the antiderivative of \p this with respect to \p name.
      *
@@ -807,7 +807,7 @@ public:
      * than automatically deduced. The \p names argument must be sorted lexicographically, otherwise an error
      * will be produced. Duplicate entries in \p names will be removed.
      *
-     * @param[in] names the names of the symbols used to represent the frequencies.
+     * @param names the names of the symbols used to represent the frequencies.
      *
      * @return the result of the time integration.
      *

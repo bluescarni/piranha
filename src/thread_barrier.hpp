@@ -68,7 +68,7 @@ public:
     /**
      * Construct a barrier for \p count threads.
      *
-     * @param[in] count number of threads for which the barrier is configured.
+     * @param count number of threads for which the barrier is configured.
      *
      * @throws std::invalid_argument if <tt>count == 0</tt>.
      * @throws std::system_error in case of failure(s) by threading primitives.

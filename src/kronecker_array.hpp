@@ -262,7 +262,7 @@ public:
      * is not \p SignedInteger, the values of \p v will be converted to \p SignedInteger using
      * piranha::safe_cast(). A vector of size 0 is always encoded as 0.
      *
-     * @param[in] v vector to be encoded.
+     * @param v vector to be encoded.
      *
      * @return \p v encoded as a \p SignedInteger using Kronecker substitution.
      *
@@ -316,8 +316,8 @@ public:
      *
      * In case of exceptions, \p retval will be left in a valid but undefined state.
      *
-     * @param[out] retval object that will store the decoded vector.
-     * @param[in] n code to be decoded.
+     * @param retval object that will store the decoded vector.
+     * @param n code to be decoded.
      *
      * @throws std::invalid_argument if any of these conditions hold:
      * - the size of \p retval is equal to or greater than the size of the output of get_limits(),

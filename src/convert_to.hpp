@@ -59,7 +59,7 @@ public:
      * return static_cast<To>(x);
      * @endcode
      *
-     * @param[in] x conversion argument.
+     * @param x conversion argument.
      *
      * @return an instance of type \p To cast from \p x.
      *
@@ -107,7 +107,7 @@ using convert_to_enabler =
  * Any specialisation of piranha::convert_to_impl must have a call operator returning
  * an instance of the decay type of \p To, otherwise this function will be disabled.
  *
- * @param[in] x conversion argument.
+ * @param x conversion argument.
  *
  * @returns an instance of the decay type of \p To converted from \p x.
  *

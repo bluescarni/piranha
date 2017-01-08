@@ -325,7 +325,7 @@ public:
      * \note
      * This constructor is enabled only if the corresponding constructor in piranha::array_key is enabled.
      *
-     * @param[in] list initializer list.
+     * @param list initializer list.
      *
      * @see piranha::array_key's constructor from initializer list.
      */
@@ -344,9 +344,9 @@ public:
      * from the size of \p s, a runtime error will be produced. This constructor is used by
      * piranha::polynomial::find_cf().
      *
-     * @param[in] begin beginning of the range.
-     * @param[in] end end of the range.
-     * @param[in] s reference symbol set.
+     * @param begin beginning of the range.
+     * @param end end of the range.
+     * @param s reference symbol set.
      *
      * @throws std::invalid_argument if the final size of \p this and the size of \p s differ.
      * @throws unspecified any exception thrown by:
@@ -372,8 +372,8 @@ public:
      * This constructor will copy the elements from the range defined by \p begin and \p end into \p this,
      * using piranha::safe_cast() for any necessary type conversion.
      *
-     * @param[in] begin beginning of the range.
-     * @param[in] end end of the range.
+     * @param begin beginning of the range.
+     * @param end end of the range.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::safe_cast(),
@@ -412,7 +412,7 @@ public:
     /**
      * A monomial and a set of arguments are compatible if their sizes coincide.
      *
-     * @param[in] args reference arguments set.
+     * @param args reference arguments set.
      *
      * @return <tt>this->size() == args.size()</tt>.
      */
@@ -424,7 +424,7 @@ public:
     /**
      * A monomial is never ignorable by definition.
      *
-     * @param[in] args reference arguments set.
+     * @param args reference arguments set.
      *
      * @return \p false.
      */
@@ -438,7 +438,7 @@ public:
     /**
      * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return \p true if the monomial is unitary, \p false otherwise.
      *
@@ -462,7 +462,7 @@ public:
      * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
      * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return the degree of the monomial.
      *
@@ -499,8 +499,8 @@ public:
      * degree.
      * Exponents not in \p p will be discarded during the computation of the partial degree.
      *
-     * @param[in] p positions of the symbols to be considered.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p positions of the symbols to be considered.
+     * @param args reference set of piranha::symbol.
      *
      * @return the partial degree of the monomial.
      *
@@ -525,7 +525,7 @@ public:
     }
     /// Low degree (equivalent to the degree).
     /**
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return the output of degree(const symbol_set &args) const.
      *
@@ -538,8 +538,8 @@ public:
     }
     /// Partial low degree (equivalent to the partial degree).
     /**
-     * @param[in] p positions of the symbols to be considered.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p positions of the symbols to be considered.
+     * @param args reference set of piranha::symbol.
      *
      * @return the output of degree(const symbol_set::positions &, const symbol_set &) const.
      *
@@ -558,7 +558,7 @@ public:
      * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
      * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
      *
-     * @param[in] args reference set of piranha::symbol.
+     * @param args reference set of piranha::symbol.
      *
      * @return name of the linear variable.
      *
@@ -608,8 +608,8 @@ public:
      * integral type, each exponent will be promoted to piranha::integer before the exponentiation
      * takes place.
      *
-     * @param[in] x exponent.
-     * @param[in] args reference set of piranha::symbol.
+     * @param x exponent.
+     * @param args reference set of piranha::symbol.
      *
      * @return \p this to the power of \p x.
      *
@@ -648,8 +648,8 @@ public:
      * If the exponent type is an integral type, then the decrement-by-one operation on the affected exponent is checked
      * for negative overflow.
      *
-     * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p position of the symbol with respect to which the differentiation will be calculated.
+     * @param args reference set of piranha::symbol.
      *
      * @return result of the differentiation.
      *
@@ -704,8 +704,8 @@ public:
      * If the exponent type is an integral type, then the increment-by-one operation on the affected exponent is checked
      * for negative overflow.
      *
-     * @param[in] s symbol with respect to which the integration will be calculated.
-     * @param[in] args reference set of piranha::symbol.
+     * @param s symbol with respect to which the integration will be calculated.
+     * @param args reference set of piranha::symbol.
      *
      * @return result of the integration.
      *
@@ -758,8 +758,8 @@ public:
     /**
      * This method will print to stream a human-readable representation of the monomial.
      *
-     * @param[in] os target stream.
-     * @param[in] args reference set of piranha::symbol.
+     * @param os target stream.
+     * @param args reference set of piranha::symbol.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception resulting from:
@@ -791,8 +791,8 @@ public:
     /**
      * Will print to stream a TeX representation of the monomial.
      *
-     * @param[in] os target stream.
-     * @param[in] args reference set of piranha::symbol.
+     * @param os target stream.
+     * @param args reference set of piranha::symbol.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception resulting from:
@@ -844,8 +844,8 @@ public:
      * returned. If \p args is not compatible with \p this and \p pmap, or the positions in \p pmap do not reference
      * only and all the exponents in the monomial, an error will be thrown.
      *
-     * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
-     * @param[in] args reference set of piranha::symbol.
+     * @param pmap piranha::symbol_set::positions_map that will be used for substitution.
+     * @param args reference set of piranha::symbol.
      *
      * @return the result of evaluating \p this with the values provided in \p pmap.
      *
@@ -894,9 +894,9 @@ public:
      * the
      * monomial is unchanged and the substitution yields 1).
      *
-     * @param[in] s name of the symbol that will be substituted.
-     * @param[in] x quantity that will be substituted in place of \p s.
-     * @param[in] args reference set of piranha::symbol.
+     * @param s name of the symbol that will be substituted.
+     * @param x quantity that will be substituted in place of \p s.
+     * @param args reference set of piranha::symbol.
      *
      * @return the result of substituting \p x for \p s.
      *
@@ -949,10 +949,10 @@ public:
      * For instance, substitution of <tt>y**2</tt> with \p a in <tt>y**7</tt> will produce <tt>a**3 * y</tt>, and
      * substitution of <tt>y**-2</tt> with \p a in <tt>y**-7</tt> will produce <tt>a**3 * y**-1</tt>.
      *
-     * @param[in] s name of the symbol that will be substituted.
-     * @param[in] n power of \p s that will be substituted.
-     * @param[in] x quantity that will be substituted in place of \p s to the power of \p n.
-     * @param[in] args reference set of piranha::symbol.
+     * @param s name of the symbol that will be substituted.
+     * @param n power of \p s that will be substituted.
+     * @param x quantity that will be substituted in place of \p s to the power of \p n.
+     * @param args reference set of piranha::symbol.
      *
      * @return the result of substituting \p x for \p s to the power of \p n.
      *
@@ -1005,10 +1005,10 @@ public:
      *
      * This method offers the basic exception safety guarantee.
      *
-     * @param[out] res return value.
-     * @param[in] t1 first argument.
-     * @param[in] t2 second argument.
-     * @param[in] args reference set of arguments.
+     * @param res return value.
+     * @param t1 first argument.
+     * @param t2 second argument.
+     * @param args reference set of arguments.
      *
      * @throws std::invalid_argument if the size of \p t1 differs from the size of \p args.
      * @throws unspecified any exception thrown by piranha::array_key::vector_add(), or by piranha::math::mul3().
@@ -1038,10 +1038,10 @@ public:
      *
      * This method offers the basic exception safety guarantee.
      *
-     * @param[out] out return value.
-     * @param[in] a first argument.
-     * @param[in] b second argument.
-     * @param[in] args reference set of arguments.
+     * @param out return value.
+     * @param a first argument.
+     * @param b second argument.
+     * @param args reference set of arguments.
      *
      * @throws std::invalid_argument if the size of \p a differs from the size of \p args.
      * @throws unspecified any exception thrown by piranha::array_key::vector_add().
@@ -1063,10 +1063,10 @@ public:
      *
      * This method offers the basic exception safety guarantee.
      *
-     * @param[out] out return value.
-     * @param[in] a first argument.
-     * @param[in] b second argument.
-     * @param[in] args reference set of arguments.
+     * @param out return value.
+     * @param a first argument.
+     * @param b second argument.
+     * @param args reference set of arguments.
      *
      * @throws std::invalid_argument if the size of \p a differs from the size of \p args.
      * @throws unspecified any exception thrown by piranha::array_key::vector_sub().
@@ -1083,7 +1083,7 @@ public:
     /**
      * The two monomials will be compared lexicographically.
      *
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return \p true if \p this is lexicographically less than \p other, \p false otherwise.
      *
@@ -1108,8 +1108,8 @@ public:
      * Note that this method does not offer a strong exception safety guarantee, as it uses
      * <tt>std::copy()</tt> internally to copy the exponents to \p out.
      *
-     * @param[out] out vector into which the exponents will be copied.
-     * @param[in] args reference set of arguments.
+     * @param out vector into which the exponents will be copied.
+     * @param args reference set of arguments.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception thrown by:
@@ -1134,7 +1134,7 @@ public:
      * This method will split \p this into two monomials: the second monomial will contain the exponent
      * of the first variable in \p args, the first monomial will contain all the other exponents.
      *
-     * @param[in] args reference arguments set.
+     * @param args reference arguments set.
      *
      * @return a pair of monomials, the second one containing the first exponent, the first one containing all the
      * other exponents.
@@ -1158,7 +1158,7 @@ public:
     /**
      * This method will return \p true if at least one exponent is less than zero, \p false otherwise.
      *
-     * @param[in] args reference arguments set.
+     * @param args reference arguments set.
      *
      * @return \p true if at least one exponent is less than zero, \p false otherwise.
      *
@@ -1207,9 +1207,9 @@ public:
      *
      * This method will pack \p this into \p packer using the format \p f.
      *
-     * @param[in] packer the target packer.
-     * @param[in] f the serialization format.
-     * @param[in] s reference arguments set.
+     * @param packer the target packer.
+     * @param f the serialization format.
+     * @param s reference arguments set.
      *
      * @throws std::invalid_argument if the sizes of \p s and \p this differ.
      * @throws unspecified any exception thrown by piranha::msgpack_pack().
@@ -1234,9 +1234,9 @@ public:
      * This method will deserialize \p o into \p this using the format \p f.
      * This method provides the basic exception safety guarantee.
      *
-     * @param[in] o msgpack object that will be deserialized.
-     * @param[in] f serialization format.
-     * @param[in] s reference arguments set.
+     * @param o msgpack object that will be deserialized.
+     * @param f serialization format.
+     * @param s reference arguments set.
      *
      * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
      * @throws unspecified any exception thrown by piranha::msgpack_convert().

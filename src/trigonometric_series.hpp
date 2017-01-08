@@ -227,7 +227,7 @@ public:
      * \note
      * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
      *
-     * @param[in] names names of the variables to be considered in the computation.
+     * @param names names of the variables to be considered in the computation.
      *
      * @return partial trigonometric degree of the series.
      *
@@ -271,7 +271,7 @@ public:
      * \note
      * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
      *
-     * @param[in] names names of the variables to be considered in the computation.
+     * @param names names of the variables to be considered in the computation.
      *
      * @return partial trigonometric low degree of the series.
      *
@@ -316,7 +316,7 @@ public:
      * \note
      * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
      *
-     * @param[in] names names of the variables to be considered in the computation.
+     * @param names names of the variables to be considered in the computation.
      *
      * @return partial trigonometric order of the series.
      *
@@ -360,7 +360,7 @@ public:
      * \note
      * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
      *
-     * @param[in] names names of the variables to be considered in the computation.
+     * @param names names of the variables to be considered in the computation.
      *
      * @return partial trigonometric low order of the series.
      *
@@ -397,8 +397,8 @@ struct t_degree_impl<Series,
      * \note
      * This operator is enabled only if the invoked method in piranha::trigonometric_series is enabled.
      *
-     * @param[in] ts input series.
-     * @param[in] args variadic argument pack.
+     * @param ts input series.
+     * @param args variadic argument pack.
      *
      * @return trigonometric degree of \p ts.
      *
@@ -424,8 +424,8 @@ struct t_ldegree_impl<Series,
      * \note
      * This operator is enabled only if the invoked method in piranha::trigonometric_series is enabled.
      *
-     * @param[in] ts input series.
-     * @param[in] args variadic argument pack.
+     * @param ts input series.
+     * @param args variadic argument pack.
      *
      * @return trigonometric low degree of \p ts.
      *
@@ -451,8 +451,8 @@ struct t_order_impl<Series,
      * \note
      * This operator is enabled only if the invoked method in piranha::trigonometric_series is enabled.
      *
-     * @param[in] ts input series.
-     * @param[in] args variadic argument pack.
+     * @param ts input series.
+     * @param args variadic argument pack.
      *
      * @return trigonometric order of \p ts.
      *
@@ -478,8 +478,8 @@ struct t_lorder_impl<Series,
      * \note
      * This operator is enabled only if the invoked method in piranha::trigonometric_series is enabled.
      *
-     * @param[in] ts input series.
-     * @param[in] args variadic argument pack.
+     * @param ts input series.
+     * @param args variadic argument pack.
      *
      * @return trigonometric low order of \p ts.
      *

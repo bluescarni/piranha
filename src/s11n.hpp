@@ -329,8 +329,8 @@ using boost_save_enabler
  * boost_save_impl<Archive, T>{}(ar, x);
  * @endcode
  *
- * @param[in] ar target Boost saving archive.
- * @param[in] x object to be saved.
+ * @param ar target Boost saving archive.
+ * @param x object to be saved.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::boost_save_impl.
  */
@@ -470,8 +470,8 @@ using boost_load_enabler
  * boost_load_impl<Archive, T>{}(ar, x);
  * @endcode
  *
- * @param[in] ar the source Boost loading archive.
- * @param[in] x the object that will be loaded from \p ar.
+ * @param ar the source Boost loading archive.
+ * @param x the object that will be loaded from \p ar.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::boost_load_impl.
  */
@@ -723,8 +723,8 @@ template <typename Stream, typename T>
 struct msgpack_pack_impl<Stream, T, msgpack_scalar_enabler<Stream, T>> {
     /// Call operator.
     /**
-     * @param[in] packer the target packer.
-     * @param[in] x the object to be packed.
+     * @param packer the target packer.
+     * @param x the object to be packed.
      *
      * @throws unspecified any exception thrown by <tt>msgpack::packer::pack()</tt>.
      */
@@ -756,9 +756,9 @@ struct msgpack_pack_impl<Stream, long double, msgpack_ld_enabler<Stream>> {
      * If \p f is msgpack_format::binary then the byte representation of \p x is packed into \p packer. Otherwise,
      * \p x is converted into string format and the resulting string will be packed into \p packer.
      *
-     * @param[in] packer the target packer.
-     * @param[in] x the object to be packed.
-     * @param[in] f the serialization format.
+     * @param packer the target packer.
+     * @param x the object to be packed.
+     * @param f the serialization format.
      *
      * @throws unspecified any exception thrown by:
      * - the public interface of \p msgpack::packer and \p std::ostringstream,
@@ -821,8 +821,8 @@ template <typename Stream>
 struct msgpack_pack_impl<Stream, std::string, msgpack_string_enabler<Stream>> {
     /// Call operator.
     /**
-     * @param[in] packer the target packer.
-     * @param[in] s the string to be packed.
+     * @param packer the target packer.
+     * @param s the string to be packed.
      *
      * @throws unspecified any exception thrown by <tt>msgpack::packer::pack()</tt>.
      */
@@ -858,9 +858,9 @@ using msgpack_pack_enabler
  * msgpack_pack_impl<Stream, T>{}(packer, x, f);
  * @endcode
  *
- * @param[in] packer the msgpack packer object.
- * @param[in] x the object to be packed into \p packer.
- * @param[in] f the serialization format.
+ * @param packer the msgpack packer object.
+ * @param x the object to be packed into \p packer.
+ * @param f the serialization format.
  *
  * @throws unspecified any exception thrown by the call operator piranha::msgpack_pack_impl.
  */
@@ -903,8 +903,8 @@ template <typename T>
 struct msgpack_convert_impl<T, msgpack_convert_scalar_enabler<T>> {
     /// Call operator.
     /**
-     * @param[out] x the output value.
-     * @param[in] o the object to be converted.
+     * @param x the output value.
+     * @param o the object to be converted.
      *
      * @throws unspecified any exception thrown by <tt>msgpack::object::convert()</tt>.
      */
@@ -922,8 +922,8 @@ template <>
 struct msgpack_convert_impl<std::string> {
     /// Call operator.
     /**
-     * @param[out] s the output string.
-     * @param[in] o the object to be converted.
+     * @param s the output string.
+     * @param o the object to be converted.
      *
      * @throws unspecified any exception thrown by the public interface of <tt>msgpack::object</tt>.
      */
@@ -959,9 +959,9 @@ using msgpack_convert_enabler
  * msgpack_convert_impl<T>{}(x, o, f);
  * @endcode
  *
- * @param[out] x the output value.
- * @param[in] o the msgpack object that will be converted into \p x.
- * @param[in] f the serialization format.
+ * @param x the output value.
+ * @param o the msgpack object that will be converted into \p x.
+ * @param f the serialization format.
  *
  * @throws unspecified any exception thrown by the call operator piranha::msgpack_convert_impl.
  */
@@ -989,9 +989,9 @@ template <typename T>
 struct msgpack_convert_impl<T, msgpack_convert_ld_enabler<T>> {
     /// Call operator.
     /**
-     * @param[out] x the output value.
-     * @param[in] o the object to be converted.
-     * @param[in] f the serialization format.
+     * @param x the output value.
+     * @param o the object to be converted.
+     * @param f the serialization format.
      *
      * @throws unspecified any exception thrown by the public interface of <tt>msgpack::object</tt> and
      * <tt>std::istringstream</tt>.
@@ -1556,10 +1556,10 @@ inline std::pair<compression, data_format> get_cdf_from_filename(std::string fil
  * format \p f establishes both the lower level serialization method to be used and its variant (e.g., portable
  * vs binary). If requested (i.e., if \p c is not piranha::compression::none), the output file will be compressed.
  *
- * @param[in] x object to be saved to file.
- * @param[in] filename name of the output file.
- * @param[in] f data format.
- * @param[in] c compression format.
+ * @param x object to be saved to file.
+ * @param filename name of the output file.
+ * @param f data format.
+ * @param c compression format.
  *
  * @throws piranha::not_implemented_error in the following cases:
  * - the type \p T does not implement the required serialization method (e.g., \p f is
@@ -1628,10 +1628,10 @@ inline void save_file(const T &x, const std::string &filename)
  * format \p f establishes both the lower level serialization method to be used and its variant (e.g., portable
  * vs binary).
  *
- * @param[out] x the object into which the content of the file name \p filename will be deserialized.
- * @param[in] filename name of the input file.
- * @param[in] f data format.
- * @param[in] c compression format.
+ * @param x the object into which the content of the file name \p filename will be deserialized.
+ * @param filename name of the input file.
+ * @param f data format.
+ * @param c compression format.
  *
  * @throws piranha::not_implemented_error in the following cases:
  * - the type \p T does not implement the required serialization method (e.g., \p f is

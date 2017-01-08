@@ -437,7 +437,7 @@ public:
      * The partial degree of the series is the maximum partial degree of its terms. If the series is empty, zero will be
      * returned.
      *
-     * @param[in] names names of the variables to be considered in the computation of the degree.
+     * @param names names of the variables to be considered in the computation of the degree.
      *
      * @return the partial degree of the series.
      *
@@ -467,7 +467,7 @@ public:
      * The partial low degree of the series is the minimum partial low degree of its terms. If the series is empty, zero
      * will be returned.
      *
-     * @param[in] names names of the variables to be considered in the computation of the low degree.
+     * @param names names of the variables to be considered in the computation of the low degree.
      *
      * @return the partial low degree of the series.
      *
@@ -502,7 +502,7 @@ public:
      * max_degree (in particular, in the current implementation there is no truncation implemented for keys -
      * a key is kept as-is or completely eliminated).
      *
-     * @param[in] max_degree maximum allowed total degree.
+     * @param max_degree maximum allowed total degree.
      *
      * @return the truncated counterpart of \p this.
      *
@@ -534,8 +534,8 @@ public:
      * This method is equivalent to the other overload, the only difference being that the partial degree is considered
      * in the computation.
      *
-     * @param[in] max_degree maximum allowed partial degree.
-     * @param[in] names names of the variables to be considered in the computation of the partial degree.
+     * @param max_degree maximum allowed partial degree.
+     * @param names names of the variables to be considered in the computation of the partial degree.
      *
      * @return the truncated counterpart of \p this.
      *
@@ -584,8 +584,8 @@ struct degree_impl<Series, ps_degree_enabler<Series>> {
     /**
      * If available, it will call piranha::power_series::degree().
      *
-     * @param[in] s input power series.
-     * @param[in] args additional arguments that will be passed to the series' method.
+     * @param s input power series.
+     * @param args additional arguments that will be passed to the series' method.
      *
      * @return the degree of input series \p s.
      *
@@ -609,8 +609,8 @@ struct ldegree_impl<Series, ps_degree_enabler<Series>> {
     /**
      * If available, it will call piranha::power_series::ldegree().
      *
-     * @param[in] s input power series.
-     * @param[in] args additional arguments that will be passed to the series' method.
+     * @param s input power series.
+     * @param args additional arguments that will be passed to the series' method.
      *
      * @return the low degree of input series \p s.
      *
@@ -634,9 +634,9 @@ struct truncate_degree_impl<Series, T, ps_degree_enabler<Series>> {
     /**
      * If available, it will call piranha::power_series::truncate_degree().
      *
-     * @param[in] s input power series.
-     * @param[in] max_degree maximum degree.
-     * @param[in] args additional arguments that will be passed to the series' method.
+     * @param s input power series.
+     * @param max_degree maximum degree.
+     * @param args additional arguments that will be passed to the series' method.
      *
      * @return the truncated version of input series \p s.
      *

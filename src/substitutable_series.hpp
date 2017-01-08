@@ -206,8 +206,8 @@ public:
      * This method will return an object resulting from the substitution of the symbol called \p name
      * in \p this with the generic object \p x.
      *
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] x object used for the substitution.
+     * @param name name of the symbol to be substituted.
+     * @param x object used for the substitution.
      *
      * @return the result of the substitution.
      *
@@ -252,9 +252,9 @@ struct subs_impl<Series, T, detail::subs_impl_subs_series_enabler<Series, T>> {
     /**
      * The call operator is equivalent to calling the substitution method on \p s.
      *
-     * @param[in] s target series.
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] x object used for substitution.
+     * @param s target series.
+     * @param name name of the symbol to be substituted.
+     * @param x object used for substitution.
      *
      * @return the result of the substitution.
      *

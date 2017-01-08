@@ -420,8 +420,8 @@ public:
      * This constructor is used in the generic constructor of piranha::series. It is equivalent
      * to a copy constructor with extra checking.
      *
-     * @param[in] other construction argument.
-     * @param[in] args reference symbol set.
+     * @param other construction argument.
+     * @param args reference symbol set.
      *
      * @throws std::invalid_argument if \p other is not compatible with \p args.
      * @throws unspecified any exception thrown by the copy constructor.
@@ -478,9 +478,9 @@ public:
      *
      * This method provides the basic exception safety guarantee.
      *
-     * @param[in] begin start of the range of \f$ a_{i,j} \f$.
-     * @param[in] end end of the range of \f$ a_{i,j} \f$.
-     * @param[in] e exponent.
+     * @param begin start of the range of \f$ a_{i,j} \f$.
+     * @param end end of the range of \f$ a_{i,j} \f$.
+     * @param e exponent.
      *
      * @throws std::invalid_argument if the term to be inserted is not in canonical form, or if the insertion
      * leads to an overflow in the value of an exponent.
@@ -539,7 +539,7 @@ public:
      * - for each term in the first divisor there exist an identical term in the
      *   second divisor.
      *
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return \p true if \p this is equal to \p other, \p false otherwise.
      */
@@ -559,7 +559,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return the opposite of operator==().
      */
@@ -599,7 +599,7 @@ public:
      * divisor is compatible if the number of variables in the terms is the same as the number
      * of symbols in \p args.
      *
-     * @param[in] args reference symbol set.
+     * @param args reference symbol set.
      *
      * @return \p true if \p this is compatible with \p args, \p false otherwise.
      */
@@ -621,7 +621,7 @@ public:
     /**
      * Only an empty divisor is considered unitary.
      *
-     * @param[in] args reference symbol set.
+     * @param args reference symbol set.
      *
      * @return \p true if \p this is empty, \p false otherwise.
      *
@@ -644,8 +644,8 @@ public:
      * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the terms,
      * with the corresponding \f$ a_{i,j} \f$ values constructed from the integral constant 0.
      *
-     * @param[in] orig_args current reference arguments set for \p this.
-     * @param[in] new_args new arguments set.
+     * @param orig_args current reference arguments set for \p this.
+     * @param new_args new arguments set.
      *
      * @return a divisor resulting from merging \p new_args into \p this.
      *
@@ -677,8 +677,8 @@ public:
     /**
      * This method will print to the stream \p os a text representation of \p this.
      *
-     * @param[in] os target stream.
-     * @param[in] args reference symbol set.
+     * @param os target stream.
+     * @param args reference symbol set.
      *
      * @throws std::invalid_argument if the number of variables in the terms of \p this is different from the
      * size of \p args.
@@ -738,8 +738,8 @@ public:
     /**
      * This method will print to the stream \p os a TeX representation of \p this.
      *
-     * @param[in] os target stream.
-     * @param[in] args reference symbol set.
+     * @param os target stream.
+     * @param args reference symbol set.
      *
      * @throws std::invalid_argument if the number of variables in the terms of \p this is different from the size
      * of \p args.
@@ -800,8 +800,8 @@ public:
      * If the divisor has no terms, 1 will be returned. If \p args is not compatible with \p this and \p pmap,
      * or the positions in \p pmap do not reference only and all the variables in the divisor, an error will be thrown.
      *
-     * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
-     * @param[in] args reference set of piranha::symbol.
+     * @param pmap piranha::symbol_set::positions_map that will be used for substitution.
+     * @param args reference set of piranha::symbol.
      *
      * @return the result of evaluating \p this with the values provided in \p pmap.
      *
@@ -854,10 +854,10 @@ public:
      *
      * This method offers the basic exception safety guarantee.
      *
-     * @param[out] res return value.
-     * @param[in] t1 first argument.
-     * @param[in] t2 second argument.
-     * @param[in] args reference set of arguments.
+     * @param res return value.
+     * @param t1 first argument.
+     * @param t2 second argument.
+     * @param args reference set of arguments.
      *
      * @throws std::invalid_argument if the key of \p t1 and/or the key of \p t2 are incompatible with \p args, or if
      * the multiplication
@@ -898,8 +898,8 @@ public:
      * contains a set of symbols that are candidates for elimination. The method will remove
      * from \p candidates those symbols whose \f$ a_{i,j} \f$ in \p this are not all zeroes.
      *
-     * @param[in] candidates set of candidates for elimination.
-     * @param[in] args reference arguments set.
+     * @param candidates set of candidates for elimination.
+     * @param args reference arguments set.
      *
      * @throws std::invalid_argument if \p this is not compatible with \p args.
      * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::symbol_set::remove().
@@ -924,8 +924,8 @@ public:
      * This method will return a copy of \p this with the \f$ a_{i,j} \f$ associated to the symbols
      * in \p trim_args removed.
      *
-     * @param[in] trim_args arguments whose \f$ a_{i,j} \f$ will be removed.
-     * @param[in] orig_args original arguments set.
+     * @param trim_args arguments whose \f$ a_{i,j} \f$ will be removed.
+     * @param orig_args original arguments set.
      *
      * @return trimmed copy of \p this.
      *
@@ -958,8 +958,8 @@ public:
      * whose \f$ a_{i,j} \f$ values for the only symbol in \p p are not zero, the second one the terms whose
      * \f$ a_{i,j} \f$  values for the only symbol in \p p are zero.
      *
-     * @param[in] p a piranha::symbol_set::positions containing exactly one element.
-     * @param[in] args reference set of piranha::symbol.
+     * @param p a piranha::symbol_set::positions containing exactly one element.
+     * @param args reference set of piranha::symbol.
      *
      * @return the original divisor split into two parts.
      *
@@ -1128,7 +1128,7 @@ struct hash<piranha::divisor<T>> {
     typedef piranha::divisor<T> argument_type;
     /// Hash operator.
     /**
-     * @param[in] a piranha::divisor whose hash value will be returned.
+     * @param a piranha::divisor whose hash value will be returned.
      *
      * @return piranha::divisor::hash().
      */

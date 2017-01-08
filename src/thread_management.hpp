@@ -97,7 +97,7 @@ namespace piranha
  *
  * In case of exceptions, the thread will not have been bound to any processor.
  *
- * @param[in] n index of the processor to which the thread will be bound (starting from index 0).
+ * @param n index of the processor to which the thread will be bound (starting from index 0).
  *
  * @throws std::invalid_argument if one of these conditions arises:
  * - n is greater than an implementation-defined maximum value,

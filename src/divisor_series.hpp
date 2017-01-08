@@ -469,7 +469,7 @@ public:
      * The derivative is computed via differentiation of the coefficients and the application of the product
      * rule.
      *
-     * @param[in] name name of the variable with respect to which the differentiation will be computed.
+     * @param name name of the variable with respect to which the differentiation will be computed.
      *
      * @return the partial derivative of \p this with respect to \p name.
      *
@@ -510,7 +510,7 @@ public:
      * Integration for divisor series is supported only if the coefficient is integrable and no divisor in the calling
      * series depends on the integration variable.
      *
-     * @param[in] name name of the variable with respect to which the integration will be performed.
+     * @param name name of the variable with respect to which the integration will be performed.
      *
      * @return the antiderivative of \p this with respect to \p name.
      *

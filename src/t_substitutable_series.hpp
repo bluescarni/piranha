@@ -200,9 +200,9 @@ public:
      *
      * Trigonometric substitution is the substitution of the cosine and sine of \p name for \p c and \p s.
      *
-     * @param[in] name name of the symbol that will be subject to substitution.
-     * @param[in] c cosine of \p name.
-     * @param[in] s sine of \p name.
+     * @param name name of the symbol that will be subject to substitution.
+     * @param c cosine of \p name.
+     * @param s sine of \p name.
      *
      * @return the result of the trigonometric substitution.
      *
@@ -251,10 +251,10 @@ struct t_subs_impl<Series, U, V, detail::t_subs_impl_t_subs_series_enabler<Serie
     /**
      * The call operator is equivalent to calling the substitution method on \p s.
      *
-     * @param[in] series argument for the substitution.
-     * @param[in] name name of the symbol that will be subject to substitution.
-     * @param[in] c cosine of \p name.
-     * @param[in] s sine of \p name.
+     * @param series argument for the substitution.
+     * @param name name of the symbol that will be subject to substitution.
+     * @param c cosine of \p name.
+     * @param s sine of \p name.
      *
      * @return the result of the substitution.
      *

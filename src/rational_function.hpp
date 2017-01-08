@@ -592,7 +592,7 @@ public:
      * constructed from the LCM
      *   of the coefficients).
      *
-     * @param[in] x construction argument.
+     * @param x construction argument.
      *
      * @throws std::invalid_argument if, when constructing from rational_function::p_type or rational_function::q_type,
      * a negative exponent is
@@ -617,8 +617,8 @@ public:
      * *this = rational_function(std::forward<T>(x)) / rational_function(std::forward<U>(y));
      * @endcode
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @throws unspecified any exception thrown by:
      * - the invoked unary constructors,
@@ -631,7 +631,7 @@ public:
     }
     /// Copy-assignment operator.
     /**
-     * @param[in] other the assignment argument.
+     * @param other the assignment argument.
      *
      * @return a reference to \p this.
      *
@@ -659,7 +659,7 @@ public:
      * The operator is implemented as the assignment from a piranha::rational_function constructed
      * from \p x.
      *
-     * @param[in] x assignment argument.
+     * @param x assignment argument.
      *
      * @return a reference to \p this.
      *
@@ -716,8 +716,8 @@ public:
     /**
      * Will stream to \p os a human-readable representation of \p r.
      *
-     * @param[in,out] os target stream.
-     * @param[in] r the piranha::rational_function to be streamed.
+     * @param os target stream.
+     * @param r the piranha::rational_function to be streamed.
      *
      * @return a reference to \p os.
      *
@@ -756,7 +756,7 @@ public:
     /**
      * This method will stream to \p os a TeX representation of \p this.
      *
-     * @param[in] os target stream.
+     * @param os target stream.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::rational_function::p_type::print_tex(),
@@ -856,8 +856,8 @@ public:
      * The numerator and denominator of \p a and \p b will be compared (after any necessary conversion
      * of \p a or \p b to piranha::rational_function).
      *
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return \p true if the numerator and denominator of \p this are equal to the numerator and
      * denominator of \p other, \p false otherwise.
@@ -878,8 +878,8 @@ public:
      *
      * This operator is the opposite of operator==().
      *
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return the opposite of operator==().
      *
@@ -908,8 +908,8 @@ public:
      *
      * This operator will compute the result of adding \p a to \p b.
      *
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return <tt>a + b</tt>.
      *
@@ -933,7 +933,7 @@ public:
      * return *this = *this + other;
      * @endcode
      *
-     * @param[in] other argument.
+     * @param other argument.
      *
      * @return a reference to \p this.
      *
@@ -968,8 +968,8 @@ public:
      *
      * This operator will compute the result of subtracting \p b from \p a.
      *
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return <tt>a - b</tt>.
      *
@@ -993,7 +993,7 @@ public:
      * return *this = *this - other;
      * @endcode
      *
-     * @param[in] other argument.
+     * @param other argument.
      *
      * @return a reference to \p this.
      *
@@ -1012,8 +1012,8 @@ public:
      *
      * This operator will compute the result of multiplying \p a by \p b.
      *
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return <tt>a * b</tt>.
      *
@@ -1037,7 +1037,7 @@ public:
      * return *this = *this * other;
      * @endcode
      *
-     * @param[in] other argument.
+     * @param other argument.
      *
      * @return a reference to \p this.
      *
@@ -1056,8 +1056,8 @@ public:
      *
      * This operator will compute the result of dividing \p a by \p b.
      *
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return <tt>a / b</tt>.
      *
@@ -1081,7 +1081,7 @@ public:
      * return *this = *this / other;
      * @endcode
      *
-     * @param[in] other argument.
+     * @param other argument.
      *
      * @return a reference to \p this.
      *
@@ -1102,7 +1102,7 @@ public:
      * functions are requested repeatedly (e.g., during substitution operations). The cache is
      * thread-safe and it can be cleared with piranha::rational_function::clear_pow_cache().
      *
-     * @param[in] n an integral exponent.
+     * @param n an integral exponent.
      *
      * @return \p this raised to the power of \p n.
      *
@@ -1187,8 +1187,8 @@ public:
      * return math::subs(num(),name,x) / math::subs(den(),name,x);
      * @endcode
      *
-     * @param[in] name name of the variable to be substituted.
-     * @param[in] x substitution argument.
+     * @param name name of the variable to be substituted.
+     * @param x substitution argument.
      *
      * @return the result of substituting \p name with \p x in \p this.
      *
@@ -1220,9 +1220,9 @@ public:
      * return math::ipow_subs(num(),name,n,x) / math::ipow_subs(den(),name,n,x);
      * @endcode
      *
-     * @param[in] name name of the variable to be substituted.
-     * @param[in] n power of \p name to be substituted.
-     * @param[in] x substitution argument.
+     * @param name name of the variable to be substituted.
+     * @param n power of \p name to be substituted.
+     * @param x substitution argument.
      *
      * @return the result of substituting \p name to the power of \p n with \p x in \p this.
      *
@@ -1270,7 +1270,7 @@ public:
      * Two rational functions are identical if their numerators and denominators are, via
      * piranha::rational_function::p_type::is_identical().
      *
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return \p true if \p this is identical to \p other, \p false otherwise.
      */
@@ -1291,8 +1291,8 @@ public:
      *
      * It is safe to call this method from multiple threads.
      *
-     * @param[in] name symbol for which the custom partial derivative function will be registered.
-     * @param[in] func custom partial derivative function.
+     * @param name symbol for which the custom partial derivative function will be registered.
+     * @param func custom partial derivative function.
      *
      * @throws unspecified any exception thrown by:
      * - failure(s) in threading primitives,
@@ -1314,7 +1314,7 @@ public:
      *
      * It is safe to call this method from multiple threads.
      *
-     * @param[in] name symbol for which the custom partial derivative function will be unregistered.
+     * @param name symbol for which the custom partial derivative function will be unregistered.
      *
      * @throws unspecified any exception thrown by:
      * - failure(s) in threading primitives,
@@ -1345,7 +1345,7 @@ public:
      * The result is computed via the quotient rule. Internally, this method will call
      * piranha::math::partial() on the numerator and denominator of \p this.
      *
-     * @param[in] name name of the variable with respect to which to differentiate.
+     * @param name name of the variable with respect to which to differentiate.
      *
      * @return the partial derivative of \p r with respect to \p name.
      *
@@ -1382,8 +1382,8 @@ struct print_tex_coefficient_impl<T, typename std::enable_if<std::is_base_of<det
     /**
      * This operator will call internally piranha::rational_function::print_tex().
      *
-     * @param[in] os target stream.
-     * @param[in] r piranha::rational_function argument.
+     * @param os target stream.
+     * @param r piranha::rational_function argument.
      *
      * @throws unspecified any exception thrown by piranha::rational_function::print_tex().
      */
@@ -1404,7 +1404,7 @@ template <typename T>
 struct is_zero_impl<T, typename std::enable_if<std::is_base_of<detail::rational_function_tag, T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] r the piranha::rational_function to be tested.
+     * @param r the piranha::rational_function to be tested.
      *
      * @return the result of calling piranha::math::is_zero() on the numerator of \p r.
      */
@@ -1432,8 +1432,8 @@ public:
      * \note
      * The call operator is enabled only if <tt>return r.pow(n)</tt> is a valid expression.
      *
-     * @param[in] r the piranha::rational_function base.
-     * @param[in] n the integral exponent.
+     * @param r the piranha::rational_function base.
+     * @param n the integral exponent.
      *
      * @return <tt>r.pow(n)</tt>.
      *
@@ -1462,9 +1462,9 @@ public:
      * \note
      * The call operator is enabled only if <tt>return r.subs(s,x)</tt> is a valid expression.
      *
-     * @param[in] r the piranha::rational_function argument.
-     * @param[in] s the name of the variable to be substituted.
-     * @param[in] x the substitution argument.
+     * @param r the piranha::rational_function argument.
+     * @param s the name of the variable to be substituted.
+     * @param x the substitution argument.
      *
      * @return <tt>r.subs(s,x)</tt>.
      *
@@ -1494,10 +1494,10 @@ public:
      * \note
      * The call operator is enabled only if <tt>return r.ipow_subs(s,n,x)</tt> is a valid expression.
      *
-     * @param[in] r the piranha::rational_function argument.
-     * @param[in] s the name of the variable to be substituted.
-     * @param[in] n the power of \p s to be substituted.
-     * @param[in] x the substitution argument.
+     * @param r the piranha::rational_function argument.
+     * @param s the name of the variable to be substituted.
+     * @param n the power of \p s to be substituted.
+     * @param x the substitution argument.
      *
      * @return <tt>r.ipow_subs(s,n,x)</tt>.
      *
@@ -1535,8 +1535,8 @@ struct partial_impl<T, detail::rf_partial_enabler<T>> {
      * be used
      * to compute the return value. Otherwise, the output of piranha::rational_function::partial() will be returned.
      *
-     * @param[in] r input piranha::rational_function.
-     * @param[in] name name of the argument with respect to which the differentiation will be calculated.
+     * @param r input piranha::rational_function.
+     * @param name name of the argument with respect to which the differentiation will be calculated.
      *
      * @return the partial derivative of \p r with respect to \p name.
      *
@@ -1576,8 +1576,8 @@ struct integrate_impl<T, typename std::enable_if<std::is_base_of<detail::rationa
     /**
      * The integration will be successful only if the denominator of \p r does not depend on the integration variable.
      *
-     * @param[in] r piranha::rational_function argument.
-     * @param[in] name name of the integration variable.
+     * @param r piranha::rational_function argument.
+     * @param name name of the integration variable.
      *
      * @return an antiderivative of \p r with respect to \p name.
      *
@@ -1622,8 +1622,8 @@ public:
      * The evaluation of a rational function is constructed from the ratio of the evaluation of its numerator
      * by the evaluation of its denominator. The return type is the type resulting from this operation.
      *
-     * @param[in] r the piranha::rational_function argument.
-     * @param[in] m the evaluation map.
+     * @param r the piranha::rational_function argument.
+     * @param m the evaluation map.
      *
      * @return the evaluation of \p r according to \p m.
      *
@@ -1646,7 +1646,7 @@ template <typename T>
 struct cos_impl<T, typename std::enable_if<std::is_base_of<detail::rational_function_tag, T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] r the piranha::rational_function argument.
+     * @param r the piranha::rational_function argument.
      *
      * @return 1 if \p r is zero.
      *
@@ -1670,7 +1670,7 @@ template <typename T>
 struct sin_impl<T, typename std::enable_if<std::is_base_of<detail::rational_function_tag, T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] r the piranha::rational_function argument.
+     * @param r the piranha::rational_function argument.
      *
      * @return 0 if \p r is zero.
      *
@@ -1696,8 +1696,8 @@ struct degree_impl<T, typename std::enable_if<std::is_base_of<detail::rational_f
      * The (partial) degree of a rational function is defined as the maximum (partial)
      * degree of numerator and denominator.
      *
-     * @param[in] r the piranha::rational_function argument.
-     * @param[in] args either an empty pack, or a univariate pack containing a vector
+     * @param r the piranha::rational_function argument.
+     * @param args either an empty pack, or a univariate pack containing a vector
      * of strings representing the names of the variables with respect to which
      * the partial degree is computed.
      *
@@ -1728,9 +1728,9 @@ struct divexact_impl<T, typename std::enable_if<std::is_base_of<detail::rational
      * retval = n / d;
      * @endcode
      *
-     * @param[out] retval the result of exact division.
-     * @param[in] n the numerator.
-     * @param[in] d the denominator.
+     * @param retval the result of exact division.
+     * @param n the numerator.
+     * @param d the denominator.
      *
      * @throws unspecified any exception thrown by piranha::rational_function::operator/().
      */

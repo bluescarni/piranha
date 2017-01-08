@@ -207,9 +207,9 @@ public:
      * name
      * in \p this with the generic object \p x.
      *
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] n integral power of the symbol to be substituted.
-     * @param[in] x object used for the substitution.
+     * @param name name of the symbol to be substituted.
+     * @param n integral power of the symbol to be substituted.
+     * @param x object used for the substitution.
      *
      * @return the result of the substitution.
      *
@@ -236,9 +236,9 @@ public:
      * This is a convenience method that will call the other ipow_subs() overload after converting
      * \p n to piranha::integer.
      *
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] n integral power of the symbol to be substituted.
-     * @param[in] x object used for the substitution.
+     * @param name name of the symbol to be substituted.
+     * @param n integral power of the symbol to be substituted.
+     * @param x object used for the substitution.
      *
      * @return the result of the substitution.
      *
@@ -278,10 +278,10 @@ struct ipow_subs_impl<Series, T, detail::ipow_subs_impl_ipow_subs_series_enabler
     /**
      * The call operator is equivalent to calling the substitution method on \p s.
      *
-     * @param[in] s target series.
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] n integral power of the symbol to be substituted.
-     * @param[in] x object used for substitution.
+     * @param s target series.
+     * @param name name of the symbol to be substituted.
+     * @param n integral power of the symbol to be substituted.
+     * @param x object used for substitution.
      *
      * @return the result of the substitution.
      *
