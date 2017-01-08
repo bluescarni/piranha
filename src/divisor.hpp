@@ -446,10 +446,22 @@ public:
         piranha_assert(destruction_checks());
         PIRANHA_TT_CHECK(is_key, divisor);
     }
-    /// Defaulted copy assignment operator.
-    divisor &operator=(const divisor &) = default;
-    /// Defaulted move assignment operator.
-    divisor &operator=(divisor &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of piranha::hash_set.
+     */
+    divisor &operator=(const divisor &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    divisor &operator=(divisor &&other) = default;
     /// Create and insert a term from range and exponent.
     /**
      * \note
@@ -980,6 +992,7 @@ public:
     }
 
 private:
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
     // Make friend with the s11n functions.
     template <typename Archive, typename T1>
     friend void boost::serialization::save(Archive &, const piranha::boost_s11n_key_wrapper<piranha::divisor<T1>> &,
@@ -987,6 +1000,8 @@ private:
     template <typename Archive, typename T1>
     friend void boost::serialization::load(Archive &, piranha::boost_s11n_key_wrapper<piranha::divisor<T1>> &,
                                            unsigned);
+#endif
+
 #if defined(PIRANHA_WITH_MSGPACK)
     template <typename Stream>
     using msgpack_pack_enabler

@@ -83,11 +83,13 @@ public:
     thread_barrier(const thread_barrier &) = delete;
     /// Deleted move constructor.
     thread_barrier(thread_barrier &&) = delete;
-    /// Deleted assignment operator.
+
+private:
     thread_barrier &operator=(const thread_barrier &) = delete;
-    /// Deleted move assignment operator.
     thread_barrier &operator=(thread_barrier &&) = delete;
-    /// Default destructor.
+
+public:
+    /// Destructor.
     /**
      * No threads must be waiting on this when the destructor is called, otherwise the program will abort.
      */

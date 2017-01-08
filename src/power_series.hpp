@@ -355,10 +355,22 @@ public:
     /// Defaulted move constructor.
     power_series(power_series &&) = default;
     PIRANHA_FORWARDING_CTOR(power_series, base)
-    /// Defaulted copy assignment operator.
-    power_series &operator=(const power_series &) = default;
-    /// Defaulted move assignment operator.
-    power_series &operator=(power_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    power_series &operator=(const power_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    power_series &operator=(power_series &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(power_series, base)
     /// Trivial destructor.
     ~power_series()

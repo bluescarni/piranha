@@ -135,10 +135,12 @@ public:
         positions(const positions &) = delete;
         /// Defaulted move constructor.
         positions(positions &&) = default;
-        /// Deleted copy assignment operator.
+
+    private:
         positions &operator=(const positions &) = delete;
-        /// Deleted move assignment operator.
         positions &operator=(positions &&) = delete;
+
+    public:
         /// Begin iterator.
         /**
          * @return an iterator to the begin of the internal vector.
@@ -210,10 +212,12 @@ public:
         positions_map(const positions_map &) = delete;
         /// Defaulted move constructor.
         positions_map(positions_map &&) = default;
-        /// Deleted copy assignment operator.
+
+    private:
         positions_map &operator=(const positions_map &) = delete;
-        /// Deleted move assignment operator.
         positions_map &operator=(positions_map &&) = delete;
+
+    public:
         /// Begin iterator.
         /**
          * @return an iterator to the begin of the internal vector.

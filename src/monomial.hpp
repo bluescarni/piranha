@@ -392,10 +392,22 @@ public:
     {
         PIRANHA_TT_CHECK(is_key, monomial);
     }
-    /// Defaulted copy assignment operator.
-    monomial &operator=(const monomial &) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    monomial &operator=(const monomial &other) = default;
     /// Defaulted move assignment operator.
-    monomial &operator=(monomial &&) = default;
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    monomial &operator=(monomial &&other) = default;
     /// Compatibility check
     /**
      * A monomial and a set of arguments are compatible if their sizes coincide.
@@ -512,12 +524,27 @@ public:
         return retval;
     }
     /// Low degree (equivalent to the degree).
+    /**
+     * @param[in] args reference set of piranha::symbol.
+     *
+     * @return the output of degree(const symbol_set &args) const.
+     *
+     * @throws unspecified any exception thrown by degree(const symbol_set &args) const.
+     */
     template <typename U = T>
     degree_type<U> ldegree(const symbol_set &args) const
     {
         return degree(args);
     }
     /// Partial low degree (equivalent to the partial degree).
+    /**
+     * @param[in] p positions of the symbols to be considered.
+     * @param[in] args reference set of piranha::symbol.
+     *
+     * @return the output of degree(const symbol_set::positions &, const symbol_set &) const.
+     *
+     * @throws unspecified any exception thrown by degree(const symbol_set::positions &, const symbol_set &) const.
+     */
     template <typename U = T>
     degree_type<U> ldegree(const symbol_set::positions &p, const symbol_set &args) const
     {
@@ -1152,6 +1179,7 @@ public:
     }
 
 private:
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
     // Make friend with the s11n functions.
     template <typename Archive, typename T1, typename S1>
     friend void
@@ -1159,6 +1187,7 @@ private:
     template <typename Archive, typename T1, typename S1>
     friend void boost::serialization::load(Archive &, piranha::boost_s11n_key_wrapper<piranha::monomial<T1, S1>> &,
                                            unsigned);
+#endif
 #if defined(PIRANHA_WITH_MSGPACK)
     // Enablers for msgpack serialization.
     template <typename Stream>

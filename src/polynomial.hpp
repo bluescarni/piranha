@@ -1324,10 +1324,22 @@ public:
         PIRANHA_TT_CHECK(is_cf, polynomial);
         PIRANHA_TT_CHECK(is_series, polynomial);
     }
-    /// Defaulted copy assignment operator.
-    polynomial &operator=(const polynomial &) = default;
-    /// Defaulted move assignment operator.
-    polynomial &operator=(polynomial &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    polynomial &operator=(const polynomial &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    polynomial &operator=(polynomial &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(polynomial, base)
     /// Override default exponentiation method.
     /**

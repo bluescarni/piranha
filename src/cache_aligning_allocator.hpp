@@ -142,10 +142,20 @@ public:
     }
     /// Defaulted destructor.
     ~cache_aligning_allocator() = default;
-    /// Defaulted copy assignment operator.
-    cache_aligning_allocator &operator=(const cache_aligning_allocator &) = default;
-    /// Defaulted move assignment operator.
-    cache_aligning_allocator &operator=(cache_aligning_allocator &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    cache_aligning_allocator &operator=(const cache_aligning_allocator &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    cache_aligning_allocator &operator=(cache_aligning_allocator &&other) = default;
 };
 }
 

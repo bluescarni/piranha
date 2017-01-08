@@ -200,15 +200,22 @@ public:
         PIRANHA_TT_CHECK(is_container_element, Derived);
         PIRANHA_TT_CHECK(std::is_base_of, array_key, Derived);
     }
-    /// Defaulted copy assignment operator.
+    /// Copy assignment operator.
     /**
-     * @throws unspecified any exception thrown by the copy constructor of piranha::small_vector.
+     * @param other the assignment argument.
      *
-     * @return reference to \p this.
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
      */
-    array_key &operator=(const array_key &) = default;
-    /// Defaulted move assignment operator.
-    array_key &operator=(array_key &&) = default;
+    array_key &operator=(const array_key &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    array_key &operator=(array_key &&other) = default;
     /// Begin iterator.
     /**
      * @return iterator to the first element of the internal container.

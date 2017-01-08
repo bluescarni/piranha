@@ -712,9 +712,15 @@ public:
     mp_rational() : m_num(), m_den(1)
     {
     }
-    /// Defaulted copy constructor.
-    mp_rational(const mp_rational &) = default;
+    /// Copy constructor.
+    /**
+     * @param other the construction argument.
+     */
+    mp_rational(const mp_rational &other) = default;
     /// Move constructor.
+    /**
+     * @param other the construction argument.
+     */
     mp_rational(mp_rational &&other) noexcept : m_num(std::move(other.m_num)), m_den(std::move(other.m_den))
     {
         // Fix the denominator of other, as its state depends on the implementation of piranha::mp_integer.
@@ -815,9 +821,19 @@ public:
         // with the low-level methods.
         piranha_assert(m_den.sign() > 0);
     }
-    /// Defaulted copy assignment operator.
-    mp_rational &operator=(const mp_rational &) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    mp_rational &operator=(const mp_rational &other) = default;
     /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
     mp_rational &operator=(mp_rational &&other) noexcept
     {
         if (unlikely(this == &other)) {
@@ -919,11 +935,17 @@ public:
         return is;
     }
     /// Get const reference to the numerator.
+    /**
+     * @return a const reference to the numerator.
+     */
     const int_type &num() const
     {
         return m_num;
     }
     /// Get const reference to the denominator.
+    /**
+     * @return a const reference to the denominator.
+     */
     const int_type &den() const
     {
         return m_den;

@@ -95,10 +95,20 @@ public:
     symbol(const symbol &) = default;
     /// Defaulted move constructor.
     symbol(symbol &&) = default;
-    /// Defaulted copy assignment operator.
-    symbol &operator=(const symbol &) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    symbol &operator=(const symbol &other) = default;
     /// Defaulted move assignment operator.
-    symbol &operator=(symbol &&) = default;
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    symbol &operator=(symbol &&other) = default;
     /// Defaulted destructor.
     ~symbol() = default;
     /// Name getter.

@@ -389,10 +389,22 @@ public:
         PIRANHA_TT_CHECK(is_series, divisor_series);
         PIRANHA_TT_CHECK(is_cf, divisor_series);
     }
-    /// Defaulted copy assignment operator.
-    divisor_series &operator=(const divisor_series &) = default;
-    /// Defaulted move assignment operator.
-    divisor_series &operator=(divisor_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    divisor_series &operator=(const divisor_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    divisor_series &operator=(divisor_series &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(divisor_series, base)
     /// Inversion.
     /**

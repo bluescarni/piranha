@@ -204,6 +204,8 @@ BOOST_AUTO_TEST_CASE(symbol_set_diff_test)
 BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
 {
     using positions = symbol_set::positions;
+    BOOST_CHECK(!std::is_copy_assignable<positions>::value);
+    BOOST_CHECK(!std::is_move_assignable<positions>::value);
     // Checker for the consistency of the positions class.
     auto checker = [](const symbol_set &a, const symbol_set &b, const positions &p) {
         // The position vector cannot have a size larger than b or a.
@@ -398,6 +400,8 @@ public:
 BOOST_AUTO_TEST_CASE(symbol_set_positions_map_test)
 {
     using pmap = symbol_set::positions_map<int>;
+    BOOST_CHECK(!std::is_copy_assignable<pmap>::value);
+    BOOST_CHECK(!std::is_move_assignable<pmap>::value);
     BOOST_CHECK(!std::is_copy_constructible<pmap>::value);
     BOOST_CHECK(std::is_move_constructible<pmap>::value);
     BOOST_CHECK(!std::is_move_assignable<pmap>::value);

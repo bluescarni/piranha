@@ -527,11 +527,19 @@ private:
 
 public:
     /// Constructor from key and piranha::symbol_set.
+    /**
+     * @param k the input key.
+     * @param ss the reference piranha::symbol_set.
+     */
     explicit boost_s11n_key_wrapper(Key &k, const symbol_set &ss)
         : m_key_m(std::addressof(k)), m_key_c(m_key_m), m_ss(ss)
     {
     }
     /// Constructor from const key and piranha::symbol_set.
+    /**
+     * @param k the input key.
+     * @param ss the reference piranha::symbol_set.
+     */
     explicit boost_s11n_key_wrapper(const Key &k, const symbol_set &ss)
         : m_key_m(nullptr), m_key_c(std::addressof(k)), m_ss(ss)
     {

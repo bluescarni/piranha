@@ -102,10 +102,20 @@ public:
     }
     /// Defaulted destructor.
     ~dynamic_aligning_allocator() = default;
-    /// Defaulted copy assignment operator.
-    dynamic_aligning_allocator &operator=(const dynamic_aligning_allocator &) = default;
-    /// Defaulted move assignment operator.
-    dynamic_aligning_allocator &operator=(dynamic_aligning_allocator &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    dynamic_aligning_allocator &operator=(const dynamic_aligning_allocator &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    dynamic_aligning_allocator &operator=(dynamic_aligning_allocator &&other) = default;
     /// Maximum allocatable size.
     /**
      * @return the maximum number of objects of type \p value_type that can be allocated by a single call to

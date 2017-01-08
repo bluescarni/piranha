@@ -413,10 +413,22 @@ public:
         PIRANHA_TT_CHECK(key_has_ldegree, kronecker_monomial);
         PIRANHA_TT_CHECK(key_is_differentiable, kronecker_monomial);
     }
-    /// Defaulted copy assignment operator.
-    kronecker_monomial &operator=(const kronecker_monomial &) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    kronecker_monomial &operator=(const kronecker_monomial &other) = default;
     /// Defaulted move assignment operator.
-    kronecker_monomial &operator=(kronecker_monomial &&) = default;
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    kronecker_monomial &operator=(kronecker_monomial &&other) = default;
     /// Set the internal integer instance.
     /**
      * @param[in] n value to which the internal integer instance will be set.
@@ -541,6 +553,13 @@ public:
         return retval;
     }
     /// Low degree (equivalent to the degree).
+    /**
+     * @param[in] args reference set of symbols.
+     *
+     * @return the output of degree(const symbol_set &) const.
+     *
+     * @throws unspecified any exception thrown by degree(const symbol_set &) const.
+     */
     degree_type ldegree(const symbol_set &args) const
     {
         return degree(args);
@@ -575,6 +594,14 @@ public:
         return retval;
     }
     /// Partial low degree (equivalent to the partial degree).
+    /**
+     * @param[in] p positions of the symbols to be considered in the calculation of the degree.
+     * @param[in] args reference set of piranha::symbol.
+     *
+     * @return the output of degree(const symbol_set::positions &, const symbol_set &) const.
+     *
+     * @throws unspecified any exception thrown by degree(const symbol_set::positions &, const symbol_set &) const.
+     */
     degree_type ldegree(const symbol_set::positions &p, const symbol_set &args) const
     {
         return degree(p, args);

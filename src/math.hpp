@@ -287,6 +287,9 @@ public:
         x = -x;
     }
     /// Call operator specialised for integral types.
+    /**
+     * @param x the integral value that will be negated.
+     */
     template <typename U, integral_enabler<U> = 0>
     void operator()(U &x) const
     {
@@ -1266,7 +1269,19 @@ inline bool transformation_is_canonical(const std::vector<T> &new_p, const std::
     return detail::is_canonical_impl(pv, qv, p_list, q_list);
 }
 
+// clang-format off
 /// Check if a transformation is canonical (alternative overload).
+/**
+ * @param[in] new_p list of objects representing the new momenta.
+ * @param[in] new_q list of objects representing the new coordinates.
+ * @param[in] p_list list of names of the old momenta.
+ * @param[in] q_list list of names of the old coordinates.
+ *
+ * @return the output of transformation_is_canonical(const std::vector<T> &, const std::vector<T> &, const std::vector<std::string> &, const std::vector<std::string> &).
+ *
+ * @throws unspecified any exception thrown by transformation_is_canonical(const std::vector<T> &, const std::vector<T> &, const std::vector<std::string> &, const std::vector<std::string> &).
+ */
+// clang-format on
 template <typename T, detail::is_canonical_enabler<T> = 0>
 inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::initializer_list<T> new_q,
                                         const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)

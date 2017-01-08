@@ -179,10 +179,22 @@ public:
         PIRANHA_TT_CHECK(is_series, Derived);
         PIRANHA_TT_CHECK(std::is_base_of, substitutable_series, Derived);
     }
-    /// Defaulted copy assignment operator.
-    substitutable_series &operator=(const substitutable_series &) = default;
-    /// Defaulted move assignment operator.
-    substitutable_series &operator=(substitutable_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    substitutable_series &operator=(const substitutable_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    substitutable_series &operator=(substitutable_series &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(substitutable_series, base)
     /// Substitution.
     /**

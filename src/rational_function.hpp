@@ -631,7 +631,7 @@ public:
     }
     /// Copy-assignment operator.
     /**
-     * @param[in] other assignment argument.
+     * @param[in] other the assignment argument.
      *
      * @return a reference to \p this.
      *
@@ -644,8 +644,13 @@ public:
         }
         return *this;
     }
-    /// Defaulted move-assignment operator.
-    rational_function &operator=(rational_function &&) = default;
+    /// Move-assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    rational_function &operator=(rational_function &&other) = default;
     /// Generic assignment operator.
     /**
      * \note

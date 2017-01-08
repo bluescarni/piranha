@@ -237,10 +237,12 @@ public:
         // Let's just make sure.
         reconstruct_ptrs();
     }
-    /// Deleted copy assignment operator.
+
+private:
     lambdified &operator=(const lambdified &) = delete;
-    /// Deleted move assignment operator.
     lambdified &operator=(lambdified &&) = delete;
+
+public:
     /// Evaluation.
     /**
      * The call operator will first associate the elements of \p values to the vector of names used to construct \p

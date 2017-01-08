@@ -2414,10 +2414,20 @@ public:
     }
     /// Defaulted destructor.
     ~mp_integer() = default;
-    /// Defaulted copy-assignment operator.
-    mp_integer &operator=(const mp_integer &) = default;
-    /// Defaulted move-assignment operator.
-    mp_integer &operator=(mp_integer &&) = default;
+    /// Copy-assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    mp_integer &operator=(const mp_integer &other) = default;
+    /// Move-assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    mp_integer &operator=(mp_integer &&other) = default;
     /// Generic assignment operator.
     /**
      * \note

@@ -608,10 +608,22 @@ public:
     {
         PIRANHA_TT_CHECK(is_series, poisson_series);
     }
-    /// Defaulted copy assignment operator.
-    poisson_series &operator=(const poisson_series &) = default;
-    /// Defaulted move assignment operator.
-    poisson_series &operator=(poisson_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    poisson_series &operator=(const poisson_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    poisson_series &operator=(poisson_series &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(poisson_series, base)
     /// Sine.
     /**

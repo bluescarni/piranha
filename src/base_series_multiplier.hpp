@@ -394,15 +394,12 @@ public:
                           : 1u;
         this->fill_term_pointers(*ctr1, *ctr2, m_v1, m_v2);
     }
-    /// Deleted default constructor.
+
+private:
     base_series_multiplier() = delete;
-    /// Deleted copy constructor.
     base_series_multiplier(const base_series_multiplier &) = delete;
-    /// Deleted move constructor.
     base_series_multiplier(base_series_multiplier &&) = delete;
-    /// Deleted copy assignment operator.
     base_series_multiplier &operator=(const base_series_multiplier &) = delete;
-    /// Deleted move assignment operator.
     base_series_multiplier &operator=(base_series_multiplier &&) = delete;
 
 protected:
@@ -774,14 +771,14 @@ protected:
             : m_v1(bsm.m_v1), m_v2(bsm.m_v2), m_retval(retval), m_c_end(retval._container().end())
         {
         }
-        /// Deleted copy constructor.
+
+    private:
         plain_multiplier(const plain_multiplier &) = delete;
-        /// Deleted move constructor.
         plain_multiplier(plain_multiplier &&) = delete;
-        /// Deleted copy assignment operator.
         plain_multiplier &operator=(const plain_multiplier &) = delete;
-        /// Deleted move assignment operator.
         plain_multiplier &operator=(plain_multiplier &&) = delete;
+
+    public:
         /// Call operator.
         /**
          * The call operator will perform the multiplication of the <tt>i</tt>-th term of the first series by the

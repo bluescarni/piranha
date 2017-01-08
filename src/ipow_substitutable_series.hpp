@@ -172,10 +172,22 @@ public:
     /// Defaulted move constructor.
     ipow_substitutable_series(ipow_substitutable_series &&) = default;
     PIRANHA_FORWARDING_CTOR(ipow_substitutable_series, base)
-    /// Defaulted copy assignment operator.
-    ipow_substitutable_series &operator=(const ipow_substitutable_series &) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    ipow_substitutable_series &operator=(const ipow_substitutable_series &other) = default;
     /// Defaulted move assignment operator.
-    ipow_substitutable_series &operator=(ipow_substitutable_series &&) = default;
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    ipow_substitutable_series &operator=(ipow_substitutable_series &&other) = default;
     /// Trivial destructor.
     ~ipow_substitutable_series()
     {

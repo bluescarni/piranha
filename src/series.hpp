@@ -2086,8 +2086,13 @@ public:
         }
         return *this;
     }
-    /// Defaulted move assignment operator.
-    series &operator=(series &&) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    series &operator=(series &&other) = default;
     /// Generic assignment operator.
     /**
      * \note

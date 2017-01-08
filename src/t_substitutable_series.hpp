@@ -169,10 +169,22 @@ public:
     /// Defaulted move constructor.
     t_substitutable_series(t_substitutable_series &&) = default;
     PIRANHA_FORWARDING_CTOR(t_substitutable_series, base)
-    /// Defaulted copy assignment operator.
-    t_substitutable_series &operator=(const t_substitutable_series &) = default;
-    /// Defaulted move assignment operator.
-    t_substitutable_series &operator=(t_substitutable_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    t_substitutable_series &operator=(const t_substitutable_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    t_substitutable_series &operator=(t_substitutable_series &&other) = default;
     /// Trivial destructor.
     ~t_substitutable_series()
     {

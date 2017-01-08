@@ -433,10 +433,20 @@ public:
         PIRANHA_TT_CHECK(key_has_t_lorder, real_trigonometric_kronecker_monomial);
         PIRANHA_TT_CHECK(key_is_differentiable, real_trigonometric_kronecker_monomial);
     }
-    /// Defaulted copy assignment operator.
-    real_trigonometric_kronecker_monomial &operator=(const real_trigonometric_kronecker_monomial &) = default;
-    /// Defaulted move assignment operator.
-    real_trigonometric_kronecker_monomial &operator=(real_trigonometric_kronecker_monomial &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    real_trigonometric_kronecker_monomial &operator=(const real_trigonometric_kronecker_monomial &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    real_trigonometric_kronecker_monomial &operator=(real_trigonometric_kronecker_monomial &&other) = default;
     /// Set the internal integer instance.
     /**
      * @param[in] n value to which the internal integer instance will be set.
@@ -616,6 +626,13 @@ public:
         return retval;
     }
     /// Low trigonometric degree (equivalent to the trigonometric degree).
+    /**
+     * @param[in] args reference set of piranha::symbol.
+     *
+     * @return the output of t_degree(const symbol_set &) const.
+     *
+     * @throws unspecified any exception thrown by t_degree(const symbol_set &) const.
+     */
     degree_type t_ldegree(const symbol_set &args) const
     {
         return t_degree(args);
@@ -655,6 +672,14 @@ public:
         return retval;
     }
     /// Partial low trigonometric degree (equivalent to the partial trigonometric degree).
+    /**
+     * @param[in] p positions of the symbols to be considered.
+     * @param[in] args reference set of piranha::symbol.
+     *
+     * @return the output of t_degree(const symbol_set::positions &, const symbol_set &) const.
+     *
+     * @throws unspecified any exception thrown by t_degree(const symbol_set::positions &, const symbol_set &) const.
+     */
     degree_type t_ldegree(const symbol_set::positions &p, const symbol_set &args) const
     {
         return t_degree(p, args);
@@ -684,6 +709,13 @@ public:
         return retval;
     }
     /// Low trigonometric order (equivalent to the trigonometric order).
+    /**
+     * @param[in] args reference set of piranha::symbol.
+     *
+     * @return the output of t_order(const symbol_set &) const.
+     *
+     * @throws unspecified any exception thrown by t_order(const symbol_set &) const.
+     */
     order_type t_lorder(const symbol_set &args) const
     {
         return t_order(args);
@@ -724,6 +756,14 @@ public:
         return retval;
     }
     /// Partial low trigonometric order (equivalent to the partial trigonometric order).
+    /**
+     * @param[in] p positions of the symbols to be considered.
+     * @param[in] args reference set of piranha::symbol.
+     *
+     * @return the output of t_order(const symbol_set::positions &, const symbol_set &) const.
+     *
+     * @throws unspecified any exception thrown by t_order(const symbol_set::positions &, const symbol_set &) const.
+     */
     order_type t_lorder(const symbol_set::positions &p, const symbol_set &args) const
     {
         return t_order(p, args);

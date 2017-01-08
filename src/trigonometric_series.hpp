@@ -180,10 +180,22 @@ public:
     /// Defaulted move constructor.
     trigonometric_series(trigonometric_series &&) = default;
     PIRANHA_FORWARDING_CTOR(trigonometric_series, base)
-    /// Defaulted copy assignment operator.
-    trigonometric_series &operator=(const trigonometric_series &) = default;
-    /// Defaulted move assignment operator.
-    trigonometric_series &operator=(trigonometric_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    trigonometric_series &operator=(const trigonometric_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    trigonometric_series &operator=(trigonometric_series &&other) = default;
     /// Trivial destructor.
     ~trigonometric_series()
     {
