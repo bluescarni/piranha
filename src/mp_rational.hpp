@@ -712,9 +712,15 @@ public:
     mp_rational() : m_num(), m_den(1)
     {
     }
-    /// Defaulted copy constructor.
-    mp_rational(const mp_rational &) = default;
+    /// Copy constructor.
+    /**
+     * @param other the construction argument.
+     */
+    mp_rational(const mp_rational &other) = default;
     /// Move constructor.
+    /**
+     * @param other the construction argument.
+     */
     mp_rational(mp_rational &&other) noexcept : m_num(std::move(other.m_num)), m_den(std::move(other.m_den))
     {
         // Fix the denominator of other, as its state depends on the implementation of piranha::mp_integer.
@@ -727,8 +733,8 @@ public:
      * \note
      * This constructor is enabled only if \p I0 and \p I1 are either integral types or piranha::integer.
      *
-     * @param[in] n numerator.
-     * @param[in] d denominator.
+     * @param n numerator.
+     * @param d denominator.
      *
      * @throws piranha::zero_division_error if the denominator is zero.
      * @throws unspecified any exception thrown by the invoked constructor of piranha::mp_integer.
@@ -746,7 +752,7 @@ public:
      * \note
      * This constructor is enabled only if \p T is an interoperable type.
      *
-     * @param[in] x object used to construct \p this.
+     * @param x object used to construct \p this.
      *
      * @throws std::invalid_argument if the construction fails (e.g., construction from a non-finite
      * floating-point value).
@@ -763,7 +769,7 @@ public:
      *
      * Note that if the string is not null-terminated, undefined behaviour will occur.
      *
-     * @param[in] str C string used for construction.
+     * @param str C string used for construction.
      *
      * @throws std::invalid_argument if the string is not formatted correctly.
      * @throws piranha::zero_division_error if the denominator, if present, is zero.
@@ -801,7 +807,7 @@ public:
     /**
      * Equivalent to the constructor from C string.
      *
-     * @param[in] str C string used for construction.
+     * @param str C string used for construction.
      *
      * @throws unspecified any exception thrown by the constructor from C string.
      */
@@ -815,9 +821,19 @@ public:
         // with the low-level methods.
         piranha_assert(m_den.sign() > 0);
     }
-    /// Defaulted copy assignment operator.
-    mp_rational &operator=(const mp_rational &) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    mp_rational &operator=(const mp_rational &other) = default;
     /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
     mp_rational &operator=(mp_rational &&other) noexcept
     {
         if (unlikely(this == &other)) {
@@ -837,7 +853,7 @@ public:
      * This operator will construct a temporary piranha::mp_rational from \p x and will then move-assign it
      * to \p this.
      *
-     * @param[in] x assignment target.
+     * @param x assignment target.
      *
      * @return reference to \p this.
      *
@@ -853,7 +869,7 @@ public:
      * This assignment operator will construct a piranha::mp_rational from the string \p str
      * and will then move-assign the result to \p this.
      *
-     * @param[in] str C string.
+     * @param str C string.
      *
      * @return reference to \p this.
      *
@@ -868,7 +884,7 @@ public:
      * This assignment operator will construct a piranha::mp_rational from the string \p str
      * and will then move-assign the result to \p this.
      *
-     * @param[in] str C++ string.
+     * @param str C++ string.
      *
      * @return reference to \p this.
      *
@@ -884,8 +900,8 @@ public:
      * - only the numerator is printed if the denominator is 1,
      * - otherwise, numerator and denominator are printed separated by a '/' sign.
      *
-     * @param[in,out] os target stream.
-     * @param[in] q rational to be printed.
+     * @param os target stream.
+     * @param q rational to be printed.
      *
      * @return reference to \p os.
      *
@@ -904,8 +920,8 @@ public:
     /**
      * Equivalent to extracting a line from the stream and then assigning it to \p q.
      *
-     * @param[in] is input stream.
-     * @param[in,out] q rational to which the contents of the stream will be assigned.
+     * @param is input stream.
+     * @param q rational to which the contents of the stream will be assigned.
      *
      * @return reference to \p is.
      *
@@ -919,11 +935,17 @@ public:
         return is;
     }
     /// Get const reference to the numerator.
+    /**
+     * @return a const reference to the numerator.
+     */
     const int_type &num() const
     {
         return m_num;
     }
     /// Get const reference to the denominator.
+    /**
+     * @return a const reference to the denominator.
+     */
     const int_type &den() const
     {
         return m_den;
@@ -1024,7 +1046,7 @@ public:
      * that \p q is already in canonical form. If that is
      * not the case, the behaviour will be undefined.
      *
-     * @param[in] q input GMP rational.
+     * @param q input GMP rational.
      *
      * @throws piranha::zero_division_error if the denominator is zero.
      */
@@ -1054,7 +1076,7 @@ public:
     /**
      * This method will set the denominator to \p den without canonicalising the rational.
      *
-     * @param[in] den desired value for the denominator.
+     * @param den desired value for the denominator.
      *
      * @throws std::invalid_argument if \p den is not positive.
      */
@@ -1108,7 +1130,7 @@ public:
      * - \p f is added to \p x,
      * - the result is assigned back to \p this.
      *
-     * @param[in] x argument for the addition.
+     * @param x argument for the addition.
      *
      * @return reference to \p this.
      *
@@ -1129,8 +1151,8 @@ public:
      * Add a piranha::mp_rational in-place. This method will first compute <tt>q + x</tt>, cast it back to \p T via \p
      * static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] q second argument.
+     * @param x first argument.
+     * @param q second argument.
      *
      * @return reference to \p x.
      *
@@ -1156,8 +1178,8 @@ public:
      * instance of type \p F
      * and added to \p f to generate the return value, which will then be of type \p F.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x + y</tt>.
      *
@@ -1219,7 +1241,7 @@ public:
      * - \p x is subtracted from \p f,
      * - the result is assigned back to \p this.
      *
-     * @param[in] x argument for the subtraction.
+     * @param x argument for the subtraction.
      *
      * @return reference to \p this.
      *
@@ -1240,8 +1262,8 @@ public:
      * Subtract a piranha::mp_rational in-place. This method will first compute <tt>x - q</tt>, cast it back to \p T via
      * \p static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] q second argument.
+     * @param x first argument.
+     * @param q second argument.
      *
      * @return reference to \p x.
      *
@@ -1267,8 +1289,8 @@ public:
      * instance of type \p F
      * and subtracted from (or to) \p f to generate the return value, which will then be of type \p F.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x - y</tt>.
      *
@@ -1293,7 +1315,7 @@ public:
      * - \p f is multiplied by \p x,
      * - the result is assigned back to \p this.
      *
-     * @param[in] x argument for the multiplication.
+     * @param x argument for the multiplication.
      *
      * @return reference to \p this.
      *
@@ -1314,8 +1336,8 @@ public:
      * Multiply by a piranha::mp_rational in-place. This method will first compute <tt>x * q</tt>, cast it back to \p T
      * via \p static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] q second argument.
+     * @param x first argument.
+     * @param q second argument.
      *
      * @return reference to \p x.
      *
@@ -1341,8 +1363,8 @@ public:
      * instance of type \p F
      * and multiplied by \p f to generate the return value, which will then be of type \p F.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x * y</tt>.
      *
@@ -1367,7 +1389,7 @@ public:
      * - \p f is divided by \p x,
      * - the result is assigned back to \p this.
      *
-     * @param[in] x argument for the division.
+     * @param x argument for the division.
      *
      * @return reference to \p this.
      *
@@ -1392,8 +1414,8 @@ public:
      * Divide by a piranha::mp_rational in-place. This method will first compute <tt>x / q</tt>, cast it back to \p T
      * via \p static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] q second argument.
+     * @param x first argument.
+     * @param q second argument.
      *
      * @return reference to \p x.
      *
@@ -1419,8 +1441,8 @@ public:
      * instance of type \p F
      * and divided by \p f (or viceversa) to generate the return value, which will then be of type \p F.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x / y</tt>.
      *
@@ -1448,8 +1470,8 @@ public:
      * instance of type \p F
      * and compared to \p f.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x == y</tt>, \p false otherwise.
      *
@@ -1476,8 +1498,8 @@ public:
      * instance of type \p F
      * and compared to \p f.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x != y</tt>, \p false otherwise.
      *
@@ -1502,8 +1524,8 @@ public:
      * instance of type \p F
      * and compared to \p f.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x < y</tt>, \p false otherwise.
      *
@@ -1530,8 +1552,8 @@ public:
      * instance of type \p F
      * and compared to \p f.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x >= y</tt>, \p false otherwise.
      *
@@ -1556,8 +1578,8 @@ public:
      * instance of type \p F
      * and compared to \p f.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x > y</tt>, \p false otherwise.
      *
@@ -1584,8 +1606,8 @@ public:
      * instance of type \p F
      * and compared to \p f.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x <= y</tt>, \p false otherwise.
      *
@@ -1605,7 +1627,7 @@ public:
      * method of numerator and denominator is used. Negative powers will raise an error if the numerator of \p this
      * is zero.
      *
-     * @param[in] exp exponent.
+     * @param exp exponent.
      *
      * @return <tt>this ** exp</tt>.
      *
@@ -1670,7 +1692,7 @@ public:
      *
      * Will return \p this choose \p n.
      *
-     * @param[in] n bottom argument for the binomial coefficient.
+     * @param n bottom argument for the binomial coefficient.
      *
      * @return \p this choose \p n.
      *
@@ -1774,7 +1796,7 @@ inline namespace literals
 
 /// Literal for arbitrary-precision rationals.
 /**
- * @param[in] s literal string.
+ * @param s literal string.
  *
  * @return a piranha::mp_rational constructed from \p s.
  *
@@ -1821,8 +1843,8 @@ template <typename T>
 struct print_tex_coefficient_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] os target stream.
-     * @param[in] cf coefficient to be printed.
+     * @param os target stream.
+     * @param cf coefficient to be printed.
      *
      * @throws unspecified any exception thrown by streaming to \p os.
      */
@@ -1856,7 +1878,7 @@ template <typename T>
 struct is_zero_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] q piranha::mp_rational to be tested.
+     * @param q piranha::mp_rational to be tested.
      *
      * @return \p true if \p q is zero, \p false otherwise.
      */
@@ -1874,7 +1896,7 @@ template <typename T>
 struct is_unitary_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] q piranha::mp_rational to be tested.
+     * @param q piranha::mp_rational to be tested.
      *
      * @return \p true if \p q is equal to one, \p false otherwise.
      */
@@ -1889,7 +1911,7 @@ template <typename T>
 struct negate_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in,out] q piranha::mp_rational to be negated.
+     * @param q piranha::mp_rational to be negated.
      */
     void operator()(T &q) const
     {
@@ -1917,8 +1939,8 @@ template <typename T, typename U>
 struct pow_impl<T, U, detail::rational_pow_enabler<T, U>> {
     /// Call operator, rational--integral overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -1931,8 +1953,8 @@ struct pow_impl<T, U, detail::rational_pow_enabler<T, U>> {
     }
     /// Call operator, rational--floating-point overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -1946,8 +1968,8 @@ struct pow_impl<T, U, detail::rational_pow_enabler<T, U>> {
     }
     /// Call operator, floating-point--rational overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -1961,8 +1983,8 @@ struct pow_impl<T, U, detail::rational_pow_enabler<T, U>> {
     }
     /// Call operator, rational--rational overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -1997,8 +2019,8 @@ struct pow_impl<T, U, detail::rational_pow_enabler<T, U>> {
     }
     /// Call operator, integral--rational overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -2037,7 +2059,7 @@ template <typename T>
 struct sin_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] q argument.
+     * @param q argument.
      *
      * @return sine of \p q.
      *
@@ -2057,7 +2079,7 @@ template <typename T>
 struct cos_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] q argument.
+     * @param q argument.
      *
      * @return cosine of \p q.
      *
@@ -2077,7 +2099,7 @@ template <typename T>
 struct abs_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] q input parameter.
+     * @param q input parameter.
      *
      * @return absolute value of \p q.
      */
@@ -2119,8 +2141,8 @@ template <typename T, typename U>
 struct binomial_impl<T, U, detail::rational_binomial_enabler<T, U>> {
     /// Call operator, rational--integral overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -2133,8 +2155,8 @@ struct binomial_impl<T, U, detail::rational_binomial_enabler<T, U>> {
     }
     /// Call operator, rational--floating-point overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -2148,8 +2170,8 @@ struct binomial_impl<T, U, detail::rational_binomial_enabler<T, U>> {
     }
     /// Call operator, floating-point--rational overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -2163,8 +2185,8 @@ struct binomial_impl<T, U, detail::rational_binomial_enabler<T, U>> {
     }
     /// Call operator, rational--rational overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -2178,8 +2200,8 @@ struct binomial_impl<T, U, detail::rational_binomial_enabler<T, U>> {
     }
     /// Call operator, integral--rational overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -2205,9 +2227,9 @@ struct divexact_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value
      * The call is equivalent to piranha::math::div3(). The exact result of the division
      * of \p q1 by \p q2 will be stored in \p out.
      *
-     * @param[out] out the output value.
-     * @param[in] q1 first argument.
-     * @param[in] q2 second argument.
+     * @param out the output value.
+     * @param q1 first argument.
+     * @param q2 second argument.
      *
      * @return the output of <tt>piranha::math::div3(out,q1,q2)</tt>.
      *
@@ -2269,7 +2291,7 @@ public:
      *
      * The conversion is performed via piranha::mp_rational's constructor.
      *
-     * @param[in] x input value.
+     * @param x input value.
      *
      * @return a rational constructed from \p x.
      *
@@ -2296,7 +2318,7 @@ public:
      * The conversion, performed via the conversion operator of piranha::mp_rational,
      * will fail if the denominator of \p q is not unitary.
      *
-     * @param[in] q input rational.
+     * @param q input rational.
      *
      * @return an integral value converted from \p q.
      *
@@ -2442,7 +2464,7 @@ struct hash<piranha::mp_rational<NBits>> {
     typedef piranha::mp_rational<NBits> argument_type;
     /// Hash operator.
     /**
-     * @param[in] q piranha::mp_rational whose hash value will be returned.
+     * @param q piranha::mp_rational whose hash value will be returned.
      *
      * @return <tt>q.hash()</tt>.
      *

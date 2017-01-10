@@ -345,8 +345,8 @@ public:
      * that a multiplication by a null series results in multiplications by a zero coefficient, which may not
      * necessarily lead to a zero result (e.g., with IEEE floats inf times zero gives NaN).
      *
-     * @param[in] s1 first series.
-     * @param[in] s2 second series.
+     * @param s1 first series.
+     * @param s2 second series.
      *
      * @throws std::invalid_argument if the symbol sets of \p s1 and \p s2 differ.
      * @throws unspecified any exception thrown by:
@@ -394,15 +394,12 @@ public:
                           : 1u;
         this->fill_term_pointers(*ctr1, *ctr2, m_v1, m_v2);
     }
-    /// Deleted default constructor.
+
+private:
     base_series_multiplier() = delete;
-    /// Deleted copy constructor.
     base_series_multiplier(const base_series_multiplier &) = delete;
-    /// Deleted move constructor.
     base_series_multiplier(base_series_multiplier &&) = delete;
-    /// Deleted copy assignment operator.
     base_series_multiplier &operator=(const base_series_multiplier &) = delete;
-    /// Deleted move assignment operator.
     base_series_multiplier &operator=(base_series_multiplier &&) = delete;
 
 protected:
@@ -435,10 +432,10 @@ protected:
      * \p lf is intended to be a functor that establishes how many terms in the second series have to be multiplied by
      * the <tt>i</tt>-th term of the first series.
      *
-     * @param[in] mf the multiplication functor.
-     * @param[in] start1 start index in the first series.
-     * @param[in] end1 end index in the first series.
-     * @param[in] lf the limit functor.
+     * @param mf the multiplication functor.
+     * @param start1 start index in the first series.
+     * @param end1 end index in the first series.
+     * @param lf the limit functor.
      *
      * @throws std::invalid_argument if \p start1 is greater than \p end1 or greater than the size of
      * base_series_multiplier::m_v1, or if \p end1 is greater than the size of base_series_multiplier::m_v1.
@@ -505,9 +502,9 @@ protected:
      * This method is equivalent to the other overload with a limit functor that will unconditionally
      * always return the size of the second series.
      *
-     * @param[in] mf the multiplication functor.
-     * @param[in] start1 start index in the first series.
-     * @param[in] end1 end index in the first series.
+     * @param mf the multiplication functor.
+     * @param start1 start index in the first series.
+     * @param end1 end index in the first series.
      *
      * @throws unspecified any exception thrown by the other overload.
      */
@@ -549,7 +546,7 @@ protected:
      * a case, different
      * instances of \p MultFunctor are constructed in different threads, but \p lf is shared among all threads.
      *
-     * @param[in] lf the limit functor.
+     * @param lf the limit functor.
      *
      * @return the estimated size of the multiplication of the first series by the second, always at least 1.
      *
@@ -766,29 +763,29 @@ protected:
         /**
          * The constructor will store references to the input arguments internally.
          *
-         * @param[in] bsm a const reference to an instance of piranha::base_series_multiplier, from which
+         * @param bsm a const reference to an instance of piranha::base_series_multiplier, from which
          * the vectors of term pointers will be extracted.
-         * @param[in] retval the \p Series instance into which terms resulting from multiplications will be inserted.
+         * @param retval the \p Series instance into which terms resulting from multiplications will be inserted.
          */
         explicit plain_multiplier(const base_series_multiplier &bsm, Series &retval)
             : m_v1(bsm.m_v1), m_v2(bsm.m_v2), m_retval(retval), m_c_end(retval._container().end())
         {
         }
-        /// Deleted copy constructor.
+
+    private:
         plain_multiplier(const plain_multiplier &) = delete;
-        /// Deleted move constructor.
         plain_multiplier(plain_multiplier &&) = delete;
-        /// Deleted copy assignment operator.
         plain_multiplier &operator=(const plain_multiplier &) = delete;
-        /// Deleted move assignment operator.
         plain_multiplier &operator=(plain_multiplier &&) = delete;
+
+    public:
         /// Call operator.
         /**
          * The call operator will perform the multiplication of the <tt>i</tt>-th term of the first series by the
          * <tt>j</tt>-th term of the second series, and it will insert the result into the return value.
          *
-         * @param[in] i index of a term in the first series.
-         * @param[in] j index of a term in the second series.
+         * @param i index of a term in the first series.
+         * @param j index of a term in the second series.
          *
          * @throws unspecified any exception thrown by:
          * - piranha::series::insert(),
@@ -844,8 +841,8 @@ protected:
      * before
      * re-throwing.
      *
-     * @param[in] retval the series to be sanitised.
-     * @param[in] n_threads the number of threads to be used.
+     * @param retval the series to be sanitised.
+     * @param n_threads the number of threads to be used.
      *
      * @throws std::invalid_argument if \p n_threads is zero, or if one of the terms in \p retval is not compatible
      * with the symbol set of \p retval.
@@ -972,7 +969,7 @@ protected:
      *
      * Note that, in multithreaded mode, \p lf will be shared among (and called concurrently from) all the threads.
      *
-     * @param[in] lf the limit functor (see base_series_multiplier::blocked_multiplication()).
+     * @param lf the limit functor (see base_series_multiplier::blocked_multiplication()).
      *
      * @return the series resulting from the multiplication of the two series used to construct \p this.
      *
@@ -1126,7 +1123,7 @@ protected:
      * the
      * constructor of piranha::base_series_multiplier.
      *
-     * @param[in,out] s the \p Series to be finalised.
+     * @param s the \p Series to be finalised.
      *
      * @throws unspecified any exception thrown by:
      * - thread_pool::enqueue(),

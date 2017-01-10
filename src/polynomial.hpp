@@ -1302,7 +1302,7 @@ public:
      * Will construct a univariate polynomial made of a single term with unitary coefficient and exponent, representing
      * the symbolic variable \p name. The type of \p name must be a string type (either C or C++).
      *
-     * @param[in] name name of the symbolic variable that the polynomial will represent.
+     * @param name name of the symbolic variable that the polynomial will represent.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::symbol_set::add(),
@@ -1324,10 +1324,22 @@ public:
         PIRANHA_TT_CHECK(is_cf, polynomial);
         PIRANHA_TT_CHECK(is_series, polynomial);
     }
-    /// Defaulted copy assignment operator.
-    polynomial &operator=(const polynomial &) = default;
-    /// Defaulted move assignment operator.
-    polynomial &operator=(polynomial &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    polynomial &operator=(const polynomial &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    polynomial &operator=(polynomial &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(polynomial, base)
     /// Override default exponentiation method.
     /**
@@ -1340,7 +1352,7 @@ public:
      * piranha::math::pow() and key computed via the monomial exponentiation method. Otherwise, the base
      * (i.e., default) exponentiation method will be used.
      *
-     * @param[in] x exponent.
+     * @param x exponent.
      *
      * @return \p this to the power of \p x.
      *
@@ -1397,7 +1409,7 @@ public:
      * of the coefficient and on the value of the exponent of the integration variable. The integration will
      * fail if the exponent is negative or non-integral.
      *
-     * @param[in] name integration variable.
+     * @param name integration variable.
      *
      * @return the antiderivative of \p this with respect to \p name.
      *
@@ -1452,7 +1464,7 @@ public:
      * If the new auto truncation settings are different from the currently active ones, the natural power cache
      * defined in piranha::series will be cleared.
      *
-     * @param[in] max_degree maximum total degree that will be retained during automatic truncation.
+     * @param max_degree maximum total degree that will be retained during automatic truncation.
      *
      * @throws unspecified any exception thrown by:
      * - threading primitives,
@@ -1488,8 +1500,8 @@ public:
      * If the new auto truncation settings are different from the currently active ones, the natural power cache
      * defined in piranha::series will be cleared.
      *
-     * @param[in] max_degree maximum partial degree that will be retained during automatic truncation.
-     * @param[in] names names of the variables that will be considered during the computation of the
+     * @param max_degree maximum partial degree that will be retained during automatic truncation.
+     * @param names names of the variables that will be considered during the computation of the
      * partial degree.
      *
      * @throws unspecified any exception thrown by:
@@ -1567,7 +1579,7 @@ public:
      * If the term is found, its coefficient will be returned. Otherwise, a coefficient initialised
      * from 0 will be returned.
      *
-     * @param[in] c the container that will be used to construct the \p Key to be located.
+     * @param c the container that will be used to construct the \p Key to be located.
      *
      * @returns the coefficient of the term whose \p Key corresponds to \p c if such term exists,
      * zero otherwise.
@@ -1589,7 +1601,7 @@ public:
      *
      * This method is identical to the other overload with the same name, and it is provided for convenience.
      *
-     * @param[in] l the list that will be used to construct the \p Key to be located.
+     * @param l the list that will be used to construct the \p Key to be located.
      *
      * @returns the coefficient of the term whose \p Key corresponds to \p l if such term exists,
      * zero otherwise.
@@ -1730,8 +1742,8 @@ public:
      * polynomials
      * \p n and \p d. The input polynomials must be univariate in the same variable.
      *
-     * @param[in] n the numerator.
-     * @param[in] d the denominator.
+     * @param n the numerator.
+     * @param d the denominator.
      *
      * @return the quotient and remainder of the division of \p n by \p d, represented as a standard pair.
      *
@@ -1767,8 +1779,8 @@ public:
      * n to be not less than
      * the univariate degree of \p d. If \p n is zero, an empty polynomial will be returned.
      *
-     * @param[in] n the numerator.
-     * @param[in] d the denominator.
+     * @param n the numerator.
+     * @param d the denominator.
      *
      * @return the pseudo-remainder of <tt>n / d</tt>.
      *
@@ -1822,8 +1834,8 @@ public:
      * This operator will compute the exact result of <tt>n / d</tt>. If \p d does not divide \p n exactly, an error
      * will be produced.
      *
-     * @param[in] n the numerator.
-     * @param[in] d the denominator.
+     * @param n the numerator.
+     * @param d the denominator.
      *
      * @return the quotient <tt>n / d</tt>.
      *
@@ -1870,8 +1882,8 @@ public:
      * return n = n / d;
      * @endcode
      *
-     * @param[in,out] n the numerator.
-     * @param[in] d the denominator.
+     * @param n the numerator.
+     * @param d the denominator.
      *
      * @return a reference to \p n.
      *
@@ -1897,7 +1909,7 @@ public:
     /**
      * This method is thread-safe.
      *
-     * @param[in] algo the desired default algorithm to be used for GCD computations.
+     * @param algo the desired default algorithm to be used for GCD computations.
      */
     static void set_default_gcd_algorithm(polynomial_gcd_algorithm algo)
     {
@@ -1931,10 +1943,10 @@ public:
      *
      * The \p with_cofactors flag signals whether the cofactors should be returned together with the GCD or not.
      *
-     * @param[in] a first argument.
-     * @param[in] b second argument.
-     * @param[in] with_cofactors flag to signal that cofactors must be returned as well.
-     * @param[in] algo the GCD algorithm.
+     * @param a first argument.
+     * @param b second argument.
+     * @param with_cofactors flag to signal that cofactors must be returned as well.
+     * @param algo the GCD algorithm.
      *
      * @return a tuple containing the GCD \p g of \p a and \p b, and the cofactors (that is, <tt>a / g</tt> and <tt>b /
      * g</tt>),
@@ -2053,8 +2065,8 @@ public:
      * available only if the operands are of the same type and no type promotions affect the coefficient types
      * during multiplication.
      *
-     * @param[in] p1 the first operand.
-     * @param[in] p2 the second operand.
+     * @param p1 the first operand.
+     * @param p2 the second operand.
      *
      * @return the product of \p p1 and \p p2.
      *
@@ -2086,9 +2098,9 @@ public:
      * available only if the operands are of the same type and no type promotions affect the coefficient types
      * during multiplication.
      *
-     * @param[in] p1 the first operand.
-     * @param[in] p2 the second operand.
-     * @param[in] max_degree the maximum total degree in the result.
+     * @param p1 the first operand.
+     * @param p2 the second operand.
+     * @param max_degree the maximum total degree in the result.
      *
      * @return the truncated product of \p p1 and \p p2.
      *
@@ -2123,10 +2135,10 @@ public:
      * available only if the operands are of the same type and no type promotions affect the coefficient types
      * during multiplication.
      *
-     * @param[in] p1 the first operand.
-     * @param[in] p2 the second operand.
-     * @param[in] max_degree the maximum total degree in the result.
-     * @param[in] names names of the variables that will be considered in the computation of the degree.
+     * @param p1 the first operand.
+     * @param p2 the second operand.
+     * @param max_degree the maximum total degree in the result.
+     * @param names names of the variables that will be considered in the computation of the degree.
      *
      * @return the truncated product of \p p1 and \p p2.
      *
@@ -2305,9 +2317,9 @@ struct divexact_impl<T, detail::poly_divexact_enabler<T>> {
     /**
      * This operator will use the division operator of the polynomial type.
      *
-     * @param[out] out return value.
-     * @param[in] n the numerator.
-     * @param[in] d the denominator.
+     * @param out return value.
+     * @param n the numerator.
+     * @param d the denominator.
      *
      * @return a reference to \p out.
      *
@@ -2329,8 +2341,8 @@ template <typename T>
 struct gcd_impl<T, T, detail::poly_gcd_enabler<T>> {
     /// Call operator.
     /**
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return the first element of the result of <tt>piranha::polynomial::gcd(a,b)</tt>.
      *
@@ -2667,8 +2679,8 @@ public:
      *
      * If any check fails, a runtime error will be produced.
      *
-     * @param[in] s1 first series operand.
-     * @param[in] s2 second series operand.
+     * @param s1 first series operand.
+     * @param s2 second series operand.
      *
      * @throws std::overflow_error if a bounds check, as described above, fails.
      * @throws unspecified any exception thrown by:
@@ -2777,8 +2789,8 @@ public:
      * - a piranha::symbol_set::positions referring to the positions of the variables of the first argument
      *   in the merged symbol set of the two operands.
      *
-     * @param[in] max_degree the maximum degree of the result of the multiplication.
-     * @param[in] args either an empty argument, or a pair of arguments as described above.
+     * @param max_degree the maximum degree of the result of the multiplication.
+     * @param args either an empty argument, or a pair of arguments as described above.
      *
      * @return the result of the truncated multiplication of the operands used for construction.
      *
@@ -2852,9 +2864,9 @@ public:
      * will produce terms with degree greater than \p max_degree when multiplied by the <tt>i</tt>-th term in the first
      * series.
      *
-     * @param[in] v_d1 a vector containing the degrees of the terms in the first series.
-     * @param[in] v_d2 a sorted vector containing the degrees of the terms in the second series.
-     * @param[in] max_degree the truncation degree.
+     * @param v_d1 a vector containing the degrees of the terms in the first series.
+     * @param v_d2 a sorted vector containing the degrees of the terms in the second series.
+     * @param max_degree the truncation degree.
      *
      * @return the vector of skip limits, as explained above.
      *

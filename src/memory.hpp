@@ -121,8 +121,8 @@ inline void *cpp_aligned_alloc(const std::size_t &alignment, const std::size_t &
  * and platform-dependent low-level routine (e.g., \p posix_memalign()). If such a low level routine is not
  * available, an exception will be raised.
  *
- * @param[in] alignment desired alignment.
- * @param[in] size number of bytes to allocate.
+ * @param alignment desired alignment.
+ * @param size number of bytes to allocate.
  *
  * @return a pointer to the allocated memory block, or \p nullptr if \p size is zero.
  *
@@ -173,8 +173,8 @@ inline void *aligned_palloc(const std::size_t &alignment, const std::size_t &siz
  *
  * The value of \p alignment must be the same used for the allocation.
  *
- * @param[in] alignment alignment value used during allocation.
- * @param[in] ptr pointer to the memory to be freed.
+ * @param alignment alignment value used during allocation.
+ * @param ptr pointer to the memory to be freed.
  *
  * @throws piranha::not_implemented_error if \p ptr is not \p nullptr, \p alignment is not zero and the low-level
  * deallocation routine is not available on the platform.
@@ -216,7 +216,7 @@ inline void aligned_pfree(const std::size_t &alignment, void *ptr)
  * returns \p true on an alignment value,
  * this will not guarantee that the allocation via piranha::aligned_palloc() will succeed.
  *
- * @param[in] alignment alignment value to be checked.
+ * @param alignment alignment value to be checked.
  *
  * @return \p true if the input value is zero or if it passes the alignment checks, \p false otherwise.
  */
@@ -258,9 +258,9 @@ inline bool alignment_check(const std::size_t &alignment)
  * This function provides the strong exception safety guarantee: in case of errors, any constructed
  * instance of \p T will be destroyed before the error is re-thrown.
  *
- * @param[in] ptr pointer to the array.
- * @param[in] size size of the array.
- * @param[in] n_threads number of threads to use.
+ * @param ptr pointer to the array.
+ * @param size size of the array.
+ * @param n_threads number of threads to use.
  *
  * @throws std::bad_alloc in case of memory allocation errors in multithreaded mode.
  * @throws unspecified any exception thrown by:
@@ -341,9 +341,9 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
  *
  * The function is a no-op if \p ptr is null or if \p T has a trivial destructor.
  *
- * @param[in] ptr pointer to the array.
- * @param[in] size size of the array.
- * @param[in] n_threads number of threads to use.
+ * @param ptr pointer to the array.
+ * @param size size of the array.
+ * @param n_threads number of threads to use.
  */
 template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
 inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_threads)
@@ -456,8 +456,8 @@ private:
  * without supplying a new deleter. To replace the managed object while supplying a new deleter as well, move semantics
  * may be used.
  *
- * @param[in] size size of the array.
- * @param[in] n_threads number of threads to use.
+ * @param size size of the array.
+ * @param n_threads number of threads to use.
  *
  * @return an \p std::unique_ptr wrapping the array.
  *

@@ -608,10 +608,22 @@ public:
     {
         PIRANHA_TT_CHECK(is_series, poisson_series);
     }
-    /// Defaulted copy assignment operator.
-    poisson_series &operator=(const poisson_series &) = default;
-    /// Defaulted move assignment operator.
-    poisson_series &operator=(poisson_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    poisson_series &operator=(const poisson_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    poisson_series &operator=(poisson_series &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(poisson_series, base)
     /// Sine.
     /**
@@ -688,7 +700,7 @@ public:
      *     whether the degree of the polynomial is a non-negative integral value;
      *   - otherwise, an error will be produced.
      *
-     * @param[in] name integration variable.
+     * @param name integration variable.
      *
      * @return the antiderivative of \p this with respect to \p name.
      *
@@ -795,7 +807,7 @@ public:
      * than automatically deduced. The \p names argument must be sorted lexicographically, otherwise an error
      * will be produced. Duplicate entries in \p names will be removed.
      *
-     * @param[in] names the names of the symbols used to represent the frequencies.
+     * @param names the names of the symbols used to represent the frequencies.
      *
      * @return the result of the time integration.
      *

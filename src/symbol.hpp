@@ -84,7 +84,7 @@ public:
     /**
      * Construct a symbol with name \p name.
      *
-     * @param[in] name name of the symbol.
+     * @param name name of the symbol.
      *
      * @throws unspecified any exception thrown by <tt>std::set::insert()</tt>.
      */
@@ -95,10 +95,20 @@ public:
     symbol(const symbol &) = default;
     /// Defaulted move constructor.
     symbol(symbol &&) = default;
-    /// Defaulted copy assignment operator.
-    symbol &operator=(const symbol &) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    symbol &operator=(const symbol &other) = default;
     /// Defaulted move assignment operator.
-    symbol &operator=(symbol &&) = default;
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    symbol &operator=(symbol &&other) = default;
     /// Defaulted destructor.
     ~symbol() = default;
     /// Name getter.
@@ -111,7 +121,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param[in] other equality argument.
+     * @param other equality argument.
      *
      * @return true if \p other refers to the same underlying object as \p this, false otherwise.
      */
@@ -121,7 +131,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param[in] other inequality argument.
+     * @param other inequality argument.
      *
      * @return negation of operator==().
      */
@@ -133,7 +143,7 @@ public:
     /**
      * Will compare lexicographically the names of the two symbols.
      *
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return <tt>this->get_name() < other.get_name()</tt>.
      */
@@ -153,8 +163,8 @@ public:
     /**
      * Will direct to \p os a human-readable description of \p s.
      *
-     * @param[in,out] os output stream.
-     * @param[in] s piranha::symbol to be sent to stream.
+     * @param os output stream.
+     * @param s piranha::symbol to be sent to stream.
      *
      * @return reference to \p os.
      */
@@ -200,7 +210,7 @@ struct hash<piranha::symbol> {
     typedef piranha::symbol argument_type;
     /// Hash operator.
     /**
-     * @param[in] s piranha::symbol whose hash value will be returned.
+     * @param s piranha::symbol whose hash value will be returned.
      *
      * @return piranha::symbol::hash().
      */

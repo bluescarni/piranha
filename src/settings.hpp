@@ -106,7 +106,7 @@ public:
     /**
      * This function is equivalent to piranha::thread_pool::resize().
      *
-     * @param[in] n the desired number of threads.
+     * @param n the desired number of threads.
      *
      * @throws unspecified any exception thrown by piranha::thread_pool::resize().
      */
@@ -173,7 +173,7 @@ public:
      * Overrides the detected cache line size. This method should be used only if the automatic
      * detection fails.
      *
-     * @param[in] n data cache line size (in bytes).
+     * @param n data cache line size (in bytes).
      *
      * @throws std::system_error in case of failure(s) by threading primitives.
      */
@@ -206,7 +206,7 @@ public:
     }
     /// Set max term output.
     /**
-     * @param[in] n maximum number of terms to be displayed when printing series.
+     * @param n maximum number of terms to be displayed when printing series.
      *
      * @throws std::system_error in case of failure(s) by threading primitives.
      */
@@ -236,7 +236,7 @@ public:
     }
     /// Set the minimum work per thread.
     /**
-     * @param[in] n the minimum work per thread.
+     * @param n the minimum work per thread.
      *
      * @throws std::invalid_argument if \n is zero.
      */

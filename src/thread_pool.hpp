@@ -550,10 +550,12 @@ public:
     future_list(const future_list &) = delete;
     /// Deleted move constructor.
     future_list(future_list &&) = delete;
-    /// Deleted copy assignment.
+
+private:
     future_list &operator=(const future_list &) = delete;
-    /// Deleted move assignment.
     future_list &operator=(future_list &&) = delete;
+
+public:
     /// Destructor
     /**
      * Will call wait_all().

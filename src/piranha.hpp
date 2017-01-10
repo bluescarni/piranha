@@ -280,7 +280,6 @@ see https://www.gnu.org/licenses/. */
  * - check returnability,
  * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
  *   in the same fashion as the s11n type traits.
- * \todo just replace @param[in]/@param[out] with just @param
  * \todo instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
  * atexit() function to clean up custom derivatives before static destruction starts. We could register the atexit
  * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each

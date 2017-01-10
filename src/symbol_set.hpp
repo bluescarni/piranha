@@ -135,10 +135,12 @@ public:
         positions(const positions &) = delete;
         /// Defaulted move constructor.
         positions(positions &&) = default;
-        /// Deleted copy assignment operator.
+
+    private:
         positions &operator=(const positions &) = delete;
-        /// Deleted move assignment operator.
         positions &operator=(positions &&) = delete;
+
+    public:
         /// Begin iterator.
         /**
          * @return an iterator to the begin of the internal vector.
@@ -210,10 +212,12 @@ public:
         positions_map(const positions_map &) = delete;
         /// Defaulted move constructor.
         positions_map(positions_map &&) = default;
-        /// Deleted copy assignment operator.
+
+    private:
         positions_map &operator=(const positions_map &) = delete;
-        /// Deleted move assignment operator.
         positions_map &operator=(positions_map &&) = delete;
+
+    public:
         /// Begin iterator.
         /**
          * @return an iterator to the begin of the internal vector.
@@ -269,7 +273,7 @@ public:
     /**
      * Each symbol in the list will be added via add() to the set.
      *
-     * @param[in] l list of symbols used for construction.
+     * @param l list of symbols used for construction.
      *
      * @throws unspecified any exception thrown by add().
      */
@@ -291,8 +295,8 @@ public:
      *
      * The set will be initialised with symbols constructed from the elements of the range.
      *
-     * @param[in] begin begin iterator.
-     * @param[in] end end iterator.
+     * @param begin begin iterator.
+     * @param end end iterator.
      *
      * @throws unspecified any exception thrown by operations on standard containers or by
      * the invoked constructor of piranha::symbol.
@@ -311,7 +315,7 @@ public:
     }
     /// Copy assignment operator.
     /**
-     * @param[in] other set to be assigned to \p this.
+     * @param other set to be assigned to \p this.
      *
      * @return reference to \p this.
      *
@@ -327,7 +331,7 @@ public:
     }
     /// Move assignment operator.
     /**
-     * @param[in] other assignment argument.
+     * @param other assignment argument.
      *
      * @return reference to \p this.
      */
@@ -349,7 +353,7 @@ public:
     }
     /// Index operator.
     /**
-     * @param[in] n index of the element to be accessed.
+     * @param n index of the element to be accessed.
      *
      * @return const reference to the element at index \p n.
      */
@@ -378,7 +382,7 @@ public:
     /**
      * The insertion of \p s will preserve the order of the set.
      *
-     * @param[in] s piranha::symbol to be inserted.
+     * @param s piranha::symbol to be inserted.
      *
      * @throws std::invalid_argument if \p s is already present in the set.
      * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
@@ -402,7 +406,7 @@ public:
     /**
      * Equivalent to constructing a piranha::symbol from \p name and then invoking the other overload of this method.
      *
-     * @param[in] name name of the piranha::symbol to be inserted.
+     * @param name name of the piranha::symbol to be inserted.
      *
      * @throws unspecified any exception thrown by the other overload of this method or by the construction
      * of piranha::symbol from \p std::string.
@@ -415,7 +419,7 @@ public:
     /**
      * The removal of \p s will preserve the order of the set.
      *
-     * @param[in] s piranha::symbol to be removed.
+     * @param s piranha::symbol to be removed.
      *
      * @throws std::invalid_argument if \p s is not present in the set.
      * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
@@ -436,7 +440,7 @@ public:
     /**
      * Equivalent to constructing a piranha::symbol from \p name and then invoking the other overload of this method.
      *
-     * @param[in] name name of the piranha::symbol to be removed.
+     * @param name name of the piranha::symbol to be removed.
      *
      * @throws unspecified any exception thrown by the other overload of this method or by the construction
      * of piranha::symbol from \p std::string.
@@ -455,7 +459,7 @@ public:
     }
     /// Merge with other set.
     /**
-     * @param[in] other merge argument.
+     * @param other merge argument.
      *
      * @return a new set containing the union of the elements present in \p this and \p other.
      *
@@ -472,7 +476,7 @@ public:
     }
     /// Set difference.
     /**
-     * @param[in] other difference argument.
+     * @param other difference argument.
      *
      * @return a new set containing the elements of \p this which are not present in \p other.
      *
@@ -487,7 +491,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return \p true if \p this and \p other contain exactly the same symbols, \p false otherwise.
      */
@@ -497,7 +501,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return opposite of operator==().
      */
@@ -510,7 +514,7 @@ public:
      * This method will return the index in the set of the input symbol \p s. If \p s is not in the set,
      * the size of the set is returned.
      *
-     * @param[in] s piranha::symbol whose index will be computed.
+     * @param s piranha::symbol whose index will be computed.
      *
      * @return the index of \p s in the set.
      *
@@ -554,8 +558,8 @@ private:
  * The internal positions vector will contain the positions in \p a of the elements
  * of \p b appearing in the set \p a.
  *
- * @param[in] a first set.
- * @param[in] b second set.
+ * @param a first set.
+ * @param b second set.
  *
  * @throws unspecified any exception thrown by memory errors in standard containers.
  */
@@ -586,8 +590,8 @@ inline symbol_set::positions::positions(const symbol_set &a, const symbol_set &b
  * The internal vector of pairs will contain the positions in \p a of the mapped values
  * of \p map appearing in the set \p a, and the mapped values themselves.
  *
- * @param[in] a reference set.
- * @param[in] map input map.
+ * @param a reference set.
+ * @param map input map.
  *
  * @throws unspecified any exception thrown by memory errors in standard containers, by
  * the copy constructor of \p T, or by <tt>std::stable_sort()</tt>.

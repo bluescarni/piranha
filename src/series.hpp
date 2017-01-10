@@ -1057,8 +1057,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return <tt>x + y</tt>.
      *
@@ -1078,8 +1078,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return reference to \p this.
      *
@@ -1096,8 +1096,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return <tt>x - y</tt>.
      *
@@ -1118,8 +1118,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return reference to \p this.
      *
@@ -1136,8 +1136,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return <tt>x * y</tt>.
      *
@@ -1158,8 +1158,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return reference to \p this.
      *
@@ -1176,8 +1176,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return <tt>x / y</tt>.
      *
@@ -1198,8 +1198,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return reference to \p this.
      *
@@ -1219,8 +1219,8 @@ public:
      * Two series are considered equal if they have the same number of terms and all terms in one series
      * appear in the other.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return \p true if <tt>x == y</tt>, \p false otherwise.
      *
@@ -1241,8 +1241,8 @@ public:
      * This operator is enabled only if the algorithm outlined in piranha::series_operators
      * is supported by the arguments.
      *
-     * @param[in] x first argument.
-     * @param[in] y second argument.
+     * @param x first argument.
+     * @param y second argument.
      *
      * @return \p true if <tt>x != y</tt>, \p false otherwise.
      *
@@ -1600,40 +1600,22 @@ private:
         const_iterator_impl;
     // Evaluation utilities.
     // NOTE: here we need the Series template because otherwise, in case of missing eval on key or coefficient, the
-    // decltype
-    // will fail as series is not a template parameter.
-    template <typename Series, typename U, typename = void>
-    struct eval_type_ {
-    };
+    // decltype will fail as series is not a template parameter. Probably we can get rid of the Series parameter
+    // if we ditch the evaluation method in favour of just the math::evaluate() functionality.
+    // This is the candidate evaluation type: the product of the evaluation of the coefficient by the evaluation of
+    // the key.
     template <typename Series, typename U>
     using e_type
         = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
                                   std::declval<std::unordered_map<std::string, U> const &>())
                    * std::declval<const typename Series::term_type::key_type &>().evaluate(
                          std::declval<const symbol_set::positions_map<U> &>(), std::declval<const symbol_set &>()));
-    template <typename Series, typename U>
-    struct eval_type_<Series, U,
-                      typename std::
-                          enable_if<has_multiply_accumulate<e_type<Series, U>,
-                                                            decltype(math::evaluate(
-                                                                std::declval<
-                                                                    typename Series::term_type::cf_type const &>(),
-                                                                std::declval<std::unordered_map<std::string, U> const
-                                                                                 &>())),
-                                                            decltype(
-                                                                std::declval<const typename Series::term_type::key_type
-                                                                                 &>()
-                                                                    .evaluate(
-                                                                        std::declval<const symbol_set::positions_map<U>
-                                                                                         &>(),
-                                                                        std::declval<const symbol_set &>()))>::value
-                                    && std::is_constructible<e_type<Series, U>, int>::value
-                                    && is_returnable<e_type<Series, U>>::value>::type> {
-        using type = e_type<Series, U>;
-    };
     // Final typedef.
     template <typename Series, typename U>
-    using eval_type = typename eval_type_<Series, U>::type;
+    using eval_type
+        = enable_if_t<conjunction<is_addable_in_place<e_type<Series, U>>, std::is_constructible<e_type<Series, U>, int>,
+                                  is_returnable<e_type<Series, U>>>::value,
+                      e_type<Series, U>>;
     // Print utilities.
     template <bool TexMode, typename Iterator>
     static std::ostream &print_helper(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
@@ -1760,12 +1742,9 @@ private:
     template <typename Series>
     using key_t = typename Series::term_type::key_type;
     // We have different implementations, depending on whether the computed derivative type is the same as the original
-    // one
-    // (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics). Adopt
-    // the usual scheme
-    // of providing an unspecialised value that sfinaes out if the enabler condition is malformed, and two
-    // specialisations
-    // that implement the logic above.
+    // one (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics).
+    // Adopt the usual scheme of providing an unspecialised value that sfinaes out if the enabler condition is
+    // malformed, and two specialisations that implement the logic above.
     template <typename Series, typename = void>
     struct partial_type_ {
     };
@@ -2060,7 +2039,7 @@ public:
      *   - the new term is inserted into \p this;
      * - otherwise, the constructor is disabled.
      *
-     * @param[in] x object to construct from.
+     * @param x object to construct from.
      *
      * @throws unspecified any exception thrown by:
      * - the copy assignment operator of piranha::symbol_set,
@@ -2085,7 +2064,7 @@ public:
     }
     /// Copy-assignment operator.
     /**
-     * @param[in] other assignment argument.
+     * @param other assignment argument.
      *
      * @return reference to \p this.
      *
@@ -2099,8 +2078,13 @@ public:
         }
         return *this;
     }
-    /// Defaulted move assignment operator.
-    series &operator=(series &&) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    series &operator=(series &&other) = default;
     /// Generic assignment operator.
     /**
      * \note
@@ -2109,7 +2093,7 @@ public:
      * Generic assignment is equivalent to assignment to a piranha::series constructed
      * via the generic constructor.
      *
-     * @param[in] x assignment argument.
+     * @param x assignment argument.
      *
      * @return reference to \p this.
      *
@@ -2182,7 +2166,7 @@ public:
      * coefficient in a valid
      * (possibly undefined) state in face of exceptions.
      *
-     * @param[in] term term to be inserted.
+     * @param term term to be inserted.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::hash_set::insert(),
@@ -2203,7 +2187,7 @@ public:
      *
      * Convenience wrapper for the generic insert() method, with \p Sign set to \p true.
      *
-     * @param[in] term term to be inserted.
+     * @param term term to be inserted.
      *
      * @throws unspecified any exception thrown by generic insert().
      */
@@ -2318,7 +2302,7 @@ public:
      * An internal thread-safe cache of natural powers of series is maintained in order to improve performance during,
      * e.g., substitution operations. This cache can be cleared with clear_pow_cache().
      *
-     * @param[in] x exponent.
+     * @param x exponent.
      *
      * @return \p this raised to the power of \p x.
      *
@@ -2425,7 +2409,7 @@ public:
      * into account
      * custom derivatives registered via piranha::series::register_custom_derivative().
      *
-     * @param[in] name name of the argument with respect to which the derivative will be calculated.
+     * @param name name of the argument with respect to which the derivative will be calculated.
      *
      * @return partial derivative of \p this with respect to the symbol named \p name.
      *
@@ -2454,8 +2438,8 @@ public:
      *
      * It is safe to call this method from multiple threads.
      *
-     * @param[in] name symbol for which the custom partial derivative function will be registered.
-     * @param[in] func custom partial derivative function.
+     * @param name symbol for which the custom partial derivative function will be registered.
+     * @param func custom partial derivative function.
      *
      * @throws unspecified any exception thrown by:
      * - failure(s) in threading primitives,
@@ -2481,7 +2465,7 @@ public:
      *
      * It is safe to call this method from multiple threads.
      *
-     * @param[in] name symbol for which the custom partial derivative function will be unregistered.
+     * @param name symbol for which the custom partial derivative function will be unregistered.
      *
      * @throws unspecified any exception thrown by:
      * - failure(s) in threading primitives,
@@ -2568,7 +2552,7 @@ public:
      * Terms are passed to \p func in the format resulting from dereferencing the iterators obtained
      * via piranha::series::begin().
      *
-     * @param[in] func filtering functor.
+     * @param func filtering functor.
      *
      * @return filtered series.
      *
@@ -2604,7 +2588,7 @@ public:
      *
      * This method requires the coefficient type to be multipliable by \p Derived.
      *
-     * @param[in] func transforming functor.
+     * @param func transforming functor.
      *
      * @return transformed series.
      *
@@ -2644,7 +2628,7 @@ public:
      * of all terms in the series via the product of the evaluations of the coefficient-key pairs in each term.
      * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
      *
-     * @param[in] dict dictionary of that will be used for evaluation.
+     * @param dict dictionary of that will be used for evaluation.
      *
      * @return evaluation of the series according to the evaluation dictionary \p dict.
      *
@@ -2685,7 +2669,8 @@ public:
         // Init return value and accumulate it.
         return_type retval = return_type(0);
         for (const auto &t : this->m_container) {
-            math::multiply_accumulate(retval, math::evaluate(t.m_cf, dict), t.m_key.evaluate(pmap, m_symbol_set));
+            // NOTE: restore use of multiply_accumulate once we sort out evaluation (enable it if supported).
+            retval += math::evaluate(t.m_cf, dict) * t.m_key.evaluate(pmap, m_symbol_set);
         }
         return retval;
     }
@@ -2774,8 +2759,8 @@ public:
      *
      * Note that the print order of the terms will be undefined.
      *
-     * @param[in,out] os target stream.
-     * @param[in] s piranha::series argument.
+     * @param os target stream.
+     * @param s piranha::series argument.
      *
      * @return reference to \p os.
      *
@@ -2834,7 +2819,7 @@ public:
      * This method will return \p true if the symbol sets of \p this and \p other are the same,
      * and <tt>other == *this</tt>.
      *
-     * @param[in] other argument for the comparison.
+     * @param other argument for the comparison.
      *
      * @return \p true if \p this and \p other are identical, \p false otherwise.
      *
@@ -2855,7 +2840,7 @@ public:
     }
     /// Symbol set setter.
     /**
-     * @param[in] args piranha::symbol_set that will be associated to the series.
+     * @param args piranha::symbol_set that will be associated to the series.
      *
      * @throws std::invalid_argument if the series is not empty.
      * @throws unspecified any exception thrown by the copy assignment operator of piranha::symbol_set.
@@ -2877,7 +2862,7 @@ public:
      * \p new_ss must have a size equal to or greater than the size of the current symbol set of \p this,
      * and all the symbols in the current symbol set must be present in \p new_ss.
      *
-     * @param[in] new_ss the new set of symbols.
+     * @param new_ss the new set of symbols.
      *
      * @return a copy of \p this with \p new_ss as symbol set.
      *
@@ -2952,8 +2937,8 @@ struct print_coefficient_impl<Series, typename std::enable_if<is_series<Series>:
      * Equivalent to the stream operator overload of piranha::series, apart from a couple
      * of parentheses '()' enclosing the coefficient series if its size is larger than 1.
      *
-     * @param[in] os target stream.
-     * @param[in] s coefficient series to be printed.
+     * @param os target stream.
+     * @param s coefficient series to be printed.
      *
      * @throws unspecified any exception thrown by the stream operator overload of piranha::series.
      */
@@ -2980,8 +2965,8 @@ struct print_tex_coefficient_impl<Series, typename std::enable_if<is_series<Seri
      * Equivalent to piranha::series::print_tex(), apart from a couple
      * of parentheses '()' enclosing the coefficient series if its size is larger than 1.
      *
-     * @param[in] os target stream.
-     * @param[in] s coefficient series to be printed.
+     * @param os target stream.
+     * @param s coefficient series to be printed.
      *
      * @throws unspecified any exception thrown by piranha::series::print_tex().
      */
@@ -3008,7 +2993,7 @@ template <typename T>
 struct negate_impl<T, typename std::enable_if<is_series<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in,out] s piranha::series to be negated.
+     * @param s piranha::series to be negated.
      *
      * @throws unspecified any exception thrown by piranha::series::negate().
      */
@@ -3028,7 +3013,7 @@ template <typename Series>
 struct is_zero_impl<Series, typename std::enable_if<is_series<Series>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] s piranha::series to be tested.
+     * @param s piranha::series to be tested.
      *
      * @return \p true if \p s is empty, \p false otherwise.
      */
@@ -3073,8 +3058,8 @@ public:
      * return s.pow(x);
      * @endcode
      *
-     * @param[in] s base.
-     * @param[in] x exponent.
+     * @param s base.
+     * @param x exponent.
      *
      * @return \p s to the power of \p x.
      *
@@ -3178,7 +3163,7 @@ template <typename Series>
 struct invert_impl<Series, detail::series_invert_enabler<Series>> {
     /// Call operator.
     /**
-     * @param[in] s argument.
+     * @param s argument.
      *
      * @return inverse of \p s.
      *
@@ -3343,7 +3328,7 @@ template <typename Series>
 struct sin_impl<Series, detail::series_sin_enabler<Series>> {
     /// Call operator.
     /**
-     * @param[in] s argument.
+     * @param s argument.
      *
      * @return sine of \p s.
      *
@@ -3371,7 +3356,7 @@ template <typename Series>
 struct cos_impl<Series, detail::series_cos_enabler<Series>> {
     /// Call operator.
     /**
-     * @param[in] s argument.
+     * @param s argument.
      *
      * @return cosine of \p s.
      *
@@ -3420,8 +3405,8 @@ struct partial_impl<Series, detail::series_partial_enabler<Series>> {
      * via piranha::series::register_custom_derivative(). In such a case, the custom derivative function will be used
      * to compute the return value. Otherwise, the output of piranha::series::partial() will be returned.
      *
-     * @param[in] s input series.
-     * @param[in] name name of the argument with respect to which the differentiation will be calculated.
+     * @param s input series.
+     * @param name name of the argument with respect to which the differentiation will be calculated.
      *
      * @return the partial derivative of \p s with respect to \p name.
      *
@@ -3462,8 +3447,8 @@ template <typename Series>
 struct integrate_impl<Series, detail::series_integrate_enabler<Series>> {
     /// Call operator.
     /**
-     * @param[in] s input series.
-     * @param[in] name name of the argument with respect to which the antiderivative will be calculated.
+     * @param s input series.
+     * @param name name of the argument with respect to which the antiderivative will be calculated.
      *
      * @return the antiderivative of \p s with respect to \p name.
      *
@@ -3501,8 +3486,8 @@ public:
      * return s.evaluate(dict);
      * @endcode
      *
-     * @param[in] s evaluation argument.
-     * @param[in] dict evaluation dictionary.
+     * @param s evaluation argument.
+     * @param dict evaluation dictionary.
      *
      * @return output of piranha::series::evaluate().
      *

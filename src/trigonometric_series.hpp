@@ -180,10 +180,22 @@ public:
     /// Defaulted move constructor.
     trigonometric_series(trigonometric_series &&) = default;
     PIRANHA_FORWARDING_CTOR(trigonometric_series, base)
-    /// Defaulted copy assignment operator.
-    trigonometric_series &operator=(const trigonometric_series &) = default;
-    /// Defaulted move assignment operator.
-    trigonometric_series &operator=(trigonometric_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    trigonometric_series &operator=(const trigonometric_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    trigonometric_series &operator=(trigonometric_series &&other) = default;
     /// Trivial destructor.
     ~trigonometric_series()
     {
@@ -215,7 +227,7 @@ public:
      * \note
      * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
      *
-     * @param[in] names names of the variables to be considered in the computation.
+     * @param names names of the variables to be considered in the computation.
      *
      * @return partial trigonometric degree of the series.
      *
@@ -259,7 +271,7 @@ public:
      * \note
      * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
      *
-     * @param[in] names names of the variables to be considered in the computation.
+     * @param names names of the variables to be considered in the computation.
      *
      * @return partial trigonometric low degree of the series.
      *
@@ -304,7 +316,7 @@ public:
      * \note
      * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
      *
-     * @param[in] names names of the variables to be considered in the computation.
+     * @param names names of the variables to be considered in the computation.
      *
      * @return partial trigonometric order of the series.
      *
@@ -348,7 +360,7 @@ public:
      * \note
      * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
      *
-     * @param[in] names names of the variables to be considered in the computation.
+     * @param names names of the variables to be considered in the computation.
      *
      * @return partial trigonometric low order of the series.
      *
@@ -385,8 +397,8 @@ struct t_degree_impl<Series,
      * \note
      * This operator is enabled only if the invoked method in piranha::trigonometric_series is enabled.
      *
-     * @param[in] ts input series.
-     * @param[in] args variadic argument pack.
+     * @param ts input series.
+     * @param args variadic argument pack.
      *
      * @return trigonometric degree of \p ts.
      *
@@ -412,8 +424,8 @@ struct t_ldegree_impl<Series,
      * \note
      * This operator is enabled only if the invoked method in piranha::trigonometric_series is enabled.
      *
-     * @param[in] ts input series.
-     * @param[in] args variadic argument pack.
+     * @param ts input series.
+     * @param args variadic argument pack.
      *
      * @return trigonometric low degree of \p ts.
      *
@@ -439,8 +451,8 @@ struct t_order_impl<Series,
      * \note
      * This operator is enabled only if the invoked method in piranha::trigonometric_series is enabled.
      *
-     * @param[in] ts input series.
-     * @param[in] args variadic argument pack.
+     * @param ts input series.
+     * @param args variadic argument pack.
      *
      * @return trigonometric order of \p ts.
      *
@@ -466,8 +478,8 @@ struct t_lorder_impl<Series,
      * \note
      * This operator is enabled only if the invoked method in piranha::trigonometric_series is enabled.
      *
-     * @param[in] ts input series.
-     * @param[in] args variadic argument pack.
+     * @param ts input series.
+     * @param args variadic argument pack.
      *
      * @return trigonometric low order of \p ts.
      *

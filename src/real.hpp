@@ -742,7 +742,7 @@ public:
     /**
      * Will deep-copy \p other.
      *
-     * @param[in] other real to be copied.
+     * @param other real to be copied.
      */
     real(const real &other)
     {
@@ -752,7 +752,7 @@ public:
     }
     /// Move constructor.
     /**
-     * @param[in] other real to be moved.
+     * @param other real to be moved.
      */
     real(real &&other) noexcept
     {
@@ -771,8 +771,8 @@ public:
      * Will use the string \p str and precision \p prec to initialize the number.
      * The expected string format, assuming representation in base 10, is described in the MPFR documentation.
      *
-     * @param[in] str string representation of the real number.
-     * @param[in] prec desired significand precision.
+     * @param str string representation of the real number.
+     * @param prec desired significand precision.
      *
      * @throws std::invalid_argument if the conversion from string fails or if the requested significand precision
      * is not within the range allowed by the MPFR library.
@@ -785,8 +785,8 @@ public:
     /**
      * Equivalent to the constructor from C string.
      *
-     * @param[in] str string representation of the real number.
-     * @param[in] prec desired significand precision.
+     * @param str string representation of the real number.
+     * @param prec desired significand precision.
      *
      * @throws unspecified any exception thrown by the constructor from C string.
      */
@@ -798,8 +798,8 @@ public:
     /**
      * \p this will be first initialised with precision \p prec, and then \p other will be assigned to \p this.
      *
-     * @param[in] other real to be copied.
-     * @param[in] prec desired significand precision.
+     * @param other real to be copied.
+     * @param prec desired significand precision.
      *
      * @throws std::invalid_argument if the requested significand precision
      * is not within the range allowed by the MPFR library.
@@ -815,8 +815,8 @@ public:
      * \note
      * This constructor is enabled only if \p T is an interoperable type.
      *
-     * @param[in] x object used to construct \p this.
-     * @param[in] prec desired significand precision.
+     * @param x object used to construct \p this.
+     * @param prec desired significand precision.
      *
      * @throws std::invalid_argument if the requested significand precision
      * is not within the range allowed by the MPFR library.
@@ -837,7 +837,7 @@ public:
     /**
      * The assignment operation will deep-copy \p other (i.e., including its precision).
      *
-     * @param[in] other real to be copied.
+     * @param other real to be copied.
      *
      * @return reference to \p this.
      */
@@ -859,7 +859,7 @@ public:
     }
     /// Move assignment operator.
     /**
-     * @param[in] other real to be moved.
+     * @param other real to be moved.
      *
      * @return reference to \p this.
      */
@@ -873,7 +873,7 @@ public:
     /**
      * The implementation is equivalent to the assignment operator from C string.
      *
-     * @param[in] str string representation of the real to be assigned.
+     * @param str string representation of the real to be assigned.
      *
      * @return reference to \p this.
      *
@@ -892,7 +892,7 @@ public:
      *
      * In case \p str is malformed, before an exception is thrown the value of \p this will be reset to zero.
      *
-     * @param[in] str string representation of the real to be assigned.
+     * @param str string representation of the real to be assigned.
      *
      * @return reference to \p this.
      *
@@ -919,7 +919,7 @@ public:
      * left it in an uninitialised state.
      * In that case, \p this will be re-initialised with the default precision.
      *
-     * @param[in] x object that will be assigned to \p this.
+     * @param x object that will be assigned to \p this.
      *
      * @return reference to \p this.
      */
@@ -967,7 +967,7 @@ public:
     /**
      * Swap \p this with \p other.
      *
-     * @param[in] other swap argument.
+     * @param other swap argument.
      */
     void swap(real &other)
     {
@@ -1025,7 +1025,7 @@ public:
     /**
      * Will set the significand precision of \p this to exactly \p prec bits, and reset the value of \p this to NaN.
      *
-     * @param[in] prec desired significand precision.
+     * @param prec desired significand precision.
      *
      * @throws std::invalid_argument if the requested significand precision
      * is not within the range allowed by the MPFR library.
@@ -1075,7 +1075,7 @@ public:
      * If the precision \p prec of \p x is greater than the precision of \p this,
      * the precision of \p this is changed to \p prec before the operation takes place.
      *
-     * @param[in] x argument for the addition.
+     * @param x argument for the addition.
      *
      * @return reference to \p this.
      *
@@ -1095,8 +1095,8 @@ public:
      * This method will first compute <tt>r + x</tt>, cast it back to \p T via \p static_cast and finally assign the
      * result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] r second argument.
+     * @param x first argument.
+     * @param r second argument.
      *
      * @return reference to \p x.
      *
@@ -1118,8 +1118,8 @@ public:
      *
      * The return type is always piranha::real.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x + y</tt>.
      *
@@ -1170,7 +1170,7 @@ public:
      * If the precision \p prec of \p x is greater than the precision of \p this,
      * the precision of \p this is changed to \p prec before the operation takes place.
      *
-     * @param[in] x argument for the subtraction.
+     * @param x argument for the subtraction.
      *
      * @return reference to \p this.
      *
@@ -1190,8 +1190,8 @@ public:
      * This method will first compute <tt>x - r</tt>, cast it back to \p T via \p static_cast and finally assign the
      * result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] r second argument.
+     * @param x first argument.
+     * @param r second argument.
      *
      * @return reference to \p x.
      *
@@ -1212,8 +1212,8 @@ public:
      *
      * The return type is always piranha::real.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x - y</tt>.
      *
@@ -1266,7 +1266,7 @@ public:
      * If the precision \p prec of \p x is greater than the precision of \p this,
      * the precision of \p this is changed to \p prec before the operation takes place.
      *
-     * @param[in] x argument for the multiplication.
+     * @param x argument for the multiplication.
      *
      * @return reference to \p this.
      *
@@ -1286,8 +1286,8 @@ public:
      * This method will first compute <tt>x * r</tt>, cast it back to \p T via \p static_cast and finally assign the
      * result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] r second argument.
+     * @param x first argument.
+     * @param r second argument.
      *
      * @return reference to \p x.
      *
@@ -1308,8 +1308,8 @@ public:
      *
      * The return type is always piranha::real.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x * y</tt>.
      *
@@ -1330,7 +1330,7 @@ public:
      * If the precision \p prec of \p x is greater than the precision of \p this,
      * the precision of \p this is changed to \p prec before the operation takes place.
      *
-     * @param[in] x argument for the division.
+     * @param x argument for the division.
      *
      * @return reference to \p this.
      *
@@ -1350,8 +1350,8 @@ public:
      * This method will first compute <tt>x / r</tt>, cast it back to \p T via \p static_cast and finally assign the
      * result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] r second argument.
+     * @param x first argument.
+     * @param r second argument.
      *
      * @return reference to \p x.
      *
@@ -1372,8 +1372,8 @@ public:
      *
      * The return type is always piranha::real.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x / y</tt>.
      *
@@ -1390,8 +1390,8 @@ public:
      * max_prec of the two operands
      * \p r1 and \p r2, the precision of \p this will be set to \p max_prec before performing the operation.
      *
-     * @param[in] r1 first argument.
-     * @param[in] r2 second argument.
+     * @param r1 first argument.
+     * @param r2 second argument.
      *
      * @return reference to \p this.
      */
@@ -1430,8 +1430,8 @@ public:
      * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false
      * will be returned.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x == y</tt>, \p false otherwise.
      */
@@ -1451,8 +1451,8 @@ public:
      * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false
      * will be returned.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x != y</tt>, \p false otherwise.
      */
@@ -1472,8 +1472,8 @@ public:
      * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false
      * will be returned.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x < y</tt>, \p false otherwise.
      */
@@ -1496,8 +1496,8 @@ public:
      * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false
      * will be returned.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x <= y</tt>, \p false otherwise.
      */
@@ -1520,8 +1520,8 @@ public:
      * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false
      * will be returned.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x > y</tt>, \p false otherwise.
      */
@@ -1544,8 +1544,8 @@ public:
      * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false
      * will be returned.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x >= y</tt>, \p false otherwise.
      */
@@ -1561,7 +1561,7 @@ public:
     /**
      * The operation is carried out with the maximum precision between \p this and \p exp.
      *
-     * @param[in] exp exponent.
+     * @param exp exponent.
      *
      * @return <tt>this ** exp</tt>.
      */
@@ -1655,8 +1655,8 @@ public:
      *
      * For non-finite numbers, the string representation is one of "nan", "inf" or "-inf".
      *
-     * @param[in] os output stream.
-     * @param[in] r piranha::real to be directed to stream.
+     * @param os output stream.
+     * @param r piranha::real to be directed to stream.
      *
      * @return reference to \p os.
      *
@@ -1707,8 +1707,8 @@ public:
     /**
      * Equivalent to extracting a line from the stream and then assigning it to \p r.
      *
-     * @param[in] is input stream.
-     * @param[in,out] r real to which the contents of the stream will be assigned.
+     * @param is input stream.
+     * @param r real to which the contents of the stream will be assigned.
      *
      * @return reference to \p is.
      *
@@ -1773,8 +1773,8 @@ public:
      * the precision of \p this and a decimal string representation of \p this are packed in an array.
      * Otherwise, an array of 4 elements storing the internal MPFR representation of \p this is packed.
      *
-     * @param[in] p target <tt>msgpack::packer</tt>.
-     * @param[in] f the desired piranha::msgpack_format.
+     * @param p target <tt>msgpack::packer</tt>.
+     * @param f the desired piranha::msgpack_format.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::safe_cast(),
@@ -1820,8 +1820,8 @@ public:
      * Calling this method in binary mode will result in undefined behaviour if \p o does not contain an integer
      * serialized via msgpack_pack().
      *
-     * @param[in] o source object.
-     * @param[in] f the desired piranha::msgpack_format.
+     * @param o source object.
+     * @param f the desired piranha::msgpack_format.
      *
      * @throws std::invalid_argument if, in binary mode, the number of serialized limbs is inconsistent with the
      * precision.
@@ -1896,7 +1896,7 @@ template <typename T>
 struct negate_impl<T, typename std::enable_if<std::is_same<T, real>::value>::type> {
     /// Call operator.
     /**
-     * @param[in,out] x piranha::real to be negated.
+     * @param x piranha::real to be negated.
      */
     void operator()(real &x) const
     {
@@ -1909,7 +1909,7 @@ template <typename T>
 struct is_zero_impl<T, typename std::enable_if<std::is_same<T, real>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] r piranha::real to be tested.
+     * @param r piranha::real to be tested.
      *
      * @return \p true if \p r is zero, \p false otherwise.
      */
@@ -1952,8 +1952,8 @@ template <typename T, typename U>
 struct pow_impl<T, U, detail::real_pow_enabler<T, U>> {
     /// Call operator, real--real overload.
     /**
-     * @param[in] r base.
-     * @param[in] x exponent.
+     * @param r base.
+     * @param x exponent.
      *
      * @return \p r to the power of \p x.
      *
@@ -1965,8 +1965,8 @@ struct pow_impl<T, U, detail::real_pow_enabler<T, U>> {
     }
     /// Call operator, real base overload.
     /**
-     * @param[in] r base.
-     * @param[in] x exponent.
+     * @param r base.
+     * @param x exponent.
      *
      * @return \p r to the power of \p x.
      *
@@ -1982,8 +1982,8 @@ struct pow_impl<T, U, detail::real_pow_enabler<T, U>> {
     }
     /// Call operator, real exponent overload.
     /**
-     * @param[in] r base.
-     * @param[in] x exponent.
+     * @param r base.
+     * @param x exponent.
      *
      * @return \p r to the power of \p x.
      *
@@ -2004,7 +2004,7 @@ struct sin_impl<T, typename std::enable_if<std::is_same<T, real>::value>::type> 
     /**
      * The operation will return the output of piranha::real::sin().
      *
-     * @param[in] r argument.
+     * @param r argument.
      *
      * @return sine of \p r.
      */
@@ -2021,7 +2021,7 @@ struct cos_impl<T, typename std::enable_if<std::is_same<T, real>::value>::type> 
     /**
      * The operation will return the output of piranha::real::cos().
      *
-     * @param[in] r argument.
+     * @param r argument.
      *
      * @return cosine of \p r.
      */
@@ -2036,7 +2036,7 @@ template <typename T>
 struct abs_impl<T, typename std::enable_if<std::is_same<T, real>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] x input parameter.
+     * @param x input parameter.
      *
      * @return absolute value of \p x.
      */
@@ -2073,8 +2073,8 @@ template <typename T, typename U>
 struct binomial_impl<T, U, detail::real_binomial_enabler<T, U>> {
     /// Call operator, real--real overload.
     /**
-     * @param[in] x top.
-     * @param[in] y bottom.
+     * @param x top.
+     * @param y bottom.
      *
      * @return \p x choose \p y.
      *
@@ -2086,8 +2086,8 @@ struct binomial_impl<T, U, detail::real_binomial_enabler<T, U>> {
     }
     /// Call operator, real top overload.
     /**
-     * @param[in] x top.
-     * @param[in] y bottom.
+     * @param x top.
+     * @param y bottom.
      *
      * @return \p x choose \p y.
      *
@@ -2103,8 +2103,8 @@ struct binomial_impl<T, U, detail::real_binomial_enabler<T, U>> {
     }
     /// Call operator, real bottom overload.
     /**
-     * @param[in] x top.
-     * @param[in] y bottom.
+     * @param x top.
+     * @param y bottom.
      *
      * @return \p x choose \p y.
      *
@@ -2119,17 +2119,17 @@ struct binomial_impl<T, U, detail::real_binomial_enabler<T, U>> {
 };
 
 /// Specialisation of the implementation of piranha::math::multiply_accumulate() for piranha::real.
-template <typename T>
-struct multiply_accumulate_impl<T, T, T, typename std::enable_if<std::is_same<T, real>::value>::type> {
+template <>
+struct multiply_accumulate_impl<real> {
     /// Call operator.
     /**
      * This implementation will use piranha::real::multiply_accumulate().
      *
-     * @param[in,out] x target value for accumulation.
-     * @param[in] y first argument.
-     * @param[in] z second argument.
+     * @param x target value for accumulation.
+     * @param y first argument.
+     * @param z second argument.
      */
-    void operator()(T &x, const T &y, const T &z) const
+    void operator()(real &x, const real &y, const real &z) const
     {
         x.multiply_accumulate(y, z);
     }
@@ -2200,7 +2200,7 @@ inline real real_compute_3_gamma(const real &a, const real &b, const real &c, co
  *
  * The returned value will have the maximum precision between \p this and \p y.
  *
- * @param[in] y bottom value.
+ * @param y bottom value.
  *
  * @return \p this choose \p y.
  *
@@ -2278,7 +2278,7 @@ public:
      * The conversion will succeed if \p r is a finite integral value representable by
      * the target type.
      *
-     * @param[in] r conversion argument.
+     * @param r conversion argument.
      *
      * @return \p r converted to \p To.
      *
@@ -2308,7 +2308,7 @@ public:
      * \note
      * This operator is enabled if \p To is an instance of piranha::mp_rational.
      *
-     * @param[in] r conversion argument.
+     * @param r conversion argument.
      *
      * @return \p r converted to piranha::mp_rational.
      *
@@ -2335,7 +2335,7 @@ inline namespace literals
 /**
  * The return value will be constructed with default precision.
  *
- * @param[in] s literal string.
+ * @param s literal string.
  *
  * @return a piranha::real constructed from \p s.
  *
@@ -2424,9 +2424,9 @@ struct msgpack_pack_impl<Stream, real, real_msgpack_pack_enabler<Stream>> {
     /**
      * The call operator will use piranha::real::msgpack_pack() internally.
      *
-     * @param[in] p target <tt>msgpack::packer</tt>.
-     * @param[in] x piranha::real to be serialized.
-     * @param[in] f the desired piranha::msgpack_format.
+     * @param p target <tt>msgpack::packer</tt>.
+     * @param x piranha::real to be serialized.
+     * @param f the desired piranha::msgpack_format.
      *
      * @throws unspecified any exception thrown by piranha::real::msgpack_pack().
      */
@@ -2448,9 +2448,9 @@ struct msgpack_convert_impl<T, real_msgpack_convert_enabler<T>> {
     /**
      * The call operator will use piranha::real::msgpack_convert() internally.
      *
-     * @param[in] x target piranha::real.
-     * @param[in] o the <tt>msgpack::object</tt> to be converted into \p n.
-     * @param[in] f the desired piranha::msgpack_format.
+     * @param x target piranha::real.
+     * @param o the <tt>msgpack::object</tt> to be converted into \p n.
+     * @param f the desired piranha::msgpack_format.
      *
      * @throws unspecified any exception thrown by piranha::real::msgpack_convert().
      */

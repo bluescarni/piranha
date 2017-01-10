@@ -179,10 +179,22 @@ public:
         PIRANHA_TT_CHECK(is_series, Derived);
         PIRANHA_TT_CHECK(std::is_base_of, substitutable_series, Derived);
     }
-    /// Defaulted copy assignment operator.
-    substitutable_series &operator=(const substitutable_series &) = default;
-    /// Defaulted move assignment operator.
-    substitutable_series &operator=(substitutable_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    substitutable_series &operator=(const substitutable_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    substitutable_series &operator=(substitutable_series &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(substitutable_series, base)
     /// Substitution.
     /**
@@ -194,8 +206,8 @@ public:
      * This method will return an object resulting from the substitution of the symbol called \p name
      * in \p this with the generic object \p x.
      *
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] x object used for the substitution.
+     * @param name name of the symbol to be substituted.
+     * @param x object used for the substitution.
      *
      * @return the result of the substitution.
      *
@@ -240,9 +252,9 @@ struct subs_impl<Series, T, detail::subs_impl_subs_series_enabler<Series, T>> {
     /**
      * The call operator is equivalent to calling the substitution method on \p s.
      *
-     * @param[in] s target series.
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] x object used for substitution.
+     * @param s target series.
+     * @param name name of the symbol to be substituted.
+     * @param x object used for substitution.
      *
      * @return the result of the substitution.
      *

@@ -169,10 +169,22 @@ public:
     /// Defaulted move constructor.
     t_substitutable_series(t_substitutable_series &&) = default;
     PIRANHA_FORWARDING_CTOR(t_substitutable_series, base)
-    /// Defaulted copy assignment operator.
-    t_substitutable_series &operator=(const t_substitutable_series &) = default;
-    /// Defaulted move assignment operator.
-    t_substitutable_series &operator=(t_substitutable_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    t_substitutable_series &operator=(const t_substitutable_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    t_substitutable_series &operator=(t_substitutable_series &&other) = default;
     /// Trivial destructor.
     ~t_substitutable_series()
     {
@@ -188,9 +200,9 @@ public:
      *
      * Trigonometric substitution is the substitution of the cosine and sine of \p name for \p c and \p s.
      *
-     * @param[in] name name of the symbol that will be subject to substitution.
-     * @param[in] c cosine of \p name.
-     * @param[in] s sine of \p name.
+     * @param name name of the symbol that will be subject to substitution.
+     * @param c cosine of \p name.
+     * @param s sine of \p name.
      *
      * @return the result of the trigonometric substitution.
      *
@@ -239,10 +251,10 @@ struct t_subs_impl<Series, U, V, detail::t_subs_impl_t_subs_series_enabler<Serie
     /**
      * The call operator is equivalent to calling the substitution method on \p s.
      *
-     * @param[in] series argument for the substitution.
-     * @param[in] name name of the symbol that will be subject to substitution.
-     * @param[in] c cosine of \p name.
-     * @param[in] s sine of \p name.
+     * @param series argument for the substitution.
+     * @param name name of the symbol that will be subject to substitution.
+     * @param c cosine of \p name.
+     * @param s sine of \p name.
      *
      * @return the result of the substitution.
      *

@@ -137,7 +137,7 @@ public:
      *
      * \p list will be forwarded to construct the internal piranha::small_vector.
      *
-     * @param[in] list initializer list.
+     * @param list initializer list.
      *
      * @throws unspecified any exception thrown by the corresponding constructor of piranha::small_vector.
      */
@@ -150,7 +150,7 @@ public:
      * The key will be created with a number of variables equal to <tt>args.size()</tt>
      * and filled with elements constructed from the integral constant 0.
      *
-     * @param[in] args piranha::symbol_set used for construction.
+     * @param args piranha::symbol_set used for construction.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::small_vector::push_back(),
@@ -175,8 +175,8 @@ public:
      * will
      * be produced.
      *
-     * @param[in] other construction argument.
-     * @param[in] args reference piranha::symbol_set.
+     * @param other construction argument.
+     * @param args reference piranha::symbol_set.
      *
      * @throws std::invalid_argument if the sizes of \p x and \p args differ.
      * @throws unspecified any exception thrown by:
@@ -200,15 +200,22 @@ public:
         PIRANHA_TT_CHECK(is_container_element, Derived);
         PIRANHA_TT_CHECK(std::is_base_of, array_key, Derived);
     }
-    /// Defaulted copy assignment operator.
+    /// Copy assignment operator.
     /**
-     * @throws unspecified any exception thrown by the copy constructor of piranha::small_vector.
+     * @param other the assignment argument.
      *
-     * @return reference to \p this.
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
      */
-    array_key &operator=(const array_key &) = default;
-    /// Defaulted move assignment operator.
-    array_key &operator=(array_key &&) = default;
+    array_key &operator=(const array_key &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    array_key &operator=(array_key &&other) = default;
     /// Begin iterator.
     /**
      * @return iterator to the first element of the internal container.
@@ -253,7 +260,7 @@ public:
     /**
      * Equivalent to piranha::small_vector::resize().
      *
-     * @param[in] new_size desired new size for the internal container.
+     * @param new_size desired new size for the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::resize().
      */
@@ -263,7 +270,7 @@ public:
     }
     /// Element access.
     /**
-     * @param[in] i index of the element to be accessed.
+     * @param i index of the element to be accessed.
      *
      * @return reference to the element of the container at index \p i.
      */
@@ -274,7 +281,7 @@ public:
     }
     /// Const element access.
     /**
-     * @param[in] i index of the element to be accessed.
+     * @param i index of the element to be accessed.
      *
      * @return const reference to the element of the container at index \p i.
      */
@@ -295,7 +302,7 @@ public:
     /**
      * Move-add \p x at the end of the internal container.
      *
-     * @param[in] x element to be added to the internal container.
+     * @param x element to be added to the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::push_back().
      */
@@ -307,7 +314,7 @@ public:
     /**
      * Copy-add \p x at the end of the internal container.
      *
-     * @param[in] x element to be added to the internal container.
+     * @param x element to be added to the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::push_back().
      */
@@ -317,7 +324,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return the result of piranha::small_vector::operator==().
      *
@@ -329,7 +336,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return negation of operator==().
      *
@@ -345,8 +352,8 @@ public:
      * contains a set of symbols that are candidates for elimination. The method will remove
      * from \p candidates those symbols whose element in \p this is not zero.
      *
-     * @param[in] candidates set of candidates for elimination.
-     * @param[in] args reference arguments set.
+     * @param candidates set of candidates for elimination.
+     * @param args reference arguments set.
      *
      * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
      * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::symbol_set::remove().
@@ -368,8 +375,8 @@ public:
      * This method will return a copy of \p this with the elements associated to the symbols
      * in \p trim_args removed.
      *
-     * @param[in] trim_args arguments whose elements will be removed.
-     * @param[in] orig_args original arguments set.
+     * @param trim_args arguments whose elements will be removed.
+     * @param orig_args original arguments set.
      *
      * @return trimmed copy of \p this.
      *
@@ -399,8 +406,8 @@ public:
      * Equivalent to calling piranha::small_vector::add() on the internal containers of \p this
      * and of the arguments.
      *
-     * @param[out] retval piranha::array_key that will hold the result of the addition.
-     * @param[in] other piranha::array_key that will be added to \p this.
+     * @param retval piranha::array_key that will hold the result of the addition.
+     * @param other piranha::array_key that will be added to \p this.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::add().
      */
@@ -418,8 +425,8 @@ public:
      * Equivalent to calling piranha::small_vector::sub() on the internal containers of \p this
      * and of the arguments.
      *
-     * @param[out] retval piranha::array_key that will hold the result of the subtraction.
-     * @param[in] other piranha::array_key that will be subtracted from \p this.
+     * @param retval piranha::array_key that will hold the result of the subtraction.
+     * @param other piranha::array_key that will be subtracted from \p this.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::sub().
      */
@@ -434,8 +441,8 @@ public:
      * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the internal container,
      * with the corresponding values constructed from the integral constant 0.
      *
-     * @param[in] orig_args current reference arguments set for \p this.
-     * @param[in] new_args new arguments set.
+     * @param orig_args current reference arguments set for \p this.
+     * @param new_args new arguments set.
      *
      * @return a \p Derived instance resulting from merging \p new_args into \p this.
      *
@@ -492,7 +499,7 @@ struct hash<piranha::array_key<T, Derived, S>> {
     typedef piranha::array_key<T, Derived, S> argument_type;
     /// Hash operator.
     /**
-     * @param[in] a piranha::array_key whose hash value will be returned.
+     * @param a piranha::array_key whose hash value will be returned.
      *
      * @return piranha::array_key::hash().
      */

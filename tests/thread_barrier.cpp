@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <functional>
+#include <type_traits>
 
 #include "../src/init.hpp"
 #include "../src/thread_pool.hpp"
@@ -53,4 +54,6 @@ BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
     }
     BOOST_CHECK_NO_THROW(f_list.wait_all());
     BOOST_CHECK_NO_THROW(f_list.wait_all());
+    BOOST_CHECK(!std::is_copy_assignable<piranha::thread_barrier>::value);
+    BOOST_CHECK(!std::is_move_assignable<piranha::thread_barrier>::value);
 }

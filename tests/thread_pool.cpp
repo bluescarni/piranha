@@ -327,6 +327,8 @@ BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
     thread_pool::resize(10u);
     auto null_task = []() {};
     future_list<decltype(null_task())> f1;
+    BOOST_CHECK(!std::is_copy_assignable<decltype(f1)>::value);
+    BOOST_CHECK(!std::is_move_assignable<decltype(f1)>::value);
     f1.wait_all();
     f1.wait_all();
     f1.get_all();

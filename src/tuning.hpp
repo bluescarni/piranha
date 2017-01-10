@@ -86,7 +86,7 @@ public:
     /**
      * @see piranha::tuning::get_parallel_memory_set() for an explanation of the meaning of this flag.
      *
-     * @param[in] flag desired value for the \p parallel_memory_set flag.
+     * @param flag desired value for the \p parallel_memory_set flag.
      */
     static void set_parallel_memory_set(bool flag)
     {
@@ -122,7 +122,7 @@ public:
     /**
      * @see piranha::tuning::get_multiplication_block_size() for an explanation of the meaning of this value.
      *
-     * @param[in] size desired value for the block size.
+     * @param size desired value for the block size.
      *
      * @throws std::invalid_argument if \p size is outside an implementation-defined range.
      */
@@ -164,7 +164,7 @@ public:
     /**
      * @see piranha::tuning::s_estimate_threshold() for an explanation of the meaning of this value.
      *
-     * @param[in] size desired value for the series estimation threshold.
+     * @param size desired value for the series estimation threshold.
      */
     static void set_estimate_threshold(unsigned long size)
     {

@@ -68,6 +68,11 @@ struct m_checker : public base_series_multiplier<Series> {
     using size_type = typename base::size_type;
     explicit m_checker(const Series &s1, const Series &s2) : base(s1, s2)
     {
+        BOOST_CHECK(!std::is_constructible<base>::value);
+        BOOST_CHECK(!std::is_copy_constructible<base>::value);
+        BOOST_CHECK(!std::is_move_constructible<base>::value);
+        BOOST_CHECK(!std::is_copy_assignable<base>::value);
+        BOOST_CHECK(!std::is_move_assignable<base>::value);
         term_pointers_checker(s1, s2);
         null_absorber_checker(s1, s2);
     }

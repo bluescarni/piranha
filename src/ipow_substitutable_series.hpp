@@ -172,10 +172,22 @@ public:
     /// Defaulted move constructor.
     ipow_substitutable_series(ipow_substitutable_series &&) = default;
     PIRANHA_FORWARDING_CTOR(ipow_substitutable_series, base)
-    /// Defaulted copy assignment operator.
-    ipow_substitutable_series &operator=(const ipow_substitutable_series &) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    ipow_substitutable_series &operator=(const ipow_substitutable_series &other) = default;
     /// Defaulted move assignment operator.
-    ipow_substitutable_series &operator=(ipow_substitutable_series &&) = default;
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    ipow_substitutable_series &operator=(ipow_substitutable_series &&other) = default;
     /// Trivial destructor.
     ~ipow_substitutable_series()
     {
@@ -195,9 +207,9 @@ public:
      * name
      * in \p this with the generic object \p x.
      *
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] n integral power of the symbol to be substituted.
-     * @param[in] x object used for the substitution.
+     * @param name name of the symbol to be substituted.
+     * @param n integral power of the symbol to be substituted.
+     * @param x object used for the substitution.
      *
      * @return the result of the substitution.
      *
@@ -224,9 +236,9 @@ public:
      * This is a convenience method that will call the other ipow_subs() overload after converting
      * \p n to piranha::integer.
      *
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] n integral power of the symbol to be substituted.
-     * @param[in] x object used for the substitution.
+     * @param name name of the symbol to be substituted.
+     * @param n integral power of the symbol to be substituted.
+     * @param x object used for the substitution.
      *
      * @return the result of the substitution.
      *
@@ -266,10 +278,10 @@ struct ipow_subs_impl<Series, T, detail::ipow_subs_impl_ipow_subs_series_enabler
     /**
      * The call operator is equivalent to calling the substitution method on \p s.
      *
-     * @param[in] s target series.
-     * @param[in] name name of the symbol to be substituted.
-     * @param[in] n integral power of the symbol to be substituted.
-     * @param[in] x object used for substitution.
+     * @param s target series.
+     * @param name name of the symbol to be substituted.
+     * @param n integral power of the symbol to be substituted.
+     * @param x object used for substitution.
      *
      * @return the result of the substitution.
      *

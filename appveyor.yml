@@ -1,5 +1,9 @@
 version: '{build}'
 
+branches:
+  except:
+    - /pr\/.+/
+
 environment:
   TWINE_PASSWORD:
     secure: rcb0UlxG/p8yoPsvhAdsHA==

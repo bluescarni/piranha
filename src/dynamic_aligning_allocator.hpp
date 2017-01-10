@@ -75,7 +75,7 @@ public:
     dynamic_aligning_allocator(dynamic_aligning_allocator &&) = default;
     /// Constructor from alignment value.
     /**
-     * @param[in] alignment alignment value that will be used for allocation.
+     * @param alignment alignment value that will be used for allocation.
      */
     explicit dynamic_aligning_allocator(const std::size_t &alignment) : m_alignment(alignment)
     {
@@ -84,7 +84,7 @@ public:
     /**
      * After construction, the alignment will be the same as \p other.
      *
-     * @param[in] other construction argument.
+     * @param other construction argument.
      */
     template <typename U>
     explicit dynamic_aligning_allocator(const dynamic_aligning_allocator<U> &other) : m_alignment(other.alignment())
@@ -94,7 +94,7 @@ public:
     /**
      * After construction, the alignment will be the same as \p other.
      *
-     * @param[in] other construction argument.
+     * @param other construction argument.
      */
     template <typename U>
     explicit dynamic_aligning_allocator(dynamic_aligning_allocator<U> &&other) : m_alignment(other.alignment())
@@ -102,10 +102,20 @@ public:
     }
     /// Defaulted destructor.
     ~dynamic_aligning_allocator() = default;
-    /// Defaulted copy assignment operator.
-    dynamic_aligning_allocator &operator=(const dynamic_aligning_allocator &) = default;
-    /// Defaulted move assignment operator.
-    dynamic_aligning_allocator &operator=(dynamic_aligning_allocator &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    dynamic_aligning_allocator &operator=(const dynamic_aligning_allocator &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    dynamic_aligning_allocator &operator=(dynamic_aligning_allocator &&other) = default;
     /// Maximum allocatable size.
     /**
      * @return the maximum number of objects of type \p value_type that can be allocated by a single call to
@@ -119,7 +129,7 @@ public:
     /**
      * The allocation function is a thin wrapper around piranha::aligned_palloc().
      *
-     * @param[in] size number of instances of type \p value_type for which the space will be allocated.
+     * @param size number of instances of type \p value_type for which the space will be allocated.
      *
      * @return a pointer to the allocated storage.
      *
@@ -138,7 +148,7 @@ public:
     /**
      * The allocation function is a thin wrapper around piranha::aligned_pfree().
      *
-     * @param[in] ptr a pointer to a memory block allocated via allocate().
+     * @param ptr a pointer to a memory block allocated via allocate().
      *
      * @throws unspecified any exception thrown by piranha::aligned_pfree().
      */
@@ -148,7 +158,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return \p true if the alignments of \p this and \p other coincide, \p false otherwise.
      */
@@ -158,7 +168,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return the opposite of operator==().
      */

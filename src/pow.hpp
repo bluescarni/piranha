@@ -82,8 +82,8 @@ struct pow_impl<T, U, detail::pow_fp_arith_enabler<T, U>> {
     /**
      * This operator will compute the exponentiation via one of the overloads of <tt>std::pow()</tt>.
      *
-     * @param[in] x base.
-     * @param[out] y exponent.
+     * @param x base.
+     * @param y exponent.
      *
      * @return <tt>x**y</tt>.
      */
@@ -100,8 +100,8 @@ struct pow_impl<T, U, detail::pow_fp_arith_enabler<T, U>> {
  * functor's
  * call operator.
  *
- * @param[in] x base.
- * @param[in] y exponent.
+ * @param x base.
+ * @param y exponent.
  *
  * @return \p x to the power of \p y.
  *
@@ -136,8 +136,8 @@ template <typename T, typename U>
 struct pow_impl<T, U, detail::integer_pow_enabler<T, U>> {
     /// Call operator, integral--integral overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -152,8 +152,8 @@ struct pow_impl<T, U, detail::integer_pow_enabler<T, U>> {
     }
     /// Call operator, piranha::mp_integer overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -167,8 +167,8 @@ struct pow_impl<T, U, detail::integer_pow_enabler<T, U>> {
     }
     /// Call operator, integer--integral overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -181,8 +181,8 @@ struct pow_impl<T, U, detail::integer_pow_enabler<T, U>> {
     }
     /// Call operator, integer--floating-point overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -195,8 +195,8 @@ struct pow_impl<T, U, detail::integer_pow_enabler<T, U>> {
     }
     /// Call operator, integral--integer overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
@@ -209,8 +209,8 @@ struct pow_impl<T, U, detail::integer_pow_enabler<T, U>> {
     }
     /// Call operator, floating-point--integer overload.
     /**
-     * @param[in] b base.
-     * @param[in] e exponent.
+     * @param b base.
+     * @param e exponent.
      *
      * @returns <tt>b**e</tt>.
      *
