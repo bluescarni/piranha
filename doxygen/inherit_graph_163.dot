@@ -1,0 +1,7 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node0 [label="piranha::math::degree\l_impl\< Series, ps_degree\l_enabler\< Series \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1degree__impl_3_01_series_00_01ps__degree__enabler_3_01_series_01_4_01_4.html",tooltip="Specialisation of the piranha::math::degree() functor for instances of piranha::power_series. "];
+}

@@ -1,0 +1,7 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node0 [label="piranha::msgpack_convert\l_impl\< T, mp_integer_msgpack\l_convert_enabler\< T \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1msgpack__convert__impl_3_01_t_00_01mp__integer__msgpack__convert__enabler_3_01_t_01_4_01_4.html",tooltip="Specialisation of piranha::msgpack_convert() for piranha::mp_integer. "];
+}

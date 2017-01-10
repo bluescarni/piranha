@@ -1,0 +1,9 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node0 [label="piranha::boost_load\l_via_boost_api\< Archive,\l hash_set\< T, Hash, Pred \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__load__via__boost__api.html"];
+  Node0 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node1 [label="piranha::boost_load\l_impl\< Archive, hash\l_set\< T, Hash, Pred \>\l, hash_set_boost_load\l_enabler\< Archive, T, Hash,\l Pred \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__load__impl_3_01_archive_00_01hash__set_3_01_t_00_01_hash_00_01_pred_01_45a84362f873dc3ca0673fa361927075a.html",tooltip="Specialisation of piranha::boost_load() for piranha::hash_set. "];
+}
