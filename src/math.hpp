@@ -84,7 +84,7 @@ public:
      *
      * The operator will compare \p x to an instance of \p U constructed from the literal 0.
      *
-     * @param[in] x argument to be tested.
+     * @param x argument to be tested.
      *
      * @return \p true if \p x is zero, \p false otherwise.
      *
@@ -124,7 +124,7 @@ namespace math
  * return is_zero_impl<T>{}(x);
  * @endcode
  *
- * @param[in] x value to be tested.
+ * @param x value to be tested.
  *
  * @return \p true if value is zero, \p false otherwise.
  *
@@ -161,7 +161,7 @@ struct is_zero_impl<T, detail::math_is_zero_std_complex_enabler<T>> {
     /**
      * The operator will test separately the real and imaginary parts of the complex argument.
      *
-     * @param[in] c argument to be tested.
+     * @param c argument to be tested.
      *
      * @return \p true if \p c is zero, \p false otherwise.
      */
@@ -193,7 +193,7 @@ public:
      *
      * The operator will compare \p x to an instance of \p U constructed from the literal 1.
      *
-     * @param[in] x argument to be tested.
+     * @param x argument to be tested.
      *
      * @return \p true if \p x is equal to 1, \p false otherwise.
      *
@@ -234,7 +234,7 @@ namespace math
  * return is_unitary_impl<T>{}(x);
  * @endcode
  *
- * @param[in] x value to be tested.
+ * @param x value to be tested.
  *
  * @return \p true if value is equal to 1, \p false otherwise.
  *
@@ -277,7 +277,7 @@ public:
      * @endcode
      * The other overload of this operator is specialised for C++ integral types, and it behaves identically.
      *
-     * @param[in,out] x value to be negated.
+     * @param x value to be negated.
      *
      * @throws unspecified any exception resulting from the in-place negation or assignment of \p x.
      */
@@ -287,6 +287,9 @@ public:
         x = -x;
     }
     /// Call operator specialised for integral types.
+    /**
+     * @param x the integral value that will be negated.
+     */
     template <typename U, integral_enabler<U> = 0>
     void operator()(U &x) const
     {
@@ -323,7 +326,7 @@ namespace math
  * @endcode
  * The result of the call operator of piranha::math::negate_impl is ignored.
  *
- * @param[in,out] x value to be negated.
+ * @param x value to be negated.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::negate_impl.
  */
@@ -335,60 +338,65 @@ inline void negate(T &x)
 
 /// Default functor for the implementation of piranha::math::multiply_accumulate().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism.
+ * This functor can be specialised via the \p std::enable_if mechanism.
  */
-template <typename T, typename U, typename V, typename = void>
+template <typename T, typename = void>
 struct multiply_accumulate_impl {
 private:
     // NOTE: as usual, we check the expression against const ref arguments.
-    template <typename T2, typename U2, typename V2>
-    using enabler =
-        typename std::enable_if<detail::true_tt<decltype(std::declval<T2 &>() += std::declval<const U2 &>()
-                                                                                 * std::declval<const V2 &>())>::value,
-                                int>::type;
+    template <typename U>
+    using addmul_t = decltype(std::declval<U &>() += std::declval<const U &>() * std::declval<const U &>());
+    template <typename U>
+    using enabler = enable_if_t<is_detected<addmul_t, U>::value, int>;
 
 public:
     /// Call operator.
     /**
      * \note
-     * This call operator is enabled only if the arguments support binary multiplication
-     * and in-place addition.
+     * This call operator is enabled only if the expression <tt>x += y * z</tt> is well-formed.
      *
      * The body of the operator is equivalent to:
      * @code
      * x += y * z;
      * @endcode
-     * where \p y and \p z are perfectly forwarded.
      *
-     * @param[in,out] x target value for accumulation.
-     * @param[in] y first argument.
-     * @param[in] z second argument.
+     * @param x target value for accumulation.
+     * @param y first argument.
+     * @param z second argument.
      *
      * @throws unspecified any exception resulting from in-place addition or
      * binary multiplication on the operands.
      */
-    template <typename T2, typename U2, typename V2, enabler<T2, U2, V2> = 0>
-    void operator()(T2 &x, U2 &&y, V2 &&z) const
+    template <typename U, enabler<U> = 0>
+    void operator()(U &x, const U &y, const U &z) const
     {
-        x += std::forward<U2>(y) * std::forward<V2>(z);
+        x += y * z;
     }
 };
 
 #if defined(FP_FAST_FMA) && defined(FP_FAST_FMAF) && defined(FP_FAST_FMAL)
+
+inline namespace impl
+{
+
+// Enabler for the fast floating-point implementation of multiply_accumulate().
+template <typename T>
+using math_multiply_accumulate_float_enabler = enable_if_t<std::is_floating_point<T>::value>;
+}
 
 /// Specialisation of the implementation of piranha::math::multiply_accumulate() for floating-point types.
 /**
  * This functor is enabled only if the macros \p FP_FAST_FMA, \p FP_FAST_FMAF and \p FP_FAST_FMAL are defined.
  */
 template <typename T>
-struct multiply_accumulate_impl<T, T, T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
+struct multiply_accumulate_impl<T, math_multiply_accumulate_float_enabler<T>> {
     /// Call operator.
     /**
      * This implementation will use the \p std::fma() function.
      *
-     * @param[in,out] x target value for accumulation.
-     * @param[in] y first argument.
-     * @param[in] z second argument.
+     * @param x target value for accumulation.
+     * @param y first argument.
+     * @param z second argument.
      */
     void operator()(T &x, const T &y, const T &z) const
     {
@@ -399,17 +407,16 @@ struct multiply_accumulate_impl<T, T, T, typename std::enable_if<std::is_floatin
 #endif
 }
 
-namespace detail
+inline namespace impl
 {
 
 // Enabler for multiply_accumulate.
-template <typename T, typename U, typename V>
-using math_multiply_accumulate_enabler = typename std::
-    enable_if<!std::is_const<T>::value
-                  && true_tt<decltype(math::multiply_accumulate_impl<T, typename std::decay<U>::type,
-                                                                     typename std::decay<V>::type>{}(
-                         std::declval<T &>(), std::declval<const U &>(), std::declval<const V &>()))>::value,
-              int>::type;
+template <typename T>
+using math_multiply_accumulate_t = decltype(
+    math::multiply_accumulate_impl<T>{}(std::declval<T &>(), std::declval<const T &>(), std::declval<const T &>()));
+
+template <typename T>
+using math_multiply_accumulate_enabler = enable_if_t<is_detected<math_multiply_accumulate_t, T>::value, int>;
 }
 
 namespace math
@@ -418,30 +425,24 @@ namespace math
 /// Multiply-accumulate.
 /**
  * \note
- * This function is enabled only if \p T is not const and the expression
- * <tt>multiply_accumulate_impl<T,Ud,Vd>>{}(x,y,z)</tt> is valid (where \p Ud and \p Vd
- * are the decay types of \p U and \p V).
+ * This function is enabled only if the expression <tt>multiply_accumulate_impl<T>{}(x, y, z)</tt> is valid.
  *
- * Will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the
- * piranha::math::multiply_accumulate_impl functor's
- * call operator. The body of this function is equivalent to:
+ * This function will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the
+ * piranha::math::multiply_accumulate_impl functor's call operator. The body of this function is equivalent to:
  * @code
- * multiply_accumulate_impl<T,Ud,Vd>{}(x,std::forward<U>(y),std::forward<V>(z));
+ * multiply_accumulate_impl<T>{}(x, y, z);
  * @endcode
- * (where \p Ud and \p Vd are the decay types of \p U and \p V). The result of the call operator of
- * piranha::math::multiply_accumulate_impl is ignored.
  *
- * @param[in,out] x target value for accumulation.
- * @param[in] y first argument.
- * @param[in] z second argument.
+ * @param x target value for accumulation.
+ * @param y first argument.
+ * @param z second argument.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::multiply_accumulate_impl.
  */
-template <typename T, typename U, typename V, detail::math_multiply_accumulate_enabler<T, U, V> = 0>
-inline void multiply_accumulate(T &x, U &&y, V &&z)
+template <typename T, math_multiply_accumulate_enabler<T> = 0>
+inline void multiply_accumulate(T &x, const T &y, const T &z)
 {
-    multiply_accumulate_impl<T, typename std::decay<U>::type, typename std::decay<V>::type>{}(x, std::forward<U>(y),
-                                                                                              std::forward<V>(z));
+    multiply_accumulate_impl<T>{}(x, y, z);
 }
 
 /// Default functor for the implementation of piranha::math::cos().
@@ -464,7 +465,7 @@ struct cos_impl<T, typename std::enable_if<std::is_floating_point<T>::value>::ty
     /**
      * The cosine will be computed via <tt>std::cos()</tt>.
      *
-     * @param[in] x argument.
+     * @param x argument.
      *
      * @return cosine of \p x.
      */
@@ -482,7 +483,7 @@ template <typename T>
 struct cos_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] x argument.
+     * @param x argument.
      *
      * @return cosine of \p x.
      *
@@ -524,7 +525,7 @@ namespace math
  * return cos_impl<T>{}(x);
  * @endcode
  *
- * @param[in] x cosine argument.
+ * @param x cosine argument.
  *
  * @return cosine of \p x.
  *
@@ -556,7 +557,7 @@ struct sin_impl<T, typename std::enable_if<std::is_floating_point<T>::value>::ty
     /**
      * The sine will be computed via <tt>std::sin()</tt>.
      *
-     * @param[in] x argument.
+     * @param x argument.
      *
      * @return sine of \p x.
      */
@@ -574,7 +575,7 @@ template <typename T>
 struct sin_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] x argument.
+     * @param x argument.
      *
      * @return sine of \p x.
      *
@@ -616,7 +617,7 @@ namespace math
  * return sin_impl<T>{}(x);
  * @endcode
  *
- * @param[in] x sine argument.
+ * @param x sine argument.
  *
  * @return sine of \p x.
  *
@@ -684,8 +685,8 @@ namespace math
  * return partial_impl<T>{}(x,str);
  * @endcode
  *
- * @param[in] x argument for the partial derivative.
- * @param[in] str name of the symbolic quantity with respect to which the derivative will be computed.
+ * @param x argument for the partial derivative.
+ * @param str name of the symbolic quantity with respect to which the derivative will be computed.
  *
  * @return partial derivative of \p x with respect to \p str.
  *
@@ -736,8 +737,8 @@ namespace math
  * return integrate_impl<T>{}(x,str);
  * @endcode
  *
- * @param[in] x argument for the integration.
- * @param[in] str name of the symbolic quantity with respect to which the integration will be computed.
+ * @param x argument for the integration.
+ * @param str name of the symbolic quantity with respect to which the integration will be computed.
  *
  * @return antiderivative of \p x with respect to \p str.
  *
@@ -767,7 +768,7 @@ public:
      *
      * The default behaviour is to return the input value \p x unchanged.
      *
-     * @param[in] x evaluation argument.
+     * @param x evaluation argument.
      *
      * @return copy of \p x.
      *
@@ -811,8 +812,8 @@ namespace math
  * return evaluate_impl<T,U>{}(x,dict);
  * @endcode
  *
- * @param[in] x quantity that will be evaluated.
- * @param[in] dict dictionary that will be used to perform the substitution.
+ * @param x quantity that will be evaluated.
+ * @param dict dictionary that will be used to perform the substitution.
  *
  * @return \p x evaluated according to \p dict.
  *
@@ -863,9 +864,9 @@ namespace math
  * return subs_impl<T,U>{}(x,name,y);
  * @endcode
  *
- * @param[in] x quantity that will be subject to substitution.
- * @param[in] name name of the symbolic variable that will be substituted.
- * @param[in] y object that will substitute the variable.
+ * @param x quantity that will be subject to substitution.
+ * @param name name of the symbolic variable that will be substituted.
+ * @param y object that will substitute the variable.
  *
  * @return \p x after substitution  of \p name with \p y.
  *
@@ -917,10 +918,10 @@ namespace math
  * return t_subs_impl<T,U,V>{}(x,name,c,s);
  * @endcode
  *
- * @param[in] x quantity that will be subject to substitution.
- * @param[in] name name of the symbolic variable that will be substituted.
- * @param[in] c object that will substitute the cosine of the variable.
- * @param[in] s object that will substitute the sine of the variable.
+ * @param x quantity that will be subject to substitution.
+ * @param name name of the symbolic variable that will be substituted.
+ * @param c object that will substitute the cosine of the variable.
+ * @param s object that will substitute the sine of the variable.
  *
  * @return \p x after substitution of cosine and sine of \p name with \p c and \p s.
  *
@@ -989,7 +990,7 @@ private:
 public:
     /// Call operator.
     /**
-     * @param[in] x input parameter.
+     * @param x input parameter.
      *
      * @return absolute value of \p x.
      */
@@ -1003,7 +1004,7 @@ public:
 /**
  * The actual implementation of this function is in the piranha::math::abs_impl functor.
  *
- * @param[in] x quantity whose absolute value will be calculated.
+ * @param x quantity whose absolute value will be calculated.
  *
  * @return absolute value of \p x.
  *
@@ -1115,10 +1116,10 @@ namespace math
  * \f]
  * where \f$ p_i \f$ and \f$ q_i \f$ are the elements of \p p_list and \p q_list.
  *
- * @param[in] f first argument.
- * @param[in] g second argument.
- * @param[in] p_list list of the names of momenta.
- * @param[in] q_list list of the names of coordinates.
+ * @param f first argument.
+ * @param g second argument.
+ * @param p_list list of the names of momenta.
+ * @param q_list list of the names of coordinates.
  *
  * @return the poisson bracket of \p f and \p g with respect to \p p_list and \p q_list.
  *
@@ -1242,10 +1243,10 @@ namespace math
  * momenta
  * and coordinates as functions of the old momenta \p p_list and \p q_list.
  *
- * @param[in] new_p list of objects representing the new momenta.
- * @param[in] new_q list of objects representing the new coordinates.
- * @param[in] p_list list of names of the old momenta.
- * @param[in] q_list list of names of the old coordinates.
+ * @param new_p list of objects representing the new momenta.
+ * @param new_q list of objects representing the new coordinates.
+ * @param p_list list of names of the old momenta.
+ * @param q_list list of names of the old coordinates.
  *
  * @return \p true if the transformation is canonical, \p false otherwise.
  *
@@ -1268,7 +1269,19 @@ inline bool transformation_is_canonical(const std::vector<T> &new_p, const std::
     return detail::is_canonical_impl(pv, qv, p_list, q_list);
 }
 
+// clang-format off
 /// Check if a transformation is canonical (alternative overload).
+/**
+ * @param new_p list of objects representing the new momenta.
+ * @param new_q list of objects representing the new coordinates.
+ * @param p_list list of names of the old momenta.
+ * @param q_list list of names of the old coordinates.
+ *
+ * @return the output of transformation_is_canonical(const std::vector<T> &, const std::vector<T> &, const std::vector<std::string> &, const std::vector<std::string> &).
+ *
+ * @throws unspecified any exception thrown by transformation_is_canonical(const std::vector<T> &, const std::vector<T> &, const std::vector<std::string> &, const std::vector<std::string> &).
+ */
+// clang-format on
 template <typename T, detail::is_canonical_enabler<T> = 0>
 inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::initializer_list<T> new_q,
                                         const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
@@ -1298,7 +1311,7 @@ struct degree_impl {
  *
  * The actual implementation of this function is in the piranha::math::degree_impl functor.
  *
- * @param[in] x object whose degree will be computed.
+ * @param x object whose degree will be computed.
  *
  * @return total degree.
  *
@@ -1316,8 +1329,8 @@ inline auto degree(const T &x) -> decltype(degree_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::degree_impl functor.
  *
- * @param[in] x object whose partial degree will be computed.
- * @param[in] names names of the variables that will be considered in the computation.
+ * @param x object whose partial degree will be computed.
+ * @param names names of the variables that will be considered in the computation.
  *
  * @return partial degree.
  *
@@ -1348,7 +1361,7 @@ struct ldegree_impl {
  *
  * The actual implementation of this function is in the piranha::math::ldegree_impl functor.
  *
- * @param[in] x object whose low degree will be computed.
+ * @param x object whose low degree will be computed.
  *
  * @return total low degree.
  *
@@ -1367,8 +1380,8 @@ inline auto ldegree(const T &x) -> decltype(ldegree_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::ldegree_impl functor.
  *
- * @param[in] x object whose partial low degree will be computed.
- * @param[in] names names of the variables that will be considered in the computation.
+ * @param x object whose partial low degree will be computed.
+ * @param names names of the variables that will be considered in the computation.
  *
  * @return partial low degree.
  *
@@ -1405,7 +1418,7 @@ struct t_degree_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
  *
- * @param[in] x object whose trigonometric degree will be computed.
+ * @param x object whose trigonometric degree will be computed.
  *
  * @return total trigonometric degree.
  *
@@ -1424,8 +1437,8 @@ inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
  *
- * @param[in] x object whose trigonometric degree will be computed.
- * @param[in] names names of the variables that will be considered in the computation of the degree.
+ * @param x object whose trigonometric degree will be computed.
+ * @param names names of the variables that will be considered in the computation of the degree.
  *
  * @return partial trigonometric degree.
  *
@@ -1464,7 +1477,7 @@ struct t_ldegree_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
  *
- * @param[in] x object whose trigonometric low degree will be computed.
+ * @param x object whose trigonometric low degree will be computed.
  *
  * @return total trigonometric low degree.
  *
@@ -1483,8 +1496,8 @@ inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
  *
- * @param[in] x object whose trigonometric low degree will be computed.
- * @param[in] names names of the variables that will be considered in the computation of the degree.
+ * @param x object whose trigonometric low degree will be computed.
+ * @param names names of the variables that will be considered in the computation of the degree.
  *
  * @return partial trigonometric low degree.
  *
@@ -1526,7 +1539,7 @@ struct t_order_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_order_impl functor.
  *
- * @param[in] x object whose trigonometric order will be computed.
+ * @param x object whose trigonometric order will be computed.
  *
  * @return total trigonometric order.
  *
@@ -1545,8 +1558,8 @@ inline auto t_order(const T &x) -> decltype(t_order_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_order_impl functor.
  *
- * @param[in] x object whose trigonometric order will be computed.
- * @param[in] names names of the variables that will be considered in the computation of the order.
+ * @param x object whose trigonometric order will be computed.
+ * @param names names of the variables that will be considered in the computation of the order.
  *
  * @return partial trigonometric order.
  *
@@ -1588,7 +1601,7 @@ struct t_lorder_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
  *
- * @param[in] x object whose trigonometric low order will be computed.
+ * @param x object whose trigonometric low order will be computed.
  *
  * @return total trigonometric low order.
  *
@@ -1607,8 +1620,8 @@ inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
  *
- * @param[in] x object whose trigonometric low order will be computed.
- * @param[in] names names of the variables that will be considered in the computation of the order.
+ * @param x object whose trigonometric low order will be computed.
+ * @param names names of the variables that will be considered in the computation of the order.
  *
  * @return partial trigonometric low order.
  *
@@ -1668,8 +1681,8 @@ return truncate_degree_impl<T,U>()(x,max_degree);
  * The call operator of piranha::math::truncate_degree_impl is required to return type \p T, otherwise
  * this function will be disabled.
  *
- * @param[in] x object which will be subject to truncation.
- * @param[in] max_degree maximum allowed total degree in the output.
+ * @param x object which will be subject to truncation.
+ * @param max_degree maximum allowed total degree in the output.
  *
  * @return the truncated counterpart of \p x.
  *
@@ -1695,9 +1708,9 @@ return truncate_degree_impl<T,U>()(x,max_degree,names);
  * The call operator of piranha::math::truncate_degree_impl is required to return type \p T, otherwise
  * this function will be disabled.
  *
- * @param[in] x object which will be subject to truncation.
- * @param[in] max_degree maximum allowed partial degree in the output.
- * @param[in] names names of the variables that will be considered in the computation of the partial degree.
+ * @param x object which will be subject to truncation.
+ * @param max_degree maximum allowed partial degree in the output.
+ * @param names names of the variables that will be considered in the computation of the partial degree.
  *
  * @return the truncated counterpart of \p x.
  *
@@ -2358,28 +2371,27 @@ public:
 template <typename Key, typename T>
 const bool key_has_subs<Key, T>::value;
 
-/// Type trait to detect the availability of piranha::math::multiply_accumulate.
+/// Type trait to detect the availability of piranha::math::multiply_accumulate().
 /**
- * This type trait will be \p true if piranha::math::multiply_accumulate can be called with arguments of type \p T, \p U
- * and \p V,
+ * This type trait will be \p true if piranha::math::multiply_accumulate() can be called with arguments of type \p T,
  * \p false otherwise.
  */
-template <typename T, typename U = T, typename V = U>
-class has_multiply_accumulate : detail::sfinae_types
+template <typename T>
+class has_multiply_accumulate
 {
-    template <typename T2, typename U2, typename V2>
-    static auto test(T2 &t, const U2 &u, const V2 &v) -> decltype(math::multiply_accumulate(t, u, v), void(), yes());
-    static no test(...);
+    template <typename U>
+    using multiply_accumulate_t = decltype(
+        math::multiply_accumulate(std::declval<U &>(), std::declval<const U &>(), std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<multiply_accumulate_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = std::is_same<decltype(test(std::declval<T &>(), std::declval<U>(), std::declval<V>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
-template <typename T, typename U, typename V>
-const bool has_multiply_accumulate<T, U, V>::value;
+template <typename T>
+const bool has_multiply_accumulate<T>::value;
 
 /// Type trait to detect the availability of piranha::math::evaluate.
 /**
@@ -2514,9 +2526,9 @@ struct add3_impl {
      *
      * This operator will return the result of the expression <tt>a = b + c</tt>.
      *
-     * @param[out] a the return value.
-     * @param[in] b the first operand.
-     * @param[in] c the second operand.
+     * @param a the return value.
+     * @param b the first operand.
+     * @param c the second operand.
      *
      * @return <tt>a = b + c</tt>.
      *
@@ -2541,9 +2553,9 @@ struct add3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
      * This operator will return the expression <tt>a = static_cast<T>(b + c)</tt>, with <tt>b + c</tt>
      * forcibly cast back to \p T in order to avoid compiler warnings with short integral types.
      *
-     * @param[out] a the return value.
-     * @param[in] b the first operand.
-     * @param[in] c the second operand.
+     * @param a the return value.
+     * @param b the first operand.
+     * @param c the second operand.
      *
      * @return <tt>a = static_cast<T>(b + c)</tt>.
      */
@@ -2559,9 +2571,9 @@ struct add3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
  * piranha::math::add3_impl functor's
  * call operator.
  *
- * @param[out] a the return value.
- * @param[in] b the first operand.
- * @param[in] c the second operand.
+ * @param a the return value.
+ * @param b the first operand.
+ * @param c the second operand.
  *
  * @return the value returned by the call operator of piranha::math::add3_impl.
  *
@@ -2586,9 +2598,9 @@ struct sub3_impl {
      *
      * This operator will return the result of the expression <tt>a = b - c</tt>.
      *
-     * @param[out] a the return value.
-     * @param[in] b the first operand.
-     * @param[in] c the second operand.
+     * @param a the return value.
+     * @param b the first operand.
+     * @param c the second operand.
      *
      * @return <tt>a = b - c</tt>.
      *
@@ -2613,9 +2625,9 @@ struct sub3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
      * This operator will return the expression <tt>a = static_cast<T>(b - c)</tt>, with <tt>b - c</tt>
      * forcibly cast back to \p T in order to avoid compiler warnings with short integral types.
      *
-     * @param[out] a the return value.
-     * @param[in] b the first operand.
-     * @param[in] c the second operand.
+     * @param a the return value.
+     * @param b the first operand.
+     * @param c the second operand.
      *
      * @return <tt>a = static_cast<T>(b - c)</tt>.
      */
@@ -2631,9 +2643,9 @@ struct sub3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
  * piranha::math::sub3_impl functor's
  * call operator.
  *
- * @param[out] a the return value.
- * @param[in] b the first operand.
- * @param[in] c the second operand.
+ * @param a the return value.
+ * @param b the first operand.
+ * @param c the second operand.
  *
  * @return the value returned by the call operator of piranha::math::sub3_impl.
  *
@@ -2658,9 +2670,9 @@ struct mul3_impl {
      *
      * This operator will return the result of the expression <tt>a = b * c</tt>.
      *
-     * @param[out] a the return value.
-     * @param[in] b the first operand.
-     * @param[in] c the second operand.
+     * @param a the return value.
+     * @param b the first operand.
+     * @param c the second operand.
      *
      * @return <tt>a = b * c</tt>.
      *
@@ -2685,9 +2697,9 @@ struct mul3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
      * This operator will return the expression <tt>a = static_cast<T>(b * c)</tt>, with <tt>b * c</tt>
      * forcibly cast back to \p T in order to avoid compiler warnings with short integral types.
      *
-     * @param[out] a the return value.
-     * @param[in] b the first operand.
-     * @param[in] c the second operand.
+     * @param a the return value.
+     * @param b the first operand.
+     * @param c the second operand.
      *
      * @return <tt>a = static_cast<T>(b * c)</tt>.
      */
@@ -2703,9 +2715,9 @@ struct mul3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
  * piranha::math::mul3_impl functor's
  * call operator.
  *
- * @param[out] a the return value.
- * @param[in] b the first operand.
- * @param[in] c the second operand.
+ * @param a the return value.
+ * @param b the first operand.
+ * @param c the second operand.
  *
  * @return the value returned by the call operator of piranha::math::mul3_impl.
  *
@@ -2730,9 +2742,9 @@ struct div3_impl {
      *
      * This operator will return the result of the expression <tt>a = b / c</tt>.
      *
-     * @param[out] a the return value.
-     * @param[in] b the first operand.
-     * @param[in] c the second operand.
+     * @param a the return value.
+     * @param b the first operand.
+     * @param c the second operand.
      *
      * @return <tt>a = b / c</tt>.
      *
@@ -2757,9 +2769,9 @@ struct div3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
      * This operator will return the expression <tt>a = static_cast<T>(b / c)</tt>, with <tt>b / c</tt>
      * forcibly cast back to \p T in order to avoid compiler warnings with short integral types.
      *
-     * @param[out] a the return value.
-     * @param[in] b the first operand.
-     * @param[in] c the second operand.
+     * @param a the return value.
+     * @param b the first operand.
+     * @param c the second operand.
      *
      * @return <tt>a = static_cast<T>(b / c)</tt>.
      */
@@ -2775,9 +2787,9 @@ struct div3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
  * piranha::math::div3_impl functor's
  * call operator.
  *
- * @param[out] a the return value.
- * @param[in] b the first operand.
- * @param[in] c the second operand.
+ * @param a the return value.
+ * @param b the first operand.
+ * @param c the second operand.
  *
  * @return the value returned by the call operator of piranha::math::div3_impl.
  *
@@ -2812,9 +2824,9 @@ struct divexact_impl {
  * the piranha::math::divexact_impl functor's call operator. The implementation should throw an instance of
  * piranha::math::inexact_division if the division is not exact.
  *
- * @param[out] a the return value.
- * @param[in] b the first operand.
- * @param[in] c the second operand.
+ * @param a the return value.
+ * @param b the first operand.
+ * @param c the second operand.
  *
  * @return the value returned by the call operator of piranha::math::divexact_impl.
  *
@@ -2876,8 +2888,8 @@ struct gcd_impl<T, U, typename std::enable_if<std::is_integral<T>::value && std:
      * The GCD will be computed via the euclidean algorithm. No overflow check is performed during
      * the computation.
      *
-     * @param[in] a the first operand.
-     * @param[in] b the second operand.
+     * @param a the first operand.
+     * @param b the second operand.
      *
      * @return the GCD of \p a and \p b.
      */
@@ -2893,8 +2905,8 @@ struct gcd_impl<T, U, typename std::enable_if<std::is_integral<T>::value && std:
  * piranha::math::gcd_impl functor's
  * call operator.
  *
- * @param[in] a the first operand.
- * @param[in] b the second operand.
+ * @param a the first operand.
+ * @param b the second operand.
  *
  * @return the value returned by the call operator of piranha::math::gcd_impl.
  *
@@ -2917,9 +2929,9 @@ struct gcd3_impl {
      * \note
      * This operator is enabled only if the expression <tt>out = math::gcd(a,b)</tt> is well-formed.
      *
-     * @param[out] out the output value.
-     * @param[in] a the first operand.
-     * @param[in] b the second operand.
+     * @param out the output value.
+     * @param a the first operand.
+     * @param b the second operand.
      *
      * @return <tt>out = math::gcd(a,b)</tt>.
      *
@@ -2943,9 +2955,9 @@ struct gcd3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
     /**
      * This call operator will forcibly cast back to \p T the result of piranha::math::gcd().
      *
-     * @param[out] out the output value.
-     * @param[in] a the first operand.
-     * @param[in] b the second operand.
+     * @param out the output value.
+     * @param a the first operand.
+     * @param b the second operand.
      *
      * @return <tt>out = static_cast<T>(math::gcd(a,b))</tt>.
      */
@@ -2961,9 +2973,9 @@ struct gcd3_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
  * piranha::math::gcd3_impl functor's
  * call operator.
  *
- * @param[out] out the output value.
- * @param[in] a the first operand.
- * @param[in] b the second operand.
+ * @param out the output value.
+ * @param a the first operand.
+ * @param b the second operand.
  *
  * @return the value returned by the call operator of piranha::math::gcd3_impl.
  *

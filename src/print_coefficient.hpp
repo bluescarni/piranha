@@ -51,8 +51,8 @@ struct print_coefficient_impl {
      *
      * The default call operator will print to stream the object.
      *
-     * @param[in] os target stream.
-     * @param[in] cf coefficient to be printed.
+     * @param os target stream.
+     * @param cf coefficient to be printed.
      *
      * @return the value returned by the stream insertion operator of \p U.
      *
@@ -73,8 +73,8 @@ struct print_coefficient_impl {
  * The implementation uses the call operator of the piranha::print_coefficient_impl functor.
  * Specialisations of piranha::print_coefficient_impl can be defined to customize the behaviour.
  *
- * @param[in] os target stream.
- * @param[in] cf coefficient object to be printed.
+ * @param os target stream.
+ * @param cf coefficient object to be printed.
  *
  * @return the value returned by the call operator of piranha::print_coefficient_impl.
  *

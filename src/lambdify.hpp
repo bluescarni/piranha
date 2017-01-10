@@ -173,9 +173,9 @@ public:
      * value for \p s in the subsequent call to math::evaluate(). \p extra_map must not contain symbol names appearing
      * in \p names.
      *
-     * @param[in] x the object that will be evaluated by operator()().
-     * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
-     * @param[in] extra_map the custom symbol evaluation map.
+     * @param x the object that will be evaluated by operator()().
+     * @param names the list of symbols to which the values passed to operator()() will be mapped.
+     * @param extra_map the custom symbol evaluation map.
      *
      * @throws std::invalid_argument if \p names contains duplicates or if \p extra_map contains symbol names
      * already present in \p names.
@@ -195,9 +195,9 @@ public:
      * This constructor is equivalent to the other constructor, the only difference being that \p x
      * is used to move-construct (instead of copy-construct) the internal instance of \p T.
      *
-     * @param[in] x the object that will be evaluated by operator()().
-     * @param[in] names the list of symbols to which the values passed to operator()() will be mapped.
-     * @param[in] extra_map the custom symbol evaluation map.
+     * @param x the object that will be evaluated by operator()().
+     * @param names the list of symbols to which the values passed to operator()() will be mapped.
+     * @param extra_map the custom symbol evaluation map.
      *
      * @throws std::invalid_argument if \p names contains duplicates or if \p extra_map contains symbol names
      * already present in \p names.
@@ -214,7 +214,7 @@ public:
     }
     /// Copy constructor.
     /**
-     * @param[in] other copy argument.
+     * @param other copy argument.
      *
      * @throws unspecified any exception thrown by the copy constructor of the internal members.
      */
@@ -225,7 +225,7 @@ public:
     }
     /// Move constructor.
     /**
-     * @param[in] other move argument.
+     * @param other move argument.
      *
      * @throws unspecified any exception thrown by the move constructor of the internal members.
      */
@@ -237,10 +237,12 @@ public:
         // Let's just make sure.
         reconstruct_ptrs();
     }
-    /// Deleted copy assignment operator.
+
+private:
     lambdified &operator=(const lambdified &) = delete;
-    /// Deleted move assignment operator.
     lambdified &operator=(lambdified &&) = delete;
+
+public:
     /// Evaluation.
     /**
      * The call operator will first associate the elements of \p values to the vector of names used to construct \p
@@ -254,7 +256,7 @@ public:
      * Note that this function needs to modify the internal state of the object, and thus it is not const and it is
      * not thread-safe.
      *
-     * @param[in] values the values that will be used for evaluation.
+     * @param values the values that will be used for evaluation.
      *
      * @return the output of piranha::math::evaluate() called on the instance of type \p T stored internally.
      *
@@ -383,9 +385,9 @@ namespace math
  *
  * The decay types of \p T and \p U are used as template parameters for the piranha::math::lambdified return type.
  *
- * @param[in] x object that will be evaluated.
- * @param[in] names names of the symbols that will be used for evaluation.
- * @param[in] extra_map map of type piranha::math::lambdified::extra_map_type for custom symbol evaluation.
+ * @param x object that will be evaluated.
+ * @param names names of the symbols that will be used for evaluation.
+ * @param extra_map map of type piranha::math::lambdified::extra_map_type for custom symbol evaluation.
  *
  * @return an instance of piranha::math::lambdified that can be used to evaluate \p x.
  *

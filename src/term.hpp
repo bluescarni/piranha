@@ -109,8 +109,8 @@ public:
      *
      * This constructor will forward perfectly \p cf and \p key to construct coefficient and key.
      *
-     * @param[in] cf argument used for the construction of the coefficient.
-     * @param[in] key argument used for the construction of the key.
+     * @param cf argument used for the construction of the coefficient.
+     * @param key argument used for the construction of the key.
      *
      * @throws unspecified any exception thrown by the constructors of \p Cf and \p Key.
      */
@@ -125,7 +125,7 @@ public:
     }
     /// Copy assignment operator.
     /**
-     * @param[in] other assignment argument.
+     * @param other assignment argument.
      *
      * @return reference to \p this.
      *
@@ -141,7 +141,7 @@ public:
     }
     /// Trivial move-assignment operator.
     /**
-     * @param[in] other assignment argument.
+     * @param other assignment argument.
      *
      * @return reference to \p this.
      */
@@ -157,7 +157,7 @@ public:
     /**
      * Equivalence of terms is defined by the equivalence of their keys.
      *
-     * @param[in] other comparison argument.
+     * @param other comparison argument.
      *
      * @return <tt>m_key == other.m_key</tt>.
      *
@@ -181,7 +181,7 @@ public:
     }
     /// Compatibility test.
     /**
-     * @param[in] args reference arguments set.
+     * @param args reference arguments set.
      *
      * @return the key's <tt>is_compatible()</tt> method's return value.
      */
@@ -197,7 +197,7 @@ public:
      * coefficient
      * will result in the termination of the program.
      *
-     * @param[in] args reference arguments set.
+     * @param args reference arguments set.
      *
      * @return \p true if either the key's <tt>is_ignorable()</tt> method or piranha::math::is_zero() on the coefficient
      * return \p true,

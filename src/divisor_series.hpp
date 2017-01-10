@@ -389,10 +389,22 @@ public:
         PIRANHA_TT_CHECK(is_series, divisor_series);
         PIRANHA_TT_CHECK(is_cf, divisor_series);
     }
-    /// Defaulted copy assignment operator.
-    divisor_series &operator=(const divisor_series &) = default;
-    /// Defaulted move assignment operator.
-    divisor_series &operator=(divisor_series &&) = default;
+    /// Copy assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     *
+     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     */
+    divisor_series &operator=(const divisor_series &other) = default;
+    /// Move assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    divisor_series &operator=(divisor_series &&other) = default;
     PIRANHA_FORWARDING_ASSIGNMENT(divisor_series, base)
     /// Inversion.
     /**
@@ -457,7 +469,7 @@ public:
      * The derivative is computed via differentiation of the coefficients and the application of the product
      * rule.
      *
-     * @param[in] name name of the variable with respect to which the differentiation will be computed.
+     * @param name name of the variable with respect to which the differentiation will be computed.
      *
      * @return the partial derivative of \p this with respect to \p name.
      *
@@ -498,7 +510,7 @@ public:
      * Integration for divisor series is supported only if the coefficient is integrable and no divisor in the calling
      * series depends on the integration variable.
      *
-     * @param[in] name name of the variable with respect to which the integration will be performed.
+     * @param name name of the variable with respect to which the integration will be performed.
      *
      * @return the antiderivative of \p this with respect to \p name.
      *

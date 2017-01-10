@@ -670,7 +670,7 @@ public:
      * The elements of \p l will be added to a default-constructed object, after conversion
      * to \p T via piranha::safe_cast().
      *
-     * @param[in] l list that will be used for initialisation.
+     * @param l list that will be used for initialisation.
      *
      * @throws unspecified any exception thrown by push_back() or by piranha::safe_cast().
      */
@@ -686,8 +686,8 @@ public:
     /**
      * This constructor will initialise a vector containing \p size copies of \p value.
      *
-     * @param[in] size the desired vector size.
-     * @param[in] value the value used to initialise all the elements of the vector.
+     * @param size the desired vector size.
+     * @param value the value used to initialise all the elements of the vector.
      *
      * @throws unspecified any exception thrown by push_back().
      */
@@ -713,7 +713,7 @@ public:
     small_vector &operator=(small_vector &&) = default;
     /// Const subscript operator.
     /**
-     * @param[in] n index of the element to be accessed.
+     * @param n index of the element to be accessed.
      *
      * @return const reference to the <tt>n</tt>-th element of the vector.
      */
@@ -723,7 +723,7 @@ public:
     }
     /// Subscript operator.
     /**
-     * @param[in] n index of the element to be accessed.
+     * @param n index of the element to be accessed.
      *
      * @return reference to the <tt>n</tt>-th element of the vector.
      */
@@ -733,7 +733,7 @@ public:
     }
     /// Copy-add element at the end.
     /**
-     * @param[in] x object that will be added at the end of the vector.
+     * @param x object that will be added at the end of the vector.
      *
      * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
      * @throws unspecified any exception thrown by the copy constructor of \p T.
@@ -744,7 +744,7 @@ public:
     }
     /// Move-add element at the end.
     /**
-     * @param[in] x object that will be added at the end of the vector.
+     * @param x object that will be added at the end of the vector.
      *
      * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
      */
@@ -825,7 +825,7 @@ public:
      * \note
      * This method is enabled only if \p T is equality comparable.
      *
-     * @param[in] other argument for the comparison.
+     * @param other argument for the comparison.
      *
      * @return \p true if the sizes of \p this and \p other coincide and the element-wise comparison
      * of the stored objects is \p true, \p false otherwise.
@@ -860,7 +860,7 @@ public:
      * \note
      * This method is enabled only if \p T is equality comparable.
      *
-     * @param[in] other argument for the comparison.
+     * @param other argument for the comparison.
      *
      * @return the opposite of operator==().
      *
@@ -904,7 +904,7 @@ public:
      * Resize the vector to \p size. Elements in excess will be destroyed,
      * new elements will be value-initialised and placed at the end.
      *
-     * @param[in] size new size.
+     * @param size new size.
      *
      * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
      * @throws unspecified any exception thrown by the default constructor of \p T.
@@ -955,8 +955,8 @@ public:
      * \p this, \p retval and/or \p other are allowed to be the same object, provided that piranha::math::add3()
      * also supports this type of usage.
      *
-     * @param[out] retval result of the addition.
-     * @param[in] other argument for the addition.
+     * @param retval result of the addition.
+     * @param other argument for the addition.
      *
      * @throws std::invalid_argument if the sizes of \p this and \p other do not coincide.
      * @throws unspecified any exception thrown by:
@@ -993,8 +993,8 @@ public:
      * \p this, \p retval and/or \p other are allowed to be the same object, provided that piranha::math::sub3()
      * also supports this type of usage.
      *
-     * @param[out] retval result of the subtraction.
-     * @param[in] other argument for the subtraction.
+     * @param retval result of the subtraction.
+     * @param other argument for the subtraction.
      *
      * @throws std::invalid_argument if the sizes of \p this and \p other do not coincide.
      * @throws unspecified any exception thrown by:
@@ -1022,7 +1022,7 @@ public:
      *
      * \p it must be a valid iterator to an element in \p this.
      *
-     * @param[in] it iterator to the element of \p this to be removed.
+     * @param it iterator to the element of \p this to be removed.
      *
      * @return the iterator following the erased element.
      */

@@ -200,8 +200,8 @@ struct binomial_impl<T, U, detail::binomial_fp_arith_enabler<T, U>> {
      * arithmetics, the result will - in general - be inexact, even if both \p x and \p y represent
      * integral values.
      *
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @return \p x choose \p y.
      *
@@ -246,8 +246,8 @@ namespace math
  * return binomial_impl<T,U>{}(x,y);
  * @endcode
  *
- * @param[in] x top number.
- * @param[in] y bottom number.
+ * @param x top number.
+ * @param y bottom number.
  *
  * @return \p x choose \p y.
  *
@@ -281,8 +281,8 @@ template <typename T, typename U>
 struct binomial_impl<T, U, detail::integer_binomial_enabler<T, U>> {
     /// Call operator, integral--integral overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -297,8 +297,8 @@ struct binomial_impl<T, U, detail::integer_binomial_enabler<T, U>> {
     }
     /// Call operator, piranha::mp_integer overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -311,8 +311,8 @@ struct binomial_impl<T, U, detail::integer_binomial_enabler<T, U>> {
     }
     /// Call operator, integer--integral overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -325,8 +325,8 @@ struct binomial_impl<T, U, detail::integer_binomial_enabler<T, U>> {
     }
     /// Call operator, integer--floating-point overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -340,8 +340,8 @@ struct binomial_impl<T, U, detail::integer_binomial_enabler<T, U>> {
     }
     /// Call operator, integral--integer overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
@@ -355,8 +355,8 @@ struct binomial_impl<T, U, detail::integer_binomial_enabler<T, U>> {
     }
     /// Call operator, floating-point--integer overload.
     /**
-     * @param[in] x top argument.
-     * @param[in] y bottom argument.
+     * @param x top argument.
+     * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *

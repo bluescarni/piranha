@@ -2373,7 +2373,7 @@ public:
      * Construction from a floating-point type will result in the truncated
      * counterpart of the original value.
      *
-     * @param[in] x object used to construct \p this.
+     * @param x object used to construct \p this.
      *
      * @throws std::invalid_argument if the construction fails (e.g., construction from a non-finite
      * floating-point value).
@@ -2392,7 +2392,7 @@ public:
      *
      * Note that if the string is not null-terminated, undefined behaviour will occur.
      *
-     * @param[in] str decimal string representation of the number used to initialise the integer object.
+     * @param str decimal string representation of the number used to initialise the integer object.
      *
      * @throws std::invalid_argument if the string is malformed.
      */
@@ -2404,7 +2404,7 @@ public:
     /**
      * Equivalent to the constructor from C string.
      *
-     * @param[in] str decimal string representation of the number used to initialise the integer object.
+     * @param str decimal string representation of the number used to initialise the integer object.
      *
      * @throws unspecified any exception thrown by the constructor from C string.
      */
@@ -2414,10 +2414,20 @@ public:
     }
     /// Defaulted destructor.
     ~mp_integer() = default;
-    /// Defaulted copy-assignment operator.
-    mp_integer &operator=(const mp_integer &) = default;
-    /// Defaulted move-assignment operator.
-    mp_integer &operator=(mp_integer &&) = default;
+    /// Copy-assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    mp_integer &operator=(const mp_integer &other) = default;
+    /// Move-assignment operator.
+    /**
+     * @param other the assignment argument.
+     *
+     * @return a reference to \p this.
+     */
+    mp_integer &operator=(mp_integer &&other) = default;
     /// Generic assignment operator.
     /**
      * \note
@@ -2426,7 +2436,7 @@ public:
      * This assignment operator is equivalent to constructing a temporary instance of mp_integer from \p x
      * and then move-assigning it to \p this.
      *
-     * @param[in] x object that will be assigned to \p this.
+     * @param x object that will be assigned to \p this.
      *
      * @return reference to \p this.
      *
@@ -2441,7 +2451,7 @@ public:
     /**
      * Equivalent to the construction and susbequent move to \p this of a temporary mp_integer from \p str.
      *
-     * @param[in] str C++ string that will be assigned to \p this.
+     * @param str C++ string that will be assigned to \p this.
      *
      * @return reference to \p this.
      *
@@ -2456,7 +2466,7 @@ public:
     /**
      * Equivalent to the construction and susbequent move to \p this of a temporary mp_integer from \p str.
      *
-     * @param[in] str C string that will be assigned to \p this.
+     * @param str C string that will be assigned to \p this.
      *
      * @return reference to \p this.
      *
@@ -2516,8 +2526,8 @@ public:
     /**
      * The input \p n will be directed to the output stream \p os as a string of digits in base 10.
      *
-     * @param[in] os output stream.
-     * @param[in] n piranha::mp_integer to be directed to stream.
+     * @param os output stream.
+     * @param n piranha::mp_integer to be directed to stream.
      *
      * @return reference to \p os.
      *
@@ -2536,8 +2546,8 @@ public:
     /**
      * Equivalent to extracting a line from the stream and then assigning it to \p n.
      *
-     * @param[in] is input stream.
-     * @param[in,out] n integer to which the contents of the stream will be assigned.
+     * @param is input stream.
+     * @param n integer to which the contents of the stream will be assigned.
      *
      * @return reference to \p is.
      *
@@ -2612,7 +2622,7 @@ public:
      * - \p f is added to \p x,
      * - the result is assigned back to \p this.
      *
-     * @param[in] x argument for the addition.
+     * @param x argument for the addition.
      *
      * @return reference to \p this.
      *
@@ -2632,8 +2642,8 @@ public:
      * Add a piranha::mp_integer in-place. This method will first compute <tt>n + x</tt>, cast it back to \p T via \p
      * static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] n second argument.
+     * @param x first argument.
+     * @param n second argument.
      *
      * @return reference to \p x.
      *
@@ -2660,8 +2670,8 @@ public:
      * instance of type \p F
      * and added to \p f to generate the return value, which will then be of type \p F.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x + y</tt>.
      *
@@ -2708,8 +2718,8 @@ public:
     /**
      * Sets \p this to <tt>n1 + n2</tt>. This form can be more efficient than the corresponding binary operator.
      *
-     * @param[in] n1 first argument.
-     * @param[in] n2 second argument.
+     * @param n1 first argument.
+     * @param n2 second argument.
      *
      * @return reference to \p this.
      */
@@ -2766,7 +2776,7 @@ public:
      * - \p x is subtracted from \p f,
      * - the result is assigned back to \p this.
      *
-     * @param[in] x argument for the subtraction.
+     * @param x argument for the subtraction.
      *
      * @return reference to \p this.
      *
@@ -2786,8 +2796,8 @@ public:
      * Subtract a piranha::mp_integer in-place. This method will first compute <tt>x - n</tt>, cast it back to \p T via
      * \p static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] n second argument.
+     * @param x first argument.
+     * @param n second argument.
      *
      * @return reference to \p x.
      *
@@ -2811,8 +2821,8 @@ public:
      * instance of type \p F
      * and subtracted from (or to) \p f to generate the return value, which will then be of type \p F.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x - y</tt>.
      *
@@ -2861,8 +2871,8 @@ public:
     /**
      * Sets \p this to <tt>n1 - n2</tt>. This form can be more efficient than the corresponding binary operator.
      *
-     * @param[in] n1 first argument.
-     * @param[in] n2 second argument.
+     * @param n1 first argument.
+     * @param n2 second argument.
      *
      * @return reference to \p this.
      */
@@ -2919,7 +2929,7 @@ public:
      * - \p x is multiplied by \p f,
      * - the result is assigned back to \p this.
      *
-     * @param[in] x argument for the multiplication.
+     * @param x argument for the multiplication.
      *
      * @return reference to \p this.
      *
@@ -2939,8 +2949,8 @@ public:
      * Multiply by a piranha::mp_integer in-place. This method will first compute <tt>x * n</tt>, cast it back to \p T
      * via \p static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] n second argument.
+     * @param x first argument.
+     * @param n second argument.
      *
      * @return reference to \p x.
      *
@@ -2964,8 +2974,8 @@ public:
      * instance of type \p F
      * and multiplied by \p f to generate the return value, which will then be of type \p F.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x * y</tt>.
      *
@@ -2982,8 +2992,8 @@ public:
     /**
      * Sets \p this to <tt>this + (n1 * n2)</tt>.
      *
-     * @param[in] n1 first argument.
-     * @param[in] n2 second argument.
+     * @param n1 first argument.
+     * @param n2 second argument.
      *
      * @return reference to \p this.
      */
@@ -3031,8 +3041,8 @@ public:
     /**
      * Sets \p this to <tt>n1 * n2</tt>. This form can be more efficient than the corresponding binary operator.
      *
-     * @param[in] n1 first argument.
-     * @param[in] n2 second argument.
+     * @param n1 first argument.
+     * @param n2 second argument.
      *
      * @return reference to \p this.
      */
@@ -3089,7 +3099,7 @@ public:
      * - \p f is divided by \p x,
      * - the result is assigned back to \p this.
      *
-     * @param[in] x argument for the division.
+     * @param x argument for the division.
      *
      * @return reference to \p this.
      *
@@ -3114,8 +3124,8 @@ public:
      * Divide by a piranha::mp_integer in-place. This method will first compute <tt>x / n</tt>, cast it back to \p T via
      * \p static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] n second argument.
+     * @param x first argument.
+     * @param n second argument.
      *
      * @return reference to \p x.
      *
@@ -3139,8 +3149,8 @@ public:
      * instance of type \p F
      * and divided by (or used as a dividend for) \p f to generate the return value, which will then be of type \p F.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x / y</tt>.
      *
@@ -3161,8 +3171,8 @@ public:
     /**
      * Sets \p this to <tt>n1 / n2</tt>. This form can be more efficient than the corresponding binary operator.
      *
-     * @param[in] n1 first argument.
-     * @param[in] n2 second argument.
+     * @param n1 first argument.
+     * @param n2 second argument.
      *
      * @throws piranha::zero_division_error if \p n2 is zero.
      *
@@ -3220,10 +3230,10 @@ public:
      * This method will set \p q to the quotient and \p r to the remainder of <tt>n1 / n2</tt>.
      * The sign of the remainder will be the sign of the numerator \p n1.
      *
-     * @param[out] q the quotient.
-     * @param[out] r the remainder.
-     * @param[in] n1 the numerator.
-     * @param[in] n2 the denominator.
+     * @param q the quotient.
+     * @param r the remainder.
+     * @param n1 the numerator.
+     * @param n2 the denominator.
      *
      * @throws piranha::zero_division_error if \p n2 is zero.
      * @throws std::invalid_argument if \p q and \p r are the same object.
@@ -3294,7 +3304,7 @@ public:
      * Sets \p this to <tt>this % n</tt>. This operator behaves in the way specified by the C++ standard (specifically,
      * the sign of the remainder will be the sign of the numerator).
      *
-     * @param[in] n argument for the modulo operation.
+     * @param n argument for the modulo operation.
      *
      * @return reference to \p this.
      *
@@ -3318,8 +3328,8 @@ public:
      * n</tt>,
      * cast it back to \p T via \p static_cast and finally assign the result to \p x.
      *
-     * @param[in,out] x first argument.
-     * @param[in] n second argument.
+     * @param x first argument.
+     * @param n second argument.
      *
      * @return reference to \p x.
      *
@@ -3339,8 +3349,8 @@ public:
      * - \p U is piranha::mp_integer and \p T is an integral interoperable type,
      * - both \p T and \p U are piranha::mp_integer.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x % y</tt>.
      *
@@ -3365,7 +3375,7 @@ public:
      * Sets \p this to <tt>this << n</tt>. The left shift operation is equivalent to a multiplication
      * by 2 to the power of \p n.
      *
-     * @param[in] n argument for the left shift operation.
+     * @param n argument for the left shift operation.
      *
      * @return reference to \p this.
      *
@@ -3388,8 +3398,8 @@ public:
      * equivalent to a multiplication
      * by 2 to the power of \p n.
      *
-     * @param[in,out] x first argument.
-     * @param[in] n second argument.
+     * @param x first argument.
+     * @param n second argument.
      *
      * @return reference to \p x.
      *
@@ -3409,8 +3419,8 @@ public:
      * - \p U is piranha::mp_integer and \p T is an integral interoperable type,
      * - both \p T and \p U are piranha::mp_integer.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x << y</tt>.
      *
@@ -3431,7 +3441,7 @@ public:
      * Sets \p this to <tt>this >> n</tt>. The right shift operation is equivalent to a truncated division
      * by 2 to the power of \p n.
      *
-     * @param[in] n argument for the right shift operation.
+     * @param n argument for the right shift operation.
      *
      * @return reference to \p this.
      *
@@ -3454,8 +3464,8 @@ public:
      * equivalent to a
      * truncated division by 2 to the power of \p n.
      *
-     * @param[in,out] x first argument.
-     * @param[in] n second argument.
+     * @param x first argument.
+     * @param n second argument.
      *
      * @return reference to \p x.
      *
@@ -3475,8 +3485,8 @@ public:
      * - \p U is piranha::mp_integer and \p T is an integral interoperable type,
      * - both \p T and \p U are piranha::mp_integer.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return <tt>x >> y</tt>.
      *
@@ -3503,8 +3513,8 @@ public:
      * instance of type \p F
      * and compared to \p f to generate the return value.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x == y</tt>, \p false otherwise.
      *
@@ -3525,8 +3535,8 @@ public:
      *
      * This operator is the negation of operator==().
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x == y</tt>, \p false otherwise.
      *
@@ -3551,8 +3561,8 @@ public:
      * instance of type \p F
      * and compared to \p f to generate the return value.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x < y</tt>, \p false otherwise.
      *
@@ -3577,8 +3587,8 @@ public:
      * instance of type \p F
      * and compared to \p f to generate the return value.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x <= y</tt>, \p false otherwise.
      *
@@ -3603,8 +3613,8 @@ public:
      * instance of type \p F
      * and compared to \p f to generate the return value.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x > y</tt>, \p false otherwise.
      *
@@ -3629,8 +3639,8 @@ public:
      * instance of type \p F
      * and compared to \p f to generate the return value.
      *
-     * @param[in] x first argument
-     * @param[in] y second argument.
+     * @param x first argument
+     * @param y second argument.
      *
      * @return \p true if <tt>x >= y</tt>, \p false otherwise.
      *
@@ -3654,7 +3664,7 @@ public:
      * type, otherwise an
      * \p std::invalid_argument exception will be thrown.
      *
-     * @param[in] exp exponent.
+     * @param exp exponent.
      *
      * @return <tt>this ** exp</tt>.
      *
@@ -3688,9 +3698,9 @@ public:
      * This method will write to \p out the GCD of \p n1 and \p n2.
      * The returned value is guaranteed to be non-negative if both arguments are non-negative.
      *
-     * @param[out] out the output value.
-     * @param[in] n1 first argument
-     * @param[in] n2 second argument.
+     * @param out the output value.
+     * @param n1 first argument
+     * @param n2 second argument.
      */
     static void gcd(mp_integer &out, const mp_integer &n1, const mp_integer &n2)
     {
@@ -3818,7 +3828,7 @@ public:
     /**
      * The method uses the GMP function <tt>mpz_probab_prime_p()</tt>.
      *
-     * @param[in] reps number of primality tests to be run.
+     * @param reps number of primality tests to be run.
      *
      * @return 2 if \p this is definitely a prime, 1 if \p this is probably prime, 0 if \p this is definitely composite.
      *
@@ -3905,7 +3915,7 @@ public:
      *
      * Will return \p this choose \p k using the GMP <tt>mpz_bin_ui</tt> function.
      *
-     * @param[in] k bottom argument for the binomial coefficient.
+     * @param k bottom argument for the binomial coefficient.
      *
      * @return \p this choose \p k.
      *
@@ -3977,7 +3987,7 @@ public:
     /**
      * The choice of storage type will depend on the value of \p z.
      *
-     * @param[in] z <tt>mpz_t</tt> that will be used to initialise \p this.
+     * @param z <tt>mpz_t</tt> that will be used to initialise \p this.
      */
     explicit mp_integer(const ::mpz_t z)
     {
@@ -4037,9 +4047,9 @@ public:
      * This static method will set \p out to the quotient of \p n1 and \p n2. \p n2 must divide
      * \p n1 exactly, otherwise the behaviour will be undefined.
      *
-     * @param[out] out the output value.
-     * @param[in] n1 the numerator.
-     * @param[in] n2 the denominator.
+     * @param out the output value.
+     * @param n1 the numerator.
+     * @param n2 the denominator.
      *
      * @throws piranha::zero_division_error if \p n2 is zero.
      */
@@ -4251,8 +4261,8 @@ public:
      * storage or not, the second element is a boolean representing the sign of the integer (\p true
      * for positive or zero, \p false for negative) and the last element is an array of limbs.
      *
-     * @param[in] p target <tt>msgpack::packer</tt>.
-     * @param[in] f the desired piranha::msgpack_format.
+     * @param p target <tt>msgpack::packer</tt>.
+     * @param f the desired piranha::msgpack_format.
      *
      * @throws std::overflow_error if the number of limbs is larger than an implementation-defined value.
      * @throws unspecified any exception thrown by:
@@ -4315,8 +4325,8 @@ public:
      * Calling this method in binary mode will result in undefined behaviour if \p o does not contain an integer
      * serialized via msgpack_pack().
      *
-     * @param[in] o source object.
-     * @param[in] f the desired piranha::msgpack_format.
+     * @param o source object.
+     * @param f the desired piranha::msgpack_format.
      *
      * @throws std::invalid_argument if, in binary mode, the serialized static integer has a number of limbs
      * greater than 2.
@@ -4442,14 +4452,14 @@ namespace math
  * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
  */
 template <typename T>
-struct multiply_accumulate_impl<T, T, T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
+struct multiply_accumulate_impl<T, enable_if_t<detail::is_mp_integer<T>::value>> {
     /// Call operator.
     /**
      * This implementation will use piranha::mp_integer::multiply_accumulate().
      *
-     * @param[in,out] x target value for accumulation.
-     * @param[in] y first argument.
-     * @param[in] z second argument.
+     * @param x target value for accumulation.
+     * @param y first argument.
+     * @param z second argument.
      */
     void operator()(T &x, const T &y, const T &z) const
     {
@@ -4467,7 +4477,7 @@ struct negate_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::
     /**
      * Will use internally piranha::mp_integer::negate().
      *
-     * @param[in,out] n piranha::mp_integer to be negated.
+     * @param n piranha::mp_integer to be negated.
      */
     void operator()(T &n) const
     {
@@ -4485,7 +4495,7 @@ struct is_zero_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>:
     /**
      * Will use internally piranha::mp_integer::sign().
      *
-     * @param[in] n piranha::mp_integer to be tested.
+     * @param n piranha::mp_integer to be tested.
      *
      * @return \p true if \p n is zero, \p false otherwise.
      */
@@ -4505,7 +4515,7 @@ struct is_unitary_impl<T, typename std::enable_if<detail::is_mp_integer<T>::valu
     /**
      * Will use internally piranha::mp_integer::is_unitary().
      *
-     * @param[in] n piranha::mp_integer to be tested.
+     * @param n piranha::mp_integer to be tested.
      *
      * @return \p true if \p n is equal to 1, \p false otherwise.
      */
@@ -4523,7 +4533,7 @@ template <typename T>
 struct abs_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] n input parameter.
+     * @param n input parameter.
      *
      * @return absolute value of \p n.
      */
@@ -4541,7 +4551,7 @@ template <typename T>
 struct sin_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] n argument.
+     * @param n argument.
      *
      * @return sine of \p n.
      *
@@ -4564,7 +4574,7 @@ template <typename T>
 struct cos_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[in] n argument.
+     * @param n argument.
      *
      * @return cosine of \p n.
      *
@@ -4597,7 +4607,7 @@ struct partial_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>:
 
 /// Factorial.
 /**
- * @param[in] n factorial argument.
+ * @param n factorial argument.
  *
  * @return the output of piranha::mp_integer::factorial().
  *
@@ -4623,10 +4633,10 @@ struct ipow_subs_impl {
  * Substitute the integral power of a symbolic variable with a generic object.
  * The actual implementation of this function is in the piranha::math::ipow_subs_impl functor.
  *
- * @param[in] x quantity that will be subject to substitution.
- * @param[in] name name of the symbolic variable that will be substituted.
- * @param[in] n power of \p name that will be substituted.
- * @param[in] y object that will substitute the variable.
+ * @param x quantity that will be subject to substitution.
+ * @param name name of the symbolic variable that will be substituted.
+ * @param n power of \p name that will be substituted.
+ * @param y object that will substitute the variable.
  *
  * @return \p x after substitution  of \p name to the power of \p n with \p y.
  *
@@ -4647,9 +4657,9 @@ template <typename T>
 struct add3_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[out] out the output value.
-     * @param[in] a the first operand.
-     * @param[in] b the second operand.
+     * @param out the output value.
+     * @param a the first operand.
+     * @param b the second operand.
      *
      * @return the output of piranha::mp_integer::add().
      */
@@ -4667,9 +4677,9 @@ template <typename T>
 struct sub3_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[out] out the output value.
-     * @param[in] a the first operand.
-     * @param[in] b the second operand.
+     * @param out the output value.
+     * @param a the first operand.
+     * @param b the second operand.
      *
      * @return the output of piranha::mp_integer::sub().
      */
@@ -4687,9 +4697,9 @@ template <typename T>
 struct mul3_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[out] out the output value.
-     * @param[in] a the first operand.
-     * @param[in] b the second operand.
+     * @param out the output value.
+     * @param a the first operand.
+     * @param b the second operand.
      *
      * @return the output of piranha::mp_integer::mul().
      */
@@ -4707,9 +4717,9 @@ template <typename T>
 struct div3_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::type> {
     /// Call operator.
     /**
-     * @param[out] out the output value.
-     * @param[in] a the first operand.
-     * @param[in] b the second operand.
+     * @param out the output value.
+     * @param a the first operand.
+     * @param b the second operand.
      *
      * @return the output of piranha::mp_integer::div().
      */
@@ -4730,9 +4740,9 @@ struct divexact_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>
      * The call operator will first determine quotient and remainder via piranha::mp_integer::divrem().
      * If the remainder is not null, an error will be thrown.
      *
-     * @param[out] out return value.
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param out return value.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return a reference to \p out.
      *
@@ -4777,8 +4787,8 @@ template <typename T, typename U>
 struct gcd_impl<T, U, detail::mp_integer_gcd_enabler<T, U>> {
     /// Call operator, piranha::mp_integer - piranha::mp_integer overload.
     /**
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return the GCD of \p a and \p b.
      */
@@ -4791,8 +4801,8 @@ struct gcd_impl<T, U, detail::mp_integer_gcd_enabler<T, U>> {
     }
     /// Call operator, piranha::mp_integer - integral overload.
     /**
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return the GCD of \p a and \p b.
      */
@@ -4803,8 +4813,8 @@ struct gcd_impl<T, U, detail::mp_integer_gcd_enabler<T, U>> {
     }
     /// Call operator, integral - piranha::mp_integer overload.
     /**
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return the GCD of \p a and \p b.
      */
@@ -4825,9 +4835,9 @@ struct gcd3_impl<T, typename std::enable_if<detail::is_mp_integer<T>::value>::ty
     /**
      * This call operator will use internally piranha::mp_integer::gcd().
      *
-     * @param[out] out return value.
-     * @param[in] a first argument.
-     * @param[in] b second argument.
+     * @param out return value.
+     * @param a first argument.
+     * @param b second argument.
      *
      * @return a reference to \p out.
      */
@@ -4859,10 +4869,10 @@ namespace math
  * This function is a convenience wrapper that will call the other piranha::math::ipow_subs() overload, with \p n
  * converted to a piranha::integer.
  *
- * @param[in] x quantity that will be subject to substitution.
- * @param[in] name name of the symbolic variable that will be substituted.
- * @param[in] n power of \p name that will be substituted.
- * @param[in] y object that will substitute the variable.
+ * @param x quantity that will be subject to substitution.
+ * @param name name of the symbolic variable that will be substituted.
+ * @param n power of \p name that will be substituted.
+ * @param y object that will substitute the variable.
  *
  * @return \p x after substitution  of \p name to the power of \p n with \p y.
  *
@@ -4962,7 +4972,7 @@ inline namespace literals
 
 /// Literal for arbitrary-precision integers.
 /**
- * @param[in] s literal string.
+ * @param s literal string.
  *
  * @return a piranha::mp_integer constructed from \p s.
  *
@@ -5058,9 +5068,9 @@ struct msgpack_pack_impl<Stream, T, mp_integer_msgpack_pack_enabler<Stream, T>> 
     /**
      * The call operator will use piranha::mp_integer::msgpack_pack() internally.
      *
-     * @param[in] p target <tt>msgpack::packer</tt>.
-     * @param[in] n piranha::mp_integer to be serialized.
-     * @param[in] f the desired piranha::msgpack_format.
+     * @param p target <tt>msgpack::packer</tt>.
+     * @param n piranha::mp_integer to be serialized.
+     * @param f the desired piranha::msgpack_format.
      *
      * @throws unspecified any exception thrown by piranha::mp_integer::msgpack_pack().
      */
@@ -5081,9 +5091,9 @@ struct msgpack_convert_impl<T, mp_integer_msgpack_convert_enabler<T>> {
     /**
      * The call operator will use piranha::mp_integer::msgpack_convert() internally.
      *
-     * @param[in] n target piranha::mp_integer.
-     * @param[in] o the <tt>msgpack::object</tt> to be converted into \p n.
-     * @param[in] f the desired piranha::msgpack_format.
+     * @param n target piranha::mp_integer.
+     * @param o the <tt>msgpack::object</tt> to be converted into \p n.
+     * @param f the desired piranha::msgpack_format.
      *
      * @throws unspecified any exception thrown by piranha::mp_integer::msgpack_convert().
      */
@@ -5207,7 +5217,7 @@ struct hash<piranha::mp_integer<NBits>> {
     typedef piranha::mp_integer<NBits> argument_type;
     /// Hash operator.
     /**
-     * @param[in] n piranha::mp_integer whose hash value will be returned.
+     * @param n piranha::mp_integer whose hash value will be returned.
      *
      * @return <tt>n.hash()</tt>.
      *
