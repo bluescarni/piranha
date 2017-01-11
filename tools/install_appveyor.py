@@ -128,7 +128,8 @@ common_cmake_opts = r'-DCMAKE_PREFIX_PATH=c:\\local -DPIRANHA_WITH_BZIP2=yes -DB
 # Configuration step.
 if is_python_build:
     run_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s ' + common_cmake_opts + r' -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python' +
-                (python_version[0] if python_version[0] == '3' else r'') + r'-mgw62-mt-1_63.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + ((r'\\python' + python_version + r'.dll') if python_version == '36' else (r'\\libs\\python' + python_version + r'.dll')))
+                (python_version[0] if python_version[0] == '3' else r'') + r'-mgw62-mt-1_63.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + ((r'\\python' + python_version + r'.dll') if python_version == '36' else (r'\\libs\\python' + python_version + r'.dll')) +
+                r' -DPYTHON_INCLUDE_DIR=C:\\Python' + python_version + r'\\include')
 elif BUILD_TYPE in ['Release', 'Debug']:
     TEST_NSPLIT = os.environ['TEST_NSPLIT']
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
