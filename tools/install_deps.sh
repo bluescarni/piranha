@@ -26,9 +26,9 @@ fi
 conda create -q -p $deps_dir -y $conda_pkgs
 source activate $deps_dir
 
-wget https://github.com/msgpack/msgpack-c/releases/download/cpp-2.0.0/msgpack-2.0.0.tar.gz
-tar xzf msgpack-2.0.0.tar.gz
-cd msgpack-2.0.0
+wget https://github.com/msgpack/msgpack-c/releases/download/cpp-2.1.0/msgpack-2.1.0.tar.gz
+tar xzf msgpack-2.1.0.tar.gz
+cd msgpack-2.1.0
 
 mkdir build
 cd build
