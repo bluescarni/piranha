@@ -1,7 +1,0 @@
-digraph "Graphical Class Hierarchy"
-{
-  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
-  node [fontname="Helvetica",fontsize="10",shape=record];
-  rankdir="LR";
-  Node0 [label="piranha::math::evaluate\l_impl\< T, U, typename\l std::enable_if\< std::is\l_base_of\< detail::rational\l_function_tag, T \>::value \>\l::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1evaluate__impl_3_01_t_00_01_u_00_01typename_01std_1_1enable__if_3_01stdc8d4ad757f5ea104caf0ecb16bc7266b.html",tooltip="Specialisation of the piranha::math::evaluate() functor for piranha::rational_function. "];
-}

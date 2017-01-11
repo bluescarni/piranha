@@ -52,6 +52,5 @@ var searchData=
   ['hash_3c_20piranha_3a_3areal_5ftrigonometric_5fkronecker_5fmonomial_3c_20t_20_3e_20_3e',['hash&lt; piranha::real_trigonometric_kronecker_monomial&lt; T &gt; &gt;',['../structstd_1_1hash_3_01piranha_1_1real__trigonometric__kronecker__monomial_3_01_t_01_4_01_4.html',1,'std']]],
   ['hash_3c_20piranha_3a_3asymbol_20_3e',['hash&lt; piranha::symbol &gt;',['../structstd_1_1hash_3_01piranha_1_1symbol_01_4.html',1,'std']]],
   ['hash_5fset',['hash_set',['../classpiranha_1_1hash__set.html',1,'piranha']]],
-  ['hash_5fset_3c_20p_5ftype_2c_20p_5ftype_5fhasher_20_3e',['hash_set&lt; p_type, p_type_hasher &gt;',['../classpiranha_1_1hash__set.html',1,'piranha']]],
-  ['hash_5fset_3c_20term_5ftype_2c_20detail_3a_3aterm_5fhasher_3c_20term_5ftype_20_3e_20_3e',['hash_set&lt; term_type, detail::term_hasher&lt; term_type &gt; &gt;',['../classpiranha_1_1hash__set.html',1,'piranha']]]
+  ['hash_5fset_3c_20p_5ftype_2c_20p_5ftype_5fhasher_20_3e',['hash_set&lt; p_type, p_type_hasher &gt;',['../classpiranha_1_1hash__set.html',1,'piranha']]]
 ];

@@ -1,8 +1,0 @@
-digraph "piranha::boost_load_impl&lt; Archive, mp_rational&lt; NBits &gt;, mp_rational_boost_load_enabler&lt; Archive, NBits &gt; &gt;"
-{
-  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
-  node [fontname="Helvetica",fontsize="10",shape=record];
-  Node2 [label="piranha::boost_load\l_impl\< Archive, mp_rational\l\< NBits \>, mp_rational_boost\l_load_enabler\< Archive, NBits \> \>",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node3 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node3 [label="piranha::boost_load\l_via_boost_api\< Archive,\l mp_rational\< NBits \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__load__via__boost__api.html"];
-}

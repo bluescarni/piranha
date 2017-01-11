@@ -1,7 +1,0 @@
-digraph "Graphical Class Hierarchy"
-{
-  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
-  node [fontname="Helvetica",fontsize="10",shape=record];
-  rankdir="LR";
-  Node0 [label="piranha::math::t_lorder\l_impl\< Series, typename\l std::enable_if\< std::is\l_base_of\< detail::trigonometric\l_series_tag, Series \>::value\l \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1t__lorder__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01std_143e8d88b209171f085d6417658ac4f43.html",tooltip="Specialisation of the piranha::math::t_lorder() functor for instances of piranha::trigonometric_serie..."];
-}

@@ -1,7 +1,0 @@
-digraph "Graphical Class Hierarchy"
-{
-  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
-  node [fontname="Helvetica",fontsize="10",shape=record];
-  rankdir="LR";
-  Node0 [label="piranha::math::multiply\l_accumulate_impl\< T, enable\l_if_t\< detail::is_mp_integer\l\< T \>::value \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1multiply__accumulate__impl_3_01_t_00_01enable__if__t_3_01detail_1_1is__8e1188cd68bcb2cce1c5920a368e4abe.html",tooltip="Specialisation of the implementation of piranha::math::multiply_accumulate() for piranha::mp_integer..."];
-}
