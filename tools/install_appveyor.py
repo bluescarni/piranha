@@ -80,7 +80,9 @@ run_command(r'7z x -aoa -oC:\\ msgpack.7z', verbose=False)
 
 # Setup of the dependencies for a Python build.
 if is_python_build:
-    if BUILD_TYPE == 'Python35':
+    if BUILD_TYPE == 'Python36':
+        python_version = '36'
+    elif BUILD_TYPE == 'Python35':
         python_version = '35'
     elif BUILD_TYPE == 'Python34':
         python_version = '34'
