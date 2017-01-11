@@ -18,7 +18,8 @@
         VERSION:     '0.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
@@ -31,8 +32,6 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="Piranha 0.8 documentation" href="index.html" />
-    <link rel="up" title="Python reference" href="pyranha_reference.html" />
     <link rel="next" title="pyranha.celmec" href="pyranha_celmec.html" />
     <link rel="prev" title="Python reference" href="pyranha_reference.html" />
 <meta charset='utf-8'>
@@ -111,7 +110,7 @@
             
               <li class="hidden-sm">
 <div id="sourcelink">
-  <a href="_sources/pyranha_root.txt"
+  <a href="_sources/pyranha_root.rst.txt"
      rel="nofollow">Source</a>
 </div></li>
             
@@ -443,10 +442,10 @@ description of how the method is used.</p>
 <dt id="pyranha.settings.set_thread_binding">
 <em class="property">static </em><code class="descname">set_thread_binding</code><span class="sig-paren">(</span><em>flag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.set_thread_binding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.set_thread_binding" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the thread binding policy.</p>
-<p>By default, the threads created by piranha are not bound to specific processors/cores.
-Calling this method with a <code class="docutils literal"><span class="pre">True</span></code> <em>flag</em> will instruct piranha to attempt to bind each
+<p>By default, the threads created by Piranha are not bound to specific processors/cores.
+Calling this method with a <code class="docutils literal"><span class="pre">True</span></code> <em>flag</em> will instruct Piranha to attempt to bind each
 thread to a different processor/core (which can result in increased performance
-in certain circumstances). If <em>flag</em> is <code class="docutils literal"><span class="pre">False</span></code>, the threads created by piranha will be
+in certain circumstances). If <em>flag</em> is <code class="docutils literal"><span class="pre">False</span></code>, the threads created by Piranha will be
 free to migrate across processors/cores.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -484,8 +483,8 @@ free to migrate across processors/cores.</p>
 to/from disk symbolic objects via <a class="reference internal" href="#pyranha.save_file" title="pyranha.save_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.save_file()</span></code></a> and <a class="reference internal" href="#pyranha.load_file" title="pyranha.load_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.load_file()</span></code></a>.
 The Boost formats are based on the Boost serialization library and they are always available.
 The msgpack formats rely on the msgpack-c library (which is an optional dependency).</p>
-<p>The portable variants are slower but suitable for use across architectures and piranha versions, the binary
-variants are faster but they are not portable across architectures and piranha versions.</p>
+<p>The portable variants are slower but suitable for use across architectures and Piranha versions, the binary
+variants are faster but they are not portable across architectures and Piranha versions.</p>
 <dl class="attribute">
 <dt id="pyranha.data_format.boost_binary">
 <code class="descname">boost_binary</code><em class="property"> = pyranha._core.data_format.boost_binary</em><a class="headerlink" href="#pyranha.data_format.boost_binary" title="Permalink to this definition">¶</a></dt>
@@ -518,7 +517,7 @@ variants are faster but they are not portable across architectures and piranha v
 <dd><p>Compression format.</p>
 <p>The members of this class identify the compression formats that can be used when saving/loading
 to/from disk symbolic objects via <a class="reference internal" href="#pyranha.save_file" title="pyranha.save_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.save_file()</span></code></a> and <a class="reference internal" href="#pyranha.load_file" title="pyranha.load_file"><code class="xref py py-func docutils literal"><span class="pre">pyranha.load_file()</span></code></a>.
-The compression formats are available only if piranha was compiled with the corresponding optional
+The compression formats are available only if Piranha was compiled with the corresponding optional
 compression options enabled.</p>
 <dl class="attribute">
 <dt id="pyranha.compression.bzip2">
@@ -668,7 +667,7 @@ as data format and <em>cf</em> as compression format. The possible values for <e
     </p>
     <p>
         &copy; Copyright 2009-2016, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

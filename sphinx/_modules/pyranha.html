@@ -18,7 +18,8 @@
         VERSION:     '0.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -31,8 +32,6 @@
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="Piranha 0.8 documentation" href="../index.html" />
-    <link rel="up" title="Module code" href="index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -417,10 +416,10 @@
 <div class="viewcode-block" id="settings.set_thread_binding"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_thread_binding">[docs]</a>    <span class="k">def</span> <span class="nf">set_thread_binding</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the thread binding policy.</span>
 
-<span class="sd">        By default, the threads created by piranha are not bound to specific processors/cores.</span>
-<span class="sd">        Calling this method with a ``True`` *flag* will instruct piranha to attempt to bind each</span>
+<span class="sd">        By default, the threads created by Piranha are not bound to specific processors/cores.</span>
+<span class="sd">        Calling this method with a ``True`` *flag* will instruct Piranha to attempt to bind each</span>
 <span class="sd">        thread to a different processor/core (which can result in increased performance</span>
-<span class="sd">        in certain circumstances). If *flag* is ``False``, the threads created by piranha will be</span>
+<span class="sd">        in certain circumstances). If *flag* is ``False``, the threads created by Piranha will be</span>
 <span class="sd">        free to migrate across processors/cores.</span>
 
 <span class="sd">        :param flag: the desired thread binding policy</span>
@@ -477,8 +476,8 @@
 <span class="sd">    The Boost formats are based on the Boost serialization library and they are always available.</span>
 <span class="sd">    The msgpack formats rely on the msgpack-c library (which is an optional dependency).</span>
 
-<span class="sd">    The portable variants are slower but suitable for use across architectures and piranha versions, the binary</span>
-<span class="sd">    variants are faster but they are not portable across architectures and piranha versions.</span>
+<span class="sd">    The portable variants are slower but suitable for use across architectures and Piranha versions, the binary</span>
+<span class="sd">    variants are faster but they are not portable across architectures and Piranha versions.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -497,7 +496,7 @@
 
 <span class="sd">    The members of this class identify the compression formats that can be used when saving/loading</span>
 <span class="sd">    to/from disk symbolic objects via :py:func:`pyranha.save_file` and :py:func:`pyranha.load_file`.</span>
-<span class="sd">    The compression formats are available only if piranha was compiled with the corresponding optional</span>
+<span class="sd">    The compression formats are available only if Piranha was compiled with the corresponding optional</span>
 <span class="sd">    compression options enabled.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -632,7 +631,7 @@
     </p>
     <p>
         &copy; Copyright 2009-2016, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>
