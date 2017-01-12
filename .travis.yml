@@ -24,7 +24,6 @@ addons:
     - gcc-6
     - g++-6
     - curl
-    - binutils-gold
 
 env:
   global:
