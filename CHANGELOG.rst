@@ -7,6 +7,8 @@ Changelog
 New
 ~~~
 
+- Add pyranha's binary package for Python 3.6. [Francesco Biscani]
+
 - Add advanced option in the build system to enable/disable the
   installation of the header files (enabled by default). [Francesco
   Biscani]
