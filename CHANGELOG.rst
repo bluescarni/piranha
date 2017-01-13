@@ -14,6 +14,15 @@ New
 Changes
 ~~~~~~~
 
+- In pyrannha, remove the exposition of series with real coefficient
+  types. [Francesco Biscani]
+
+- Update the msgpack-c version in the binary packages to 2.1.0.
+  [Francesco Biscani]
+
+- Update the Boost version in binary packages to 1.63. [Francesco
+  Biscani]
+
 - Simplify the math::multiply_accumulate() function to work only on
   arguments of the same type. [Francesco Biscani]
 
