@@ -349,9 +349,6 @@ void expose_polynomials_7();
 void expose_polynomials_8();
 void expose_polynomials_9();
 void expose_polynomials_10();
-void expose_polynomials_11();
-void expose_polynomials_12();
-void expose_polynomials_13();
 }
 
 #endif

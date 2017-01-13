@@ -42,9 +42,6 @@ YACMA_PYTHON_MODULE(_core SHARED
 	expose_polynomials_8.cpp
 	expose_polynomials_9.cpp
 	expose_polynomials_10.cpp
-	expose_polynomials_11.cpp
-	expose_polynomials_12.cpp
-	expose_polynomials_13.cpp
 	# Poisson series.
 	poisson_series_descriptor.hpp
 	expose_poisson_series.hpp
@@ -60,9 +57,6 @@ YACMA_PYTHON_MODULE(_core SHARED
 	expose_poisson_series_9.cpp
 	expose_poisson_series_10.cpp
 	expose_poisson_series_11.cpp
-	expose_poisson_series_12.cpp
-	expose_poisson_series_13.cpp
-	expose_poisson_series_14.cpp
 	# Divisor series.
 	divisor_series_descriptor.hpp
 	expose_divisor_series.hpp
@@ -72,9 +66,6 @@ YACMA_PYTHON_MODULE(_core SHARED
 	expose_divisor_series_3.cpp
 	expose_divisor_series_4.cpp
 	expose_divisor_series_5.cpp
-	expose_divisor_series_6.cpp
-	expose_divisor_series_7.cpp
-	expose_divisor_series_8.cpp
 	# Python files.
 	__init__.py _common.py celmec.py math.py test.py types.py "${CMAKE_CURRENT_BINARY_DIR}/_version.py"
 	${PYRANHA_TUTORIAL_FILES}

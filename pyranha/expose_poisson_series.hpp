@@ -99,9 +99,6 @@ void expose_poisson_series_8();
 void expose_poisson_series_9();
 void expose_poisson_series_10();
 void expose_poisson_series_11();
-void expose_poisson_series_12();
-void expose_poisson_series_13();
-void expose_poisson_series_14();
 }
 
 #endif

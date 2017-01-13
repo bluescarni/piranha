@@ -201,9 +201,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_polynomials_8();
     pyranha::expose_polynomials_9();
     pyranha::expose_polynomials_10();
-    pyranha::expose_polynomials_11();
-    pyranha::expose_polynomials_12();
-    pyranha::expose_polynomials_13();
     // Expose Poisson series.
     pyranha::instantiate_type_generator_template<piranha::poisson_series>("poisson_series", types_module);
     pyranha::expose_poisson_series_0();
@@ -218,9 +215,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_poisson_series_9();
     pyranha::expose_poisson_series_10();
     pyranha::expose_poisson_series_11();
-    pyranha::expose_poisson_series_12();
-    pyranha::expose_poisson_series_13();
-    pyranha::expose_poisson_series_14();
     // Expose divisor series.
     pyranha::instantiate_type_generator_template<piranha::divisor_series>("divisor_series", types_module);
     pyranha::expose_divisor_series_0();
@@ -229,9 +223,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_divisor_series_3();
     pyranha::expose_divisor_series_4();
     pyranha::expose_divisor_series_5();
-    pyranha::expose_divisor_series_6();
-    pyranha::expose_divisor_series_7();
-    pyranha::expose_divisor_series_8();
     // Expose the settings class.
     bp::class_<piranha::settings> settings_class("_settings", bp::init<>());
     settings_class.def("_get_max_term_output", piranha::settings::get_max_term_output)
