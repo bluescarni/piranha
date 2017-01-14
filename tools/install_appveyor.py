@@ -42,6 +42,8 @@ def run_command(raw_command, directory=None, verbose=True):
     else:
         output = str(proc.communicate()[0], 'utf-8')
     if proc.returncode:
+        print(output)
+        sys.stdout.flush()
         raise RuntimeError(output)
     return output
 
