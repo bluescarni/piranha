@@ -110,6 +110,7 @@ if is_python_build:
     run_command(r'7z x -aoa -oC:\\ boost_python.7z', verbose=False)
     # Install pip and deps.
     wget(r'https://bootstrap.pypa.io/get-pip.py', 'get-pip.py')
+    run_command(pinterp + ' get-pip.py')
     run_command(pip + ' install mpmath')
     if is_release_build:
         run_command(pip + ' install twine')
