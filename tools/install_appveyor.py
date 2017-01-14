@@ -42,8 +42,6 @@ def run_command(raw_command, directory=None, verbose=True):
     else:
         output = str(proc.communicate()[0], 'utf-8')
     if proc.returncode:
-        print(output)
-        sys.stdout.flush()
         raise RuntimeError(output)
     return output
 
@@ -112,8 +110,6 @@ if is_python_build:
     run_command(r'7z x -aoa -oC:\\ boost_python.7z', verbose=False)
     # Install pip and deps.
     wget(r'https://bootstrap.pypa.io/get-pip.py', 'get-pip.py')
-    run_command(pinterp + ' get-pip.py')
-    run_command(pip + ' install numpy')
     run_command(pip + ' install mpmath')
     if is_release_build:
         run_command(pip + ' install twine')
