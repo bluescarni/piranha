@@ -16,6 +16,10 @@ New
 Changes
 ~~~~~~~
 
+- The GMP library bundled with pyranha's binary packages has been
+  updated to the latest version, and it is now built in fat mode.
+  [Francesco Biscani]
+
 - In pyrannha, remove the exposition of series with real coefficient
   types. [Francesco Biscani]
 
