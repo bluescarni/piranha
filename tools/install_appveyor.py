@@ -160,9 +160,8 @@ if is_python_build:
     run_command(pinterp + r' setup.py bdist_wheel')
     os.environ['PATH'] = ORIGINAL_PATH
     run_command(pip + r' install dist\\' + os.listdir('dist')[0])
-    os.chdir(r'c:\\')
     run_command(
-        pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
+        pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"', directory=r'c:\\')
     if is_release_build:
         run_command(twine + r' upload -u bluescarni dist\\' +
                     os.listdir('dist')[0])
