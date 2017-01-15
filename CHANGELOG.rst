@@ -1,6 +1,16 @@
 Changelog
 =========
 
+%%version%% (unreleased)
+------------------------
+
+Fix
+~~~
+
+- Tentative fix for release script. [Francesco Biscani]
+
+  [skip ci]
+
 v0.9 (2017-01-15)
 -----------------
 
