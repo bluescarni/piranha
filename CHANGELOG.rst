@@ -1,7 +1,55 @@
 Changelog
 =========
 
-v0.8 (2016-11-19)
+%%version%% (unreleased)
+------------------------
+
+New
+~~~
+
+- Add pyranha's binary package for Python 3.6. [Francesco Biscani]
+
+- Add advanced option in the build system to enable/disable the
+  installation of the header files (enabled by default). [Francesco
+  Biscani]
+
+Changes
+~~~~~~~
+
+- The GMP library bundled with pyranha's binary packages has been
+  updated to the latest version, and it is now built in fat mode.
+  [Francesco Biscani]
+
+- In pyrannha, remove the exposition of series with real coefficient
+  types. [Francesco Biscani]
+
+- Update the msgpack-c version in the binary packages to 2.1.0.
+  [Francesco Biscani]
+
+- Update the Boost version in binary packages to 1.63. [Francesco
+  Biscani]
+
+- Simplify the math::multiply_accumulate() function to work only on
+  arguments of the same type. [Francesco Biscani]
+
+- The zero_division_error exception now derives from domain_error rather
+  than invalid_argument. [Francesco Biscani]
+
+Fix
+~~~
+
+- Various documentation fixes for the latest doxygen version. [Francesco
+  Biscani]
+
+- Require GMP >= 5. [Francesco Biscani]
+
+- Fix occurrences of potential undefined behaviour when interacting with
+  raw storage. [Francesco Biscani]
+
+- Fix compilation on CentOS 5, where the CPU_COUNT macro is not
+  available. [darioizzo]
+
+v0.8 (2016-11-20)
 -----------------
 
 New

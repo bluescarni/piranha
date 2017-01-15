@@ -80,7 +80,9 @@ run_command(r'7z x -aoa -oC:\\ msgpack.7z', verbose=False)
 
 # Setup of the dependencies for a Python build.
 if is_python_build:
-    if BUILD_TYPE == 'Python35':
+    if BUILD_TYPE == 'Python36':
+        python_version = '36'
+    elif BUILD_TYPE == 'Python35':
         python_version = '35'
     elif BUILD_TYPE == 'Python34':
         python_version = '34'
@@ -108,7 +110,7 @@ if is_python_build:
     run_command(r'7z x -aoa -oC:\\ boost_python.7z', verbose=False)
     # Install pip and deps.
     wget(r'https://bootstrap.pypa.io/get-pip.py', 'get-pip.py')
-    run_command(pinterp + ' get-pip.py')
+    run_command(pinterp + ' get-pip.py --force-reinstall')
     run_command(pip + ' install numpy')
     run_command(pip + ' install mpmath')
     if is_release_build:
@@ -121,12 +123,13 @@ os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
 os.makedirs('build')
 os.chdir('build')
 
-common_cmake_opts = r'-DCMAKE_PREFIX_PATH=c:\\local -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll'
+common_cmake_opts = r'-DCMAKE_PREFIX_PATH=c:\\local -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_63.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_63.dll'
 
 # Configuration step.
 if is_python_build:
     run_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s ' + common_cmake_opts + r' -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python' +
-                (python_version[0] if python_version[0] == '3' else r'') + r'-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + r'\\libs\\python' + python_version + r'.dll')
+                (python_version[0] if python_version[0] == '3' else r'') + r'-mgw62-mt-1_63.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + r'\\libs\\python' + python_version + r'.dll' +
+                r' -DPYTHON_INCLUDE_DIR=C:\\Python' + python_version + r'\\include')
 elif BUILD_TYPE in ['Release', 'Debug']:
     TEST_NSPLIT = os.environ['TEST_NSPLIT']
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']

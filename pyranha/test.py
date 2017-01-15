@@ -339,17 +339,16 @@ class mpmath_test_case(_ut.TestCase):
             from mpmath import workdps, mpf, pi
         except ImportError:
             return
-        from .types import polynomial, real, int16, monomial
-        pt = polynomial[real, monomial[int16]]()
-        self.assertEqual(pt(mpf("4.5667")), mpf("4.5667"))
-        self.assertEqual(pt(mpf("4.5667")) ** mpf("1.234567"),
-                         mpf("4.5667") ** mpf("1.234567"))
+        from .types import polynomial, integer, int16, monomial
+        from .math import evaluate
+        pt = polynomial[integer, monomial[int16]]()
+        x = pt('x')
+        self.assertEqual(evaluate(x,{'x':mpf('4.5667')}), mpf('4.5667'))
+        self.assert_(type(evaluate(x,{'x':mpf('4.5667')})) == mpf)
         for n in [11, 21, 51, 101, 501]:
             with workdps(n):
-                self.assertEqual(pt(mpf("4.5667")), mpf("4.5667"))
-                self.assertEqual(pt(mpf("4.5667")) ** mpf("1.234567"),
-                                 mpf("4.5667") ** mpf("1.234567"))
-                self.assertEqual(pt(mpf(pi)), mpf(pi))
+                self.assertEqual(evaluate(x,{'x':mpf('4.5667')}), mpf('4.5667'))
+                self.assert_(type(evaluate(x,{'x':mpf('4.5667')})) == mpf)
 
 
 class math_test_case(_ut.TestCase):
@@ -382,25 +381,6 @@ class math_test_case(_ut.TestCase):
         self.assertAlmostEqual(math.sin(-2.456), psin(pt(-2.456)).list[0][0])
         self.assertRaises(TypeError, lambda: pcos(""))
         self.assertRaises(TypeError, lambda: psin(""))
-        try:
-            from mpmath import mpf, workdps
-            from mpmath import cos as mpcos, sin as mpsin
-            pt = polynomial[real, k_monomial]()
-            self.assertEqual(mpcos(mpf("1.2345")), pcos(mpf("1.2345")))
-            self.assertEqual(mpcos(mpf("3")), pcos(pt(mpf("3"))))
-            self.assertEqual(mpcos(mpf("-2.456")), pcos(pt(mpf("-2.456"))))
-            self.assertEqual(mpsin(mpf("1.2345")), psin(mpf("1.2345")))
-            self.assertEqual(mpsin(mpf("3")), psin(pt(mpf("3"))))
-            self.assertEqual(mpsin(mpf("-2.456")), psin(pt(mpf("-2.456"))))
-            with workdps(500):
-                self.assertEqual(mpcos(mpf("1.2345")), pcos(mpf("1.2345")))
-                self.assertEqual(mpcos(mpf("3")), pcos(pt(mpf("3"))))
-                self.assertEqual(mpcos(mpf("-2.456")), pcos(pt(mpf("-2.456"))))
-                self.assertEqual(mpsin(mpf("1.2345")), psin(mpf("1.2345")))
-                self.assertEqual(mpsin(mpf("3")), psin(pt(mpf("3"))))
-                self.assertEqual(mpsin(mpf("-2.456")), psin(pt(mpf("-2.456"))))
-        except ImportError:
-            pass
         self.binomialTest()
         self.sincosTest()
         self.evaluateTest()
@@ -510,12 +490,6 @@ class math_test_case(_ut.TestCase):
         # Trigger a floating-point conversion.
         self.assertEqual(type(subs(z * cos(x + y), 'x', 0.)),
                          poisson_series[polynomial[double, k_monomial]]())
-        try:
-            from mpmath import mpf
-            self.assertEqual(type(subs(z * cos(x + y), 'x', mpf(1.23))),
-                             poisson_series[polynomial[real, k_monomial]]())
-        except ImportError:
-            pass
         # Trig subs.
         self.assertEqual(t_subs(z * sin(x + y), 'y', 0, 1), z * cos(x))
         self.assertEqual(type(t_subs(z * sin(x + y), 'y', 0, 1)), pt)
@@ -526,12 +500,6 @@ class math_test_case(_ut.TestCase):
         self.assertEqual(type(t_subs(z * sin(x + y), 'y', c, s)), pt)
         self.assertEqual(type(t_subs(z * sin(x + y), 'y', 0., 1.)),
                          poisson_series[polynomial[double, k_monomial]]())
-        try:
-            from mpmath import mpf
-            self.assertEqual(type(t_subs(z * sin(x + y), 'y', mpf(0.), mpf(1.))),
-                             poisson_series[polynomial[real, k_monomial]]())
-        except ImportError:
-            pass
         # Ipow subs.
         self.assertEqual(ipow_subs(x**5 * y**2 * z / 5,
                                    'x', 2, 3), 9 * x * y**2 * z / 5)
@@ -540,12 +508,6 @@ class math_test_case(_ut.TestCase):
                                    'x', 2, 3), 27 * y**2 * z / 5)
         self.assertEqual(type(ipow_subs(x**5 * y**2 * z / 5, 'x', 2, 3.)),
                          poisson_series[polynomial[double, k_monomial]]())
-        try:
-            from mpmath import mpf
-            self.assertEqual(type(ipow_subs(x**5 * y**2 * z / 5, 'x', 2, mpf(3.))),
-                             poisson_series[polynomial[real, k_monomial]]())
-        except ImportError:
-            pass
 
     def invertTest(self):
         from fractions import Fraction as F
@@ -676,12 +638,6 @@ class polynomial_test_case(_ut.TestCase):
             type(polynomial[integer, monomial[int16]]()(1).list[0][0]), int)
         self.assertEqual(
             type(polynomial[double, monomial[int16]]()(1).list[0][0]), float)
-        try:
-            from mpmath import mpf
-            self.assertEqual(
-                type(polynomial[real, monomial[int16]]()(1).list[0][0]), mpf)
-        except ImportError:
-            pass
         # A couple of tests for integration.
         pt = polynomial[rational, monomial[int16]]()
         x, y, z = [pt(_) for _ in ['x', 'y', 'z']]
@@ -775,8 +731,6 @@ class divisor_series_test_case(_ut.TestCase):
             int16]]()(1).list[0][0]), polynomial[rational, monomial[int16]]())
         self.assertEqual(type(divisor_series[polynomial[double, monomial[int16]], divisor[
             int16]]()(1).list[0][0]), polynomial[double, monomial[int16]]())
-        self.assertEqual(type(divisor_series[polynomial[real, monomial[int16]], divisor[
-            int16]]()(1).list[0][0]), polynomial[real, monomial[int16]]())
         # A couple of tests for the invert() functionality.
         dt = divisor_series[polynomial[
             rational, monomial[int16]], divisor[int16]]()
@@ -934,18 +888,9 @@ class converters_test_case(_ut.TestCase):
             from mpmath import mpf, mp, workdps, binomial as bin, fabs
         except ImportError:
             return
-        pt = polynomial[real, monomial[int16]]()
-        self.assertEqual(mpf, type(pt(4).list[0][0]))
-        self.assertEqual(pt(4).list[0][0], mpf(4))
+        pt = polynomial[integer, monomial[int16]]()
         self.assertEqual(mpf, type(evaluate(pt("x"), {"x": mpf(5)})))
         self.assertEqual(evaluate(pt("x"), {"x": mpf(5)}), mpf(5))
-        # Test various types of bad repr.
-        with patch_repr(mpf, "foo"):
-            self.assertRaises(RuntimeError, lambda: pt(mpf(5)))
-        with patch_repr(mpf, "'1.23445"):
-            self.assertRaises(RuntimeError, lambda: pt(mpf(5)))
-        with patch_repr(mpf, "'foobar'"):
-            self.assertRaises(ValueError, lambda: pt(mpf(5)))
         # Check the handling of the precision.
         from .math import binomial
         # Original number of decimal digits.
@@ -960,15 +905,6 @@ class converters_test_case(_ut.TestCase):
             self.assertEqual(tmp.context.dps, 100)
             self.assertTrue(fabs(tmp - bin(mpf(5.1), mpf(3.2)))
                             < mpf('5e-100'))
-        # This will create a coefficient with dps equal to the current value.
-        tmp = 3 * pt('x')
-        self.assertEqual(evaluate(tmp, {'x': mpf(1)}).context.dps, orig_dps)
-        self.assertEqual(tmp.list[0][0].context.dps, orig_dps)
-        with workdps(100):
-            # When we extract the coefficient with increased temporary precision, we get
-            # an object with increased precision.
-            self.assertEqual(tmp.list[0][0].context.dps, 100)
-
 
 class serialization_test_case(_ut.TestCase):
     """Test case for the serialization of series.
