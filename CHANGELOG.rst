@@ -1,18 +1,8 @@
 Changelog
 =========
 
-v0.10 (2017-01-15)
-------------------
-
-Fix
-~~~
-
-- Tentative fix for release script. [Francesco Biscani]
-
-  [skip ci]
-
-v0.9 (2017-01-15)
------------------
+%%version%% (unreleased)
+------------------------
 
 New
 ~~~
@@ -47,6 +37,12 @@ Changes
 
 Fix
 ~~~
+
+- Trigger the release scripts. [Francesco Biscani]
+
+- Tentative fix for release script. [Francesco Biscani]
+
+  [skip ci]
 
 - Various documentation fixes for the latest doxygen version. [Francesco
   Biscani]
