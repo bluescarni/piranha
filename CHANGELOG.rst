@@ -1,6 +1,15 @@
 Changelog
 =========
 
+v0.10 (2017-01-15)
+------------------
+
+Changes
+~~~~~~~
+
+- No changes with respect to 0.9, whose released was botched. [Francesco
+  Biscani]
+
 v0.9 (2017-01-15)
 -----------------
 
