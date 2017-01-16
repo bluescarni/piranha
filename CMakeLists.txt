@@ -47,54 +47,59 @@ mark_as_advanced(PIRANHA_RUN_ON_VALGRIND)
 # Setup of the compilation flags.
 include(YACMACompilerLinkerSettings)
 
-# Additional platform-specific setup.
-include(PiranhaPlatformSettings)
-
 # Threading setup.
 include(YACMAThreadingSetup)
-set(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${YACMA_THREADING_CXX_FLAGS}")
-if(YACMA_HAS_PTHREAD_AFFINITY)
+if(YACMA_HAVE_PTHREAD_AFFINITY)
 	set(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
 endif()
-if(YACMA_HAS_THREAD_LOCAL)
+if(YACMA_HAVE_THREAD_LOCAL)
 	set(PIRANHA_THREAD_LOCAL "#define PIRANHA_HAVE_THREAD_LOCAL")
 endif()
 
-# Report the CXX flags.
-message(STATUS "Current CXX flags: ${CMAKE_CXX_FLAGS}")
-message(STATUS "Current CXX debug flags: ${CMAKE_CXX_FLAGS_DEBUG}")
+# Additional platform-specific setup.
+include(PiranhaPlatformSettings)
+
+# Assemble the flags.
+set(PIRANHA_CXX_FLAGS_DEBUG ${YACMA_CXX_FLAGS} ${YACMA_CXX_FLAGS_DEBUG} ${YACMA_THREADING_CXX_FLAGS})
+set(PIRANHA_CXX_FLAGS_RELEASE ${YACMA_CXX_FLAGS} ${YACMA_THREADING_CXX_FLAGS})
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND YACMA_COMPILER_IS_CLANGXX)
+  message(STATUS "Clang compiler on OSX detected, setting the standard library to 'libc++'.")
+  list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-stdlib=libc++")
+  list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-stdlib=libc++")
+endif()
+if(MINGW)
+	# Curb binary size in MinGW debug builds.
+	message(STATUS "Appending the '-g0 -Os' flags in MinGW debug builds.")
+	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-g0" "-Os")
+	# Flag needed to deal with big binaries in MinGW.
+	message(STATUS "Enabling the '-Wa,-mbig-obj' flag in MinGW builds.")
+	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-Wa,-mbig-obj")
+	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-Wa,-mbig-obj")
+endif()
 
 # NOTE: ideally we would want this inside the pyranha CMakeLists.txt, however
 # it seems like there's a strange interaction between the code for finding Boost.Python
 # and the CMake FindPythonLibs macro, and it does not work that way.
-if(BUILD_PYRANHA)
+if(PIRANHA_BUILD_PYRANHA)
 	include(YACMAPythonSetup)
 endif()
 
 # Boost libraries setup.
 # NOTE: apparently, according to the FindBoost.cmake of cmake 3.5, iostreams
 # depends on regex.
-SET(REQUIRED_BOOST_LIBS serialization iostreams regex)
-IF(BUILD_TESTS)
+set(_PIRANHA_REQUIRED_BOOST_LIBS serialization iostreams regex)
+if(PIRANHA_BUILD_TESTS)
 	# These libraries are needed only if building tests.
-	MESSAGE(STATUS "Linking unit tests to Boost.Filesystem and Boost System")
-	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} filesystem system)
-ENDIF()
-IF(BUILD_PYRANHA)
-	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} python)
-ENDIF()
-MESSAGE(STATUS "Required Boost libraries: ${REQUIRED_BOOST_LIBS}")
-FIND_PACKAGE(Boost 1.48.0 REQUIRED COMPONENTS "${REQUIRED_BOOST_LIBS}")
-MESSAGE(STATUS "Detected Boost version: ${Boost_VERSION}")
-# Include system Boost headers.
-MESSAGE(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
-MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
-# NOTE: mark as system headers to avoid excessive warnings in debug mode.
-INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
-# Set the mandatory Boost libraries.
-# NOTE: here we do not include the libraries pulled in by the tests, only those which are needed by Piranha's core.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_REGEX_LIBRARY})
+	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS filesystem system)
+endif()
+if(PIRANHA_BUILD_PYRANHA)
+	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS python)
+endif()
+message(STATUS "Required Boost libraries: ${_PIRANHA_REQUIRED_BOOST_LIBS}")
+find_package(Boost 1.55.0 REQUIRED COMPONENTS "${_PIRANHA_REQUIRED_BOOST_LIBS}")
+message(STATUS "Detected Boost version: ${Boost_VERSION}")
+message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
+message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 
 # GMP setup.
 FIND_PACKAGE(GMP REQUIRED)
