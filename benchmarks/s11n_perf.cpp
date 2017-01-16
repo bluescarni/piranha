@@ -44,6 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/monomial.hpp>
 #include <piranha/mp_integer.hpp>
 #include <piranha/polynomial.hpp>
+
 #include "pearce1.hpp"
 #include "simple_timer.hpp"
 

@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#define BOOST_TEST_MODULE monagan1_test
+#define BOOST_TEST_MODULE monagan3_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
@@ -35,11 +35,12 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/mp_integer.hpp>
 #include <piranha/settings.hpp>
+
 #include "monagan.hpp"
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(monagan1_test)
+BOOST_AUTO_TEST_CASE(monagan3_test)
 {
     init();
     settings::set_thread_binding(true);
@@ -47,5 +48,5 @@ BOOST_AUTO_TEST_CASE(monagan1_test)
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    BOOST_CHECK_EQUAL((monagan1<integer, kronecker_monomial<>>().size()), 12341u);
+    BOOST_CHECK_EQUAL((monagan3<integer, kronecker_monomial<>>().size()), 39711u);
 }

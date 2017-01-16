@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_MONAGAN_HPP
 
 #include <piranha/polynomial.hpp>
+
 #include "simple_timer.hpp"
 
 namespace piranha

@@ -26,26 +26,39 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#define BOOST_TEST_MODULE monagan5_test
-#include <boost/test/included/unit_test.hpp>
+#ifndef PIRANHA_PEARCE1_HPP
+#define PIRANHA_PEARCE1_HPP
 
-#include <boost/lexical_cast.hpp>
+#include <piranha/polynomial.hpp>
 
-#include <piranha/init.hpp>
-#include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/settings.hpp>
-#include "monagan.hpp"
+#include "simple_timer.hpp"
 
-using namespace piranha;
-
-BOOST_AUTO_TEST_CASE(monagan5_test)
+namespace piranha
 {
-    init();
-    settings::set_thread_binding(true);
-    if (boost::unit_test::framework::master_test_suite().argc > 1) {
-        settings::set_n_threads(
-            boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+
+template <typename Cf, typename Key>
+inline polynomial<Cf, Key> pearce1(unsigned long long factor = 1u)
+{
+    typedef polynomial<Cf, Key> p_type;
+    p_type x("x"), y("y"), z("z"), t("t"), u("u");
+
+    auto f = (x + y + z * z * 2 + t * t * t * 3 + u * u * u * u * u * 5 + 1);
+    auto tmp_f(f);
+    auto g = (u + t + z * z * 2 + y * y * y * 3 + x * x * x * x * x * 5 + 1);
+    auto tmp_g(g);
+    for (int i = 1; i < 12; ++i) {
+        f *= tmp_f;
+        g *= tmp_g;
     }
-    BOOST_CHECK_EQUAL((monagan5<integer, kronecker_monomial<>>().size()), 417311u);
+    if (factor > 1u) {
+        f *= factor;
+        g *= factor;
+    }
+    {
+        simple_timer t;
+        return f * g;
+    }
 }
+}
+
+#endif

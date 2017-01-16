@@ -26,26 +26,34 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#define BOOST_TEST_MODULE monagan2_test
-#include <boost/test/included/unit_test.hpp>
+#ifndef PIRANHA_FATEMAN1_HPP
+#define PIRANHA_FATEMAN1_HPP
 
-#include <boost/lexical_cast.hpp>
+#include <piranha/polynomial.hpp>
 
-#include <piranha/init.hpp>
-#include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/settings.hpp>
-#include "monagan.hpp"
+#include "simple_timer.hpp"
 
-using namespace piranha;
-
-BOOST_AUTO_TEST_CASE(monagan2_test)
+namespace piranha
 {
-    init();
-    settings::set_thread_binding(true);
-    if (boost::unit_test::framework::master_test_suite().argc > 1) {
-        settings::set_n_threads(
-            boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+
+template <typename Cf, typename Key>
+inline polynomial<Cf, Key> fateman1(unsigned long long factor = 1u)
+{
+    typedef polynomial<Cf, Key> p_type;
+    p_type x("x"), y("y"), z("z"), t("t");
+    auto f = x + y + z + t + 1;
+    auto tmp(f);
+    for (auto i = 1; i < 20; ++i) {
+        f *= tmp;
     }
-    BOOST_CHECK_EQUAL((monagan2<integer, kronecker_monomial<>>().size()), 12341u);
+    if (factor > 1u) {
+        f *= factor;
+    }
+    {
+        simple_timer t;
+        return f * (f + 1);
+    }
 }
+}
+
+#endif

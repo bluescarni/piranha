@@ -16,6 +16,9 @@ endif()
 # Build option: enable test set.
 option(PIRANHA_BUILD_TESTS "Build test set." OFF)
 
+# Build option: enable benchmarks.
+option(PIRANHA_BUILD_BENCHMARKS "Build benchmarks." OFF)
+
 # Build option: build the C++ tutorial.
 option(PIRANHA_BUILD_TUTORIAL "Build the C++ tutorial." OFF)
 
@@ -54,7 +57,7 @@ if(YACMA_HAVE_THREAD_LOCAL)
 	set(PIRANHA_THREAD_LOCAL "#define PIRANHA_HAVE_THREAD_LOCAL")
 endif()
 
-# Start to set up the list of mandatory targets to link to.
+# Start to set up the list of mandatory targets for piranha to link to.
 set(PIRANHA_MANDATORY_LINK_TARGETS Threads::Threads)
 
 # Additional platform-specific setup.
@@ -87,7 +90,7 @@ endif()
 
 # Boost libraries setup.
 set(_PIRANHA_REQUIRED_BOOST_LIBS serialization iostreams)
-if(PIRANHA_BUILD_TESTS)
+if(PIRANHA_BUILD_TESTS OR PIRANHA_BUILD_BENCHMARKS)
 	# These libraries are needed only if building tests.
 	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS filesystem system)
 endif()
@@ -110,10 +113,10 @@ find_package(MPFR REQUIRED)
 message(STATUS "MPFR library found.")
 message(STATUS "MPFR include dir is: ${MPFR_INCLUDE_DIR}")
 message(STATUS "MPFR library is: ${MPFR_LIBRARIES}")
+# NOTE: link last GMP, link order might matter depending on the situation.
 list(APPEND PIRANHA_MANDATORY_LINK_TARGETS MPFR::MPFR GMP::GMP)
 
 if(PIRANHA_WITH_MSGPACK)
-	include(CheckTypeSize)
 	find_package(MSGPACK-C REQUIRED)
 	message(STATUS "msgpack-c library found.")
 	message(STATUS "msgpack-c include dir is: ${MSGPACK-C_INCLUDE_DIR}")
@@ -121,10 +124,11 @@ if(PIRANHA_WITH_MSGPACK)
 	if(NOT PIRANHA_BOOST_MAPPED_FILE_CHECK)
 		message(STATUS "Testing whether Boost's memory mapped file is supported.")
 		try_compile(_PIRANHA_BOOST_MAPPED_FILE_CHECK "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/test_mmapped_file.cpp"
-			LINK_LIBRARIES Boost::iostreams Boost::boost)
+			LINK_LIBRARIES Boost::boost Boost::disable_autolinking Boost::iostreams)
 		if(NOT _PIRANHA_BOOST_MAPPED_FILE_CHECK)
-			message(FATAL_ERROR "msgpack support in Piranha requires an implementation of Boost's memory mapped file.")
+			message(FATAL_ERROR "msgpack support in Piranha requires an implementation of Boost's memory mapped file, which seems to be unsupported on this platform.")
 		endif()
+		# Put it into the cache, so we avoid running the check again in future CMake invocations.
 		set(PIRANHA_BOOST_MAPPED_FILE_CHECK YES CACHE INTERNAL "")
 	endif()
 	message(STATUS "Boost's memory mapped file is supported.")
@@ -179,9 +183,28 @@ if(PIRANHA_INSTALL_HEADERS)
 	install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include" DESTINATION include)
 endif()
 
+# Tests and benchmarks setup.
+# This is just a simple counter variable, internal use only.
+set(_PIRANHA_TEST_NUM "0")
+# Check splitting options. These need to be set from the command line.
+# - PIRANHA_TEST_NSPLIT: number of chunks into which the unit tests will be divided (must be > 1).
+# - PIRANHA_TEST_SPLIT_NUM: 0-based index of the chunk to run.
+if(PIRANHA_TEST_NSPLIT AND "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "")
+	message(FATAL_ERROR "Test splitting was requested, but the PIRANHA_TEST_SPLIT_NUM variable was not set.")
+elseif(NOT PIRANHA_TEST_NSPLIT AND NOT "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "")
+	message(FATAL_ERROR "The PIRANHA_TEST_SPLIT_NUM variable was set, but test splitting was not requested.")
+endif()
+if(PIRANHA_TEST_NSPLIT)
+	message(STATUS "Tests will be split into ${PIRANHA_TEST_NSPLIT} chunks. The chunk with index ${PIRANHA_TEST_SPLIT_NUM} will be processed.")
+endif()
+
 if(PIRANHA_BUILD_TESTS)
 	enable_testing()
 	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
+endif()
+
+if(PIRANHA_BUILD_BENCHMARKS)
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/benchmarks")
 endif()
 
 if(PIRANHA_BUILD_TUTORIAL)

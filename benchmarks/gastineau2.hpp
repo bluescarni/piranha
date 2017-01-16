@@ -26,44 +26,35 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#define BOOST_TEST_MODULE power_series_test
-#include <boost/test/included/unit_test.hpp>
+#ifndef PIRANHA_GASTINEAU2_HPP
+#define PIRANHA_GASTINEAU2_HPP
 
-#include <iostream>
+#include <piranha/polynomial.hpp>
 
-#include <piranha/init.hpp>
-#include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include "pearce1.hpp"
 #include "simple_timer.hpp"
 
-using namespace piranha;
-
-BOOST_AUTO_TEST_CASE(pearce1_test)
+namespace piranha
 {
-    init();
-    settings::set_thread_binding(true);
-    std::cout << "Timing multiplication:\n";
-    auto ret1 = pearce1<integer, kronecker_monomial<>>();
-    decltype(ret1) ret2;
-    {
-        std::cout << "Timing degree computation: ";
-        simple_timer t;
-        std::cout << ret1.degree() << '\n';
+
+template <typename Cf, typename Key>
+inline polynomial<Cf, Key> gastineau2()
+{
+    typedef polynomial<Cf, Key> p_type;
+    p_type x("x"), y("y"), z("z"), t("t"), u("u");
+
+    auto f = (x + y + z * z * 2 + t * t * t * 3 + u * u * u * u * u * 5 + 1);
+    auto tmp_f(f);
+    auto g = (u + t + z * z * 2 + y * y * y * 3 + x * x * x * x * x * 5 + 1);
+    auto tmp_g(g);
+    for (int i = 1; i < 25; ++i) {
+        f *= tmp_f;
+        g *= tmp_g;
     }
     {
-        std::cout << "Timing degree truncation:\n";
         simple_timer t;
-        ret2 = ret1.truncate_degree(30);
-    }
-    {
-        std::cout << "Timing new degree computation: ";
-        simple_timer t;
-        std::cout << ret2.degree() << '\n';
-    }
-    {
-        std::cout << "Timing partial degree truncation:\n";
-        simple_timer t;
-        ret2 = ret1.truncate_degree(30, {"u", "z"});
+        return f * g;
     }
 }
+}
+
+#endif

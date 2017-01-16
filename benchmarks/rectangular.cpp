@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/init.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/settings.hpp>
+
 #include "simple_timer.hpp"
 
 using namespace piranha;

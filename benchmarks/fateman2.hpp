@@ -26,36 +26,29 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_PEARCE1_HPP
-#define PIRANHA_PEARCE1_HPP
+#ifndef PIRANHA_FATEMAN2_HPP
+#define PIRANHA_FATEMAN2_HPP
 
 #include <piranha/polynomial.hpp>
+
 #include "simple_timer.hpp"
 
 namespace piranha
 {
 
 template <typename Cf, typename Key>
-inline polynomial<Cf, Key> pearce1(unsigned long long factor = 1u)
+inline polynomial<Cf, Key> fateman2()
 {
     typedef polynomial<Cf, Key> p_type;
-    p_type x("x"), y("y"), z("z"), t("t"), u("u");
-
-    auto f = (x + y + z * z * 2 + t * t * t * 3 + u * u * u * u * u * 5 + 1);
-    auto tmp_f(f);
-    auto g = (u + t + z * z * 2 + y * y * y * 3 + x * x * x * x * x * 5 + 1);
-    auto tmp_g(g);
-    for (int i = 1; i < 12; ++i) {
-        f *= tmp_f;
-        g *= tmp_g;
-    }
-    if (factor > 1u) {
-        f *= factor;
-        g *= factor;
+    p_type x("x"), y("y"), z("z"), t("t");
+    auto f = x + y + z + t + 1;
+    auto tmp(f);
+    for (auto i = 1; i < 30; ++i) {
+        f *= tmp;
     }
     {
         simple_timer t;
-        return f * g;
+        return f * (f + 1);
     }
 }
 }

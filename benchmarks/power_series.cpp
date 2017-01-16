@@ -26,30 +26,45 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_GASTINEAU1_HPP
-#define PIRANHA_GASTINEAU1_HPP
+#define BOOST_TEST_MODULE power_series_test
+#include <boost/test/included/unit_test.hpp>
 
-#include <piranha/polynomial.hpp>
+#include <iostream>
+
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/mp_integer.hpp>
+
+#include "pearce1.hpp"
 #include "simple_timer.hpp"
 
-namespace piranha
-{
+using namespace piranha;
 
-template <typename Cf, typename Key>
-inline polynomial<Cf, Key> gastineau1()
+BOOST_AUTO_TEST_CASE(pearce1_test)
 {
-    typedef polynomial<Cf, Key> p_type;
-    p_type x("x"), y("y"), z("z"), t("t");
-    auto f = x + y + z + t + 1;
-    auto tmp(f);
-    for (auto i = 1; i < 40; ++i) {
-        f *= tmp;
+    init();
+    settings::set_thread_binding(true);
+    std::cout << "Timing multiplication:\n";
+    auto ret1 = pearce1<integer, kronecker_monomial<>>();
+    decltype(ret1) ret2;
+    {
+        std::cout << "Timing degree computation: ";
+        simple_timer t;
+        std::cout << ret1.degree() << '\n';
     }
     {
+        std::cout << "Timing degree truncation:\n";
         simple_timer t;
-        return f * (f + 1);
+        ret2 = ret1.truncate_degree(30);
+    }
+    {
+        std::cout << "Timing new degree computation: ";
+        simple_timer t;
+        std::cout << ret2.degree() << '\n';
+    }
+    {
+        std::cout << "Timing partial degree truncation:\n";
+        simple_timer t;
+        ret2 = ret1.truncate_degree(30, {"u", "z"});
     }
 }
-}
-
-#endif

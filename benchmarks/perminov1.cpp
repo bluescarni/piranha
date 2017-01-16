@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/settings.hpp>
+
 #include "simple_timer.hpp"
 
 using namespace piranha;

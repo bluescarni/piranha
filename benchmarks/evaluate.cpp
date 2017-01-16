@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/mp_integer.hpp>
 #include <piranha/mp_rational.hpp>
+
 #include "pearce1.hpp"
 #include "simple_timer.hpp"
 

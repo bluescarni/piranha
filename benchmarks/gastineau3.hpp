@@ -26,26 +26,35 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#define BOOST_TEST_MODULE monagan3_test
-#include <boost/test/included/unit_test.hpp>
+#ifndef PIRANHA_GASTINEAU3_HPP
+#define PIRANHA_GASTINEAU3_HPP
 
-#include <boost/lexical_cast.hpp>
+#include <piranha/polynomial.hpp>
 
-#include <piranha/init.hpp>
-#include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/settings.hpp>
-#include "monagan.hpp"
+#include "simple_timer.hpp"
 
-using namespace piranha;
-
-BOOST_AUTO_TEST_CASE(monagan3_test)
+namespace piranha
 {
-    init();
-    settings::set_thread_binding(true);
-    if (boost::unit_test::framework::master_test_suite().argc > 1) {
-        settings::set_n_threads(
-            boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+
+template <typename Cf, typename Key>
+inline polynomial<Cf, Key> gastineau3()
+{
+    typedef polynomial<Cf, Key> p_type;
+    p_type u("u"), v("v"), w("w"), x("x"), y("y");
+
+    auto f = (1 + u * u + v + w * w + x - y * y);
+    auto g = (1 + u + v * v + w + x * x + y * y * y);
+    auto tmp_f(f), tmp_g(g);
+    for (int i = 1; i < 28; ++i) {
+        f *= tmp_f;
+        g *= tmp_g;
     }
-    BOOST_CHECK_EQUAL((monagan3<integer, kronecker_monomial<>>().size()), 39711u);
+    g += 1;
+    {
+        simple_timer t;
+        return f * g;
+    }
 }
+}
+
+#endif
