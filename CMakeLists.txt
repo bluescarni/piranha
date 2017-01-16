@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.2.0)
 
 project(piranha VERSION 0.10)
 
@@ -15,46 +15,37 @@ if(NOT CMAKE_BUILD_TYPE)
 	FORCE)
 endif()
 
-# Build Option: when active the file main.cpp is built.
-option(BUILD_MAIN "Build 'main.cpp'." OFF)
-
 # Build option: enable test set.
-option(BUILD_TESTS "Build test set." OFF)
+option(PIRANHA_BUILD_TESTS "Build test set." OFF)
 
 # Build option: build the C++ tutorial.
-option(BUILD_TUTORIAL "Build the C++ tutorial." OFF)
+option(PIRANHA_BUILD_TUTORIAL "Build the C++ tutorial." OFF)
 
 # Build option: build the Python bindings.
-option(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
+option(PIRANHA_BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 
-# Use TCMalloc as allocator.
-option(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
-
-# Enable msgpack serialization format.
+# Build option: enable the msgpack serialization format.
 option(PIRANHA_WITH_MSGPACK "Enable support for the msgpack serialization format." OFF)
 
-# Enable zlib/gzip compression.
+# Build option: enable zlib/gzip compression.
 option(PIRANHA_WITH_ZLIB "Enable support for zlib/gzip compression." OFF)
 
-# Enable bzip2 compression.
+# Build option: enable bzip2 compression.
 option(PIRANHA_WITH_BZIP2 "Enable support for bzip2 compression." OFF)
 
-# Enable the installation of the headers.
+# Build option: enable the installation of the headers.
 option(PIRANHA_INSTALL_HEADERS "Enable the installation of the headers." ON)
 mark_as_advanced(PIRANHA_INSTALL_HEADERS)
 
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
 # in the future it might become a more general-purpose flag.
-option(RUN_ON_VALGRIND "Configure Piranha to be run on Valgrind." OFF)
+option(PIRANHA_RUN_ON_VALGRIND "Configure Piranha to be run on Valgrind." OFF)
 # Make it an advanced option, not really interesting for non-developers.
-mark_as_advanced(RUN_ON_VALGRIND)
+mark_as_advanced(PIRANHA_RUN_ON_VALGRIND)
 
-# Initialise (empty) list of libraries to link against.
-SET(MANDATORY_LIBRARIES "")
-
-# Initial setup of the compilation flags.
-include(PiranhaCompilerLinkerSettings)
+# Setup of the compilation flags.
+include(YACMACompilerLinkerSettings)
 
 # Additional platform-specific setup.
 include(PiranhaPlatformSettings)
