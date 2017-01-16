@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_FATEMAN2_HPP
 #define PIRANHA_FATEMAN2_HPP
 
-#include "../src/polynomial.hpp"
+#include <piranha/polynomial.hpp>
 #include "simple_timer.hpp"
 
 namespace piranha

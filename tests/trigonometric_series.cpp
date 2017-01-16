@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/trigonometric_series.hpp"
+#include <piranha/trigonometric_series.hpp>
 
 #define BOOST_TEST_MODULE trigonometric_series_test
 #include <boost/test/included/unit_test.hpp>
@@ -39,15 +39,15 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/forwarding.hpp"
-#include "../src/init.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/s11n.hpp"
-#include "../src/series.hpp"
+#include <piranha/forwarding.hpp>
+#include <piranha/init.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/series.hpp>
 
 using namespace piranha;
 

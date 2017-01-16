@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/poisson_series.hpp"
+#include <piranha/poisson_series.hpp>
 
 #define BOOST_TEST_MODULE poisson_series_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -38,21 +38,21 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/detail/polynomial_fwd.hpp"
-#include "../src/divisor.hpp"
-#include "../src/divisor_series.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/invert.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/series.hpp"
+#include <piranha/detail/polynomial_fwd.hpp>
+#include <piranha/divisor.hpp>
+#include <piranha/divisor_series.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/series.hpp>
 
 using namespace piranha;
 

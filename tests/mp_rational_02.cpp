@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/mp_rational.hpp"
+#include <piranha/mp_rational.hpp>
 
 #define BOOST_TEST_MODULE mp_rational_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -41,10 +41,10 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <type_traits>
 
-#include "../src/config.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/s11n.hpp"
+#include <piranha/config.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/s11n.hpp>
 
 using namespace piranha;
 

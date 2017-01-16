@@ -1,4 +1,4 @@
-include_directories("${CMAKE_SOURCE_DIR}/src")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 MACRO(ADD_PIRANHA_TUTORIAL arg1)
 	ADD_EXECUTABLE(${arg1} ${arg1}.cpp)

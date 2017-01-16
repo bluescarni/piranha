@@ -26,20 +26,20 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/series.hpp"
+#include <piranha/series.hpp>
 
 #define BOOST_TEST_MODULE series_07_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <limits>
 
-#include "../src/init.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/init.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

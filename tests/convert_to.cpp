@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/convert_to.hpp"
+#include <piranha/convert_to.hpp>
 
 #define BOOST_TEST_MODULE convert_to_test
 #include <boost/test/included/unit_test.hpp>
@@ -35,11 +35,11 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
-#include "../src/config.hpp"
-#include "../src/init.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/real.hpp"
+#include <piranha/config.hpp>
+#include <piranha/init.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/real.hpp>
 
 static void test_func()
 {

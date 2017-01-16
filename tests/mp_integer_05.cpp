@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/mp_integer.hpp"
+#include <piranha/mp_integer.hpp>
 
 #define BOOST_TEST_MODULE mp_integer_05_test
 #include <boost/test/included/unit_test.hpp>
@@ -36,10 +36,10 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include "../src/config.hpp"
-#include "../src/init.hpp"
-#include "../src/safe_cast.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/config.hpp>
+#include <piranha/init.hpp>
+#include <piranha/safe_cast.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

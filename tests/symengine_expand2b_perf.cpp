@@ -26,18 +26,18 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/polynomial.hpp"
+#include <piranha/polynomial.hpp>
 
 #define BOOST_TEST_MODULE symengine_expand2b_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
 
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/settings.hpp"
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/settings.hpp>
 #include "simple_timer.hpp"
 
 using namespace piranha;

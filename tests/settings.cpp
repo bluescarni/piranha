@@ -26,15 +26,15 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/settings.hpp"
+#include <piranha/settings.hpp>
 
 #define BOOST_TEST_MODULE settings_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <stdexcept>
 
-#include "../src/init.hpp"
-#include "../src/runtime_info.hpp"
+#include <piranha/init.hpp>
+#include <piranha/runtime_info.hpp>
 
 using namespace piranha;
 

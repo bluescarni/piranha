@@ -33,11 +33,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/lexical_cast.hpp>
 
-#include "../src/init.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/settings.hpp"
+#include <piranha/init.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/settings.hpp>
 
 using namespace piranha;
 

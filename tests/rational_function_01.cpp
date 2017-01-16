@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/rational_function.hpp"
+#include <piranha/rational_function.hpp>
 
 #define BOOST_TEST_MODULE rational_function_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -40,20 +40,20 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/pow.hpp"
-#include "../src/print_tex_coefficient.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/print_tex_coefficient.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

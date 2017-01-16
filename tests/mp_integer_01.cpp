@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/mp_integer.hpp"
+#include <piranha/mp_integer.hpp>
 
 #define BOOST_TEST_MODULE mp_integer_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -50,14 +50,14 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/config.hpp"
-#include "../src/convert_to.hpp"
-#include "../src/debug_access.hpp"
-#include "../src/detail/gmp.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/math.hpp"
-#include "../src/safe_cast.hpp"
+#include <piranha/config.hpp>
+#include <piranha/convert_to.hpp>
+#include <piranha/debug_access.hpp>
+#include <piranha/detail/gmp.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/math.hpp>
+#include <piranha/safe_cast.hpp>
 
 using integral_types = boost::mpl::vector<char, signed char, short, int, long, long long, unsigned char, unsigned short,
                                           unsigned, unsigned long, unsigned long long

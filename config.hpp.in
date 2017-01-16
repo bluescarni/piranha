@@ -1,0 +1,80 @@
+/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+
+This file is part of the Piranha library.
+
+The Piranha library is free software; you can redistribute it and/or modify
+it under the terms of either:
+
+  * the GNU Lesser General Public License as published by the Free
+    Software Foundation; either version 3 of the License, or (at your
+    option) any later version.
+
+or
+
+  * the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any
+    later version.
+
+or both in parallel, as here.
+
+The Piranha library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received copies of the GNU General Public License and the
+GNU Lesser General Public License along with the Piranha library.  If not,
+see https://www.gnu.org/licenses/. */
+
+#ifndef PIRANHA_CONFIG_HPP
+#define PIRANHA_CONFIG_HPP
+
+// Start of defines instantiated by CMake.
+// clang-format off
+@PIRANHA_PTHREAD_AFFINITY@
+@PIRANHA_POSIX_MEMALIGN@
+#define PIRANHA_VERSION @piranha_VERSION@
+#define PIRANHA_GIT_REVISION @PIRANHA_GIT_REVISION@
+@PIRANHA_SYSTEM_LOGICAL_PROCESSOR_INFORMATION@
+@PIRANHA_THREAD_LOCAL@
+@PIRANHA_ENABLE_MSGPACK@
+@PIRANHA_ENABLE_ZLIB@
+@PIRANHA_ENABLE_BZIP2@
+// clang-format on
+// End of defines instantiated by CMake.
+
+// NOTE: testing indicates that the thread_local keyword on MinGW is not currently
+// reliable (i.e., parallel initialization of function-level thread-local statics
+// sometimes leads to heap corruption). Disable it for now.
+#if defined(__MINGW32__) && defined(PIRANHA_HAVE_THREAD_LOCAL)
+#undef PIRANHA_HAVE_THREAD_LOCAL
+#endif
+
+// A handy macro to qualify a variable as static thread-local,
+// but only if the keyword is available (otherwise the variable will not
+// be TLS).
+#if defined(PIRANHA_HAVE_THREAD_LOCAL)
+#define PIRANHA_MAYBE_TLS static thread_local
+#else
+#define PIRANHA_MAYBE_TLS
+#endif
+
+#include <cassert>
+
+#define piranha_assert assert
+
+// NOTE: clang has to go first, as it might define __GNUC__ internally.
+// Same thing could happen with ICC.
+#if defined(__clang__)
+#include <piranha/detail/config_clang.hpp>
+#elif defined(__INTEL_COMPILER)
+#include <piranha/detail/config_intel.hpp>
+#elif defined(__GNUC__)
+#include <piranha/detail/config_gcc.hpp>
+#else
+// NOTE: additional compiler configurations go here or in separate file as above.
+#define likely(x) (x)
+#define unlikely(x) (x)
+#endif
+
+#endif

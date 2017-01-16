@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/series.hpp"
+#include <piranha/series.hpp>
 
 #define BOOST_TEST_MODULE series_04_test
 #include <boost/test/included/unit_test.hpp>
@@ -42,20 +42,20 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
-#include "../src/base_series_multiplier.hpp"
-#include "../src/forwarding.hpp"
-#include "../src/init.hpp"
-#include "../src/key_is_multipliable.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/print_coefficient.hpp"
-#include "../src/print_tex_coefficient.hpp"
-#include "../src/series_multiplier.hpp"
-#include "../src/settings.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/base_series_multiplier.hpp>
+#include <piranha/forwarding.hpp>
+#include <piranha/init.hpp>
+#include <piranha/key_is_multipliable.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/print_coefficient.hpp>
+#include <piranha/print_tex_coefficient.hpp>
+#include <piranha/series_multiplier.hpp>
+#include <piranha/settings.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

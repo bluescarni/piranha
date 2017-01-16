@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/memory.hpp"
+#include <piranha/memory.hpp>
 
 #define BOOST_TEST_MODULE memory_test
 #include <boost/test/included/unit_test.hpp>
@@ -39,10 +39,10 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <utility>
 
-#include "../src/detail/demangle.hpp"
-#include "../src/init.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/settings.hpp"
+#include <piranha/detail/demangle.hpp>
+#include <piranha/init.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/settings.hpp>
 #include "simple_timer.hpp"
 
 using namespace piranha;

@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/hash_set.hpp"
+#include <piranha/hash_set.hpp>
 
 #define BOOST_TEST_MODULE hash_set_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -40,12 +40,12 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <tuple>
 
-#include "../src/config.hpp"
-#include "../src/init.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/s11n.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/config.hpp>
+#include <piranha/init.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/type_traits.hpp>
 
 static const int ntries = 1000;
 

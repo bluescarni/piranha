@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/dynamic_aligning_allocator.hpp"
+#include <piranha/dynamic_aligning_allocator.hpp>
 
 #define BOOST_TEST_MODULE dynamic_aligning_allocator_test
 #include <boost/test/included/unit_test.hpp>
@@ -44,8 +44,8 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <vector>
 
-#include "../src/init.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/init.hpp>
+#include <piranha/type_traits.hpp>
 
 typedef boost::mpl::vector<double, std::string> types;
 

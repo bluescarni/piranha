@@ -29,10 +29,10 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE evaluate_test
 #include <boost/test/included/unit_test.hpp>
 
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
 #include "pearce1.hpp"
 #include "simple_timer.hpp"
 

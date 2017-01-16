@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/polynomial.hpp"
+#include <piranha/polynomial.hpp>
 
 #define BOOST_TEST_MODULE polynomial_04_test
 #include <boost/test/included/unit_test.hpp>
@@ -38,16 +38,16 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <utility>
 
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

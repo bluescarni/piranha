@@ -31,9 +31,9 @@ see https://www.gnu.org/licenses/. */
 
 #include <iostream>
 
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/mp_integer.hpp"
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/mp_integer.hpp>
 #include "pearce1.hpp"
 #include "simple_timer.hpp"
 

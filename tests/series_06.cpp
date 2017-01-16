@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/series.hpp"
+#include <piranha/series.hpp>
 
 #define BOOST_TEST_MODULE series_06_test
 #include <boost/test/included/unit_test.hpp>
@@ -42,17 +42,17 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 
-#include "../src/config.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/is_cf.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/s11n.hpp"
-#include "../src/symbol_set.hpp"
+#include <piranha/config.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/is_cf.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/symbol_set.hpp>
 
 using namespace piranha;
 

@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/kronecker_monomial.hpp"
+#include <piranha/kronecker_monomial.hpp>
 
 #define BOOST_TEST_MODULE kronecker_monomial_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -46,12 +46,12 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <vector>
 
-#include "../src/config.hpp"
-#include "../src/init.hpp"
-#include "../src/s11n.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/config.hpp>
+#include <piranha/init.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

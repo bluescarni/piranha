@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/key_is_multipliable.hpp"
+#include <piranha/key_is_multipliable.hpp>
 
 #define BOOST_TEST_MODULE key_is_multipliable_test
 #include <boost/test/included/unit_test.hpp>
@@ -36,9 +36,9 @@ see https://www.gnu.org/licenses/. */
 #include <functional>
 #include <iostream>
 
-#include "../src/init.hpp"
-#include "../src/is_key.hpp"
-#include "../src/symbol_set.hpp"
+#include <piranha/init.hpp>
+#include <piranha/is_key.hpp>
+#include <piranha/symbol_set.hpp>
 
 using namespace piranha;
 

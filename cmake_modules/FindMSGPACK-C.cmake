@@ -38,3 +38,9 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(MSGPACK-C DEFAULT_MSG MSGPACK-C_INCLUDE_DIR)
 
 mark_as_advanced(MSGPACK-C_INCLUDE_DIR)
+
+# NOTE: this has been adapted from CMake's FindPNG.cmake.
+if(MSGPACK-C_FOUND AND NOT TARGET MSGPACK-C::MSGPACK-C)
+	add_library(MSGPACK-C::MSGPACK-C INTERFACE IMPORTED)
+  set_target_properties(MSGPACK-C::MSGPACK-C PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${MSGPACK-C_INCLUDE_DIR}")
+endif()

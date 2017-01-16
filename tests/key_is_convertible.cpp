@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/key_is_convertible.hpp"
+#include <piranha/key_is_convertible.hpp>
 
 #define BOOST_TEST_MODULE key_is_convertible_test
 #include <boost/test/included/unit_test.hpp>
@@ -35,8 +35,8 @@ see https://www.gnu.org/licenses/. */
 #include <functional>
 #include <iostream>
 
-#include "../src/init.hpp"
-#include "../src/symbol_set.hpp"
+#include <piranha/init.hpp>
+#include <piranha/symbol_set.hpp>
 
 using namespace piranha;
 

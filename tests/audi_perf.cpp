@@ -31,11 +31,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/lexical_cast.hpp>
 
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/settings.hpp"
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/settings.hpp>
 #include "simple_timer.hpp"
 
 using namespace piranha;

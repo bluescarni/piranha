@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/tuning.hpp"
+#include <piranha/tuning.hpp>
 
 #define BOOST_TEST_MODULE tuning_test
 #include <boost/test/included/unit_test.hpp>
@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <thread>
 
-#include "../src/init.hpp"
+#include <piranha/init.hpp>
 
 using namespace piranha;
 

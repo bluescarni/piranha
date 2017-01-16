@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/real.hpp"
+#include <piranha/real.hpp>
 
 #define BOOST_TEST_MODULE real_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -45,11 +45,11 @@ see https://www.gnu.org/licenses/. */
 #include <typeinfo>
 #include <vector>
 
-#include "../src/config.hpp"
-#include "../src/detail/mpfr.hpp"
-#include "../src/init.hpp"
-#include "../src/s11n.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/config.hpp>
+#include <piranha/detail/mpfr.hpp>
+#include <piranha/init.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/type_traits.hpp>
 
 static const int ntries = 1000;
 

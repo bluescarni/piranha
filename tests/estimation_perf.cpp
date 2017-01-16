@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/base_series_multiplier.hpp"
+#include <piranha/base_series_multiplier.hpp>
 
 #define BOOST_TEST_MODULE estimation_test
 #include <boost/test/included/unit_test.hpp>
@@ -39,12 +39,12 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/power_series.hpp"
-#include "../src/settings.hpp"
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/power_series.hpp>
+#include <piranha/settings.hpp>
 
 using namespace piranha;
 using p_type = polynomial<double, k_monomial>;

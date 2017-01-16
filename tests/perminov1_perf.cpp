@@ -37,17 +37,17 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/divisor.hpp"
-#include "../src/divisor_series.hpp"
-#include "../src/init.hpp"
-#include "../src/kronecker_array.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/s11n.hpp"
-#include "../src/series.hpp"
-#include "../src/settings.hpp"
+#include <piranha/divisor.hpp>
+#include <piranha/divisor_series.hpp>
+#include <piranha/init.hpp>
+#include <piranha/kronecker_array.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/series.hpp>
+#include <piranha/settings.hpp>
 #include "simple_timer.hpp"
 
 using namespace piranha;

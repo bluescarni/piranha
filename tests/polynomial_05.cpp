@@ -26,19 +26,19 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/polynomial.hpp"
+#include <piranha/polynomial.hpp>
 
 #define BOOST_TEST_MODULE polynomial_05_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <sstream>
 
-#include "../src/config.hpp"
-#include "../src/init.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/pow.hpp"
-#include "../src/s11n.hpp"
+#include <piranha/config.hpp>
+#include <piranha/init.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/s11n.hpp>
 
 using namespace piranha;
 

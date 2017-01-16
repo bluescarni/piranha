@@ -26,19 +26,19 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/thread_management.hpp"
+#include <piranha/thread_management.hpp>
 
 #define BOOST_TEST_MODULE thread_management_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <mutex>
 
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/runtime_info.hpp"
-#include "../src/settings.hpp"
-#include "../src/thread_barrier.hpp"
-#include "../src/thread_pool.hpp"
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/runtime_info.hpp>
+#include <piranha/settings.hpp>
+#include <piranha/thread_barrier.hpp>
+#include <piranha/thread_pool.hpp>
 
 std::mutex mutex;
 

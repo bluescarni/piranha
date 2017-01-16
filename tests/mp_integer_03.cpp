@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/mp_integer.hpp"
+#include <piranha/mp_integer.hpp>
 
 #define BOOST_TEST_MODULE mp_integer_03_test
 #include <boost/test/included/unit_test.hpp>
@@ -49,14 +49,14 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_map>
 #include <vector>
 
-#include "../src/binomial.hpp"
-#include "../src/config.hpp"
-#include "../src/detail/gmp.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/math.hpp"
-#include "../src/s11n.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/binomial.hpp>
+#include <piranha/config.hpp>
+#include <piranha/detail/gmp.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/math.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

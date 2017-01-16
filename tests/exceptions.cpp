@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/exceptions.hpp"
+#include <piranha/exceptions.hpp>
 
 #define BOOST_TEST_MODULE exceptions_test
 #include <boost/test/included/unit_test.hpp>
@@ -36,7 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/init.hpp"
+#include <piranha/init.hpp>
 
 using namespace piranha;
 

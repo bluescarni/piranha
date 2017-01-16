@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 3.2.0)
 
 project(piranha VERSION 0.10)
 
-enable_testing()
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules" "${CMAKE_SOURCE_DIR}/cmake_modules/yacma")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/yacma")
 
 message(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 
@@ -56,6 +54,9 @@ if(YACMA_HAVE_THREAD_LOCAL)
 	set(PIRANHA_THREAD_LOCAL "#define PIRANHA_HAVE_THREAD_LOCAL")
 endif()
 
+# Start to set up the list of mandatory targets to link to.
+set(PIRANHA_MANDATORY_LINK_TARGETS Threads::Threads)
+
 # Additional platform-specific setup.
 include(PiranhaPlatformSettings)
 
@@ -63,9 +64,9 @@ include(PiranhaPlatformSettings)
 set(PIRANHA_CXX_FLAGS_DEBUG ${YACMA_CXX_FLAGS} ${YACMA_CXX_FLAGS_DEBUG} ${YACMA_THREADING_CXX_FLAGS})
 set(PIRANHA_CXX_FLAGS_RELEASE ${YACMA_CXX_FLAGS} ${YACMA_THREADING_CXX_FLAGS})
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND YACMA_COMPILER_IS_CLANGXX)
-  message(STATUS "Clang compiler on OSX detected, setting the standard library to 'libc++'.")
-  list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-stdlib=libc++")
-  list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-stdlib=libc++")
+	message(STATUS "Clang compiler on OSX detected, setting the standard library to 'libc++'.")
+	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-stdlib=libc++")
+	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-stdlib=libc++")
 endif()
 if(MINGW)
 	# Curb binary size in MinGW debug builds.
@@ -85,9 +86,7 @@ if(PIRANHA_BUILD_PYRANHA)
 endif()
 
 # Boost libraries setup.
-# NOTE: apparently, according to the FindBoost.cmake of cmake 3.5, iostreams
-# depends on regex.
-set(_PIRANHA_REQUIRED_BOOST_LIBS serialization iostreams regex)
+set(_PIRANHA_REQUIRED_BOOST_LIBS serialization iostreams)
 if(PIRANHA_BUILD_TESTS)
 	# These libraries are needed only if building tests.
 	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS filesystem system)
@@ -100,66 +99,37 @@ find_package(Boost 1.55.0 REQUIRED COMPONENTS "${_PIRANHA_REQUIRED_BOOST_LIBS}")
 message(STATUS "Detected Boost version: ${Boost_VERSION}")
 message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
+list(APPEND PIRANHA_MANDATORY_LINK_TARGETS Boost::boost Boost::disable_autolinking Boost::serialization Boost::iostreams)
 
-# GMP setup.
-FIND_PACKAGE(GMP REQUIRED)
-MESSAGE(STATUS "GMP library found.")
-MESSAGE(STATUS "GMP include dir is: ${GMP_INCLUDE_DIR}")
-MESSAGE(STATUS "GMP library is: ${GMP_LIBRARIES}")
-MESSAGE(STATUS "Checking GMP version.")
-TRY_COMPILE(GMP_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/gmp_check_version.cpp"
-	CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${GMP_INCLUDE_DIR}")
-IF(NOT GMP_VERSION_CHECK)
-	MESSAGE(FATAL_ERROR "Unsupported GMP version, please upgrade.")
-ENDIF()
-MESSAGE(STATUS "GMP version is ok.")
-# Same as Boost, mark as a system header.
-INCLUDE_DIRECTORIES(SYSTEM ${GMP_INCLUDE_DIR})
-
-# MPFR setup.
-FIND_PACKAGE(MPFR REQUIRED)
-MESSAGE(STATUS "MPFR library found.")
-MESSAGE(STATUS "MPFR include dir is: ${MPFR_INCLUDE_DIR}")
-MESSAGE(STATUS "MPFR library is: ${MPFR_LIBRARIES}")
-MESSAGE(STATUS "Checking MPFR version.")
-TRY_COMPILE(MPFR_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/mpfr_check_version.cpp"
-	CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${MPFR_INCLUDE_DIR};${GMP_INCLUDE_DIR}")
-IF(NOT MPFR_VERSION_CHECK)
-	MESSAGE(FATAL_ERROR "Unsupported MPFR version, please upgrade.")
-ENDIF()
-MESSAGE(STATUS "MPFR version is ok.")
-INCLUDE_DIRECTORIES(SYSTEM ${MPFR_INCLUDE_DIR})
-
-# NOTE: MPFR should be linked in before GMP, that's why we link GMP here.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES})
+# GMP/MPFR setup.
+find_package(GMP REQUIRED)
+message(STATUS "GMP library found.")
+message(STATUS "GMP include dir is: ${GMP_INCLUDE_DIR}")
+message(STATUS "GMP library is: ${GMP_LIBRARIES}")
+find_package(MPFR REQUIRED)
+message(STATUS "MPFR library found.")
+message(STATUS "MPFR include dir is: ${MPFR_INCLUDE_DIR}")
+message(STATUS "MPFR library is: ${MPFR_LIBRARIES}")
+list(APPEND PIRANHA_MANDATORY_LINK_TARGETS MPFR::MPFR GMP::GMP)
 
 if(PIRANHA_WITH_MSGPACK)
+	include(CheckTypeSize)
 	find_package(MSGPACK-C REQUIRED)
 	message(STATUS "msgpack-c library found.")
 	message(STATUS "msgpack-c include dir is: ${MSGPACK-C_INCLUDE_DIR}")
-	try_compile(MSGPACK-C_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/msgpack_check_version.cpp"
-		CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${MSGPACK-C_INCLUDE_DIR}")
-	if(NOT MSGPACK-C_VERSION_CHECK)
-		message(FATAL_ERROR "Unsupported msgpack-c version, please upgrade.")
-	endif()
-	message(STATUS "msgpack-c version is ok.")
 	# msgpack load file requires memory mapping for uncompressed format.
-	try_compile(BOOST_MAPPED_FILE_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/test_mmapped_file.cpp"
-		CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${Boost_INCLUDE_DIRS}" LINK_LIBRARIES "${Boost_IOSTREAMS_LIBRARY}")
-	if(NOT BOOST_MAPPED_FILE_CHECK)
-		message(FATAL_ERROR "msgpack support in Piranha requires an implementation of Boost's memory mapped file.")
+	if(NOT PIRANHA_BOOST_MAPPED_FILE_CHECK)
+		message(STATUS "Testing whether Boost's memory mapped file is supported.")
+		try_compile(_PIRANHA_BOOST_MAPPED_FILE_CHECK "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/test_mmapped_file.cpp"
+			LINK_LIBRARIES Boost::iostreams Boost::boost)
+		if(NOT _PIRANHA_BOOST_MAPPED_FILE_CHECK)
+			message(FATAL_ERROR "msgpack support in Piranha requires an implementation of Boost's memory mapped file.")
+		endif()
+		set(PIRANHA_BOOST_MAPPED_FILE_CHECK YES CACHE INTERNAL "")
 	endif()
 	message(STATUS "Boost's memory mapped file is supported.")
-	# We make explicit use of std::uint32_t.
-	set(CMAKE_EXTRA_INCLUDE_FILES "cstdint")
-	check_type_size(std::uint32_t PIRANHA_HAVE_UINT32_T LANGUAGE CXX)
-	if(NOT PIRANHA_HAVE_UINT32_T)
-		message(FATAL_ERROR "msgpack support in Piranha requires the availability of the std::uint32_t type.")
-	endif()
-	unset(CMAKE_EXTRA_INCLUDE_FILES)
-	unset(PIRANHA_HAVE_UINT32_T)
-	include_directories(SYSTEM ${MSGPACK-C_INCLUDE_DIR})
 	set(PIRANHA_ENABLE_MSGPACK "#define PIRANHA_WITH_MSGPACK")
+	list(APPEND PIRANHA_MANDATORY_LINK_TARGETS MSGPACK-C::MSGPACK-C)
 endif()
 
 if(PIRANHA_WITH_ZLIB)
@@ -167,9 +137,8 @@ if(PIRANHA_WITH_ZLIB)
 	message(STATUS "zlib library found.")
 	message(STATUS "zlib include dir is: ${ZLIB_INCLUDE_DIR}")
 	message(STATUS "zlib library is: ${ZLIB_LIBRARIES}")
-	include_directories(SYSTEM ${ZLIB_INCLUDE_DIR})
-	set(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${ZLIB_LIBRARIES})
 	set(PIRANHA_ENABLE_ZLIB "#define PIRANHA_WITH_ZLIB")
+	list(APPEND PIRANHA_MANDATORY_LINK_TARGETS ZLIB::ZLIB)
 endif()
 
 if(PIRANHA_WITH_BZIP2)
@@ -177,19 +146,9 @@ if(PIRANHA_WITH_BZIP2)
 	message(STATUS "bzip2 library found.")
 	message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
 	message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
-	include_directories(SYSTEM ${BZIP2_INCLUDE_DIR})
-	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${BZIP2_LIBRARIES})
 	set(PIRANHA_ENABLE_BZIP2 "#define PIRANHA_WITH_BZIP2")
+	list(APPEND PIRANHA_MANDATORY_LINK_TARGETS BZip2::BZip2)
 endif()
-
-# TCMalloc setup.
-IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")
-	FIND_LIBRARY(TCMALLOC_LIBRARY NAMES tcmalloc tcmalloc_minimal)
-	IF(NOT TCMALLOC_LIBRARY)
-		MESSAGE(FATAL_ERROR "TCMalloc use was requested but the library could not be located.")
-	ENDIF()
-	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${TCMALLOC_LIBRARY})
-ENDIF()
 
 # Try to determine the git revision.
 find_package(Git)
@@ -204,30 +163,36 @@ message(STATUS "Git revision: ${PIRANHA_GIT_REVISION}")
 message(STATUS "Piranha version: ${piranha_VERSION}")
 
 # Configure config.hpp.
-CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/config.hpp.in" "${CMAKE_SOURCE_DIR}/src/config.hpp")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/piranha/config.hpp")
 
-# Add the directory for the piranha library.
-ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/src")
+# Setup the piranha interface library.
+add_library(piranha INTERFACE)
+target_link_libraries(piranha INTERFACE ${PIRANHA_MANDATORY_LINK_TARGETS})
+target_include_directories(piranha INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 
-# Link main to piranha library.
-IF(BUILD_MAIN)
-	ADD_EXECUTABLE(main main.cpp)
-	TARGET_LINK_LIBRARIES(main ${MANDATORY_LIBRARIES})
-ENDIF()
-
-IF(BUILD_TESTS)
-	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/tests")
-ENDIF()
-
-if(BUILD_TUTORIAL)
-	add_subdirectory("${CMAKE_SOURCE_DIR}/tutorial")
+# Installation.
+if(PIRANHA_INSTALL_HEADERS)
+	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include" DESTINATION include)
+	install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include" DESTINATION include)
 endif()
 
-IF(BUILD_PYRANHA)
-	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/pyranha")
+if(PIRANHA_BUILD_TESTS)
+	enable_testing()
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
+endif()
+
+if(PIRANHA_BUILD_TUTORIAL)
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tutorial")
+endif()
+
+IF(PIRANHA_BUILD_PYRANHA)
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/pyranha")
 	if(MINGW)
 		message(STATUS "Creating the files for the generation of a binary wheel for MinGW.")
 		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/mingw_wheel_setup.py" "${CMAKE_CURRENT_BINARY_DIR}/wheel/setup.py")
 		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/mingw_wheel_libs_python${PYTHON_VERSION_MAJOR}.txt" "${CMAKE_CURRENT_BINARY_DIR}/wheel/mingw_wheel_libs_python${PYTHON_VERSION_MAJOR}.txt")
 	endif()
-ENDIF()
+endif()

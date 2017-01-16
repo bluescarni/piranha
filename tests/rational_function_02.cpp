@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/rational_function.hpp"
+#include <piranha/rational_function.hpp>
 
 #define BOOST_TEST_MODULE rational_function_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -36,17 +36,17 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <type_traits>
 
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/series.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/series.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

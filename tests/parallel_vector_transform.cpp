@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/detail/parallel_vector_transform.hpp"
+#include <piranha/detail/parallel_vector_transform.hpp>
 
 #define BOOST_TEST_MODULE parallel_vector_transform_test
 #include <boost/test/included/unit_test.hpp>
@@ -34,8 +34,8 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <vector>
 
-#include "../src/init.hpp"
-#include "../src/settings.hpp"
+#include <piranha/init.hpp>
+#include <piranha/settings.hpp>
 
 using namespace piranha;
 using namespace piranha::detail;

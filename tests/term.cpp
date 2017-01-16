@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/term.hpp"
+#include <piranha/term.hpp>
 
 #define BOOST_TEST_MODULE term_test
 #include <boost/test/included/unit_test.hpp>
@@ -39,14 +39,14 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

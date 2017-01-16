@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/array_key.hpp"
+#include <piranha/array_key.hpp>
 
 #define BOOST_TEST_MODULE array_key_test
 #include <boost/test/included/unit_test.hpp>
@@ -41,12 +41,12 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include "../src/debug_access.hpp"
-#include "../src/init.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/debug_access.hpp>
+#include <piranha/init.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
