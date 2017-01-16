@@ -11,7 +11,7 @@ you should be able to compile and run your first C++ Piranha program:
 
 .. _hello_piranha_cpp:
 
-.. literalinclude:: ../../tutorial/hello_piranha.cpp
+.. literalinclude:: ../../tutorials/hello_piranha.cpp
    :language: c++
    :linenos:
 
@@ -92,7 +92,7 @@ Your first Pyranha program
 
 The Python counterpart of the :ref:`C++ code <hello_piranha_cpp>` is:
 
-.. literalinclude:: ../../pyranha/tutorial/hello_piranha.py
+.. literalinclude:: ../../pyranha/tutorials/hello_piranha.py
    :language: python
    :linenos:
 

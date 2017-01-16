@@ -39,7 +39,7 @@ wrapper.
 
 The following C++ code illustrates some features of the ``integer`` type:
 
-.. literalinclude:: ../../tutorial/integer.cpp
+.. literalinclude:: ../../tutorials/integer.cpp
    :language: c++
    :linenos:
 
@@ -64,7 +64,7 @@ As expected, on the Python side things look simpler:
 
 .. _integer_py:
 
-.. literalinclude:: ../../pyranha/tutorial/integer.py
+.. literalinclude:: ../../pyranha/tutorials/integer.py
    :language: python
    :linenos:
 
@@ -104,7 +104,7 @@ the standard C++ numerical hierarchy, and it obeys the following basic rules:
 
 The following C++ code showcases a few features of the ``rational`` class:
 
-.. literalinclude:: ../../tutorial/rational.cpp
+.. literalinclude:: ../../tutorials/rational.cpp
    :language: c++
    :linenos:
 
@@ -145,7 +145,7 @@ On the Python side things are again simpler:
 
 .. _rational_py:
 
-.. literalinclude:: ../../pyranha/tutorial/rational.py
+.. literalinclude:: ../../pyranha/tutorials/rational.py
    :language: python
    :linenos:
 
@@ -177,7 +177,7 @@ The ``real`` type obeys the following basic rules:
 
 The following C++ code showcases a few features of the ``real`` class:
 
-.. literalinclude:: ../../tutorial/real_.cpp
+.. literalinclude:: ../../tutorials/real_.cpp
    :language: c++
    :linenos:
 
