@@ -2,7 +2,7 @@
 #include <iostream>
 
 // Include the global Piranha header.
-#include "piranha.hpp"
+#include <piranha/piranha.hpp>
 
 // Import the names from the Piranha namespace.
 using namespace piranha;

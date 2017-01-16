@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "piranha.hpp"
+#include <piranha/piranha.hpp>
 
 using namespace piranha;
 

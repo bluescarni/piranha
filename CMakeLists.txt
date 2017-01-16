@@ -19,8 +19,8 @@ option(PIRANHA_BUILD_TESTS "Build test set." OFF)
 # Build option: enable benchmarks.
 option(PIRANHA_BUILD_BENCHMARKS "Build benchmarks." OFF)
 
-# Build option: build the C++ tutorial.
-option(PIRANHA_BUILD_TUTORIAL "Build the C++ tutorial." OFF)
+# Build option: build the C++ tutorials.
+option(PIRANHA_BUILD_TUTORIALS "Build the C++ tutorials." OFF)
 
 # Build option: build the Python bindings.
 option(PIRANHA_BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
@@ -207,8 +207,8 @@ if(PIRANHA_BUILD_BENCHMARKS)
 	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/benchmarks")
 endif()
 
-if(PIRANHA_BUILD_TUTORIAL)
-	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tutorial")
+if(PIRANHA_BUILD_TUTORIALS)
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tutorials")
 endif()
 
 IF(PIRANHA_BUILD_PYRANHA)
