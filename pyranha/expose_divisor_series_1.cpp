@@ -28,7 +28,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
-#include "../src/divisor_series.hpp"
+#include <piranha/divisor_series.hpp>
+
 #include "divisor_series_descriptor.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_utils.hpp"

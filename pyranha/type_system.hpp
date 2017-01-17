@@ -44,7 +44,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/detail/demangle.hpp"
+#include <piranha/detail/demangle.hpp>
+
 #include "utils.hpp"
 
 namespace pyranha

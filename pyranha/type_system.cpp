@@ -39,8 +39,9 @@ see https://www.gnu.org/licenses/. */
 #include <typeindex>
 #include <vector>
 
-#include "../src/config.hpp"
-#include "../src/detail/demangle.hpp"
+#include <piranha/config.hpp>
+#include <piranha/detail/demangle.hpp>
+
 #include "type_system.hpp"
 
 namespace pyranha

@@ -66,6 +66,8 @@ include(PiranhaPlatformSettings)
 # Assemble the flags.
 set(PIRANHA_CXX_FLAGS_DEBUG ${YACMA_CXX_FLAGS} ${YACMA_CXX_FLAGS_DEBUG} ${YACMA_THREADING_CXX_FLAGS})
 set(PIRANHA_CXX_FLAGS_RELEASE ${YACMA_CXX_FLAGS} ${YACMA_THREADING_CXX_FLAGS})
+# NOTE: the idea here is to enable globally certain compiler options that always need to be activated
+# on a certain platform. Further compiler flags will be set for specific targets.
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND YACMA_COMPILER_IS_CLANGXX)
 	message(STATUS "Clang compiler on OSX detected, setting the standard library to 'libc++'.")
 	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-stdlib=libc++")

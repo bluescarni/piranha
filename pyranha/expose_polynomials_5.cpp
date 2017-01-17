@@ -28,7 +28,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
-#include "../src/polynomial.hpp"
+#include <piranha/polynomial.hpp>
+
 #include "expose_polynomials.hpp"
 #include "expose_utils.hpp"
 #include "polynomial_descriptor.hpp"

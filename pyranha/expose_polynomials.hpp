@@ -41,9 +41,10 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
-#include "../src/math.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/math.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/type_traits.hpp>
+
 #include "expose_utils.hpp"
 #include "type_system.hpp"
 

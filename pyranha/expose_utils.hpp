@@ -58,20 +58,21 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/detail/demangle.hpp"
-#include "../src/detail/sfinae_types.hpp"
-#include "../src/detail/type_in_tuple.hpp"
-#include "../src/invert.hpp"
-#include "../src/lambdify.hpp"
-#include "../src/math.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/pow.hpp"
-#include "../src/power_series.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/series.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/detail/demangle.hpp>
+#include <piranha/detail/sfinae_types.hpp>
+#include <piranha/detail/type_in_tuple.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/lambdify.hpp>
+#include <piranha/math.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/power_series.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/series.hpp>
+#include <piranha/type_traits.hpp>
+
 #include "type_system.hpp"
 #include "utils.hpp"
 

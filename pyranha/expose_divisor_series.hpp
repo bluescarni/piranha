@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PYRANHA_EXPOSE_DIVISOR_SERIES_HPP
 #define PYRANHA_EXPOSE_DIVISOR_SERIES_HPP
 
-#include "../src/divisor_series.hpp"
+#include <piranha/divisor_series.hpp>
 
 #include "type_system.hpp"
 

@@ -37,8 +37,9 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/detail/sfinae_types.hpp"
-#include "../src/poisson_series.hpp"
+#include <piranha/detail/sfinae_types.hpp>
+#include <piranha/poisson_series.hpp>
+
 #include "type_system.hpp"
 
 namespace pyranha
