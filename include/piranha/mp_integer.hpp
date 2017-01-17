@@ -200,19 +200,23 @@ struct si_limb_types {
     static_assert(NBits == 0, "Invalid limb size.");
 };
 
-#if defined(PIRANHA_UINT128_T)
+// NOTE: we can check int128 on GCC/clang with __SIZEOF_INT128__ apparently:
+// http://stackoverflow.com/questions/21886985/what-gcc-versions-support-the-int128-intrinsic-type
+#if defined(__SIZEOF_INT128__)
+
 // NOTE: we are lacking native 128 bit types on MSVC, it should be possible to implement them
 // though using primitives like this:
 // http://msdn.microsoft.com/en-us/library/windows/desktop/hh802931(v=vs.85).aspx
 template <>
 struct si_limb_types<64> {
     using limb_t = std::uint_least64_t;
-    using dlimb_t = PIRANHA_UINT128_T;
+    using dlimb_t = __uint128_t;
     static_assert(static_cast<dlimb_t>(std::numeric_limits<limb_t>::max())
                       <= -dlimb_t(1) / std::numeric_limits<limb_t>::max(),
                   "128-bit integer is too narrow.");
     static const limb_t limb_bits = 64;
 };
+
 #endif
 
 template <>
@@ -238,7 +242,7 @@ struct si_limb_types<8> {
 
 template <>
 struct si_limb_types<0> : public si_limb_types<
-#if defined(PIRANHA_UINT128_T)
+#if defined(__SIZEOF_INT128__)
                               64
 #else
                               32

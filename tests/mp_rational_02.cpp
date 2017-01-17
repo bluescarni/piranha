@@ -57,7 +57,7 @@ using boost::archive::xml_iarchive;
 
 using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
                                       std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(PIRANHA_UINT128_T)
+#if defined(__SIZEOF_INT128__)
                                       ,
                                       std::integral_constant<int, 64>
 #endif

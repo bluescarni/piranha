@@ -52,7 +52,7 @@ using int_types = std::tuple<char, signed char, unsigned char, short, unsigned s
 
 using size_types = std::tuple<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
                               std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(PIRANHA_UINT128_T)
+#if defined(__SIZEOF_INT128__)
                               ,
                               std::integral_constant<int, 64>
 #endif
