@@ -171,16 +171,16 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINA
 
 # Setup the piranha interface library.
 add_library(piranha INTERFACE)
-target_link_libraries(piranha INTERFACE ${PIRANHA_MANDATORY_LINK_TARGETS})
 target_include_directories(piranha INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>)
+target_link_libraries(piranha INTERFACE ${PIRANHA_MANDATORY_LINK_TARGETS})
 
 # Installation.
 if(PIRANHA_INSTALL_HEADERS)
-	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include" DESTINATION include)
-	install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include" DESTINATION include)
+	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/piranha" DESTINATION include)
+	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/piranha/config.hpp" DESTINATION include/piranha)
 endif()
 
 # Tests and benchmarks setup.

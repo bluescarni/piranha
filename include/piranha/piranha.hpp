@@ -207,7 +207,6 @@ see https://www.gnu.org/licenses/. */
  * This should probably be an is_base_of check, as done in forwarding.hpp, so that if one derives from the class then we
  * are still not mixing
  * up generic ctor and standard copy/move ones in the derived class.
- * It will be suboptimal but at least it should work on osx.
  * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs,
  * e.g., implementing the test() method
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type
@@ -224,24 +223,6 @@ see https://www.gnu.org/licenses/. */
  * exception type.
  * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a
  * time.
- * \todo when we rework division/gcd with the ordered poly representation, we need also to solve the issue of the
- * interaction between truncation
- * and division/GCD operations. It seems like we will need to relax some assumptions and assertions (e.g.,
- * multiplication by a non-zero entity
- * could result in zero because of truncation), and add checks so that we can throw cleanly if something goes bad
- * (division by zero, etc.).
- * \todo related to the above, since we use pow() in the GCD algorithms we also have the problem of pow_caches() having
- * the incorrect results.
- * It seems like a good course of action would be to just invalidate the caches every time the truncation limit changes.
- * We need to check with
- * symengine in order to make sure this does not create troubles for them. Even after we do that, we still need to
- * account for potentially strange
- * things happening when we use pow() in GCD (e.g., nonzero poly to positive power returning zero).
- * \todo again related to the above, there are a couple of instances of use of lterm with potentially zero polynomial
- * due to truncation. Keep in mind,
- * probably it is just best to replace poly multiplications with explicitly untruncated counterparts in rational
- * function.
- * \todo implement the GCD benchmarks from the liao paper as a performance test.
  * \todo we need to decide if we want to keep the postifx notation for things like eval, subs etc. or just support the
  * math:: versions. It probably does
  * not make much sense to go back and remove the methods in the toolboxes, but for documentation purposes and in python
@@ -263,16 +244,9 @@ see https://www.gnu.org/licenses/. */
  * note also that the settings' methods' docstrings need to be filled out properly with exception specs, return types,
  * etc.
  * \todo "quick install" should not be the title of the getting started section in sphinx
- * \todo consider poly::udivrem(5*x**2,2*x). This throws an inexact division error triggered by inexact integral cf
- * division, but maybe it should just return (0,5*x**2).
- * \todo might want to put a recursion limit on the recursive algorithms for GCD/division, in order to avoid
- * crashing from Python due to stack overflow.
  * \todo it seems like in C++17 we can finally have an automatically inited global class in which to tuck the init
  * code (and probably the thread pool as well), via inline variables. Probably we will need to define it in a separate
  * header and then make sure to include that header in every piranha public header.
- * \todo checkout the --enable-fat GMP build option - it looks like this is the way to go for a generic GMP lib
- * for binary windows distributions. UPDATE: this does not seem to work properly in mingw, but keep it in mind
- * for manylinux1.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
  * \todo guidelines for type traits modernization:
  * - beautify enablers,
