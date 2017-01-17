@@ -47,7 +47,7 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
         echo "Aborting.";
         exit 1;
     fi
-    if [[ `find $deps_dir/include/piranha -iname config.hpp` == "" ]]
+    if [[ `find $deps_dir/include/piranha -iname config.hpp` == "" ]]; then
         echo "The config.hpp file was not installed, aborting.";
         exit 1;
     fi
