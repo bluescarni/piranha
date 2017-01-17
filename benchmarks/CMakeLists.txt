@@ -1,6 +1,7 @@
 # Setup for the split compilation of benchmarks.
 
-function(ADD_PIRANHA_BENCHMARK arg1)
+# NOTE: this needs to be a macro since it is modifying the external variable _PIRANHA_TEST_NUM.
+macro(ADD_PIRANHA_BENCHMARK arg1)
 	if(PIRANHA_TEST_NSPLIT)
 		math(EXPR _PIRANHA_TEST_NUM "(${_PIRANHA_TEST_NUM} + 1) % ${PIRANHA_TEST_NSPLIT}")
 	endif()
@@ -14,7 +15,7 @@ function(ADD_PIRANHA_BENCHMARK arg1)
     set_property(TARGET ${arg1} PROPERTY CXX_STANDARD_REQUIRED YES)
     set_property(TARGET ${arg1} PROPERTY CXX_EXTENSIONS NO)
 	endif()
-endfunction()
+endmacro()
 
 ADD_PIRANHA_BENCHMARK(audi)
 ADD_PIRANHA_BENCHMARK(estimation)

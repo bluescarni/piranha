@@ -1,6 +1,7 @@
 # Setup for the split compilation of tests.
 
-function(ADD_PIRANHA_TESTCASE arg1)
+# NOTE: this needs to be a macro since it is modifying the external variable _PIRANHA_TEST_NUM.
+macro(ADD_PIRANHA_TESTCASE arg1)
 	if(PIRANHA_TEST_NSPLIT)
 		math(EXPR _PIRANHA_TEST_NUM "(${_PIRANHA_TEST_NUM} + 1) % ${PIRANHA_TEST_NSPLIT}")
 	endif()
@@ -18,7 +19,7 @@ function(ADD_PIRANHA_TESTCASE arg1)
     set_property(TARGET ${arg1} PROPERTY CXX_EXTENSIONS NO)
 		add_test("${arg1}" "${arg1}")
 	endif()
-endfunction()
+endmacro()
 
 ADD_PIRANHA_TESTCASE(array_key)
 ADD_PIRANHA_TESTCASE(atomic_utils)
