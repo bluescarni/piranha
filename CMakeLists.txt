@@ -74,9 +74,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND YACMA_COMPILER_IS_CLANGXX)
 	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-stdlib=libc++")
 endif()
 if(MINGW)
-	# Curb binary size in MinGW debug builds.
-	message(STATUS "Appending the '-g0 -Os' flags in MinGW debug builds.")
-	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-g0" "-Os")
 	# Flag needed to deal with big binaries in MinGW.
 	message(STATUS "Enabling the '-Wa,-mbig-obj' flag in MinGW builds.")
 	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-Wa,-mbig-obj")

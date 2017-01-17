@@ -127,7 +127,7 @@ common_cmake_opts = r'-DCMAKE_PREFIX_PATH=c:\\local -DPIRANHA_WITH_BZIP2=yes -DB
 
 # Configuration step.
 if is_python_build:
-    run_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s ' + common_cmake_opts + r' -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python' +
+    run_command(r'cmake -G "MinGW Makefiles" ..  -DPIRANHA_BUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s ' + common_cmake_opts + r' -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python' +
                 (python_version[0] if python_version[0] == '3' else r'') + r'-mgw62-mt-1_63.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + r'\\libs\\python' + python_version + r'.dll' +
                 r' -DPYTHON_INCLUDE_DIR=C:\\Python' + python_version + r'\\include')
 elif BUILD_TYPE in ['Release', 'Debug']:
@@ -135,7 +135,7 @@ elif BUILD_TYPE in ['Release', 'Debug']:
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
     cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + (r' -DPIRANHA_BUILD_TESTS=yes' if BUILD_TYPE == 'Debug' else r' -DPIRANHA_BUILD_BENCHMARKS=yes') + r' -DPIRANHA_TEST_NSPLIT=' + \
         TEST_NSPLIT + r' -DPIRANHA_TEST_SPLIT_NUM=' + \
-        SPLIT_TEST_NUM + r' ' + common_cmake_opts
+        SPLIT_TEST_NUM + r' ' + common_cmake_opts + (r' -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0"' if BUILD_TYPE == 'Debug' else r'')
     run_command(r'cmake -G "MinGW Makefiles" .. ' + cmake_opts)
 else:
     raise RuntimeError('Unsupported build type: ' + BUILD_TYPE)
