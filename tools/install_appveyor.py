@@ -133,7 +133,7 @@ if is_python_build:
 elif BUILD_TYPE in ['Release', 'Debug']:
     TEST_NSPLIT = os.environ['TEST_NSPLIT']
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
-    cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + r' -DBUILD_TESTS=yes -DPIRANHA_TEST_NSPLIT=' + \
+    cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + (r' -DPIRANHA_BUILD_TESTS=yes' if BUILD_TYPE == 'Debug' else r' -DPIRANHA_BUILD_BENCHMARKS=yes') + r' -DPIRANHA_TEST_NSPLIT=' + \
         TEST_NSPLIT + r' -DPIRANHA_TEST_SPLIT_NUM=' + \
         SPLIT_TEST_NUM + r' ' + common_cmake_opts
     run_command(r'cmake -G "MinGW Makefiles" .. ' + cmake_opts)
@@ -165,8 +165,6 @@ if is_python_build:
     if is_release_build:
         run_command(twine + r' upload -u bluescarni dist\\' +
                     os.listdir('dist')[0])
-elif BUILD_TYPE == 'Release':
-    run_command(r'ctest -VV -E "gastineau|pearce2_unpacked|s11n_perf"')
 elif BUILD_TYPE == 'Debug':
     run_command(r'ctest -VV')
 else:

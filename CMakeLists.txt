@@ -108,11 +108,11 @@ list(APPEND PIRANHA_MANDATORY_LINK_TARGETS Boost::boost Boost::disable_autolinki
 find_package(GMP REQUIRED)
 message(STATUS "GMP library found.")
 message(STATUS "GMP include dir is: ${GMP_INCLUDE_DIR}")
-message(STATUS "GMP library is: ${GMP_LIBRARIES}")
+message(STATUS "GMP library is: ${GMP_LIBRARY}")
 find_package(MPFR REQUIRED)
 message(STATUS "MPFR library found.")
 message(STATUS "MPFR include dir is: ${MPFR_INCLUDE_DIR}")
-message(STATUS "MPFR library is: ${MPFR_LIBRARIES}")
+message(STATUS "MPFR library is: ${MPFR_LIBRARY}")
 # NOTE: link last GMP, link order might matter depending on the situation.
 list(APPEND PIRANHA_MANDATORY_LINK_TARGETS MPFR::MPFR GMP::GMP)
 
