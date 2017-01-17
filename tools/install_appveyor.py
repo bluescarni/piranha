@@ -165,6 +165,8 @@ if is_python_build:
     if is_release_build:
         run_command(twine + r' upload -u bluescarni dist\\' +
                     os.listdir('dist')[0])
+elif BUILD_TYPE == 'Release':
+    pass
 elif BUILD_TYPE == 'Debug':
     run_command(r'ctest -VV')
 else:
