@@ -64,7 +64,7 @@ As expected, on the Python side things look simpler:
 
 .. _integer_py:
 
-.. literalinclude:: ../../pyranha/tutorials/integer.py
+.. literalinclude:: ../../pyranha/tutorial/integer.py
    :language: python
    :linenos:
 
@@ -145,7 +145,7 @@ On the Python side things are again simpler:
 
 .. _rational_py:
 
-.. literalinclude:: ../../pyranha/tutorials/rational.py
+.. literalinclude:: ../../pyranha/tutorial/rational.py
    :language: python
    :linenos:
 

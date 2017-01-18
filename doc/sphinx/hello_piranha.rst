@@ -92,7 +92,7 @@ Your first Pyranha program
 
 The Python counterpart of the :ref:`C++ code <hello_piranha_cpp>` is:
 
-.. literalinclude:: ../../pyranha/tutorials/hello_piranha.py
+.. literalinclude:: ../../pyranha/tutorial/hello_piranha.py
    :language: python
    :linenos:
 
