@@ -135,7 +135,7 @@ elif BUILD_TYPE in ['Release', 'Debug']:
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
     cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + (r' -DPIRANHA_BUILD_TESTS=yes' if BUILD_TYPE == 'Debug' else r' -DPIRANHA_BUILD_BENCHMARKS=yes') + r' -DPIRANHA_TEST_NSPLIT=' + \
         TEST_NSPLIT + r' -DPIRANHA_TEST_SPLIT_NUM=' + \
-        SPLIT_TEST_NUM + r' ' + common_cmake_opts + (r' -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0"' if BUILD_TYPE == 'Debug' else r'')
+        SPLIT_TEST_NUM + r' ' + common_cmake_opts + (r' -DCMAKE_CXX_FLAGS_DEBUG="-g0 -Os"' if BUILD_TYPE == 'Debug' else r'')
     run_command(r'cmake -G "MinGW Makefiles" .. ' + cmake_opts)
 else:
     raise RuntimeError('Unsupported build type: ' + BUILD_TYPE)
