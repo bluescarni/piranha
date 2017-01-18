@@ -8,10 +8,6 @@ macro(ADD_PIRANHA_TESTCASE arg1)
 	if(NOT PIRANHA_TEST_NSPLIT OR "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${_PIRANHA_TEST_NUM}")
 		add_executable("${arg1}" "${arg1}.cpp")
 		target_compile_options(${arg1} PRIVATE "$<$<CONFIG:DEBUG>:${PIRANHA_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PIRANHA_CXX_FLAGS_RELEASE}>")
-		if(YACMA_COMPILER_IS_GNUCXX)
-			# Some tests on some versions of GCC cause ICEs with the debug level 2. Dial back to 1.
-			target_compile_options(${arg1} PRIVATE "$<$<CONFIG:DEBUG>:-g1>")
-		endif()
 		if(PIRANHA_RUN_ON_VALGRIND AND CMAKE_BUILD_TYPE STREQUAL "Debug")
 			# Add a special definition for the unit tests when the run-on-Valgrind
 			# option is selected.
