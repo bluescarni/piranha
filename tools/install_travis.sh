@@ -18,7 +18,7 @@ fi
 
 if [[ "${BUILD_TYPE}" == "Debug" ]]; then
     if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address -Os -g0" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address -g0 -Os" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make VERBOSE=1;
         ctest -E "thread|memory" -V;
     elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
@@ -27,7 +27,7 @@ if [[ "${BUILD_TYPE}" == "Debug" ]]; then
         ctest -E "thread" -V;
     fi
 elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DCMAKE_CXX_FLAGS_DEBUG="-Og --coverage -g1" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DCMAKE_CXX_FLAGS_DEBUG="-g1 -Og --coverage" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
         make VERBOSE=1;
         ctest -E "thread" -V;
         bash <(curl -s https://codecov.io/bash) -x $GCOV_EXECUTABLE
@@ -62,7 +62,7 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
 fi
 
 if [[ "${BUILD_TYPE}" == "Python2" || "${BUILD_TYPE}" == "Python3" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0" -DCMAKE_INSTALL_PREFIX=$deps_dir  ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG="-g0 -Os" -DCMAKE_INSTALL_PREFIX=$deps_dir  ../;
     make install VERBOSE=1;
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
 fi
