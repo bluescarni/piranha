@@ -52,6 +52,14 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
         exit 1;
     fi
 
+    # Test the CMake export installation.
+    cd ../tools/sample_project;
+    mkdir build;
+    cd build;
+    cmake ../ -DCMAKE_PREFIX_PATH=$deps_dir;
+    make;
+    ./main;
+
     # Do the release here.
     if [[ "${PIRANHA_RELEASE_VERSION}" != "" ]]; then
       echo "Creating new piranha release: ${PIRANHA_RELEASE_VERSION}"
