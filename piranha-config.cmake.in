@@ -8,7 +8,7 @@ list(APPEND CMAKE_MODULE_PATH "${_PIRANHA_CONFIG_SELF_DIR}")
 find_package(Threads REQUIRED)
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
-find_package(Boost @_PIRANHA_MINIMUM_BOOST_VERSION@ REQUIRED COMPONENTS serialization iostreams)
+include(PiranhaFindBoost)
 @_PIRANHA_CONFIG_OPTIONAL_DEPS@
 # Restore original module path.
 set(CMAKE_MODULE_PATH "${_PIRANHA_CONFIG_OLD_MODULE_PATH}")
