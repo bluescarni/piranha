@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/real.hpp"
+#include <piranha/real.hpp>
 
 #define BOOST_TEST_MODULE real_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -49,17 +49,17 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_map>
 #include <vector>
 
-#include "../src/binomial.hpp"
-#include "../src/config.hpp"
-#include "../src/detail/mpfr.hpp"
-#include "../src/init.hpp"
-#include "../src/math.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/pow.hpp"
-#include "../src/s11n.hpp"
-#include "../src/safe_cast.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/binomial.hpp>
+#include <piranha/config.hpp>
+#include <piranha/detail/mpfr.hpp>
+#include <piranha/init.hpp>
+#include <piranha/math.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/safe_cast.hpp>
+#include <piranha/type_traits.hpp>
 
 static_assert(MPFR_PREC_MIN <= 4 && MPFR_PREC_MAX >= 4,
               "The unit tests for piranha::real assume that 4 is a valid value for significand precision.");

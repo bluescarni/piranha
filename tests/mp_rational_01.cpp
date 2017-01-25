@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/mp_rational.hpp"
+#include <piranha/mp_rational.hpp>
 
 #define BOOST_TEST_MODULE mp_rational_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -52,18 +52,18 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/binomial.hpp"
-#include "../src/config.hpp"
-#include "../src/detail/gmp.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/math.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/pow.hpp"
-#include "../src/print_tex_coefficient.hpp"
-#include "../src/s11n.hpp"
-#include "../src/safe_cast.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/binomial.hpp>
+#include <piranha/config.hpp>
+#include <piranha/detail/gmp.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/math.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/print_tex_coefficient.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/safe_cast.hpp>
+#include <piranha/type_traits.hpp>
 
 static std::mt19937 rng;
 static const int ntries = 1000;
@@ -72,7 +72,7 @@ using namespace piranha;
 
 using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
                                       std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(PIRANHA_UINT128_T)
+#if defined(__SIZEOF_INT128__)
                                       ,
                                       std::integral_constant<int, 64>
 #endif

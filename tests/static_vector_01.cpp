@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/static_vector.hpp"
+#include <piranha/static_vector.hpp>
 
 #define BOOST_TEST_MODULE static_vector_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -45,9 +45,9 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/init.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/init.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/type_traits.hpp>
 
 // NOTE: here we define a custom string class base on std::string that respects nothrow requirements in hash_set:
 // in the current GCC (4.6) the destructor of std::string does not have nothrow, so we cannot use it.

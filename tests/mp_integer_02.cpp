@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/mp_integer.hpp"
+#include <piranha/mp_integer.hpp>
 
 #define BOOST_TEST_MODULE mp_integer_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -49,15 +49,15 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/config.hpp"
-#include "../src/debug_access.hpp"
-#include "../src/detail/gmp.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/is_cf.hpp"
-#include "../src/math.hpp"
-#include "../src/pow.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/config.hpp>
+#include <piranha/debug_access.hpp>
+#include <piranha/detail/gmp.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/is_cf.hpp>
+#include <piranha/math.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/type_traits.hpp>
 
 using integral_types = boost::mpl::vector<char, signed char, short, int, long, long long, unsigned char, unsigned short,
                                           unsigned, unsigned long, unsigned long long
@@ -83,7 +83,7 @@ using mpz_raii = detail::mpz_raii;
 
 using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
                                       std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(PIRANHA_UINT128_T)
+#if defined(__SIZEOF_INT128__)
                                       ,
                                       std::integral_constant<int, 64>
 #endif

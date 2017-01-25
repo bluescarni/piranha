@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/small_vector.hpp"
+#include <piranha/small_vector.hpp>
 
 #define BOOST_TEST_MODULE small_vector_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -49,13 +49,13 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/detail/prepare_for_print.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/s11n.hpp"
-#include "../src/safe_cast.hpp"
+#include <piranha/detail/prepare_for_print.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/safe_cast.hpp>
 
 // NOTE: in these tests we are assuming a few things:
 // - we can generally go a few elements beyond the numerical limits of sizes without wrapping over,

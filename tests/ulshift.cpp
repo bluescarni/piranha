@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/detail/ulshift.hpp"
+#include <piranha/detail/ulshift.hpp>
 
 #define BOOST_TEST_MODULE ulshift_test
 #include <boost/test/included/unit_test.hpp>
@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <type_traits>
 
-#include "../src/init.hpp"
+#include <piranha/init.hpp>
 
 using namespace piranha::detail;
 

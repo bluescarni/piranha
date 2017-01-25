@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -47,25 +47,26 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/binomial.hpp"
-#include "../src/config.hpp"
-#include "../src/divisor.hpp"
-#include "../src/divisor_series.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/invert.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/safe_cast.hpp"
-#include "../src/thread_pool.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/binomial.hpp>
+#include <piranha/config.hpp>
+#include <piranha/divisor.hpp>
+#include <piranha/divisor_series.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/safe_cast.hpp>
+#include <piranha/thread_pool.hpp>
+#include <piranha/type_traits.hpp>
+
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"

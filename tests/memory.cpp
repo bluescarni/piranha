@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/memory.hpp"
+#include <piranha/memory.hpp>
 
 #define BOOST_TEST_MODULE memory_test
 #include <boost/test/included/unit_test.hpp>
@@ -43,9 +43,9 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/config.hpp"
-#include "../src/init.hpp"
-#include "../src/settings.hpp"
+#include <piranha/config.hpp>
+#include <piranha/init.hpp>
+#include <piranha/settings.hpp>
 
 // Helper to def-init as an array of T the raw storage returned by the memory alloc function.
 template <typename T>

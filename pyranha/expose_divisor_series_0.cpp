@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -28,7 +28,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
-#include "../src/divisor_series.hpp"
+#include <piranha/divisor_series.hpp>
+
 #include "divisor_series_descriptor.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_utils.hpp"

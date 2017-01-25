@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/thread_barrier.hpp"
+#include <piranha/thread_barrier.hpp>
 
 #define BOOST_TEST_MODULE thread_barrier_test
 #include <boost/test/included/unit_test.hpp>
@@ -34,8 +34,8 @@ see https://www.gnu.org/licenses/. */
 #include <functional>
 #include <type_traits>
 
-#include "../src/init.hpp"
-#include "../src/thread_pool.hpp"
+#include <piranha/init.hpp>
+#include <piranha/thread_pool.hpp>
 
 BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
 {

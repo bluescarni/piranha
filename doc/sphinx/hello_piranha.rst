@@ -11,7 +11,7 @@ you should be able to compile and run your first C++ Piranha program:
 
 .. _hello_piranha_cpp:
 
-.. literalinclude:: ../../tutorial/hello_piranha.cpp
+.. literalinclude:: ../../tutorials/hello_piranha.cpp
    :language: c++
    :linenos:
 

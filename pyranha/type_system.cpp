@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -39,8 +39,9 @@ see https://www.gnu.org/licenses/. */
 #include <typeindex>
 #include <vector>
 
-#include "../src/config.hpp"
-#include "../src/detail/demangle.hpp"
+#include <piranha/config.hpp>
+#include <piranha/detail/demangle.hpp>
+
 #include "type_system.hpp"
 
 namespace pyranha

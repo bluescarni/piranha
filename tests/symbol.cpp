@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/symbol.hpp"
+#include <piranha/symbol.hpp>
 
 #define BOOST_TEST_MODULE symbol_test
 #include <boost/test/included/unit_test.hpp>
@@ -38,8 +38,8 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <unordered_set>
 
-#include "../src/init.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/init.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

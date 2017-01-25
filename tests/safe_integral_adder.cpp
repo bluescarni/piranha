@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/detail/safe_integral_adder.hpp"
+#include <piranha/detail/safe_integral_adder.hpp>
 
 #define BOOST_TEST_MODULE safe_integral_adder_test
 #include <boost/test/included/unit_test.hpp>
@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <stdexcept>
 
-#include "../src/init.hpp"
+#include <piranha/init.hpp>
 
 using namespace piranha;
 

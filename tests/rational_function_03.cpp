@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/rational_function.hpp"
+#include <piranha/rational_function.hpp>
 
 #define BOOST_TEST_MODULE rational_function_03_test
 #include <boost/test/included/unit_test.hpp>
@@ -36,12 +36,12 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <tuple>
 
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/s11n.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
