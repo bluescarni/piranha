@@ -1,6 +1,21 @@
 Changelog
 =========
 
+%%version%% (unreleased)
+------------------------
+
+New
+~~~
+
+- Revamped build system: removed cruft, restructured directory layout,
+  adopted modern CMake idioms, added support for package installation,
+  separated benchmarks in own dir. [Francesco Biscani]
+
+Changes
+~~~~~~~
+
+- Updated the copyright date. [Francesco Biscani]
+
 v0.10 (2017-01-15)
 ------------------
 
