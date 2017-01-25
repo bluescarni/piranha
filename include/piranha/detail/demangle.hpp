@@ -78,7 +78,7 @@ inline std::string demangle(const char *s)
 #endif
 }
 
-/// C++ string overload.
+// C++ string overload.
 inline std::string demangle(const std::string &s)
 {
     return demangle(s.c_str());
