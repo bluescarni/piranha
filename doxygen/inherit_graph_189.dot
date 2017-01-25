@@ -1,0 +1,7 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node0 [label="piranha::math::ipow\l_subs_impl\< Series,\l T, detail::ipow_subs\l_impl_ipow_subs_series\l_enabler\< Series, T \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1ipow__subs__impl_3_01_series_00_01_t_00_01detail_1_1ipow__subs__impl__i05512f754a96e06f7f436d1e41d65424.html",tooltip="Specialisation of the piranha::math::ipow_subs_impl functor for instances of piranha::ipow_substituta..."];
+}

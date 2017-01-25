@@ -1,0 +1,7 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node0 [label="piranha::math::divexact\l_impl\< T, typename std\l::enable_if\< std::is_base\l_of\< detail::rational_function\l_tag, T \>::value \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1divexact__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__5fbdfdb47b706b1d3def71eb384ec539.html",tooltip="Specialisation of the piranha::math::divexact() functor for piranha::rational_function. "];
+}

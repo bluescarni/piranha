@@ -18,6 +18,6 @@ var searchData=
   ['exceptions_2ehpp',['exceptions.hpp',['../exceptions_8hpp.html',1,'']]],
   ['exp',['exp',['../classpiranha_1_1real.html#affabc1b21b6fbbaa4b20f0acbaeef73d',1,'piranha::real']]],
   ['extend_5fsymbol_5fset',['extend_symbol_set',['../classpiranha_1_1series.html#aaafc56eba07220821ab4b7f026105bd9',1,'piranha::series']]],
-  ['extra_5fmap_5ftype',['extra_map_type',['../classpiranha_1_1math_1_1lambdified.html#ae09a4179fc240d1c83b2268e4c8bb08a',1,'piranha::math::lambdified']]],
+  ['extra_5fmap_5ftype',['extra_map_type',['../classpiranha_1_1math_1_1lambdified.html#a8a37396a62ec2f0f32995f991104ac94',1,'piranha::math::lambdified']]],
   ['extract_5fexponents',['extract_exponents',['../classpiranha_1_1kronecker__monomial.html#a0f898a1921a9777c644c959adfc17c27',1,'piranha::kronecker_monomial::extract_exponents()'],['../classpiranha_1_1monomial.html#abced45d33d573a0bb686115994ae3771',1,'piranha::monomial::extract_exponents()']]]
 ];

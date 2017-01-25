@@ -1,0 +1,7 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node0 [label="piranha::series_recursion\l_index\< T, detail::sri\l_rf_enabler\< T \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1series__recursion__index_3_01_t_00_01detail_1_1sri__rf__enabler_3_01_t_01_4_01_4.html",tooltip="Specialisation of piranha::series_recursion_index for piranha::rational_function. ..."];
+}

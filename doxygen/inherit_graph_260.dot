@@ -1,0 +1,7 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node0 [label="piranha::msgpack_convert\l_impl\< small_vector\< T,\l std::integral_constant\l\< std::size_t, Size \> \>,\l msgpack_convert_array_enabler\l\< small_vector\< T, std::integral\l_constant\< std::size_t, Size \> \> \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1msgpack__convert__impl_3_01small__vector_3_01_t_00_01std_1_1integral__constant_7124fcab6d2c0d17b6f3d1b727ca5611.html",tooltip="Specialisation of piranha::msgpack_convert() for piranha::small_vector. "];
+}
