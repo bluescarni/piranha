@@ -119,7 +119,7 @@
       
   <h1>Source code for pyranha.test</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: iso-8859-1 -*-</span>
-<span class="c1"># Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)</span>
+<span class="c1"># Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of the Piranha library.</span>
 <span class="c1">#</span>
@@ -953,11 +953,11 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">bad_str</span> <span class="o">=</span> <span class="n">bad_str</span>
 
             <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">old_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">__str__</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_str</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">old_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="fm">__str__</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="fm">__str__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_str</span>
 
             <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_str</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="fm">__str__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_str</span>
         <span class="c1"># Same for repr.</span>
 
         <span class="k">class</span> <span class="nc">patch_repr</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -967,11 +967,11 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">bad_repr</span> <span class="o">=</span> <span class="n">bad_repr</span>
 
             <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">old_repr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">__repr__</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">__repr__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_repr</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">old_repr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="fm">__repr__</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="fm">__repr__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_repr</span>
 
             <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">__repr__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_repr</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="fm">__repr__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_repr</span>
         <span class="c1"># Start with plain integers.</span>
         <span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">[</span><span class="n">integer</span><span class="p">,</span> <span class="n">monomial</span><span class="p">[</span><span class="n">int16</span><span class="p">]]()</span>
         <span class="c1"># Use small integers to make it work both on Python 2 and Python 3.</span>
@@ -1422,8 +1422,8 @@
       
     </p>
     <p>
-        &copy; Copyright 2009-2016, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+        &copy; Copyright 2009-2017, Francesco Biscani.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.<br/>
     </p>
   </div>
 </footer>
