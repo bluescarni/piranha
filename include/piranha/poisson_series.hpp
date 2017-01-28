@@ -52,7 +52,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/mp_integer.hpp>
 #include <piranha/power_series.hpp>
-#include <piranha/rational_function.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>
@@ -124,11 +123,6 @@ class poisson_series
                                                  poisson_series<Cf>>,
                        poisson_series<Cf>>;
     // Sin/cos utils.
-    // Shortcut to detect rational function coefficient.
-    template <typename T>
-    using has_rf_cf
-        = std::integral_constant<bool,
-                                 std::is_base_of<detail::rational_function_tag, typename T::term_type::cf_type>::value>;
     // Types coming out of sin()/cos() for the base type. These will also be the final types.
     template <typename T>
     using sin_type = decltype(math::sin(std::declval<const typename T::base &>()));
@@ -136,31 +130,21 @@ class poisson_series
     using cos_type = decltype(math::cos(std::declval<const typename T::base &>()));
     // Case 0: Poisson series is not suitable for special sin() implementation. Just forward to the base one, via
     // casting.
-    template <typename T = poisson_series,
-              typename std::enable_if<!detail::poly_in_cf<T>::value && !has_rf_cf<T>::value, int>::type = 0>
+    template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value, int>::type = 0>
     sin_type<T> sin_impl() const
     {
         return math::sin(*static_cast<const base *>(this));
     }
     // Case 1: Poisson series is suitable for special sin() implementation via poly. This can fail at runtime depending
-    // on what is
-    // contained in the coefficients. The return type is the same as the base one, as in this routine we only need
-    // operations
-    // which are supported by all coefficient types, no need for rebinding or anything like that.
+    // on what is contained in the coefficients. The return type is the same as the base one, as in this routine we only
+    // need operations which are supported by all coefficient types, no need for rebinding or anything like that.
     template <typename T = poisson_series, typename std::enable_if<detail::poly_in_cf<T>::value, int>::type = 0>
     sin_type<T> sin_impl() const
     {
         return special_sin_cos<false, sin_type<T>>(*this);
     }
-    // Case 2: Poisson series is suitable for special sin() implementation via rational function.
-    template <typename T = poisson_series, typename std::enable_if<has_rf_cf<T>::value, int>::type = 0>
-    sin_type<T> sin_impl() const
-    {
-        return special_sin_cos_rf<false, sin_type<T>>(*this);
-    }
     // Same as above, for cos().
-    template <typename T = poisson_series,
-              typename std::enable_if<!detail::poly_in_cf<T>::value && !has_rf_cf<T>::value, int>::type = 0>
+    template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value, int>::type = 0>
     cos_type<T> cos_impl() const
     {
         return math::cos(*static_cast<const base *>(this));
@@ -170,16 +154,9 @@ class poisson_series
     {
         return special_sin_cos<true, cos_type<T>>(*this);
     }
-    template <typename T = poisson_series, typename std::enable_if<has_rf_cf<T>::value, int>::type = 0>
-    cos_type<T> cos_impl() const
-    {
-        return special_sin_cos_rf<true, cos_type<T>>(*this);
-    }
     // Functions to handle the case in which special sin/cos implementation fails. They will just call the base sin/cos,
-    // we need
-    // them with tag dispatching as the implementation below is generic and needs to cope with potentially different
-    // sin/cos return
-    // types.
+    // we need them with tag dispatching as the implementation below is generic and needs to cope with potentially
+    // different sin/cos return types.
     template <typename T>
     static cos_type<T> special_sin_cos_failure(const T &s, const std::true_type &)
     {
@@ -261,20 +238,6 @@ class poisson_series
     {
         if (s.is_single_coefficient() && !s.empty()) {
             return special_sin_cos<IsCos, RetT>(s._container().begin()->m_cf);
-        }
-        return special_sin_cos_failure(*this, std::integral_constant<bool, IsCos>{});
-    }
-    // Special sin/cos implementation when the coefficient is a rational function.
-    template <bool IsCos, typename RetT, typename T>
-    RetT special_sin_cos_rf(const T &s) const
-    {
-        if (s.is_single_coefficient() && !s.empty() && math::is_unitary(s._container().begin()->m_cf.den())) {
-            try {
-                return poly_to_ps<IsCos, RetT>(s._container().begin()->m_cf.num());
-            } catch (const std::invalid_argument &) {
-                // Interpret invalid_argument as a failure in extracting integral combination,
-                // and move on.
-            }
         }
         return special_sin_cos_failure(*this, std::integral_constant<bool, IsCos>{});
     }
@@ -538,52 +501,6 @@ class poisson_series
         }
         return retval;
     }
-    // Implementation when the coefficient is a rational function.
-    template <
-        typename T = poisson_series,
-        typename std::enable_if<std::is_base_of<detail::rational_function_tag, typename T::term_type::cf_type>::value,
-                                int>::type
-        = 0>
-    T t_integrate_impl(const std::vector<std::string> &names) const
-    {
-        // Types from base.
-        using term_type = typename base::term_type;
-        using r_type = typename term_type::cf_type;
-        using p_type = typename r_type::p_type;
-        using key_type = typename term_type::key_type;
-        piranha_assert(names.size() == this->get_symbol_set().size());
-        T retval;
-        retval.set_symbol_set(this->get_symbol_set());
-        for (const auto &t : this->_container()) {
-            // Get the flavour of the current trig monomial.
-            const bool flavour = t.m_key.get_flavour();
-            // Get the vector of trigonometric multipliers.
-            const auto trig_vector = t.m_key.unpack(this->m_symbol_set);
-            // Construct a polynomial from the extracted multipliers, using
-            // the names in linear combination.
-            p_type tmp;
-            for (decltype(trig_vector.size()) i = 0u; i < trig_vector.size(); ++i) {
-                tmp += p_type{names[static_cast<decltype(names.size())>(i)]} * trig_vector[i];
-            }
-            if (math::is_zero(tmp)) {
-                piranha_throw(std::invalid_argument, "an invalid trigonometric term was encountered while "
-                                                     "attempting a time integration");
-            }
-            // Construct the new coefficient from the current coefficient,
-            // divided by the newly constructed poly.
-            r_type r{t.m_cf / std::move(tmp)};
-            // Need to negate the coefficient if the current trig monomial is a sine.
-            if (!flavour) {
-                math::negate(r);
-            }
-            // Create a copy of the current trig monomial and flip its flavour.
-            key_type tmp_key{t.m_key};
-            tmp_key.set_flavour(!flavour);
-            // Create new term from new coefficient and key, and insert it.
-            retval.insert(term_type{std::move(r), std::move(tmp_key)});
-        }
-        return retval;
-    }
     // The final typedef.
     template <typename T>
     using ti_type
@@ -633,8 +550,7 @@ public:
      * implementation for series is appropriate).
      *
      * In general, this method behaves exactly like the default implementation of piranha::math::sin() for series
-     * types. If, however, a polynomial appears in the hierarchy of coefficients, or the coefficient type is an instance
-     * of piranha::rational_function, then this method
+     * types. If, however, a polynomial appears in the hierarchy of coefficients, then this method
      * will attempt to extract an integral linear combination of symbolic arguments and use it to construct
      * a Poisson series with a single term, unitary coefficient and the trigonometric key built from the linear
      * combination.
@@ -755,7 +671,7 @@ public:
     /**
      * \note
      * This method is enabled only if:
-     * - the coefficient type is an instance of piranha::divisor_series or piranha::rational_function, and
+     * - the coefficient type is an instance of piranha::divisor_series, and
      * - the operations required by the computation of the time integration are supported by all
      *   the involved types.
      *

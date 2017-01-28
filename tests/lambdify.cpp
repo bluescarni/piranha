@@ -44,7 +44,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/mp_integer.hpp>
 #include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/rational_function.hpp>
 #include <piranha/real.hpp>
 
 using namespace piranha;
@@ -114,19 +113,6 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
         BOOST_CHECK((std::is_same<decltype(l5({})), double>::value));
         BOOST_CHECK_EQUAL(l5({1., 2., 3.}), 1. - 3.);
         BOOST_CHECK_THROW(l5({1., 3.}), std::invalid_argument);
-    }
-    {
-        using r_type = rational_function<k_monomial>;
-        r_type x{"x"}, y{"y"}, z{"z"};
-        BOOST_CHECK((has_lambdify<r_type, integer>::value));
-        BOOST_CHECK((!has_lambdify<r_type, std::string>::value));
-        auto l0 = lambdify<rational>((x + y) / (y - z), {"x", "y", "z"});
-        BOOST_CHECK((std::is_same<decltype(l0({})), rational>::value));
-        BOOST_CHECK_EQUAL(l0({1_q, 3 / 5_q, 9_q}), (1 + 3 / 5_q) / (3 / 5_q - 9));
-        BOOST_CHECK_THROW(l0({1_q, 3 / 5_q, 3 / 5_q}), zero_division_error);
-        BOOST_CHECK((has_lambdify<r_type, real>::value));
-        auto l1 = lambdify<real>((x + y) / (y - z), {"x", "y", "z"});
-        BOOST_CHECK((std::is_same<decltype(l1({})), real>::value));
     }
     {
         BOOST_CHECK((has_lambdify<double, integer>::value));

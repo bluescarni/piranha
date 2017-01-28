@@ -316,7 +316,6 @@ inline namespace literals
 #include <piranha/power_series.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
-#include <piranha/rational_function.hpp>
 #include <piranha/real.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/runtime_info.hpp>

@@ -225,10 +225,8 @@ class series_division_test_case(_ut.TestCase):
         self.assertRaises(TypeError, lambda: type(pt(2) / pt2(1)))
         self.assertEqual(type(1. / pt(2)), pt2)
         self.assertEqual(type(pt(2) / 1.), pt2)
-        self.assertEqual((x**2 - 1) / (x + 1), x - 1)
-        self.assertEqual(type((x**2 - 1) / (x + 1)), pt)
         self.assertRaises(ZeroDivisionError, lambda: x / 0)
-        self.assertRaises(ArithmeticError, lambda: x / y)
+        self.assertRaises(ValueError, lambda: x / y)
         tmp = pt(4)
         tmp /= 4
         self.assertEqual(tmp, 1)
@@ -343,12 +341,13 @@ class mpmath_test_case(_ut.TestCase):
         from .math import evaluate
         pt = polynomial[integer, monomial[int16]]()
         x = pt('x')
-        self.assertEqual(evaluate(x,{'x':mpf('4.5667')}), mpf('4.5667'))
-        self.assert_(type(evaluate(x,{'x':mpf('4.5667')})) == mpf)
+        self.assertEqual(evaluate(x, {'x': mpf('4.5667')}), mpf('4.5667'))
+        self.assert_(type(evaluate(x, {'x': mpf('4.5667')})) == mpf)
         for n in [11, 21, 51, 101, 501]:
             with workdps(n):
-                self.assertEqual(evaluate(x,{'x':mpf('4.5667')}), mpf('4.5667'))
-                self.assert_(type(evaluate(x,{'x':mpf('4.5667')})) == mpf)
+                self.assertEqual(
+                    evaluate(x, {'x': mpf('4.5667')}), mpf('4.5667'))
+                self.assert_(type(evaluate(x, {'x': mpf('4.5667')})) == mpf)
 
 
 class math_test_case(_ut.TestCase):
@@ -628,10 +627,9 @@ class polynomial_test_case(_ut.TestCase):
     """
 
     def runTest(self):
-        from . import polynomial_gcd_algorithm as pga
         from .types import polynomial, rational, int16, integer, double, real, monomial
         from fractions import Fraction
-        from .math import integrate, gcd
+        from .math import integrate
         self.assertEqual(
             type(polynomial[rational, monomial[int16]]()(1).list[0][0]), Fraction)
         self.assertEqual(
@@ -655,55 +653,6 @@ class polynomial_test_case(_ut.TestCase):
         self.assertRaises(TypeError, lambda: x.find_cf([1.]))
         self.assertRaises(TypeError, lambda: x.find_cf([1, 'a']))
         self.assertRaises(TypeError, lambda: x.find_cf(1))
-        # Split and join.
-        pt = polynomial[integer, monomial[int16]]()
-        pt2 = polynomial[double, monomial[int16]]()
-        x, y, z = [pt(_) for _ in ['x', 'y', 'z']]
-        self.assertEqual((x + 3 * y - 2 * z).split().join(), x + 3 * y - 2 * z)
-        self.assertEqual(type((x + 3 * y - 2 * z).split()),
-                         polynomial[polynomial[integer, monomial[int16]], monomial[int16]]())
-        # Division.
-        # NOTE: should also add some uprem testing as well.
-        self.assertEqual(x / x, 1)
-        self.assertEqual(((x + y) * (x + 1)) / (x + 1), x + y)
-        x /= x
-        self.assertEqual(x, 1)
-        x = pt('x')
-        self.assertRaises(ArithmeticError, lambda: pt(1) / x)
-        self.assertEqual(pt.udivrem(x, x)[0], 1)
-        self.assertEqual(pt.udivrem(x, x)[1], 0)
-        self.assertEqual(pt.udivrem(x, x + 1)[0], 1)
-        self.assertEqual(pt.udivrem(x, x + 1)[1], -1)
-        self.assertRaises(ValueError, lambda: pt.udivrem(x + y, x + y))
-        # GCD.
-        self.assertTrue(gcd((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y)) == x -
-                        y or gcd((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y)) == -x + y)
-        self.assertRaises(TypeError, lambda: gcd(x, 1))
-        self.assertRaises(ValueError, lambda: gcd(x**-1, y))
-        # Test the methods to get/set the default GCD algo.
-        self.assertEqual(pt.get_default_gcd_algorithm(), pga.automatic)
-        pt.set_default_gcd_algorithm(pga.prs_sr)
-        self.assertEqual(pt.get_default_gcd_algorithm(), pga.prs_sr)
-        pt.reset_default_gcd_algorithm()
-        self.assertEqual(pt.get_default_gcd_algorithm(), pga.automatic)
-
-        def gcd_check(a, b, cmp):
-            for algo in [pga.automatic, pga.prs_sr, pga.heuristic]:
-                res = pt.gcd(a, b, algo)
-                self.assertTrue(res[0] == cmp or res[0] == -cmp)
-                res = pt.gcd(a, b, True, algo)
-                self.assertTrue(res[0] == cmp or res[0] == -cmp)
-                self.assertEqual(res[1], a / res[0])
-                self.assertEqual(res[2], b / res[0])
-        gcd_check((x**2 - y**2) * (x + 3), (x - y) * (x**3 + y), x - y)
-        # Content.
-        self.assertEqual((12 * x + 20 * y).content(), 4)
-        self.assertEqual((x - x).content(), 0)
-        self.assertRaises(AttributeError, lambda: pt2().content())
-        # Primitive part.
-        self.assertEqual((12 * x + 20 * y).primitive_part(), 3 * x + 5 * y)
-        self.assertRaises(ZeroDivisionError, lambda: (x - x).primitive_part())
-        self.assertRaises(AttributeError, lambda: pt2().primitive_part())
         # s11n.
         pt = polynomial[integer, monomial[int16]]()
         x, y, z = pt('x'), pt('y'), pt('z')
@@ -905,6 +854,7 @@ class converters_test_case(_ut.TestCase):
             self.assertEqual(tmp.context.dps, 100)
             self.assertTrue(fabs(tmp - bin(mpf(5.1), mpf(3.2)))
                             < mpf('5e-100'))
+
 
 class serialization_test_case(_ut.TestCase):
     """Test case for the serialization of series.
