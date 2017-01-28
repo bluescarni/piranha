@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::print_tex\l_coefficient_impl\< T,\l typename \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1print__tex__coefficient__impl.html",tooltip="Default functor for piranha::print_tex_coefficient(). "];
+  Node0 [label="piranha::series_recursion\l_index\< T, typename \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1series__recursion__index.html",tooltip="Series recursion index. "];
 }

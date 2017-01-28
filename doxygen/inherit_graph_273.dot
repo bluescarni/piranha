@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::msgpack_pack\l_impl\< Stream, Series,\l series_msgpack_pack_enabler\l\< Stream, Series \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1msgpack__pack__impl_3_01_stream_00_01_series_00_01series__msgpack__pack__enablec56dcdb099f0eafaf4f56de77c4f0b30.html",tooltip="Specialisation of piranha::msgpack_pack() for piranha::series. "];
+  Node0 [label="piranha::print_tex\l_coefficient_impl\< T,\l typename std::enable\l_if\< detail::is_mp_rational\l\< T \>::value \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1print__tex__coefficient__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01deta7b62f26a29f425de49707b424ec6dbe5.html",tooltip="Specialisation of the piranha::print_tex_coefficient() functor for piranha::mp_rational. "];
 }

@@ -616,7 +616,7 @@ template&lt;typename T  = poisson_series&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00684">684</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00600">600</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -1186,7 +1186,7 @@ template&lt;typename T  = poisson_series&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00721">721</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00637">637</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -1989,7 +1989,7 @@ template&lt;typename T  = poisson_series&gt; </div>
 
 <p>Sine. </p>
 <dl class="section note"><dt>Note</dt><dd>This template method is enabled only if <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">math::sin()</a> can be called on the class from which <a class="el" href="classpiranha_1_1poisson__series.html" title="Poisson series class. ">piranha::poisson_series</a> derives (i.e., only if the default <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">math::sin()</a> implementation for series is appropriate).</dd></dl>
-<p>In general, this method behaves exactly like the default implementation of <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a> for series types. If, however, a polynomial appears in the hierarchy of coefficients, or the coefficient type is an instance of <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a>, then this method will attempt to extract an integral linear combination of symbolic arguments and use it to construct a Poisson series with a single term, unitary coefficient and the trigonometric key built from the linear combination.</p>
+<p>In general, this method behaves exactly like the default implementation of <a class="el" href="namespacepiranha_1_1math.html#a8c98a78b13de3619ba578d2afe606209" title="Sine. ">piranha::math::sin()</a> for series types. If, however, a polynomial appears in the hierarchy of coefficients, then this method will attempt to extract an integral linear combination of symbolic arguments and use it to construct a Poisson series with a single term, unitary coefficient and the trigonometric key built from the linear combination.</p>
 <p>For instance, if the calling Poisson series is </p><p class="formulaDsp">
 \[ -2x + y, \]
 </p>
@@ -2015,7 +2015,7 @@ template&lt;typename T  = poisson_series&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00668">668</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00584">584</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -2220,7 +2220,7 @@ template&lt;typename T  = poisson_series&gt; </div>
 
 <p>Time integration. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is enabled only if:<ul>
-<li>the coefficient type is an instance of <a class="el" href="classpiranha_1_1divisor__series.html" title="Divisor series. ">piranha::divisor_series</a> or <a class="el" href="classpiranha_1_1rational__function.html" title="Rational function. ">piranha::rational_function</a>, and</li>
+<li>the coefficient type is an instance of <a class="el" href="classpiranha_1_1divisor__series.html" title="Divisor series. ">piranha::divisor_series</a>, and</li>
 <li>the operations required by the computation of the time integration are supported by all the involved types.</li>
 </ul>
 </dd></dl>
@@ -2249,7 +2249,7 @@ template&lt;typename T  = poisson_series&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00791">791</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00707">707</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -2299,7 +2299,7 @@ template&lt;typename T  = poisson_series&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00819">819</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="poisson__series_8hpp_source.html#l00735">735</a> of file <a class="el" href="poisson__series_8hpp_source.html">poisson_series.hpp</a>.</p>
 
 </div>
 </div>

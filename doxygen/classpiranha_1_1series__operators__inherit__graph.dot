@@ -44,18 +44,4 @@ digraph "piranha::series_operators"
   Node19 [label="piranha::power_series\l\< ipow_substitutable\l_series\< substitutable\l_series\< t_substitutable\l_series\< trigonometric_series\l\< series\< Cf, rtk_monomial,\l poisson_series\< Cf \> \> \>, poisson\l_series\< Cf \> \>, poisson_series\<\l Cf \> \>, poisson_series\< Cf \> \>, poisson\l_series\< Cf \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1power__series.html"];
   Node19 -> Node20 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node20 [label="piranha::poisson_series\l\< Cf \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1poisson__series.html",tooltip="Poisson series class. "];
-  Node0 -> Node21 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
-  Node21 [label="piranha::series\< integer,\l Key, polynomial\< integer,\l Key \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1series.html"];
-  Node21 -> Node22 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node22 [label="piranha::t_substitutable\l_series\< series\< integer,\l Key, polynomial\< integer,\l Key \> \>, polynomial\< integer,\l Key \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1t__substitutable__series.html"];
-  Node22 -> Node23 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node23 [label="piranha::substitutable\l_series\< t_substitutable\l_series\< series\< integer,\l Key, polynomial\< integer,\l Key \> \>, polynomial\< integer,\l Key \> \>, polynomial\< integer, Key \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1substitutable__series.html"];
-  Node23 -> Node24 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node24 [label="piranha::ipow_substitutable\l_series\< substitutable_series\l\< t_substitutable_series\< series\l\< integer, Key, polynomial\< integer,\l Key \> \>, polynomial\< integer, Key\l \> \>, polynomial\< integer, Key \> \>,\l polynomial\< integer, Key \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1ipow__substitutable__series.html"];
-  Node24 -> Node25 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node25 [label="piranha::trigonometric\l_series\< ipow_substitutable\l_series\< substitutable_series\l\< t_substitutable_series\< series\l\< integer, Key, polynomial\< integer,\l Key \> \>, polynomial\< integer, Key\l \> \>, polynomial\< integer, Key \> \>,\l polynomial\< integer, Key \> \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1trigonometric__series.html"];
-  Node25 -> Node26 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node26 [label="piranha::power_series\l\< trigonometric_series\l\< ipow_substitutable_series\l\< substitutable_series\< t\l_substitutable_series\< series\l\< integer, Key, polynomial\< integer,\l Key \> \>, polynomial\< integer, Key\l \> \>, polynomial\< integer, Key \> \>,\l polynomial\< integer, Key \> \> \>, polynomial\l\< integer, Key \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1power__series.html"];
-  Node26 -> Node27 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node27 [label="piranha::polynomial\l\< integer, Key \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1polynomial.html"];
 }

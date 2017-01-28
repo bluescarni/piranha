@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::mp_integer\l\< NBits \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1mp__integer.html",tooltip="Multiple precision integer class. "];
+  Node0 [label="piranha::msgpack_pack\l_impl\< Stream, hash_set\l\< T, Hash, Pred \>, hash\l_set_msgpack_pack_enabler\l\< Stream, T, Hash, Pred \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1msgpack__pack__impl_3_01_stream_00_01hash__set_3_01_t_00_01_hash_00_01_pred_01_a066d477d6a81a66d3d487890659fa84.html",tooltip="Specialisation of piranha::msgpack_pack() for piranha::hash_set. "];
 }

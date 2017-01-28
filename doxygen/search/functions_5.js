@@ -10,6 +10,5 @@ var searchData=
   ['evaluate',['evaluate',['../classpiranha_1_1divisor.html#ac792bc29607e03d888765dc95a007c0f',1,'piranha::divisor::evaluate()'],['../classpiranha_1_1kronecker__monomial.html#a6ddb407c3ef73097b478dd88e0661592',1,'piranha::kronecker_monomial::evaluate()'],['../classpiranha_1_1monomial.html#a1dd0d7ec29b262bfd6cd530ad9f74d20',1,'piranha::monomial::evaluate()'],['../classpiranha_1_1real__trigonometric__kronecker__monomial.html#a9307ca5fbc6174d0a92d03cc25dea481',1,'piranha::real_trigonometric_kronecker_monomial::evaluate()'],['../classpiranha_1_1series.html#ae5c9ee4d3741bec3a93ec78bf0831f43',1,'piranha::series::evaluate()'],['../namespacepiranha_1_1math.html#a7b7051ad0e4cd2e7373bb71747e2116a',1,'piranha::math::evaluate()']]],
   ['evaluate_5fsparsity',['evaluate_sparsity',['../classpiranha_1_1hash__set.html#a525256d52ac552b9a81e9978654f1d36',1,'piranha::hash_set']]],
   ['exp',['exp',['../classpiranha_1_1real.html#affabc1b21b6fbbaa4b20f0acbaeef73d',1,'piranha::real']]],
-  ['extend_5fsymbol_5fset',['extend_symbol_set',['../classpiranha_1_1series.html#aaafc56eba07220821ab4b7f026105bd9',1,'piranha::series']]],
-  ['extract_5fexponents',['extract_exponents',['../classpiranha_1_1kronecker__monomial.html#a0f898a1921a9777c644c959adfc17c27',1,'piranha::kronecker_monomial::extract_exponents()'],['../classpiranha_1_1monomial.html#abced45d33d573a0bb686115994ae3771',1,'piranha::monomial::extract_exponents()']]]
+  ['extend_5fsymbol_5fset',['extend_symbol_set',['../classpiranha_1_1series.html#aaafc56eba07220821ab4b7f026105bd9',1,'piranha::series']]]
 ];

@@ -1,13 +1,12 @@
 var searchData=
 [
   ['gamma',['gamma',['../classpiranha_1_1real.html#a963355262532aadaa800c318f66eefde',1,'piranha::real']]],
-  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../classpiranha_1_1polynomial.html#a9dd3cf150972e0e3fe5a6524466f0f2d',1,'piranha::polynomial::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
+  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
   ['gcd3',['gcd3',['../namespacepiranha_1_1math.html#aed326292eae1eeef5a46fd472a6e3165',1,'piranha::math']]],
   ['get_5fall',['get_all',['../classpiranha_1_1future__list.html#a24702db33f17b26d7e43b378ba2a27ac',1,'piranha::future_list']]],
   ['get_5fauto_5ftruncate_5fdegree',['get_auto_truncate_degree',['../classpiranha_1_1polynomial.html#a1448978bc7f49ee46d3099cd8580dd1a',1,'piranha::polynomial']]],
   ['get_5fbinding',['get_binding',['../classpiranha_1_1thread__pool__.html#a7339d6be8dfe9c0fb90511594c1a7bd7',1,'piranha::thread_pool_']]],
   ['get_5fcache_5fline_5fsize',['get_cache_line_size',['../classpiranha_1_1runtime__info.html#aac7510b135cddd7cdb28a9bea7e6d889',1,'piranha::runtime_info::get_cache_line_size()'],['../classpiranha_1_1settings__.html#a7416d94ce5d919f7f1bd1c80e95a24fe',1,'piranha::settings_::get_cache_line_size()']]],
-  ['get_5fdefault_5fgcd_5falgorithm',['get_default_gcd_algorithm',['../classpiranha_1_1polynomial.html#a2f8720b75662fd74c3b34dd17174729b',1,'piranha::polynomial']]],
   ['get_5festimate_5fthreshold',['get_estimate_threshold',['../classpiranha_1_1tuning.html#ae52b6a8240816c547472fa5194a48f3b',1,'piranha::tuning']]],
   ['get_5fevaluable',['get_evaluable',['../classpiranha_1_1math_1_1lambdified.html#a2263ec21373ebaaf7a43a8f4e94c89ef',1,'piranha::math::lambdified']]],
   ['get_5fextra_5fnames',['get_extra_names',['../classpiranha_1_1math_1_1lambdified.html#aefbb7784f880bce9e18a09fb5989d376',1,'piranha::math::lambdified']]],

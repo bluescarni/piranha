@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::sin\l_impl\< Series, detail\l::series_sin_enabler\<\l Series \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1sin__impl_3_01_series_00_01detail_1_1series__sin__enabler_3_01_series_01_4_01_4.html",tooltip="Specialisation of the piranha::math::sin() functor for piranha::series. "];
+  Node0 [label="piranha::math::subs\l_impl\< T, U, Enable \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1subs__impl.html",tooltip="Default functor for the implementation of piranha::math::subs(). "];
 }

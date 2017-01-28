@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::divexact\l_impl\< T, detail::poly\l_divexact_enabler\< T \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1divexact__impl_3_01_t_00_01detail_1_1poly__divexact__enabler_3_01_t_01_4_01_4.html",tooltip="Implementation of piranha::math::divexact() for piranha::polynomial. "];
+  Node0 [label="piranha::math::divexact\l_impl\< T, typename std\l::enable_if\< detail::is\l_mp_rational\< T \>::value\l \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1divexact__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01detail_1_1ie07c33a9ba7067e350420c6e6cd9d1a5.html",tooltip="Implementation of piranha::math::divexact() for piranha::mp_rational. "];
 }

@@ -219,15 +219,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a48ecc463c05c7fd2a5f7afd36217213d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a48ecc463c05c7fd2a5f7afd36217213d">operator&lt;</a> (const <a class="el" href="classpiranha_1_1monomial.html">monomial</a> &amp;other) const</td></tr>
 <tr class="memdesc:a48ecc463c05c7fd2a5f7afd36217213d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comparison operator.  <a href="#a48ecc463c05c7fd2a5f7afd36217213d">More...</a><br /></td></tr>
 <tr class="separator:a48ecc463c05c7fd2a5f7afd36217213d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abced45d33d573a0bb686115994ae3771"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#abced45d33d573a0bb686115994ae3771">extract_exponents</a> (std::vector&lt; typename <a class="el" href="classpiranha_1_1array__key.html#a51b7b1b403e7342fd0500a94fe69b076">base::value_type</a> &gt; &amp;out, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const</td></tr>
-<tr class="memdesc:abced45d33d573a0bb686115994ae3771"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract the vector of exponents.  <a href="#abced45d33d573a0bb686115994ae3771">More...</a><br /></td></tr>
-<tr class="separator:abced45d33d573a0bb686115994ae3771"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5cb52f952085bd4b61ae5f140fe62f6d"><td class="memItemLeft" align="right" valign="top">std::pair&lt; <a class="el" href="classpiranha_1_1monomial.html">monomial</a>, <a class="el" href="classpiranha_1_1monomial.html">monomial</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a5cb52f952085bd4b61ae5f140fe62f6d">split</a> (const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const</td></tr>
-<tr class="memdesc:a5cb52f952085bd4b61ae5f140fe62f6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Split.  <a href="#a5cb52f952085bd4b61ae5f140fe62f6d">More...</a><br /></td></tr>
-<tr class="separator:a5cb52f952085bd4b61ae5f140fe62f6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac88d1d16e974e2e968c795fab2599531"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#ac88d1d16e974e2e968c795fab2599531">has_negative_exponent</a> (const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const</td></tr>
-<tr class="memdesc:ac88d1d16e974e2e968c795fab2599531"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect negative exponents.  <a href="#ac88d1d16e974e2e968c795fab2599531">More...</a><br /></td></tr>
-<tr class="separator:ac88d1d16e974e2e968c795fab2599531"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6afff80e4f5731ba9488a6eaeb6a277d"><td class="memTemplParams" colspan="2">template&lt;typename Stream , msgpack_pack_enabler&lt; Stream &gt;  = 0&gt; </td></tr>
 <tr class="memitem:a6afff80e4f5731ba9488a6eaeb6a277d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a6afff80e4f5731ba9488a6eaeb6a277d">msgpack_pack</a> (msgpack::packer&lt; Stream &gt; &amp;packer, <a class="el" href="namespacepiranha.html#a2b90f21cb3e6e18b3f47af2ddc87d5d3">msgpack_format</a> f, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;s) const</td></tr>
 <tr class="memdesc:a6afff80e4f5731ba9488a6eaeb6a277d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize in msgpack format.  <a href="#a6afff80e4f5731ba9488a6eaeb6a277d">More...</a><br /></td></tr>
@@ -906,120 +897,6 @@ template&lt;typename U &gt; </div>
 
 </div>
 </div>
-<a id="abced45d33d573a0bb686115994ae3771"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abced45d33d573a0bb686115994ae3771">&#9670;&nbsp;</a></span>extract_exponents()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t, 0u&gt;&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classpiranha_1_1monomial.html">piranha::monomial</a>&lt; T, S &gt;::extract_exponents </td>
-          <td>(</td>
-          <td class="paramtype">std::vector&lt; typename <a class="el" href="classpiranha_1_1array__key.html#a51b7b1b403e7342fd0500a94fe69b076">base::value_type</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>out</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
-          <td class="paramname"><em>args</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Extract the vector of exponents. </p>
-<p>This method will write into <code>out</code> the content of <code>this</code>. If necessary, <code>out</code> will be resized to match the size of <code>this</code>.</p>
-<p>Note that this method does not offer a strong exception safety guarantee, as it uses <code>std::copy()</code> internally to copy the exponents to <code>out</code>.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">out</td><td>vector into which the exponents will be copied. </td></tr>
-    <tr><td class="paramname">args</td><td>reference set of arguments.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">std::invalid_argument</td><td>if the sizes of <code>args</code> and <code>this</code> differ. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
-<li>the resizing of <code>out</code>,</li>
-<li>the copy assignment of the exponents. </li>
-</ul>
-</td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="monomial_8hpp_source.html#l01120">1120</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
-
-</div>
-</div>
-<a id="ac88d1d16e974e2e968c795fab2599531"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac88d1d16e974e2e968c795fab2599531">&#9670;&nbsp;</a></span>has_negative_exponent()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t, 0u&gt;&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool <a class="el" href="classpiranha_1_1monomial.html">piranha::monomial</a>&lt; T, S &gt;::has_negative_exponent </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
-          <td class="paramname"><em>args</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Detect negative exponents. </p>
-<p>This method will return <code>true</code> if at least one exponent is less than zero, <code>false</code> otherwise.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">args</td><td>reference arguments set.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd><code>true</code> if at least one exponent is less than zero, <code>false</code> otherwise.</dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">std::invalid_argument</td><td>if the size of <code>args</code> is different from the size of <code>this</code>. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li>the construction of an exponent from an <code>int</code>,</li>
-<li>the comparison operator of the exponent type. </li>
-</ul>
-</td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="monomial_8hpp_source.html#l01170">1170</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
-
-</div>
-</div>
 <a id="a93587f8be921b728e85f9538406a83ec"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a93587f8be921b728e85f9538406a83ec">&#9670;&nbsp;</a></span>hash()</h2>
 
@@ -1622,7 +1499,7 @@ template&lt;typename U  = monomial, msgpack_convert_enabler&lt; U &gt;  = 0&gt; 
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="monomial_8hpp_source.html#l01245">1245</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monomial_8hpp_source.html#l01168">1168</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1689,7 +1566,7 @@ template&lt;typename Stream , msgpack_pack_enabler&lt; Stream &gt;  = 0&gt; </di
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="monomial_8hpp_source.html#l01218">1218</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monomial_8hpp_source.html#l01141">1141</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2601,53 +2478,6 @@ template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t, 0u
 <dl class="section return"><dt>Returns</dt><dd>the output of the <a class="el" href="classpiranha_1_1small__vector.html#aae6f725c3c63c9edebca268278ebb0ab" title="Size, begin and end. ">piranha::small_vector::size_begin_end()</a> method called by the internal <a class="el" href="classpiranha_1_1small__vector.html" title="Small vector class. ">piranha::small_vector</a> container. </dd></dl>
 
 <p class="definition">Definition at line <a class="el" href="array__key_8hpp_source.html#l00483">483</a> of file <a class="el" href="array__key_8hpp_source.html">array_key.hpp</a>.</p>
-
-</div>
-</div>
-<a id="a5cb52f952085bd4b61ae5f140fe62f6d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5cb52f952085bd4b61ae5f140fe62f6d">&#9670;&nbsp;</a></span>split()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , typename S  = std::integral_constant&lt;std::size_t, 0u&gt;&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::pair&lt;<a class="el" href="classpiranha_1_1monomial.html">monomial</a>, <a class="el" href="classpiranha_1_1monomial.html">monomial</a>&gt; <a class="el" href="classpiranha_1_1monomial.html">piranha::monomial</a>&lt; T, S &gt;::split </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
-          <td class="paramname"><em>args</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Split. </p>
-<p>This method will split <code>this</code> into two monomials: the second monomial will contain the exponent of the first variable in <code>args</code>, the first monomial will contain all the other exponents.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">args</td><td>reference arguments set.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>a pair of monomials, the second one containing the first exponent, the first one containing all the other exponents.</dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">std::invalid_argument</td><td>if the size of <code>args</code> is different from the size of <code>this</code> or less than 2. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by the constructor from a range. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="monomial_8hpp_source.html#l01145">1145</a> of file <a class="el" href="monomial_8hpp_source.html">monomial.hpp</a>.</p>
 
 </div>
 </div>

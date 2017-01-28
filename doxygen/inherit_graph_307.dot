@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::small_vector\l\< T, S \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1small__vector.html",tooltip="Small vector class. "];
+  Node0 [label="std::hash\< piranha\l::kronecker_monomial\l\< T \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structstd_1_1hash_3_01piranha_1_1kronecker__monomial_3_01_t_01_4_01_4.html",tooltip="Specialisation of std::hash for piranha::kronecker_monomial. "];
 }

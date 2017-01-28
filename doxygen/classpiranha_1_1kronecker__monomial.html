@@ -229,15 +229,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac38e2d8d554f4c0288a9f25fdbe01df7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#ac38e2d8d554f4c0288a9f25fdbe01df7">operator&lt;</a> (const <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &amp;other) const</td></tr>
 <tr class="memdesc:ac38e2d8d554f4c0288a9f25fdbe01df7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comparison operator.  <a href="#ac38e2d8d554f4c0288a9f25fdbe01df7">More...</a><br /></td></tr>
 <tr class="separator:ac38e2d8d554f4c0288a9f25fdbe01df7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f898a1921a9777c644c959adfc17c27"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a0f898a1921a9777c644c959adfc17c27">extract_exponents</a> (std::vector&lt; <a class="el" href="classpiranha_1_1kronecker__monomial.html#a34c8c65587c911f881e74ff31babaf4f">value_type</a> &gt; &amp;out, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const</td></tr>
-<tr class="memdesc:a0f898a1921a9777c644c959adfc17c27"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract the vector of exponents.  <a href="#a0f898a1921a9777c644c959adfc17c27">More...</a><br /></td></tr>
-<tr class="separator:a0f898a1921a9777c644c959adfc17c27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3991f7d22c96102ce206830fd4fa898"><td class="memItemLeft" align="right" valign="top">std::pair&lt; <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a>, <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#ab3991f7d22c96102ce206830fd4fa898">split</a> (const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const</td></tr>
-<tr class="memdesc:ab3991f7d22c96102ce206830fd4fa898"><td class="mdescLeft">&#160;</td><td class="mdescRight">Split.  <a href="#ab3991f7d22c96102ce206830fd4fa898">More...</a><br /></td></tr>
-<tr class="separator:ab3991f7d22c96102ce206830fd4fa898"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95719ca7a40ad2bc6452200353dc21bc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#a95719ca7a40ad2bc6452200353dc21bc">has_negative_exponent</a> (const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const</td></tr>
-<tr class="memdesc:a95719ca7a40ad2bc6452200353dc21bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect negative exponents.  <a href="#a95719ca7a40ad2bc6452200353dc21bc">More...</a><br /></td></tr>
-<tr class="separator:a95719ca7a40ad2bc6452200353dc21bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab622dacd2883b401077cd3fc37b420ee"><td class="memTemplParams" colspan="2">template&lt;typename Stream , msgpack_pack_enabler&lt; Stream &gt;  = 0&gt; </td></tr>
 <tr class="memitem:ab622dacd2883b401077cd3fc37b420ee"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1kronecker__monomial.html#ab622dacd2883b401077cd3fc37b420ee">msgpack_pack</a> (msgpack::packer&lt; Stream &gt; &amp;packer, <a class="el" href="namespacepiranha.html#a2b90f21cb3e6e18b3f47af2ddc87d5d3">msgpack_format</a> f, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;s) const</td></tr>
 <tr class="memdesc:ab622dacd2883b401077cd3fc37b420ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize in msgpack format.  <a href="#ab622dacd2883b401077cd3fc37b420ee">More...</a><br /></td></tr>
@@ -958,67 +949,6 @@ template&lt;typename U &gt; </div>
 
 </div>
 </div>
-<a id="a0f898a1921a9777c644c959adfc17c27"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0f898a1921a9777c644c959adfc17c27">&#9670;&nbsp;</a></span>extract_exponents()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classpiranha_1_1kronecker__monomial.html">piranha::kronecker_monomial</a>&lt; T &gt;::extract_exponents </td>
-          <td>(</td>
-          <td class="paramtype">std::vector&lt; <a class="el" href="classpiranha_1_1kronecker__monomial.html#a34c8c65587c911f881e74ff31babaf4f">value_type</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>out</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
-          <td class="paramname"><em>args</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Extract the vector of exponents. </p>
-<p>This method will write into <code>out</code> the content of <code>this</code>. If necessary, <code>out</code> will be resized to match the size of <code>args</code>.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">out</td><td>vector into which the exponents will be copied. </td></tr>
-    <tr><td class="paramname">args</td><td>reference set of arguments.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
-<li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
-<li>the resizing of <code>out</code>,</li>
-<li><a class="el" href="classpiranha_1_1kronecker__monomial.html#a896bc9d38e3071215e2a86ed78ae8c3d" title="Unpack internal integer instance. ">unpack()</a>. </li>
-</ul>
-</td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l01143">1143</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
-
-</div>
-</div>
 <a id="a52c977d1c9fd6b26e5484e790fa12319"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a52c977d1c9fd6b26e5484e790fa12319">&#9670;&nbsp;</a></span>get_int()</h2>
 
@@ -1048,52 +978,6 @@ template&lt;typename T = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>value of the internal integer instance. </dd></dl>
 
 <p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00444">444</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
-
-</div>
-</div>
-<a id="a95719ca7a40ad2bc6452200353dc21bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a95719ca7a40ad2bc6452200353dc21bc">&#9670;&nbsp;</a></span>has_negative_exponent()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool <a class="el" href="classpiranha_1_1kronecker__monomial.html">piranha::kronecker_monomial</a>&lt; T &gt;::has_negative_exponent </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
-          <td class="paramname"><em>args</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Detect negative exponents. </p>
-<p>This method will return <code>true</code> if at least one exponent is less than zero, <code>false</code> otherwise.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">args</td><td>reference arguments set.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd><code>true</code> if at least one exponent is less than zero, <code>false</code> otherwise.</dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1kronecker__monomial.html#a896bc9d38e3071215e2a86ed78ae8c3d" title="Unpack internal integer instance. ">unpack()</a>. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l01183">1183</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1689,7 +1573,7 @@ template&lt;typename U  = kronecker_monomial, msgpack_convert_enabler&lt; U &gt;
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l01247">1247</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l01189">1189</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -1755,7 +1639,7 @@ template&lt;typename Stream , msgpack_pack_enabler&lt; Stream &gt;  = 0&gt; </di
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l01218">1218</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l01160">1160</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>
@@ -2368,53 +2252,6 @@ template&lt;typename T = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 </dl>
 
 <p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l00436">436</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
-
-</div>
-</div>
-<a id="ab3991f7d22c96102ce206830fd4fa898"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3991f7d22c96102ce206830fd4fa898">&#9670;&nbsp;</a></span>split()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::pair&lt;<a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a>, <a class="el" href="classpiranha_1_1kronecker__monomial.html">kronecker_monomial</a>&gt; <a class="el" href="classpiranha_1_1kronecker__monomial.html">piranha::kronecker_monomial</a>&lt; T &gt;::split </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;&#160;</td>
-          <td class="paramname"><em>args</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Split. </p>
-<p>This method will split <code>this</code> into two monomials: the second monomial will contain the exponent of the first variable in <code>args</code>, the first monomial will contain all the other exponents.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">args</td><td>reference arguments set.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>a pair of monomials, the second one containing the first exponent, the first one containing all the other exponents.</dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">std::invalid_argument</td><td>if the size of <code>args</code> is less than 2. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1kronecker__monomial.html#a896bc9d38e3071215e2a86ed78ae8c3d" title="Unpack internal integer instance. ">unpack()</a> or by the constructor from a range. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="kronecker__monomial_8hpp_source.html#l01165">1165</a> of file <a class="el" href="kronecker__monomial_8hpp_source.html">kronecker_monomial.hpp</a>.</p>
 
 </div>
 </div>

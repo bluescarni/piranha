@@ -6,6 +6,4 @@ digraph "Graphical Class Hierarchy"
   Node0 [label="piranha::boost_save\l_via_boost_api\< Archive, T \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__via__boost__api.html",tooltip="Implementation of piranha::boost_save() via the Boost API. "];
   Node0 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node1 [label="piranha::boost_save\l_impl\< Archive, T, boost\l_save_arithmetic_enabler\l\< Archive, T \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__impl_3_01_archive_00_01_t_00_01boost__save__arithmetic__enabler_3_01_archive_00_01_t_01_4_01_4.html",tooltip="Specialisation of piranha::boost_save() for arithmetic types. "];
-  Node0 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node2 [label="piranha::boost_save\l_impl\< Archive, T, rf\l_boost_save_enabler\< Archive,\l T \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__impl_3_01_archive_00_01_t_00_01rf__boost__save__enabler_3_01_archive_00_01_t_01_4_01_4.html",tooltip="Specialisation of piranha::boost_save() for piranha::rational_function. "];
 }
