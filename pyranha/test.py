@@ -341,12 +341,13 @@ class mpmath_test_case(_ut.TestCase):
         from .math import evaluate
         pt = polynomial[integer, monomial[int16]]()
         x = pt('x')
-        self.assertEqual(evaluate(x,{'x':mpf('4.5667')}), mpf('4.5667'))
-        self.assert_(type(evaluate(x,{'x':mpf('4.5667')})) == mpf)
+        self.assertEqual(evaluate(x, {'x': mpf('4.5667')}), mpf('4.5667'))
+        self.assert_(type(evaluate(x, {'x': mpf('4.5667')})) == mpf)
         for n in [11, 21, 51, 101, 501]:
             with workdps(n):
-                self.assertEqual(evaluate(x,{'x':mpf('4.5667')}), mpf('4.5667'))
-                self.assert_(type(evaluate(x,{'x':mpf('4.5667')})) == mpf)
+                self.assertEqual(
+                    evaluate(x, {'x': mpf('4.5667')}), mpf('4.5667'))
+                self.assert_(type(evaluate(x, {'x': mpf('4.5667')})) == mpf)
 
 
 class math_test_case(_ut.TestCase):
@@ -853,6 +854,7 @@ class converters_test_case(_ut.TestCase):
             self.assertEqual(tmp.context.dps, 100)
             self.assertTrue(fabs(tmp - bin(mpf(5.1), mpf(3.2)))
                             < mpf('5e-100'))
+
 
 class serialization_test_case(_ut.TestCase):
     """Test case for the serialization of series.
