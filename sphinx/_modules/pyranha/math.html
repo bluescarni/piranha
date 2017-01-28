@@ -282,12 +282,12 @@
     <span class="sd">&quot;&quot;&quot;Greatest common divisor.</span>
 
 <span class="sd">    This function is a wrapper around a lower level function. It will calculate the GCD of *x* and *y*,</span>
-<span class="sd">    supporting ``int`` and various symbolic types as input.</span>
+<span class="sd">    supporting ``int`` as argument type.</span>
 
 <span class="sd">    :param x: first argument</span>
-<span class="sd">    :type x: ``int`` or a supported symbolic type</span>
+<span class="sd">    :type x: ``int``</span>
 <span class="sd">    :param y: second argument</span>
-<span class="sd">    :type y: ``int`` or a supported symbolic type</span>
+<span class="sd">    :type y: ``int``</span>
 <span class="sd">    :returns: the GCD of *x* and *y*</span>
 <span class="sd">    :raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported</span>
 <span class="sd">    :raises: any exception raised by the invoked low-level function</span>
@@ -297,13 +297,7 @@
 <span class="sd">    &gt;&gt;&gt; from pyranha.types import polynomial, integer, k_monomial</span>
 <span class="sd">    &gt;&gt;&gt; pt = polynomial[integer,k_monomial]()</span>
 <span class="sd">    &gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; gcd((x**2-y**2)*(x**3+1),(x+1)*(x+2*y)) # doctest: +SKIP</span>
-<span class="sd">    x+1</span>
 <span class="sd">    &gt;&gt;&gt; gcd(x**-1,y) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
-<span class="sd">    Traceback (most recent call last):</span>
-<span class="sd">       ...</span>
-<span class="sd">    ValueError: negative exponents are not allowed</span>
-<span class="sd">    &gt;&gt;&gt; gcd(x,2) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
 <span class="sd">    Traceback (most recent call last):</span>
 <span class="sd">       ...</span>
 <span class="sd">    TypeError: invalid argument type(s)</span>
