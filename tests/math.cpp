@@ -451,6 +451,14 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
 
 BOOST_AUTO_TEST_CASE(math_abs_test)
 {
+    BOOST_CHECK(has_abs<int>::value);
+    BOOST_CHECK(has_abs<int &>::value);
+    BOOST_CHECK(has_abs<const int &>::value);
+    BOOST_CHECK(has_abs<const int>::value);
+    BOOST_CHECK(has_abs<float>::value);
+    BOOST_CHECK(has_abs<double &&>::value);
+    BOOST_CHECK(!has_abs<void>::value);
+    BOOST_CHECK(!has_abs<std::string>::value);
     BOOST_CHECK_EQUAL(math::abs((signed char)(4)), (signed char)(4));
     BOOST_CHECK_EQUAL(math::abs((signed char)(-4)), (signed char)(4));
     BOOST_CHECK_EQUAL(math::abs(short(4)), short(4));

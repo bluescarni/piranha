@@ -970,8 +970,7 @@ private:
         return std::abs(x);
     }
     // NOTE: use decltype here so, in the remote case we are dealing with an extended integer types (for which
-    // std::abs()
-    // will not exist and cast to long long might be lossy), the overload will be discarded.
+    // std::abs() will not exist and cast to long long might be lossy), the overload will be discarded.
     template <typename U>
     static auto impl(const U &x,
                      typename std::enable_if<std::is_integral<U>::value && std::is_signed<U>::value>::type * = nullptr)
@@ -1016,6 +1015,26 @@ inline auto abs(const T &x) -> decltype(abs_impl<T>()(x))
     return abs_impl<T>()(x);
 }
 }
+
+/// Type trait to detect the presence of the piranha::math::abs() function.
+/**
+ * The type trait will be \p true if piranha::math::abs() can be successfully called on instances of \p T.
+ */
+template <typename T>
+class has_abs
+{
+    template <typename U>
+    using abs_t = decltype(math::abs(std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<abs_t,T>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+// Static init.
+template <typename T>
+const bool has_abs<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::is_zero() function.
 /**
