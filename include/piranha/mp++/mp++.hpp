@@ -1006,6 +1006,8 @@ class mp_integer
     }
 
 public:
+    /// Alias for the template parameter \p SSize.
+    static constexpr std::size_t ssize = SSize;
     /// Default constructor.
     /**
      * The default constructor initialises an integer with static storage type and value 0.
@@ -4794,6 +4796,9 @@ public:
 private:
     mppp_impl::integer_union<SSize> m_int;
 };
+
+template <std::size_t SSize>
+constexpr std::size_t mp_integer<SSize>::ssize;
 
 namespace mppp_impl
 {
