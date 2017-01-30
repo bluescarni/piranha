@@ -31,16 +31,10 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE mp_integer_04_test
 #include <boost/test/included/unit_test.hpp>
 
-#define FUSION_MAX_VECTOR_SIZE 20
-
 #include <atomic>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/fusion/algorithm.hpp>
-#include <boost/fusion/include/algorithm.hpp>
-#include <boost/fusion/include/sequence.hpp>
-#include <boost/fusion/sequence.hpp>
 #include <initializer_list>
 #include <limits>
 #include <random>
@@ -48,6 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -55,16 +50,13 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/init.hpp>
 #include <piranha/s11n.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
-using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
-                                      std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(__SIZEOF_INT128__)
-                                      ,
-                                      std::integral_constant<int, 64>
-#endif
-                                      >;
+using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integral_constant<std::size_t, 2>,
+                              std::integral_constant<std::size_t, 3>, std::integral_constant<std::size_t, 7>,
+                              std::integral_constant<std::size_t, 10>>;
 
 namespace bfs = boost::filesystem;
 
@@ -127,7 +119,7 @@ static inline T boost_roundtrip(const T &x, bool promote = false)
 
 struct boost_s11n_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using int_type = mp_integer<T::value>;
         BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, int_type>::value));
@@ -182,7 +174,7 @@ struct boost_s11n_tester {
                 // Randomly flip sign (useful if the code above was run, as that forces the value to be positive
                 // because it squares the original value twice).
                 if (pdist(rng)) {
-                    cmp.negate();
+                    cmp.neg();
                 }
                 auto tmp2 = boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
                     cmp, pdist(rng));
@@ -225,12 +217,12 @@ struct boost_s11n_tester {
 BOOST_AUTO_TEST_CASE(mp_integer_boost_s11n_test)
 {
     init();
-    boost::mpl::for_each<size_types>(boost_s11n_tester());
+    tuple_for_each(size_types{}, boost_s11n_tester{});
 }
 
 struct save_load_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using int_type = mp_integer<T::value>;
         std::atomic<bool> status(true);
@@ -254,7 +246,7 @@ struct save_load_tester {
                         // Randomly flip sign (useful if the code above was run, as that forces the value to be positive
                         // because it squares the original value twice).
                         if (pdist(rng)) {
-                            tmp.negate();
+                            tmp.neg();
                         }
 #if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
                         // NOTE: we are not expecting any failure if we have all optional deps.
@@ -289,7 +281,7 @@ struct save_load_tester {
 
 BOOST_AUTO_TEST_CASE(mp_integer_save_load_test)
 {
-    boost::mpl::for_each<size_types>(save_load_tester());
+    tuple_for_each(size_types{}, save_load_tester{});
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -311,7 +303,7 @@ static inline T msgpack_roundtrip(const T &x, msgpack_format f, bool promote = f
 
 struct msgpack_s11n_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using int_type = mp_integer<T::value>;
         BOOST_CHECK((has_msgpack_pack<std::stringstream, int_type>::value));
@@ -357,7 +349,7 @@ struct msgpack_s11n_tester {
                     // Randomly flip sign (useful if the code above was run, as that forces the value to be positive
                     // because it squares the original value twice).
                     if (pdist(rng)) {
-                        cmp.negate();
+                        cmp.neg();
                     }
                     auto tmp = msgpack_roundtrip(cmp, f, pdist(rng));
                     if (tmp != cmp || (f == msgpack_format::binary && tmp.is_static() != cmp.is_static())) {
@@ -399,35 +391,39 @@ struct msgpack_s11n_tester {
             BOOST_CHECK_EQUAL(n, 1);
         }
         {
-            // Wrong number of static int limbs.
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> p(sbuf);
-            p.pack_array(3);
-            p.pack(true);
-            p.pack(true);
-            p.pack_array(3);
-            p.pack(1);
-            p.pack(2);
-            p.pack(3);
-            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            int_type n{1};
-            BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::binary), std::invalid_argument);
-            BOOST_CHECK_EQUAL(n, 1);
+            if (T::value < 3u) {
+                // Wrong number of static int limbs.
+                msgpack::sbuffer sbuf;
+                msgpack::packer<msgpack::sbuffer> p(sbuf);
+                p.pack_array(3);
+                p.pack(true);
+                p.pack(true);
+                p.pack_array(3);
+                p.pack(1);
+                p.pack(2);
+                p.pack(3);
+                auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+                int_type n{1};
+                BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::binary), std::invalid_argument);
+                BOOST_CHECK_EQUAL(n, 1);
+            }
         }
         {
-            // Static int, wrong limb type.
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> p(sbuf);
-            p.pack_array(3);
-            p.pack(true);
-            p.pack(true);
-            p.pack_array(2);
-            p.pack(1);
-            p.pack("hello");
-            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            int_type n{1};
-            BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::binary), msgpack::type_error);
-            BOOST_CHECK_EQUAL(n, 0);
+            if (T::value > 1u) {
+                // Static int, wrong limb type.
+                msgpack::sbuffer sbuf;
+                msgpack::packer<msgpack::sbuffer> p(sbuf);
+                p.pack_array(3);
+                p.pack(true);
+                p.pack(true);
+                p.pack_array(2);
+                p.pack(1);
+                p.pack("hello");
+                auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
+                int_type n{1};
+                BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::binary), msgpack::type_error);
+                BOOST_CHECK_EQUAL(n, 0);
+            }
         }
         {
             // Dynamic int, wrong limb type.
@@ -459,7 +455,7 @@ struct msgpack_s11n_tester {
 
 BOOST_AUTO_TEST_CASE(mp_integer_msgpack_s11n_test)
 {
-    boost::mpl::for_each<size_types>(msgpack_s11n_tester());
+    tuple_for_each(size_types{}, msgpack_s11n_tester{});
 }
 
 #endif

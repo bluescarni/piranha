@@ -1078,11 +1078,3 @@ BOOST_AUTO_TEST_CASE(math_gcd_test)
     mock_type m0;
     BOOST_CHECK_NO_THROW(gcd3(m0, mock_type{}, mock_type{}));
 }
-
-BOOST_AUTO_TEST_CASE(math_divexact_test)
-{
-    BOOST_CHECK(!has_exact_division<int>::value);
-    BOOST_CHECK(!has_exact_division<double>::value);
-    BOOST_CHECK(!has_exact_division<const short &>::value);
-    BOOST_CHECK(!has_exact_division<char &&>::value);
-}

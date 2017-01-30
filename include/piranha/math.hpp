@@ -1025,7 +1025,7 @@ class has_abs
 {
     template <typename U>
     using abs_t = decltype(math::abs(std::declval<const U &>()));
-    static const bool implementation_defined = is_detected<abs_t,T>::value;
+    static const bool implementation_defined = is_detected<abs_t, T>::value;
 
 public:
     /// Value of the type trait.
@@ -2819,43 +2819,6 @@ inline auto div3(T &a, const T &b, const T &c) -> decltype(div3_impl<T>()(a, b, 
 {
     return div3_impl<T>()(a, b, c);
 }
-
-/// Exception to signal an inexact division.
-struct inexact_division final : std::invalid_argument {
-    /// Default constructor.
-    explicit inexact_division() : std::invalid_argument("inexact division")
-    {
-    }
-};
-
-/// Default functor for the implementation of piranha::math::divexact().
-/**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
- * the call operator, and will hence result in a compilation error when used.
- */
-template <typename T, typename = void>
-struct divexact_impl {
-};
-
-/// Exact division.
-/**
- * This method will write into \p a the exact result of <tt>b / c</tt>. The actual implementation of this function is in
- * the piranha::math::divexact_impl functor's call operator. The implementation should throw an instance of
- * piranha::math::inexact_division if the division is not exact.
- *
- * @param a the return value.
- * @param b the first operand.
- * @param c the second operand.
- *
- * @return the value returned by the call operator of piranha::math::divexact_impl.
- *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::divexact_impl functor.
- */
-template <typename T>
-inline auto divexact(T &a, const T &b, const T &c) -> decltype(divexact_impl<T>()(a, b, c))
-{
-    return divexact_impl<T>()(a, b, c);
-}
 }
 
 namespace detail
@@ -3009,22 +2972,19 @@ inline auto gcd3(T &out, const T &a, const T &b) -> decltype(gcd3_impl<T>()(out,
 
 /// Detect piranha::math::add3().
 /**
- * The type trait will be \p true if piranha::math::add3() can be used on instances of the decay type of \p T,
+ * The type trait will be \p true if piranha::math::add3() can be used on instances of \p T,
  * \p false otherwise.
  */
 template <typename T>
-class has_add3 : detail::sfinae_types
+class has_add3
 {
-    using Td = typename std::decay<T>::type;
-    template <typename T1>
-    static auto test(const T1 &)
-        -> decltype(math::add3(std::declval<T1 &>(), std::declval<const T1 &>(), std::declval<const T1 &>()), void(),
-                    yes());
-    static no test(...);
+    template <typename U>
+    using add3_t = decltype(math::add3(std::declval<U &>(), std::declval<const U &>(), std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<add3_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -3032,22 +2992,19 @@ const bool has_add3<T>::value;
 
 /// Detect piranha::math::sub3().
 /**
- * The type trait will be \p true if piranha::math::sub3() can be used on instances of the decay type of \p T,
+ * The type trait will be \p true if piranha::math::sub3() can be used on instances of \p T,
  * \p false otherwise.
  */
 template <typename T>
-class has_sub3 : detail::sfinae_types
+class has_sub3
 {
-    using Td = typename std::decay<T>::type;
-    template <typename T1>
-    static auto test(const T1 &)
-        -> decltype(math::sub3(std::declval<T1 &>(), std::declval<const T1 &>(), std::declval<const T1 &>()), void(),
-                    yes());
-    static no test(...);
+    template <typename U>
+    using sub3_t = decltype(math::sub3(std::declval<U &>(), std::declval<const U &>(), std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<sub3_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -3055,22 +3012,19 @@ const bool has_sub3<T>::value;
 
 /// Detect piranha::math::mul3().
 /**
- * The type trait will be \p true if piranha::math::mul3() can be used on instances of the decay type of \p T,
+ * The type trait will be \p true if piranha::math::mul3() can be used on instances of \p T,
  * \p false otherwise.
  */
 template <typename T>
-class has_mul3 : detail::sfinae_types
+class has_mul3
 {
-    using Td = typename std::decay<T>::type;
-    template <typename T1>
-    static auto test(const T1 &)
-        -> decltype(math::mul3(std::declval<T1 &>(), std::declval<const T1 &>(), std::declval<const T1 &>()), void(),
-                    yes());
-    static no test(...);
+    template <typename U>
+    using mul3_t = decltype(math::mul3(std::declval<U &>(), std::declval<const U &>(), std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<mul3_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -3078,22 +3032,19 @@ const bool has_mul3<T>::value;
 
 /// Detect piranha::math::div3().
 /**
- * The type trait will be \p true if piranha::math::div3() can be used on instances of the decay type of \p T,
+ * The type trait will be \p true if piranha::math::div3() can be used on instances of \p T,
  * \p false otherwise.
  */
 template <typename T>
-class has_div3 : detail::sfinae_types
+class has_div3
 {
-    using Td = typename std::decay<T>::type;
-    template <typename T1>
-    static auto test(const T1 &)
-        -> decltype(math::div3(std::declval<T1 &>(), std::declval<const T1 &>(), std::declval<const T1 &>()), void(),
-                    yes());
-    static no test(...);
+    template <typename U>
+    using div3_t = decltype(math::div3(std::declval<U &>(), std::declval<const U &>(), std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<div3_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -3101,21 +3052,19 @@ const bool has_div3<T>::value;
 
 /// Detect piranha::math::gcd().
 /**
- * The type trait will be \p true if piranha::math::gcd() can be used on instances of the decay types of \p T and \p U,
+ * The type trait will be \p true if piranha::math::gcd() can be used on instances of \p T and \p U,
  * \p false otherwise.
  */
 template <typename T, typename U = T>
-class has_gcd : detail::sfinae_types
+class has_gcd
 {
-    using Td = typename std::decay<T>::type;
-    using Ud = typename std::decay<U>::type;
     template <typename T1, typename U1>
-    static auto test(const T1 &a, const U1 &b) -> decltype(math::gcd(a, b), void(), yes());
-    static no test(...);
+    using gcd_t = decltype(math::gcd(std::declval<const T1 &>(), std::declval<const U1 &>()));
+    static const bool implementation_defined = is_detected<gcd_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<Td>(), std::declval<Ud>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
@@ -3123,49 +3072,23 @@ const bool has_gcd<T, U>::value;
 
 /// Detect piranha::math::gcd3().
 /**
- * The type trait will be \p true if piranha::math::gcd3() can be used on instances of the decay type of \p T,
+ * The type trait will be \p true if piranha::math::gcd3() can be used on instances of \p T,
  * \p false otherwise.
  */
 template <typename T>
-class has_gcd3 : detail::sfinae_types
+class has_gcd3
 {
-    using Td = typename std::decay<T>::type;
-    template <typename T1>
-    static auto test(const T1 &)
-        -> decltype(math::gcd3(std::declval<T1 &>(), std::declval<const T1 &>(), std::declval<const T1 &>()), void(),
-                    yes());
-    static no test(...);
+    template <typename U>
+    using gcd3_t = decltype(math::gcd3(std::declval<U &>(), std::declval<const U &>(), std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<gcd3_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
 const bool has_gcd3<T>::value;
-
-/// Detect piranha::math::divexact().
-/**
- * The type trait will be \p true if piranha::math::divexact() can be used on instances of the decay type of \p T,
- * \p false otherwise.
- */
-template <typename T>
-class has_exact_division : detail::sfinae_types
-{
-    using Td = typename std::decay<T>::type;
-    template <typename T1>
-    static auto test(const T1 &)
-        -> decltype(math::divexact(std::declval<T1 &>(), std::declval<const T1 &>(), std::declval<const T1 &>()),
-                    void(), yes());
-    static no test(...);
-
-public:
-    /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
-};
-
-template <typename T>
-const bool has_exact_division<T>::value;
 }
 
 #endif

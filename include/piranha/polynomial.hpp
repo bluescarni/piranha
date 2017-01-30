@@ -991,31 +991,7 @@ const bool has_get_auto_truncate_degree<S>::value;
 // Global enabler for the polynomial multiplier.
 template <typename Series>
 using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag, Series>::value>::type;
-
-// Enabler for exact ring operations.
-template <typename T>
-using poly_ero_enabler =
-    typename std::enable_if<std::is_base_of<detail::polynomial_tag, typename std::decay<T>::type>::value
-                            && has_exact_ring_operations<typename std::decay<T>::type::term_type::cf_type>::value
-                            && (std::is_integral<typename std::decay<T>::type::term_type::key_type::value_type>::value
-                                || has_exact_ring_operations<
-                                       typename std::decay<T>::type::term_type::key_type::value_type>::value)>::type;
 }
-
-/// Exact ring operations specialisation for piranha::polynomial.
-/**
- * This specialisation is enabled if the decay type of \p T is an instance of piranha::polynomial
- * whose coefficient type satisfies piranha::has_exact_ring_operations and whose exponent type is either
- * a C++ integral type or another type which satisfies piranha::has_exact_ring_operations.
- */
-template <typename T>
-struct has_exact_ring_operations<T, detail::poly_ero_enabler<T>> {
-    /// Value of the type trait.
-    static const bool value = true;
-};
-
-template <typename T>
-const bool has_exact_ring_operations<T, detail::poly_ero_enabler<T>>::value;
 
 /// Specialisation of piranha::series_multiplier for piranha::polynomial.
 /**

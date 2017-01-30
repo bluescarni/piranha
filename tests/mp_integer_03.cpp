@@ -1181,50 +1181,6 @@ BOOST_AUTO_TEST_CASE(mp_integer_integer_sqrt_test)
     boost::mpl::for_each<size_types>(integer_sqrt_tester());
 }
 
-struct factorial_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef mp_integer<T::value> int_type;
-        int_type n;
-        BOOST_CHECK(n.factorial() == 1);
-        n = 1;
-        BOOST_CHECK(n.factorial() == 1);
-        n = 2;
-        BOOST_CHECK(n.factorial() == 2);
-        n = 3;
-        BOOST_CHECK(n.factorial() == 6);
-        n = 4;
-        BOOST_CHECK(n.factorial() == 24);
-        n = 5;
-        BOOST_CHECK(n.factorial() == 24 * 5);
-        // Random tests.
-        std::uniform_int_distribution<int> ud(-1000, 1000);
-        std::uniform_int_distribution<int> promote_dist(0, 1);
-        mpz_raii m;
-        for (int i = 0; i < ntries; ++i) {
-            auto tmp = ud(rng);
-            n = tmp;
-            if (promote_dist(rng) && n.is_static()) {
-                n.promote();
-            }
-            if (tmp < 0) {
-                BOOST_CHECK_THROW(n.factorial(), std::invalid_argument);
-                continue;
-            }
-            ::mpz_set_si(&m.m_mpz, static_cast<long>(tmp));
-            ::mpz_fac_ui(&m.m_mpz, static_cast<unsigned long>(tmp));
-            BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n.factorial()), mpz_lexcast(m));
-            BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::factorial(n)), mpz_lexcast(m));
-        }
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_integer_factorial_test)
-{
-    boost::mpl::for_each<size_types>(factorial_tester());
-}
-
 struct binomial_tester {
     template <typename T>
     void operator()(const T &)
@@ -1318,48 +1274,6 @@ BOOST_AUTO_TEST_CASE(mp_integer_binomial_test)
     // Different bits sizes.
     BOOST_CHECK((!has_binomial<mp_integer<16>, mp_integer<32>>::value));
     BOOST_CHECK((!has_binomial<mp_integer<32>, mp_integer<16>>::value));
-}
-
-struct sin_cos_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef mp_integer<T::value> int_type;
-        BOOST_CHECK_EQUAL(math::sin(int_type()), 0);
-        BOOST_CHECK_EQUAL(math::cos(int_type()), 1);
-        BOOST_CHECK_THROW(math::sin(int_type(1)), std::invalid_argument);
-        BOOST_CHECK_THROW(math::cos(int_type(1)), std::invalid_argument);
-        BOOST_CHECK((std::is_same<int_type, decltype(math::cos(int_type{}))>::value));
-        BOOST_CHECK((std::is_same<int_type, decltype(math::sin(int_type{}))>::value));
-        BOOST_CHECK(has_sine<int_type>::value);
-        BOOST_CHECK(has_cosine<int_type>::value);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_integer_sin_cos_test)
-{
-    boost::mpl::for_each<size_types>(sin_cos_tester());
-}
-
-struct math_divexact_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef mp_integer<T::value> int_type;
-        BOOST_CHECK(has_exact_division<int_type>::value);
-        int_type out;
-        math::divexact(out, int_type(4), int_type(-2));
-        BOOST_CHECK_EQUAL(out, -2);
-        math::divexact(out, int_type(0), int_type(-2));
-        BOOST_CHECK_EQUAL(out, 0);
-        BOOST_CHECK_THROW(math::divexact(out, int_type(0), int_type(0)), zero_division_error);
-        BOOST_CHECK_THROW(math::divexact(out, int_type(3), int_type(2)), math::inexact_division);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_integer_math_divexact_test)
-{
-    boost::mpl::for_each<size_types>(math_divexact_tester());
 }
 
 struct static_hash_tester {
@@ -1604,26 +1518,6 @@ BOOST_AUTO_TEST_CASE(mp_integer_hash_test)
     boost::mpl::for_each<size_types>(hash_tester());
 }
 
-struct partial_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef mp_integer<T::value> int_type;
-        BOOST_CHECK(is_differentiable<int_type>::value);
-        int_type n;
-        BOOST_CHECK_EQUAL(math::partial(n, ""), 0);
-        n = 5;
-        BOOST_CHECK_EQUAL(math::partial(n, "abc"), 0);
-        n = -5;
-        BOOST_CHECK_EQUAL(math::partial(n, "def"), 0);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_integer_partial_test)
-{
-    boost::mpl::for_each<size_types>(partial_tester());
-}
-
 struct evaluate_tester {
     template <typename T>
     void operator()(const T &)
@@ -1731,23 +1625,6 @@ struct mpz_view_tester {
 BOOST_AUTO_TEST_CASE(mp_integer_mpz_view_test)
 {
     boost::mpl::for_each<size_types>(mpz_view_tester());
-}
-
-struct ipow_subs_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef mp_integer<T::value> int_type;
-        BOOST_CHECK((!has_ipow_subs<int_type, int_type>::value));
-        BOOST_CHECK((!has_ipow_subs<int_type, int>::value));
-        BOOST_CHECK((!has_ipow_subs<int_type, long>::value));
-        BOOST_CHECK((!has_ipow_subs<int_type, double>::value));
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_integer_ipow_subs_test)
-{
-    boost::mpl::for_each<size_types>(ipow_subs_tester());
 }
 
 struct serialization_tester {
@@ -1865,23 +1742,6 @@ struct is_unitary_tester {
 BOOST_AUTO_TEST_CASE(mp_integer_is_unitary_test)
 {
     boost::mpl::for_each<size_types>(is_unitary_tester());
-}
-
-struct ero_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        using z_type = mp_integer<T::value>;
-        BOOST_CHECK(has_exact_ring_operations<z_type>::value);
-        BOOST_CHECK(has_exact_ring_operations<const z_type>::value);
-        BOOST_CHECK(has_exact_ring_operations<z_type &&>::value);
-        BOOST_CHECK(has_exact_ring_operations<volatile z_type &&>::value);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_integer_ero_test)
-{
-    boost::mpl::for_each<size_types>(ero_tester());
 }
 
 struct bits_size_tester {

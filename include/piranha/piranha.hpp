@@ -212,7 +212,7 @@ see https://www.gnu.org/licenses/. */
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type
  * traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
- * \todo in mp_integer probably the ternary operations (and multadd and divexact etc.) should be modified so that the
+ * \todo in mp_integer probably the ternary operations (and multadd etc.) should be modified so that the
  * return value is demoted to
  * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times,
  * once it is set to dynamic
