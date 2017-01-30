@@ -75,6 +75,15 @@ struct is_mp_integer : std::false_type {
 template <std::size_t SSize>
 struct is_mp_integer<mp_integer<SSize>> : std::true_type {
 };
+
+// Detect if T and U are both mp_integer with same SSize.
+template <typename T, typename U>
+struct is_same_mp_integer : std::false_type {
+};
+
+template <std::size_t SSize>
+struct is_same_mp_integer<mp_integer<SSize>, mp_integer<SSize>> : std::true_type {
+};
 }
 
 namespace math
@@ -386,7 +395,7 @@ template <typename T, typename U>
 using math_mp_integer_gcd_enabler
     = enable_if_t<disjunction<conjunction<std::is_integral<T>, is_mp_integer<U>, std::is_constructible<U, const T &>>,
                               conjunction<std::is_integral<U>, is_mp_integer<T>, std::is_constructible<T, const U &>>,
-                              conjunction<is_mp_integer<T>, is_mp_integer<U>>>::value>;
+                              is_same_mp_integer<T, U>>::value>;
 
 // Wrapper to avoid clashes with piranha::math::gcd().
 template <std::size_t SSize>
@@ -402,7 +411,7 @@ namespace math
 /// Specialisation of the implementation of piranha::math::gcd() for piranha::mp_integer.
 /**
  * This specialisation is enabled when:
- * - \p T and \p U are both instances of piranha::mp_integer,
+ * - \p T and \p U are both instances of piranha::mp_integer with the same static size,
  * - \p T is an instance of piranha::mp_integer and \p U is an integral type from which piranha::mp_integer is
  *   constructible,
  * - \p U is an instance of piranha::mp_integer and \p T is an integral type from which piranha::mp_integer is

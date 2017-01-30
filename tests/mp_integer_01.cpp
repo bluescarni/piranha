@@ -353,6 +353,10 @@ struct gcd_tester {
         BOOST_CHECK((has_gcd3<int_type &>::value));
         BOOST_CHECK((!has_gcd3<const int_type &>::value));
         BOOST_CHECK((!has_gcd3<const int_type>::value));
+        BOOST_CHECK((!has_gcd<int_type, wchar_t>::value));
+        BOOST_CHECK((!has_gcd<wchar_t, int_type>::value));
+        BOOST_CHECK((!has_gcd<int_type, void>::value));
+        BOOST_CHECK((!has_gcd<void, int_type>::value));
         BOOST_CHECK_EQUAL(math::gcd(int_type{4}, int_type{6}), 2);
         BOOST_CHECK_EQUAL(math::gcd(int_type{0}, int_type{-6}), 6);
         BOOST_CHECK_EQUAL(math::gcd(int_type{6}, int_type{0}), 6);
@@ -370,6 +374,8 @@ struct gcd_tester {
 BOOST_AUTO_TEST_CASE(mp_integer_gcd_test)
 {
     tuple_for_each(size_types{}, gcd_tester{});
+    BOOST_CHECK((!has_gcd<mp_integer<1>,mp_integer<2>>::value));
+    BOOST_CHECK((!has_gcd<mp_integer<2>,mp_integer<1>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(mp_integer_literal_test)
@@ -488,5 +494,5 @@ struct safe_cast_int_tester {
 
 BOOST_AUTO_TEST_CASE(mp_integer_safe_cast_int_test)
 {
-    tuple_for_each(size_types{}, safe_cast_int_tester());
+    tuple_for_each(size_types{}, safe_cast_int_tester{});
 }
