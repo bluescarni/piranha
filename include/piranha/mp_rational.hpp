@@ -87,8 +87,8 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
 /// Multiple precision rational class.
 /**
  * This class encapsulates two instances of piranha::mp_integer to represent an arbitrary-precision rational number
- * in terms of a numerator and a denominator. The meaning of the \p NBits template parameter is the same as in
- * piranha::mp_integer, that is, it represents the bit width of the two limbs stored statically in the numerator and
+ * in terms of a numerator and a denominator. The meaning of the \p SSize template parameter is the same as in
+ * piranha::mp_integer, that is, it represents the number of limbs stored statically in the numerator and
  * in the denominator.
  *
  * Unless otherwise specified, rational numbers are always kept in the usual canonical form in which numerator and
@@ -97,8 +97,6 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
  * ## Interoperability with other types ##
  *
  * This class interoperates with the same types as piranha::mp_integer, plus piranha::mp_integer itself.
- * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
- * of piranha::mp_integer apply.
  *
  * ## Exception safety guarantee ##
  *
@@ -109,12 +107,12 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
  *
  * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
  */
-template <int NBits = 0>
+template <std::size_t SSize>
 class mp_rational
 {
 public:
     /// The underlying piranha::mp_integer type used to represent numerator and denominator.
-    using int_type = mp_integer<NBits>;
+    using int_type = mp_integer<SSize>;
 
 private:
     // Shortcut for interop type detector.
