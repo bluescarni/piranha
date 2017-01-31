@@ -56,10 +56,12 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/type_traits.hpp>
 
 namespace piranha
 {
 
+#if 0
 namespace detail
 {
 
@@ -83,6 +85,7 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
     static const bool value = false;
 };
 }
+#endif
 
 /// Multiple precision rational class.
 /**
@@ -116,38 +119,37 @@ public:
 
 private:
     // Shortcut for interop type detector.
-    template <typename T, typename U = mp_rational>
-    using is_interoperable_type = detail::is_mp_rational_interoperable_type<T, U>;
+    template <typename T>
+    using is_interoperable_type
+        = disjunction<mppp::mppp_impl::is_supported_interop<T>, std::is_same<T, int_type>>::value;
     // Enabler for ctor from num den pair.
     template <typename I0, typename I1>
-    using nd_ctor_enabler =
-        typename std::enable_if<(std::is_integral<I0>::value || std::is_same<I0, int_type>::value)
-                                    && (std::is_integral<I1>::value || std::is_same<I1, int_type>::value),
-                                int>::type;
+    using nd_ctor_enabler
+        = enable_if_t<conjunction<disjunction<std::is_integral<I0>, std::is_same<I0, int_type>>,
+                                  disjunction<std::is_integral<I1>, std::is_same<I1, int_type>>>::value,
+                      int>;
     // Enabler for generic ctor.
     template <typename T>
-    using generic_ctor_enabler = typename std::enable_if<is_interoperable_type<T>::value, int>::type;
+    using generic_ctor_enabler = enable_if_t<is_interoperable_type<T>::value, int>;
     // Enabler for in-place arithmetic operations with interop on the left.
     template <typename T>
-    using generic_in_place_enabler =
-        typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value, int>::type;
+    using generic_in_place_enabler
+        = enable_if_t<conjunction<is_interoperable_type<T>, negation<std::is_const<T>>>::value, int>;
     // Generic constructor implementation.
-    template <typename T>
-    void construct_from_interoperable(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    void construct_from_interoperable(const T &x)
     {
         m_num = int_type(x);
         m_den = 1;
     }
-    template <typename T>
-    void construct_from_interoperable(const T &x,
-                                      typename std::enable_if<std::is_same<T, int_type>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_same<T, int_type>::value, int> = 0>
+    void construct_from_interoperable(const T &x)
     {
         m_num = x;
         m_den = 1;
     }
-    template <typename Float>
-    void construct_from_interoperable(const Float &x,
-                                      typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
+    template <typename Float, enable_if_t<std::is_floating_point<Float>::value, int> = 0>
+    void construct_from_interoperable(const Float &x)
     {
         if (unlikely(!std::isfinite(x))) {
             piranha_throw(std::invalid_argument, "cannot construct a rational from a non-finite floating-point number");
@@ -211,8 +213,8 @@ private:
     template <typename T>
     using cast_enabler = generic_ctor_enabler<T>;
     // Conversion operator implementation.
-    template <typename Float>
-    Float convert_to_impl(typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr) const
+    template <typename Float, enable_if_t<std::is_floating_point<Float>::value, int> = 0>
+    Float convert_to_impl() const
     {
         // NOTE: there are better ways of doing this. For instance, here we might end up generating an inf even
         // if the result is actually representable. It also would be nice if this routine could short-circuit,
@@ -220,13 +222,13 @@ private:
         // The approach in GMP mpq might work for this, but it's not essential at the moment.
         return static_cast<Float>(m_num) / static_cast<Float>(m_den);
     }
-    template <typename Integral>
-    Integral convert_to_impl(typename std::enable_if<std::is_integral<Integral>::value>::type * = nullptr) const
+    template <typename Integral, enable_if_t<std::is_integral<Integral>::value, int> = 0>
+    Integral convert_to_impl() const
     {
         return static_cast<Integral>(static_cast<int_type>(*this));
     }
-    template <typename MpInteger>
-    MpInteger convert_to_impl(typename std::enable_if<std::is_same<MpInteger, int_type>::value>::type * = nullptr) const
+    template <typename MpInteger, enable_if_t<std::is_same<MpInteger, int_type>::value, int> = 0>
+    MpInteger convert_to_impl() const
     {
         return m_num / m_den;
     }
@@ -275,13 +277,13 @@ private:
         }
         return *this;
     }
-    template <typename T>
-    mp_rational &in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    mp_rational &in_place_add(const T &n)
     {
         return in_place_add(int_type(n));
     }
-    template <typename T>
-    mp_rational &in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    mp_rational &in_place_add(const T &x)
     {
         return (*this = static_cast<T>(*this) + x);
     }
@@ -297,24 +299,22 @@ private:
     {
         return binary_plus_impl(q1, q2);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_plus(const mp_rational &q1, const T &x)
     {
         return binary_plus_impl(q1, x);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_plus(const T &x, const mp_rational &q2)
     {
         return binary_plus(q2, x);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_plus(const mp_rational &q1, const T &x)
     {
         return x + static_cast<T>(q1);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_plus(const T &x, const mp_rational &q2)
     {
         return binary_plus(q2, x);
@@ -359,13 +359,13 @@ private:
         }
         return *this;
     }
-    template <typename T>
-    mp_rational &in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    mp_rational &in_place_sub(const T &n)
     {
         return in_place_sub(int_type(n));
     }
-    template <typename T>
-    mp_rational &in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    mp_rational &in_place_sub(const T &x)
     {
         return (*this = static_cast<T>(*this) - x);
     }
@@ -381,26 +381,24 @@ private:
     {
         return binary_minus_impl(q1, q2);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_minus(const mp_rational &q1, const T &x)
     {
         return binary_minus_impl(q1, x);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_minus(const T &x, const mp_rational &q2)
     {
         auto retval = binary_minus(q2, x);
         retval.negate();
         return retval;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_minus(const mp_rational &q1, const T &x)
     {
         return static_cast<T>(q1) - x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_minus(const T &x, const mp_rational &q2)
     {
         return -binary_minus(q2, x);
@@ -426,13 +424,13 @@ private:
         }
         return *this;
     }
-    template <typename T>
-    mp_rational &in_place_mult(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    mp_rational &in_place_mult(const T &n)
     {
         return in_place_mult(int_type(n));
     }
-    template <typename T>
-    mp_rational &in_place_mult(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    mp_rational &in_place_mult(const T &x)
     {
         return (*this = static_cast<T>(*this) * x);
     }
@@ -448,24 +446,22 @@ private:
     {
         return binary_mult_impl(q1, q2);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_mult(const mp_rational &q1, const T &x)
     {
         return binary_mult_impl(q1, x);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_mult(const T &x, const mp_rational &q2)
     {
         return binary_mult(q2, x);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_mult(const mp_rational &q1, const T &x)
     {
         return x * static_cast<T>(q1);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_mult(const T &x, const mp_rational &q2)
     {
         return binary_mult(q2, x);
@@ -492,13 +488,13 @@ private:
         canonicalise();
         return *this;
     }
-    template <typename T>
-    mp_rational &in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    mp_rational &in_place_div(const T &n)
     {
         return in_place_div(int_type(n));
     }
-    template <typename T>
-    mp_rational &in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    mp_rational &in_place_div(const T &x)
     {
         return (*this = static_cast<T>(*this) / x);
     }
@@ -514,26 +510,24 @@ private:
     {
         return binary_div_impl(q1, q2);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_div(const mp_rational &q1, const T &x)
     {
         return binary_div_impl(q1, x);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_div(const T &x, const mp_rational &q2)
     {
         mp_rational retval(x);
         retval /= q2;
         return retval;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_div(const mp_rational &q1, const T &x)
     {
         return static_cast<T>(q1) / x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_div(const T &x, const mp_rational &q2)
     {
         return x / static_cast<T>(q2);

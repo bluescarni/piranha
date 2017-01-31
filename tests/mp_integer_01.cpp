@@ -374,8 +374,8 @@ struct gcd_tester {
 BOOST_AUTO_TEST_CASE(mp_integer_gcd_test)
 {
     tuple_for_each(size_types{}, gcd_tester{});
-    BOOST_CHECK((!has_gcd<mp_integer<1>,mp_integer<2>>::value));
-    BOOST_CHECK((!has_gcd<mp_integer<2>,mp_integer<1>>::value));
+    BOOST_CHECK((!has_gcd<mp_integer<1>, mp_integer<2>>::value));
+    BOOST_CHECK((!has_gcd<mp_integer<2>, mp_integer<1>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(mp_integer_literal_test)
