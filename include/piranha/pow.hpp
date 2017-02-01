@@ -30,35 +30,15 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_POW_HPP
 
 #include <cmath>
-#include <string>
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 
-#include <piranha/config.hpp>
-#include <piranha/exceptions.hpp>
 #include <piranha/mp_integer.hpp>
-#include <piranha/safe_cast.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
 {
-
-inline namespace impl
-{
-
-// Enabler for integral power.
-template <typename T, typename U>
-using integer_pow_enabler
-    = enable_if_t<disjunction<conjunction<is_mp_integer<T>, mppp::mppp_impl::is_supported_interop<U>>,
-                              conjunction<is_mp_integer<U>, mppp::mppp_impl::is_supported_interop<T>>,
-                              conjunction<std::is_integral<T>, std::is_integral<U>>, is_same_mp_integer<T, U>>::value>;
-
-// Enabler for the pow overload for arithmetic and floating-point types.
-template <typename T, typename U>
-using pow_fp_arith_enabler
-    = enable_if_t<conjunction<std::is_arithmetic<T>, std::is_arithmetic<U>,
-                              disjunction<std::is_floating_point<T>, std::is_floating_point<U>>>::value>;
-}
 
 namespace math
 {
@@ -71,6 +51,20 @@ namespace math
 template <typename T, typename U, typename = void>
 struct pow_impl {
 };
+}
+
+inline namespace impl
+{
+
+// Enabler for the pow overload for arithmetic and floating-point types.
+template <typename T, typename U>
+using pow_fp_arith_enabler
+    = enable_if_t<conjunction<std::is_arithmetic<T>, std::is_arithmetic<U>,
+                              disjunction<std::is_floating_point<T>, std::is_floating_point<U>>>::value>;
+}
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::pow() for arithmetic and floating-point types.
 /**
@@ -93,7 +87,6 @@ struct pow_impl<T, U, pow_fp_arith_enabler<T, U>> {
         return std::pow(x, y);
     }
 };
-
 }
 
 inline namespace impl
@@ -101,11 +94,10 @@ inline namespace impl
 
 // Enabler for math::pow().
 template <typename T, typename U>
-using math_pow_t_ = decltype(math::pow_impl<T,U>{}(std::declval<const T &>(), std::declval<const U &>()));
+using math_pow_t_ = decltype(math::pow_impl<T, U>{}(std::declval<const T &>(), std::declval<const U &>()));
 
 template <typename T, typename U>
-using math_pow_t = enable_if_t<is_returnable<math_pow_t_<T,U>>::value,math_pow_t_<T,U>>;
-
+using math_pow_t = enable_if_t<is_returnable<math_pow_t_<T, U>>::value, math_pow_t_<T, U>>;
 }
 
 namespace math
@@ -131,10 +123,32 @@ namespace math
  * @throws unspecified any exception thrown by the call operator of the piranha::math::pow_impl functor.
  */
 template <typename T, typename U>
-inline math_pow_t<T,U> pow(const T &x, const U &y)
+inline math_pow_t<T, U> pow(const T &x, const U &y)
 {
     return pow_impl<T, U>{}(x, y);
 }
+}
+
+inline namespace impl
+{
+
+// Enabler for integral power.
+template <typename T, typename U>
+using integer_pow_enabler
+    = enable_if_t<disjunction<conjunction<is_mp_integer<T>, mppp::mppp_impl::is_supported_interop<U>>,
+                              conjunction<is_mp_integer<U>, mppp::mppp_impl::is_supported_interop<T>>,
+                              conjunction<std::is_integral<T>, std::is_integral<U>>, is_same_mp_integer<T, U>>::value>;
+
+// Wrapper for ADL.
+template <std::size_t SSize, typename T>
+auto mp_integer_pow_wrapper(const mp_integer<SSize> &base, const T &exp) -> decltype(pow(base, exp))
+{
+    return pow(base, exp);
+}
+}
+
+namespace math
+{
 
 // NOTE: this specialisation must be here as in the integral-integral overload we use mp_integer inside,
 // so the declaration of mp_integer must be avaiable. On the other hand, we cannot put this in mp_integer.hpp
@@ -149,80 +163,51 @@ inline math_pow_t<T,U> pow(const T &x, const U &y)
  *
  * The implementation follows these rules:
  * - if the arguments are both piranha::mp_integer, or a piranha::mp_integer and an integral type, then
- *   piranha::mp_integer::pow_ui() is used to compute the result (after any necessary conversion),
- * - if both arguments are integral types, piranha::mp_integer::pow_ui() is used after the conversion of the base
+ *   piranha::mp_integer::pow() is used to compute the result (after any necessary conversion),
+ * - if both arguments are integral types, piranha::mp_integer::pow() is used after the conversion of the base
  *   to piranha::integer,
  * - otherwise, the piranha::mp_integer argument is converted to the floating-point type and piranha::math::pow() is
  *   used to compute the result.
  */
 template <typename T, typename U>
 struct pow_impl<T, U, integer_pow_enabler<T, U>> {
-    /// Call operator, integral--integral overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_integer::pow()
-     * or by the constructor of piranha::mp_integer from integral type.
-     */
+private:
+    // C++ integral -- C++ integral.
     template <typename T2, typename U2,
-              typename std::enable_if<std::is_integral<T2>::value && std::is_integral<U2>::value, int>::type = 0>
-    integer operator()(const T2 &b, const U2 &e) const
+              enable_if_t<conjunction<std::is_integral<T2>, std::is_integral<U2>>::value, int> = 0>
+    static integer impl(const T2 &b, const U2 &e)
     {
-        if (e >= U2(0)) {
-            return pow_ui(integer(b), safe_cast<unsigned long>(e));
-        }
-        if (unlikely(!b)) {
-            piranha_throw(zero_division_error, "cannot raise zero to the negative integral power " + std::to_string(e));
-        }
-        
+        return mp_integer_pow_wrapper(integer{b}, e);
     }
-    /// Call operator, piranha::mp_integer overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_integer::pow()
-     * or by the constructor of piranha::mp_integer from integral type.
-     */
-    template <int NBits>
-    mp_integer<NBits> operator()(const mp_integer<NBits> &b, const mp_integer<NBits> &e) const
+    // mp_integer -- C++ integral / mp_integer.
+    template <std::size_t SSize, typename U2,
+              enable_if_t<disjunction<std::is_integral<U2>, is_same_mp_integer<U2, mp_integer<SSize>>>::value, int> = 0>
+    static mp_integer<SSize> impl(const mp_integer<SSize> &b, const U2 &e)
     {
-        return b.pow(e);
+        return mp_integer_pow_wrapper(b, e);
     }
-    /// Call operator, integer--integral overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_integer::pow().
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value, int>::type = 0>
-    mp_integer<NBits> operator()(const mp_integer<NBits> &b, const T2 &e) const
+    // C++ integral -- mp_integer.
+    template <typename T2, std::size_t SSize, enable_if_t<std::is_integral<T2>::value, int> = 0>
+    static mp_integer<SSize> impl(const T2 &b, const mp_integer<SSize> &e)
     {
-        return b.pow(e);
+        return mp_integer_pow_wrapper(mp_integer<SSize>{b}, e);
     }
-    /// Call operator, integer--floating-point overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_integer to a floating-point type.
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value, int>::type = 0>
-    T2 operator()(const mp_integer<NBits> &b, const T2 &e) const
+    // FP -- mp_integer.
+    template <typename T2, std::size_t SSize, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
+    static T2 impl(const T2 &b, const mp_integer<SSize> &e)
     {
-        return math::pow(static_cast<T2>(b), e);
+        return pow(b, static_cast<T2>(e));
     }
-    /// Call operator, integral--integer overload.
+    // mp_integer -- FP.
+    template <std::size_t SSize, typename U2, enable_if_t<std::is_floating_point<U2>::value, int> = 0>
+    static U2 impl(const mp_integer<SSize> &b, const U2 &e)
+    {
+        return pow(static_cast<U2>(b), e);
+    }
+    using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
+
+public:
+    /// Call operator.
     /**
      * @param b base.
      * @param e exponent.
@@ -231,24 +216,9 @@ struct pow_impl<T, U, integer_pow_enabler<T, U>> {
      *
      * @throws unspecified any exception thrown by piranha::mp_integer::pow().
      */
-    template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value, int>::type = 0>
-    mp_integer<NBits> operator()(const T2 &b, const mp_integer<NBits> &e) const
+    ret_type operator()(const T &b, const U &e) const
     {
-        return mp_integer<NBits>(b).pow(e);
-    }
-    /// Call operator, floating-point--integer overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_integer to a floating-point type.
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value, int>::type = 0>
-    T2 operator()(const T2 &b, const mp_integer<NBits> &e) const
-    {
-        return math::pow(b, static_cast<T2>(e));
+        return impl(b, e);
     }
 };
 }
@@ -257,19 +227,17 @@ struct pow_impl<T, U, integer_pow_enabler<T, U>> {
 /**
  * The type trait will be \p true if piranha::math::pow() can be successfully called with base \p T and
  * exponent \p U.
- *
- * The call to piranha::math::pow() will be tested with const reference arguments.
  */
 template <typename T, typename U>
-class is_exponentiable : detail::sfinae_types
+class is_exponentiable
 {
     template <typename Base, typename Expo>
-    static auto test(const Base &b, const Expo &e) -> decltype(math::pow(b, e), void(), yes());
-    static no test(...);
+    using pow_t = decltype(math::pow(std::declval<const Base &>(), std::declval<const Expo &>()));
+    static const bool implementation_defined = is_detected<pow_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<T>(), std::declval<U>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.

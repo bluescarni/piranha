@@ -252,35 +252,6 @@ BOOST_AUTO_TEST_CASE(math_multiply_accumulate_test)
     BOOST_CHECK(!has_multiply_accumulate<no_fma &>::value);
 }
 
-BOOST_AUTO_TEST_CASE(math_pow_test)
-{
-    BOOST_CHECK(math::pow(2., 2.) == std::pow(2., 2.));
-    BOOST_CHECK(math::pow(2.f, 2.) == std::pow(2.f, 2.));
-    BOOST_CHECK(math::pow(2., 2.f) == std::pow(2., 2.f));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2., 2.)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2.f)), float>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2., 2.f)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2.)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2.L)), long double>::value));
-    BOOST_CHECK(math::pow(2., 2) == std::pow(2., 2));
-    BOOST_CHECK(math::pow(2.f, 2) == std::pow(2.f, 2));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2., 2)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, char(2))), double>::value));
-    BOOST_CHECK((is_exponentiable<double, double>::value));
-    BOOST_CHECK((is_exponentiable<double, unsigned short>::value));
-    BOOST_CHECK((is_exponentiable<double &, double>::value));
-    BOOST_CHECK((is_exponentiable<const double, double>::value));
-    BOOST_CHECK((is_exponentiable<double &, double &>::value));
-    BOOST_CHECK((is_exponentiable<double &, double const &>::value));
-    BOOST_CHECK((is_exponentiable<double, double &>::value));
-    BOOST_CHECK((is_exponentiable<float, double>::value));
-    BOOST_CHECK((is_exponentiable<double, float>::value));
-    BOOST_CHECK((is_exponentiable<double, int>::value));
-    BOOST_CHECK((is_exponentiable<float, char>::value));
-}
-
 struct cos_00 {
 };
 
