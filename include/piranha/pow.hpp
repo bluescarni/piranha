@@ -141,7 +141,7 @@ using integer_pow_enabler
 
 // Wrapper for ADL.
 template <typename T, typename U>
-auto mp_integer_pow_wrapper(const T &base, const U &exp) -> decltype(pow(base, exp))
+inline auto mp_integer_pow_wrapper(const T &base, const U &exp) -> decltype(pow(base, exp))
 {
     return pow(base, exp);
 }

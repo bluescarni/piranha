@@ -161,7 +161,7 @@ inline namespace impl
 
 // Avoid name clash below.
 template <std::size_t SSize>
-mp_integer<SSize> mp_integer_abs_wrapper(const mp_integer<SSize> &n)
+inline mp_integer<SSize> mp_integer_abs_wrapper(const mp_integer<SSize> &n)
 {
     return abs(n);
 }
