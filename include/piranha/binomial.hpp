@@ -36,7 +36,6 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include <piranha/config.hpp>
-#include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/mp_integer.hpp>
 #include <piranha/pow.hpp>
@@ -45,51 +44,47 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
-// Enabler for the binomial overload involving integral types, the same as pow.
-template <typename T, typename U>
-using integer_binomial_enabler = integer_pow_enabler<T, U>;
-
+// TODO move this stuff in rational, the only place where it is used.
 // Generic binomial implementation.
-template <typename T>
-inline bool generic_binomial_check_k(const T &, const T &,
-                                     typename std::enable_if<std::is_unsigned<T>::value>::type * = nullptr)
-{
-    return false;
-}
-
-template <typename T>
-inline bool generic_binomial_check_k(const T &k, const T &zero,
-                                     typename std::enable_if<!std::is_unsigned<T>::value>::type * = nullptr)
-{
-    return k < zero;
-}
+// template <typename T, enable_if_t<std::is_unsigned<T>::value, int> = 0>
+// inline bool generic_binomial_check_k(const T &, const T &)
+// {
+//     return false;
+// }
+//
+// template <typename T, enable_if_t<!std::is_unsigned<T>::value, int> = 0>
+// inline bool generic_binomial_check_k(const T &k, const T &zero)
+// {
+//     return k < zero;
+// }
 
 // Generic binomial implementation using the falling factorial. U must be an integer
 // type, T can be anything that supports basic arithmetics. k must be non-negative.
-template <typename T, typename U>
-inline T generic_binomial(const T &x, const U &k)
-{
-    const U zero(0), one(1);
-    if (generic_binomial_check_k(k, zero)) {
-        piranha_throw(std::invalid_argument, "negative k value in binomial coefficient");
-    }
-    // Zero at bottom results always in 1.
-    if (k == zero) {
-        return T(1);
-    }
-    T tmp(x), retval = x / T(k);
-    --tmp;
-    for (auto i = static_cast<U>(k - one); i >= one; --i, --tmp) {
-        retval *= tmp;
-        retval /= T(i);
-    }
-    return retval;
-}
+// template <typename T, typename U>
+// inline T generic_binomial(const T &x, const U &k)
+// {
+//     const U zero(0), one(1);
+//     if (generic_binomial_check_k(k, zero)) {
+//         piranha_throw(std::invalid_argument, "negative k value in binomial coefficient");
+//     }
+//     // Zero at bottom results always in 1.
+//     if (k == zero) {
+//         return T(1);
+//     }
+//     T tmp(x), retval = x / T(k);
+//     --tmp;
+//     for (auto i = static_cast<U>(k - one); i >= one; --i, --tmp) {
+//         retval *= tmp;
+//         retval /= T(i);
+//     }
+//     return retval;
+// }
 
 // Compute gamma(a)/(gamma(b) * gamma(c)), assuming a, b and c are not negative ints.
+// This is a helper function for the implementation of binomial() for fp types.
 template <typename T>
 inline T compute_3_gamma(const T &a, const T &b, const T &c)
 {
@@ -122,7 +117,7 @@ inline T compute_3_gamma(const T &a, const T &b, const T &c)
 
 // Implementation of the generalised binomial coefficient for floating-point types.
 template <typename T>
-inline T fp_binomial(const T &x, const T &y)
+inline T math_fp_binomial(const T &x, const T &y)
 {
     static_assert(std::is_floating_point<T>::value, "Invalid type for fp_binomial.");
     if (unlikely(!std::isfinite(x) || !std::isfinite(y))) {
@@ -164,9 +159,9 @@ inline T fp_binomial(const T &x, const T &y)
 
 // Enabler for the specialisation of binomial for floating-point and arithmetic arguments.
 template <typename T, typename U>
-using binomial_fp_arith_enabler =
-    typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<U>::value
-                            && (std::is_floating_point<T>::value || std::is_floating_point<U>::value)>::type;
+using binomial_fp_arith_enabler
+    = enable_if_t<conjunction<std::is_arithmetic<T>, std::is_arithmetic<U>,
+                              disjunction<std::is_floating_point<T>, std::is_floating_point<U>>>::value>;
 }
 
 namespace math
@@ -174,20 +169,20 @@ namespace math
 
 /// Default functor for the implementation of piranha::math::binomial().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
- * the call operator, and will hence result in a compilation error when used.
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation does not define
+ * the call operator, and will thus generate a compile-time error if used.
  */
 template <typename T, typename U, typename = void>
 struct binomial_impl {
 };
 
-/// Specialisation of the piranha::math::binomial() functor for floating-point and arithmetic arguments.
+/// Specialisation of the implementation of piranha::math::binomial() for floating-point and arithmetic arguments.
 /**
  * This specialisation is activated when both arguments are C++ arithmetic types and at least one argument
  * is a floating-point type.
  */
 template <typename T, typename U>
-struct binomial_impl<T, U, detail::binomial_fp_arith_enabler<T, U>> {
+struct binomial_impl<T, U, binomial_fp_arith_enabler<T, U>> {
     /// Result type for the call operator.
     /**
      * The result type is the widest floating-point type among \p T and \p U.
@@ -209,12 +204,12 @@ struct binomial_impl<T, U, detail::binomial_fp_arith_enabler<T, U>> {
      */
     result_type operator()(const T &x, const U &y) const
     {
-        return detail::fp_binomial(static_cast<result_type>(x), static_cast<result_type>(y));
+        return math_fp_binomial(static_cast<result_type>(x), static_cast<result_type>(y));
     }
 };
 }
 
-namespace detail
+inline namespace impl
 {
 
 // Determination and enabling of the return type for math::binomial().
@@ -222,8 +217,7 @@ template <typename T, typename U>
 using math_binomial_type_ = decltype(math::binomial_impl<T, U>{}(std::declval<const T &>(), std::declval<const U &>()));
 
 template <typename T, typename U>
-using math_binomial_type =
-    typename std::enable_if<is_returnable<math_binomial_type_<T, U>>::value, math_binomial_type_<T, U>>::type;
+using math_binomial_type = enable_if_t<is_returnable<math_binomial_type_<T, U>>::value, math_binomial_type_<T, U>>;
 }
 
 namespace math
@@ -254,137 +248,109 @@ namespace math
  * @throws unspecified any exception thrown by the call operator of piranha::math::binomial_impl.
  */
 template <typename T, typename U>
-inline detail::math_binomial_type<T, U> binomial(const T &x, const U &y)
+inline math_binomial_type<T, U> binomial(const T &x, const U &y)
 {
     return binomial_impl<T, U>{}(x, y);
 }
+}
 
-/// Specialisation of the piranha::math::binomial() functor for piranha::mp_integer.
+inline namespace impl
+{
+
+// Enabler for the binomial overload involving integral types, the same as pow.
+template <typename T, typename U>
+using integer_binomial_enabler = integer_pow_enabler<T, U>;
+
+// Wrapper for ADL.
+template <typename T, typename U>
+auto mp_integer_binomial_wrapper(const T &base, const U &exp) -> decltype(binomial(base, exp))
+{
+    return binomial(base, exp);
+}
+}
+
+namespace math
+{
+
+/// Specialisation of the implementation of piranha::math::binomial() for piranha::mp_integer.
 /**
  * This specialisation is activated when:
- * - one of the arguments is piranha::mp_integer and the other is either
- *   piranha::mp_integer or an interoperable type for piranha::mp_integer,
+ * - one of the arguments is a piranha::mp_integer and the other is either
+ *   a piranha::mp_integer with the same static size or an interoperable type for piranha::mp_integer,
  * - both arguments are integral types.
  *
  * The implementation follows these rules:
- * - if the arguments are both piranha::mp_integer, or a piranha::mp_integer and an integral type, then
- * piranha::mp_integer::binomial() is used
- *   to compute the result (after any necessary conversion),
+ * - if the arguments are both piranha::mp_integer with the same static size, or a piranha::mp_integer and an integral
+ *   type, then piranha::mp_integer::binomial() is used to compute the result (after any necessary conversion),
  * - if both arguments are integral types, piranha::mp_integer::binomial() is used after the conversion of the top
- * argument
- *   to piranha::mp_integer,
- * - otherwise, the piranha::mp_integer argument is converted to the floating-point type and \p
- * piranha::math::binomial() is
- *   used to compute the result.
+ *   argument to piranha::integer,
+ * - otherwise, the piranha::mp_integer argument is converted to the floating-point type and
+ *   piranha::math::binomial() is used to compute the result.
  */
 template <typename T, typename U>
-struct binomial_impl<T, U, detail::integer_binomial_enabler<T, U>> {
-    /// Call operator, integral--integral overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by constructing piranha::mp_integer
-     * or by piranha::mp_integer::binomial().
-     */
+struct binomial_impl<T, U, integer_binomial_enabler<T, U>> {
+private:
+    // integral--integral overload.
     template <typename T2, typename U2,
-              typename std::enable_if<std::is_integral<T2>::value && std::is_integral<U2>::value, int>::type = 0>
-    integer operator()(const T2 &x, const U2 &y) const
+              enable_if_t<conjunction<std::is_integral<T2>, std::is_integral<U2>>::value, int> = 0>
+    static integer impl(const T2 &x, const U2 &y)
     {
-        return integer(x).binomial(y);
+        return mp_integer_binomial_wrapper(integer{x}, y);
     }
-    /// Call operator, piranha::mp_integer overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_integer::binomial().
-     */
-    template <int NBits>
-    mp_integer<NBits> operator()(const mp_integer<NBits> &x, const mp_integer<NBits> &y) const
+    // mp_integer--integral, integral--mp_integer, mp_integer--mp_integer overload.
+    template <typename T2, typename U2, enable_if_t<disjunction<conjunction<is_mp_integer<T2>, std::is_integral<U2>>,
+                                                                conjunction<is_mp_integer<U2>, std::is_integral<T2>>,
+                                                                is_same_mp_integer<T2, U2>>::value,
+                                                    int> = 0>
+    static auto impl(const T2 &x, const U2 &y) -> decltype(mp_integer_binomial_wrapper(x, y))
     {
-        return x.binomial(y);
+        return mp_integer_binomial_wrapper(x, y);
     }
-    /// Call operator, integer--integral overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_integer::binomial().
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value, int>::type = 0>
-    mp_integer<NBits> operator()(const mp_integer<NBits> &x, const T2 &y) const
-    {
-        return x.binomial(y);
-    }
-    /// Call operator, integer--floating-point overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by the conversion operator of piranha::mp_integer
-     * or by piranha::math::binomial().
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value, int>::type = 0>
-    T2 operator()(const mp_integer<NBits> &x, const T2 &y) const
-    {
-        return math::binomial(static_cast<T2>(x), y);
-    }
-    /// Call operator, integral--integer overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by constructing piranha::mp_integer
-     * or by piranha::mp_integer::binomial().
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value, int>::type = 0>
-    mp_integer<NBits> operator()(const T2 &x, const mp_integer<NBits> &y) const
-    {
-        return mp_integer<NBits>(x).binomial(y);
-    }
-    /// Call operator, floating-point--integer overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by the conversion operator of piranha::mp_integer
-     * or by piranha::math::binomial().
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value, int>::type = 0>
-    T2 operator()(const T2 &x, const mp_integer<NBits> &y) const
+    // fp--mp_integer overload.
+    template <typename T2, typename U2,
+              enable_if_t<conjunction<std::is_floating_point<T2>, is_mp_integer<U2>>::value, int> = 0>
+    static T2 impl(const T2 &x, const U2 &y)
     {
         return math::binomial(x, static_cast<T2>(y));
+    }
+    // mp_integer--fp overload.
+    template <typename T2, typename U2,
+              enable_if_t<conjunction<std::is_floating_point<U2>, is_mp_integer<T2>>::value, int> = 0>
+    static U2 impl(const T2 &x, const U2 &y)
+    {
+        return math::binomial(static_cast<U2>(x), y);
+    }
+    // Return type.
+    using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
+
+public:
+    /// Call operator.
+    /**
+     * @param x top argument.
+     * @param y bottom argument.
+     *
+     * @returns \f$ x \choose y \f$.
+     *
+     * @throws unspecified any exception thrown by piranha::mp_integer::binomial() or piranha::math::binomial().
+     */
+    ret_type operator()(const T &x, const U &y) const
+    {
+        return impl(x, y);
     }
 };
 }
 
-/// Type trait to detect the presence of the piranha::math::binomial function.
+/// Type trait to detect the presence of the piranha::math::binomial() function.
 /**
- * The type trait will be \p true if piranha::math::binomial can be successfully called on instances of \p T and \p U
- * respectively,
- * \p false otherwise.
+ * The type trait will be \p true if piranha::math::binomial() can be successfully called on instances of \p T and \p U
+ * respectively, \p false otherwise.
  */
 template <typename T, typename U>
-class has_binomial : detail::sfinae_types
+class has_binomial
 {
-    template <typename T1, typename U1>
-    static auto test(T1 const *t, U1 const *u) -> decltype(math::binomial(*t, *u), void(), yes());
-    static no test(...);
-    static const bool implementation_defined
-        = std::is_same<decltype(test((T const *)nullptr, (U const *)nullptr)), yes>::value;
+    template <typename T2, typename U2>
+    using binomial_t = decltype(math::binomial(std::declval<const T2 &>(), std::declval<const U2 &>()));
+    static const bool implementation_defined = is_detected<binomial_t, T, U>::value;
 
 public:
     /// Value of the type trait.

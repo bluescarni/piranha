@@ -37,7 +37,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
-#include <boost/math/special_functions/binomial.hpp>
 #include <cmath>
 #include <complex>
 #include <cstddef>
@@ -53,7 +52,6 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include <piranha/binomial.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/init.hpp>
 #include <piranha/kronecker_monomial.hpp>
@@ -516,88 +514,6 @@ BOOST_AUTO_TEST_CASE(math_key_has_t_lorder_test)
 {
     BOOST_CHECK(!key_has_t_lorder<monomial<int>>::value);
     BOOST_CHECK(!key_has_t_lorder<kronecker_monomial<>>::value);
-}
-
-BOOST_AUTO_TEST_CASE(math_fp_binomial_test)
-{
-    // Random testing.
-    std::uniform_real_distribution<double> rdist(-100., 100.);
-    for (int i = 0; i < ntries; ++i) {
-        const double x = rdist(rng), y = rdist(rng);
-        // NOTE: at the moment we have nothing to check this against,
-        // maybe in the future we can check against real.
-        BOOST_CHECK(std::isfinite(detail::fp_binomial(x, y)));
-    }
-    std::uniform_int_distribution<int> idist(-100, 100);
-    for (int i = 0; i < ntries; ++i) {
-        // NOTE: maybe this could be checked against the mp_integer implementation.
-        const int x = idist(rng), y = idist(rng);
-        BOOST_CHECK(std::isfinite(detail::fp_binomial(static_cast<double>(x), static_cast<double>(y))));
-        BOOST_CHECK(std::isfinite(detail::fp_binomial(static_cast<long double>(x), static_cast<long double>(y))));
-    }
-}
-
-struct b_00 {
-    b_00() = default;
-    b_00(const b_00 &) = delete;
-    b_00(b_00 &&) = delete;
-};
-
-struct b_01 {
-    b_01() = default;
-    b_01(const b_01 &) = default;
-    b_01(b_01 &&) = default;
-    ~b_01() = delete;
-};
-
-namespace piranha
-{
-
-namespace math
-{
-
-template <>
-struct binomial_impl<b_00, b_00, void> {
-    b_00 operator()(const b_00 &, const b_00 &) const;
-};
-
-template <>
-struct binomial_impl<b_01, b_01, void> {
-    b_01 operator()(const b_01 &, const b_01 &) const;
-};
-}
-}
-
-BOOST_AUTO_TEST_CASE(math_binomial_test)
-{
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0))>::value));
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0u))>::value));
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0l))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0u))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0ll))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, 0))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, char(0)))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, short(0)))>::value));
-    BOOST_CHECK((has_binomial<double, int>::value));
-    BOOST_CHECK((has_binomial<double, unsigned>::value));
-    BOOST_CHECK((has_binomial<float, char>::value));
-    BOOST_CHECK((has_binomial<float, float>::value));
-    BOOST_CHECK((has_binomial<float, double>::value));
-    if (std::numeric_limits<double>::has_quiet_NaN && std::numeric_limits<double>::has_infinity) {
-        BOOST_CHECK_THROW(math::binomial(1., std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(1., std::numeric_limits<double>::infinity()), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::quiet_NaN(), 1.), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::infinity(), 1.), std::invalid_argument);
-        BOOST_CHECK_THROW(
-            math::binomial(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity()),
-            std::invalid_argument);
-        BOOST_CHECK_THROW(
-            math::binomial(std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()),
-            std::invalid_argument);
-    }
-    BOOST_CHECK((!has_binomial<b_00, b_00>::value));
-    BOOST_CHECK((!has_binomial<b_01, b_01>::value));
 }
 
 BOOST_AUTO_TEST_CASE(math_t_subs_test)
