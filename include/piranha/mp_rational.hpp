@@ -61,32 +61,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-#if 0
-namespace detail
-{
-
-// Fwd declaration.
-template <typename>
-struct is_mp_rational;
-
-// NOTE: this is a bit complicated: the interoperable types for mp_rational are those from mp_integer
-// plus mp_integer, but not *any* mp_integer, just the one whose bits value matches that of the rational.
-template <typename T, typename Rational, typename = void>
-struct is_mp_rational_interoperable_type {
-    static const bool value
-        = is_mp_integer_interoperable_type<T>::value || std::is_same<T, typename Rational::int_type>::value;
-};
-
-// The second complication is that we need to cope with the fact that we are using this tt in a context
-// in which Rational might not actually be a rational (in the pow_impl specialisation). In this case we must prevent
-// a hard error to be generated.
-template <typename T, typename Rational>
-struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!is_mp_rational<Rational>::value>::type> {
-    static const bool value = false;
-};
-}
-#endif
-
 /// Multiple precision rational class.
 /**
  * This class encapsulates two instances of piranha::mp_integer to represent an arbitrary-precision rational number
@@ -537,24 +511,22 @@ private:
     {
         return q1.num() == q2.num() && q1.den() == q2.den();
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_eq(const mp_rational &q, const T &x)
     {
         return q.den().is_unitary() && q.num() == x;
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_eq(const T &x, const mp_rational &q)
     {
         return binary_eq(q, x);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_eq(const mp_rational &q, const T &x)
     {
         return static_cast<T>(q) == x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_eq(const T &x, const mp_rational &q)
     {
         return binary_eq(q, x);
@@ -572,24 +544,22 @@ private:
         }
         return q1.num() * q2.den() < q2.num() * q1.den();
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_less_than(const mp_rational &q, const T &x)
     {
         return q.num() < q.den() * x;
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_less_than(const T &x, const mp_rational &q)
     {
         return q.den() * x < q.num();
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_less_than(const mp_rational &q, const T &x)
     {
         return static_cast<T>(q) < x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_less_than(const T &x, const mp_rational &q)
     {
         return x < static_cast<T>(q);
@@ -602,19 +572,17 @@ private:
         }
         return q1.num() * q2.den() > q2.num() * q1.den();
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_greater_than(const mp_rational &q, const T &x)
     {
         return q.num() > q.den() * x;
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_greater_than(const T &x, const mp_rational &q)
     {
         return q.den() * x > q.num();
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_greater_than(const mp_rational &q, const T &x)
     {
         return static_cast<T>(q) > x;
@@ -1911,7 +1879,7 @@ struct negate_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>:
     }
 };
 
-///// Specialisation of the piranha::math::pow() functor for piranha::mp_rational.
+/// Specialisation of the piranha::math::pow() functor for piranha::mp_rational.
 /**
  * This specialisation is activated when one of the arguments is piranha::mp_rational
  * and the other is either piranha::mp_rational or an interoperable type for piranha::mp_rational.
