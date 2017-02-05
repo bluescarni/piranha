@@ -140,8 +140,8 @@ using integer_pow_enabler
                               conjunction<std::is_integral<T>, std::is_integral<U>>, is_same_mp_integer<T, U>>::value>;
 
 // Wrapper for ADL.
-template <std::size_t SSize, typename T>
-auto mp_integer_pow_wrapper(const mp_integer<SSize> &base, const T &exp) -> decltype(pow(base, exp))
+template <typename T, typename U>
+auto mp_integer_pow_wrapper(const T &base, const U &exp) -> decltype(pow(base, exp))
 {
     return pow(base, exp);
 }
@@ -162,12 +162,10 @@ namespace math
  * - both arguments are C++ integral types.
  *
  * The implementation follows these rules:
- * - if the arguments are both piranha::mp_integer, or a piranha::mp_integer and an integral type, then
- *   piranha::mp_integer::pow() is used to compute the result (after any necessary conversion),
+ * - if the arguments are both piranha::mp_integer, or a piranha::mp_integer and an interoperable type for
+ *   piranha::mp_integer, then piranha::mp_integer::pow() is used to compute the result,
  * - if both arguments are integral types, piranha::mp_integer::pow() is used after the conversion of the base
- *   to piranha::integer,
- * - otherwise, the piranha::mp_integer argument is converted to the floating-point type and piranha::math::pow() is
- *   used to compute the result.
+ *   to piranha::integer.
  */
 template <typename T, typename U>
 struct pow_impl<T, U, integer_pow_enabler<T, U>> {
@@ -179,30 +177,12 @@ private:
     {
         return mp_integer_pow_wrapper(integer{b}, e);
     }
-    // mp_integer -- C++ integral / mp_integer.
-    template <std::size_t SSize, typename U2,
-              enable_if_t<disjunction<std::is_integral<U2>, is_same_mp_integer<U2, mp_integer<SSize>>>::value, int> = 0>
-    static mp_integer<SSize> impl(const mp_integer<SSize> &b, const U2 &e)
+    // The other cases.
+    template <typename T2, typename U2,
+              enable_if_t<negation<conjunction<std::is_integral<T2>, std::is_integral<U2>>>::value, int> = 0>
+    static auto impl(const T2 &b, const U2 &e) -> decltype(mp_integer_pow_wrapper(b, e))
     {
         return mp_integer_pow_wrapper(b, e);
-    }
-    // C++ integral -- mp_integer.
-    template <typename T2, std::size_t SSize, enable_if_t<std::is_integral<T2>::value, int> = 0>
-    static mp_integer<SSize> impl(const T2 &b, const mp_integer<SSize> &e)
-    {
-        return mp_integer_pow_wrapper(mp_integer<SSize>{b}, e);
-    }
-    // FP -- mp_integer.
-    template <typename T2, std::size_t SSize, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    static T2 impl(const T2 &b, const mp_integer<SSize> &e)
-    {
-        return pow(b, static_cast<T2>(e));
-    }
-    // mp_integer -- FP.
-    template <std::size_t SSize, typename U2, enable_if_t<std::is_floating_point<U2>::value, int> = 0>
-    static U2 impl(const mp_integer<SSize> &b, const U2 &e)
-    {
-        return pow(static_cast<U2>(b), e);
     }
     using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
 

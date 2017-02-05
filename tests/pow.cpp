@@ -89,7 +89,6 @@ struct int_pow_tester {
         template <typename T>
         void operator()(const T &) const
         {
-            using piranha::math::pow;
             using int_type = mp_integer<U::value>;
             BOOST_CHECK((is_exponentiable<int_type, T>::value));
             BOOST_CHECK((is_exponentiable<int_type, float>::value));
@@ -97,73 +96,73 @@ struct int_pow_tester {
             BOOST_CHECK((is_exponentiable<double, int_type>::value));
             BOOST_CHECK((is_exponentiable<long double, int_type>::value));
             int_type n;
-            BOOST_CHECK((std::is_same<int_type, decltype(pow(n, T(0)))>::value));
-            BOOST_CHECK_EQUAL(pow(n, T(0)), 1);
+            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(n, T(0)))>::value));
+            BOOST_CHECK_EQUAL(math::pow(n, T(0)), 1);
             if (std::is_signed<T>::value) {
-                BOOST_CHECK_THROW(pow(n, T(-1)), mppp::zero_division_error);
+                BOOST_CHECK_THROW(math::pow(n, T(-1)), mppp::zero_division_error);
             }
             n = 1;
-            BOOST_CHECK_EQUAL(pow(n, T(0)), 1);
+            BOOST_CHECK_EQUAL(math::pow(n, T(0)), 1);
             if (std::is_signed<T>::value) {
-                BOOST_CHECK_EQUAL(pow(n, T(-1)), 1);
+                BOOST_CHECK_EQUAL(math::pow(n, T(-1)), 1);
             }
             n = -1;
-            BOOST_CHECK_EQUAL(pow(n, T(0)), 1);
+            BOOST_CHECK_EQUAL(math::pow(n, T(0)), 1);
             if (std::is_signed<T>::value) {
-                BOOST_CHECK_EQUAL(pow(n, T(-1)), -1);
+                BOOST_CHECK_EQUAL(math::pow(n, T(-1)), -1);
             }
             n = 2;
-            BOOST_CHECK_EQUAL(pow(n, T(0)), 1);
-            BOOST_CHECK_EQUAL(pow(n, T(1)), 2);
-            BOOST_CHECK_EQUAL(pow(n, T(2)), 4);
-            BOOST_CHECK_EQUAL(pow(n, T(4)), 16);
-            BOOST_CHECK_EQUAL(pow(n, T(5)), 32);
+            BOOST_CHECK_EQUAL(math::pow(n, T(0)), 1);
+            BOOST_CHECK_EQUAL(math::pow(n, T(1)), 2);
+            BOOST_CHECK_EQUAL(math::pow(n, T(2)), 4);
+            BOOST_CHECK_EQUAL(math::pow(n, T(4)), 16);
+            BOOST_CHECK_EQUAL(math::pow(n, T(5)), 32);
             if (std::is_signed<T>::value) {
-                BOOST_CHECK_EQUAL(pow(n, T(-1)), 0);
+                BOOST_CHECK_EQUAL(math::pow(n, T(-1)), 0);
             }
             n = -3;
-            BOOST_CHECK_EQUAL(pow(n, T(0)), 1);
-            BOOST_CHECK_EQUAL(pow(n, T(1)), -3);
-            BOOST_CHECK_EQUAL(pow(n, T(2)), 9);
-            BOOST_CHECK_EQUAL(pow(n, T(4)), 81);
-            BOOST_CHECK_EQUAL(pow(n, T(5)), -243);
-            BOOST_CHECK_EQUAL(pow(n, T(13)), -1594323);
+            BOOST_CHECK_EQUAL(math::pow(n, T(0)), 1);
+            BOOST_CHECK_EQUAL(math::pow(n, T(1)), -3);
+            BOOST_CHECK_EQUAL(math::pow(n, T(2)), 9);
+            BOOST_CHECK_EQUAL(math::pow(n, T(4)), 81);
+            BOOST_CHECK_EQUAL(math::pow(n, T(5)), -243);
+            BOOST_CHECK_EQUAL(math::pow(n, T(13)), -1594323);
             if (std::is_signed<T>::value) {
-                BOOST_CHECK_EQUAL(pow(n, T(-1)), 0);
+                BOOST_CHECK_EQUAL(math::pow(n, T(-1)), 0);
             }
             // Test here the various math::pow() overloads as well.
             // Integer--integer.
             BOOST_CHECK((is_exponentiable<int_type, int_type>::value));
-            BOOST_CHECK((std::is_same<int_type, decltype(pow(int_type(1), int_type(1)))>::value));
-            BOOST_CHECK_EQUAL(pow(int_type(2), int_type(3)), 8);
+            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(int_type(1), int_type(1)))>::value));
+            BOOST_CHECK_EQUAL(math::pow(int_type(2), int_type(3)), 8);
             // Integer -- integral.
             BOOST_CHECK((is_exponentiable<int_type, int>::value));
             BOOST_CHECK((is_exponentiable<int_type, char>::value));
             BOOST_CHECK((is_exponentiable<int_type, unsigned long>::value));
-            BOOST_CHECK((std::is_same<int_type, decltype(pow(int_type(1), 1))>::value));
-            BOOST_CHECK((std::is_same<int_type, decltype(pow(int_type(1), 1ul))>::value));
-            BOOST_CHECK((std::is_same<int_type, decltype(pow(int_type(1), (signed char)1))>::value));
-            BOOST_CHECK_EQUAL(pow(int_type(2), 3), 8);
+            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(int_type(1), 1))>::value));
+            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(int_type(1), 1ul))>::value));
+            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(int_type(1), (signed char)1))>::value));
+            BOOST_CHECK_EQUAL(math::pow(int_type(2), 3), 8);
             // Integer -- floating-point.
             BOOST_CHECK((is_exponentiable<int_type, double>::value));
-            BOOST_CHECK((std::is_same<double, decltype(pow(int_type(1), 1.))>::value));
-            BOOST_CHECK_EQUAL(pow(int_type(2), 3.), pow(2., 3.));
-            BOOST_CHECK_EQUAL(pow(int_type(2), 1. / 3.), pow(2., 1. / 3.));
+            BOOST_CHECK((std::is_same<double, decltype(math::pow(int_type(1), 1.))>::value));
+            BOOST_CHECK_EQUAL(math::pow(int_type(2), 3.), math::pow(2., 3.));
+            BOOST_CHECK_EQUAL(math::pow(int_type(2), 1. / 3.), math::pow(2., 1. / 3.));
             // Integral -- integer.
             BOOST_CHECK((is_exponentiable<int, int_type>::value));
             BOOST_CHECK((is_exponentiable<short, int_type>::value));
-            BOOST_CHECK((std::is_same<int_type, decltype(pow(1, int_type(1)))>::value));
-            BOOST_CHECK((std::is_same<int_type, decltype(pow(short(1), int_type(1)))>::value));
-            BOOST_CHECK_EQUAL(pow(2, int_type(3)), 8.);
+            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(1, int_type(1)))>::value));
+            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(short(1), int_type(1)))>::value));
+            BOOST_CHECK_EQUAL(math::pow(2, int_type(3)), 8.);
             // Floating-point -- integer.
             BOOST_CHECK((is_exponentiable<float, int_type>::value));
             BOOST_CHECK((is_exponentiable<double, int_type>::value));
-            BOOST_CHECK((std::is_same<float, decltype(pow(1.f, int_type(1)))>::value));
-            BOOST_CHECK((std::is_same<double, decltype(pow(1., int_type(1)))>::value));
-            BOOST_CHECK_EQUAL(pow(2.f, int_type(3)), pow(2.f, 3.f));
-            BOOST_CHECK_EQUAL(pow(2., int_type(3)), pow(2., 3.));
-            BOOST_CHECK_EQUAL(pow(2.f / 5.f, int_type(3)), pow(2.f / 5.f, 3.f));
-            BOOST_CHECK_EQUAL(pow(2. / 7., int_type(3)), pow(2. / 7., 3.));
+            BOOST_CHECK((std::is_same<float, decltype(math::pow(1.f, int_type(1)))>::value));
+            BOOST_CHECK((std::is_same<double, decltype(math::pow(1., int_type(1)))>::value));
+            BOOST_CHECK_EQUAL(math::pow(2.f, int_type(3)), math::pow(2.f, 3.f));
+            BOOST_CHECK_EQUAL(math::pow(2., int_type(3)), math::pow(2., 3.));
+            BOOST_CHECK_EQUAL(math::pow(2.f / 5.f, int_type(3)), math::pow(2.f / 5.f, 3.f));
+            BOOST_CHECK_EQUAL(math::pow(2. / 7., int_type(3)), math::pow(2. / 7., 3.));
         }
     };
     template <typename T>
@@ -178,7 +177,6 @@ struct mp_integer_pow_tester {
     void operator()(const T &) const
     {
         using int_type = mp_integer<T::value>;
-        using piranha::math::pow;
         BOOST_CHECK((is_exponentiable<int_type, int_type>::value));
         BOOST_CHECK((!is_exponentiable<int_type, void>::value));
         BOOST_CHECK((!is_exponentiable<void, int_type>::value));
@@ -190,30 +188,30 @@ struct mp_integer_pow_tester {
         BOOST_CHECK((is_exponentiable<long double, int_type>::value));
         BOOST_CHECK((is_exponentiable<const long double, int_type &&>::value));
         int_type n;
-        BOOST_CHECK((std::is_same<int_type, decltype(pow(n, n))>::value));
-        BOOST_CHECK_EQUAL(pow(n, int_type(0)), 1);
-        BOOST_CHECK_THROW(pow(n, int_type(-1)), mppp::zero_division_error);
+        BOOST_CHECK((std::is_same<int_type, decltype(math::pow(n, n))>::value));
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(0)), 1);
+        BOOST_CHECK_THROW(math::pow(n, int_type(-1)), mppp::zero_division_error);
         n = 1;
-        BOOST_CHECK_EQUAL(pow(n, int_type(0)), 1);
-        BOOST_CHECK_EQUAL(pow(n, int_type(-1)), 1);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(0)), 1);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(-1)), 1);
         n = -1;
-        BOOST_CHECK_EQUAL(pow(n, int_type(0)), 1);
-        BOOST_CHECK_EQUAL(pow(n, int_type(-1)), -1);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(0)), 1);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(-1)), -1);
         n = 2;
-        BOOST_CHECK_EQUAL(pow(n, int_type(0)), 1);
-        BOOST_CHECK_EQUAL(pow(n, int_type(1)), 2);
-        BOOST_CHECK_EQUAL(pow(n, int_type(2)), 4);
-        BOOST_CHECK_EQUAL(pow(n, int_type(4)), 16);
-        BOOST_CHECK_EQUAL(pow(n, int_type(5)), 32);
-        BOOST_CHECK_EQUAL(pow(n, int_type(-1)), 0);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(0)), 1);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(1)), 2);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(2)), 4);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(4)), 16);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(5)), 32);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(-1)), 0);
         n = -3;
-        BOOST_CHECK_EQUAL(pow(n, int_type(0)), 1);
-        BOOST_CHECK_EQUAL(pow(n, int_type(1)), -3);
-        BOOST_CHECK_EQUAL(pow(n, int_type(2)), 9);
-        BOOST_CHECK_EQUAL(pow(n, int_type(4)), 81);
-        BOOST_CHECK_EQUAL(pow(n, int_type(5)), -243);
-        BOOST_CHECK_EQUAL(pow(n, int_type(13)), -1594323);
-        BOOST_CHECK_EQUAL(pow(n, int_type(-1)), 0);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(0)), 1);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(1)), -3);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(2)), 9);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(4)), 81);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(5)), -243);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(13)), -1594323);
+        BOOST_CHECK_EQUAL(math::pow(n, int_type(-1)), 0);
     }
 };
 
