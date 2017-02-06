@@ -47,42 +47,6 @@ namespace piranha
 inline namespace impl
 {
 
-// TODO move this stuff in rational, the only place where it is used.
-// Generic binomial implementation.
-// template <typename T, enable_if_t<std::is_unsigned<T>::value, int> = 0>
-// inline bool generic_binomial_check_k(const T &, const T &)
-// {
-//     return false;
-// }
-//
-// template <typename T, enable_if_t<!std::is_unsigned<T>::value, int> = 0>
-// inline bool generic_binomial_check_k(const T &k, const T &zero)
-// {
-//     return k < zero;
-// }
-
-// Generic binomial implementation using the falling factorial. U must be an integer
-// type, T can be anything that supports basic arithmetics. k must be non-negative.
-// template <typename T, typename U>
-// inline T generic_binomial(const T &x, const U &k)
-// {
-//     const U zero(0), one(1);
-//     if (generic_binomial_check_k(k, zero)) {
-//         piranha_throw(std::invalid_argument, "negative k value in binomial coefficient");
-//     }
-//     // Zero at bottom results always in 1.
-//     if (k == zero) {
-//         return T(1);
-//     }
-//     T tmp(x), retval = x / T(k);
-//     --tmp;
-//     for (auto i = static_cast<U>(k - one); i >= one; --i, --tmp) {
-//         retval *= tmp;
-//         retval /= T(i);
-//     }
-//     return retval;
-// }
-
 // Compute gamma(a)/(gamma(b) * gamma(c)), assuming a, b and c are not negative ints.
 // This is a helper function for the implementation of binomial() for fp types.
 template <typename T>
