@@ -1042,22 +1042,8 @@ private:
     using mp_int_enabler = enable_if_t<is_mp_integer<T>::value, int>;
     template <typename T>
     using int_enabler = enable_if_t<std::is_integral<T>::value, int>;
-
-public:
-    /// Float to piranha::mp_integer conversion.
-    /**
-     * \note
-     * This operator is enabled if \p T is a C++ floating-point type.
-     *
-     * @param f input float to be converted.
-     *
-     * @return \p f converted to \p To.
-     *
-     * @throws piranha::safe_cast_failure is the input float is not finite or if it has a nonzero fractional part.
-     * @throws unspecified any exception thrown by the constructor of piranha::mp_integer from a floating-point.
-     */
     template <typename T, float_enabler<T> = 0>
-    To operator()(const T &f) const
+    static To impl(const T &f)
     {
         if (unlikely(!std::isfinite(f))) {
             piranha_throw(safe_cast_failure, "the non-finite floating-point value " + std::to_string(f)
@@ -1070,19 +1056,8 @@ public:
         }
         return To{f};
     }
-    /// piranha::mp_integer to integral conversion.
-    /**
-     * \note
-     * This operator is enabled if \p T is an instance of piranha::mp_integer.
-     *
-     * @param n input piranha::mp_integer.
-     *
-     * @return \p n converted to the C++ integral type \p To.
-     *
-     * @throws piranha::safe_cast_failure if the target integral type cannot represent the value of \p n.
-     */
     template <typename T, mp_int_enabler<T> = 0>
-    To operator()(const T &n) const
+    static To impl(const T &n)
     {
         try {
             return To(n);
@@ -1092,19 +1067,27 @@ public:
                                                  + "', as the conversion cannot preserve the original value");
         }
     }
-    /// Integral to piranha::mp_integer conversion.
-    /**
-     * \note
-     * This operator is enabled if \p T is a C++ integral type.
-     *
-     * @param n input C++ integral.
-     *
-     * @return \p n converted to \p To.
-     */
     template <typename T, int_enabler<T> = 0>
-    To operator()(const T &n) const
+    static To impl(const T &n)
     {
         return To{n};
+    }
+
+public:
+    /// Call operator.
+    /**
+     * @param x input value to be converted.
+     *
+     * @return \p x converted to \p To.
+     *
+     * @throws piranha::safe_cast_failure if:
+     * - the input float is not finite or if it has a nonzero fractional part,
+     * - the target integral type \p To cannot represent the value of the input piranha::mp_integer.
+     * @throws unspecified any exception thrown by the constructor of piranha::mp_integer from a floating-point.
+     */
+    To operator()(const From &x) const
+    {
+        return impl(x);
     }
 };
 }
