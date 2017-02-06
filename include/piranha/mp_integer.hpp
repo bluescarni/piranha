@@ -68,7 +68,7 @@ inline namespace impl
 
 // Detect if T is an instance of piranha::mp_integer.
 // This is used in some enablers (e.g., gcd).
-template <typename T>
+template <typename>
 struct is_mp_integer : std::false_type {
 };
 
@@ -77,7 +77,7 @@ struct is_mp_integer<mp_integer<SSize>> : std::true_type {
 };
 
 // Detect if T and U are both mp_integer with same SSize.
-template <typename T, typename U>
+template <typename, typename>
 struct is_same_mp_integer : std::false_type {
 };
 
