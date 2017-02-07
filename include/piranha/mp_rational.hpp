@@ -1937,62 +1937,24 @@ namespace math
  */
 template <typename T, typename U>
 struct pow_impl<T, U, math_rational_pow_enabler<T, U>> {
-    /// Call operator, rational--integral overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_rational::pow().
-     */
+private:
     template <std::size_t SSize, typename T2>
-    auto operator()(const mp_rational<SSize> &b, const T2 &e) const -> decltype(b.pow(e))
+    static auto impl(const mp_rational<SSize> &b, const T2 &e) -> decltype(b.pow(e))
     {
         return b.pow(e);
     }
-    /// Call operator, rational--floating-point overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to a floating-point type.
-     */
     template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    T2 operator()(const mp_rational<SSize> &b, const T2 &e) const
+    static T2 impl(const mp_rational<SSize> &b, const T2 &e)
     {
         return math::pow(static_cast<T2>(b), e);
     }
-    /// Call operator, floating-point--rational overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to a floating-point type.
-     */
     template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    T2 operator()(const T2 &e, const mp_rational<SSize> &b) const
+    static T2 impl(const T2 &e, const mp_rational<SSize> &b)
     {
         return math::pow(e, static_cast<T2>(b));
     }
-    /// Call operator, rational--rational overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws std::invalid_argument if the result cannot be computed.
-     * @throws unspecified any exception thrown by piranha::mp_rational::pow().
-     */
     template <std::size_t SSize>
-    mp_rational<SSize> operator()(const mp_rational<SSize> &b, const mp_rational<SSize> &e) const
+    static mp_rational<SSize> impl(const mp_rational<SSize> &b, const mp_rational<SSize> &e)
     {
         // Special casing.
         if (is_unitary(b)) {
@@ -2017,20 +1979,9 @@ struct pow_impl<T, U, math_rational_pow_enabler<T, U>> {
         }
         return b.pow(e.num());
     }
-    /// Call operator, integral--rational overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws std::invalid_argument if the result cannot be computed.
-     * @throws unspecified any exception thrown by piranha::math::pow() with integral base and piranha::mp_integer
-     * exponent.
-     */
     template <std::size_t SSize, typename T2,
               enable_if_t<disjunction<std::is_integral<T2>, is_mp_integer<T2>>::value, int> = 0>
-    auto operator()(const T2 &b, const mp_rational<SSize> &e) const -> decltype(math::pow(b, e.num()))
+    static auto impl(const T2 &b, const mp_rational<SSize> &e) -> decltype(math::pow(b, e.num()))
     {
         using ret_type = decltype(math::pow(b, e.num()));
         if (is_unitary(b)) {
@@ -2051,6 +2002,25 @@ struct pow_impl<T, U, math_rational_pow_enabler<T, U>> {
                           "unable to raise an integral to a rational power whose denominator is not 1");
         }
         return math::pow(b, e.num());
+    }
+    using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
+public:
+    /// Call operator, rational--integral overload.
+    /**
+     * @param b base.
+     * @param e exponent.
+     *
+     * @returns <tt>b**e</tt>.
+     *
+     * @throws std::invalid_argument if the result cannot be computed.
+     * @throws unspecified any exception thrown by:
+     * - piranha::math::pow(),
+     * - piranha::mp_rational::pow(),
+     * - converting piranha::mp_rational to a floating-point type.
+     */
+    ret_type operator()(const T &b, const U &e) const
+    {
+        return impl(b,e);
     }
 };
 

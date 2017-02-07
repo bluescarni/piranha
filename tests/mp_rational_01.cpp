@@ -119,7 +119,7 @@ struct constructor_tester {
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
-        std::cout << "NBits,size,align: " << T::value << ',' << sizeof(q_type) << ',' << alignof(q_type) << '\n';
+        std::cout << "static limbs,size,align: " << T::value << ',' << sizeof(q_type) << ',' << alignof(q_type) << '\n';
         q_type q;
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q), "0");
         BOOST_CHECK_EQUAL(q.num(), 0);
