@@ -2005,7 +2005,7 @@ private:
     }
     using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
 public:
-    /// Call operator, rational--integral overload.
+    /// Call operator.
     /**
      * @param b base.
      * @param e exponent.
@@ -2121,80 +2121,49 @@ namespace math
  */
 template <typename T, typename U>
 struct binomial_impl<T, U, math_rational_binomial_enabler<T, U>> {
-    /// Call operator, rational--integral overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_rational::binomial().
-     */
+private:
     template <std::size_t SSize, typename T2>
-    auto operator()(const mp_rational<SSize> &x, const T2 &y) const -> decltype(x.binomial(y))
+    static auto impl(const mp_rational<SSize> &x, const T2 &y) -> decltype(x.binomial(y))
     {
         return x.binomial(y);
     }
-    /// Call operator, rational--floating-point overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to a floating-point type.
-     */
     template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    T2 operator()(const mp_rational<SSize> &x, const T2 &y) const
+    static T2 impl(const mp_rational<SSize> &x, const T2 &y)
     {
         return math::binomial(static_cast<T2>(x), y);
     }
-    /// Call operator, floating-point--rational overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to a floating-point type.
-     */
     template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    T2 operator()(const T2 &x, const mp_rational<SSize> &y) const
+    static T2 impl(const T2 &x, const mp_rational<SSize> &y)
     {
         return math::binomial(x, static_cast<T2>(y));
     }
-    /// Call operator, rational--rational overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to \p double.
-     */
     template <std::size_t SSize>
-    double operator()(const mp_rational<SSize> &x, const mp_rational<SSize> &y) const
+    static double impl(const mp_rational<SSize> &x, const mp_rational<SSize> &y)
     {
         return math::binomial(static_cast<double>(x), static_cast<double>(y));
     }
-    /// Call operator, integral--rational overload.
+    template <std::size_t SSize, typename T2,
+              enable_if_t<disjunction<std::is_integral<T2>, is_mp_integer<T2>>::value, int> = 0>
+    static double impl(const T2 &x, const mp_rational<SSize> &y)
+    {
+        return math::binomial(static_cast<double>(x), static_cast<double>(y));
+    }
+    using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
+public:
+    /// Call operator.
     /**
      * @param x top argument.
      * @param y bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * or piranha::mp_integer to \p double.
+     * @throws unspecified any exception thrown by:
+     * - piranha::mp_rational::binomial(),
+     * - converting piranha::mp_rational or piranha::mp_integer to a floating-point type.
      */
-    template <std::size_t SSize, typename T2,
-              enable_if_t<disjunction<std::is_integral<T2>, is_mp_integer<T2>>::value, int> = 0>
-    double operator()(const T2 &x, const mp_rational<SSize> &y) const
+    ret_type operator()(const T &x, const U &y) const
     {
-        return math::binomial(static_cast<double>(x), static_cast<double>(y));
+        return impl(x,y);
     }
 };
 }
