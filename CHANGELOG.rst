@@ -14,7 +14,16 @@ New
 Changes
 ~~~~~~~
 
+- Remove for the time being all functionality related to polynomial
+  division/gcd, including rational functions. [Francesco Biscani]
+
 - Updated the copyright date. [Francesco Biscani]
+
+Fix
+~~~
+
+- Fix building with BZip2 support on older CMake versions. [Francesco
+  Biscani]
 
 v0.10 (2017-01-15)
 ------------------
