@@ -1,4 +1,3 @@
-
 # Get current dir.
 get_filename_component(_PIRANHA_CONFIG_SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
