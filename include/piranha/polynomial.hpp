@@ -319,7 +319,7 @@ class polynomial
                           "unable to perform polynomial integration: cannot extract the integral form of an exponent");
         }
         // If the degree is negative, integration by parts won't terminate.
-        if (degree.sign() < 0) {
+        if (degree.sgn() < 0) {
             piranha_throw(std::invalid_argument,
                           "unable to perform polynomial integration: negative integral exponent");
         }
@@ -1556,12 +1556,12 @@ public:
 private:
     // NOTE: wrapper to multadd that treats specially rational coefficients. We need to decide in the future
     // if this stays here or if it is better to generalise it.
-    template <typename T, typename std::enable_if<!detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<!is_mp_rational<T>::value, int>::type = 0>
     static void fma_wrap(T &a, const T &b, const T &c)
     {
         math::multiply_accumulate(a, b, c);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     static void fma_wrap(T &a, const T &b, const T &c)
     {
         math::multiply_accumulate(a._num(), b.num(), c.num());

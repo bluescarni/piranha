@@ -2358,7 +2358,7 @@ public:
         } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument, "invalid argument for series exponentiation: non-integral value");
         }
-        if (n.sign() < 0) {
+        if (n.sgn() < 0) {
             piranha_throw(std::invalid_argument, "invalid argument for series exponentiation: negative integral value");
         }
         // Lock the cache for the rest of the method.

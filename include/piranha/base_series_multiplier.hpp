@@ -176,7 +176,7 @@ struct base_series_multiplier_impl<Series, Derived, typename std::enable_if<is_m
         }
         // All these computations involve only positive numbers,
         // the GCD must always be positive.
-        piranha_assert(m_lcm.sign() == 1);
+        piranha_assert(m_lcm.sgn() == 1);
         // Copy over the terms and renormalise to lcm.
         it_f = c1.end();
         for (auto it = c1.begin(); it != it_f; ++it) {
@@ -268,7 +268,7 @@ private:
     }
     // Implementation of finalise().
     template <typename T,
-              typename std::enable_if<detail::is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
+              typename std::enable_if<is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
     void finalise_impl(T &s) const
     {
         // Nothing to do if the lcm is unitary.
@@ -320,7 +320,7 @@ private:
         }
     }
     template <typename T,
-              typename std::enable_if<!detail::is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
+              typename std::enable_if<!is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
     void finalise_impl(T &) const
     {
     }
@@ -679,7 +679,7 @@ protected:
                     add = integer(multiplier) * count * count;
                 }
                 // Fix if zero, so that the average later never results in zero.
-                if (add.sign() == 0) {
+                if (add.sgn() == 0) {
                     add = 1;
                 }
                 acc += add;

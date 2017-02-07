@@ -182,8 +182,8 @@ class poisson_series
         auto lc = poly.integral_combination();
         // Change sign if needed.
         bool sign_change = false;
-        if (!lc.empty() && lc.begin()->second.sign() < 0) {
-            std::for_each(lc.begin(), lc.end(), [](std::pair<const std::string, integer> &p) { p.second.negate(); });
+        if (!lc.empty() && lc.begin()->second.sgn() < 0) {
+            std::for_each(lc.begin(), lc.end(), [](std::pair<const std::string, integer> &p) { p.second.neg(); });
             sign_change = true;
         }
         // Return value.
@@ -370,7 +370,7 @@ class poisson_series
                 "unable to perform Poisson series integration: cannot convert polynomial degree to an integer");
         }
         // If the variable is in both cf and key, and the cf degree is negative, we cannot integrate.
-        if (degree.sign() < 0) {
+        if (degree.sgn() < 0) {
             piranha_throw(
                 std::invalid_argument,
                 "unable to perform Poisson series integration: polynomial coefficient has negative integral degree");
