@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
     BOOST_CHECK((std::is_same<pt0, decltype(math::invert(pt0{}))>::value));
     BOOST_CHECK_EQUAL(math::invert(pt0{1}), 1);
     BOOST_CHECK_EQUAL(math::invert(pt0{2}), 0);
-    BOOST_CHECK_THROW(math::invert(pt0{0}), zero_division_error);
+    BOOST_CHECK_THROW(math::invert(pt0{0}), mppp::zero_division_error);
     BOOST_CHECK_EQUAL(math::invert(pt0{"x"}), math::pow(pt0{"x"}, -1));
     using pt1 = poisson_series<polynomial<rational, monomial<long>>>;
     BOOST_CHECK(is_invertible<pt1>::value);

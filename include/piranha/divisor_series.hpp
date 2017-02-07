@@ -145,7 +145,7 @@ class divisor_series
     static auto safe_mult(const T &n, const T &m) -> decltype(n * m)
     {
         auto ret(integer(n) * m);
-        ret.negate();
+        ret.neg();
         return static_cast<decltype(n * m)>(ret);
     }
     template <typename T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0>
@@ -327,7 +327,7 @@ class divisor_series
                     math::gcd3(cd, cd, n);
                 }
                 // Common denominator could be negative.
-                if (cd.sign() < 0) {
+                if (cd.sgn() < 0) {
                     math::negate(cd);
                 }
                 // It should never be zero: if all elements in v_int are zero, we would not have been
@@ -339,8 +339,7 @@ class divisor_series
                 }
                 // Now build the key.
                 key_type tmp_key;
-                integer exponent(1);
-                tmp_key.insert(v_int.begin(), v_int.end(), exponent);
+                tmp_key.insert(v_int.begin(), v_int.end(), integer{1});
                 // The return value.
                 RetT retval;
                 retval.set_symbol_set(ss);
@@ -350,7 +349,7 @@ class divisor_series
                 if (need_negate) {
                     math::negate(cd);
                 }
-                return RetT(retval / cd.pow(exponent));
+                return RetT(retval / cd);
             } catch (const std::invalid_argument &) {
                 // Interpret invalid_argument as a failure in extracting integral combination,
                 // and move on.
