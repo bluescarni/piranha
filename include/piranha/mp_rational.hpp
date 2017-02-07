@@ -2004,6 +2004,7 @@ private:
         return math::pow(b, e.num());
     }
     using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
+
 public:
     /// Call operator.
     /**
@@ -2020,7 +2021,7 @@ public:
      */
     ret_type operator()(const T &b, const U &e) const
     {
-        return impl(b,e);
+        return impl(b, e);
     }
 };
 
@@ -2149,6 +2150,7 @@ private:
         return math::binomial(static_cast<double>(x), static_cast<double>(y));
     }
     using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
+
 public:
     /// Call operator.
     /**
@@ -2163,7 +2165,7 @@ public:
      */
     ret_type operator()(const T &x, const U &y) const
     {
-        return impl(x,y);
+        return impl(x, y);
     }
 };
 }
@@ -2189,28 +2191,8 @@ using sc_rat_enabler
 template <typename To, typename From>
 struct safe_cast_impl<To, From, sc_rat_enabler<To, From>> {
 private:
-    template <typename T>
-    using to_enabler = enable_if_t<disjunction<std::is_arithmetic<T>, is_mp_integer<T>>::value, int>;
-    template <typename T>
-    using from_enabler = enable_if_t<is_mp_rational<T>::value, int>;
-
-public:
-    /// Call operator, to-rational overload.
-    /**
-     * \note
-     * This operator is enabled if \p T is an arithmetic type or an instance of piranha::mp_integer.
-     *
-     * The conversion is performed via piranha::mp_rational's constructor.
-     *
-     * @param x input value.
-     *
-     * @return a rational constructed from \p x.
-     *
-     * @throws piranha::safe_cast_failure if the conversion fails.
-     * @throws unspecified any exception thrown by \p boost::lexical_cast().
-     */
-    template <typename T, to_enabler<T> = 0>
-    To operator()(const T &x) const
+    template <typename T, enable_if_t<disjunction<std::is_arithmetic<T>, is_mp_integer<T>>::value, int> = 0>
+    static To impl(const T &x)
     {
         try {
             // NOTE: checks for finiteness of an fp value are in the ctor.
@@ -2221,23 +2203,8 @@ public:
                                                  + "' to a rational, as the conversion would not preserve the value");
         }
     }
-    /// Call operator, from-rational overload.
-    /**
-     * \note
-     * This operator is enabled if \p T is an instance of piranha::mp_rational.
-     *
-     * The conversion, performed via the conversion operator of piranha::mp_rational,
-     * will fail if the denominator of \p q is not unitary.
-     *
-     * @param q input rational.
-     *
-     * @return an integral value converted from \p q.
-     *
-     * @throws safe_cast_failure if the conversion fails.
-     * @throws unspecified any exception thrown by \p boost::lexical_cast().
-     */
-    template <typename T, from_enabler<T> = 0>
-    To operator()(const T &q) const
+    template <typename T, enable_if_t<is_mp_rational<T>::value, int> = 0>
+    static To impl(const T &q)
     {
         if (unlikely(!q.den().is_one())) {
             piranha_throw(safe_cast_failure, "cannot convert the rational value " + boost::lexical_cast<std::string>(q)
@@ -2251,6 +2218,22 @@ public:
                                                  + " to the integral type '" + detail::demangle<To>()
                                                  + "', as the conversion cannot preserve the value");
         }
+    }
+
+public:
+    /// Call operator.
+    /**
+     * The conversion is performed via piranha::mp_rational's constructor and conversion operator.
+     *
+     * @param x input value.
+     *
+     * @return \p x converted to \p To.
+     *
+     * @throws piranha::safe_cast_failure if the conversion fails.
+     */
+    To operator()(const From &x) const
+    {
+        return impl(x);
     }
 };
 
