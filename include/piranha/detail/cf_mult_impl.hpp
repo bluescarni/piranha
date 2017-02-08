@@ -59,7 +59,7 @@ inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
 
 // Enabler for the functions above.
 template <typename Cf>
-using cf_mult_enabler = enable_if_t<conjunction<is_cf<Cf>,has_mul3<Cf>>::value>;
+using cf_mult_enabler = enable_if_t<conjunction<is_cf<Cf>, has_mul3<Cf>>::value>;
 }
 }
 

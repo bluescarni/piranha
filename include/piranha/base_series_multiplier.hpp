@@ -267,8 +267,7 @@ private:
         return Term{std::move(t.m_cf), t.m_key};
     }
     // Implementation of finalise().
-    template <typename T,
-              typename std::enable_if<is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
     void finalise_impl(T &s) const
     {
         // Nothing to do if the lcm is unitary.
