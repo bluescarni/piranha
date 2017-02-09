@@ -7,6 +7,9 @@ Changelog
 New
 ~~~
 
+- Initial integration of the mp++ library in piranha (so far affecting
+  only the mp_integer class). [Francesco Biscani]
+
 - Revamped build system: removed cruft, restructured directory layout,
   adopted modern CMake idioms, added support for package installation,
   separated benchmarks in own dir. [Francesco Biscani]
