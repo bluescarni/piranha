@@ -458,7 +458,7 @@ class poisson_series
             // of the common divisor.
             integer cd;
             bool first_nonzero_found = false;
-            for (const auto &n_int: tmp_int) {
+            for (const auto &n_int : tmp_int) {
                 // NOTE: gcd is safe, operating on integers.
                 math::gcd3(cd, cd, n_int);
                 if (!first_nonzero_found && !math::is_zero(n_int)) {
@@ -473,7 +473,7 @@ class poisson_series
             // Take the abs of the cd.
             cd.abs();
             // Divide the vector by the common divisor.
-            for (auto &n_int: tmp_int) {
+            for (auto &n_int : tmp_int) {
                 n_int /= cd;
             }
             // Build the temporary divisor series from the trigonometric arguments.

@@ -126,7 +126,7 @@ class divisor_series
     using dv_type = typename Key::value_type;
     // Partial utils.
     // Handle exponent increase in a safe way.
-    template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
     static void expo_increase(T &e)
     {
         if (unlikely(e == std::numeric_limits<T>::max())) {
@@ -135,20 +135,20 @@ class divisor_series
         }
         e = static_cast<T>(e + T(1));
     }
-    template <typename T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<!std::is_integral<T>::value, int> = 0>
     static void expo_increase(T &e)
     {
         ++e;
     }
     // Safe computation of the integral multiplier.
-    template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
     static auto safe_mult(const T &n, const T &m) -> decltype(n * m)
     {
         auto ret(integer(n) * m);
         ret.neg();
         return static_cast<decltype(n * m)>(ret);
     }
-    template <typename T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<!std::is_integral<T>::value, int> = 0>
     static auto safe_mult(const T &n, const T &m) -> decltype(-(n * m))
     {
         return -(n * m);
@@ -161,11 +161,10 @@ class divisor_series
     using d_partial_type_1 = decltype(std::declval<const T &>() * std::declval<const d_partial_type_0<T> &>());
     // Requirements on the final type for the first stage.
     template <typename T>
-    using d_partial_type =
-        typename std::enable_if<std::is_constructible<d_partial_type_1<T>, d_partial_type_0<T>>::value
-                                    && std::is_constructible<d_partial_type_1<T>, int>::value
-                                    && is_addable_in_place<d_partial_type_1<T>>::value,
-                                d_partial_type_1<T>>::type;
+    using d_partial_type = enable_if_t<conjunction<std::is_constructible<d_partial_type_1<T>, d_partial_type_0<T>>,
+                                                   std::is_constructible<d_partial_type_1<T>, int>,
+                                                   is_addable_in_place<d_partial_type_1<T>>>::value,
+                                       d_partial_type_1<T>>;
     template <typename T = divisor_series>
     d_partial_type<T> d_partial_impl(typename T::term_type::key_type &key, const symbol_set::positions &pos) const
     {
@@ -242,18 +241,18 @@ class divisor_series
             * std::declval<const T &>()
         + std::declval<const d_partial_type<T> &>());
     template <typename T>
-    using partial_type = typename std::enable_if<std::is_constructible<partial_type_<T>, int>::value
-                                                     && is_addable_in_place<partial_type_<T>>::value,
-                                                 partial_type_<T>>::type;
+    using partial_type = enable_if_t<conjunction<std::is_constructible<partial_type_<T>, int>,
+                                                 is_addable_in_place<partial_type_<T>>>::value,
+                                     partial_type_<T>>;
     // Integrate utils.
     template <typename T>
     using integrate_type_ = decltype(
         math::integrate(std::declval<const typename T::term_type::cf_type &>(), std::declval<const std::string &>())
         * std::declval<const T &>());
     template <typename T>
-    using integrate_type = typename std::enable_if<std::is_constructible<integrate_type_<T>, int>::value
-                                                       && is_addable_in_place<integrate_type_<T>>::value,
-                                                   integrate_type_<T>>::type;
+    using integrate_type = enable_if_t<conjunction<std::is_constructible<integrate_type_<T>, int>,
+                                                   is_addable_in_place<integrate_type_<T>>>::value,
+                                       integrate_type_<T>>;
     // Invert utils.
     // Type coming out of invert() for the base type. This will also be the final type.
     template <typename T>
@@ -265,32 +264,31 @@ class divisor_series
         static constexpr bool value = false;
     };
     template <typename T>
-    struct has_special_invert<T, typename std::
-                                     enable_if<detail::poly_in_cf<T>::value
-                                               && std::is_constructible<inverse_type<T>,
-                                                                        decltype(std::declval<const inverse_type<T> &>()
-                                                                                 / std::declval<const integer &>())>::
-                                                      value>::type> {
+    struct has_special_invert<T,
+                              enable_if_t<conjunction<detail::poly_in_cf<T>,
+                                                      std::is_constructible<inverse_type<T>,
+                                                                            decltype(
+                                                                                std::declval<const inverse_type<T> &>()
+                                                                                / std::declval<const integer &>())>>::
+                                              value>> {
         static constexpr bool value = true;
     };
     // Case 0: Series is not suitable for special invert() implementation. Just forward to the base one, via casting.
-    template <typename T = divisor_series, typename std::enable_if<!has_special_invert<T>::value, int>::type = 0>
+    template <typename T = divisor_series, enable_if_t<!has_special_invert<T>::value, int> = 0>
     inverse_type<T> invert_impl() const
     {
         return math::invert(*static_cast<const base *>(this));
     }
     // Case 1: Series is suitable for special invert() implementation. This can fail at runtime depending on what is
     // contained in the coefficients. The return type is the same as the base one.
-    template <typename T = divisor_series, typename std::enable_if<has_special_invert<T>::value, int>::type = 0>
+    template <typename T = divisor_series, enable_if_t<has_special_invert<T>::value, int> = 0>
     inverse_type<T> invert_impl() const
     {
         return special_invert<inverse_type<T>>(*this);
     }
     // Special invert() implementation when we have reached the first polynomial coefficient in the hierarchy.
     template <typename RetT, typename T,
-              typename std::enable_if<std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value,
-                                      int>::type
-              = 0>
+              enable_if_t<std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value, int> = 0>
     RetT special_invert(const T &s) const
     {
         if (s.is_single_coefficient() && !s.empty()) {
@@ -304,14 +302,14 @@ class divisor_series
                 piranha_assert(!lc.empty());
                 std::vector<integer> v_int;
                 symbol_set ss;
-                for (auto it = lc.begin(); it != lc.end(); ++it) {
-                    ss.add(symbol(it->first));
-                    v_int.push_back(it->second);
+                for (const auto &p : lc) {
+                    ss.add(symbol(p.first));
+                    v_int.push_back(p.second);
                 }
                 // We need to canonicalise the term: switch the sign if the first
                 // nonzero element is negative, and divide by the common denom.
                 bool first_nonzero_found = false, need_negate = false;
-                integer cd(0);
+                integer cd;
                 for (auto &n : v_int) {
                     if (!first_nonzero_found && !math::is_zero(n)) {
                         if (n < 0) {
@@ -326,13 +324,9 @@ class divisor_series
                     // NOTE: the gcd computation here is safe as we are operating on integers.
                     math::gcd3(cd, cd, n);
                 }
-                // Common denominator could be negative.
-                if (cd.sgn() < 0) {
-                    math::negate(cd);
-                }
-                // It should never be zero: if all elements in v_int are zero, we would not have been
-                // able to extract the linear combination.
-                piranha_assert(!math::is_zero(cd));
+                // GCD on integers should always return non-negative numbers, and cd should never be zero: if all
+                // elements in v_int are zero, we would not have been able to extract the linear combination.
+                piranha_assert(cd.sgn() > 0);
                 // Divide by the cd.
                 for (auto &n : v_int) {
                     n /= cd;
@@ -360,9 +354,7 @@ class divisor_series
     // The coefficient is not a polynomial: recurse to the inner coefficient type, if the current coefficient type
     // is suitable.
     template <typename RetT, typename T,
-              typename std::enable_if<!std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value,
-                                      int>::type
-              = 0>
+              enable_if_t<!std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value, int> = 0>
     RetT special_invert(const T &s) const
     {
         if (s.is_single_coefficient() && !s.empty()) {
@@ -556,8 +548,7 @@ namespace detail
 {
 
 template <typename Series>
-using divisor_series_multiplier_enabler =
-    typename std::enable_if<std::is_base_of<divisor_series_tag, Series>::value>::type;
+using divisor_series_multiplier_enabler = enable_if_t<std::is_base_of<divisor_series_tag, Series>::value>;
 }
 
 /// Specialisation of piranha::series_multiplier for piranha::divisor_series.
@@ -567,9 +558,8 @@ class series_multiplier<Series, detail::divisor_series_multiplier_enabler<Series
 {
     using base = base_series_multiplier<Series>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler
+        = enable_if_t<key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>;
 
 public:
     /// Inherit base constructors.
