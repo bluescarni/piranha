@@ -165,9 +165,14 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::rational_converter ra_c;
     pyranha::real_converter re_c;
     // Exceptions translation.
-    pyranha::generic_translate<&PyExc_ZeroDivisionError, piranha::zero_division_error>();
-    pyranha::generic_translate<&PyExc_NotImplementedError, piranha::not_implemented_error>();
+    // NOTE: the order matters here, as translators registered later are tried first.
+    // Since some of our exceptions derive from std exceptions, we want to make sure
+    // our more specific exceptions have the priority when translating.
+    pyranha::generic_translate<&PyExc_ValueError, std::domain_error>();
     pyranha::generic_translate<&PyExc_OverflowError, std::overflow_error>();
+    pyranha::generic_translate<&PyExc_ZeroDivisionError, piranha::zero_division_error>();
+    pyranha::generic_translate<&PyExc_ZeroDivisionError, mppp::zero_division_error>();
+    pyranha::generic_translate<&PyExc_NotImplementedError, piranha::not_implemented_error>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::positive_overflow>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::negative_overflow>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::bad_numeric_cast>();
@@ -245,7 +250,7 @@ BOOST_PYTHON_MODULE(_core)
     settings_class.def("_get_thread_binding", piranha::settings::get_thread_binding)
         .staticmethod("_get_thread_binding");
     // Factorial.
-    bp::def("_factorial", &piranha::math::factorial<0>);
+    bp::def("_factorial", &piranha::math::factorial<1>);
 // Binomial coefficient.
 #define PYRANHA_EXPOSE_BINOMIAL(top, bot) bp::def("_binomial", &piranha::math::binomial<top, bot>)
     PYRANHA_EXPOSE_BINOMIAL(double, double);
