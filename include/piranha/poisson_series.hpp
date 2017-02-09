@@ -456,13 +456,13 @@ class poisson_series
             // first nonzero multiplier is positive, so we don't need to account for sign flips when
             // constructing a divisor from the trigonometric part. We just need to take care
             // of the common divisor.
-            integer cd(0);
+            integer cd;
             bool first_nonzero_found = false;
-            for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
+            for (const auto &n_int: tmp_int) {
                 // NOTE: gcd is safe, operating on integers.
-                cd = math::gcd(cd, *it2);
-                if (!first_nonzero_found && !math::is_zero(*it2)) {
-                    piranha_assert(*it2 > 0);
+                math::gcd3(cd, cd, n_int);
+                if (!first_nonzero_found && !math::is_zero(n_int)) {
+                    piranha_assert(n_int > 0);
                     first_nonzero_found = true;
                 }
             }
@@ -471,18 +471,17 @@ class poisson_series
                                                      "attempting a time integration");
             }
             // Take the abs of the cd.
-            cd = cd.abs();
+            cd.abs();
             // Divide the vector by the common divisor.
-            for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
-                *it2 /= cd;
+            for (auto &n_int: tmp_int) {
+                n_int /= cd;
             }
             // Build the temporary divisor series from the trigonometric arguments.
             d_series_type div_series;
             div_series.set_symbol_set(div_symbols);
             // Build the divisor key.
-            typename d_key_type::value_type exponent(1);
             d_key_type div_key;
-            div_key.insert(tmp_int.begin(), tmp_int.end(), exponent);
+            div_key.insert(tmp_int.begin(), tmp_int.end(), typename d_key_type::value_type(1));
             // Finish building the temporary divisor series.
             div_series.insert(d_term_type(d_cf_type(1), std::move(div_key)));
             // Temporary Poisson series from the current term, with the trig flavour flipped.
