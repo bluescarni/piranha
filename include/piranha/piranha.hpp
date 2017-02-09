@@ -236,6 +236,8 @@ see https://www.gnu.org/licenses/. */
  * \todo we are using std::decay all over the place to, essentially, remove cv and ref qualifiers from types. But decay
  * also turns arrays into pointers and functions into pointers. Maybe we should have a remove_cvr type trait that just
  * removes
+ * \todo when working on the sparse monomial, remember to check on all those uses of symbol_set::add() to build
+ * a symbol set (it will be really slow when dealing with thousands of symbols)
  * cv and refs instead. Not sure if we care about plain arrays and function pointers enough though.
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.
