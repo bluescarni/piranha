@@ -53,5 +53,5 @@ BOOST_AUTO_TEST_CASE(pearce1_test)
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    BOOST_CHECK_EQUAL((pearce1<integer, kronecker_monomial<>>().size()), 5821335u);
+    BOOST_CHECK_EQUAL((pearce1<mp_integer<2>, kronecker_monomial<>>().size()), 5821335u);
 }

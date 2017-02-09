@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(fateman1_unpacked_test)
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    polynomial<integer, monomial<signed char>>::set_auto_truncate_degree(20);
-    BOOST_CHECK_EQUAL((fateman1<integer, monomial<signed char>>().size()), 10626u);
-    polynomial<integer, monomial<signed char>>::set_auto_truncate_degree(30);
-    BOOST_CHECK_EQUAL((fateman1<integer, monomial<signed char>>().size()), 46376u);
+    polynomial<mp_integer<2>, monomial<signed char>>::set_auto_truncate_degree(20);
+    BOOST_CHECK_EQUAL((fateman1<mp_integer<2>, monomial<signed char>>().size()), 10626u);
+    polynomial<mp_integer<2>, monomial<signed char>>::set_auto_truncate_degree(30);
+    BOOST_CHECK_EQUAL((fateman1<mp_integer<2>, monomial<signed char>>().size()), 46376u);
 }

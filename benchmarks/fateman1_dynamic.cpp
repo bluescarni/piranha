@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(fateman1_test)
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    BOOST_CHECK_EQUAL((fateman1<integer, kronecker_monomial<>>(
+    BOOST_CHECK_EQUAL((fateman1<mp_integer<2>, kronecker_monomial<>>(
                            static_cast<unsigned long long>(std::numeric_limits<::mp_limb_t>::max()))
                            .size()),
                       135751u);

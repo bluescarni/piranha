@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(memory_parallel_array_test)
         for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
             std::cout << "n = " << i + 1u << '\n';
             simple_timer t;
-            auto ptr1 = make_parallel_array<mp_integer<>>(alloc_size, i + 1u);
+            auto ptr1 = make_parallel_array<integer>(alloc_size, i + 1u);
         }
         std::cout << "Testing array wrap\n"
                      "==================\n";

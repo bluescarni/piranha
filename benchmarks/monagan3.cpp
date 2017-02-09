@@ -48,5 +48,5 @@ BOOST_AUTO_TEST_CASE(monagan3_test)
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    BOOST_CHECK_EQUAL((monagan3<integer, kronecker_monomial<>>().size()), 39711u);
+    BOOST_CHECK_EQUAL((monagan3<mp_integer<2>, kronecker_monomial<>>().size()), 39711u);
 }
