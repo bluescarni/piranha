@@ -941,7 +941,10 @@ BOOST_AUTO_TEST_CASE(math_gcd_test)
     }
     // Check the type traits.
     BOOST_CHECK((has_gcd<int>::value));
+    BOOST_CHECK((!has_gcd<void>::value));
     BOOST_CHECK((has_gcd<int, long>::value));
+    BOOST_CHECK((!has_gcd<int, void>::value));
+    BOOST_CHECK((!has_gcd<void, int>::value));
     BOOST_CHECK((has_gcd<int &, char &>::value));
     BOOST_CHECK((!has_gcd<double>::value));
     BOOST_CHECK((!has_gcd<double, int>::value));
@@ -952,6 +955,8 @@ BOOST_AUTO_TEST_CASE(math_gcd_test)
     BOOST_CHECK(has_gcd3<short>::value);
     BOOST_CHECK(has_gcd3<long long>::value);
     BOOST_CHECK(has_gcd3<long long &>::value);
+    BOOST_CHECK(!has_gcd3<long long const>::value);
+    BOOST_CHECK(!has_gcd3<void>::value);
     BOOST_CHECK(!has_gcd3<const long long &>::value);
     BOOST_CHECK(!has_gcd3<double>::value);
     BOOST_CHECK(!has_gcd3<double &&>::value);
