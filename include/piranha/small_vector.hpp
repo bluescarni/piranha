@@ -733,6 +733,8 @@ public:
     }
     /// Copy-add element at the end.
     /**
+     * **NOTE**: if \p x is an element of the vector, the behaviour will be undefined.
+     *
      * @param x object that will be added at the end of the vector.
      *
      * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
@@ -744,6 +746,8 @@ public:
     }
     /// Move-add element at the end.
     /**
+     * **NOTE**: if \p x is an element of the vector, the behaviour will be undefined.
+     *
      * @param x object that will be added at the end of the vector.
      *
      * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
@@ -947,10 +951,8 @@ public:
      * This method is enabled only if \p value_type satisfies piranha::has_add3.
      *
      * Will compute the element-wise addition of \p this and \p other via piranha::math::add3(), storing the result in
-     * \p retval.
-     * In face of exceptions during the addition of two elements, \p retval will be left in an unspecified
-     * but valid state, provided that piranha::math::add3() offers the basic exception
-     * safety guarantee.
+     * \p retval. In face of exceptions during the addition of two elements, \p retval will be left in an unspecified
+     * but valid state, provided that piranha::math::add3() offers the basic exception safety guarantee.
      *
      * \p this, \p retval and/or \p other are allowed to be the same object, provided that piranha::math::add3()
      * also supports this type of usage.
@@ -985,10 +987,8 @@ public:
      * This method is enabled only if \p value_type satisfies piranha::has_sub3.
      *
      * Will compute the element-wise subtraction of \p this and \p other via piranha::math::sub3(), storing the result
-     * in \p retval.
-     * In face of exceptions during the subtraction of two elements, \p retval will be left in an unspecified
-     * but valid state, provided that piranha::math::sub3() offers the basic exception
-     * safety guarantee.
+     * in \p retval. In face of exceptions during the subtraction of two elements, \p retval will be left in an
+     * unspecified but valid state, provided that piranha::math::sub3() offers the basic exception safety guarantee.
      *
      * \p this, \p retval and/or \p other are allowed to be the same object, provided that piranha::math::sub3()
      * also supports this type of usage.
