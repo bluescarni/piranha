@@ -1048,7 +1048,7 @@ public:
      *
      * @throws std::invalid_argument if the deserialized divisor fails internal consistency checks, or if it is not
      * compatible with \p args.
-     * @throws unspecified any exception throw by piranha::msgpack_convert().
+     * @throws unspecified any exception thrown by piranha::msgpack_convert().
      */
     template <typename U = divisor, msgpack_convert_enabler<U> = 0>
     void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &args)

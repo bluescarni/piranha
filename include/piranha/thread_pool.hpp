@@ -318,7 +318,7 @@ public:
      * This method will add a task to the <tt>n</tt>-th thread in the pool. The task is represented
      * by a callable \p F and its arguments \p args, which will be copied/moved via an \p std::bind() wrapper into an
      * execution queue consumed by the thread to which the task is assigned. The return value is an \p std::future
-     * which can be used to retrieve the return value of (or the exception throw by) the callable.
+     * which can be used to retrieve the return value of (or the exception thrown by) the callable.
      *
      * @param n index of the thread that will consume the task.
      * @param f callable object representing the task.
