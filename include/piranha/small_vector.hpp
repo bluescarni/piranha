@@ -733,6 +733,8 @@ public:
     }
     /// Copy-add element at the end.
     /**
+     * **NOTE**: if \p x is an element of the vector, the behaviour will be undefined.
+     *
      * @param x object that will be added at the end of the vector.
      *
      * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
@@ -744,6 +746,8 @@ public:
     }
     /// Move-add element at the end.
     /**
+     * **NOTE**: if \p x is an element of the vector, the behaviour will be undefined.
+     *
      * @param x object that will be added at the end of the vector.
      *
      * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
@@ -947,10 +951,8 @@ public:
      * This method is enabled only if \p value_type satisfies piranha::has_add3.
      *
      * Will compute the element-wise addition of \p this and \p other via piranha::math::add3(), storing the result in
-     * \p retval.
-     * In face of exceptions during the addition of two elements, \p retval will be left in an unspecified
-     * but valid state, provided that piranha::math::add3() offers the basic exception
-     * safety guarantee.
+     * \p retval. In face of exceptions during the addition of two elements, \p retval will be left in an unspecified
+     * but valid state, provided that piranha::math::add3() offers the basic exception safety guarantee.
      *
      * \p this, \p retval and/or \p other are allowed to be the same object, provided that piranha::math::add3()
      * also supports this type of usage.
@@ -1078,7 +1080,7 @@ private:
                     piranha_throw(std::bad_alloc, );
                 }
                 d_storage tmp_d;
-                tmp_d.reserve(static_cast<d_size_type>(static_cast<d_size_type>(m_union.g_st().max_size) + 1u));
+                tmp_d.reserve(static_cast<d_size_type>(m_union.g_st().max_size + 1u));
                 std::move(m_union.g_st().begin(), m_union.g_st().end(), std::back_inserter(tmp_d));
                 // Push back the new element.
                 tmp_d.push_back(std::forward<U>(x));

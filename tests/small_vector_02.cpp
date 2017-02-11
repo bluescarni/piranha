@@ -191,3 +191,50 @@ BOOST_AUTO_TEST_CASE(small_vector_msgpack_s11n_test)
 }
 
 #endif
+
+struct own_pb_tester {
+    template <typename T>
+    struct runner {
+        template <typename U>
+        void operator()(const U &) const
+        {
+            using v_type = small_vector<T, U>;
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, v_type>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, small_vector<v_type, U>>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, v_type &>::value));
+            BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, const v_type &>::value));
+            BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive const, const v_type &>::value));
+            BOOST_CHECK((!has_boost_save<boost::archive::binary_iarchive, const v_type &>::value));
+            BOOST_CHECK((!has_boost_save<void, v_type>::value));
+            BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, v_type>::value));
+            BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, small_vector<v_type, U>>::value));
+            BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, v_type &>::value));
+            BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, const v_type &>::value));
+            BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive const, const v_type &>::value));
+            BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, v_type>::value));
+            BOOST_CHECK((!has_boost_load<void, v_type>::value));
+            using size_type = typename v_type::size_type;
+            std::uniform_int_distribution<size_type> sdist(0u, 20u);
+            std::uniform_int_distribution<int> edist(-10, 10);
+            for (int i = 0; i < ntries; ++i) {
+                auto size = sdist(rng);
+                v_type v;
+                for (decltype(size) j = 0; j < size; ++j) {
+                    v.push_back(T(edist(rng)));
+                }
+                boost_round_trip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(v);
+                boost_round_trip<boost::archive::text_oarchive, boost::archive::text_iarchive>(v);
+            }
+        }
+    };
+    template <typename T>
+    void operator()(const T &) const
+    {
+        tuple_for_each(size_types{}, runner<T>{});
+    }
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_own_push_back_test)
+{
+    tuple_for_each(value_types{}, own_pb_tester{});
+}
