@@ -1069,7 +1069,7 @@ public:
                 tmp_m.set_flavour(!get_flavour());
                 // Flip the sign of the multiplier as needed.
                 if (!get_flavour()) {
-                    tmp_n.negate();
+                    tmp_n.neg();
                 }
                 return std::make_pair(static_cast<value_type>(tmp_n), std::move(tmp_m));
             }

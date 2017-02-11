@@ -56,39 +56,16 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/type_traits.hpp>
 
 namespace piranha
 {
 
-namespace detail
-{
-
-// Fwd declaration.
-template <typename>
-struct is_mp_rational;
-
-// NOTE: this is a bit complicated: the interoperable types for mp_rational are those from mp_integer
-// plus mp_integer, but not *any* mp_integer, just the one whose bits value matches that of the rational.
-template <typename T, typename Rational, typename = void>
-struct is_mp_rational_interoperable_type {
-    static const bool value
-        = is_mp_integer_interoperable_type<T>::value || std::is_same<T, typename Rational::int_type>::value;
-};
-
-// The second complication is that we need to cope with the fact that we are using this tt in a context
-// in which Rational might not actually be a rational (in the pow_impl specialisation). In this case we must prevent
-// a hard error to be generated.
-template <typename T, typename Rational>
-struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!is_mp_rational<Rational>::value>::type> {
-    static const bool value = false;
-};
-}
-
 /// Multiple precision rational class.
 /**
  * This class encapsulates two instances of piranha::mp_integer to represent an arbitrary-precision rational number
- * in terms of a numerator and a denominator. The meaning of the \p NBits template parameter is the same as in
- * piranha::mp_integer, that is, it represents the bit width of the two limbs stored statically in the numerator and
+ * in terms of a numerator and a denominator. The meaning of the \p SSize template parameter is the same as in
+ * piranha::mp_integer, that is, it represents the number of limbs stored statically in the numerator and
  * in the denominator.
  *
  * Unless otherwise specified, rational numbers are always kept in the usual canonical form in which numerator and
@@ -97,8 +74,6 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
  * ## Interoperability with other types ##
  *
  * This class interoperates with the same types as piranha::mp_integer, plus piranha::mp_integer itself.
- * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
- * of piranha::mp_integer apply.
  *
  * ## Exception safety guarantee ##
  *
@@ -109,47 +84,45 @@ struct is_mp_rational_interoperable_type<T, Rational, typename std::enable_if<!i
  *
  * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
  */
-template <int NBits = 0>
+template <std::size_t SSize>
 class mp_rational
 {
 public:
     /// The underlying piranha::mp_integer type used to represent numerator and denominator.
-    using int_type = mp_integer<NBits>;
+    using int_type = mp_integer<SSize>;
 
 private:
     // Shortcut for interop type detector.
-    template <typename T, typename U = mp_rational>
-    using is_interoperable_type = detail::is_mp_rational_interoperable_type<T, U>;
+    template <typename T>
+    using is_interoperable_type = disjunction<mppp::mppp_impl::is_supported_interop<T>, std::is_same<T, int_type>>;
     // Enabler for ctor from num den pair.
     template <typename I0, typename I1>
-    using nd_ctor_enabler =
-        typename std::enable_if<(std::is_integral<I0>::value || std::is_same<I0, int_type>::value)
-                                    && (std::is_integral<I1>::value || std::is_same<I1, int_type>::value),
-                                int>::type;
+    using nd_ctor_enabler
+        = enable_if_t<conjunction<disjunction<std::is_integral<I0>, std::is_same<I0, int_type>>,
+                                  disjunction<std::is_integral<I1>, std::is_same<I1, int_type>>>::value,
+                      int>;
     // Enabler for generic ctor.
     template <typename T>
-    using generic_ctor_enabler = typename std::enable_if<is_interoperable_type<T>::value, int>::type;
+    using generic_ctor_enabler = enable_if_t<is_interoperable_type<T>::value, int>;
     // Enabler for in-place arithmetic operations with interop on the left.
     template <typename T>
-    using generic_in_place_enabler =
-        typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value, int>::type;
+    using generic_in_place_enabler
+        = enable_if_t<conjunction<is_interoperable_type<T>, negation<std::is_const<T>>>::value, int>;
     // Generic constructor implementation.
-    template <typename T>
-    void construct_from_interoperable(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    void construct_from_interoperable(const T &x)
     {
         m_num = int_type(x);
         m_den = 1;
     }
-    template <typename T>
-    void construct_from_interoperable(const T &x,
-                                      typename std::enable_if<std::is_same<T, int_type>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_same<T, int_type>::value, int> = 0>
+    void construct_from_interoperable(const T &x)
     {
         m_num = x;
         m_den = 1;
     }
-    template <typename Float>
-    void construct_from_interoperable(const Float &x,
-                                      typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
+    template <typename Float, enable_if_t<std::is_floating_point<Float>::value, int> = 0>
+    void construct_from_interoperable(const Float &x)
     {
         if (unlikely(!std::isfinite(x))) {
             piranha_throw(std::invalid_argument, "cannot construct a rational from a non-finite floating-point number");
@@ -165,7 +138,7 @@ private:
         int_type i_part;
         int exp = std::ilogb(abs_x);
         while (exp >= 0) {
-            i_part += int_type(radix).pow(exp);
+            i_part += math::pow(int_type(radix), exp);
             const Float tmp = std::scalbn(Float(1), exp);
             if (unlikely(tmp == HUGE_VAL)) {
                 piranha_throw(std::invalid_argument, "output of std::scalbn is HUGE_VAL");
@@ -176,7 +149,7 @@ private:
                 // m_den is 1 already.
                 m_num = i_part;
                 if (x < Float(0)) {
-                    m_num.negate();
+                    m_num.neg();
                 }
                 return;
             }
@@ -206,15 +179,15 @@ private:
         math::multiply_accumulate(m_num, i_part, m_den);
         canonicalise();
         if (x < Float(0)) {
-            m_num.negate();
+            m_num.neg();
         }
     }
     // Enabler for conversion operator.
     template <typename T>
     using cast_enabler = generic_ctor_enabler<T>;
     // Conversion operator implementation.
-    template <typename Float>
-    Float convert_to_impl(typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr) const
+    template <typename Float, enable_if_t<std::is_floating_point<Float>::value, int> = 0>
+    Float convert_to_impl() const
     {
         // NOTE: there are better ways of doing this. For instance, here we might end up generating an inf even
         // if the result is actually representable. It also would be nice if this routine could short-circuit,
@@ -222,13 +195,13 @@ private:
         // The approach in GMP mpq might work for this, but it's not essential at the moment.
         return static_cast<Float>(m_num) / static_cast<Float>(m_den);
     }
-    template <typename Integral>
-    Integral convert_to_impl(typename std::enable_if<std::is_integral<Integral>::value>::type * = nullptr) const
+    template <typename Integral, enable_if_t<std::is_integral<Integral>::value, int> = 0>
+    Integral convert_to_impl() const
     {
         return static_cast<Integral>(static_cast<int_type>(*this));
     }
-    template <typename MpInteger>
-    MpInteger convert_to_impl(typename std::enable_if<std::is_same<MpInteger, int_type>::value>::type * = nullptr) const
+    template <typename MpInteger, enable_if_t<std::is_same<MpInteger, int_type>::value, int> = 0>
+    MpInteger convert_to_impl() const
     {
         return m_num / m_den;
     }
@@ -237,7 +210,7 @@ private:
     {
         // NOTE: all this should never throw because we only operate on mp_integer objects,
         // no conversions involved, etc.
-        const bool u1 = m_den.is_unitary(), u2 = other.m_den.is_unitary();
+        const bool u1 = m_den.is_one(), u2 = other.m_den.is_one();
         if (u1 && u2) {
             // Both are integers, just add without canonicalising. This is safe if
             // this and other are the same object.
@@ -269,7 +242,7 @@ private:
     }
     mp_rational &in_place_add(const int_type &other)
     {
-        if (m_den.is_unitary()) {
+        if (m_den.is_one()) {
             // If den is unitary, no need to multiply.
             m_num += other;
         } else {
@@ -277,13 +250,13 @@ private:
         }
         return *this;
     }
-    template <typename T>
-    mp_rational &in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    mp_rational &in_place_add(const T &n)
     {
         return in_place_add(int_type(n));
     }
-    template <typename T>
-    mp_rational &in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    mp_rational &in_place_add(const T &x)
     {
         return (*this = static_cast<T>(*this) + x);
     }
@@ -299,24 +272,22 @@ private:
     {
         return binary_plus_impl(q1, q2);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_plus(const mp_rational &q1, const T &x)
     {
         return binary_plus_impl(q1, x);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_plus(const T &x, const mp_rational &q2)
     {
         return binary_plus(q2, x);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_plus(const mp_rational &q1, const T &x)
     {
         return x + static_cast<T>(q1);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_plus(const T &x, const mp_rational &q2)
     {
         return binary_plus(q2, x);
@@ -327,7 +298,7 @@ private:
         // NOTE: optimisations are possible here if we implement multiply_sub
         // or do some trickery with in-place negation + multiply_accumulate().
         // Keep it in mind for future optimisations.
-        const bool u1 = m_den.is_unitary(), u2 = other.m_den.is_unitary();
+        const bool u1 = m_den.is_one(), u2 = other.m_den.is_one();
         if (u1 && u2) {
             m_num -= other.m_num;
         } else if (u1) {
@@ -342,9 +313,9 @@ private:
             m_num *= other.m_den;
             // Negate temporarily in order to use multiply_accumulate.
             // NOTE: candidate for multiply_sub if we ever implement it.
-            m_den.negate();
+            m_den.neg();
             math::multiply_accumulate(m_num, m_den, other.m_num);
-            m_den.negate();
+            m_den.neg();
             m_den *= other.m_den;
             canonicalise();
         }
@@ -352,22 +323,22 @@ private:
     }
     mp_rational &in_place_sub(const int_type &other)
     {
-        if (m_den.is_unitary()) {
+        if (m_den.is_one()) {
             m_num -= other;
         } else {
-            m_den.negate();
+            m_den.neg();
             math::multiply_accumulate(m_num, m_den, other);
-            m_den.negate();
+            m_den.neg();
         }
         return *this;
     }
-    template <typename T>
-    mp_rational &in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    mp_rational &in_place_sub(const T &n)
     {
         return in_place_sub(int_type(n));
     }
-    template <typename T>
-    mp_rational &in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    mp_rational &in_place_sub(const T &x)
     {
         return (*this = static_cast<T>(*this) - x);
     }
@@ -383,26 +354,24 @@ private:
     {
         return binary_minus_impl(q1, q2);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_minus(const mp_rational &q1, const T &x)
     {
         return binary_minus_impl(q1, x);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_minus(const T &x, const mp_rational &q2)
     {
         auto retval = binary_minus(q2, x);
         retval.negate();
         return retval;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_minus(const mp_rational &q1, const T &x)
     {
         return static_cast<T>(q1) - x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_minus(const T &x, const mp_rational &q2)
     {
         return -binary_minus(q2, x);
@@ -410,7 +379,7 @@ private:
     // In-place mult.
     mp_rational &in_place_mult(const mp_rational &other)
     {
-        if (m_den.is_unitary() && other.m_den.is_unitary()) {
+        if (m_den.is_one() && other.m_den.is_one()) {
             m_num *= other.m_num;
         } else {
             // NOTE: no issue here if this and other are the same object.
@@ -423,18 +392,18 @@ private:
     mp_rational &in_place_mult(const int_type &other)
     {
         m_num *= other;
-        if (!m_den.is_unitary()) {
+        if (!m_den.is_one()) {
             canonicalise();
         }
         return *this;
     }
-    template <typename T>
-    mp_rational &in_place_mult(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    mp_rational &in_place_mult(const T &n)
     {
         return in_place_mult(int_type(n));
     }
-    template <typename T>
-    mp_rational &in_place_mult(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    mp_rational &in_place_mult(const T &x)
     {
         return (*this = static_cast<T>(*this) * x);
     }
@@ -450,24 +419,22 @@ private:
     {
         return binary_mult_impl(q1, q2);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_mult(const mp_rational &q1, const T &x)
     {
         return binary_mult_impl(q1, x);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_mult(const T &x, const mp_rational &q2)
     {
         return binary_mult(q2, x);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_mult(const mp_rational &q1, const T &x)
     {
         return x * static_cast<T>(q1);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_mult(const T &x, const mp_rational &q2)
     {
         return binary_mult(q2, x);
@@ -494,13 +461,13 @@ private:
         canonicalise();
         return *this;
     }
-    template <typename T>
-    mp_rational &in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_integral<T>::value, int> = 0>
+    mp_rational &in_place_div(const T &n)
     {
         return in_place_div(int_type(n));
     }
-    template <typename T>
-    mp_rational &in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
+    mp_rational &in_place_div(const T &x)
     {
         return (*this = static_cast<T>(*this) / x);
     }
@@ -516,26 +483,24 @@ private:
     {
         return binary_div_impl(q1, q2);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_div(const mp_rational &q1, const T &x)
     {
         return binary_div_impl(q1, x);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static mp_rational binary_div(const T &x, const mp_rational &q2)
     {
         mp_rational retval(x);
         retval /= q2;
         return retval;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_div(const mp_rational &q1, const T &x)
     {
         return static_cast<T>(q1) / x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static T binary_div(const T &x, const mp_rational &q2)
     {
         return x / static_cast<T>(q2);
@@ -545,24 +510,22 @@ private:
     {
         return q1.num() == q2.num() && q1.den() == q2.den();
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_eq(const mp_rational &q, const T &x)
     {
-        return q.den().is_unitary() && q.num() == x;
+        return q.den().is_one() && q.num() == x;
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_eq(const T &x, const mp_rational &q)
     {
         return binary_eq(q, x);
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_eq(const mp_rational &q, const T &x)
     {
         return static_cast<T>(q) == x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_eq(const T &x, const mp_rational &q)
     {
         return binary_eq(q, x);
@@ -580,24 +543,22 @@ private:
         }
         return q1.num() * q2.den() < q2.num() * q1.den();
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_less_than(const mp_rational &q, const T &x)
     {
         return q.num() < q.den() * x;
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_less_than(const T &x, const mp_rational &q)
     {
         return q.den() * x < q.num();
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_less_than(const mp_rational &q, const T &x)
     {
         return static_cast<T>(q) < x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_less_than(const T &x, const mp_rational &q)
     {
         return x < static_cast<T>(q);
@@ -610,24 +571,22 @@ private:
         }
         return q1.num() * q2.den() > q2.num() * q1.den();
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_greater_than(const mp_rational &q, const T &x)
     {
         return q.num() > q.den() * x;
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     static bool binary_greater_than(const T &x, const mp_rational &q)
     {
         return q.den() * x > q.num();
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_greater_than(const mp_rational &q, const T &x)
     {
         return static_cast<T>(q) > x;
     }
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<std::is_floating_point<T>::value, int> = 0>
     static bool binary_greater_than(const T &x, const mp_rational &q)
     {
         return x > static_cast<T>(q);
@@ -664,16 +623,16 @@ private:
         }
 
     private:
-        typename int_type::mpz_view m_n_view;
-        typename int_type::mpz_view m_d_view;
+        decltype(std::declval<const int_type &>().get_mpz_view()) m_n_view;
+        decltype(std::declval<const int_type &>().get_mpz_view()) m_d_view;
         mpq_struct_t m_mpq;
     };
     // Pow enabler.
     template <typename T>
-    using pow_enabler = typename std::
-        enable_if<std::is_same<decltype(std::declval<const int_type &>().pow(std::declval<const T &>())),
-                               decltype(std::declval<const int_type &>().pow(std::declval<const T &>()))>::value,
-                  int>::type;
+    using pow_enabler
+        = enable_if_t<std::is_same<decltype(math::pow(std::declval<const int_type &>(), std::declval<const T &>())),
+                                   int_type>::value,
+                      int>;
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
@@ -742,7 +701,7 @@ public:
     template <typename I0, typename I1, nd_ctor_enabler<I0, I1> = 0>
     explicit mp_rational(const I0 &n, const I1 &d) : m_num(n), m_den(d)
     {
-        if (unlikely(m_den.sign() == 0)) {
+        if (unlikely(m_den.sgn() == 0)) {
             piranha_throw(zero_division_error, "zero denominator");
         }
         canonicalise();
@@ -778,22 +737,12 @@ public:
      */
     explicit mp_rational(const char *str) : m_num(), m_den(1)
     {
-        // String validation.
         auto ptr = str;
         std::size_t num_size = 0u;
         while (*ptr != '\0' && *ptr != '/') {
             ++num_size;
             ++ptr;
         }
-        try {
-            int_type::validate_string(str, num_size);
-            if (*ptr == '/') {
-                int_type::validate_string(ptr + 1u, std::strlen(ptr + 1u));
-            }
-        } catch (...) {
-            piranha_throw(std::invalid_argument, "invalid string input for rational type");
-        }
-        // String is ok, proceed with construction.
         m_num = int_type(std::string(str, str + num_size));
         if (*ptr == '/') {
             m_den = int_type(std::string(ptr + 1u));
@@ -819,7 +768,7 @@ public:
     {
         // NOTE: no checks no the numerator as we might mess it up
         // with the low-level methods.
-        piranha_assert(m_den.sign() > 0);
+        piranha_assert(m_den.sgn() > 0);
     }
     /// Copy assignment operator.
     /**
@@ -909,7 +858,7 @@ public:
      */
     friend std::ostream &operator<<(std::ostream &os, const mp_rational &q)
     {
-        if (q.m_den.is_unitary()) {
+        if (q.m_den.is_one()) {
             os << q.m_num;
         } else {
             os << q.m_num << '/' << q.m_den;
@@ -987,7 +936,7 @@ public:
         // NOTE: there should be no way to set a negative denominator, so no check is performed.
         // The condition is checked in the dtor.
         const auto gcd = math::gcd(m_num, m_den);
-        return (m_num.sign() != 0 && (gcd == 1 || gcd == -1)) || (m_num.sign() == 0 && m_den == 1);
+        return (m_num.sgn() != 0 && (gcd == 1 || gcd == -1)) || (m_num.sgn() == 0 && m_den == 1);
     }
     /// Canonicalise.
     /**
@@ -1006,12 +955,12 @@ public:
         // Consider this as a possible optimisation in the future.
         const int_type gcd = math::gcd(m_num, m_den);
         piranha_assert(!math::is_zero(gcd));
-        int_type::_divexact(m_num, m_num, gcd);
-        int_type::_divexact(m_den, m_den, gcd);
+        divexact(m_num, m_num, gcd);
+        divexact(m_den, m_den, gcd);
         // Fix mismatch in signs.
-        if (m_den.sign() == -1) {
-            m_num.negate();
-            m_den.negate();
+        if (m_den.sgn() == -1) {
+            m_num.neg();
+            m_den.neg();
         }
         // NOTE: this could be a nice place to use the demote() method of mp_integer.
     }
@@ -1052,7 +1001,7 @@ public:
      */
     explicit mp_rational(const ::mpq_t q) : m_num(mpq_numref(q)), m_den(mpq_denref(q))
     {
-        if (unlikely(m_den.sign() == 0)) {
+        if (unlikely(m_den.sgn() == 0)) {
             piranha_throw(zero_division_error, "zero denominator");
         }
     }
@@ -1082,7 +1031,7 @@ public:
      */
     void _set_den(const int_type &den)
     {
-        if (unlikely(den.sign() <= 0)) {
+        if (unlikely(den.sgn() <= 0)) {
             piranha_throw(std::invalid_argument, "cannot set non-positive denominator in rational");
         }
         m_den = den;
@@ -1195,7 +1144,7 @@ public:
     /// Negate in-place.
     void negate()
     {
-        m_num.negate();
+        m_num.neg();
     }
     /// Negated copy.
     /**
@@ -1621,10 +1570,11 @@ public:
     /// Exponentiation.
     /**
      * \note
-     * This method is enabled only if piranha::mp_integer::pow() can be called with an argument of type \p T.
+     * This method is enabled only if piranha::mp_rational::int_type can be raised to the power of \p exp, yielding
+     * piranha::mp_rational::int_type as a result.
      *
-     * This method computes \p this raised to the integral power \p exp. Internally, the piranha::mp_integer::pow()
-     * method of numerator and denominator is used. Negative powers will raise an error if the numerator of \p this
+     * This method computes \p this raised to the integral power \p exp. Internally, the piranha::math::pow()
+     * function is used on numerator and denominator. Negative powers will raise an error if the numerator of \p this
      * is zero.
      *
      * @param exp exponent.
@@ -1632,7 +1582,7 @@ public:
      * @return <tt>this ** exp</tt>.
      *
      * @throws piranha::zero_division_error if \p exp is negative and the numerator of \p this is zero.
-     * @throws unspecified any exception thrown by piranha::mp_integer::pow().
+     * @throws unspecified any exception thrown by piranha::math::pow().
      */
     template <typename T, pow_enabler<T> = 0>
     mp_rational pow(const T &exp) const
@@ -1643,8 +1593,8 @@ public:
             // a rational value.
             // NOTE: in case of exceptions here we are good, the worst that can happen
             // is that the numerator has some value and den is still 1 from the initialisation.
-            retval.m_num = num().pow(exp);
-            retval.m_den = den().pow(exp);
+            retval.m_num = math::pow(num(), exp);
+            retval.m_den = math::pow(den(), exp);
         } else {
             if (unlikely(math::is_zero(num()))) {
                 piranha_throw(zero_division_error, "zero denominator in rational exponentiation");
@@ -1652,11 +1602,11 @@ public:
             // For negative exponents, invert.
             const int_type n_exp = -int_type(exp);
             // NOTE: exception safe here as well.
-            retval.m_num = den().pow(n_exp);
-            retval.m_den = num().pow(n_exp);
-            if (retval.m_den.sign() < 0) {
-                retval.m_num.negate();
-                retval.m_den.negate();
+            retval.m_num = math::pow(den(), n_exp);
+            retval.m_den = math::pow(num(), n_exp);
+            if (retval.m_den.sgn() < 0) {
+                math::negate(retval.m_num);
+                math::negate(retval.m_den);
             }
         }
         return retval;
@@ -1668,8 +1618,8 @@ public:
     mp_rational abs() const
     {
         mp_rational retval{*this};
-        if (retval.m_num.sign() < 0) {
-            retval.m_num.negate();
+        if (retval.m_num.sgn() < 0) {
+            retval.m_num.neg();
         }
         return retval;
     }
@@ -1681,10 +1631,46 @@ public:
      */
     std::size_t hash() const
     {
-        std::size_t retval = m_num.hash();
-        boost::hash_combine(retval, m_den.hash());
+        std::size_t retval = std::hash<int_type>()(m_num);
+        boost::hash_combine(retval, std::hash<int_type>()(m_den));
         return retval;
     }
+
+private:
+    // Generic binomial implementation.
+    template <typename T, enable_if_t<std::is_unsigned<T>::value, int> = 0>
+    static bool generic_binomial_check_k(const T &, const T &)
+    {
+        return false;
+    }
+    template <typename T, enable_if_t<!std::is_unsigned<T>::value, int> = 0>
+    static bool generic_binomial_check_k(const T &k, const T &zero)
+    {
+        return k < zero;
+    }
+    // Generic binomial implementation using the falling factorial. U must be an integer
+    // type, T can be anything that supports basic arithmetics. k must be non-negative.
+    template <typename T, typename U>
+    static T generic_binomial(const T &x, const U &k)
+    {
+        const U zero(0), one(1);
+        if (generic_binomial_check_k(k, zero)) {
+            piranha_throw(std::invalid_argument, "negative k value in binomial coefficient");
+        }
+        // Zero at bottom results always in 1.
+        if (k == zero) {
+            return T(1);
+        }
+        T tmp(x), retval = x / T(k);
+        --tmp;
+        for (auto i = static_cast<U>(k - one); i >= one; --i, --tmp) {
+            retval *= tmp;
+            retval /= T(i);
+        }
+        return retval;
+    }
+
+public:
     /// Binomial coefficient.
     /**
      * \note
@@ -1699,13 +1685,12 @@ public:
      * @throws unspecified any exception thrown by piranha::mp_integer::binomial()
      * or by arithmetic operations on piranha::mp_rational.
      */
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value || std::is_same<T, int_type>::value, int>::type = 0>
+    template <typename T, enable_if_t<disjunction<std::is_integral<T>, std::is_same<T, int_type>>::value, int> = 0>
     mp_rational binomial(const T &n) const
     {
-        if (m_den.is_unitary()) {
+        if (m_den.is_one()) {
             // If this is an integer, offload to mp_integer::binomial().
-            return mp_rational{m_num.binomial(n), 1};
+            return mp_rational{math::binomial(m_num, n), 1};
         }
         if (n < T(0)) {
             // (rational negative-int) will always give zero.
@@ -1714,7 +1699,7 @@ public:
         // (rational non-negative-int) uses the generic implementation.
         // NOTE: this is going to be really slow, it can be improved by orders
         // of magnitude.
-        return detail::generic_binomial(*this, n);
+        return generic_binomial(*this, n);
     }
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -1788,8 +1773,8 @@ private:
     int_type m_den;
 };
 
-/// Alias for piranha::mp_rational with default bit size.
-using rational = mp_rational<>;
+/// Alias for piranha::mp_rational with 1 static limb.
+using rational = mp_rational<1>;
 
 inline namespace literals
 {
@@ -1809,59 +1794,65 @@ inline rational operator"" _q(const char *s)
 }
 }
 
-namespace detail
+inline namespace impl
 {
 
-// Temporary TMP structure to detect mp_rational types.
-// Should be replaced by is_instance_of once (or if) we move
-// from NBits to an integral_constant for selecting limb
-// size in mp_integer.
-template <typename T>
+// TMP structure to detect mp_rational types.
+template <typename>
 struct is_mp_rational : std::false_type {
 };
 
-template <int NBits>
-struct is_mp_rational<mp_rational<NBits>> : std::true_type {
+template <std::size_t SSize>
+struct is_mp_rational<mp_rational<SSize>> : std::true_type {
 };
 
-template <typename T, typename U>
-using rational_pow_enabler =
-    typename std::enable_if<(is_mp_rational<T>::value && is_mp_rational_interoperable_type<U, T>::value)
-                            || (is_mp_rational<U>::value && is_mp_rational_interoperable_type<T, U>::value) ||
-                            // NOTE: here we are catching two rational arguments with potentially different
-                            // bits. BUT this case is not caught in the pow_impl, so we should be ok as long
-                            // as we don't allow interoperablity with different bits.
-                            (is_mp_rational<T>::value &&is_mp_rational<U>::value)>::type;
+// Detect if T and U are both mp_rational with same SSize.
+template <typename, typename>
+struct is_same_mp_rational : std::false_type {
+};
 
-// Binomial follows the same rules as pow.
-template <typename T, typename U>
-using rational_binomial_enabler = rational_pow_enabler<T, U>;
+template <std::size_t SSize>
+struct is_same_mp_rational<mp_rational<SSize>, mp_rational<SSize>> : std::true_type {
+};
+
+// Detect if type T is an interoperable type for the mp_rational type Rational.
+// NOTE: we need to split this in 2 as we might be using this in a context in which
+// Rational is not an mp_rational, in which case we cannot and don't need to check
+// against the inner int type.
+template <typename T, typename Rational>
+struct is_mp_rational_interoperable_type : mppp::mppp_impl::is_supported_interop<T> {
+};
+
+template <typename T, std::size_t SSize>
+struct is_mp_rational_interoperable_type<T, mp_rational<SSize>>
+    : disjunction<mppp::mppp_impl::is_supported_interop<T>, std::is_same<T, typename mp_rational<SSize>::int_type>> {
+};
 }
 
 /// Specialisation of the piranha::print_tex_coefficient() functor for piranha::mp_rational.
-template <typename T>
-struct print_tex_coefficient_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+template <std::size_t SSize>
+struct print_tex_coefficient_impl<mp_rational<SSize>> {
     /// Call operator.
     /**
      * @param os target stream.
      * @param cf coefficient to be printed.
      *
-     * @throws unspecified any exception thrown by streaming to \p os.
+     * @throws unspecified any exception thrown by streaming piranha::mp_integer to \p os.
      */
-    void operator()(std::ostream &os, const T &cf) const
+    void operator()(std::ostream &os, const mp_rational<SSize> &cf) const
     {
         if (math::is_zero(cf.num())) {
             os << "0";
             return;
         }
-        if (cf.den().is_unitary()) {
+        if (cf.den().is_one()) {
             os << cf.num();
             return;
         }
         auto num = cf.num();
-        if (num.sign() < 0) {
+        if (num.sgn() < 0) {
             os << "-";
-            num.negate();
+            num.neg();
         }
         os << "\\frac{" << num << "}{" << cf.den() << "}";
     }
@@ -1870,56 +1861,65 @@ struct print_tex_coefficient_impl<T, typename std::enable_if<detail::is_mp_ratio
 namespace math
 {
 
-/// Specialisation of the piranha::math::is_zero() functor for piranha::mp_rational.
-/**
- * This specialisation is enabled when \p T is an instance of piranha::mp_rational.
- */
-template <typename T>
-struct is_zero_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+/// Specialisation of the implementation of piranha::math::is_zero() for piranha::mp_rational.
+template <std::size_t SSize>
+struct is_zero_impl<mp_rational<SSize>> {
     /// Call operator.
     /**
      * @param q piranha::mp_rational to be tested.
      *
      * @return \p true if \p q is zero, \p false otherwise.
      */
-    bool operator()(const T &q) const
+    bool operator()(const mp_rational<SSize> &q) const
     {
         return is_zero(q.num());
     }
 };
 
-/// Specialisation of the piranha::math::is_unitary() functor for piranha::mp_rational.
-/**
- * This specialisation is enabled when \p T is an instance of piranha::mp_rational.
- */
-template <typename T>
-struct is_unitary_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+/// Specialisation of the implementation of piranha::math::is_unitary() for piranha::mp_rational.
+template <std::size_t SSize>
+struct is_unitary_impl<mp_rational<SSize>> {
     /// Call operator.
     /**
      * @param q piranha::mp_rational to be tested.
      *
      * @return \p true if \p q is equal to one, \p false otherwise.
      */
-    bool operator()(const T &q) const
+    bool operator()(const mp_rational<SSize> &q) const
     {
         return is_unitary(q.num()) && is_unitary(q.den());
     }
 };
 
-/// Specialisation of the piranha::math::negate() functor for piranha::mp_rational.
-template <typename T>
-struct negate_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+/// Specialisation of the implementation of piranha::math::negate() for piranha::mp_rational.
+template <std::size_t SSize>
+struct negate_impl<mp_rational<SSize>> {
     /// Call operator.
     /**
      * @param q piranha::mp_rational to be negated.
      */
-    void operator()(T &q) const
+    void operator()(mp_rational<SSize> &q) const
     {
         q.negate();
     }
 };
+}
 
-///// Specialisation of the piranha::math::pow() functor for piranha::mp_rational.
+inline namespace impl
+{
+
+// Enabler for the pow specialisation.
+template <typename T, typename U>
+using math_rational_pow_enabler
+    = enable_if_t<disjunction<conjunction<is_mp_rational<T>, is_mp_rational_interoperable_type<U, T>>,
+                              conjunction<is_mp_rational<U>, is_mp_rational_interoperable_type<T, U>>,
+                              is_same_mp_rational<T, U>>::value>;
+}
+
+namespace math
+{
+
+/// Specialisation of the implementation of piranha::math::pow() for piranha::mp_rational.
 /**
  * This specialisation is activated when one of the arguments is piranha::mp_rational
  * and the other is either piranha::mp_rational or an interoperable type for piranha::mp_rational.
@@ -1936,108 +1936,59 @@ struct negate_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>:
  *   on the values of the operands.
  */
 template <typename T, typename U>
-struct pow_impl<T, U, detail::rational_pow_enabler<T, U>> {
-    /// Call operator, rational--integral overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_rational::pow().
-     */
-    template <int NBits, typename T2>
-    auto operator()(const mp_rational<NBits> &b, const T2 &e) const -> decltype(b.pow(e))
+struct pow_impl<T, U, math_rational_pow_enabler<T, U>> {
+private:
+    template <std::size_t SSize, typename T2>
+    static auto impl(const mp_rational<SSize> &b, const T2 &e) -> decltype(b.pow(e))
     {
         return b.pow(e);
     }
-    /// Call operator, rational--floating-point overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to a floating-point type.
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value, int>::type = 0>
-    T2 operator()(const mp_rational<NBits> &b, const T2 &e) const
+    template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
+    static T2 impl(const mp_rational<SSize> &b, const T2 &e)
     {
         return math::pow(static_cast<T2>(b), e);
     }
-    /// Call operator, floating-point--rational overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to a floating-point type.
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value, int>::type = 0>
-    T2 operator()(const T2 &e, const mp_rational<NBits> &b) const
+    template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
+    static T2 impl(const T2 &e, const mp_rational<SSize> &b)
     {
         return math::pow(e, static_cast<T2>(b));
     }
-    /// Call operator, rational--rational overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws std::invalid_argument if the result cannot be computed.
-     * @throws unspecified any exception thrown by piranha::mp_rational::pow().
-     */
-    template <int NBits>
-    mp_rational<NBits> operator()(const mp_rational<NBits> &b, const mp_rational<NBits> &e) const
+    template <std::size_t SSize>
+    static mp_rational<SSize> impl(const mp_rational<SSize> &b, const mp_rational<SSize> &e)
     {
         // Special casing.
         if (is_unitary(b)) {
             return b;
         }
         if (is_zero(b)) {
-            const auto sign = e.num().sign();
+            const auto sign = e.num().sgn();
             if (sign > 0) {
                 // 0**q = 1
-                return mp_rational<NBits>(0);
+                return mp_rational<SSize>(0);
             }
             if (sign == 0) {
                 // 0**0 = 1
-                return mp_rational<NBits>(1);
+                return mp_rational<SSize>(1);
             }
             // 0**-q -> division by zero.
             piranha_throw(zero_division_error, "unable to raise zero to a negative power");
         }
-        if (!e.den().is_unitary()) {
+        if (!e.den().is_one()) {
             piranha_throw(std::invalid_argument,
                           "unable to raise rational to a rational power whose denominator is not 1");
         }
         return b.pow(e.num());
     }
-    /// Call operator, integral--rational overload.
-    /**
-     * @param b base.
-     * @param e exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws std::invalid_argument if the result cannot be computed.
-     * @throws unspecified any exception thrown by piranha::math::pow() with integral base and piranha::mp_integer
-     * exponent.
-     */
-    template <int NBits, typename T2,
-              typename std::enable_if<std::is_integral<T2>::value || detail::is_mp_integer<T2>::value, int>::type = 0>
-    auto operator()(const T2 &b, const mp_rational<NBits> &e) const -> decltype(math::pow(b, e.num()))
+    template <std::size_t SSize, typename T2,
+              enable_if_t<disjunction<std::is_integral<T2>, is_mp_integer<T2>>::value, int> = 0>
+    static auto impl(const T2 &b, const mp_rational<SSize> &e) -> decltype(math::pow(b, e.num()))
     {
         using ret_type = decltype(math::pow(b, e.num()));
         if (is_unitary(b)) {
             return ret_type(b);
         }
         if (is_zero(b)) {
-            const auto sign = e.num().sign();
+            const auto sign = e.num().sgn();
             if (sign > 0) {
                 return ret_type(0);
             }
@@ -2046,17 +1997,37 @@ struct pow_impl<T, U, detail::rational_pow_enabler<T, U>> {
             }
             piranha_throw(zero_division_error, "unable to raise zero to a negative power");
         }
-        if (!e.den().is_unitary()) {
+        if (!e.den().is_one()) {
             piranha_throw(std::invalid_argument,
                           "unable to raise an integral to a rational power whose denominator is not 1");
         }
         return math::pow(b, e.num());
     }
+    using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
+
+public:
+    /// Call operator.
+    /**
+     * @param b base.
+     * @param e exponent.
+     *
+     * @returns <tt>b**e</tt>.
+     *
+     * @throws std::invalid_argument if the result cannot be computed.
+     * @throws unspecified any exception thrown by:
+     * - piranha::math::pow(),
+     * - piranha::mp_rational::pow(),
+     * - converting piranha::mp_rational to a floating-point type.
+     */
+    ret_type operator()(const T &b, const U &e) const
+    {
+        return impl(b, e);
+    }
 };
 
-/// Specialisation of the piranha::math::sin() functor for piranha::mp_rational.
-template <typename T>
-struct sin_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+/// Specialisation of the implementation of piranha::math::sin() for piranha::mp_rational.
+template <std::size_t SSize>
+struct sin_impl<mp_rational<SSize>> {
     /// Call operator.
     /**
      * @param q argument.
@@ -2065,18 +2036,18 @@ struct sin_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::ty
      *
      * @throws std::invalid_argument if the argument is not zero.
      */
-    T operator()(const T &q) const
+    mp_rational<SSize> operator()(const mp_rational<SSize> &q) const
     {
         if (is_zero(q)) {
-            return T(0);
+            return mp_rational<SSize>(0);
         }
         piranha_throw(std::invalid_argument, "cannot compute the sine of a non-zero rational");
     }
 };
 
-/// Specialisation of the piranha::math::cos() functor for piranha::mp_rational.
-template <typename T>
-struct cos_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+/// Specialisation of the implementation of piranha::math::cos() for piranha::mp_rational.
+template <std::size_t SSize>
+struct cos_impl<mp_rational<SSize>> {
     /// Call operator.
     /**
      * @param q argument.
@@ -2085,44 +2056,56 @@ struct cos_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::ty
      *
      * @throws std::invalid_argument if the argument is not zero.
      */
-    T operator()(const T &q) const
+    mp_rational<SSize> operator()(const mp_rational<SSize> &q) const
     {
         if (is_zero(q)) {
-            return T(1);
+            return mp_rational<SSize>(1);
         }
         piranha_throw(std::invalid_argument, "cannot compute the cosine of a non-zero rational");
     }
 };
 
-/// Specialisation of the piranha::math::abs() functor for piranha::mp_rational.
-template <typename T>
-struct abs_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+/// Specialisation of the implementation of piranha::math::abs() for piranha::mp_rational.
+template <std::size_t SSize>
+struct abs_impl<mp_rational<SSize>> {
     /// Call operator.
     /**
      * @param q input parameter.
      *
      * @return absolute value of \p q.
      */
-    T operator()(const T &q) const
+    mp_rational<SSize> operator()(const mp_rational<SSize> &q) const
     {
         return q.abs();
     }
 };
 
-/// Specialisation of the piranha::math::partial() functor for piranha::mp_rational.
-template <typename T>
-struct partial_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+/// Specialisation of the implementation of piranha::math::partial() for piranha::mp_rational.
+template <std::size_t SSize>
+struct partial_impl<mp_rational<SSize>> {
     /// Call operator.
     /**
      * @return an instance of piranha::mp_rational constructed from zero.
      */
-    T operator()(const T &, const std::string &) const
+    mp_rational<SSize> operator()(const mp_rational<SSize> &, const std::string &) const
     {
-        return T{0};
+        return mp_rational<SSize>{};
     }
 };
+}
 
-/// Specialisation of the piranha::math::binomial() functor for piranha::mp_rational.
+inline namespace impl
+{
+
+// Binomial follows the same rules as pow.
+template <typename T, typename U>
+using math_rational_binomial_enabler = math_rational_pow_enabler<T, U>;
+}
+
+namespace math
+{
+
+/// Specialisation of the implementation of piranha::math::binomial() for piranha::mp_rational.
 /**
  * This specialisation is activated when one of the arguments is piranha::mp_rational and the other is either
  * piranha::mp_rational or an interoperable type for piranha::mp_rational.
@@ -2138,134 +2121,64 @@ struct partial_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>
  *   arguments are converted to \p double and piranha::math::binomial() is used.
  */
 template <typename T, typename U>
-struct binomial_impl<T, U, detail::rational_binomial_enabler<T, U>> {
-    /// Call operator, rational--integral overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by piranha::mp_rational::binomial().
-     */
-    template <int NBits, typename T2>
-    auto operator()(const mp_rational<NBits> &x, const T2 &y) const -> decltype(x.binomial(y))
+struct binomial_impl<T, U, math_rational_binomial_enabler<T, U>> {
+private:
+    template <std::size_t SSize, typename T2>
+    static auto impl(const mp_rational<SSize> &x, const T2 &y) -> decltype(x.binomial(y))
     {
         return x.binomial(y);
     }
-    /// Call operator, rational--floating-point overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to a floating-point type.
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value, int>::type = 0>
-    T2 operator()(const mp_rational<NBits> &x, const T2 &y) const
+    template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
+    static T2 impl(const mp_rational<SSize> &x, const T2 &y)
     {
         return math::binomial(static_cast<T2>(x), y);
     }
-    /// Call operator, floating-point--rational overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to a floating-point type.
-     */
-    template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value, int>::type = 0>
-    T2 operator()(const T2 &x, const mp_rational<NBits> &y) const
+    template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
+    static T2 impl(const T2 &x, const mp_rational<SSize> &y)
     {
         return math::binomial(x, static_cast<T2>(y));
     }
-    /// Call operator, rational--rational overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * to \p double.
-     */
-    template <int NBits>
-    double operator()(const mp_rational<NBits> &x, const mp_rational<NBits> &y) const
+    template <std::size_t SSize>
+    static double impl(const mp_rational<SSize> &x, const mp_rational<SSize> &y)
     {
         return math::binomial(static_cast<double>(x), static_cast<double>(y));
     }
-    /// Call operator, integral--rational overload.
-    /**
-     * @param x top argument.
-     * @param y bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by converting piranha::mp_rational
-     * or piranha::mp_integer to \p double.
-     */
-    template <int NBits, typename T2,
-              typename std::enable_if<std::is_integral<T2>::value || detail::is_mp_integer<T2>::value, int>::type = 0>
-    double operator()(const T2 &x, const mp_rational<NBits> &y) const
+    template <std::size_t SSize, typename T2,
+              enable_if_t<disjunction<std::is_integral<T2>, is_mp_integer<T2>>::value, int> = 0>
+    static double impl(const T2 &x, const mp_rational<SSize> &y)
     {
         return math::binomial(static_cast<double>(x), static_cast<double>(y));
     }
-};
+    using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
 
-/// Implementation of piranha::math::divexact() for piranha::mp_rational.
-/**
- * This specialisation is enabled when \p T is an instance of piranha::mp_rational.
- */
-template <typename T>
-struct divexact_impl<T, typename std::enable_if<detail::is_mp_rational<T>::value>::type> {
+public:
     /// Call operator.
     /**
-     * The call is equivalent to piranha::math::div3(). The exact result of the division
-     * of \p q1 by \p q2 will be stored in \p out.
+     * @param x top argument.
+     * @param y bottom argument.
      *
-     * @param out the output value.
-     * @param q1 first argument.
-     * @param q2 second argument.
+     * @returns \f$ x \choose y \f$.
      *
-     * @return the output of <tt>piranha::math::div3(out,q1,q2)</tt>.
-     *
-     * @throws unspecified any exception thrown by piranha::math::div3().
+     * @throws unspecified any exception thrown by:
+     * - piranha::mp_rational::binomial(),
+     * - converting piranha::mp_rational or piranha::mp_integer to a floating-point type.
      */
-    auto operator()(T &out, const T &q1, const T &q2) const -> decltype(div3(out, q1, q2))
+    ret_type operator()(const T &x, const U &y) const
     {
-        return div3(out, q1, q2);
+        return impl(x, y);
     }
 };
 }
-
-/// Specialisation of piranha::has_exact_ring_operations for piranha::mp_rational.
-/**
- * This specialisation is enabled if the decay type of \p T is an instance of piranha::mp_rational.
- */
-template <typename T>
-struct has_exact_ring_operations<T, typename std::
-                                        enable_if<detail::is_mp_rational<typename std::decay<T>::type>::value>::type> {
-    /// Value of the type trait.
-    static const bool value = true;
-};
-
-template <typename T>
-const bool has_exact_ring_operations<T, typename std::enable_if<detail::is_mp_rational<
-                                            typename std::decay<T>::type>::value>::type>::value;
 
 inline namespace impl
 {
 
 template <typename To, typename From>
 using sc_rat_enabler
-    = enable_if_t<disjunction<conjunction<detail::is_mp_rational<To>,
-                                          disjunction<std::is_arithmetic<From>, detail::is_mp_integer<From>>>,
-                              conjunction<detail::is_mp_rational<From>,
-                                          disjunction<std::is_integral<To>, detail::is_mp_integer<To>>>>::value>;
+    = enable_if_t<disjunction<conjunction<is_mp_rational<To>,
+                                          disjunction<std::is_arithmetic<From>, is_mp_integer<From>>>,
+                              conjunction<is_mp_rational<From>,
+                                          disjunction<std::is_integral<To>, is_mp_integer<To>>>>::value>;
 }
 
 /// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_rational.
@@ -2278,28 +2191,8 @@ using sc_rat_enabler
 template <typename To, typename From>
 struct safe_cast_impl<To, From, sc_rat_enabler<To, From>> {
 private:
-    template <typename T>
-    using to_enabler = enable_if_t<disjunction<std::is_arithmetic<T>, detail::is_mp_integer<T>>::value, int>;
-    template <typename T>
-    using from_enabler = enable_if_t<detail::is_mp_rational<T>::value, int>;
-
-public:
-    /// Call operator, to-rational overload.
-    /**
-     * \note
-     * This operator is enabled if \p T is an arithmetic type or an instance of piranha::mp_integer.
-     *
-     * The conversion is performed via piranha::mp_rational's constructor.
-     *
-     * @param x input value.
-     *
-     * @return a rational constructed from \p x.
-     *
-     * @throws piranha::safe_cast_failure if the conversion fails.
-     * @throws unspecified any exception thrown by \p boost::lexical_cast().
-     */
-    template <typename T, to_enabler<T> = 0>
-    To operator()(const T &x) const
+    template <typename T, enable_if_t<disjunction<std::is_arithmetic<T>, is_mp_integer<T>>::value, int> = 0>
+    static To impl(const T &x)
     {
         try {
             // NOTE: checks for finiteness of an fp value are in the ctor.
@@ -2310,25 +2203,10 @@ public:
                                                  + "' to a rational, as the conversion would not preserve the value");
         }
     }
-    /// Call operator, from-rational overload.
-    /**
-     * \note
-     * This operator is enabled if \p T is an instance of piranha::mp_rational.
-     *
-     * The conversion, performed via the conversion operator of piranha::mp_rational,
-     * will fail if the denominator of \p q is not unitary.
-     *
-     * @param q input rational.
-     *
-     * @return an integral value converted from \p q.
-     *
-     * @throws safe_cast_failure if the conversion fails.
-     * @throws unspecified any exception thrown by \p boost::lexical_cast().
-     */
-    template <typename T, from_enabler<T> = 0>
-    To operator()(const T &q) const
+    template <typename T, enable_if_t<is_mp_rational<T>::value, int> = 0>
+    static To impl(const T &q)
     {
-        if (unlikely(!q.den().is_unitary())) {
+        if (unlikely(!q.den().is_one())) {
             piranha_throw(safe_cast_failure, "cannot convert the rational value " + boost::lexical_cast<std::string>(q)
                                                  + " to the integral type '" + detail::demangle<To>()
                                                  + "', as the rational value as non-unitary denominator");
@@ -2341,18 +2219,34 @@ public:
                                                  + "', as the conversion cannot preserve the value");
         }
     }
+
+public:
+    /// Call operator.
+    /**
+     * The conversion is performed via piranha::mp_rational's constructor and conversion operator.
+     *
+     * @param x input value.
+     *
+     * @return \p x converted to \p To.
+     *
+     * @throws piranha::safe_cast_failure if the conversion fails.
+     */
+    To operator()(const From &x) const
+    {
+        return impl(x);
+    }
 };
 
 inline namespace impl
 {
 
-template <typename Archive, int NBits>
+template <typename Archive, std::size_t SSize>
 using mp_rational_boost_save_enabler
-    = enable_if_t<has_boost_save<Archive, typename mp_rational<NBits>::int_type>::value>;
+    = enable_if_t<has_boost_save<Archive, typename mp_rational<SSize>::int_type>::value>;
 
-template <typename Archive, int NBits>
+template <typename Archive, std::size_t SSize>
 using mp_rational_boost_load_enabler
-    = enable_if_t<has_boost_load<Archive, typename mp_rational<NBits>::int_type>::value>;
+    = enable_if_t<has_boost_load<Archive, typename mp_rational<SSize>::int_type>::value>;
 }
 
 /// Specialisation of piranha::boost_save() for piranha::mp_rational.
@@ -2365,9 +2259,9 @@ using mp_rational_boost_load_enabler
  *
  * @throws unspecified any exception thrown by piranha::boost_save().
  */
-template <typename Archive, int NBits>
-struct boost_save_impl<Archive, mp_rational<NBits>, mp_rational_boost_save_enabler<Archive, NBits>>
-    : boost_save_via_boost_api<Archive, mp_rational<NBits>> {
+template <typename Archive, std::size_t SSize>
+struct boost_save_impl<Archive, mp_rational<SSize>, mp_rational_boost_save_enabler<Archive, SSize>>
+    : boost_save_via_boost_api<Archive, mp_rational<SSize>> {
 };
 
 /// Specialisation of piranha::boost_load() for piranha::mp_rational.
@@ -2382,9 +2276,9 @@ struct boost_save_impl<Archive, mp_rational<NBits>, mp_rational_boost_save_enabl
  * @throws unspecified any exception thrown by piranha::boost_load() or by the constructor of piranha::mp_rational
  * from numerator and denominator.
  */
-template <typename Archive, int NBits>
-struct boost_load_impl<Archive, mp_rational<NBits>, mp_rational_boost_load_enabler<Archive, NBits>>
-    : boost_load_via_boost_api<Archive, mp_rational<NBits>> {
+template <typename Archive, std::size_t SSize>
+struct boost_load_impl<Archive, mp_rational<SSize>, mp_rational_boost_load_enabler<Archive, SSize>>
+    : boost_load_via_boost_api<Archive, mp_rational<SSize>> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -2394,11 +2288,11 @@ inline namespace impl
 
 template <typename Stream, typename T>
 using mp_rational_msgpack_pack_enabler
-    = enable_if_t<conjunction<detail::is_mp_rational<T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>;
+    = enable_if_t<conjunction<is_mp_rational<T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>;
 
 template <typename T>
 using mp_rational_msgpack_convert_enabler
-    = enable_if_t<conjunction<detail::is_mp_rational<T>, is_detected<msgpack_convert_member_t, T>>::value>;
+    = enable_if_t<conjunction<is_mp_rational<T>, is_detected<msgpack_convert_member_t, T>>::value>;
 }
 
 /// Specialisation of piranha::msgpack_pack() for piranha::mp_rational.
@@ -2456,12 +2350,12 @@ namespace std
 {
 
 /// Specialisation of \p std::hash for piranha::mp_rational.
-template <int NBits>
-struct hash<piranha::mp_rational<NBits>> {
+template <std::size_t SSize>
+struct hash<piranha::mp_rational<SSize>> {
     /// Result type.
     typedef size_t result_type;
     /// Argument type.
-    typedef piranha::mp_rational<NBits> argument_type;
+    typedef piranha::mp_rational<SSize> argument_type;
     /// Hash operator.
     /**
      * @param q piranha::mp_rational whose hash value will be returned.

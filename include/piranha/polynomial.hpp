@@ -319,7 +319,7 @@ class polynomial
                           "unable to perform polynomial integration: cannot extract the integral form of an exponent");
         }
         // If the degree is negative, integration by parts won't terminate.
-        if (degree.sign() < 0) {
+        if (degree.sgn() < 0) {
             piranha_throw(std::invalid_argument,
                           "unable to perform polynomial integration: negative integral exponent");
         }
@@ -991,31 +991,7 @@ const bool has_get_auto_truncate_degree<S>::value;
 // Global enabler for the polynomial multiplier.
 template <typename Series>
 using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag, Series>::value>::type;
-
-// Enabler for exact ring operations.
-template <typename T>
-using poly_ero_enabler =
-    typename std::enable_if<std::is_base_of<detail::polynomial_tag, typename std::decay<T>::type>::value
-                            && has_exact_ring_operations<typename std::decay<T>::type::term_type::cf_type>::value
-                            && (std::is_integral<typename std::decay<T>::type::term_type::key_type::value_type>::value
-                                || has_exact_ring_operations<
-                                       typename std::decay<T>::type::term_type::key_type::value_type>::value)>::type;
 }
-
-/// Exact ring operations specialisation for piranha::polynomial.
-/**
- * This specialisation is enabled if the decay type of \p T is an instance of piranha::polynomial
- * whose coefficient type satisfies piranha::has_exact_ring_operations and whose exponent type is either
- * a C++ integral type or another type which satisfies piranha::has_exact_ring_operations.
- */
-template <typename T>
-struct has_exact_ring_operations<T, detail::poly_ero_enabler<T>> {
-    /// Value of the type trait.
-    static const bool value = true;
-};
-
-template <typename T>
-const bool has_exact_ring_operations<T, detail::poly_ero_enabler<T>>::value;
 
 /// Specialisation of piranha::series_multiplier for piranha::polynomial.
 /**
@@ -1580,12 +1556,12 @@ public:
 private:
     // NOTE: wrapper to multadd that treats specially rational coefficients. We need to decide in the future
     // if this stays here or if it is better to generalise it.
-    template <typename T, typename std::enable_if<!detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<!is_mp_rational<T>::value, int>::type = 0>
     static void fma_wrap(T &a, const T &b, const T &c)
     {
         math::multiply_accumulate(a, b, c);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     static void fma_wrap(T &a, const T &b, const T &c)
     {
         math::multiply_accumulate(a._num(), b.num(), c.num());

@@ -7,6 +7,9 @@ Changelog
 New
 ~~~
 
+- Initial integration of the mp++ library in piranha (so far affecting
+  only the mp_integer class). [Francesco Biscani]
+
 - Revamped build system: removed cruft, restructured directory layout,
   adopted modern CMake idioms, added support for package installation,
   separated benchmarks in own dir. [Francesco Biscani]
@@ -14,7 +17,16 @@ New
 Changes
 ~~~~~~~
 
+- Remove for the time being all functionality related to polynomial
+  division/gcd, including rational functions. [Francesco Biscani]
+
 - Updated the copyright date. [Francesco Biscani]
+
+Fix
+~~~
+
+- Fix building with BZip2 support on older CMake versions. [Francesco
+  Biscani]
 
 v0.10 (2017-01-15)
 ------------------

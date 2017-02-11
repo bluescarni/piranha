@@ -52,5 +52,5 @@ BOOST_AUTO_TEST_CASE(fateman1_unpacked_test)
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    BOOST_CHECK_EQUAL((fateman1<integer, monomial<signed char>>().size()), 135751u);
+    BOOST_CHECK_EQUAL((fateman1<mp_integer<2>, monomial<signed char>>().size()), 135751u);
 }

@@ -28,7 +28,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/polynomial.hpp>
 
-#define BOOST_TEST_MODULE polynomial_05_test
+#define BOOST_TEST_MODULE polynomial_03_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <sstream>

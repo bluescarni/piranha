@@ -54,5 +54,5 @@ BOOST_AUTO_TEST_CASE(gastineau3_test)
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    BOOST_CHECK_EQUAL((gastineau3<integer, kronecker_monomial<>>().size()), 144049555ull);
+    BOOST_CHECK_EQUAL((gastineau3<mp_integer<2>, kronecker_monomial<>>().size()), 144049555ull);
 }

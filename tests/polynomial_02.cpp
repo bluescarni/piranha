@@ -110,7 +110,7 @@ public:
 }
 
 struct multiplication_tester {
-    template <typename Cf, typename std::enable_if<detail::is_mp_rational<Cf>::value, int>::type = 0>
+    template <typename Cf, typename std::enable_if<is_mp_rational<Cf>::value, int>::type = 0>
     void operator()(const Cf &)
     {
         typedef polynomial<Cf, monomial<int>> p_type;
@@ -198,7 +198,7 @@ struct multiplication_tester {
             BOOST_CHECK(tmp1 == p_type{tmp_alt});
         }
     }
-    template <typename Cf, typename std::enable_if<!detail::is_mp_rational<Cf>::value, int>::type = 0>
+    template <typename Cf, typename std::enable_if<!is_mp_rational<Cf>::value, int>::type = 0>
     void operator()(const Cf &)
     {
     }
@@ -221,24 +221,28 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
         BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x", integer(1)), 1);
         BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x", p_type1{"x"}), p_type1{"x"});
         p_type1 x{"x"}, y{"y"}, z{"z"};
-        BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("x", integer(3)), 9 + 3 * y + z);
-        BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("y", rational(3, 2)), x * x + x * rational(3, 2) + z);
-        BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("k", rational(3, 2)), x * x + x * y + z);
-        BOOST_CHECK_EQUAL(x.pow(-1).subs("x", x.pow(-1)), x);
-        BOOST_CHECK_EQUAL(
-            (x.pow(2) + x * y + z).subs("x", rational(3, 2)).subs("y", rational(4, 5)).subs("z", -rational(6, 7)),
-            (x.pow(2) + x * y + z)
-                .evaluate(std::unordered_map<std::string, rational>{
-                    {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
-        BOOST_CHECK_EQUAL(
-            math::subs(x.pow(2) + x * y + z, "x", rational(3, 2)).subs("y", rational(4, 5)).subs("z", -rational(6, 7)),
-            (x.pow(2) + x * y + z)
-                .evaluate(std::unordered_map<std::string, rational>{
-                    {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("x", integer(3)), 9 + 3 * y + z);
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("y", rational(3, 2)), x * x + x * rational(3, 2) + z);
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("k", rational(3, 2)), x * x + x * y + z);
+        BOOST_CHECK_EQUAL(math::pow(x, -1).subs("x", math::pow(x, -1)), x);
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z)
+                              .subs("x", rational(3, 2))
+                              .subs("y", rational(4, 5))
+                              .subs("z", -rational(6, 7)),
+                          (math::pow(x, 2) + x * y + z)
+                              .evaluate(std::unordered_map<std::string, rational>{
+                                  {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
+        BOOST_CHECK_EQUAL(math::subs(math::pow(x, 2) + x * y + z, "x", rational(3, 2))
+                              .subs("y", rational(4, 5))
+                              .subs("z", -rational(6, 7)),
+                          (math::pow(x, 2) + x * y + z)
+                              .evaluate(std::unordered_map<std::string, rational>{
+                                  {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
         BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x", integer(1))), p_type1>::value));
         BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x", rational(1))), p_type1>::value));
-        BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("k", rational(3, 2)), x * x + x * y + z);
-        BOOST_CHECK_EQUAL(((y + 4 * z).pow(5) * x.pow(-1)).subs("x", rational(3)), ((y + 4 * z).pow(5)) / 3);
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("k", rational(3, 2)), x * x + x * y + z);
+        BOOST_CHECK_EQUAL((math::pow(y + 4 * z, 5) * math::pow(x, -1)).subs("x", rational(3)),
+                          (math::pow(y + 4 * z, 5)) / 3);
     }
     {
         typedef polynomial<real, monomial<int>> p_type2;
@@ -264,12 +268,12 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
                           .subs("y", integer(-3))
                           .subs("z", integer(4))
                           .subs("k", integer()),
-                      integer(2).pow(3) + integer(-3).pow(2) + integer(2) * integer(-3) * integer(4));
+                      math::pow(integer(2), 3) + math::pow(integer(-3), 2) + integer(2) * integer(-3) * integer(4));
     BOOST_CHECK_EQUAL(math::subs(x * x * x + y * y + z * y * x, "x", integer(2))
                           .subs("y", integer(-3))
                           .subs("z", integer(4))
                           .subs("k", integer()),
-                      integer(2).pow(3) + integer(-3).pow(2) + integer(2) * integer(-3) * integer(4));
+                      math::pow(integer(2), 3) + math::pow(integer(-3), 2) + integer(2) * integer(-3) * integer(4));
     BOOST_CHECK_EQUAL((x * x * x + y * y + z * y * x)
                           .subs("x", integer(0))
                           .subs("y", integer(0))
@@ -470,7 +474,7 @@ BOOST_AUTO_TEST_CASE(polynomial_invert_test)
     BOOST_CHECK((std::is_same<pt0, decltype(math::invert(pt0{}))>::value));
     BOOST_CHECK_EQUAL(math::invert(pt0{1}), 1);
     BOOST_CHECK_EQUAL(math::invert(pt0{2}), 0);
-    BOOST_CHECK_THROW(math::invert(pt0{0}), zero_division_error);
+    BOOST_CHECK_THROW(math::invert(pt0{0}), mppp::zero_division_error);
     BOOST_CHECK_EQUAL(math::invert(pt0{"x"}), math::pow(pt0{"x"}, -1));
     using pt1 = polynomial<rational, monomial<long>>;
     BOOST_CHECK(is_invertible<pt1>::value);

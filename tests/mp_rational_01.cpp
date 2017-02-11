@@ -31,14 +31,8 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE mp_rational_01_test
 #include <boost/test/included/unit_test.hpp>
 
-#define FUSION_MAX_VECTOR_SIZE 20
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/fusion/algorithm.hpp>
-#include <boost/fusion/include/algorithm.hpp>
-#include <boost/fusion/include/sequence.hpp>
-#include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cmath>
 #include <cstddef>
@@ -49,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -70,15 +65,12 @@ static const int ntries = 1000;
 
 using namespace piranha;
 
-using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
-                                      std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(__SIZEOF_INT128__)
-                                      ,
-                                      std::integral_constant<int, 64>
-#endif
-                                      >;
+using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integral_constant<std::size_t, 2>,
+                              std::integral_constant<std::size_t, 3>, std::integral_constant<std::size_t, 7>,
+                              std::integral_constant<std::size_t, 10>>;
 
 using mpq_struct_t = std::remove_extent<::mpq_t>::type;
+using mpz_raii = mppp::mppp_impl::mpz_raii;
 
 // Simple RAII holder for GMP rationals.
 struct mpq_raii {
@@ -123,11 +115,11 @@ static inline std::string mpq_lexcast(const mpq_raii &m)
 // Constructors and assignments.
 struct constructor_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
-        std::cout << "NBits,size,align: " << T::value << ',' << sizeof(q_type) << ',' << alignof(q_type) << '\n';
+        std::cout << "static limbs,size,align: " << T::value << ',' << sizeof(q_type) << ',' << alignof(q_type) << '\n';
         q_type q;
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q), "0");
         BOOST_CHECK_EQUAL(q.num(), 0);
@@ -163,7 +155,7 @@ struct constructor_tester {
         // Random testing.
         std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
         mpq_raii m;
-        detail::mpz_raii z;
+        mpz_raii z;
         for (int i = 0; i < ntries; ++i) {
             const int a = dist(rng), b = dist(rng);
             if (b == 0) {
@@ -225,7 +217,7 @@ struct constructor_tester {
                               std::string("1/") + boost::lexical_cast<std::string>(dradix));
             tmp /= dradix;
             BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{tmp}),
-                              std::string("1/") + boost::lexical_cast<std::string>(int_type(dradix).pow(2)));
+                              std::string("1/") + boost::lexical_cast<std::string>(math::pow(int_type(dradix), 2)));
             tmp = 0.;
             BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{tmp}), "0");
             const unsigned ldradix = static_cast<unsigned>(std::numeric_limits<long double>::radix);
@@ -235,7 +227,7 @@ struct constructor_tester {
                               std::string("1/") + boost::lexical_cast<std::string>(ldradix));
             ltmp /= ldradix;
             BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{ltmp}),
-                              std::string("1/") + boost::lexical_cast<std::string>(int_type(ldradix).pow(2)));
+                              std::string("1/") + boost::lexical_cast<std::string>(math::pow(int_type(ldradix), 2)));
             ltmp = 0.;
             BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{ltmp}), "0");
             // This was a bug: we did not fix the sign when the input was a negative integral value.
@@ -275,22 +267,16 @@ struct constructor_tester {
         BOOST_CHECK_THROW(q_type{"-/-2"}, std::invalid_argument);
         BOOST_CHECK_THROW(q_type{"/2"}, std::invalid_argument);
         BOOST_CHECK_THROW(q_type{"3/"}, std::invalid_argument);
-        BOOST_CHECK_THROW(q_type{"3 /2"}, std::invalid_argument);
-        BOOST_CHECK_THROW(q_type{"3/ 2"}, std::invalid_argument);
-        BOOST_CHECK_THROW(q_type{"3/2 "}, std::invalid_argument);
         BOOST_CHECK_THROW(q_type{"+3/2"}, std::invalid_argument);
         BOOST_CHECK_THROW(q_type{"3/+2"}, std::invalid_argument);
         BOOST_CHECK_THROW(q_type{"3a/2"}, std::invalid_argument);
-        BOOST_CHECK_THROW(q_type{"3/2 1"}, std::invalid_argument);
         BOOST_CHECK_THROW(q_type{"3/2a1"}, std::invalid_argument);
-        BOOST_CHECK_THROW(q_type{"3/02"}, std::invalid_argument);
-        BOOST_CHECK_THROW(q_type{"03/2"}, std::invalid_argument);
         BOOST_CHECK_THROW(q_type{"3/5/2"}, std::invalid_argument);
         BOOST_CHECK_THROW(q_type{"3/0"}, zero_division_error);
         BOOST_CHECK_THROW(q_type{"0/0"}, zero_division_error);
-        BOOST_CHECK_THROW(q_type{"3/-0"}, std::invalid_argument);
-        BOOST_CHECK_THROW(q_type{"0/-0"}, std::invalid_argument);
-        BOOST_CHECK_THROW(q_type{"-0/-0"}, std::invalid_argument);
+        BOOST_CHECK_THROW(q_type{"3/-0"}, zero_division_error);
+        BOOST_CHECK_THROW(q_type{"0/-0"}, zero_division_error);
+        BOOST_CHECK_THROW(q_type{"-0/-0"}, zero_division_error);
         // Random testing.
         for (int i = 0; i < ntries; ++i) {
             const int tmp_num = dist(rng), tmp_den = dist(rng);
@@ -342,10 +328,8 @@ struct constructor_tester {
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11), "0");
         q11 = std::string("3/4");
         BOOST_CHECK_THROW((q11 = std::string("1/0")), zero_division_error);
-        BOOST_CHECK_THROW((q11 = std::string("1/-0")), std::invalid_argument);
-        BOOST_CHECK_THROW((q11 = std::string("-0/4")), std::invalid_argument);
+        BOOST_CHECK_THROW((q11 = std::string("1/-0")), zero_division_error);
         BOOST_CHECK_THROW((q11 = std::string("0/0")), zero_division_error);
-        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11), "3/4");
         BOOST_CHECK((std::is_same<q_type &, decltype(q11 = std::string("1/0"))>::value));
         BOOST_CHECK((std::is_same<q_type &, decltype(q11 = "1/0")>::value));
         // Check move semantics.
@@ -379,15 +363,15 @@ struct constructor_tester {
 BOOST_AUTO_TEST_CASE(mp_rational_constructor_test)
 {
     init();
-    boost::mpl::for_each<size_types>(constructor_tester());
+    tuple_for_each(size_types{}, constructor_tester{});
     // Test we are not gobbling in mp_ints with different bit widths.
-    BOOST_CHECK((!std::is_constructible<mp_rational<16>, mp_integer<32>>::value));
-    BOOST_CHECK((!std::is_constructible<mp_rational<32>, mp_integer<16>>::value));
+    BOOST_CHECK((!std::is_constructible<mp_rational<1>, mp_integer<2>>::value));
+    BOOST_CHECK((!std::is_constructible<mp_rational<2>, mp_integer<1>>::value));
 }
 
 struct ll_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -424,12 +408,12 @@ struct ll_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_low_level_test)
 {
-    boost::mpl::for_each<size_types>(ll_tester());
+    tuple_for_each(size_types{}, ll_tester{});
 }
 
 struct conversion_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -458,7 +442,7 @@ struct conversion_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_conversion_test)
 {
-    boost::mpl::for_each<size_types>(conversion_tester());
+    tuple_for_each(size_types{}, conversion_tester{});
 }
 
 BOOST_AUTO_TEST_CASE(mp_rational_literal_test)
@@ -480,7 +464,7 @@ BOOST_AUTO_TEST_CASE(mp_rational_literal_test)
 
 struct plus_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using math::gcd;
         using q_type = mp_rational<T::value>;
@@ -584,7 +568,7 @@ struct plus_tester {
         // Random testing with integral types.
         std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
         mpq_raii m0, m1, m2;
-        detail::mpz_raii z;
+        mpz_raii z;
         for (int i = 0; i < ntries; ++i) {
             int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
             if (b == 0 || d == 0) {
@@ -716,7 +700,7 @@ struct plus_tester {
 
 struct minus_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using math::gcd;
         using q_type = mp_rational<T::value>;
@@ -830,7 +814,7 @@ struct minus_tester {
         // Random testing with integral types.
         std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
         mpq_raii m0, m1, m2;
-        detail::mpz_raii z;
+        mpz_raii z;
         for (int i = 0; i < ntries; ++i) {
             int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
             if (b == 0 || d == 0) {
@@ -959,7 +943,7 @@ struct minus_tester {
 
 struct mult_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1047,7 +1031,7 @@ struct mult_tester {
         // Random testing with integral types.
         std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
         mpq_raii m0, m1, m2;
-        detail::mpz_raii z;
+        mpz_raii z;
         for (int i = 0; i < ntries; ++i) {
             int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
             if (b == 0 || d == 0) {
@@ -1161,7 +1145,7 @@ struct mult_tester {
 
 struct div_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1261,7 +1245,7 @@ struct div_tester {
         // Random testing with integral types.
         std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
         mpq_raii m0, m1, m2;
-        detail::mpz_raii z;
+        mpz_raii z;
         for (int i = 0; i < ntries; ++i) {
             int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
             // Nothing must be zero if we are going to switch operands around.
@@ -1371,26 +1355,26 @@ struct div_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_arith_test)
 {
-    boost::mpl::for_each<size_types>(plus_tester());
-    boost::mpl::for_each<size_types>(minus_tester());
-    boost::mpl::for_each<size_types>(mult_tester());
-    boost::mpl::for_each<size_types>(div_tester());
+    tuple_for_each(size_types{}, plus_tester());
+    tuple_for_each(size_types{}, minus_tester());
+    tuple_for_each(size_types{}, mult_tester());
+    tuple_for_each(size_types{}, div_tester());
     // Check with different bits size.
-    BOOST_CHECK((!is_addable_in_place<mp_rational<16>, mp_rational<32>>::value));
-    BOOST_CHECK((!is_addable_in_place<mp_rational<16>, mp_integer<32>>::value));
-    BOOST_CHECK((!is_addable<mp_rational<16>, mp_rational<32>>::value));
-    BOOST_CHECK((!is_addable<mp_rational<32>, mp_rational<16>>::value));
-    BOOST_CHECK((!is_addable<mp_rational<16>, mp_integer<32>>::value));
-    BOOST_CHECK((!is_addable<mp_integer<32>, mp_rational<16>>::value));
-    BOOST_CHECK((!is_subtractable<mp_rational<16>, mp_rational<32>>::value));
-    BOOST_CHECK((!is_subtractable<mp_rational<32>, mp_rational<16>>::value));
-    BOOST_CHECK((!is_subtractable<mp_rational<16>, mp_integer<32>>::value));
-    BOOST_CHECK((!is_subtractable<mp_integer<32>, mp_rational<16>>::value));
+    BOOST_CHECK((!is_addable_in_place<mp_rational<1>, mp_rational<2>>::value));
+    BOOST_CHECK((!is_addable_in_place<mp_rational<1>, mp_integer<2>>::value));
+    BOOST_CHECK((!is_addable<mp_rational<1>, mp_rational<2>>::value));
+    BOOST_CHECK((!is_addable<mp_rational<2>, mp_rational<1>>::value));
+    BOOST_CHECK((!is_addable<mp_rational<1>, mp_integer<2>>::value));
+    BOOST_CHECK((!is_addable<mp_integer<2>, mp_rational<1>>::value));
+    BOOST_CHECK((!is_subtractable<mp_rational<1>, mp_rational<2>>::value));
+    BOOST_CHECK((!is_subtractable<mp_rational<2>, mp_rational<1>>::value));
+    BOOST_CHECK((!is_subtractable<mp_rational<1>, mp_integer<2>>::value));
+    BOOST_CHECK((!is_subtractable<mp_integer<2>, mp_rational<1>>::value));
 }
 
 struct is_zero_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         q_type q;
@@ -1407,12 +1391,12 @@ struct is_zero_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_is_zero_test)
 {
-    boost::mpl::for_each<size_types>(is_zero_tester());
+    tuple_for_each(size_types{}, is_zero_tester());
 }
 
 struct mpq_view_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         {
@@ -1462,12 +1446,12 @@ struct mpq_view_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_mpq_view_test)
 {
-    boost::mpl::for_each<size_types>(mpq_view_tester());
+    tuple_for_each(size_types{}, mpq_view_tester());
 }
 
 struct equality_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1527,7 +1511,7 @@ struct equality_tester {
 
 struct less_than_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1599,7 +1583,7 @@ struct less_than_tester {
 
 struct geq_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1671,7 +1655,7 @@ struct geq_tester {
 
 struct greater_than_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1743,7 +1727,7 @@ struct greater_than_tester {
 
 struct leq_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1815,16 +1799,16 @@ struct leq_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_cmp_test)
 {
-    boost::mpl::for_each<size_types>(equality_tester());
-    boost::mpl::for_each<size_types>(less_than_tester());
-    boost::mpl::for_each<size_types>(geq_tester());
-    boost::mpl::for_each<size_types>(greater_than_tester());
-    boost::mpl::for_each<size_types>(leq_tester());
+    tuple_for_each(size_types{}, equality_tester());
+    tuple_for_each(size_types{}, less_than_tester());
+    tuple_for_each(size_types{}, geq_tester());
+    tuple_for_each(size_types{}, greater_than_tester());
+    tuple_for_each(size_types{}, leq_tester());
 }
 
 struct pow_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1930,16 +1914,16 @@ struct pow_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_pow_test)
 {
-    boost::mpl::for_each<size_types>(pow_tester());
-    BOOST_CHECK((!is_exponentiable<mp_rational<16>, mp_rational<32>>::value));
-    BOOST_CHECK((!is_exponentiable<mp_rational<16>, mp_integer<32>>::value));
-    BOOST_CHECK((!is_exponentiable<mp_integer<32>, mp_rational<16>>::value));
-    BOOST_CHECK((!is_exponentiable<mp_integer<32>, std::string>::value));
+    tuple_for_each(size_types{}, pow_tester());
+    BOOST_CHECK((!is_exponentiable<mp_rational<1>, mp_rational<2>>::value));
+    BOOST_CHECK((!is_exponentiable<mp_rational<1>, mp_integer<2>>::value));
+    BOOST_CHECK((!is_exponentiable<mp_integer<2>, mp_rational<1>>::value));
+    BOOST_CHECK((!is_exponentiable<mp_integer<2>, std::string>::value));
 }
 
 struct abs_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         BOOST_CHECK_EQUAL(q_type{}.abs(), q_type(0));
@@ -1955,12 +1939,12 @@ struct abs_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_abs_test)
 {
-    boost::mpl::for_each<size_types>(abs_tester());
+    tuple_for_each(size_types{}, abs_tester());
 }
 
 struct hash_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -1969,7 +1953,7 @@ struct hash_tester {
         BOOST_CHECK(q_type{3}.hash() != std::hash<q_type>()(q_type{3, 2}));
         BOOST_CHECK_EQUAL(q_type(4, 5).hash(), std::hash<q_type>()(q_type(-8, -10)));
         q_type q0{123, -456};
-        std::size_t h = q0.num().hash();
+        std::size_t h = hash(q0.num());
         boost::hash_combine(h, std::hash<int_type>()(q0.den()));
         BOOST_CHECK_EQUAL(h, q0.hash());
     }
@@ -1977,12 +1961,12 @@ struct hash_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_hash_test)
 {
-    boost::mpl::for_each<size_types>(hash_tester());
+    tuple_for_each(size_types{}, hash_tester());
 }
 
 struct print_tex_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         BOOST_CHECK(has_print_tex_coefficient<q_type>::value);
@@ -2009,12 +1993,12 @@ struct print_tex_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_print_tex_test)
 {
-    boost::mpl::for_each<size_types>(print_tex_tester());
+    tuple_for_each(size_types{}, print_tex_tester());
 }
 
 struct sin_cos_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         BOOST_CHECK_EQUAL(math::sin(q_type()), 0);
@@ -2030,14 +2014,14 @@ struct sin_cos_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_sin_cos_test)
 {
-    boost::mpl::for_each<size_types>(sin_cos_tester());
+    tuple_for_each(size_types{}, sin_cos_tester());
 }
 
 struct sep_tester {
     template <typename T>
     using edict = std::unordered_map<std::string, T>;
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         BOOST_CHECK_EQUAL(math::partial(q_type{1}, ""), 0);
@@ -2060,12 +2044,12 @@ struct sep_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_sep_test)
 {
-    boost::mpl::for_each<size_types>(sep_tester());
+    tuple_for_each(size_types{}, sep_tester());
 }
 
 struct binomial_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -2119,16 +2103,16 @@ struct binomial_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_binomial_test)
 {
-    boost::mpl::for_each<size_types>(binomial_tester());
-    BOOST_CHECK((!has_binomial<mp_rational<32>, mp_rational<16>>::value));
-    BOOST_CHECK((!has_binomial<mp_rational<16>, mp_rational<32>>::value));
-    BOOST_CHECK((!has_binomial<mp_rational<16>, mp_integer<32>>::value));
-    BOOST_CHECK((!has_binomial<mp_rational<32>, mp_integer<16>>::value));
+    tuple_for_each(size_types{}, binomial_tester());
+    BOOST_CHECK((!has_binomial<mp_rational<2>, mp_rational<1>>::value));
+    BOOST_CHECK((!has_binomial<mp_rational<1>, mp_rational<2>>::value));
+    BOOST_CHECK((!has_binomial<mp_rational<1>, mp_integer<2>>::value));
+    BOOST_CHECK((!has_binomial<mp_rational<2>, mp_integer<1>>::value));
 }
 
 struct stream_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         q_type q(42, -5);
@@ -2143,12 +2127,12 @@ struct stream_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_stream_test)
 {
-    boost::mpl::for_each<size_types>(stream_tester());
+    tuple_for_each(size_types{}, stream_tester());
 }
 
 struct safe_cast_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using z_type = mp_integer<T::value>;
@@ -2215,12 +2199,12 @@ struct safe_cast_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_safe_cast_test)
 {
-    boost::mpl::for_each<size_types>(safe_cast_tester());
+    tuple_for_each(size_types{}, safe_cast_tester());
 }
 
 struct serialization_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
@@ -2248,12 +2232,12 @@ struct serialization_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_serialization_test)
 {
-    boost::mpl::for_each<size_types>(serialization_tester());
+    tuple_for_each(size_types{}, serialization_tester());
 }
 
 struct is_unitary_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         BOOST_CHECK(!math::is_unitary(q_type{}));
@@ -2270,44 +2254,5 @@ struct is_unitary_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_is_unitary_test)
 {
-    boost::mpl::for_each<size_types>(is_unitary_tester());
-}
-
-struct divexact_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        using q_type = mp_rational<T::value>;
-        BOOST_CHECK(has_exact_division<q_type>::value);
-        q_type out;
-        math::divexact(out, q_type{3}, q_type{-2});
-        BOOST_CHECK_EQUAL(out, q_type{3} / q_type{-2});
-        math::divexact(out, q_type{8}, q_type{-2});
-        BOOST_CHECK_EQUAL(out, q_type{-4});
-        BOOST_CHECK_THROW(math::divexact(out, q_type{8}, q_type{0}), zero_division_error);
-        math::divexact(out, q_type{0}, q_type{-2});
-        BOOST_CHECK_EQUAL(out, 0);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_rational_divexact_test)
-{
-    boost::mpl::for_each<size_types>(divexact_tester());
-}
-
-struct ero_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        using q_type = mp_rational<T::value>;
-        BOOST_CHECK(has_exact_ring_operations<q_type>::value);
-        BOOST_CHECK(has_exact_ring_operations<const q_type>::value);
-        BOOST_CHECK(has_exact_ring_operations<q_type &&>::value);
-        BOOST_CHECK(has_exact_ring_operations<volatile q_type &&>::value);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_rational_ero_test)
-{
-    boost::mpl::for_each<size_types>(ero_tester());
+    tuple_for_each(size_types{}, is_unitary_tester());
 }

@@ -203,7 +203,7 @@ public:
             // NOTE: we need to def init objects of type T inside the buffer. Unlike in C, objects with trivial default
             // constructors cannot be created by simply reinterpreting suitably aligned storage,
             // such as memory allocated with std::malloc: placement-new is required to formally introduce a new objects
-            // and avoid potential undefined behavior. This is likely to be optimised away by the compiler.
+            // and avoid potential undefined behaviour. This is likely to be optimised away by the compiler.
             default_init(ptr(), ptr() + size);
             std::memcpy(vs(), other.vs(), size * sizeof(T));
             m_size = size;

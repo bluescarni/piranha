@@ -2091,7 +2091,9 @@ PREDEFINED             = PIRANHA_DOXYGEN_INVOKED \
                          PIRANHA_WITH_MSGPACK \
                          PIRANHA_HAVE_THREAD_LOCAL \
                          PIRANHA_WITH_ZLIB \
-                         PIRANHA_WITH_BZIP2
+                         PIRANHA_WITH_BZIP2 \
+                         MPPP_NAMESPACE=mppp \
+                         MPPP_WITH_LONG_DOUBLE
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

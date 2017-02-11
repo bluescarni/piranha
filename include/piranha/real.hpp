@@ -62,7 +62,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
 template <typename = int>
@@ -84,19 +84,17 @@ const ::mpfr_prec_t real_base<T>::default_prec;
 
 // Types interoperable with real.
 template <typename T>
-struct is_real_interoperable_type {
-    static const bool value = detail::is_mp_integer_interoperable_type<T>::value || detail::is_mp_integer<T>::value
-                              || detail::is_mp_rational<T>::value;
+struct is_real_interoperable_type
+    : disjunction<mppp::mppp_impl::is_supported_interop<T>, is_mp_integer<T>, is_mp_rational<T>> {
 };
 }
 
 /// Arbitrary precision floating-point class.
 /**
  * This class represents floating-point ("real") numbers of arbitrary size (i.e., the size is limited only by the
- * available memory).
- * The implementation consists of a C++ wrapper around the \p mpfr_t type from the multiprecision MPFR library. Real
- * numbers
- * are represented in binary format and they consist of an arbitrary-size significand coupled to a fixed-size exponent.
+ * available memory). The implementation consists of a C++ wrapper around the \p mpfr_t type from the multiprecision
+ * MPFR library. Real numbers are represented in binary format and they consist of an arbitrary-size significand coupled
+ * to a fixed-size exponent.
  *
  * Unless noted otherwise, this implementation always uses the \p MPFR_RNDN (round to nearest) rounding mode for all
  * operations.
@@ -105,8 +103,6 @@ struct is_real_interoperable_type {
  *
  * This class interoperates with the same types as piranha::mp_integer and piranha::mp_rational,
  * plus piranha::mp_integer and piranha::mp_rational themselves.
- * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
- * of piranha::mp_integer apply.
  *
  * ## Exception safety guarantee ##
  *
@@ -117,8 +113,6 @@ struct is_real_interoperable_type {
  *
  * Move construction and move assignment will leave the moved-from object in a state that is destructible and
  * assignable.
- *
- * @see http://www.mpfr.org
  */
 // NOTES:
 // - if we overhaul the tests, put random precision values as well.
@@ -130,11 +124,11 @@ struct is_real_interoperable_type {
 // - At the moment, this class is technically not sortable because moved-from reals cannot be compared. For use in
 //   std::sort, we should add special casing for moved-from objects. See:
 //   http://stackoverflow.com/questions/26579132/what-is-the-post-condition-of-a-move-constructor
-class real : public detail::real_base<>
+class real : public real_base<>
 {
     // Shortcut for interop type detector.
     template <typename T>
-    using is_interoperable_type = detail::is_real_interoperable_type<T>;
+    using is_interoperable_type = is_real_interoperable_type<T>;
     // Enabler for generic ctor.
     template <typename T>
     using generic_ctor_enabler = typename std::enable_if<is_interoperable_type<T>::value, int>::type;
@@ -143,12 +137,12 @@ class real : public detail::real_base<>
     using cast_enabler = generic_ctor_enabler<T>;
     // Enabler for in-place arithmetic operations with interop on the left.
     template <typename T>
-    using generic_in_place_enabler =
-        typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value, int>::type;
+    using generic_in_place_enabler
+        = enable_if_t<conjunction<is_interoperable_type<T>, negation<std::is_const<T>>>::value, int>;
     // Precision check.
     static void prec_check(const ::mpfr_prec_t &prec)
     {
-        if (prec < MPFR_PREC_MIN || prec > MPFR_PREC_MAX) {
+        if (unlikely(prec < MPFR_PREC_MIN || prec > MPFR_PREC_MAX)) {
             piranha_throw(std::invalid_argument, "invalid significand precision requested");
         }
     }
@@ -158,7 +152,7 @@ class real : public detail::real_base<>
         prec_check(prec);
         ::mpfr_init2(m_value, prec);
         const int retval = ::mpfr_set_str(m_value, str, 10, default_rnd);
-        if (retval != 0) {
+        if (unlikely(retval != 0)) {
             ::mpfr_clear(m_value);
             piranha_throw(std::invalid_argument, "invalid string input for real");
         }
@@ -170,25 +164,23 @@ class real : public detail::real_base<>
     {
         ::mpfr_set_ld(m_value, static_cast<long double>(x), default_rnd);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<conjunction<std::is_integral<T>, std::is_signed<T>>::value, int> = 0>
     void construct_from_generic(const T &si)
     {
         ::mpfr_set_sj(m_value, static_cast<std::intmax_t>(si), default_rnd);
     }
-    template <typename T,
-              typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value, int>::type = 0>
+    template <typename T, enable_if_t<conjunction<std::is_integral<T>, std::is_unsigned<T>>::value, int> = 0>
     void construct_from_generic(const T &ui)
     {
         ::mpfr_set_uj(m_value, static_cast<std::uintmax_t>(ui), default_rnd);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_integer<T>::value, int>::type = 0>
     void construct_from_generic(const T &n)
     {
         auto v = n.get_mpz_view();
         ::mpfr_set_z(m_value, v, default_rnd);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     void construct_from_generic(const T &q)
     {
         auto v = q.get_mpq_view();
@@ -212,7 +204,7 @@ class real : public detail::real_base<>
         return (sign() != 0);
     }
     template <typename T>
-    typename std::enable_if<detail::is_mp_integer<T>::value, T>::type convert_to_impl() const
+    typename std::enable_if<is_mp_integer<T>::value, T>::type convert_to_impl() const
     {
         if (is_nan() || is_inf()) {
             piranha_throw(std::overflow_error, "cannot convert non-finite real to an integral value");
@@ -220,7 +212,7 @@ class real : public detail::real_base<>
         T retval;
         retval.promote();
         // Explicitly request rounding to zero in this case.
-        ::mpfr_get_z(&retval.m_int.g_dy(), m_value, MPFR_RNDZ);
+        ::mpfr_get_z(&retval._get_union().g_dy(), m_value, MPFR_RNDZ);
         // NOTE: demote candidate.
         return retval;
     }
@@ -263,7 +255,7 @@ class real : public detail::real_base<>
     // Smart pointer to handle the string output from mpfr.
     typedef std::unique_ptr<char, void (*)(char *)> smart_mpfr_str;
     template <typename T>
-    typename std::enable_if<detail::is_mp_rational<T>::value, T>::type convert_to_impl() const
+    typename std::enable_if<is_mp_rational<T>::value, T>::type convert_to_impl() const
     {
         if (is_nan()) {
             piranha_throw(std::overflow_error, "cannot convert NaN to rational");
@@ -316,14 +308,14 @@ class real : public detail::real_base<>
         ::mpfr_add(m_value, m_value, r.m_value, default_rnd);
         return *this;
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     real &in_place_add(const T &q)
     {
         auto v = q.get_mpq_view();
         ::mpfr_add_q(m_value, m_value, v, default_rnd);
         return *this;
     }
-    template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_integer<T>::value, int>::type = 0>
     real &in_place_add(const T &n)
     {
         auto v = n.get_mpz_view();
@@ -372,14 +364,14 @@ class real : public detail::real_base<>
         ::mpfr_sub(m_value, m_value, r.m_value, default_rnd);
         return *this;
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     real &in_place_sub(const T &q)
     {
         auto v = q.get_mpq_view();
         ::mpfr_sub_q(m_value, m_value, v, default_rnd);
         return *this;
     }
-    template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_integer<T>::value, int>::type = 0>
     real &in_place_sub(const T &n)
     {
         auto v = n.get_mpz_view();
@@ -426,14 +418,14 @@ class real : public detail::real_base<>
         ::mpfr_mul(m_value, m_value, r.m_value, default_rnd);
         return *this;
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     real &in_place_mul(const T &q)
     {
         auto v = q.get_mpq_view();
         ::mpfr_mul_q(m_value, m_value, v, default_rnd);
         return *this;
     }
-    template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_integer<T>::value, int>::type = 0>
     real &in_place_mul(const T &n)
     {
         auto v = n.get_mpz_view();
@@ -478,14 +470,14 @@ class real : public detail::real_base<>
         ::mpfr_div(m_value, m_value, r.m_value, default_rnd);
         return *this;
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     real &in_place_div(const T &q)
     {
         auto v = q.get_mpq_view();
         ::mpfr_div_q(m_value, m_value, v, default_rnd);
         return *this;
     }
-    template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_integer<T>::value, int>::type = 0>
     real &in_place_div(const T &n)
     {
         auto v = n.get_mpz_view();
@@ -529,7 +521,7 @@ class real : public detail::real_base<>
     {
         return (::mpfr_equal_p(r1.m_value, r2.m_value) != 0);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_integer<T>::value, int>::type = 0>
     static bool binary_equality(const real &r, const T &n)
     {
         if (r.is_nan()) {
@@ -538,7 +530,7 @@ class real : public detail::real_base<>
         auto v = n.get_mpz_view();
         return (::mpfr_cmp_z(r.m_value, v) == 0);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     static bool binary_equality(const real &r, const T &q)
     {
         if (r.is_nan()) {
@@ -574,13 +566,13 @@ class real : public detail::real_base<>
     {
         return (::mpfr_less_p(r1.m_value, r2.m_value) != 0);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     static bool binary_less_than(const real &r, const T &q)
     {
         auto v = q.get_mpq_view();
         return (::mpfr_cmp_q(r.m_value, v) < 0);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_integer<T>::value, int>::type = 0>
     static bool binary_less_than(const real &r, const T &n)
     {
         auto v = n.get_mpz_view();
@@ -601,13 +593,13 @@ class real : public detail::real_base<>
     {
         return (::mpfr_lessequal_p(r1.m_value, r2.m_value) != 0);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
     static bool binary_leq(const real &r, const T &q)
     {
         auto v = q.get_mpq_view();
         return (::mpfr_cmp_q(r.m_value, v) <= 0);
     }
-    template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<is_mp_integer<T>::value, int>::type = 0>
     static bool binary_leq(const real &r, const T &n)
     {
         auto v = n.get_mpz_view();
@@ -2251,7 +2243,7 @@ inline namespace impl
 
 template <typename To, typename From>
 using sc_real_enabler
-    = enable_if_t<conjunction<disjunction<std::is_integral<To>, detail::is_mp_integer<To>, detail::is_mp_rational<To>>,
+    = enable_if_t<conjunction<disjunction<std::is_integral<To>, is_mp_integer<To>, is_mp_rational<To>>,
                               std::is_same<From, real>>::value>;
 }
 
@@ -2265,9 +2257,9 @@ template <typename To, typename From>
 struct safe_cast_impl<To, From, sc_real_enabler<To, From>> {
 private:
     template <typename T>
-    using integral_enabler = enable_if_t<disjunction<std::is_integral<T>, detail::is_mp_integer<T>>::value, int>;
+    using integral_enabler = enable_if_t<disjunction<std::is_integral<T>, is_mp_integer<T>>::value, int>;
     template <typename T>
-    using rational_enabler = enable_if_t<detail::is_mp_rational<T>::value, int>;
+    using rational_enabler = enable_if_t<is_mp_rational<T>::value, int>;
 
 public:
     /// Call operator, real to integral overload.

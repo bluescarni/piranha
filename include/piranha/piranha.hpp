@@ -212,7 +212,7 @@ see https://www.gnu.org/licenses/. */
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type
  * traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
- * \todo in mp_integer probably the ternary operations (and multadd and divexact etc.) should be modified so that the
+ * \todo in mp_integer probably the ternary operations (and multadd etc.) should be modified so that the
  * return value is demoted to
  * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times,
  * once it is set to dynamic
@@ -236,6 +236,8 @@ see https://www.gnu.org/licenses/. */
  * \todo we are using std::decay all over the place to, essentially, remove cv and ref qualifiers from types. But decay
  * also turns arrays into pointers and functions into pointers. Maybe we should have a remove_cvr type trait that just
  * removes
+ * \todo when working on the sparse monomial, remember to check on all those uses of symbol_set::add() to build
+ * a symbol set (it will be really slow when dealing with thousands of symbols)
  * cv and refs instead. Not sure if we care about plain arrays and function pointers enough though.
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.

@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(polynomial_degree_test)
 }
 
 struct multiplication_tester {
-    template <typename Cf, typename std::enable_if<!detail::is_mp_rational<Cf>::value, int>::type = 0>
+    template <typename Cf, typename std::enable_if<!is_mp_rational<Cf>::value, int>::type = 0>
     void operator()(const Cf &)
     {
         // NOTE: this test is going to be exact in case of coefficients cancellations with double
@@ -405,7 +405,7 @@ struct multiplication_tester {
             BOOST_CHECK(tmp1 == p_type{tmp_alt});
         }
     }
-    template <typename Cf, typename std::enable_if<detail::is_mp_rational<Cf>::value, int>::type = 0>
+    template <typename Cf, typename std::enable_if<is_mp_rational<Cf>::value, int>::type = 0>
     void operator()(const Cf &)
     {
     }

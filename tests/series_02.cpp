@@ -1806,7 +1806,12 @@ public:
             BOOST_CHECK(it2->m_key.size() == 1u);
             BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
             // Test division by zero of empty series.
-            if (std::is_same<integer, Cf>::value || std::is_same<rational, Cf>::value) {
+            if (std::is_same<integer, Cf>::value) {
+                BOOST_CHECK_THROW(p_type1{} / 0, mppp::zero_division_error);
+                p_type1 zero;
+                BOOST_CHECK_THROW(zero /= 0, mppp::zero_division_error);
+            }
+            if (std::is_same<rational, Cf>::value) {
                 BOOST_CHECK_THROW(p_type1{} / 0, zero_division_error);
                 p_type1 zero;
                 BOOST_CHECK_THROW(zero /= 0, zero_division_error);
@@ -1869,7 +1874,7 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
     BOOST_CHECK(tmp.empty());
     // Check zero division error.
     tmp = 2 * x + y;
-    BOOST_CHECK_THROW(tmp /= 0, zero_division_error);
+    BOOST_CHECK_THROW(tmp /= 0, mppp::zero_division_error);
     BOOST_CHECK(tmp.empty());
 }
 

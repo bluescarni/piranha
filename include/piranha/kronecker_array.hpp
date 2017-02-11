@@ -130,7 +130,7 @@ private:
         // Perturb integer value: add random quantity and then take next prime.
         auto perturb = [&engine, &dist](integer &arg) {
             arg += (dist(engine) * (arg)) / 100;
-            arg = arg.nextprime();
+            arg.nextprime();
         };
         // Build initial minmax and coding vectors: all elements in the [-1,1] range.
         std::vector<integer> m_vec, M_vec, c_vec, prev_c_vec, prev_m_vec, prev_M_vec;
