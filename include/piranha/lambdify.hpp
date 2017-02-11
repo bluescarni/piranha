@@ -54,8 +54,8 @@ namespace detail
 // Requirements for the lambdified template parameters (after decay).
 template <typename T, typename U>
 using math_lambdified_reqs
-    = std::integral_constant<bool, is_evaluable<T, U>::value && is_mappable<U>::value
-                                       && std::is_copy_constructible<T>::value && std::is_move_constructible<T>::value>;
+    = std::integral_constant<bool, conjunction<is_evaluable<T, U>, is_mappable<U>, std::is_copy_constructible<T>,
+                                               std::is_move_constructible<T>>::value>;
 }
 
 namespace math
