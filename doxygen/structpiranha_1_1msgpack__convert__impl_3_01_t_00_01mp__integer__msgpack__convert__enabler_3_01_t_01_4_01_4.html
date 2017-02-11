@@ -77,7 +77,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>Specialisation of <a class="el" href="namespacepiranha.html#a719a5c93291c56fe1442005d5f76e5e5" title="Convert msgpack object. ">piranha::msgpack_convert()</a> for <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>.  
+<p>Specialisation of <a class="el" href="namespacepiranha.html#a719a5c93291c56fe1442005d5f76e5e5" title="Convert msgpack object. ">piranha::msgpack_convert()</a> for <a class="el" href="namespacepiranha.html#a4521ec5ea56e318ade722c8bd0ca0180" title="Alias for mppp::mp_integer. ">piranha::mp_integer</a>.  
  <a href="structpiranha_1_1msgpack__convert__impl_3_01_t_00_01mp__integer__msgpack__convert__enabler_3_01_t_01_4_01_4.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>&gt;</code></p>
@@ -92,10 +92,15 @@ Public Member Functions</h2></td></tr>
 <div class="textblock"><h3>template&lt;typename T&gt;<br />
 struct piranha::msgpack_convert_impl&lt; T, mp_integer_msgpack_convert_enabler&lt; T &gt; &gt;</h3>
 
-<p>Specialisation of <a class="el" href="namespacepiranha.html#a719a5c93291c56fe1442005d5f76e5e5" title="Convert msgpack object. ">piranha::msgpack_convert()</a> for <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>. </p>
-<dl class="section note"><dt>Note</dt><dd>This specialisation is enabled if <code>T</code> is an instance of <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>. </dd></dl>
+<p>Specialisation of <a class="el" href="namespacepiranha.html#a719a5c93291c56fe1442005d5f76e5e5" title="Convert msgpack object. ">piranha::msgpack_convert()</a> for <a class="el" href="namespacepiranha.html#a4521ec5ea56e318ade722c8bd0ca0180" title="Alias for mppp::mp_integer. ">piranha::mp_integer</a>. </p>
+<dl class="section note"><dt>Note</dt><dd>This specialisation is enabled if:<ul>
+<li><code>T</code> is an instance of <a class="el" href="namespacepiranha.html#a4521ec5ea56e318ade722c8bd0ca0180" title="Alias for mppp::mp_integer. ">piranha::mp_integer</a>,</li>
+<li>the integral types used in the internal representation of the integer, <code>bool</code> and <code>std::string</code> satisfy <a class="el" href="classpiranha_1_1has__msgpack__convert.html" title="Detect the presence of piranha::msgpack_convert(). ">piranha::has_msgpack_convert</a>,</li>
+<li>the size type of <code>std::vector&lt;msgpack::object&gt;</code> can be safely converted to the integral type representing the size of the integer. </li>
+</ul>
+</dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l05093">5093</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l00904">904</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a5797fd06d5860f7afbd8347a84bed1a0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5797fd06d5860f7afbd8347a84bed1a0">&#9670;&nbsp;</a></span>operator()()</h2>
@@ -140,23 +145,31 @@ template&lt;typename T &gt; </div>
 </div><div class="memdoc">
 
 <p>Call operator. </p>
-<p>The call operator will use <a class="el" href="classpiranha_1_1mp__integer.html#a35151c02596274ecaf3eac9c69f14ad8" title="Convert from msgpack object. ">piranha::mp_integer::msgpack_convert()</a> internally.</p>
+<p>This method will convert the object <code>o</code> into <code>n</code>. If <code>f</code> is <a class="el" href="namespacepiranha.html#a2b90f21cb3e6e18b3f47af2ddc87d5d3a9d7183f16acce70658f686ae7f1a4d20" title="Binary. ">piranha::msgpack_format::binary</a>, this method offers the basic exception safety guarantee and it performs minimal checking on the input data. Calling this method in binary mode will result in undefined behaviour if <code>o</code> does not contain an integer serialized via <a class="el" href="namespacepiranha.html#a7a1abfe20587d9b80b1479e2559dad58" title="Pack generic object in a msgpack stream. ">msgpack_pack()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">n</td><td>target <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>. </td></tr>
-    <tr><td class="paramname">o</td><td>the <code>msgpack::object</code> to be converted into <code>n</code>. </td></tr>
+    <tr><td class="paramname">n</td><td>the destination <a class="el" href="namespacepiranha.html#a4521ec5ea56e318ade722c8bd0ca0180" title="Alias for mppp::mp_integer. ">piranha::mp_integer</a>. </td></tr>
+    <tr><td class="paramname">o</td><td>source object. </td></tr>
     <tr><td class="paramname">f</td><td>the desired <a class="el" href="namespacepiranha.html#a2b90f21cb3e6e18b3f47af2ddc87d5d3" title="Serialization format for msgpack. ">piranha::msgpack_format</a>.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="classpiranha_1_1mp__integer.html#a35151c02596274ecaf3eac9c69f14ad8" title="Convert from msgpack object. ">piranha::mp_integer::msgpack_convert()</a>. </td></tr>
+    <tr><td class="paramname">std::invalid_argument</td><td>if, in binary mode, the serialized static integer has a number of limbs greater than its static size. </td></tr>
+    <tr><td class="paramname">std::overflow_error</td><td>if the number of limbs is larger than an implementation-defined value. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
+<li>memory errors in standard containers,</li>
+<li>the public interface of <code>msgpack::object</code>,</li>
+<li><a class="el" href="namespacepiranha.html#a719a5c93291c56fe1442005d5f76e5e5" title="Convert msgpack object. ">piranha::msgpack_convert()</a>,</li>
+<li>the constructor of <a class="el" href="namespacepiranha.html#a4521ec5ea56e318ade722c8bd0ca0180" title="Alias for mppp::mp_integer. ">piranha::mp_integer</a> from string. </li>
+</ul>
+</td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l05104">5104</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l00925">925</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>

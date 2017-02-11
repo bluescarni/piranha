@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['factorial',['factorial',['../classpiranha_1_1mp__integer.html#a26e677fc9474afef328da3e64c4c7c3c',1,'piranha::mp_integer::factorial()'],['../namespacepiranha_1_1math.html#aff7272af623e53be5c8e9c8fe1176cf5',1,'piranha::math::factorial()']]],
+  ['fac_5fui',['fac_ui',['../classmppp_1_1mp__integer.html#abc8fcd9090b94b24b6684af97191f7a3',1,'mppp::mp_integer']]],
+  ['factorial',['factorial',['../namespacepiranha_1_1math.html#afe5197472e0afd7cfea5eb15d0afd7d9',1,'piranha::math']]],
   ['filter',['filter',['../classpiranha_1_1series.html#a33216a696a195e177799649af9a6720c',1,'piranha::series']]],
   ['finalise_5fseries',['finalise_series',['../classpiranha_1_1base__series__multiplier.html#ac84b5cdc51fc0a7451973dbb2944c763',1,'piranha::base_series_multiplier']]],
   ['find',['find',['../classpiranha_1_1hash__set.html#a7f52223f8638f91f56943168353e758a',1,'piranha::hash_set::find(const key_type &amp;k) const'],['../classpiranha_1_1hash__set.html#a0eb23bf3f6828e339e413a33ad9a3083',1,'piranha::hash_set::find(const key_type &amp;k)']]],

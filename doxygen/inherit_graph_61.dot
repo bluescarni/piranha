@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::has_is_zero\< T \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1has__is__zero.html",tooltip="Type trait to detect the presence of the piranha::math::is_zero() function. "];
+  Node0 [label="piranha::has_left_shift\l\< T, U \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1has__left__shift.html",tooltip="Left-shift type trait. "];
 }

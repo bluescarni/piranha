@@ -170,7 +170,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac308a9c055ae2d5af5dac621268d3e43"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpiranha_1_1divisor__series.html">divisor_series</a>&lt; Cf, Key &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1power__series.html#ac308a9c055ae2d5af5dac621268d3e43">truncate_degree</a> (const T &amp;max_degree, const std::vector&lt; std::string &gt; &amp;names) const</td></tr>
 <tr class="memdesc:ac308a9c055ae2d5af5dac621268d3e43"><td class="mdescLeft">&#160;</td><td class="mdescRight">Partial degree truncation.  <a href="#ac308a9c055ae2d5af5dac621268d3e43">More...</a><br /></td></tr>
 <tr class="separator:ac308a9c055ae2d5af5dac621268d3e43"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="memItemLeft" align="right" valign="top">ipow_subs_type&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8">ipow_subs</a> (const std::string &amp;name, const <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b">integer</a> &amp;n, const T &amp;x) const</td></tr>
+<tr class="memitem:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="memItemLeft" align="right" valign="top">ipow_subs_type&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8">ipow_subs</a> (const std::string &amp;name, const <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362">integer</a> &amp;n, const T &amp;x) const</td></tr>
 <tr class="memdesc:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Substitution.  <a href="#a3b1b859da8985051abeb1fa01a8dbbd8">More...</a><br /></td></tr>
 <tr class="separator:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac23d5585f793eeaa6c612eb0cfdcc357"><td class="memItemLeft" align="right" valign="top">ipow_subs_type&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1ipow__substitutable__series.html#ac23d5585f793eeaa6c612eb0cfdcc357">ipow_subs</a> (const std::string &amp;name, const Int &amp;n, const T &amp;x) const</td></tr>
@@ -1062,7 +1062,7 @@ template&lt;typename T  = divisor_series&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="divisor__series_8hpp_source.html#l00525">525</a> of file <a class="el" href="divisor__series_8hpp_source.html">divisor_series.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="divisor__series_8hpp_source.html#l00516">516</a> of file <a class="el" href="divisor__series_8hpp_source.html">divisor_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -1100,7 +1100,7 @@ template&lt;typename T  = divisor_series&gt; </div>
 <li>a <a class="el" href="classpiranha_1_1polynomial.html" title="Polynomial class. ">piranha::polynomial</a> appears in the coefficient hierarchy and</li>
 <li>the calling series is not empty and</li>
 <li>the calling series satisfies <a class="el" href="classpiranha_1_1series.html#a0a826064332b8a234c2343d6975d2240" title="Test for single-coefficient series. ">piranha::series::is_single_coefficient()</a> and</li>
-<li>the return type is divisible by <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>, yielding a type which can be used to construct the return type.</li>
+<li>the return type is divisible by <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>, yielding a type which can be used to construct the return type.</li>
 </ul>
 <p>Under these circumstances, this method will attempt to construct a divisor from the first polynomial coefficient encountered in the hierarchy, and, if successful, it will return a <a class="el" href="classpiranha_1_1divisor__series.html" title="Divisor series. ">piranha::divisor_series</a> consisting of a single term with unitary coefficient and with the key containing the divisor built from the polynomial.</p>
 <p>For example, inverting the following divisor series with polynomial coefficient </p><p class="formulaDsp">
@@ -1130,7 +1130,7 @@ template&lt;typename T  = divisor_series&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="divisor__series_8hpp_source.html#l00458">458</a> of file <a class="el" href="divisor__series_8hpp_source.html">divisor_series.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="divisor__series_8hpp_source.html#l00449">449</a> of file <a class="el" href="divisor__series_8hpp_source.html">divisor_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -1152,7 +1152,7 @@ template&lt;typename T  = divisor_series&gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b">integer</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362">integer</a> &amp;&#160;</td>
           <td class="paramname"><em>n</em>, </td>
         </tr>
         <tr>
@@ -1244,7 +1244,7 @@ template&lt;typename T  = divisor_series&gt; </div>
 
 <p>Substitution. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is enabled only if the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload is enabled, and <code>Int</code> is a C++ integral type.</dd></dl>
-<p>This is a convenience method that will call the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload after converting <code>n</code> to <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>.</p>
+<p>This is a convenience method that will call the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload after converting <code>n</code> to <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">name</td><td>name of the symbol to be substituted. </td></tr>
@@ -1256,7 +1256,7 @@ template&lt;typename T  = divisor_series&gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>the result of the substitution.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception resulting from calling the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload, or by constructing a <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a> from a C++ integral type. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception resulting from calling the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload, or by constructing a <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a> from a C++ integral type. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1691,7 +1691,7 @@ template&lt;typename T  = divisor_series&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="divisor__series_8hpp_source.html#l00489">489</a> of file <a class="el" href="divisor__series_8hpp_source.html">divisor_series.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="divisor__series_8hpp_source.html#l00480">480</a> of file <a class="el" href="divisor__series_8hpp_source.html">divisor_series.hpp</a>.</p>
 
 </div>
 </div>
@@ -1742,7 +1742,7 @@ template&lt;typename T  = divisor_series&gt; </div>
 <li>series, term, coefficient and key construction,</li>
 <li><a class="el" href="classpiranha_1_1series.html#ac049565106ddee1881fedf6481de9458" title="Insert term. ">insert()</a>,</li>
 <li><a class="el" href="classpiranha_1_1series.html#a0a826064332b8a234c2343d6975d2240" title="Test for single-coefficient series. ">is_single_coefficient()</a>,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a>, <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a> and <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a38c4927a813897b54020e9e8d6a08a13" title="Exponentiation. ">piranha::math::pow()</a>, <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a> and <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
 <li>series multiplication,</li>
 <li>memory errors in standard containers,</li>
 <li>threading primitives,</li>

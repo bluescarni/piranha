@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::negate\l_impl\< T, typename \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1negate__impl.html",tooltip="Default functor for the implementation of piranha::math::negate(). "];
+  Node0 [label="piranha::math::partial\l_impl\< mp_rational\< SSize \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1partial__impl_3_01mp__rational_3_01_s_size_01_4_01_4.html",tooltip="Specialisation of the implementation of piranha::math::partial() for piranha::mp_rational. "];
 }

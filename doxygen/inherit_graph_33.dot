@@ -3,7 +3,7 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::boost_save\l_via_boost_api\< Archive,\l std::string \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__via__boost__api.html"];
+  Node0 [label="piranha::boost_save\l_via_boost_api\< Archive,\l static_vector\< T, S \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__via__boost__api.html"];
   Node0 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node1 [label="piranha::boost_save\l_impl\< Archive, std\l::string, boost_save\l_string_enabler\< Archive \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__impl_3_01_archive_00_01std_1_1string_00_01boost__save__string__enabler_3_01_archive_01_4_01_4.html",tooltip="Specialisation of piranha::boost_save() for std::string. "];
+  Node1 [label="piranha::boost_save\l_impl\< Archive, static\l_vector\< T, S \>, boost\l_save_vector_enabler\< Archive,\l static_vector\< T, S \> \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__impl_3_01_archive_00_01static__vector_3_01_t_00_01_s_01_4_00_01booa291650298b7d5c79e6d3deaa47194dd.html",tooltip="Specialisation of piranha::boost_save() for piranha::static_vector. "];
 }

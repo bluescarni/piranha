@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::truncate\l_degree_impl\< Series,\l T, ps_degree_enabler\<\l Series \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1truncate__degree__impl_3_01_series_00_01_t_00_01ps__degree__enabler_3_01_series_01_4_01_4.html",tooltip="Specialisation of the piranha::math::truncate_degree() functor for instances of piranha::power_series..."];
+  Node0 [label="piranha::msgpack_convert\l_impl\< static_vector\< T,\l S \>, msgpack_convert_array\l_enabler\< static_vector\< T,\l S \> \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1msgpack__convert__impl_3_01static__vector_3_01_t_00_01_s_01_4_00_01msgpack__con113016bd683ca0895787056623ce169e.html",tooltip="Specialisation of piranha::msgpack_convert() for piranha::static_vector. "];
 }

@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::cos\l_impl\< T, typename std\l::enable_if\< std::is_floating\l_point\< T \>::value \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1cos__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__floatf4f236ad8bf40cd7845fb14616d6f642.html",tooltip="Specialisation of the piranha::math::cos() functor for floating-point types. "];
+  Node0 [label="piranha::math::degree\l_impl\< Series, ps_degree\l_enabler\< Series \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1degree__impl_3_01_series_00_01ps__degree__enabler_3_01_series_01_4_01_4.html",tooltip="Specialisation of the piranha::math::degree() functor for instances of piranha::power_series. "];
 }

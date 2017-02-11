@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::key_is_evaluable\l\< Key, T \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1key__is__evaluable.html",tooltip="Type trait to detect evaluable keys. "];
+  Node0 [label="piranha::kronecker\l_array\< SignedInteger \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1kronecker__array.html",tooltip="Kronecker array. "];
 }

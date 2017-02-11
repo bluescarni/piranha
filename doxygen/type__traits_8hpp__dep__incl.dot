@@ -91,6 +91,7 @@ digraph "type_traits.hpp"
   Node22 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node22 -> Node7 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node22 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node10 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node23 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node23 [label="km_commons.hpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$km__commons_8hpp_source.html"];
   Node23 -> Node12 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -98,7 +99,7 @@ digraph "type_traits.hpp"
   Node0 -> Node11 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node24 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node24 [label="exceptions.hpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$exceptions_8hpp.html",tooltip="Exceptions. "];
+  Node24 [label="exceptions.hpp",height=0.2,width=0.4,color="red", fillcolor="white", style="filled",URL="$exceptions_8hpp.html",tooltip="Exceptions. "];
   Node24 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node24 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node24 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -180,7 +181,7 @@ digraph "type_traits.hpp"
   Node32 -> Node31 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node32 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node32 -> Node36 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node36 [label="mp_integer.hpp",height=0.2,width=0.4,color="red", fillcolor="white", style="filled",URL="$mp__integer_8hpp_source.html"];
+  Node36 [label="mp_integer.hpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$mp__integer_8hpp_source.html"];
   Node36 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node36 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node36 -> Node11 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -193,6 +194,17 @@ digraph "type_traits.hpp"
   Node36 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node36 -> Node7 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node36 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node36 -> Node37 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 [label="pow.hpp",height=0.2,width=0.4,color="red", fillcolor="white", style="filled",URL="$pow_8hpp_source.html"];
+  Node37 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 -> Node11 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 -> Node12 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 -> Node9 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 -> Node14 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node37 -> Node16 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node36 -> Node14 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node36 -> Node13 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node36 -> Node16 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -242,7 +254,7 @@ digraph "type_traits.hpp"
   Node24 -> Node14 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node24 -> Node13 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node24 -> Node45 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node45 [label="runtime_info.hpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$runtime__info_8hpp_source.html"];
+  Node45 [label="runtime_info.hpp",height=0.2,width=0.4,color="red", fillcolor="white", style="filled",URL="$runtime__info_8hpp_source.html"];
   Node45 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node45 -> Node45 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node45 -> Node44 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -252,11 +264,6 @@ digraph "type_traits.hpp"
   Node46 -> Node46 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node46 -> Node39 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node45 -> Node39 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node45 -> Node47 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node47 [label="tuning.hpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$tuning_8hpp_source.html"];
-  Node47 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node47 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node47 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node24 -> Node48 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node48 [label="s11n.hpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$s11n_8hpp_source.html"];
   Node48 -> Node11 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -334,6 +341,7 @@ digraph "type_traits.hpp"
   Node51 -> Node12 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node51 -> Node32 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node51 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node51 -> Node36 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node51 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node51 -> Node7 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node51 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -351,7 +359,6 @@ digraph "type_traits.hpp"
   Node54 -> Node54 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node24 -> Node46 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node24 -> Node39 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node24 -> Node47 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node29 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node18 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node33 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -365,9 +372,11 @@ digraph "type_traits.hpp"
   Node0 -> Node40 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node36 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node9 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node7 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node37 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node19 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node14 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node0 -> Node13 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];

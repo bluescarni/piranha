@@ -3,7 +3,7 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::boost_save\l_via_boost_api\< Archive,\l small_vector\< T, std::\lintegral_constant\< std::\lsize_t, Size \> \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__via__boost__api.html"];
+  Node0 [label="piranha::boost_save\l_via_boost_api\< Archive,\l Series \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__via__boost__api.html"];
   Node0 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node1 [label="piranha::boost_save\l_impl\< Archive, small\l_vector\< T, std::integral\l_constant\< std::size_t, Size\l \> \>, boost_save_vector_enabler\l\< Archive, small_vector\< T, std\l::integral_constant\< std::size_t,\l Size \> \> \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__impl_3_01_archive_00_01small__vector_3_01_t_00_01std_1_1integral__a84505430fe26a6df892a77f192b3084.html",tooltip="Specialisation of piranha::boost_save() for piranha::small_vector. "];
+  Node1 [label="piranha::boost_save\l_impl\< Archive, Series,\l series_boost_save_enabler\l\< Archive, Series \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__impl_3_01_archive_00_01_series_00_01series__boost__save__enabler_3a6e837321ac8630fbbe67ade8dbf5868.html",tooltip="Specialisation of piranha::boost_save() for piranha::series. "];
 }

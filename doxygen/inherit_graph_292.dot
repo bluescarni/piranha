@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::symbol",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1symbol.html",tooltip="Literal symbol class. "];
+  Node0 [label="piranha::thread_pool\l_\< T \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1thread__pool__.html",tooltip="Static thread pool. "];
 }

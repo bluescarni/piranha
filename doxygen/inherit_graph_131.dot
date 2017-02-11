@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::key_has_t\l_ldegree\< Key \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1key__has__t__ldegree.html",tooltip="Type trait to detect if a key type has a trigonometric low degree property. "];
+  Node0 [label="piranha::key_has_t\l_subs\< Key, T, U \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1key__has__t__subs.html",tooltip="Type trait to detect the presence of the trigonometric substitution method in keys. "];
 }

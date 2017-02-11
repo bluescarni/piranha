@@ -213,7 +213,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a6080443728a562465556d96178f42f05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Substitution.  <a href="#a6080443728a562465556d96178f42f05">More...</a><br /></td></tr>
 <tr class="separator:a6080443728a562465556d96178f42f05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a18995a19cd08cf3c21f93467eb0250fb"><td class="memTemplParams" colspan="2">template&lt;typename U &gt; </td></tr>
-<tr class="memitem:a18995a19cd08cf3c21f93467eb0250fb"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; std::pair&lt; ipow_subs_type&lt; U &gt;, <a class="el" href="classpiranha_1_1monomial.html">monomial</a> &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a18995a19cd08cf3c21f93467eb0250fb">ipow_subs</a> (const std::string &amp;s, const <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b">integer</a> &amp;n, const U &amp;x, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const</td></tr>
+<tr class="memitem:a18995a19cd08cf3c21f93467eb0250fb"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; std::pair&lt; ipow_subs_type&lt; U &gt;, <a class="el" href="classpiranha_1_1monomial.html">monomial</a> &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a18995a19cd08cf3c21f93467eb0250fb">ipow_subs</a> (const std::string &amp;s, const <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362">integer</a> &amp;n, const U &amp;x, const <a class="el" href="classpiranha_1_1symbol__set.html">symbol_set</a> &amp;args) const</td></tr>
 <tr class="memdesc:a18995a19cd08cf3c21f93467eb0250fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Substitution of integral power.  <a href="#a18995a19cd08cf3c21f93467eb0250fb">More...</a><br /></td></tr>
 <tr class="separator:a18995a19cd08cf3c21f93467eb0250fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a48ecc463c05c7fd2a5f7afd36217213d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1monomial.html#a48ecc463c05c7fd2a5f7afd36217213d">operator&lt;</a> (const <a class="el" href="classpiranha_1_1monomial.html">monomial</a> &amp;other) const</td></tr>
@@ -867,12 +867,12 @@ template&lt;typename U &gt; </div>
 <p>Evaluation. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is available only if <code>U</code> satisfies the following requirements:<ul>
 <li>it can be used in <a class="el" href="classpiranha_1_1symbol__set_1_1positions__map.html" title="Positions map class. ">piranha::symbol_set::positions_map</a>,</li>
-<li>it can be used in <a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a> with the monomial exponents as powers, yielding a type <code>eval_type</code>,</li>
+<li>it can be used in <a class="el" href="namespacepiranha_1_1math.html#a38c4927a813897b54020e9e8d6a08a13" title="Exponentiation. ">piranha::math::pow()</a> with the monomial exponents as powers, yielding a type <code>eval_type</code>,</li>
 <li><code>eval_type</code> is constructible from <code>int</code>,</li>
 <li><code>eval_type</code> is multipliable in place.</li>
 </ul>
 </dd></dl>
-<p>The return value will be built by iteratively applying <a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a> using the values provided by <code>pmap</code> as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be returned. If <code>args</code> is not compatible with <code>this</code> and <code>pmap</code>, or the positions in <code>pmap</code> do not reference only and all the exponents in the monomial, an error will be thrown.</p>
+<p>The return value will be built by iteratively applying <a class="el" href="namespacepiranha_1_1math.html#a38c4927a813897b54020e9e8d6a08a13" title="Exponentiation. ">piranha::math::pow()</a> using the values provided by <code>pmap</code> as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be returned. If <code>args</code> is not compatible with <code>this</code> and <code>pmap</code>, or the positions in <code>pmap</code> do not reference only and all the exponents in the monomial, an error will be thrown.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">pmap</td><td><a class="el" href="classpiranha_1_1symbol__set_1_1positions__map.html" title="Positions map class. ">piranha::symbol_set::positions_map</a> that will be used for substitution. </td></tr>
@@ -886,7 +886,7 @@ template&lt;typename U &gt; </div>
     <tr><td class="paramname">std::invalid_argument</td><td>if there exist an incompatibility between <code>this</code>, <code>args</code> or <code>pmap</code>. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>construction of the return type,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a> or the in-place multiplication operator of the return type. </li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a38c4927a813897b54020e9e8d6a08a13" title="Exponentiation. ">piranha::math::pow()</a> or the in-place multiplication operator of the return type. </li>
 </ul>
 </td></tr>
   </table>
@@ -1018,7 +1018,7 @@ template&lt;typename U &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b">integer</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362">integer</a> &amp;&#160;</td>
           <td class="paramname"><em>n</em>, </td>
         </tr>
         <tr>
@@ -1048,9 +1048,9 @@ template&lt;typename U &gt; </div>
 
 <p>Substitution of integral power. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is enabled only if:<ul>
-<li><code>U</code> can be raised to a <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a> power, yielding a type <code>subs_type</code>,</li>
+<li><code>U</code> can be raised to a <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a> power, yielding a type <code>subs_type</code>,</li>
 <li><code>subs_type</code> is constructible from <code>int</code> and assignable,</li>
-<li>the value type of the monomial can be cast safely to <a class="el" href="namespacepiranha.html#ae329702ab296cd14e0e6d780ef09d5eb" title="Alias for piranha::mp_rational with default bit size. ">piranha::rational</a> and it supports in-place subtraction with <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>.</li>
+<li>the value type of the monomial can be cast safely to <a class="el" href="namespacepiranha.html#ad3693d3d9985d2cdf0b9a497e305b23b" title="Alias for piranha::mp_rational with 1 static limb. ">piranha::rational</a> and it supports in-place subtraction with <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>.</li>
 </ul>
 </dd></dl>
 <p>Substitute the symbol called <code>s</code> to the power of <code>n</code> with quantity <code>x</code>. The return value is a vector containing a single pair in which the first element is the result of the substitution, and the second element the monomial after the substitution has been performed. If <code>s</code> is not in <code>args</code>, the return value will be <code>(1,this)</code> (i.e., the monomial is unchanged and the substitution yields 1).</p>
@@ -1070,9 +1070,9 @@ template&lt;typename U &gt; </div>
     <tr><td class="paramname">std::invalid_argument</td><td>if the sizes of <code>args</code> and <code>this</code> differ. </td></tr>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>construction and assignment of the return value,</li>
-<li>construction of <a class="el" href="namespacepiranha.html#ae329702ab296cd14e0e6d780ef09d5eb" title="Alias for piranha::mp_rational with default bit size. ">piranha::rational</a>,</li>
+<li>construction of <a class="el" href="namespacepiranha.html#ad3693d3d9985d2cdf0b9a497e305b23b" title="Alias for piranha::mp_rational with 1 static limb. ">piranha::rational</a>,</li>
 <li><a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a>,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a38c4927a813897b54020e9e8d6a08a13" title="Exponentiation. ">piranha::math::pow()</a>,</li>
 <li><a class="el" href="classpiranha_1_1array__key.html#aa5a80146f0f863be9d85407b2d7eb26c" title="Move-add element at the end. ">piranha::array_key::push_back()</a>,</li>
 <li>the in-place subtraction operator of the exponent type. </li>
 </ul>
@@ -1346,7 +1346,7 @@ template&lt;typename U  = T, linarg_enabler&lt; U &gt;  = 0&gt; </div>
 </div><div class="memdoc">
 
 <p>Name of the linear argument. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is enabled only if the exponent type supports <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a> to <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This method is enabled only if the exponent type supports <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a> to <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>.</dd></dl>
 <p>If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary exponent), the name of the variable will be returned. Otherwise, an error will be raised.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -2117,8 +2117,8 @@ template&lt;typename U , pow_enabler&lt; U &gt;  = 0&gt; </div>
 </div><div class="memdoc">
 
 <p>Monomial exponentiation. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is enabled if the exponent type (or its promoted <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a> counterpart) is multipliable by <code>U</code> and the result type can be cast safely back to the exponent type.</dd></dl>
-<p>Will return a monomial corresponding to <code>this</code> raised to the <code>x</code>-th power. The exponentiation is computed via the multiplication of the exponents by <code>x</code>. If the exponent type is a C++ integral type, each exponent will be promoted to <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a> before the exponentiation takes place.</p>
+<dl class="section note"><dt>Note</dt><dd>This method is enabled if the exponent type (or its promoted <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a> counterpart) is multipliable by <code>U</code> and the result type can be cast safely back to the exponent type.</dd></dl>
+<p>Will return a monomial corresponding to <code>this</code> raised to the <code>x</code>-th power. The exponentiation is computed via the multiplication of the exponents by <code>x</code>. If the exponent type is a C++ integral type, each exponent will be promoted to <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a> before the exponentiation takes place.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>exponent. </td></tr>
@@ -2130,7 +2130,7 @@ template&lt;typename U , pow_enabler&lt; U &gt;  = 0&gt; </div>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the sizes of <code>args</code> and <code>this</code> differ. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by monomial copy construction or in-place multiplication of exponents by <code>x</code>, and by the invoked operations on <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>, if any. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by monomial copy construction or in-place multiplication of exponents by <code>x</code>, and by the invoked operations on <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>, if any. </td></tr>
   </table>
   </dd>
 </dl>
@@ -2547,7 +2547,7 @@ template&lt;typename U &gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li>construction and assignment of the return value,</li>
 <li>construction of an exponent from zero,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a38c4927a813897b54020e9e8d6a08a13" title="Exponentiation. ">piranha::math::pow()</a>,</li>
 <li><a class="el" href="classpiranha_1_1array__key.html#aa5a80146f0f863be9d85407b2d7eb26c" title="Move-add element at the end. ">piranha::array_key::push_back()</a>. </li>
 </ul>
 </td></tr>

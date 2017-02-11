@@ -1,7 +1,7 @@
 var searchData=
 [
   ['gamma',['gamma',['../classpiranha_1_1real.html#a963355262532aadaa800c318f66eefde',1,'piranha::real']]],
-  ['gcd',['gcd',['../classpiranha_1_1mp__integer.html#a131815a6d7d6a0127ed9da18e741aba7',1,'piranha::mp_integer::gcd()'],['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math::gcd()']]],
+  ['gcd',['gcd',['../namespacepiranha_1_1math.html#a1c4d8d79c21d909f852c4678121bcad5',1,'piranha::math']]],
   ['gcd3',['gcd3',['../namespacepiranha_1_1math.html#aed326292eae1eeef5a46fd472a6e3165',1,'piranha::math']]],
   ['get_5fall',['get_all',['../classpiranha_1_1future__list.html#a24702db33f17b26d7e43b378ba2a27ac',1,'piranha::future_list']]],
   ['get_5fauto_5ftruncate_5fdegree',['get_auto_truncate_degree',['../classpiranha_1_1polynomial.html#a1448978bc7f49ee46d3099cd8580dd1a',1,'piranha::polynomial']]],
@@ -17,8 +17,9 @@ var searchData=
   ['get_5fmax_5fterm_5foutput',['get_max_term_output',['../classpiranha_1_1settings__.html#a511786ba228e56986e36b1d2b85c48f7',1,'piranha::settings_']]],
   ['get_5fmin_5fwork_5fper_5fthread',['get_min_work_per_thread',['../classpiranha_1_1settings__.html#a8151c49aeea4abf6ca892f7862aa06f4',1,'piranha::settings_']]],
   ['get_5fmpfr_5ft',['get_mpfr_t',['../classpiranha_1_1real.html#ad3786478cf5ee88f7a3a83a75c7515c0',1,'piranha::real::get_mpfr_t()'],['../classpiranha_1_1real.html#a9d1f72bcb738eeb9b4b09a686de5c36c',1,'piranha::real::get_mpfr_t() const']]],
-  ['get_5fmpq_5fview',['get_mpq_view',['../classpiranha_1_1mp__rational.html#ae7e77714f77a82754599a1e5d6dfed92',1,'piranha::mp_rational']]],
-  ['get_5fmpz_5fview',['get_mpz_view',['../classpiranha_1_1mp__integer.html#ad3ba8bde6e2995c0df02e9cb31336abd',1,'piranha::mp_integer']]],
+  ['get_5fmpq_5fview',['get_mpq_view',['../classpiranha_1_1mp__rational.html#a6c0432a49d7c14ad699f2e6baf8caf0c',1,'piranha::mp_rational']]],
+  ['get_5fmpz_5ft',['get_mpz_t',['../classmppp_1_1mp__integer.html#a838018dde1f7c7f142a496ae716a53cc',1,'mppp::mp_integer']]],
+  ['get_5fmpz_5fview',['get_mpz_view',['../classmppp_1_1mp__integer.html#aaea6b849d829e76086fbeba66fee1337',1,'mppp::mp_integer']]],
   ['get_5fmultiplication_5fblock_5fsize',['get_multiplication_block_size',['../classpiranha_1_1tuning.html#ab18605a560b5b816de8eb508ca922b49',1,'piranha::tuning']]],
   ['get_5fn_5fthreads',['get_n_threads',['../classpiranha_1_1settings__.html#a27e587b3e0003c132c204ef70b1de2f2',1,'piranha::settings_']]],
   ['get_5fname',['get_name',['../classpiranha_1_1symbol.html#aa16a12c4c0370b9f94b45e581c217352',1,'piranha::symbol']]],

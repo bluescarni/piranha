@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::print_coefficient\l_impl\< Series, typename\l std::enable_if\< is_series\l\< Series \>::value \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1print__coefficient__impl_3_01_series_00_01typename_01std_1_1enable__if_3_01is__4f70554f1e13ddd06c988856639bfd73.html",tooltip="Specialisation of piranha::print_coefficient_impl for series. "];
+  Node0 [label="piranha::runtime_info",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1runtime__info.html",tooltip="Runtime information. "];
 }

@@ -109,7 +109,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:af2e1876ad0ca3d1c65c9e202d8f4bbaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trivial destructor. <br /></td></tr>
 <tr class="separator:af2e1876ad0ca3d1c65c9e202d8f4bbaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="memTemplItemLeft" align="right" valign="top">ipow_subs_type&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8">ipow_subs</a> (const std::string &amp;name, const <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b">integer</a> &amp;n, const T &amp;x) const</td></tr>
+<tr class="memitem:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="memTemplItemLeft" align="right" valign="top">ipow_subs_type&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8">ipow_subs</a> (const std::string &amp;name, const <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362">integer</a> &amp;n, const T &amp;x) const</td></tr>
 <tr class="memdesc:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Substitution.  <a href="#a3b1b859da8985051abeb1fa01a8dbbd8">More...</a><br /></td></tr>
 <tr class="separator:a3b1b859da8985051abeb1fa01a8dbbd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac23d5585f793eeaa6c612eb0cfdcc357"><td class="memTemplParams" colspan="2">template&lt;typename T , typename Int , ipow_subs_int_enabler&lt; Int &gt;  = 0&gt; </td></tr>
@@ -122,7 +122,7 @@ Public Member Functions</h2></td></tr>
 class piranha::ipow_substitutable_series&lt; Series, Derived &gt;</h3>
 
 <p>Toolbox for series suitable for integral power substitution. </p>
-<p>This toolbox will conditionally augment a <code>Series</code> type by adding methods to subtitute integral powers of symbols with generic objects. Such augmentation takes place if the series' coefficient and/or key types expose substitution methods (as established by the <a class="el" href="classpiranha_1_1has__ipow__subs.html" title="Type trait to detect the presence of the piranha::math::ipow_subs function. ">piranha::has_ipow_subs</a> and <a class="el" href="classpiranha_1_1key__has__ipow__subs.html" title="Type trait to detect the presence of the integral power substitution method in keys. ">piranha::key_has_ipow_subs</a> type traits). If the requirements outlined above are not satisfied, the substitution methods will be disabled.</p>
+<p>This toolbox will conditionally augment a <code>Series</code> type by adding methods to subtitute integral powers of symbols with generic objects. Such augmentation takes place if the series' coefficient and/or key types expose substitution methods (as established by the <a class="el" href="classpiranha_1_1has__ipow__subs.html" title="Type trait to detect the availability of the piranha::math::ipow_subs() function. ...">piranha::has_ipow_subs</a> and <a class="el" href="classpiranha_1_1key__has__ipow__subs.html" title="Type trait to detect the presence of the integral power substitution method in keys. ">piranha::key_has_ipow_subs</a> type traits). If the requirements outlined above are not satisfied, the substitution methods will be disabled.</p>
 <p>This class satisfies the <a class="el" href="classpiranha_1_1is__series.html" title="Type trait to detect series types. ">piranha::is_series</a> type trait.</p>
 <h2>Type requirements</h2>
 <ul>
@@ -158,7 +158,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b">integer</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362">integer</a> &amp;&#160;</td>
           <td class="paramname"><em>n</em>, </td>
         </tr>
         <tr>
@@ -254,7 +254,7 @@ template&lt;typename T , typename Int , ipow_subs_int_enabler&lt; Int &gt;  = 0&
 
 <p>Substitution. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is enabled only if the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload is enabled, and <code>Int</code> is a C++ integral type.</dd></dl>
-<p>This is a convenience method that will call the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload after converting <code>n</code> to <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>.</p>
+<p>This is a convenience method that will call the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload after converting <code>n</code> to <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">name</td><td>name of the symbol to be substituted. </td></tr>
@@ -266,7 +266,7 @@ template&lt;typename T , typename Int , ipow_subs_int_enabler&lt; Int &gt;  = 0&
 <dl class="section return"><dt>Returns</dt><dd>the result of the substitution.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception resulting from calling the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload, or by constructing a <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a> from a C++ integral type. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception resulting from calling the other <a class="el" href="classpiranha_1_1ipow__substitutable__series.html#a3b1b859da8985051abeb1fa01a8dbbd8" title="Substitution. ">ipow_subs()</a> overload, or by constructing a <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a> from a C++ integral type. </td></tr>
   </table>
   </dd>
 </dl>

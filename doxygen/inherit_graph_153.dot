@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::binomial\l_impl\< T, U, detail::real\l_binomial_enabler\< T, U \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1binomial__impl_3_01_t_00_01_u_00_01detail_1_1real__binomial__enabler_3_01_t_00_01_u_01_4_01_4.html",tooltip="Specialisation of the piranha::math::binomial() functor for piranha::real. "];
+  Node0 [label="piranha::math::cos\l_impl\< mp_rational\<\l SSize \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1cos__impl_3_01mp__rational_3_01_s_size_01_4_01_4.html",tooltip="Specialisation of the implementation of piranha::math::cos() for piranha::mp_rational. "];
 }

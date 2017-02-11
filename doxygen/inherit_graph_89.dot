@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::hash_set\<\l term_type, detail::\lterm_hasher\< term_type \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1hash__set.html"];
+  Node0 [label="piranha::is_addable\l_in_place\< T, U \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1is__addable__in__place.html",tooltip="In-place addable type trait. "];
 }

@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::negate\l_impl\< T, typename std\l::enable_if\< std::is_same\l\< T, real \>::value \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1negate__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__sa0c299022750663470c1226628bce710f.html",tooltip="Specialisation of the piranha::math::negate() functor for piranha::real. "];
+  Node0 [label="piranha::math::partial\l_impl\< T, typename std\l::enable_if\< std::is_same\l\< T, real \>::value \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1partial__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__s84a8d9181bfd7f11229ba677189d6635.html",tooltip="Specialisation of the piranha::math::partial() functor for piranha::real. "];
 }

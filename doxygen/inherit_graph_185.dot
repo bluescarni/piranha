@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::is_unitary\l_impl\< T, typename std\l::enable_if\< detail::is\l_mp_integer\< T \>::value \>\l::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1is__unitary__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01detail_13f4aea92cc4f31a8e425a5fc9a750e1d.html",tooltip="Specialisation of the piranha::math::is_unitary() functor for piranha::mp_integer. "];
+  Node0 [label="piranha::math::is_zero\l_impl\< T, typename \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1is__zero__impl.html",tooltip="Default functor for the implementation of piranha::math::is_zero(). "];
 }

@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::real_trigonometric\l_kronecker_monomial\< T \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1real__trigonometric__kronecker__monomial.html",tooltip="Real trigonometric Kronecker monomial class. "];
+  Node0 [label="piranha::safe_cast\l_impl\< To, From, typename \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1safe__cast__impl.html",tooltip="Default implementation of piranha::safe_cast(). "];
 }

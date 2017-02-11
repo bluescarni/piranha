@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::math::div3\l_impl\< T, Enable \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1div3__impl.html",tooltip="Default functor for the implementation of piranha::math::div3(). "];
+  Node0 [label="piranha::math::evaluate\l_impl\< Series, T, typename\l std::enable_if\< is_series\l\< Series \>::value \>::type \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1math_1_1evaluate__impl_3_01_series_00_01_t_00_01typename_01std_1_1enable__if_3_690d7ddd2bdd98656327e649cf5b52da.html",tooltip="Specialisation of the piranha::math::evaluate() functor for series types. "];
 }

@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::is_evaluable\l\< T, U \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1is__evaluable.html",tooltip="Type trait to detect the availability of piranha::math::evaluate. "];
+  Node0 [label="piranha::is_function\l_object\< T, ReturnType,\l Args \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1is__function__object.html",tooltip="Function object type trait. "];
 }

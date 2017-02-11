@@ -873,7 +873,7 @@ template&lt;typename T = std::make_signed&lt;std::size_t&gt;::type&gt; </div>
 <li><a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#ac3ece8999ab42ab3dbcd60f45098b613" title="Unpack internal integer instance. ">unpack()</a>,</li>
 <li><a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a>,</li>
 <li>monomial construction,</li>
-<li>the cast operator of <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>. </li>
+<li>the cast operator of <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>. </li>
 </ul>
 </td></tr>
   </table>
@@ -2300,7 +2300,7 @@ template&lt;typename U &gt; </div>
 </div><div class="memdoc">
 
 <p>Trigonometric substitution. </p>
-<dl class="section note"><dt>Note</dt><dd>This method is enabled only if <code>U</code> supports the mathematical operations needed to compute the result. In particular, the implementation uses <a class="el" href="namespacepiranha_1_1math.html#af02524baa2248e71ea2857ac033dec16" title="Generalised binomial coefficient. ">piranha::math::binomial()</a> internally (thus, <code>U</code> must be interoperable with <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>).</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This method is enabled only if <code>U</code> supports the mathematical operations needed to compute the result. In particular, the implementation uses <a class="el" href="namespacepiranha_1_1math.html#a755a440fe280d7ee38347ce860e8484b" title="Generalised binomial coefficient. ">piranha::math::binomial()</a> internally (thus, <code>U</code> must be interoperable with <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>).</dd></dl>
 <p>This method works in the same way as the <a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#aecc839d5bbef4f1d38f1ba5e7142255f" title="Substitution. ">subs()</a> method, but the cosine <code>c</code> and sine <code>s</code> of <code>name</code> will be substituted (instead of a direct substitution of <code>name</code>). The substitution is performed using standard trigonometric formulae, and it will result in a list of two (substitution result,new monomial) pairs.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -2317,7 +2317,7 @@ template&lt;typename U &gt; </div>
     <tr><td class="paramname">unspecified</td><td>any exception thrown by:<ul>
 <li><a class="el" href="classpiranha_1_1real__trigonometric__kronecker__monomial.html#ac3ece8999ab42ab3dbcd60f45098b613" title="Unpack internal integer instance. ">unpack()</a>,</li>
 <li>construction, assignment and arithmetics on the return value and on the intermediary values invovled in the computation,</li>
-<li><a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a> and <a class="el" href="namespacepiranha_1_1math.html#af02524baa2248e71ea2857ac033dec16" title="Generalised binomial coefficient. ">piranha::math::binomial()</a>,</li>
+<li><a class="el" href="namespacepiranha_1_1math.html#a47fae3623a188a7a711be3cce4f4da56" title="In-place negation. ">piranha::math::negate()</a> and <a class="el" href="namespacepiranha_1_1math.html#a755a440fe280d7ee38347ce860e8484b" title="Generalised binomial coefficient. ">piranha::math::binomial()</a>,</li>
 <li><a class="el" href="classpiranha_1_1static__vector.html#ac719f17b9d6b90a2186ea8e8c2412548" title="Copy-add element at the end of the vector. ">piranha::static_vector::push_back()</a>,</li>
 <li><a class="el" href="classpiranha_1_1kronecker__array.html#ae274a65a1cec7944624b6d0cacb33162" title="Encode vector. ">piranha::kronecker_array::encode()</a>. </li>
 </ul>

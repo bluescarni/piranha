@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::symbol_set",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1symbol__set.html",tooltip="Symbol set. "];
+  Node0 [label="piranha::trigonometric\l_series\< Series \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1trigonometric__series.html",tooltip="Trigonometric series toolbox. "];
 }

@@ -400,7 +400,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
 </div><div class="memdoc">
 
 <p>Compute number of threads to use. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>Int</code> is an unsigned integer type or <a class="el" href="namespacepiranha.html#a236e3b8e7d5b78d00fcdc5de941e9f4b" title="Alias for piranha::mp_integer with default bit size. ">piranha::integer</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>Int</code> is an unsigned integer type or <a class="el" href="namespacepiranha.html#a5b983cfca428401f011389e30157b362" title="Alias for piranha::mp_integer with 1 limb of static storage. ">piranha::integer</a>.</dd></dl>
 <p>This function computes the suggested number of threads to use, given an amount of total <code>work_size</code> units of work and a minimum amount of work units per thread <code>min_work_per_thread</code>.</p>
 <p>The returned value will always be 1 if the calling thread belongs to the thread pool; otherwise, a number of threads such that each thread has at least <code>min_work_per_thread</code> units of work to consume will be returned. In any case, the return value is always greater than zero.</p>
 <dl class="params"><dt>Parameters</dt><dd>

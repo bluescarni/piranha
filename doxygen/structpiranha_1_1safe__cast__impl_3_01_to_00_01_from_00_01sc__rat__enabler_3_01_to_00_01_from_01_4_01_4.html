@@ -84,14 +84,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:abb288dc017ce3ded944193efaf155013"><td class="memTemplParams" colspan="2">template&lt;typename T , to_enabler&lt; T &gt;  = 0&gt; </td></tr>
-<tr class="memitem:abb288dc017ce3ded944193efaf155013"><td class="memTemplItemLeft" align="right" valign="top">To&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1safe__cast__impl_3_01_to_00_01_from_00_01sc__rat__enabler_3_01_to_00_01_from_01_4_01_4.html#abb288dc017ce3ded944193efaf155013">operator()</a> (const T &amp;x) const</td></tr>
-<tr class="memdesc:abb288dc017ce3ded944193efaf155013"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator, to-rational overload.  <a href="#abb288dc017ce3ded944193efaf155013">More...</a><br /></td></tr>
-<tr class="separator:abb288dc017ce3ded944193efaf155013"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a049417a30603f463958a82f640fdad63"><td class="memTemplParams" colspan="2">template&lt;typename T , from_enabler&lt; T &gt;  = 0&gt; </td></tr>
-<tr class="memitem:a049417a30603f463958a82f640fdad63"><td class="memTemplItemLeft" align="right" valign="top">To&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpiranha_1_1safe__cast__impl_3_01_to_00_01_from_00_01sc__rat__enabler_3_01_to_00_01_from_01_4_01_4.html#a049417a30603f463958a82f640fdad63">operator()</a> (const T &amp;q) const</td></tr>
-<tr class="memdesc:a049417a30603f463958a82f640fdad63"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator, from-rational overload.  <a href="#a049417a30603f463958a82f640fdad63">More...</a><br /></td></tr>
-<tr class="separator:a049417a30603f463958a82f640fdad63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7241294449e80fdd2923d828efd70214"><td class="memItemLeft" align="right" valign="top">To&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1safe__cast__impl_3_01_to_00_01_from_00_01sc__rat__enabler_3_01_to_00_01_from_01_4_01_4.html#a7241294449e80fdd2923d828efd70214">operator()</a> (const From &amp;x) const</td></tr>
+<tr class="memdesc:a7241294449e80fdd2923d828efd70214"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call operator.  <a href="#a7241294449e80fdd2923d828efd70214">More...</a><br /></td></tr>
+<tr class="separator:a7241294449e80fdd2923d828efd70214"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename To, typename From&gt;<br />
@@ -99,22 +94,20 @@ struct piranha::safe_cast_impl&lt; To, From, sc_rat_enabler&lt; To, From &gt; &g
 
 <p>Specialisation of <a class="el" href="namespacepiranha.html#a4d35b0701002d5db09bbc4e54406117d" title="Safe cast. ">piranha::safe_cast()</a> for conversions involving <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>. </p>
 <dl class="section note"><dt>Note</dt><dd>This specialisation is enabled in the following cases:<ul>
-<li><code>To</code> is a rational type and <code>From</code> is either an arithmetic type or <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>,</li>
-<li><code>To</code> is an integral type or <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>, and <code>From</code> is <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>. </li>
+<li><code>To</code> is a rational type and <code>From</code> is either an arithmetic type or <a class="el" href="namespacepiranha.html#a4521ec5ea56e318ade722c8bd0ca0180" title="Alias for mppp::mp_integer. ">piranha::mp_integer</a>,</li>
+<li><code>To</code> is an integral type or <a class="el" href="namespacepiranha.html#a4521ec5ea56e318ade722c8bd0ca0180" title="Alias for mppp::mp_integer. ">piranha::mp_integer</a>, and <code>From</code> is <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>. </li>
 </ul>
 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="mp__rational_8hpp_source.html#l02279">2279</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mp__rational_8hpp_source.html#l02192">2192</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="abb288dc017ce3ded944193efaf155013"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abb288dc017ce3ded944193efaf155013">&#9670;&nbsp;</a></span>operator()() <span class="overload">[1/2]</span></h2>
+<a id="a7241294449e80fdd2923d828efd70214"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7241294449e80fdd2923d828efd70214">&#9670;&nbsp;</a></span>operator()()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename To , typename From &gt; </div>
-<div class="memtemplate">
-template&lt;typename T , to_enabler&lt; T &gt;  = 0&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -122,7 +115,7 @@ template&lt;typename T , to_enabler&lt; T &gt;  = 0&gt; </div>
         <tr>
           <td class="memname">To <a class="el" href="structpiranha_1_1safe__cast__impl.html">piranha::safe_cast_impl</a>&lt; To, From, sc_rat_enabler&lt; To, From &gt; &gt;::operator() </td>
           <td>(</td>
-          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramtype">const From &amp;&#160;</td>
           <td class="paramname"><em>x</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -134,75 +127,23 @@ template&lt;typename T , to_enabler&lt; T &gt;  = 0&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Call operator, to-rational overload. </p>
-<dl class="section note"><dt>Note</dt><dd>This operator is enabled if <code>T</code> is an arithmetic type or an instance of <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>.</dd></dl>
-<p>The conversion is performed via <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>'s constructor.</p>
+<p>Call operator. </p>
+<p>The conversion is performed via <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>'s constructor and conversion operator.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>input value.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a rational constructed from <code>x</code>.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><code>x</code> converted to <code>To</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname"><a class="el" href="structpiranha_1_1safe__cast__failure.html" title="Exception to signal failure in piranha::safe_cast(). ">piranha::safe_cast_failure</a></td><td>if the conversion fails. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <code>boost::lexical_cast()</code>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="mp__rational_8hpp_source.html#l02302">2302</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
-
-</div>
-</div>
-<a id="a049417a30603f463958a82f640fdad63"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a049417a30603f463958a82f640fdad63">&#9670;&nbsp;</a></span>operator()() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename To , typename From &gt; </div>
-<div class="memtemplate">
-template&lt;typename T , from_enabler&lt; T &gt;  = 0&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">To <a class="el" href="structpiranha_1_1safe__cast__impl.html">piranha::safe_cast_impl</a>&lt; To, From, sc_rat_enabler&lt; To, From &gt; &gt;::operator() </td>
-          <td>(</td>
-          <td class="paramtype">const T &amp;&#160;</td>
-          <td class="paramname"><em>q</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Call operator, from-rational overload. </p>
-<dl class="section note"><dt>Note</dt><dd>This operator is enabled if <code>T</code> is an instance of <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>.</dd></dl>
-<p>The conversion, performed via the conversion operator of <a class="el" href="classpiranha_1_1mp__rational.html" title="Multiple precision rational class. ">piranha::mp_rational</a>, will fail if the denominator of <code>q</code> is not unitary.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">q</td><td>input rational.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>an integral value converted from <code>q</code>.</dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname"><a class="el" href="structpiranha_1_1safe__cast__failure.html" title="Exception to signal failure in piranha::safe_cast(). ">safe_cast_failure</a></td><td>if the conversion fails. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by <code>boost::lexical_cast()</code>. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="mp__rational_8hpp_source.html#l02329">2329</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mp__rational_8hpp_source.html#l02234">2234</a> of file <a class="el" href="mp__rational_8hpp_source.html">mp_rational.hpp</a>.</p>
 
 </div>
 </div>

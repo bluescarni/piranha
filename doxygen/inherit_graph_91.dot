@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::is_addable\l\< T, U \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1is__addable.html",tooltip="Addable type trait. "];
+  Node0 [label="piranha::is_boost_saving\l_archive\< Archive, T \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1is__boost__saving__archive.html",tooltip="Detect Boost saving archives. "];
 }

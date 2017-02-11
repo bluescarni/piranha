@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::future_list\< T \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1future__list.html",tooltip="Class to store a list of futures. "];
+  Node0 [label="piranha::enable_noexcept\l_checks\< T, typename \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1enable__noexcept__checks.html",tooltip="Enable noexcept checks. "];
 }

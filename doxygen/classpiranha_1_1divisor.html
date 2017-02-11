@@ -216,7 +216,7 @@ class piranha::divisor&lt; T &gt;</h3>
 <li>the \( a_{i,j} \) in each term have no non-unitary common divisor.</li>
 </ul>
 <h2>Type requirements</h2>
-<p><code>T</code> must be either a C++ signed integral type or an instance of <a class="el" href="classpiranha_1_1mp__integer.html" title="Multiple precision integer class. ">piranha::mp_integer</a>.</p>
+<p><code>T</code> must be either a C++ signed integral type or an instance of <a class="el" href="namespacepiranha.html#a4521ec5ea56e318ade722c8bd0ca0180" title="Alias for mppp::mp_integer. ">piranha::mp_integer</a>.</p>
 <h2>Exception safety guarantee</h2>
 <p>Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.</p>
 <h2>Move semantics</h2>
@@ -443,7 +443,7 @@ template&lt;typename U &gt; </div>
 <li>it supports the arithmetic operations necessary to construct the return type.</li>
 </ul>
 </dd></dl>
-<p>The return value will be built via multiplications of the \( a_{i,j} \) by the values in the input map, additions, divisions and exponentiations via <a class="el" href="namespacepiranha_1_1math.html#afbd1041a6f6d37325b55a66b7a84c016" title="Exponentiation. ">piranha::math::pow()</a>. If the divisor has no terms, 1 will be returned. If <code>args</code> is not compatible with <code>this</code> and <code>pmap</code>, or the positions in <code>pmap</code> do not reference only and all the variables in the divisor, an error will be thrown.</p>
+<p>The return value will be built via multiplications of the \( a_{i,j} \) by the values in the input map, additions, divisions and exponentiations via <a class="el" href="namespacepiranha_1_1math.html#a38c4927a813897b54020e9e8d6a08a13" title="Exponentiation. ">piranha::math::pow()</a>. If the divisor has no terms, 1 will be returned. If <code>args</code> is not compatible with <code>this</code> and <code>pmap</code>, or the positions in <code>pmap</code> do not reference only and all the variables in the divisor, an error will be thrown.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">pmap</td><td><a class="el" href="classpiranha_1_1symbol__set_1_1positions__map.html" title="Positions map class. ">piranha::symbol_set::positions_map</a> that will be used for substitution. </td></tr>

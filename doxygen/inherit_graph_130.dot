@@ -3,5 +3,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="piranha::key_has_t\l_degree\< Key \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1key__has__t__degree.html",tooltip="Type trait to detect if a key type has a trigonometric degree property. "];
+  Node0 [label="piranha::key_has_t\l_order\< Key \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classpiranha_1_1key__has__t__order.html",tooltip="Type trait to detect if a key type has a trigonometric order property. "];
 }
