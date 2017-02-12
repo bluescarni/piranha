@@ -69,9 +69,6 @@ inline namespace impl
 // https://github.com/progschj/ThreadPool
 struct task_queue {
     struct runner {
-        runner(task_queue *ptr, unsigned n, bool bind) : m_ptr(ptr), m_n(n), m_bind(bind)
-        {
-        }
         void operator()() const
         {
             if (m_bind) {
