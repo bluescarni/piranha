@@ -46,7 +46,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/binomial.hpp>
 #include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
-#include <piranha/detail/is_digit.hpp>
 #include <piranha/detail/mpfr.hpp>
 #include <piranha/detail/real_fwd.hpp>
 #include <piranha/exceptions.hpp>
@@ -145,6 +144,19 @@ class real : public real_base<>
         if (unlikely(prec < MPFR_PREC_MIN || prec > MPFR_PREC_MAX)) {
             piranha_throw(std::invalid_argument, "invalid significand precision requested");
         }
+    }
+    static bool is_digit(char c)
+    {
+        // NOTE: check this answer:
+        // http://stackoverflow.com/questions/13827180/char-ascii-relation
+        // """
+        // The mapping of integer values for characters does have one guarantee given
+        // by the Standard: the values of the decimal digits are continguous.
+        // (i.e., '1' - '0' == 1, ... '9' - '0' == 9)
+        // """
+        // It should be possible to implement this with a binary search.
+        const char digits[] = "0123456789";
+        return std::find(digits, digits + 10, c) != (digits + 10);
     }
     // Construction.
     void construct_from_string(const char *str, const ::mpfr_prec_t &prec)
@@ -277,7 +289,7 @@ class real : public real_base<>
         // Transform into fraction.
         std::size_t digits = 0u;
         for (; *cptr != '\0'; ++cptr) {
-            if (detail::is_digit(*cptr)) {
+            if (is_digit(*cptr)) {
                 ++digits;
             }
         }
@@ -1680,7 +1692,7 @@ public:
         // Copy into C++ string.
         std::string cpp_str(str.get());
         // Insert the radix point.
-        auto it = std::find_if(cpp_str.begin(), cpp_str.end(), [](char c) { return detail::is_digit(c); });
+        auto it = std::find_if(cpp_str.begin(), cpp_str.end(), is_digit);
         if (it != cpp_str.end()) {
             ++it;
             cpp_str.insert(it, '.');

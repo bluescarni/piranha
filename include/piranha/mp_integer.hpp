@@ -41,7 +41,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
-#include <piranha/detail/gmp.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>

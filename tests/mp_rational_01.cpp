@@ -49,7 +49,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/binomial.hpp>
 #include <piranha/config.hpp>
-#include <piranha/detail/gmp.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/init.hpp>
 #include <piranha/math.hpp>
