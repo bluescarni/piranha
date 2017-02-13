@@ -68,12 +68,12 @@ inline namespace impl
 // Task queue class. Inspired by:
 // https://github.com/progschj/ThreadPool
 struct task_queue {
-    struct runner {
-        void operator()() const
-        {
-            if (m_bind) {
+    task_queue(unsigned n, bool bind) : m_stop(false)
+    {
+        auto runner = [this, n, bind]() {
+            if (bind) {
                 try {
-                    bind_to_proc(m_n);
+                    bind_to_proc(n);
                 } catch (...) {
                     // Don't stop if we cannot bind.
                     // NOTE: logging candidate.
@@ -81,21 +81,21 @@ struct task_queue {
             }
             try {
                 while (true) {
-                    std::unique_lock<std::mutex> lock(m_ptr->m_mutex);
-                    while (!m_ptr->m_stop && m_ptr->m_tasks.empty()) {
+                    std::unique_lock<std::mutex> lock(this->m_mutex);
+                    while (!this->m_stop && this->m_tasks.empty()) {
                         // Need to wait for something to happen only if the task
                         // list is empty and we are not stopping.
                         // NOTE: wait will be noexcept in C++14.
-                        m_ptr->m_cond.wait(lock);
+                        this->m_cond.wait(lock);
                     }
-                    if (m_ptr->m_stop && m_ptr->m_tasks.empty()) {
+                    if (this->m_stop && this->m_tasks.empty()) {
                         // If the stop flag was set, and we do not have more tasks,
                         // just exit.
                         break;
                     }
                     // NOTE: move constructor of std::function could throw, unfortunately.
-                    std::function<void()> task(std::move(m_ptr->m_tasks.front()));
-                    m_ptr->m_tasks.pop();
+                    std::function<void()> task(std::move(this->m_tasks.front()));
+                    this->m_tasks.pop();
                     lock.unlock();
                     task();
                 }
@@ -111,21 +111,14 @@ struct task_queue {
             }
             // Free the MPFR caches.
             ::mpfr_free_cache();
-        }
-        task_queue *m_ptr;
-        const unsigned m_n;
-        const bool m_bind;
-    };
-
-    task_queue(unsigned n, bool bind) : m_stop(false)
-    {
-        // NOTE: this seems to be ok wrt order of evaluation, since the ctor of runner cannot throw.
-        // In general, it could happen that:
+        };
+        // NOTE: this is ok wrt order of evaluation, since runner is an already constructed object.
+        // If we constructed runner within the new expression, it could happen that:
         // - new allocates,
         // - runner is constructed and throws,
         // - the memory allocated by new is not freed.
         // See the classic: http://gotw.ca/gotw/056.htm
-        m_thread.reset(new std::thread(runner{this, n, bind}));
+        m_thread.reset(new std::thread(std::move(runner)));
     }
     ~task_queue()
     {
