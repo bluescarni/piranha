@@ -112,13 +112,7 @@ struct task_queue {
             // Free the MPFR caches.
             ::mpfr_free_cache();
         };
-        // NOTE: this is ok wrt order of evaluation, since runner is an already constructed object.
-        // If we constructed runner within the new expression, it could happen that:
-        // - new allocates,
-        // - runner is constructed and throws,
-        // - the memory allocated by new is not freed.
-        // See the classic: http://gotw.ca/gotw/056.htm
-        m_thread.reset(new std::thread(std::move(runner)));
+        m_thread = std::thread(std::move(runner));
     }
     ~task_queue()
     {
@@ -203,14 +197,14 @@ struct task_queue {
         // Notify the thread that queue has been stopped, wait for it
         // to consume the remaining tasks and exit.
         m_cond.notify_one();
-        m_thread->join();
+        m_thread.join();
     }
-
+    // Data members.
     bool m_stop;
     std::condition_variable m_cond;
     std::mutex m_mutex;
     std::queue<std::function<void()>> m_tasks;
-    std::unique_ptr<std::thread> m_thread;
+    std::thread m_thread;
 };
 
 // Type to represent thread queues: a vector of task queues paired with a set of thread ids.
@@ -235,7 +229,7 @@ inline thread_queues_t get_initial_thread_queues()
     }
     // Generate the set of thread IDs.
     for (const auto &ptr : retval.first) {
-        auto p = retval.second.insert(ptr->m_thread->get_id());
+        auto p = retval.second.insert(ptr->m_thread.get_id());
         (void)p;
         piranha_assert(p.second);
     }
@@ -328,7 +322,7 @@ public:
     static enqueue_t<F &&, Args &&...> enqueue(unsigned n, F &&f, Args &&... args)
     {
         detail::atomic_lock_guard lock(s_atf);
-        if (n >= s_queues.first.size()) {
+        if (unlikely(n >= s_queues.first.size())) {
             piranha_throw(std::invalid_argument, "the thread index " + std::to_string(n)
                                                      + " is out of range, the thread pool contains only "
                                                      + std::to_string(s_queues.first.size()) + " threads");
@@ -358,7 +352,7 @@ private:
         }
         // Fill in the thread ids set.
         for (const auto &ptr : new_queues.first) {
-            auto p = new_queues.second.insert(ptr->m_thread->get_id());
+            auto p = new_queues.second.insert(ptr->m_thread.get_id());
             (void)p;
             piranha_assert(p.second);
         }
