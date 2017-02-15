@@ -174,19 +174,6 @@ inline S generic_deepcopy_wrapper(const S &s, bp::dict)
     return s;
 }
 
-// Generic evaluate wrapper.
-template <typename S, typename T>
-inline auto generic_evaluate_wrapper(const S &s, bp::dict dict, const T &)
-    -> decltype(piranha::math::evaluate(s, std::declval<std::unordered_map<std::string, T>>()))
-{
-    std::unordered_map<std::string, T> cpp_dict;
-    bp::stl_input_iterator<std::string> it(dict), end;
-    for (; it != end; ++it) {
-        cpp_dict[*it] = bp::extract<T>(dict[*it])();
-    }
-    return piranha::math::evaluate(s, cpp_dict);
-}
-
 // Generic lambdify wrapper.
 // NOTE: need to reason about thread safety here. Lambdified objects are not thread safe,
 // but separate lambdified objects could be used from different threads and we need to protect
@@ -579,8 +566,15 @@ class series_exposer
         template <typename T>
         void operator()(const T &, typename std::enable_if<piranha::is_evaluable<S, T>::value>::type * = nullptr) const
         {
-            m_series_class.def("_evaluate", generic_evaluate_wrapper<S, T>);
-            bp::def("_evaluate", generic_evaluate_wrapper<S, T>);
+            bp::def("_evaluate", +[](const S &s, bp::dict dict, const T &) -> decltype(
+                                     piranha::math::evaluate(s, std::declval<std::unordered_map<std::string, T>>())) {
+                std::unordered_map<std::string, T> cpp_dict;
+                bp::stl_input_iterator<std::string> it(dict), end;
+                for (; it != end; ++it) {
+                    cpp_dict[*it] = bp::extract<T>(dict[*it])();
+                }
+                return piranha::math::evaluate(s, cpp_dict);
+            });
             bp::def("_lambdify", generic_lambdify_wrapper<S, T>);
             generic_expose_lambdified<S, T>();
         }
