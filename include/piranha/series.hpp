@@ -3444,6 +3444,7 @@ public:
      * of all terms in the series via the product of the evaluations of the coefficient-key pairs in each term.
      * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
      *
+     * @param s the series to be evaluated.
      * @param dict dictionary of that will be used for evaluation.
      *
      * @return evaluation of the series according to the evaluation dictionary \p dict.
