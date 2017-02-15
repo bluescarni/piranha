@@ -183,7 +183,7 @@ private:
     template <typename U>
     struct eval_type_<U, typename std::enable_if<is_multipliable_in_place<e_type<U>>::value
                                                  && std::is_constructible<e_type<U>, int>::value
-                                                 && detail::is_pmappable<U>::value>::type> {
+                                                 && is_mappable<U>::value>::type> {
         using type = e_type<U>;
     };
     // The final typedef.
@@ -948,7 +948,7 @@ public:
     /**
      * \note
      * This method is available only if \p U satisfies the following requirements:
-     * - it can be used in piranha::symbol_set::positions_map,
+     * - it satisfies piranha::is_mappable,
      * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
      * - \p eval_type is constructible from \p int,
      * - \p eval_type is multipliable in place.

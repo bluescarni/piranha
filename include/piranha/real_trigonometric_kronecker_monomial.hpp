@@ -222,7 +222,7 @@ private:
                                                               decltype(math::sin(std::declval<e_type<U>>()))>::value
                                               && std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())),
                                                                        int>::value
-                                              && detail::is_pmappable<U>::value>::type> {
+                                              && is_mappable<U>::value>::type> {
         using type = decltype(math::cos(std::declval<e_type<U>>()));
     };
     // Final typedef for the eval type.
@@ -1080,7 +1080,7 @@ public:
     /**
      * \note
      * This template method is activated only if \p U supports the mathematical operations needed to compute
-     * the return type, and if it is suitable for use in piranha::symbol_set::positions_map.
+     * the return type, and if it satisfies piranha::is_mappable.
      *
      * The return value will be built by applying piranha::math::cos() or piranha::math:sin()
      * to the linear combination of the values in \p pmap with the multipliers.

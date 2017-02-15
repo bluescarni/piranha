@@ -97,7 +97,7 @@ struct term_hasher {
 };
 
 // NOTE: this needs to go here, instead of in the series class as private method,
-// because of a bug in GCC 4.7:
+// because of a bug in GCC 4.7/4.8:
 // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53137
 template <typename Term, typename Derived>
 inline std::pair<typename Term::cf_type, Derived> pair_from_term(const symbol_set &s, const Term &t)
@@ -1598,24 +1598,6 @@ private:
     typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type, Derived>(const term_type &)>,
                                       typename container_type::const_iterator>
         const_iterator_impl;
-    // Evaluation utilities.
-    // NOTE: here we need the Series template because otherwise, in case of missing eval on key or coefficient, the
-    // decltype will fail as series is not a template parameter. Probably we can get rid of the Series parameter
-    // if we ditch the evaluation method in favour of just the math::evaluate() functionality.
-    // This is the candidate evaluation type: the product of the evaluation of the coefficient by the evaluation of
-    // the key.
-    template <typename Series, typename U>
-    using e_type
-        = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
-                                  std::declval<std::unordered_map<std::string, U> const &>())
-                   * std::declval<const typename Series::term_type::key_type &>().evaluate(
-                         std::declval<const symbol_set::positions_map<U> &>(), std::declval<const symbol_set &>()));
-    // Final typedef.
-    template <typename Series, typename U>
-    using eval_type
-        = enable_if_t<conjunction<is_addable_in_place<e_type<Series, U>>, std::is_constructible<e_type<Series, U>, int>,
-                                  is_returnable<e_type<Series, U>>>::value,
-                      e_type<Series, U>>;
     // Print utilities.
     template <bool TexMode, typename Iterator>
     static std::ostream &print_helper(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
@@ -2615,65 +2597,6 @@ public:
         }
         return retval;
     }
-    /// Evaluation.
-    /**
-     * \note
-     * This method is enabled only if:
-     * - both the coefficient and the key types are evaluable,
-     * - the evaluated types are suitable for use in piranha::math::multiply_accumulate(),
-     * - the return type is constructible from \p int and it satisfies piranha::is_returnable.
-     *
-     * Series evaluation starts with a zero-initialised instance of the return type, which is determined
-     * according to the evaluation types of coefficient and key. The return value accumulates the evaluation
-     * of all terms in the series via the product of the evaluations of the coefficient-key pairs in each term.
-     * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
-     *
-     * @param dict dictionary of that will be used for evaluation.
-     *
-     * @return evaluation of the series according to the evaluation dictionary \p dict.
-     *
-     * @throws unspecified any exception thrown by:
-     * - coefficient and key evaluation,
-     * - insertion operations on \p std::unordered_map,
-     * - piranha::math::multiply_accumulate().
-     */
-    template <typename T, typename Series = series>
-    eval_type<Series, T> evaluate(const std::unordered_map<std::string, T> &dict) const
-    {
-        // NOTE: possible improvement: if the evaluation type is less-than comparable,
-        // build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
-        // with fp types and maybe improve performance - e.g., for integers).
-        using return_type = eval_type<Series, T>;
-        // Transform the string dict into symbol dict for use in keys.
-        std::unordered_map<symbol, T> s_dict;
-        for (const auto &p : dict) {
-            s_dict[symbol(p.first)] = p.second;
-        }
-        // Convert to positions map.
-        symbol_set::positions_map<T> pmap(this->m_symbol_set, s_dict);
-        decltype(this->m_symbol_set.size()) i = 0u;
-        piranha_assert(pmap.size() <= this->m_symbol_set.size());
-        // First we iterate over all elements of pmap (which could be fewer than the symbols).
-        for (const auto &p : pmap) {
-            if (unlikely(i != p.first)) {
-                piranha_throw(std::invalid_argument, "the symbol '" + this->m_symbol_set[i].get_name()
-                                                         + "' is missing from the series evaluation dictionary'");
-            }
-            ++i;
-        }
-        // It could still happen that pmap is missing symbols at the tail of the symbol set.
-        if (unlikely(i < this->m_symbol_set.size())) {
-            piranha_throw(std::invalid_argument, "the symbol '" + this->m_symbol_set[i].get_name()
-                                                     + "' is missing from the series evaluation dictionary'");
-        }
-        // Init return value and accumulate it.
-        return_type retval = return_type(0);
-        for (const auto &t : this->m_container) {
-            // NOTE: restore use of multiply_accumulate once we sort out evaluation (enable it if supported).
-            retval += math::evaluate(t.m_cf, dict) * t.m_key.evaluate(pmap, m_symbol_set);
-        }
-        return retval;
-    }
     /// Trim.
     /**
      * This method will return a series mathematically equivalent to \p this in which discardable arguments
@@ -3460,43 +3383,110 @@ struct integrate_impl<Series, detail::series_integrate_enabler<Series>> {
         return s.integrate(name);
     }
 };
+}
 
-/// Specialisation of the piranha::math::evaluate() functor for series types.
+inline namespace impl
+{
+
+// This is the candidate evaluation type: the product of the evaluation of the coefficient by the evaluation of
+// the key.
+template <typename Series, typename T>
+using series_eval_type
+    = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
+                              std::declval<std::unordered_map<std::string, T> const &>())
+               * std::declval<const typename Series::term_type::key_type &>().evaluate(
+                     std::declval<const symbol_set::positions_map<T> &>(), std::declval<const symbol_set &>()));
+
+template <typename Series, typename T>
+using math_series_evaluate_enabler
+    = enable_if_t<conjunction<is_series<Series>, is_mappable<T>, is_addable_in_place<series_eval_type<Series, T>>,
+                              std::is_constructible<series_eval_type<Series, T>, int>,
+                              is_returnable<series_eval_type<Series, T>>>::value>;
+}
+
+namespace math
+{
+
+/// Specialisation of the implementation of piranha::math::evaluate() for series types.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::series.
+ * This specialisation is activated when all the following conditions hold:
+ * - \p Series is an instance of piranha::series,
+ * - \p T satisfies piranha::is_mappable,
+ * - the coefficient and key types of \p Series support evaluation,
+ * - the types resulting from the evaluation of coefficients and keys can be multiplied,
+ *   yielding a result of type \p E,
+ * - \p E is addable in place, constructible from \p int and it satisfies piranha::is_returnable.
  */
 template <typename Series, typename T>
-struct evaluate_impl<Series, T, typename std::enable_if<is_series<Series>::value>::type> {
+struct evaluate_impl<Series, T, math_series_evaluate_enabler<Series, T>> {
 private:
-    template <typename U>
-    using eval_type_
-        = decltype(std::declval<const Series &>().evaluate(std::declval<const std::unordered_map<std::string, U> &>()));
-    template <typename U>
-    using eval_type = typename std::enable_if<is_returnable<eval_type_<U>>::value, eval_type_<U>>::type;
+    using eval_type = series_eval_type<Series, T>;
+    using cf_eval_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
+                                                 std::declval<std::unordered_map<std::string, T> const &>()));
+    using key_eval_type = decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(
+        std::declval<const symbol_set::positions_map<T> &>(), std::declval<const symbol_set &>()));
+    template <typename E, enable_if_t<has_multiply_accumulate<E>::value, int> = 0>
+    static void multadd(E &retval, const E &a, const E &b)
+    {
+        math::multiply_accumulate(retval, a, b);
+    }
+    template <typename E1, typename E2, typename E3>
+    static void multadd(E1 &retval, const E2 &a, const E3 &b)
+    {
+        retval += a * b;
+    }
 
 public:
     /// Call operator.
     /**
-     * \note
-     * This operator is enabled only if the expression <tt>s.evaluate(dict)</tt>
-     * is valid, returning a type which satisfies piranha::is_returnable.
+     * Series evaluation starts with a zero-initialised instance of the return type, which is determined
+     * according to the evaluation types of coefficient and key. The return value accumulates the evaluation
+     * of all terms in the series via the product of the evaluations of the coefficient-key pairs in each term.
+     * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
      *
-     * The body of this operator is equivalent to:
-     * @code
-     * return s.evaluate(dict);
-     * @endcode
+     * @param dict dictionary of that will be used for evaluation.
      *
-     * @param s evaluation argument.
-     * @param dict evaluation dictionary.
+     * @return evaluation of the series according to the evaluation dictionary \p dict.
      *
-     * @return output of piranha::series::evaluate().
-     *
-     * @throws unspecified any exception thrown by piranha::series::evaluate().
+     * @throws std::invalid_argument if a symbol of \p s does not appear in \p dict.
+     * @throws unspecified any exception thrown by:
+     * - coefficient and key evaluation,
+     * - the public interface of piranha::symbol_set::position_map and \p std::unordered_map,
+     * - arithmetic operations on the evaluation type.
      */
-    template <typename U>
-    eval_type<U> operator()(const Series &s, const std::unordered_map<std::string, U> &dict) const
+    eval_type operator()(const Series &s, const std::unordered_map<std::string, T> &dict) const
     {
-        return s.evaluate(dict);
+        // NOTE: possible improvement: if the evaluation type is less-than comparable,
+        // build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
+        // with fp types and maybe improve performance - e.g., for integers).
+        // Transform the string dict into symbol dict for use in keys.
+        std::unordered_map<symbol, T> s_dict;
+        for (const auto &p : dict) {
+            s_dict[symbol(p.first)] = p.second;
+        }
+        // Convert to positions map.
+        symbol_set::positions_map<T> pmap(s.get_symbol_set(), s_dict);
+        decltype(s.get_symbol_set().size()) i = 0;
+        piranha_assert(pmap.size() <= s.get_symbol_set().size());
+        // First we iterate over all elements of pmap (which could be fewer than the symbols).
+        for (const auto &p : pmap) {
+            if (unlikely(i != p.first)) {
+                piranha_throw(std::invalid_argument, "the symbol '" + s.get_symbol_set()[i].get_name()
+                                                         + "' is missing from the series evaluation dictionary'");
+            }
+            ++i;
+        }
+        // It could still happen that pmap is missing symbols at the tail of the symbol set.
+        if (unlikely(i < s.get_symbol_set().size())) {
+            piranha_throw(std::invalid_argument, "the symbol '" + s.get_symbol_set()[i].get_name()
+                                                     + "' is missing from the series evaluation dictionary'");
+        }
+        // Init return value and accumulate it.
+        eval_type retval(0);
+        for (const auto &t : s._container()) {
+            multadd(retval, math::evaluate(t.m_cf, dict), t.m_key.evaluate(pmap, s.get_symbol_set()));
+        }
+        return retval;
     }
 };
 }

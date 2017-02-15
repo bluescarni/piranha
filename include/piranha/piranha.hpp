@@ -263,6 +263,10 @@ see https://www.gnu.org/licenses/. */
  * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
  * work in a more generic fashion (or otherwise we need to make clear). More generally, we need to think if there's
  * a robust way of sorting out the init/destruction sequence for the global state. Destruction is harder.
+ * \todo When checking for mappability,
+ * e.g., in the monomial subs routines, eval, etc. need to keep in mind that a type needs to be mappable only if
+ * the methods of the containers are *actually* instantiated: creating a map of references, for instance, is perfectly
+ * valid as long as one does not attempt to insert stuff into it.
  */
 namespace piranha
 {

@@ -399,41 +399,42 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
     BOOST_CHECK((is_evaluable<p_type1, integer>::value));
     BOOST_CHECK((is_evaluable<p_type1, int>::value));
     BOOST_CHECK((is_evaluable<p_type1, long>::value));
-    BOOST_CHECK((std::is_same<rational, decltype(p_type1{}.evaluate(dict_type_int{}))>::value));
-    BOOST_CHECK((std::is_same<rational, decltype(p_type1{}.evaluate(dict_type_long{}))>::value));
-    BOOST_CHECK_EQUAL(p_type1{}.evaluate(dict_type{}), 0);
+    BOOST_CHECK((std::is_same<rational, decltype(math::evaluate(p_type1{}, dict_type_int{}))>::value));
+    BOOST_CHECK((std::is_same<rational, decltype(math::evaluate(p_type1{}, dict_type_long{}))>::value));
+    BOOST_CHECK_EQUAL(math::evaluate(p_type1{}, dict_type{}), 0);
     p_type1 x{"x"}, y{"y"};
-    BOOST_CHECK_THROW(x.evaluate(dict_type{}), std::invalid_argument);
-    BOOST_CHECK_EQUAL(x.evaluate(dict_type{{"x", rational(1)}}), 1);
-    BOOST_CHECK_THROW((x + (2 * y).pow(3)).evaluate(dict_type{{"x", rational(1)}}), std::invalid_argument);
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
+    BOOST_CHECK_THROW(math::evaluate(x, dict_type{}), std::invalid_argument);
+    BOOST_CHECK_EQUAL(math::evaluate(x, dict_type{{"x", rational(1)}}), 1);
+    BOOST_CHECK_THROW(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}}), std::invalid_argument);
+    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       rational(1) + (2 * rational(2, 3)).pow(3));
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
+    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}));
-    BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type{})), rational>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type{})), rational>::value));
     typedef std::unordered_map<std::string, real> dict_type2;
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
-                      real(1.234) + math::pow(2 * real(-5.678), 3));
     BOOST_CHECK_EQUAL(
-        (x + (2 * y).pow(3)).evaluate(dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
+        math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
+        real(1.234) + math::pow(2 * real(-5.678), 3));
+    BOOST_CHECK_EQUAL(
+        math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
         math::evaluate(x + math::pow(2 * y, 3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}));
-    BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type2{})), real>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type2{})), real>::value));
     typedef std::unordered_map<std::string, double> dict_type3;
     BOOST_CHECK((is_evaluable<p_type1, double>::value));
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
+    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
                       1.234 + math::pow(2 * -5.678, 3));
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
+    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
                       math::evaluate(x + math::pow(2 * y, 3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}));
-    BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type3{})), double>::value));
-    BOOST_CHECK((!is_evaluable<g_series_type3<double, mock_key>, double>::value));
-    // NOTE: this used to be true before we changed the ctor from int of mock_cf to explicit.
-    BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf, monomial<int>>, double>::value));
-    BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf, mock_key>, double>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type3{})), double>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate<double>(g_series_type3<double, mock_key>{}, {})),
+                              g_series_type3<double, mock_key>>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate<double>(g_series_type3<mock_cf, monomial<int>>{}, {})),
+                              g_series_type3<mock_cf, monomial<int>>>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate<double>(g_series_type3<mock_cf, mock_key>{}, {})),
+                              g_series_type3<mock_cf, mock_key>>::value));
     BOOST_CHECK((is_evaluable<g_series_type3<double, monomial<int>>, double>::value));
     // Check the syntax from initializer list with explicit template parameter.
-    BOOST_CHECK_EQUAL(p_type1{}.evaluate<int>({{"foo", 4.}}), 0);
-    BOOST_CHECK_EQUAL(p_type1{}.evaluate<double>({{"foo", 4.}, {"bar", 7}}), 0);
     BOOST_CHECK_EQUAL(math::evaluate<int>(p_type1{}, {{"foo", 4.}}), 0);
     BOOST_CHECK_EQUAL(math::evaluate<double>(p_type1{}, {{"foo", 4.}, {"bar", 7}}), 0);
 }

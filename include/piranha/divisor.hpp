@@ -392,7 +392,7 @@ private:
         typename std::enable_if<std::is_constructible<eval_type_<U>, int>::value
                                     && is_divisible_in_place<eval_type_<U>>::value
                                     && std::is_constructible<eval_sum_type<U>, int>::value
-                                    && is_addable_in_place<eval_sum_type<U>>::value && detail::is_pmappable<U>::value,
+                                    && is_addable_in_place<eval_sum_type<U>>::value && is_mappable<U>::value,
                                 eval_type_<U>>::type;
     // Multiplication utilities.
     template <typename Cf>
@@ -792,7 +792,7 @@ public:
     /**
      * \note
      * This method is available only if \p U satisfies the following requirements:
-     * - it can be used in piranha::symbol_set::positions_map,
+     * - it satisfies piranha::is_mappable,
      * - it supports the arithmetic operations necessary to construct the return type.
      *
      * The return value will be built via multiplications of the \f$ a_{i,j} \f$ by the values

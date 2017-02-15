@@ -50,20 +50,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
-{
-
-// Requirements for types that can be used in positions_map.
-template <typename T>
-struct is_pmappable {
-    static const bool value = std::is_copy_constructible<T>::value && std::is_move_constructible<T>::value
-                              && std::is_move_assignable<T>::value && std::is_destructible<T>::value;
-};
-
-template <typename T>
-const bool is_pmappable<T>::value;
-}
-
 /// Symbol set.
 /**
  * This class represents an ordered set of piranha::symbol. The individual piranha::symbol instances
@@ -191,13 +177,13 @@ public:
      *
      * ## Type requirements ##
      *
-     * \p T must be destructible, copy-constructible, move-constructible and move-assignable.
+     * \p T must satisfy piranha::is_mappable.
      */
     template <typename T>
     class positions_map
     {
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
-        PIRANHA_TT_CHECK(detail::is_pmappable, T);
+        PIRANHA_TT_CHECK(is_mappable, T);
 #endif
     public:
         /// Value type.
