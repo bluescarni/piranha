@@ -191,8 +191,8 @@ using enable_if_t = typename std::enable_if<B, T>::type;
 
 template <typename T>
 using is_nonconst_rvalue_ref
-    = std::integral_constant<bool, std::is_rvalue_reference<T>::value
-                                       && !std::is_const<typename std::remove_reference<T>::type>::value>;
+    = std::integral_constant<bool,
+                             conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>::value>;
 
 template <typename T, typename U, typename Derived>
 struct arith_tt_helper {
@@ -203,29 +203,22 @@ struct arith_tt_helper {
 
 /// Addable type trait.
 /**
- * Will be \p true if objects of type \p T can be added to objects of type \p U using the binary addition operator.
- *
- * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
- @code
- operator+(const Td &, const Ud &)
- @endcode
- * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
- @code
- is_addable<int>::value == true;
- is_addable<int,std::string>::value == false;
- @endcode
+ * This type trait will be \p true if objects of type \p T can be added to objects of type \p U using the binary
+ * addition operator, \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator+(const T &, const U &)
+ * @endcode
  */
 template <typename T, typename U = T>
-class is_addable : detail::sfinae_types
+class is_addable
 {
-    friend struct arith_tt_helper<T, U, is_addable<T, U>>;
     template <typename T1, typename U1>
-    static auto test(const T1 &t, const U1 &u) -> decltype(t + u, void(), yes());
-    static no test(...);
+    using add_t = decltype(std::declval<const T1 &>() + std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<add_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, is_addable>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
@@ -233,29 +226,22 @@ const bool is_addable<T, U>::value;
 
 /// In-place addable type trait.
 /**
- * Will be \p true if objects of type \p U can be added in-place to objects of type \p T.
- *
- * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
- @code
- operator+=(Td &, const Ud &)
- @endcode
- * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
- @code
- is_addable_in_place<int>::value == true;
- is_addable_in_place<int,std::string>::value == false;
- @endcode
+ * This type trait will be \p true if objects of type \p U can be added in-place to objects of type \p T,
+ * \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator+=(T &, const U &)
+ * @endcode
  */
 template <typename T, typename U = T>
-class is_addable_in_place : detail::sfinae_types
+class is_addable_in_place
 {
-    friend struct arith_tt_helper<T, U, is_addable_in_place<T, U>>;
     template <typename T1, typename U1>
-    static auto test(T1 &t, const U1 &u) -> decltype(t += u, void(), yes());
-    static no test(...);
+    using ip_add_t = decltype(std::declval<T1 &>() += std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<ip_add_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, is_addable_in_place>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
@@ -263,19 +249,22 @@ const bool is_addable_in_place<T, U>::value;
 
 /// Subtractable type trait.
 /**
- * @see piranha::is_addable.
+ * This type trait will be \p true if objects of type \p U can be subtracted from objects of type \p T using the binary
+ * subtraction operator, \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator-(const T &, const U &)
+ * @endcode
  */
 template <typename T, typename U = T>
-class is_subtractable : detail::sfinae_types
+class is_subtractable
 {
-    friend struct arith_tt_helper<T, U, is_subtractable<T, U>>;
     template <typename T1, typename U1>
-    static auto test(const T1 &t, const U1 &u) -> decltype(t - u, void(), yes());
-    static no test(...);
+    using sub_t = decltype(std::declval<const T1 &>() - std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<sub_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, is_subtractable>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
