@@ -16,3 +16,6 @@ doc/sphinx/_build/
 
 # Python bits.
 *.pyc
+
+# Editors.
+.vscode
