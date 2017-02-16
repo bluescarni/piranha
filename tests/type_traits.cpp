@@ -155,12 +155,15 @@ struct nontrivial_dtor {
 BOOST_AUTO_TEST_CASE(type_traits_is_addable_test)
 {
     BOOST_CHECK(is_addable<int>::value);
+    BOOST_CHECK(!is_addable<void>::value);
     BOOST_CHECK(is_addable<const int>::value);
     BOOST_CHECK((is_addable<const int, int>::value));
     BOOST_CHECK((is_addable<int, const int>::value));
     BOOST_CHECK((is_addable<const int &, int &>::value));
     BOOST_CHECK((is_addable<int &&, const int &>::value));
     BOOST_CHECK(is_addable<double>::value);
+    BOOST_CHECK((!is_addable<double, void>::value));
+    BOOST_CHECK((!is_addable<void, double>::value));
     BOOST_CHECK(is_addable<std::complex<double>>::value);
     BOOST_CHECK((is_addable<const std::complex<double>, double>::value));
     BOOST_CHECK((is_addable<std::complex<double>, const double>::value));
@@ -196,6 +199,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place_test)
 {
+    BOOST_CHECK((!is_addable_in_place<void>::value));
+    BOOST_CHECK((!is_addable_in_place<void, int>::value));
+    BOOST_CHECK((!is_addable_in_place<int, void>::value));
     BOOST_CHECK((is_addable_in_place<int>::value));
     BOOST_CHECK((is_addable_in_place<int, int>::value));
     BOOST_CHECK((is_addable_in_place<int, double>::value));
@@ -212,6 +218,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_test)
 {
+    BOOST_CHECK((!is_subtractable<void>::value));
+    BOOST_CHECK((!is_subtractable<void, int>::value));
+    BOOST_CHECK((!is_subtractable<int, void>::value));
     BOOST_CHECK(is_subtractable<int>::value);
     BOOST_CHECK(is_subtractable<const int>::value);
     BOOST_CHECK((is_subtractable<const int, int>::value));
@@ -253,6 +262,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place_test)
 {
+    BOOST_CHECK((!is_subtractable_in_place<void>::value));
+    BOOST_CHECK((!is_subtractable_in_place<void, int>::value));
+    BOOST_CHECK((!is_subtractable_in_place<int, void>::value));
     BOOST_CHECK((is_subtractable_in_place<int>::value));
     BOOST_CHECK((is_subtractable_in_place<int, int>::value));
     BOOST_CHECK((is_subtractable_in_place<int, double>::value));
@@ -269,6 +281,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_multipliable_test)
 {
+    BOOST_CHECK((!is_multipliable<void>::value));
+    BOOST_CHECK((!is_multipliable<void, int>::value));
+    BOOST_CHECK((!is_multipliable<int, void>::value));
     BOOST_CHECK(is_multipliable<int>::value);
     BOOST_CHECK(is_multipliable<const int>::value);
     BOOST_CHECK((is_multipliable<const int, int>::value));
@@ -302,6 +317,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_multipliable_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_multipliable_in_place_test)
 {
+    BOOST_CHECK((!is_multipliable_in_place<void>::value));
+    BOOST_CHECK((!is_multipliable_in_place<void, int>::value));
+    BOOST_CHECK((!is_multipliable_in_place<int, void>::value));
     BOOST_CHECK((is_multipliable_in_place<int>::value));
     BOOST_CHECK((is_multipliable_in_place<int, int>::value));
     BOOST_CHECK((is_multipliable_in_place<int, double>::value));
@@ -317,6 +335,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_multipliable_in_place_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_divisible_test)
 {
+    BOOST_CHECK((!is_divisible<void>::value));
+    BOOST_CHECK((!is_divisible<void, int>::value));
+    BOOST_CHECK((!is_divisible<int, void>::value));
     BOOST_CHECK(is_divisible<int>::value);
     BOOST_CHECK(is_divisible<const int>::value);
     BOOST_CHECK((is_divisible<const int, int>::value));
@@ -350,6 +371,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_divisible_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_divisible_in_place_test)
 {
+    BOOST_CHECK((!is_divisible_in_place<void>::value));
+    BOOST_CHECK((!is_divisible_in_place<void, int>::value));
+    BOOST_CHECK((!is_divisible_in_place<int, void>::value));
     BOOST_CHECK((is_divisible_in_place<int>::value));
     BOOST_CHECK((is_divisible_in_place<int, int>::value));
     BOOST_CHECK((is_divisible_in_place<int, double>::value));
@@ -426,6 +450,9 @@ bool operator!=(const frob_mix_not_eq &, const frob_mix_not_eq &);
 
 BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable_test)
 {
+    BOOST_CHECK((!is_equality_comparable<void>::value));
+    BOOST_CHECK((!is_equality_comparable<void, int>::value));
+    BOOST_CHECK((!is_equality_comparable<int, void>::value));
     BOOST_CHECK(is_equality_comparable<int>::value);
     BOOST_CHECK(!is_equality_comparable<trivial>::value);
     BOOST_CHECK((is_equality_comparable<int, double>::value));
@@ -450,6 +477,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_less_than_comparable_test)
 {
+    BOOST_CHECK((!is_less_than_comparable<void>::value));
+    BOOST_CHECK((!is_less_than_comparable<void, int>::value));
+    BOOST_CHECK((!is_less_than_comparable<int, void>::value));
     BOOST_CHECK(is_less_than_comparable<int>::value);
     BOOST_CHECK((is_less_than_comparable<int, double>::value));
     BOOST_CHECK((is_less_than_comparable<double, int>::value));
@@ -472,6 +502,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_less_than_comparable_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_greater_than_comparable_test)
 {
+    BOOST_CHECK((!is_greater_than_comparable<void>::value));
+    BOOST_CHECK((!is_greater_than_comparable<void, int>::value));
+    BOOST_CHECK((!is_greater_than_comparable<int, void>::value));
     BOOST_CHECK(is_greater_than_comparable<int>::value);
     BOOST_CHECK((is_greater_than_comparable<int, double>::value));
     BOOST_CHECK((is_greater_than_comparable<double, int>::value));
@@ -566,6 +599,7 @@ struct c_element2 {
 
 BOOST_AUTO_TEST_CASE(type_traits_is_container_element_test)
 {
+    BOOST_CHECK(!is_container_element<void>::value);
     BOOST_CHECK(is_container_element<int>::value);
     BOOST_CHECK(!is_container_element<int const>::value);
     BOOST_CHECK(is_container_element<double>::value);
@@ -929,6 +963,9 @@ struct hfo9 {
 
 BOOST_AUTO_TEST_CASE(type_traits_is_hash_function_object_test)
 {
+    BOOST_CHECK((!is_hash_function_object<void, int>::value));
+    BOOST_CHECK((!is_hash_function_object<int, void>::value));
+    BOOST_CHECK((!is_hash_function_object<void, void>::value));
     BOOST_CHECK((is_hash_function_object<std::hash<int>, int>::value));
     BOOST_CHECK((is_hash_function_object<std::hash<int const *>, int const *>::value));
     BOOST_CHECK((is_hash_function_object<std::hash<int const *>, int *>::value));
@@ -1015,6 +1052,9 @@ struct efo10 {
 
 BOOST_AUTO_TEST_CASE(type_traits_is_equality_function_object_test)
 {
+    BOOST_CHECK((!is_equality_function_object<void, int>::value));
+    BOOST_CHECK((!is_equality_function_object<int, void>::value));
+    BOOST_CHECK((!is_equality_function_object<void, void>::value));
     BOOST_CHECK((is_equality_function_object<std::equal_to<int>, int>::value));
     BOOST_CHECK((is_equality_function_object<std::equal_to<int>, short>::value));
     BOOST_CHECK((!is_equality_function_object<const std::equal_to<int>, short>::value));
@@ -1769,12 +1809,12 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(has_typedef_type<aot<arrow03a>>::value);
     BOOST_CHECK((std::is_same<typename aot<arrow03a>::type, int *>::value));
     // Iterator.
-    BOOST_CHECK(detail::has_iterator_traits<int *>::value);
-    BOOST_CHECK(detail::has_iterator_traits<const int *>::value);
-    BOOST_CHECK(!detail::has_iterator_traits<int>::value);
-    BOOST_CHECK(!detail::has_iterator_traits<double>::value);
-    BOOST_CHECK(detail::has_iterator_traits<std::vector<int>::iterator>::value);
-    BOOST_CHECK(detail::has_iterator_traits<std::vector<int>::const_iterator>::value);
+    BOOST_CHECK(has_iterator_traits<int *>::value);
+    BOOST_CHECK(has_iterator_traits<const int *>::value);
+    BOOST_CHECK(!has_iterator_traits<int>::value);
+    BOOST_CHECK(!has_iterator_traits<double>::value);
+    BOOST_CHECK(has_iterator_traits<std::vector<int>::iterator>::value);
+    BOOST_CHECK(has_iterator_traits<std::vector<int>::const_iterator>::value);
     BOOST_CHECK(is_iterator<int *>::value);
     BOOST_CHECK(is_iterator<const int *>::value);
     BOOST_CHECK(is_iterator<std::vector<int>::iterator>::value);

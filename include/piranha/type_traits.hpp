@@ -272,19 +272,22 @@ const bool is_subtractable<T, U>::value;
 
 /// In-place subtractable type trait.
 /**
- * @see piranha::is_addable_in_place.
+ * This type trait will be \p true if objects of type \p U can be subtracted in-place from objects of type \p T,
+ * \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator-=(T &, const U &)
+ * @endcode
  */
 template <typename T, typename U = T>
-class is_subtractable_in_place : detail::sfinae_types
+class is_subtractable_in_place
 {
-    friend struct arith_tt_helper<T, U, is_subtractable_in_place<T, U>>;
     template <typename T1, typename U1>
-    static auto test(T1 &t, const U1 &u) -> decltype(t -= u, void(), yes());
-    static no test(...);
+    using ip_sub_t = decltype(std::declval<T1 &>() -= std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<ip_sub_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, is_subtractable_in_place>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
@@ -292,19 +295,22 @@ const bool is_subtractable_in_place<T, U>::value;
 
 /// Multipliable type trait.
 /**
- * @see piranha::is_addable.
+ * This type trait will be \p true if objects of type \p T can be multiplied by objects of type \p U using the binary
+ * multiplication operator, \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator*(const T &, const U &)
+ * @endcode
  */
 template <typename T, typename U = T>
-class is_multipliable : detail::sfinae_types
+class is_multipliable
 {
-    friend struct arith_tt_helper<T, U, is_multipliable<T, U>>;
     template <typename T1, typename U1>
-    static auto test(const T1 &t, const U1 &u) -> decltype(t * u, void(), yes());
-    static no test(...);
+    using mul_t = decltype(std::declval<const T1 &>() * std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<mul_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, is_multipliable>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
@@ -312,19 +318,22 @@ const bool is_multipliable<T, U>::value;
 
 /// In-place multipliable type trait.
 /**
- * @see piranha::is_addable_in_place.
+ * This type trait will be \p true if objects of type \p T can be multiplied in-place by objects of type \p U,
+ * \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator+=(T &, const U &)
+ * @endcode
  */
 template <typename T, typename U = T>
-class is_multipliable_in_place : detail::sfinae_types
+class is_multipliable_in_place
 {
-    friend struct arith_tt_helper<T, U, is_multipliable_in_place<T, U>>;
     template <typename T1, typename U1>
-    static auto test(T1 &t, const U1 &u) -> decltype(t *= u, void(), yes());
-    static no test(...);
+    using ip_mul_t = decltype(std::declval<T1 &>() *= std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<ip_mul_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, is_multipliable_in_place>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
@@ -332,19 +341,22 @@ const bool is_multipliable_in_place<T, U>::value;
 
 /// Divisible type trait.
 /**
- * @see piranha::is_addable.
+ * This type trait will be \p true if objects of type \p T can be divided by objects of type \p U using the binary
+ * division operator, \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator/(const T &, const U &)
+ * @endcode
  */
 template <typename T, typename U = T>
-class is_divisible : detail::sfinae_types
+class is_divisible
 {
-    friend struct arith_tt_helper<T, U, is_divisible<T, U>>;
     template <typename T1, typename U1>
-    static auto test(const T1 &t, const U1 &u) -> decltype(t / u, void(), yes());
-    static no test(...);
+    using div_t = decltype(std::declval<const T1 &>() / std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<div_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, is_divisible>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
@@ -352,19 +364,22 @@ const bool is_divisible<T, U>::value;
 
 /// In-place divisible type trait.
 /**
- * @see piranha::is_addable_in_place.
+ * This type trait will be \p true if objects of type \p T can be divided in-place by objects of type \p U,
+ * \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator/=(T &, const U &)
+ * @endcode
  */
 template <typename T, typename U = T>
-class is_divisible_in_place : detail::sfinae_types
+class is_divisible_in_place
 {
-    friend struct arith_tt_helper<T, U, is_divisible_in_place<T, U>>;
     template <typename T1, typename U1>
-    static auto test(T1 &t, const U1 &u) -> decltype(t /= u, void(), yes());
-    static no test(...);
+    using ip_div_t = decltype(std::declval<T1 &>() /= std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<ip_div_t, T, U>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, is_divisible_in_place>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
@@ -377,19 +392,14 @@ const bool is_divisible_in_place<T, U>::value;
  * references) and must return a type implicitly convertible to \p bool.
  */
 template <typename T, typename U = T>
-class is_equality_comparable : detail::sfinae_types
+class is_equality_comparable
 {
-    typedef typename std::decay<T>::type Td;
-    typedef typename std::decay<U>::type Ud;
     template <typename T1, typename U1>
-    static auto test1(const T1 &t, const U1 &u) -> decltype(t == u);
-    static no test1(...);
+    using eq_t = decltype(std::declval<const T1 &>() == std::declval<const U1 &>());
     template <typename T1, typename U1>
-    static auto test2(const T1 &t, const U1 &u) -> decltype(t != u);
-    static no test2(...);
-    static const bool implementation_defined
-        = std::is_convertible<decltype(test1(std::declval<Td>(), std::declval<Ud>())), bool>::value
-          && std::is_convertible<decltype(test2(std::declval<Td>(), std::declval<Ud>())), bool>::value;
+    using ineq_t = decltype(std::declval<const T1 &>() != std::declval<const U1 &>());
+    static const bool implementation_defined = conjunction<std::is_convertible<detected_t<eq_t, T, U>, bool>,
+                                                           std::is_convertible<detected_t<ineq_t, T, U>, bool>>::value;
 
 public:
     /// Value of the type trait.
@@ -404,21 +414,18 @@ const bool is_equality_comparable<T, U>::value;
 /**
  * This type trait is \p true if instances of type \p T can be compared to instances of
  * type \p U using the less-than operator. The operator must be non-mutable (i.e., implemented using pass-by-value or
- * const
- * references) and must return a type implicitly convertible to \p bool.
+ * const references) and must return a type implicitly convertible to \p bool.
  */
 template <typename T, typename U = T>
-class is_less_than_comparable : detail::sfinae_types
+class is_less_than_comparable
 {
-    typedef typename std::decay<T>::type Td;
-    typedef typename std::decay<U>::type Ud;
     template <typename T1, typename U1>
-    static auto test(const T1 &t, const U1 &u) -> decltype(t < u);
-    static no test(...);
+    using lt_t = decltype(std::declval<const T1 &>() < std::declval<const U1 &>());
+    static const bool implementation_defined = std::is_convertible<detected_t<lt_t, T, U>, bool>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_convertible<decltype(test(std::declval<Td>(), std::declval<Ud>())), bool>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -433,17 +440,15 @@ const bool is_less_than_comparable<T, U>::value;
  * references) and must return a type implicitly convertible to \p bool.
  */
 template <typename T, typename U = T>
-class is_greater_than_comparable : detail::sfinae_types
+class is_greater_than_comparable
 {
-    typedef typename std::decay<T>::type Td;
-    typedef typename std::decay<U>::type Ud;
     template <typename T1, typename U1>
-    static auto test(const T1 &t, const U1 &u) -> decltype(t > u);
-    static no test(...);
+    using gt_t = decltype(std::declval<const T1 &>() > std::declval<const U1 &>());
+    static const bool implementation_defined = std::is_convertible<detected_t<gt_t, T, U>, bool>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_convertible<decltype(test(std::declval<Td>(), std::declval<Ud>())), bool>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -452,7 +457,7 @@ const bool is_greater_than_comparable<T, U>::value;
 
 /// Enable \p noexcept checks.
 /**
- * This type trait, to be specialised with the <tt>std::enable_if</tt> mechanism, enables or disables
+ * This type trait, which can be specialised with the <tt>std::enable_if</tt> mechanism, enables or disables
  * \p noexcept checks in the piranha::is_container_element type trait. This type trait should be used
  * only with legacy pre-C++11 classes that do not support \p noexcept: by specialising this trait to
  * \p false, the piranha::is_container_element trait will disable \p noexcept checks and it will thus be
@@ -481,32 +486,30 @@ const bool enable_noexcept_checks<T, Enable>::value;
  */
 template <typename T>
 struct is_container_element {
+private:
     // NOTE: here we do not require copy assignability as in our containers we always implement
     // copy-assign as copy-construct + move for exception safety reasons.
-    /// Value of the type trait.
-    static const bool value = std::is_default_constructible<T>::value && std::is_copy_constructible<T>::value
-                              && (!enable_noexcept_checks<T>::value
-                                  || (std::is_nothrow_destructible<T>::value
-// The Intel compiler has troubles with the noexcept versions of these two type traits.
+    static const bool implementation_defined
+        = conjunction<std::is_default_constructible<T>, std::is_copy_constructible<T>,
+                      disjunction<negation<enable_noexcept_checks<T>>,
+                                  conjunction<std::is_nothrow_destructible<T>,
 #if defined(PIRANHA_COMPILER_IS_INTEL)
-                                      && std::is_move_constructible<T>::value && std::is_move_assignable<T>::value
+                                              // The Intel compiler has troubles with the noexcept versions of these two
+                                              // type traits.
+                                              std::is_move_constructible<T>, std::is_move_assignable<T>
 #else
-                                      && std::is_nothrow_move_constructible<T>::value
-                                      && std::is_nothrow_move_assignable<T>::value
+
+                                              std::is_nothrow_move_constructible<T>, std::is_nothrow_move_assignable<T>
 #endif
-                                      ));
+                                              >>>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
 const bool is_container_element<T>::value;
-
-inline namespace impl
-{
-
-// Detection of ostreamable types.
-template <typename T>
-using ostreamable_t = decltype(std::declval<std::ostream &>() << std::declval<const T &>());
-}
 
 /// Type trait for classes that can be output-streamed.
 /**
@@ -520,6 +523,8 @@ using ostreamable_t = decltype(std::declval<std::ostream &>() << std::declval<co
 template <typename T>
 class is_ostreamable
 {
+    template <typename T1>
+    using ostreamable_t = decltype(std::declval<std::ostream &>() << std::declval<const T1 &>());
     static const bool implementation_defined = std::is_same<detected_t<ostreamable_t, T>, std::ostream &>::value;
 
 public:
@@ -529,60 +534,6 @@ public:
 
 template <typename T>
 const bool is_ostreamable<T>::value;
-
-namespace detail
-{
-
-template <typename T>
-class is_hashable_impl : detail::sfinae_types
-{
-    typedef typename std::decay<T>::type Td;
-    template <typename T1>
-    static auto test(const T1 &t) -> decltype(std::declval<const std::hash<T1> &>()(t));
-    static no test(...);
-
-public:
-    static const bool value = std::is_same<decltype(test(std::declval<Td>())), std::size_t>::value;
-};
-}
-
-/// Hashable type trait.
-/**
- * This type trait will be \p true if the decay type of \p T is hashable, \p false otherwise.
- *
- * A type \p T is hashable when supplied with a specialisation of \p std::hash which:
- * - has a call operator complying to the interface specified by the C++ standard,
- * - satisfies piranha::is_container_element.
- *
- * Note that depending on the implementation of the default \p std::hash class, using this type trait with
- * a type which does not provide a specialisation for \p std::hash could result in a compilation error
- * (e.g., if the unspecialised \p std::hash includes a \p false \p static_assert).
- */
-// NOTE: when we remove the is_container_element check we might need to make sure that std::hash is def ctible,
-// depending on how we use it. Check.
-template <typename T, typename = void>
-class is_hashable
-{
-public:
-    /// Value of the type trait.
-    static const bool value = false;
-};
-
-template <typename T>
-class is_hashable<T, typename std::enable_if<detail::is_hashable_impl<T>::value>::type>
-{
-    typedef typename std::decay<T>::type Td;
-    typedef std::hash<Td> hasher;
-
-public:
-    static const bool value = is_container_element<hasher>::value;
-};
-
-template <typename T, typename Enable>
-const bool is_hashable<T, Enable>::value;
-
-template <typename T>
-const bool is_hashable<T, typename std::enable_if<detail::is_hashable_impl<T>::value>::type>::value;
 
 /// Function object type trait.
 /**
@@ -615,102 +566,97 @@ const bool is_function_object<T, ReturnType, Args...>::value;
  * \p T is a hash function object for \p U if the following requirements are met:
  * - \p T is a function object with const call operator accepting as input const \p U and returning \p std::size_t,
  * - \p T satisfies piranha::is_container_element.
- *
- * The decay type of \p U is considered in this type trait.
  */
-template <typename T, typename U, typename = void>
+template <typename T, typename U>
 class is_hash_function_object
 {
+    // NOTE: use addlref_t to avoid forming a ref to void.
+    static const bool implementation_defined
+        = conjunction<is_function_object<const T, std::size_t, const addlref_t<U>>, is_container_element<T>>::value;
+
 public:
     /// Value of the type trait.
-    static const bool value = false;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
-class is_hash_function_object<T, U, typename std::enable_if<is_function_object<
-                                        typename std::add_const<T>::type, std::size_t,
-                                        typename std::decay<U>::type const &>::value>::type>
-{
-    typedef typename std::decay<U>::type Ud;
-
-public:
-    static const bool value = is_container_element<T>::value;
-};
-
-template <typename T, typename U, typename Enable>
-const bool is_hash_function_object<T, U, Enable>::value;
-
-template <typename T, typename U>
-const bool is_hash_function_object<T, U, typename std::enable_if<is_function_object<
-                                             typename std::add_const<T>::type, std::size_t,
-                                             typename std::decay<U>::type const &>::value>::type>::value;
+const bool is_hash_function_object<T, U>::value;
 
 /// Type trait to detect equality function objects.
 /**
  * \p T is an equality function object for \p U if the following requirements are met:
  * - \p T is a function object with const call operator accepting as input two const \p U and returning \p bool,
  * - \p T satisfies piranha::is_container_element.
- *
- * The decay type of \p U is considered in this type trait.
  */
-template <typename T, typename U, typename = void>
+template <typename T, typename U>
 class is_equality_function_object
 {
+    static const bool implementation_defined
+        = conjunction<is_function_object<const T, bool, const addlref_t<U>, const addlref_t<U>>,
+                      is_container_element<T>>::value;
+
 public:
     /// Value of the type trait.
-    static const bool value = false;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename U>
-class is_equality_function_object<T, U,
-                                  typename std::enable_if<is_function_object<
-                                      typename std::add_const<T>::type, bool, typename std::decay<U>::type const &,
-                                      typename std::decay<U>::type const &>::value>::type>
+const bool is_equality_function_object<T, U>::value;
+
+/// Hashable type trait.
+/**
+ * This type trait will be \p true if \p T is hashable (after the removal of cv/ref qualifiers), \p false otherwise.
+ *
+ * A type \p T is hashable when supplied with a specialisation of \p std::hash which satisfies
+ * piranha::is_hash_function_object.
+ *
+ * Note that depending on the implementation of the default \p std::hash class, using this type trait with
+ * a type which does not provide a specialisation for \p std::hash could result in a compilation error
+ * (e.g., if the unspecialised \p std::hash includes a \p false \p static_assert).
+ */
+// NOTE: when we remove the is_container_element check we might need to make sure that std::hash is def ctible,
+// depending on how we use it. Check.
+template <typename T>
+class is_hashable
 {
+    static const bool implementation_defined = is_hash_function_object<std::hash<uncvref_t<T>>, T>::value;
+
 public:
-    static const bool value = is_container_element<T>::value;
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
 };
 
-template <typename T, typename U, typename Enable>
-const bool is_equality_function_object<T, U, Enable>::value;
-
-template <typename T, typename U>
-const bool
-    is_equality_function_object<T, U, typename std::enable_if<is_function_object<
-                                          typename std::add_const<T>::type, bool, typename std::decay<U>::type const &,
-                                          typename std::decay<U>::type const &>::value>::type>::value;
+template <typename T>
+const bool is_hashable<T>::value;
 }
 
 /// Macro to test if class has type definition.
 /**
- * This macro will declare a template struct parametrized over one type \p T and called <tt>has_typedef_type_name</tt>,
- * whose static const bool member \p value will be \p true if \p T contains a \p typedef called \p type_name, false
+ * This macro will declare a struct template parametrized over one type \p T and called <tt>has_typedef_type_name</tt>,
+ * whose static const bool member \p value will be \p true if \p T contains a \p typedef called \p type_name, \p false
  * otherwise.
  *
  * For instance:
- * \code
+ * @code
  * PIRANHA_DECLARE_HAS_TYPEDEF(foo_type);
  * struct foo
  * {
  * 	typedef int foo_type;
  * };
  * struct bar {};
- * \endcode
+ * @endcode
  * \p has_typedef_foo_type<foo>::value will be true and \p has_typedef_foo_type<bar>::value will be false.
- *
- * The decay type of the template argument is considered by the class defined by the macro.
  */
 #define PIRANHA_DECLARE_HAS_TYPEDEF(type_name)                                                                         \
     template <typename PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>                                                           \
-    class has_typedef_##type_name : piranha::detail::sfinae_types                                                      \
+    class has_typedef_##type_name                                                                                      \
     {                                                                                                                  \
-        using Td_ = typename std::decay<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>::type;                                   \
-        template <typename T_>                                                                                         \
-        static auto test(const T_ *) -> decltype(std::declval<typename T_::type_name>(), void(), yes());               \
-        static no test(...);                                                                                           \
+        using Td_ = uncvref_t<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>;                                                   \
+        template <typename U>                                                                                          \
+        using type_t = typename U::type_name;                                                                          \
                                                                                                                        \
     public:                                                                                                            \
-        static const bool value = std::is_same<yes, decltype(test((Td_ *)nullptr))>::value;                            \
+        static const bool value = is_detected<type_t, Td_>::value;                                                     \
     }
 
 /// Macro for static type trait checks.
@@ -780,7 +726,7 @@ using min_int = typename detail::min_int_impl<T, Args...>::type;
 template <typename T, typename... Args>
 using max_int = typename detail::max_int_impl<T, Args...>::type;
 
-namespace detail
+inline namespace impl
 {
 
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
@@ -788,13 +734,11 @@ namespace detail
 // Detect the availability of std::iterator_traits on type It, plus a couple more requisites from the
 // iterator concept.
 // NOTE: this needs also the is_swappable type trait, but this seems to be difficult to implement in C++11. Mostly
-// because
-// it seems that:
+// because it seems that:
 // - we cannot detect a specialised std::swap (so if it is not specialised, it will pick the default implementation
 //   which could fail in the implementation without giving hints in the prototype),
 // - it's tricky to fulfill the requirement that swap has to be called unqualified (cannot use 'using std::swap' within
-// a decltype()
-//   SFINAE, might be doable with automatic return type deduction for regular functions in C++14?).
+//   a decltype() SFINAE, might be doable with automatic return type deduction for regular functions in C++14?).
 template <typename It>
 struct has_iterator_traits {
     using it_tags = std::tuple<std::input_iterator_tag, std::output_iterator_tag, std::forward_iterator_tag,
@@ -805,60 +749,20 @@ struct has_iterator_traits {
     PIRANHA_DECLARE_HAS_TYPEDEF(reference);
     PIRANHA_DECLARE_HAS_TYPEDEF(iterator_category);
     using i_traits = std::iterator_traits<It>;
-    static const bool value = has_typedef_reference<i_traits>::value && has_typedef_value_type<i_traits>::value
-                              && has_typedef_pointer<i_traits>::value && has_typedef_difference_type<i_traits>::value
-                              && has_typedef_iterator_category<i_traits>::value && std::is_copy_constructible<It>::value
-                              && std::is_copy_assignable<It>::value && std::is_destructible<It>::value;
+    static const bool value
+        = conjunction<has_typedef_reference<i_traits>, has_typedef_value_type<i_traits>, has_typedef_pointer<i_traits>,
+                      has_typedef_difference_type<i_traits>, has_typedef_iterator_category<i_traits>,
+                      std::is_copy_constructible<It>, std::is_copy_assignable<It>, std::is_destructible<It>>::value;
 };
-
-template <typename It>
-const bool has_iterator_traits<It>::value;
 
 // TMP to check if a type is convertible to a type in the tuple.
-template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
+template <typename, typename>
 struct convertible_type_in_tuple {
-    static_assert(I < std::numeric_limits<std::size_t>::max(), "Overflow error.");
-    static const bool value = std::is_convertible<T, typename std::tuple_element<I, Tuple>::type>::value
-                              || convertible_type_in_tuple<T, Tuple, I + 1u>::value;
 };
 
-template <typename T, typename Tuple, std::size_t I>
-struct convertible_type_in_tuple<T, Tuple, I, typename std::enable_if<I == std::tuple_size<Tuple>::value>::type> {
-    static const bool value = false;
-};
-
-template <typename T, typename = void>
-struct is_iterator_impl {
-    static const bool value = false;
-};
-
-// NOTE: here the correct condition is the commented one, as opposed to the first one appearing. However, it seems like
-// there are inconsistencies between the commented condition and the definition of many output iterators in the standard
-// library:
-//
-// http://stackoverflow.com/questions/23567244/apparent-inconsistency-in-iterator-requirements
-//
-// Until this is clarified, it is probably better to keep this workaround.
-template <typename T>
-struct is_iterator_impl<T,
-                        typename std::
-                            enable_if</*std::is_same<typename
-                                         std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value &&*/
-                                      // That is the one that would need to be replaced with the one above. Just check
-                                      // that operator*() is defined.
-                                      std::is_same<decltype(*std::declval<T &>()),
-                                                   decltype(*std::declval<T &>())>::value
-                                      && std::is_same<decltype(++std::declval<T &>()), T &>::value
-                                      && has_iterator_traits<T>::value &&
-                                      // NOTE: here we used to have type_in_tuple, but it turns out Boost.iterator
-                                      // defines its own set of tags derived from the standard
-                                      // ones. Hence, check that the category can be converted to one of the standard
-                                      // categories. This should not change anything for std iterators,
-                                      // and just enable support for Boost ones.
-                                      convertible_type_in_tuple<typename std::iterator_traits<T>::iterator_category,
-                                                                typename has_iterator_traits<T>::it_tags>::value>::
-                                type> {
-    static const bool value = true;
+template <typename T, typename... Args>
+struct convertible_type_in_tuple<T, std::tuple<Args...>> {
+    static const bool value = disjunction<std::is_convertible<T, Args>...>::value;
 };
 
 #endif
@@ -866,14 +770,37 @@ struct is_iterator_impl<T,
 
 /// Iterator type trait.
 /**
- * This type trait will be \p true if the decay type of \p T satisfies the compile-time requirements of an iterator (as
- * defined by the C++ standard),
- * \p false otherwise.
+ * This type trait will be \p true if \p T, after the removal of cv/ref qualifiers, satisfies the compile-time
+ * requirements of an iterator (as defined by the C++ standard), \p false otherwise.
  */
 template <typename T>
-struct is_iterator {
+class is_iterator
+{
+    template <typename U>
+    using deref_t = decltype(*std::declval<U &>());
+    template <typename U>
+    using inc_t = decltype(++std::declval<U &>());
+    template <typename U>
+    using it_cat = typename std::iterator_traits<U>::iterator_category;
+    using uT = uncvref_t<T>;
+    static const bool implementation_defined = conjunction<
+        // NOTE: here the correct condition is the commented one, as opposed to the first one appearing. However, it
+        // seems like there are inconsistencies between the commented condition and the definition of many output
+        // iterators in the standard library:
+        //
+        // http://stackoverflow.com/questions/23567244/apparent-inconsistency-in-iterator-requirements
+        //
+        // Until this is clarified, it is probably better to keep this workaround.
+        /* std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value */
+        is_detected<deref_t, uT>, std::is_same<detected_t<inc_t, uT>, uT &>, has_iterator_traits<uT>,
+        // NOTE: here we used to have type_in_tuple, but it turns out Boost.iterator defines its own set of tags derived
+        // from the standard ones. Hence, check that the category can be converted to one of the standard categories.
+        // This should not change anything for std iterators, and just enable support for Boost ones.
+        convertible_type_in_tuple<detected_t<it_cat, uT>, typename has_iterator_traits<uT>::it_tags>>::value;
+
+public:
     /// Value of the type trait.
-    static const bool value = detail::is_iterator_impl<typename std::decay<T>::type>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -909,7 +836,7 @@ struct arrow_operator_type<T, typename std::enable_if<std::is_same<
 template <typename T>
 struct is_input_iterator_impl<T,
                               typename std::
-                                  enable_if<is_iterator_impl<T>::value && is_equality_comparable<T>::value
+                                  enable_if<is_iterator<T>::value && is_equality_comparable<T>::value
                                             && std::is_convertible<decltype(*std::declval<T &>()),
                                                                    typename std::iterator_traits<T>::value_type>::value
                                             && std::is_same<decltype(++std::declval<T &>()), T &>::value
