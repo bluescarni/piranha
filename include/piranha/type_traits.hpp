@@ -595,29 +595,6 @@ const bool is_hashable<T, Enable>::value;
 template <typename T>
 const bool is_hashable<T, typename std::enable_if<detail::is_hashable_impl<T>::value>::type>::value;
 
-namespace detail
-{
-
-template <typename, typename, typename = void>
-struct is_function_object_impl {
-    template <typename... Args>
-    struct tt {
-        static const bool value = false;
-    };
-};
-
-template <typename T, typename ReturnType>
-struct is_function_object_impl<T, ReturnType, typename std::enable_if<std::is_class<T>::value>::type> {
-    template <typename... Args>
-    struct tt : detail::sfinae_types {
-        template <typename U>
-        static auto test(U &f) -> decltype(f(std::declval<Args>()...));
-        static no test(...);
-        static const bool value = std::is_same<decltype(test(*(T *)nullptr)), ReturnType>::value;
-    };
-};
-}
-
 /// Function object type trait.
 /**
  * This type trait will be true if \p T is a function object returning \p ReturnType and taking
@@ -631,9 +608,14 @@ struct is_function_object_impl<T, ReturnType, typename std::enable_if<std::is_cl
 template <typename T, typename ReturnType, typename... Args>
 class is_function_object
 {
+    template <typename T1, typename... Args1>
+    using ret_t = decltype(std::declval<T1 &>()(std::declval<Args1>()...));
+    static const bool implementation_defined
+        = conjunction<std::is_class<T>, std::is_same<detected_t<ret_t, T, Args...>, ReturnType>>::value;
+
 public:
     /// Value of the type trait.
-    static const bool value = detail::is_function_object_impl<T, ReturnType>::template tt<Args...>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T, typename ReturnType, typename... Args>

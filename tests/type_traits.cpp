@@ -814,6 +814,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_function_object_test)
     auto l2 = [](const int &) {};
     auto l3 = [](int &) {};
     auto l4 = [](int &) { return std::string{}; };
+    BOOST_CHECK((!is_function_object<void, void>::value));
     BOOST_CHECK((!is_function_object<int, void>::value));
     BOOST_CHECK((is_function_object<decltype(l1), void>::value));
     BOOST_CHECK((is_function_object<const decltype(l1), void>::value));
