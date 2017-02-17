@@ -853,6 +853,11 @@ struct convertible_type_in_tuple<T, std::tuple<Args...>> {
 #endif
 }
 
+// NOTE: this and the other iterator type traits seem to work ok in practice, but probably
+// there are some corner cases which are not handled fully according to the standard. After spending
+// some time on these, it seems like a nontrivial amount of work would be needed to refine them
+// further, so let's just leave them like this for now.
+
 /// Iterator type trait.
 /**
  * This type trait will be \p true if \p T, after the removal of cv/ref qualifiers, satisfies the compile-time
@@ -1167,9 +1172,8 @@ using fp_zero_is_absorbing_enabler = enable_if_t<std::is_floating_point<uncvref_
  * This specialisation is enabled if \p T, after the removal of cv/reference qualifiers, is a C++ floating-point type
  * supporting NaN.
  *
- * In the presence of NaN, a floating-point zero is not the multiplicative absorbing element.
- *
- * This type traits requires \p T to satsify piranha::is_multipliable, after the removal of cv/reference qualifiers.
+ * In the presence of NaN, a floating-point zero is not the multiplicative absorbing element, and thus this
+ * specialisation will be unconditionally \p false if activated.
  */
 template <typename T>
 class zero_is_absorbing<T, fp_zero_is_absorbing_enabler<T>>
