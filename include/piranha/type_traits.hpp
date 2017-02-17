@@ -651,12 +651,12 @@ const bool is_hashable<T>::value;
     template <typename PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>                                                           \
     class has_typedef_##type_name                                                                                      \
     {                                                                                                                  \
-        using Td_ = uncvref_t<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>;                                                   \
+        using Td_ = piranha::uncvref_t<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>;                                          \
         template <typename U>                                                                                          \
         using type_t = typename U::type_name;                                                                          \
                                                                                                                        \
     public:                                                                                                            \
-        static const bool value = is_detected<type_t, Td_>::value;                                                     \
+        static const bool value = piranha::is_detected<type_t, Td_>::value;                                            \
     }
 
 /// Macro for static type trait checks.
