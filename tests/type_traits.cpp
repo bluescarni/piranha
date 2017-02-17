@@ -1461,7 +1461,7 @@ BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
 
 // Boilerplate to test the arrow op type trait.
 template <typename T>
-using aot = detail::arrow_operator_type<T>;
+using aot = arrow_operator_type<T>;
 
 PIRANHA_DECLARE_HAS_TYPEDEF(type);
 
@@ -1815,6 +1815,7 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!has_iterator_traits<double>::value);
     BOOST_CHECK(has_iterator_traits<std::vector<int>::iterator>::value);
     BOOST_CHECK(has_iterator_traits<std::vector<int>::const_iterator>::value);
+    BOOST_CHECK(!is_iterator<void>::value);
     BOOST_CHECK(is_iterator<int *>::value);
     BOOST_CHECK(is_iterator<const int *>::value);
     BOOST_CHECK(is_iterator<std::vector<int>::iterator>::value);
@@ -1844,6 +1845,7 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(is_iterator<std::ostream_iterator<int>>::value);
     BOOST_CHECK(is_iterator<std::insert_iterator<std::list<int>>>::value);
     // Input iterator.
+    BOOST_CHECK(!is_input_iterator<void>::value);
     BOOST_CHECK(is_input_iterator<int *>::value);
     BOOST_CHECK(is_input_iterator<const int *>::value);
     BOOST_CHECK(is_input_iterator<std::vector<int>::iterator>::value);
@@ -1896,6 +1898,7 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(is_input_iterator<iter13 &>::value);
     BOOST_CHECK(is_input_iterator<const iter13>::value);
     // Forward iterator.
+    BOOST_CHECK(!is_forward_iterator<void>::value);
     BOOST_CHECK(is_forward_iterator<int *>::value);
     BOOST_CHECK(is_forward_iterator<const int *>::value);
     BOOST_CHECK(is_forward_iterator<std::vector<int>::iterator>::value);
@@ -2033,6 +2036,9 @@ BOOST_AUTO_TEST_CASE(type_traits_has_begin_end_test)
 BOOST_AUTO_TEST_CASE(type_traits_shift_test)
 {
     BOOST_CHECK(has_left_shift<int>::value);
+    BOOST_CHECK((!has_left_shift<void>::value));
+    BOOST_CHECK((!has_left_shift<void, int>::value));
+    BOOST_CHECK((!has_left_shift<int, void>::value));
     BOOST_CHECK((has_left_shift<int, long>::value));
     BOOST_CHECK((has_left_shift<int &, char &&>::value));
     BOOST_CHECK((has_left_shift<int &, const short &>::value));
@@ -2044,6 +2050,9 @@ BOOST_AUTO_TEST_CASE(type_traits_shift_test)
     // lshift operator for ostream has incompatible signature, as
     // the first argument is passed as mutable reference.
     BOOST_CHECK((!has_left_shift<std::ostream, long>::value));
+    BOOST_CHECK((!has_left_shift_in_place<void>::value));
+    BOOST_CHECK((!has_left_shift_in_place<void, int>::value));
+    BOOST_CHECK((!has_left_shift_in_place<int, void>::value));
     BOOST_CHECK(has_left_shift_in_place<int>::value);
     BOOST_CHECK((has_left_shift_in_place<int, long>::value));
     BOOST_CHECK((has_left_shift_in_place<int &, long const>::value));
@@ -2052,6 +2061,9 @@ BOOST_AUTO_TEST_CASE(type_traits_shift_test)
     BOOST_CHECK((!has_left_shift_in_place<long, float>::value));
     BOOST_CHECK((!has_left_shift_in_place<long, std::string>::value));
     // Right shift.
+    BOOST_CHECK((!has_right_shift<void>::value));
+    BOOST_CHECK((!has_right_shift<void, int>::value));
+    BOOST_CHECK((!has_right_shift<int, void>::value));
     BOOST_CHECK(has_right_shift<int>::value);
     BOOST_CHECK((has_right_shift<int, long>::value));
     BOOST_CHECK((has_right_shift<int &, char &&>::value));
@@ -2062,6 +2074,9 @@ BOOST_AUTO_TEST_CASE(type_traits_shift_test)
     BOOST_CHECK((!has_right_shift<long, std::string>::value));
     BOOST_CHECK((!has_right_shift<std::string, long>::value));
     BOOST_CHECK((!has_right_shift<std::istream, long>::value));
+    BOOST_CHECK((!has_right_shift_in_place<void>::value));
+    BOOST_CHECK((!has_right_shift_in_place<void, int>::value));
+    BOOST_CHECK((!has_right_shift_in_place<int, void>::value));
     BOOST_CHECK(has_right_shift_in_place<int>::value);
     BOOST_CHECK((has_right_shift_in_place<int, long>::value));
     BOOST_CHECK((has_right_shift_in_place<int &, long const>::value));

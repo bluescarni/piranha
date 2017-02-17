@@ -47,7 +47,6 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include <piranha/config.hpp>
-#include <piranha/detail/sfinae_types.hpp>
 
 namespace piranha
 {
@@ -193,12 +192,6 @@ template <typename T>
 using is_nonconst_rvalue_ref
     = std::integral_constant<bool,
                              conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>::value>;
-
-template <typename T, typename U, typename Derived>
-struct arith_tt_helper {
-    static const bool value = std::is_same<decltype(Derived::test(*(unref_t<T> *)nullptr, *(unref_t<U> *)nullptr)),
-                                           detail::sfinae_types::yes>::value;
-};
 }
 
 /// Addable type trait.
@@ -384,6 +377,98 @@ public:
 
 template <typename T, typename U>
 const bool is_divisible_in_place<T, U>::value;
+
+/// Left-shift type trait.
+/**
+ * This type trait will be \p true if objects of type \p T can be left-shifted by objects of type \p U using the binary
+ * left-shift operator, \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator<<(const T &, const U &)
+ * @endcode
+ */
+template <typename T, typename U = T>
+class has_left_shift
+{
+    template <typename T1, typename U1>
+    using ls_t = decltype(std::declval<const T1 &>() << std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<ls_t, T, U>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename T, typename U>
+const bool has_left_shift<T, U>::value;
+
+/// Right-shift type trait.
+/**
+ * This type trait will be \p true if objects of type \p T can be right-shifted by objects of type \p U using the binary
+ * right-shift operator, \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator>>(const T &, const U &)
+ * @endcode
+ */
+template <typename T, typename U = T>
+class has_right_shift
+{
+    template <typename T1, typename U1>
+    using rs_t = decltype(std::declval<const T1 &>() >> std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<rs_t, T, U>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename T, typename U>
+const bool has_right_shift<T, U>::value;
+
+/// In-place left-shift type trait.
+/**
+ * This type trait will be \p true if objects of type \p T can be left-shifted in-place by objects of type \p U,
+ * \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator<<=(T &, const U &)
+ * @endcode
+ */
+template <typename T, typename U = T>
+class has_left_shift_in_place
+{
+    template <typename T1, typename U1>
+    using ls_t = decltype(std::declval<T1 &>() <<= std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<ls_t, T, U>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename T, typename U>
+const bool has_left_shift_in_place<T, U>::value;
+
+/// In-place right-shift type trait.
+/**
+ * This type trait will be \p true if objects of type \p T can be right-shifted in-place by objects of type \p U,
+ * \p false otherwise. The operator will be tested in the form:
+ * @code
+ * operator>>=(T &, const U &)
+ * @endcode
+ */
+template <typename T, typename U = T>
+class has_right_shift_in_place
+{
+    template <typename T1, typename U1>
+    using rs_t = decltype(std::declval<T1 &>() >>= std::declval<const U1 &>());
+    static const bool implementation_defined = is_detected<rs_t, T, U>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+template <typename T, typename U>
+const bool has_right_shift_in_place<T, U>::value;
 
 /// Equality-comparable type trait.
 /**
@@ -792,7 +877,7 @@ class is_iterator
         //
         // Until this is clarified, it is probably better to keep this workaround.
         /* std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value */
-        is_detected<deref_t, uT>, std::is_same<detected_t<inc_t, uT>, uT &>, has_iterator_traits<uT>,
+        is_detected<deref_t, uT>, std::is_same<detected_t<inc_t, uT>, addlref_t<uT>>, has_iterator_traits<uT>,
         // NOTE: here we used to have type_in_tuple, but it turns out Boost.iterator defines its own set of tags derived
         // from the standard ones. Hence, check that the category can be converted to one of the standard categories.
         // This should not change anything for std iterators, and just enable support for Boost ones.
@@ -806,62 +891,65 @@ public:
 template <typename T>
 const bool is_iterator<T>::value;
 
-namespace detail
+inline namespace impl
 {
 
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
 
-template <typename T, typename = void>
-struct is_input_iterator_impl {
-    static const bool value = false;
-};
-
-template <typename T, typename = void>
+// The purpose of these bits is to check whether U correctly implements the arrow operator.
+// A correct implementation will return a pointer, after potentially calling
+// the operator recursively as many times as needed. See:
+// http://stackoverflow.com/questions/10677804/how-arrow-operator-overloading-works-internally-in-c
+template <typename U, typename = void>
 struct arrow_operator_type {
 };
 
-template <typename T>
-struct arrow_operator_type<T, typename std::enable_if<std::is_pointer<T>::value>::type> {
-    using type = T;
+// This represents the terminator of the recursion.
+template <typename U>
+struct arrow_operator_type<U *> {
+    using type = U *;
+};
+
+// Handy alias.
+template <typename U>
+using arrow_operator_t = typename arrow_operator_type<U>::type;
+
+// These bits invoke arrow_operator_type recursively, until a pointer is found.
+template <typename U>
+using rec_arrow_op_t = arrow_operator_t<decltype(std::declval<U &>().operator->())>;
+
+template <typename U>
+struct arrow_operator_type<U, enable_if_t<is_detected<rec_arrow_op_t, U>::value>> {
+    using type = rec_arrow_op_t<U>;
+};
+
+template <typename T, typename = void>
+struct is_input_iterator_impl : std::false_type {
 };
 
 template <typename T>
-struct arrow_operator_type<T, typename std::enable_if<std::is_same<
-                                  typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type,
-                                  typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type>::
-                                                          value>::type> {
-    using type = typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type;
-};
-
-template <typename T>
-struct is_input_iterator_impl<T,
-                              typename std::
-                                  enable_if<is_iterator<T>::value && is_equality_comparable<T>::value
-                                            && std::is_convertible<decltype(*std::declval<T &>()),
-                                                                   typename std::iterator_traits<T>::value_type>::value
-                                            && std::is_same<decltype(++std::declval<T &>()), T &>::value
-                                            && std::is_same<decltype((void)std::declval<T &>()++),
-                                                            decltype((void)std::declval<T &>()++)>::value
-                                            && std::is_convertible<decltype(*std::declval<T &>()++),
-                                                                   typename std::iterator_traits<T>::value_type>::value
-                                            &&
-                                            // NOTE: here we know that the arrow op has to return a pointer, if
-                                            // implemented correctly, and that the syntax
-                                            // it->m must be equivalent to (*it).m. This means that, barring differences
-                                            // in reference qualifications,
-                                            // it-> and *it must return the same thing.
-                                            std::is_same<
-                                                typename std::remove_reference<decltype(
-                                                    *std::declval<typename arrow_operator_type<T>::type>())>::type,
-                                                typename std::remove_reference<decltype(*std::declval<T &>())>::type>::
-                                                value
-                                            &&
-                                            // NOTE: here the usage of is_convertible guarantees we catch both iterators
-                                            // higher in the type hierarchy and
-                                            // the Boost versions of standard iterators as well.
-                                            std::is_convertible<typename std::iterator_traits<T>::iterator_category,
-                                                                std::input_iterator_tag>::value>::type> {
-    static const bool value = true;
+struct
+    is_input_iterator_impl<T,
+                           enable_if_t<conjunction<is_iterator<T>, is_equality_comparable<T>,
+                                                   std::is_convertible<decltype(*std::declval<T &>()),
+                                                                       typename std::iterator_traits<T>::value_type>,
+                                                   std::is_same<decltype(++std::declval<T &>()), T &>,
+                                                   std::is_same<decltype((void)std::declval<T &>()++),
+                                                                decltype((void)++std::declval<T &>())>,
+                                                   std::is_convertible<decltype(*std::declval<T &>()++),
+                                                                       typename std::iterator_traits<T>::value_type>,
+                                                   // NOTE: here we know that the arrow op has to return a pointer, if
+                                                   // implemented correctly, and that the syntax it->m must be
+                                                   // equivalent to (*it).m. This means that, barring differences in
+                                                   // reference qualifications, it-> and *it must return the same thing.
+                                                   std::is_same<unref_t<decltype(*std::declval<arrow_operator_t<T>>())>,
+                                                                unref_t<decltype(*std::declval<T &>())>>,
+                                                   // NOTE: here the usage of is_convertible guarantees we catch both
+                                                   // iterators higher in the type hierarchy and the Boost versions of
+                                                   // standard iterators as well.
+                                                   std::is_convertible<
+                                                       typename std::iterator_traits<T>::iterator_category,
+                                                       std::input_iterator_tag>>::value>> : std::true_type {
 };
 
 #endif
@@ -869,56 +957,61 @@ struct is_input_iterator_impl<T,
 
 /// Input iterator type trait.
 /**
- * This type trait will be \p true if the decay type of \p T satisfies the compile-time requirements of an input
- * iterator (as defined by the C++ standard),
- * \p false otherwise.
+ * This type trait will be \p true if \p T, after the removal of cv/reference qualifiers, satisfies the compile-time
+ * requirements of an input iterator (as defined by the C++ standard), \p false otherwise.
  */
 template <typename T>
-struct is_input_iterator {
+class is_input_iterator
+{
+    static const bool implementation_defined = is_input_iterator_impl<uncvref_t<T>>::value;
+
+public:
     /// Value of the type trait.
-    static const bool value = detail::is_input_iterator_impl<typename std::decay<T>::type>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
 const bool is_input_iterator<T>::value;
 
-namespace detail
+inline namespace impl
 {
 
 template <typename T, typename = void>
-struct is_forward_iterator_impl {
-    static const bool value = false;
+struct is_forward_iterator_impl : std::false_type {
 };
 
 template <typename T>
 struct is_forward_iterator_impl<T,
-                                typename std::
-                                    enable_if<is_input_iterator_impl<T>::value
-                                              && std::is_default_constructible<T>::value
-                                              && (std::is_same<typename std::iterator_traits<T>::value_type &,
-                                                               typename std::iterator_traits<T>::reference>::value
-                                                  || std::is_same<typename std::iterator_traits<T>::value_type const &,
-                                                                  typename std::iterator_traits<T>::reference>::value)
-                                              && std::is_convertible<decltype(std::declval<T &>()++), const T &>::value
-                                              && std::is_same<decltype(*std::declval<T &>()++),
-                                                              typename std::iterator_traits<T>::reference>::value
-                                              && std::is_convertible<
-                                                     typename std::iterator_traits<T>::iterator_category,
-                                                     std::forward_iterator_tag>::value>::type> {
-    static const bool value = true;
+                                enable_if_t<conjunction<is_input_iterator<T>, std::is_default_constructible<T>,
+                                                        disjunction<std::is_same<
+                                                                        typename std::iterator_traits<T>::value_type &,
+                                                                        typename std::iterator_traits<T>::reference>,
+                                                                    std::is_same<
+                                                                        typename std::iterator_traits<T>::
+                                                                            value_type const &,
+                                                                        typename std::iterator_traits<T>::reference>>,
+                                                        std::is_convertible<decltype(std::declval<T &>()++), const T &>,
+                                                        std::is_same<decltype(*std::declval<T &>()++),
+                                                                     typename std::iterator_traits<T>::reference>,
+                                                        std::is_convertible<
+                                                            typename std::iterator_traits<T>::iterator_category,
+                                                            std::forward_iterator_tag>>::value>> : std::true_type {
 };
 }
 
 /// Forward iterator type trait.
 /**
- * This type trait will be \p true if the decay type of \p T satisfies the compile-time requirements of a forward
- * iterator (as defined by the C++ standard),
- * \p false otherwise.
+ * This type trait will be \p true if \p T, after the removal of cv/reference qualifiers, satisfies the compile-time
+ * requirements of a forward iterator (as defined by the C++ standard), \p false otherwise.
  */
 template <typename T>
-struct is_forward_iterator {
+class is_forward_iterator
+{
+    static const bool implementation_defined = is_forward_iterator_impl<uncvref_t<T>>::value;
+
+public:
     /// Value of the type trait.
-    static const bool value = detail::is_forward_iterator_impl<typename std::decay<T>::type>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -964,155 +1057,35 @@ const bool true_tt<T>::value;
  *
  * - <tt>std::begin()</tt> and <tt>std::end()</tt> can be called on instances of \p T, yielding the type \p It,
  * - \p It is an input iterator.
- *
- * Any reference qualification in \p T is ignored by this type trait.
  */
+// NOTE: maybe this should be called has_input_begin_end.
 template <typename T>
-class has_begin_end : detail::sfinae_types
+class has_begin_end
 {
-    using Td = typename std::remove_reference<T>::type;
-    template <typename T1>
-    static auto test1(T1 &t) -> decltype(std::begin(t));
-    static no test1(...);
-    template <typename T1>
-    static auto test2(T1 &t) -> decltype(std::end(t));
-    static no test2(...);
+    template <typename U>
+    using begin_t = decltype(std::begin(std::declval<U &>()));
+    template <typename U>
+    using end_t = decltype(std::end(std::declval<U &>()));
+    static const bool implementation_defined
+        = conjunction<is_input_iterator<detected_t<begin_t, T>>, is_input_iterator<detected_t<end_t, T>>,
+                      std::is_same<detected_t<begin_t, T>, detected_t<end_t, T>>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = is_input_iterator<decltype(test1(std::declval<Td &>()))>::value
-          && is_input_iterator<decltype(test2(std::declval<Td &>()))>::value
-          && std::is_same<decltype(test1(std::declval<Td &>())), decltype(test2(std::declval<Td &>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
 const bool has_begin_end<T>::value;
 
-/// Left-shift type trait.
-/**
- * Will be \p true if objects of type \p T can be left-shifted by objects of type \p U.
- *
- * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
- @code
- operator<<(const Td &, const Ud &)
- @endcode
- * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
- @code
- has_left_shift<int>::value == true;
- has_left_shift<int,std::string>::value == false;
- @endcode
- */
-template <typename T, typename U = T>
-class has_left_shift : detail::sfinae_types
-{
-    friend struct arith_tt_helper<T, U, has_left_shift<T, U>>;
-    template <typename T1, typename U1>
-    static auto test(const T1 &t, const U1 &u) -> decltype(t << u, void(), yes());
-    static no test(...);
-
-public:
-    /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, has_left_shift>::value;
-};
-
-template <typename T, typename U>
-const bool has_left_shift<T, U>::value;
-
-/// Right-shift type trait.
-/**
- * Will be \p true if objects of type \p T can be right-shifted by objects of type \p U.
- *
- * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
- @code
- operator>>(const Td &, const Ud &)
- @endcode
- * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
- @code
- has_right_shift<int>::value == true;
- has_right_shift<int,std::string>::value == false;
- @endcode
- */
-template <typename T, typename U = T>
-class has_right_shift : detail::sfinae_types
-{
-    friend struct arith_tt_helper<T, U, has_right_shift<T, U>>;
-    template <typename T1, typename U1>
-    static auto test(const T1 &t, const U1 &u) -> decltype(t >> u, void(), yes());
-    static no test(...);
-
-public:
-    /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, has_right_shift>::value;
-};
-
-template <typename T, typename U>
-const bool has_right_shift<T, U>::value;
-
-/// In-place left-shift type trait.
-/**
- * Will be \p true if objects of type \p T can be left-shifted in-place by objects of type \p U.
- *
- * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
- @code
- operator<<=(Td &, const Ud &)
- @endcode
- * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
- @code
- has_left_shift_in_place<int>::value == true;
- has_left_shift_in_place<int,std::string>::value == false;
- @endcode
- */
-template <typename T, typename U = T>
-class has_left_shift_in_place : detail::sfinae_types
-{
-    friend struct arith_tt_helper<T, U, has_left_shift_in_place<T, U>>;
-    template <typename T1, typename U1>
-    static auto test(T1 &t, const U1 &u) -> decltype(t <<= u, void(), yes());
-    static no test(...);
-
-public:
-    /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, has_left_shift_in_place>::value;
-};
-
-template <typename T, typename U>
-const bool has_left_shift_in_place<T, U>::value;
-
-/// In-place right-shift type trait.
-/**
- * Will be \p true if objects of type \p T can be right-shifted in-place by objects of type \p U.
- *
- * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
- @code
- operator<<=(Td &, const Ud &)
- @endcode
- * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
- @code
- has_right_shift_in_place<int>::value == true;
- has_right_shift_in_place<int,std::string>::value == false;
- @endcode
- */
-template <typename T, typename U = T>
-class has_right_shift_in_place : detail::sfinae_types
-{
-    friend struct arith_tt_helper<T, U, has_right_shift_in_place<T, U>>;
-    template <typename T1, typename U1>
-    static auto test(T1 &t, const U1 &u) -> decltype(t >>= u, void(), yes());
-    static no test(...);
-
-public:
-    /// Value of the type trait.
-    static const bool value = arith_tt_helper<T, U, has_right_shift_in_place>::value;
-};
-
-template <typename T, typename U>
-const bool has_right_shift_in_place<T, U>::value;
-
 /// Detect if type can be returned from a function.
+/**
+ * The type trait will be true if \p T is destructible and copy or move
+ * constructible, or if \p T is \p void.
+ */
 template <typename T>
-struct is_returnable {
-private:
+class is_returnable
+{
     static const bool implementation_defined
         = disjunction<std::is_same<T, void>,
                       conjunction<std::is_destructible<T>,
@@ -1120,10 +1093,6 @@ private:
 
 public:
     /// Value of the type trait.
-    /**
-     * The type trait will be true if \p T is destructible and copy or move
-     * constructible, or if \p T is \p void.
-     */
     static const bool value = implementation_defined;
 };
 
@@ -1143,8 +1112,8 @@ const bool is_returnable<T>::value;
  * Otherwise, the value of this trait will be \p false.
  */
 template <typename T>
-struct is_mappable {
-private:
+class is_mappable
+{
     static const bool implementation_defined
         = conjunction<std::is_default_constructible<T>, std::is_destructible<T>, std::is_copy_constructible<T>,
                       std::is_copy_assignable<T>, std::is_move_constructible<T>, std::is_move_assignable<T>>::value;
@@ -1170,8 +1139,8 @@ const bool is_mappable<T>::value;
  * This type trait can be specialised via \p std::enable_if.
  */
 template <typename T, typename = void>
-struct zero_is_absorbing {
-private:
+class zero_is_absorbing
+{
     PIRANHA_TT_CHECK(is_multipliable, uncvref_t<T>);
 
 public:
@@ -1185,6 +1154,7 @@ const bool zero_is_absorbing<T, Enable>::value;
 inline namespace impl
 {
 
+// NOTE: no conj/disj as we are not using ::value members from numeric_limits.
 template <typename T>
 using fp_zero_is_absorbing_enabler = enable_if_t<std::is_floating_point<uncvref_t<T>>::value
                                                  && (std::numeric_limits<uncvref_t<T>>::has_quiet_NaN
@@ -1202,8 +1172,8 @@ using fp_zero_is_absorbing_enabler = enable_if_t<std::is_floating_point<uncvref_
  * This type traits requires \p T to satsify piranha::is_multipliable, after the removal of cv/reference qualifiers.
  */
 template <typename T>
-struct zero_is_absorbing<T, fp_zero_is_absorbing_enabler<T>> {
-private:
+class zero_is_absorbing<T, fp_zero_is_absorbing_enabler<T>>
+{
     PIRANHA_TT_CHECK(is_multipliable, uncvref_t<T>);
 
 public:
