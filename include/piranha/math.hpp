@@ -749,13 +749,25 @@ inline detail::math_integrate_type<T> integrate(const T &x, const std::string &s
 {
     return integrate_impl<T>{}(x, str);
 }
+}
+
+inline namespace impl
+{
+
+// The default implementation of evaluate_impl inherits from this.
+struct default_math_evaluate_tag {
+};
+}
+
+namespace math
+{
 
 /// Default functor for the implementation of piranha::math::evaluate().
 /**
  * This functor can be specialised via the \p std::enable_if mechanism.
  */
 template <typename T, typename U, typename = void>
-class evaluate_impl
+class evaluate_impl : default_math_evaluate_tag
 {
     template <typename T1, typename, typename = void>
     struct ret_type_ {
