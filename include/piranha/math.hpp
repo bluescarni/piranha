@@ -810,12 +810,12 @@ inline namespace impl
 
 // Return type for math::evaluate().
 template <typename T, typename U>
-using math_evaluate_type_ = decltype(
+using math_evaluate_t_ = decltype(
     math::evaluate_impl<T, U>{}(std::declval<const T &>(), std::declval<const std::unordered_map<std::string, U> &>()));
 
 template <typename T, typename U>
-using math_evaluate_type =
-    typename std::enable_if<is_returnable<math_evaluate_type_<T, U>>::value, math_evaluate_type_<T, U>>::type;
+using math_evaluate_t =
+    typename std::enable_if<is_returnable<math_evaluate_t_<T, U>>::value, math_evaluate_t_<T, U>>::type;
 }
 
 namespace math
@@ -843,7 +843,7 @@ namespace math
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
 template <typename U, typename T>
-inline math_evaluate_type<T, U> evaluate(const T &x, const std::unordered_map<std::string, U> &dict)
+inline math_evaluate_t<T, U> evaluate(const T &x, const std::unordered_map<std::string, U> &dict)
 {
     return evaluate_impl<T, U>{}(x, dict);
 }
