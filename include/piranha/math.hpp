@@ -1852,11 +1852,11 @@ struct is_differential_key_pair<Key, std::pair<PairFirst, Key>> {
  *
  * The decay type of \p Key is considered in this type trait.
  */
-template <typename T>
+template <typename Key>
 class key_is_differentiable : detail::sfinae_types
 {
-    using Td = typename std::decay<T>::type;
-    PIRANHA_TT_CHECK(is_key, Td);
+    using Keyd = typename std::decay<Key>::type;
+    PIRANHA_TT_CHECK(is_key, Keyd);
     template <typename U>
     static auto test(const U &u)
         -> decltype(u.partial(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()));
@@ -1864,11 +1864,11 @@ class key_is_differentiable : detail::sfinae_types
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::is_differential_key_pair<Td, decltype(test(std::declval<Td>()))>::value;
+    static const bool value = detail::is_differential_key_pair<Keyd, decltype(test(std::declval<Keyd>()))>::value;
 };
 
-template <typename T>
-const bool key_is_differentiable<T>::value;
+template <typename Key>
+const bool key_is_differentiable<Key>::value;
 
 /// Type trait for integrable types.
 /**
