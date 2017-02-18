@@ -755,8 +755,8 @@ inline detail::math_integrate_type<T> integrate(const T &x, const std::string &s
  * This functor can be specialised via the \p std::enable_if mechanism.
  */
 template <typename T, typename U, typename = void>
-struct evaluate_impl {
-private:
+class evaluate_impl
+{
     template <typename T1, typename, typename = void>
     struct ret_type_ {
         using type = T1;

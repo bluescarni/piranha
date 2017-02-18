@@ -3418,8 +3418,8 @@ namespace math
  * - \p E is addable in place, constructible from \p int and it satisfies piranha::is_returnable.
  */
 template <typename Series, typename T>
-struct evaluate_impl<Series, T, math_series_evaluate_enabler<Series, T>> {
-private:
+class evaluate_impl<Series, T, math_series_evaluate_enabler<Series, T>>
+{
     using eval_type = series_eval_type<Series, T>;
     using cf_eval_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
                                                  std::declval<std::unordered_map<std::string, T> const &>()));
