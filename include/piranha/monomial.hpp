@@ -864,7 +864,7 @@ public:
     }
 
 private:
-    // Subs support (re-uses the e_type typedef from the eval type)/
+    // Subs support (re-uses the e_type typedef from the eval type).
     template <typename U>
     using subs_type = enable_if_t<conjunction<std::is_constructible<e_type<U>, int>,
                                               std::is_assignable<e_type<U> &, e_type<U>>>::value,
