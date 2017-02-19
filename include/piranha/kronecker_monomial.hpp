@@ -1028,7 +1028,7 @@ public:
             }
         }
         piranha_assert(new_v.size() == v.size());
-        retval.push_back(std::make_pair(std::move(retval_s), kronecker_monomial(ka::encode(new_v))));
+        retval.emplace_back(std::move(retval_s), kronecker_monomial(ka::encode(new_v)));
         return retval;
     }
     /// Substitution of integral power.
@@ -1077,7 +1077,7 @@ public:
             }
         }
         std::vector<std::pair<s_type, kronecker_monomial>> retval;
-        retval.push_back(std::make_pair(std::move(retval_s), kronecker_monomial(ka::encode(new_v))));
+        retval.emplace_back(std::move(retval_s), kronecker_monomial(ka::encode(new_v)));
         return retval;
     }
     /// Identify symbols that can be trimmed.

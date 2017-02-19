@@ -979,7 +979,7 @@ public:
             }
         }
         std::vector<std::pair<s_type, monomial>> retval;
-        retval.push_back(std::make_pair(std::move(retval_s), std::move(retval_key)));
+        retval.emplace_back(std::move(retval_s), std::move(retval_key));
         return retval;
     }
     /// Multiply terms with a monomial key.

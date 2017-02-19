@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <piranha/config.hpp>
@@ -213,13 +214,13 @@ private:
     static limits_type determine_limits()
     {
         limits_type retval;
-        retval.push_back(std::make_tuple(std::vector<int_type>{}, int_type(0), int_type(0), int_type(0)));
+        retval.emplace_back(std::vector<int_type>{}, int_type(0), int_type(0), int_type(0));
         for (size_type i = 1u;; ++i) {
-            const auto tmp = determine_limit(i);
+            auto tmp = determine_limit(i);
             if (std::get<0u>(tmp).empty()) {
                 break;
             } else {
-                retval.push_back(tmp);
+                retval.push_back(std::move(tmp));
             }
         }
         return retval;

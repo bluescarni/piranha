@@ -588,7 +588,7 @@ inline symbol_set::positions_map<T>::positions_map(const symbol_set &a, const st
     for (const auto &p : map) {
         const auto idx = a.index_of(p.first);
         if (idx != a.size()) {
-            m_pairs.push_back(std::make_pair(idx, p.second));
+            m_pairs.emplace_back(idx, p.second);
         }
     }
     std::stable_sort(m_pairs.begin(), m_pairs.end(),
