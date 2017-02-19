@@ -590,8 +590,8 @@ public:
     template <typename U, pow_enabler<U> = 0>
     monomial pow(const U &x, const symbol_set &args) const
     {
-        typedef typename base::size_type size_type;
-        if (!is_compatible(args)) {
+        using size_type = typename base::size_type;
+        if (unlikely(!is_compatible(args))) {
             piranha_throw(std::invalid_argument, "invalid size of arguments set");
         }
         // Init with zeroes.
@@ -709,7 +709,7 @@ public:
                 // NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
                 // we are never going to land here as args[i] is at this point never going to be s.
                 ip_inc(retval[i]);
-                if (math::is_zero(retval[i])) {
+                if (unlikely(math::is_zero(retval[i]))) {
                     piranha_throw(std::invalid_argument,
                                   "unable to perform monomial integration: negative unitary exponent");
                 }
