@@ -152,20 +152,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
     using base = array_key<T, monomial<T, S>, S>;
-    // Eval and subs type definition.
-    template <typename U, typename = void>
-    struct eval_type_ {
-    };
-    template <typename U>
-    using e_type = decltype(math::pow(std::declval<U const &>(), std::declval<T const &>()));
-    template <typename U>
-    struct eval_type_<U, typename std::enable_if<is_multipliable_in_place<e_type<U>>::value
-                                                 && std::is_constructible<e_type<U>, int>::value
-                                                 && is_mappable<U>::value>::type> {
-        using type = e_type<U>;
-    };
-    template <typename U>
-    using eval_type = typename eval_type_<U>::type;
     // Enabler for ctor from init list.
     template <typename U>
     using init_list_enabler =
@@ -811,10 +797,14 @@ public:
         for (typename base::size_type i = 0u; i < this->size(); ++i) {
             cur_value = (*this)[i];
             if (!math::is_zero(cur_value)) {
-                // NOTE: the sequencing rules of the ternary operator ensure that math::negate(cur_value) is
-                // evaluated after zero < cur_value.
-                cur_oss
-                    = (zero < cur_value) ? std::addressof(oss_num) : (math::negate(cur_value), std::addressof(oss_den));
+                // NOTE: use this weird form for the test because the presence of operator<()
+                // is already guaranteed and thus we don't need additional requirements on T.
+                if (zero < cur_value) {
+                    cur_oss = std::addressof(oss_num);
+                } else {
+                    math::negate(cur_value);
+                    cur_oss = std::addressof(oss_den);
+                }
                 (*cur_oss) << "{" << args[i].get_name() << "}";
                 if (!math::is_unitary(cur_value)) {
                     (*cur_oss) << "^{" << detail::prepare_for_print(cur_value) << "}";
@@ -830,6 +820,17 @@ public:
             os << "\\frac{1}{" << den_str << "}";
         }
     }
+
+private:
+    // Eval and subs type definition.
+    template <typename U>
+    using e_type = decltype(math::pow(std::declval<U const &>(), std::declval<T const &>()));
+    template <typename U>
+    using eval_type = enable_if_t<conjunction<is_multipliable_in_place<e_type<U>>,
+                                              std::is_constructible<e_type<U>, int>, is_mappable<U>>::value,
+                                  e_type<U>>;
+
+public:
     /// Evaluation.
     /**
      * \note
@@ -885,14 +886,11 @@ public:
      * - \p U can be raised to the value type, yielding a type \p subs_type,
      * - \p subs_type can be constructed from \p int and it is assignable.
      *
-     * Substitute the symbol called \p s in the monomial with quantity \p x. The return value is vector containing one
-     * pair in which the first
-     * element is the result of substituting \p s with \p x (i.e., \p x raised to the power of the exponent
-     * corresponding
-     * to \p s), and the second element the monomial after the substitution has been performed (i.e., with the exponent
-     * corresponding to \p s set to zero). If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e.,
-     * the
-     * monomial is unchanged and the substitution yields 1).
+     * Substitute the symbol called \p s in the monomial with quantity \p x. The return value is vector containing
+     * one pair in which the first element is the result of substituting \p s with \p x (i.e., \p x raised to the power
+     * of the exponent corresponding to \p s), and the second element the monomial after the substitution has been
+     * performed (i.e., with the exponent corresponding to \p s set to zero). If \p s is not in \p args, the return
+     * value will be <tt>(1,this)</tt> (i.e., the monomial is unchanged and the substitution yields 1).
      *
      * @param s name of the symbol that will be substituted.
      * @param x quantity that will be substituted in place of \p s.
