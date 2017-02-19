@@ -253,23 +253,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     using partial_enabler =
         typename std::enable_if<std::is_assignable<U &, decltype(std::declval<U &>() - std::declval<U>())>::value,
                                 int>::type;
-    // Subs support.
-    // NOTE: this can obviously be compressed and implemented more cleanly with a single enable_if, but unfortunately
-    // when this pattern is used both here and in k_monomial, a weird compiler error results with both GCC 4.8 and 4.9.
-    // We need to check with GCC 5 what happens, and in case the problem is still there, it needs to be reported.
-    template <typename U>
-    using subs_type__ = decltype(math::pow(std::declval<const U &>(), std::declval<const T &>()));
-    template <typename U, typename = void>
-    struct subs_type_ {
-    };
-    template <typename U>
-    struct subs_type_<U,
-                      typename std::enable_if<std::is_constructible<subs_type__<U>, int>::value
-                                              && std::is_assignable<subs_type__<U> &, subs_type__<U>>::value>::type> {
-        using type = subs_type__<U>;
-    };
-    template <typename U>
-    using subs_type = typename subs_type_<U>::type;
     // ipow subs support.
     template <typename U>
     using ipow_subs_type__ = decltype(math::pow(std::declval<const U &>(), std::declval<const integer &>()));
@@ -822,7 +805,7 @@ public:
     }
 
 private:
-    // Eval and subs type definition.
+    // Eval type definition.
     template <typename U>
     using e_type = decltype(math::pow(std::declval<U const &>(), std::declval<T const &>()));
     template <typename U>
@@ -879,6 +862,15 @@ public:
         piranha_assert(it == pmap.end());
         return retval;
     }
+
+private:
+    // Subs support (re-uses the e_type typedef from the eval type)/
+    template <typename U>
+    using subs_type = enable_if_t<conjunction<std::is_constructible<e_type<U>, int>,
+                                              std::is_assignable<e_type<U> &, e_type<U>>>::value,
+                                  e_type<U>>;
+
+public:
     /// Substitution.
     /**
      * \note
@@ -924,7 +916,7 @@ public:
             }
         }
         piranha_assert(retval_key.size() == this->size());
-        retval.push_back(std::make_pair(std::move(retval_s), std::move(retval_key)));
+        retval.emplace_back(std::move(retval_s), std::move(retval_key));
         return retval;
     }
     /// Substitution of integral power.
