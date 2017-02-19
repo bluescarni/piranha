@@ -67,7 +67,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/invert.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_convertible.hpp>
-#include <piranha/lamptify.hpp>
 #include <piranha/math.hpp>
 #include <piranha/mp_integer.hpp>
 #include <piranha/pow.hpp>
@@ -3489,83 +3488,6 @@ public:
             multadd(retval, math::evaluate(t.m_cf, dict), t.m_key.evaluate(pmap, s.get_symbol_set()));
         }
         return retval;
-    }
-};
-}
-
-inline namespace impl
-{
-
-template <typename Series, typename T>
-using series_cf_lam_t = decltype(math::lamptify(
-    std::declval<const typename Series::term_type::cf_type &>(), std::declval<const std::vector<std::string> &>(),
-    std::declval<const std::unordered_map<std::string, std::function<T(const std::vector<T> &)>> &>()));
-}
-
-namespace math
-{
-
-template <typename Series, typename T>
-class lamptify_impl<Series, T, math_series_lamptify_enabler<Series, T>>
-{
-    struct lamptified {
-        using cf_lam_t = series_cf_lam_t<Series, T>;
-        using key_lam_t = series_key_lam_t<Series, T>;
-        using vector_t = std::vector<std::pair<cf_lam_t, key_lam_t>>;
-        lamptified(const Series &s, const std::vector<std::string> &names,
-                   const std::unordered_map<std::string, std::function<T(const std::vector<T> &)>> &implicit_deps)
-        {
-            // Check if there are duplicates in names.
-            auto names_copy = names;
-            std::sort(names_copy.begin(), names_copy.end());
-            if (unlikely(std::unique(names_copy.begin(), names_copy.end()) != names_copy.end())) {
-                piranha_throw(std::invalid_argument, "the positional list of symbols used in "
-                                                     "the lamptification of a series contains duplicates");
-            }
-            // Make sure that implicit_deps does not contain anything already in names.
-            // NOTE: iterate over implicit_deps because it's likely to contain fewer elements
-            // than names.
-            for (const auto &p : implicit_deps) {
-                if (unlikely(std::binary_search(names_copy.begin(), names_copy.end(), p.first))) {
-                    piranha_throw(std::invalid_argument, "the implicit dependencies map used in the lamptification "
-                                                         "of a series contains the symbol '"
-                                                             + p.first + "', which is already in the "
-                                                                         "positional list of symbols");
-                }
-            }
-            // Check that all symbols in s are present either in the positional list, or in the implict deps map.
-            for (const auto &sym : s.get_symbol_set()) {
-                if (unlikely(!std::binary_search(names_copy.begin(), names_copy.end(), sym.get_name())
-                             && !implicit_deps.count(sym.get_name()))) {
-                    piranha_throw(std::invalid_argument,
-                                  "in the lamptification of a series, the symbol '" + sym.get_name()
-                                      + "' was not found neither in the positional list of symbols nor in the "
-                                        "implicit dependencies map");
-                }
-            }
-            // Build the vector of lamptified objects.
-            m_terms.reserve(static_cast<typename vector_t::size_type>(s.size()));
-            for (const auto &t : s._container()) {
-                m_terms.emplace_back(math::lamptify(t.m_cf, names, implicit_deps), t.m_key.lamptify());
-            }
-        }
-        eval_t operator()(const std::vector<T> &values) const
-        {
-            eval_t retval(0);
-            for (const auto &p : m_terms) {
-                addmul_impl(retval, p.first(values), p.second(values));
-            }
-            return retval;
-        }
-        vector_t m_terms;
-    };
-
-public:
-    return_t
-    operator()(const Series &s, const std::vector<std::string> &names,
-               const std::unordered_map<std::string, std::function<T(const std::vector<T> &)>> &implicit_deps) const
-    {
-        return lamptified{s, names, implicit_deps};
     }
 };
 }
