@@ -42,7 +42,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/detail/init_data.hpp>
-#include <piranha/detail/symbol_set_fwd.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/symbol.hpp>
 #include <piranha/type_traits.hpp>
@@ -52,8 +51,8 @@ namespace piranha
 
 /// Symbol set.
 /**
- * This class represents an ordered set of piranha::symbol. The individual piranha::symbol instances
- * can be accessed via iterators or the index operator.
+ * This class represents an ordered set of piranha::symbol, stored internally as an ordered vector.
+ * The individual piranha::symbol instances can be accessed via iterators or the index operator.
  *
  * ## Exception safety guarantee ##
  *
@@ -68,6 +67,7 @@ class symbol_set
 {
     bool check() const
     {
+        // LCOV_EXCL_START
         // Check for sorted range.
         if (!std::is_sorted(begin(), end())) {
             return false;
@@ -81,18 +81,19 @@ class symbol_set
                 return false;
             }
         }
+        // LCOV_EXCL_STOP
         return true;
     }
     // Enabler for ctor from iterator.
     template <typename Iterator, typename Symbol>
-    using it_ctor_enabler = typename std::
-        enable_if<is_input_iterator<Iterator>::value
-                      && std::is_constructible<Symbol, decltype(*(std::declval<const Iterator &>()))>::value,
-                  int>::type;
+    using it_ctor_enabler
+        = enable_if_t<conjunction<is_input_iterator<Iterator>,
+                                  std::is_constructible<Symbol, decltype(*(std::declval<const Iterator &>()))>>::value,
+                      int>;
 
 public:
     /// Size type.
-    typedef std::vector<symbol>::size_type size_type;
+    using size_type = std::vector<symbol>::size_type;
     /// Positions class.
     /**
      * This is a small utility class that can be used to determine the positions,
@@ -145,6 +146,8 @@ public:
         }
         /// Last element.
         /**
+         * **NOTE**: the behaviour will be undefined if the size of \p this is zero.
+         *
          * @return a const reference to the last element.
          */
         const value_type &back() const
@@ -230,6 +233,8 @@ public:
         }
         /// Last element.
         /**
+         * **NOTE**: the behaviour will be undefined if the size of \p this is zero.
+         *
          * @return a const reference to the last element.
          */
         const value_type &back() const
@@ -242,7 +247,7 @@ public:
         std::vector<value_type> m_pairs;
     };
     /// Const iterator.
-    typedef std::vector<symbol>::const_iterator const_iterator;
+    using const_iterator = std::vector<symbol>::const_iterator;
     /// Defaulted default constructor.
     /**
      * Will construct an empty set.
@@ -528,10 +533,12 @@ public:
 private:
     bool run_destruction_checks() const
     {
+        // LCOV_EXCL_START
         // Run destruction checks only if we are not in the shutdown phase.
         if (shutdown()) {
             return true;
         }
+        // LCOV_EXCL_STOP
         return check();
     }
 
