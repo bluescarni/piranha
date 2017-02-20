@@ -157,11 +157,11 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1div3__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__inte21dc6168cc98f654bb07344e656952a7.html">div3_impl&lt; T, typename std::enable_if&lt; std::is_integral&lt; T &gt;::value &gt;::type &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#ab0b30a828ae8739cca5f4f492a8a4090" title="Ternary division. ">piranha::math::div3()</a> functor for integral types.  <a href="structpiranha_1_1math_1_1div3__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__inte21dc6168cc98f654bb07344e656952a7.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1evaluate__impl.html">evaluate_impl</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a7b7051ad0e4cd2e7373bb71747e2116a" title="Evaluation. ">piranha::math::evaluate()</a>.  <a href="structpiranha_1_1math_1_1evaluate__impl.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1math_1_1evaluate__impl.html">evaluate_impl</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a6ef0a582db726a9a28e8351faa08bcaa" title="Evaluation. ">piranha::math::evaluate()</a>.  <a href="classpiranha_1_1math_1_1evaluate__impl.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1evaluate__impl_3_01_series_00_01_t_00_01typename_01std_1_1enable__if_3_690d7ddd2bdd98656327e649cf5b52da.html">evaluate_impl&lt; Series, T, typename std::enable_if&lt; is_series&lt; Series &gt;::value &gt;::type &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a7b7051ad0e4cd2e7373bb71747e2116a" title="Evaluation. ">piranha::math::evaluate()</a> functor for series types.  <a href="structpiranha_1_1math_1_1evaluate__impl_3_01_series_00_01_t_00_01typename_01std_1_1enable__if_3_690d7ddd2bdd98656327e649cf5b52da.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1math_1_1evaluate__impl_3_01_series_00_01_t_00_01math__series__evaluate__enabler_3_01_series_00_01_t_01_4_01_4.html">evaluate_impl&lt; Series, T, math_series_evaluate_enabler&lt; Series, T &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of the implementation of <a class="el" href="namespacepiranha_1_1math.html#a6ef0a582db726a9a28e8351faa08bcaa" title="Evaluation. ">piranha::math::evaluate()</a> for series types.  <a href="classpiranha_1_1math_1_1evaluate__impl_3_01_series_00_01_t_00_01math__series__evaluate__enabler_3_01_series_00_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1gcd3__impl.html">gcd3_impl</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#aed326292eae1eeef5a46fd472a6e3165" title="Ternary GCD. ">piranha::math::gcd3()</a>.  <a href="structpiranha_1_1math_1_1gcd3__impl.html#details">More...</a><br /></td></tr>
@@ -227,7 +227,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of the <a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c" title="Zero test. ">piranha::math::is_zero()</a> functor for <a class="el" href="classpiranha_1_1real.html" title="Arbitrary precision floating-point class. ">piranha::real</a>.  <a href="structpiranha_1_1math_1_1is__zero__impl_3_01_t_00_01typename_01std_1_1enable__if_3_01std_1_1is__0f5293ccea14433d6d670df85edcd144.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1math_1_1lambdified.html">lambdified</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Functor interface for <a class="el" href="namespacepiranha_1_1math.html#a7b7051ad0e4cd2e7373bb71747e2116a" title="Evaluation. ">piranha::math::evaluate()</a>.  <a href="classpiranha_1_1math_1_1lambdified.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Functor interface for <a class="el" href="namespacepiranha_1_1math.html#a6ef0a582db726a9a28e8351faa08bcaa" title="Evaluation. ">piranha::math::evaluate()</a>.  <a href="classpiranha_1_1math_1_1lambdified.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1math_1_1ldegree__impl.html">ldegree_impl</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default functor for the implementation of <a class="el" href="namespacepiranha_1_1math.html#a05ad27dfa7dce556237f837c5c317890" title="Total low degree. ">piranha::math::ldegree()</a>.  <a href="structpiranha_1_1math_1_1ldegree__impl.html#details">More...</a><br /></td></tr>
@@ -387,10 +387,10 @@ Functions</h2></td></tr>
 <tr class="memitem:ad1e5e54357d0937d3e42780f03e2e7df"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha_1_1math.html#ad1e5e54357d0937d3e42780f03e2e7df">invert</a> (const T &amp;x) -&gt; decltype(<a class="el" href="structpiranha_1_1math_1_1invert__impl.html">invert_impl</a>&lt; T &gt;()(x))</td></tr>
 <tr class="memdesc:ad1e5e54357d0937d3e42780f03e2e7df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the inverse.  <a href="#ad1e5e54357d0937d3e42780f03e2e7df">More...</a><br /></td></tr>
 <tr class="separator:ad1e5e54357d0937d3e42780f03e2e7df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6fbf22d958ba696f713feb60ce502373"><td class="memTemplParams" colspan="2">template&lt;typename U , typename T &gt; </td></tr>
-<tr class="memitem:a6fbf22d958ba696f713feb60ce502373"><td class="memTemplItemLeft" align="right" valign="top">detail::math_lambdify_type&lt; T, U &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha_1_1math.html#a6fbf22d958ba696f713feb60ce502373">lambdify</a> (T &amp;&amp;x, const std::vector&lt; std::string &gt; &amp;names, detail::math_lambdify_extra_map_type&lt; T, U &gt; extra_map=detail::math_lambdify_extra_map_type&lt; T, U &gt;{})</td></tr>
-<tr class="memdesc:a6fbf22d958ba696f713feb60ce502373"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a functor interface for <a class="el" href="namespacepiranha_1_1math.html#a7b7051ad0e4cd2e7373bb71747e2116a" title="Evaluation. ">piranha::math::evaluate()</a>.  <a href="#a6fbf22d958ba696f713feb60ce502373">More...</a><br /></td></tr>
-<tr class="separator:a6fbf22d958ba696f713feb60ce502373"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1e6a2d4227c2ed2383dc33f6c53ef50"><td class="memTemplParams" colspan="2">template&lt;typename U , typename T &gt; </td></tr>
+<tr class="memitem:ae1e6a2d4227c2ed2383dc33f6c53ef50"><td class="memTemplItemLeft" align="right" valign="top">detail::math_lambdify_type&lt; T, U &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha_1_1math.html#ae1e6a2d4227c2ed2383dc33f6c53ef50">lambdify</a> (T &amp;&amp;x, const std::vector&lt; std::string &gt; &amp;names, detail::math_lambdify_extra_map_type&lt; T, U &gt; extra_map={})</td></tr>
+<tr class="memdesc:ae1e6a2d4227c2ed2383dc33f6c53ef50"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a functor interface for <a class="el" href="namespacepiranha_1_1math.html#a6ef0a582db726a9a28e8351faa08bcaa" title="Evaluation. ">piranha::math::evaluate()</a>.  <a href="#ae1e6a2d4227c2ed2383dc33f6c53ef50">More...</a><br /></td></tr>
+<tr class="separator:ae1e6a2d4227c2ed2383dc33f6c53ef50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39d210d7fd0c312b5a280445548a853c"><td class="memTemplParams" colspan="2">template&lt;typename T , detail::math_is_zero_enabler&lt; T &gt;  = 0&gt; </td></tr>
 <tr class="memitem:a39d210d7fd0c312b5a280445548a853c"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha_1_1math.html#a39d210d7fd0c312b5a280445548a853c">is_zero</a> (const T &amp;x)</td></tr>
 <tr class="memdesc:a39d210d7fd0c312b5a280445548a853c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Zero test.  <a href="#a39d210d7fd0c312b5a280445548a853c">More...</a><br /></td></tr>
@@ -423,10 +423,10 @@ Functions</h2></td></tr>
 <tr class="memitem:ad7f46a0b6a203a29e27aefd1a196edc6"><td class="memTemplItemLeft" align="right" valign="top">detail::math_integrate_type&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha_1_1math.html#ad7f46a0b6a203a29e27aefd1a196edc6">integrate</a> (const T &amp;x, const std::string &amp;str)</td></tr>
 <tr class="memdesc:ad7f46a0b6a203a29e27aefd1a196edc6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Integration.  <a href="#ad7f46a0b6a203a29e27aefd1a196edc6">More...</a><br /></td></tr>
 <tr class="separator:ad7f46a0b6a203a29e27aefd1a196edc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b7051ad0e4cd2e7373bb71747e2116a"><td class="memTemplParams" colspan="2">template&lt;typename U , typename T &gt; </td></tr>
-<tr class="memitem:a7b7051ad0e4cd2e7373bb71747e2116a"><td class="memTemplItemLeft" align="right" valign="top">detail::math_evaluate_type&lt; T, U &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha_1_1math.html#a7b7051ad0e4cd2e7373bb71747e2116a">evaluate</a> (const T &amp;x, const std::unordered_map&lt; std::string, U &gt; &amp;dict)</td></tr>
-<tr class="memdesc:a7b7051ad0e4cd2e7373bb71747e2116a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluation.  <a href="#a7b7051ad0e4cd2e7373bb71747e2116a">More...</a><br /></td></tr>
-<tr class="separator:a7b7051ad0e4cd2e7373bb71747e2116a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ef0a582db726a9a28e8351faa08bcaa"><td class="memTemplParams" colspan="2">template&lt;typename U , typename T &gt; </td></tr>
+<tr class="memitem:a6ef0a582db726a9a28e8351faa08bcaa"><td class="memTemplItemLeft" align="right" valign="top">math_evaluate_t&lt; T, U &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha_1_1math.html#a6ef0a582db726a9a28e8351faa08bcaa">evaluate</a> (const T &amp;x, const std::unordered_map&lt; std::string, U &gt; &amp;dict)</td></tr>
+<tr class="memdesc:a6ef0a582db726a9a28e8351faa08bcaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluation.  <a href="#a6ef0a582db726a9a28e8351faa08bcaa">More...</a><br /></td></tr>
+<tr class="separator:a6ef0a582db726a9a28e8351faa08bcaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abd7b607dc1e19d28a2f8bd601e6916c7"><td class="memTemplParams" colspan="2">template&lt;typename T , typename U &gt; </td></tr>
 <tr class="memitem:abd7b607dc1e19d28a2f8bd601e6916c7"><td class="memTemplItemLeft" align="right" valign="top">detail::math_subs_type&lt; T, U &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepiranha_1_1math.html#abd7b607dc1e19d28a2f8bd601e6916c7">subs</a> (const T &amp;x, const std::string &amp;name, const U &amp;y)</td></tr>
 <tr class="memdesc:abd7b607dc1e19d28a2f8bd601e6916c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Substitution.  <a href="#abd7b607dc1e19d28a2f8bd601e6916c7">More...</a><br /></td></tr>
@@ -595,7 +595,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01013">1013</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01048">1048</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -660,7 +660,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02602">2602</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02633">2633</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -702,7 +702,7 @@ template&lt;typename T , typename U &gt; </div>
 
 <p>Generalised binomial coefficient. </p>
 <p>Generic binomial coefficient.</p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>binomial_impl&lt;T,U&gt;{}(x,y)</code> is a valid expression, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>binomial_impl&lt;T,U&gt;{}(x,y)</code> is a valid expression, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Will return the generalised binomial coefficient: </p><p class="formulaDsp">
 \[ {x \choose y}. \]
 </p>
@@ -752,7 +752,7 @@ template&lt;typename T &gt; </div>
 </div><div class="memdoc">
 
 <p>Cosine. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>cos_impl&lt;T&gt;{}(x)</code> is valid, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>cos_impl&lt;T&gt;{}(x)</code> is valid, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Returns the cosine of <code>x</code>. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1cos__impl.html" title="Default functor for the implementation of piranha::math::cos(). ">piranha::math::cos_impl</a> functor's call operator. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> cos_impl&lt;T&gt;{}(x);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>cosine argument.</td></tr>
@@ -815,7 +815,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01340">1340</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01375">1375</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -874,7 +874,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01359">1359</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01394">1394</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -939,12 +939,12 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02818">2818</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02849">2849</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
-<a id="a7b7051ad0e4cd2e7373bb71747e2116a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b7051ad0e4cd2e7373bb71747e2116a">&#9670;&nbsp;</a></span>evaluate()</h2>
+<a id="a6ef0a582db726a9a28e8351faa08bcaa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ef0a582db726a9a28e8351faa08bcaa">&#9670;&nbsp;</a></span>evaluate()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -955,7 +955,7 @@ template&lt;typename U , typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">detail::math_evaluate_type&lt;T, U&gt; piranha::math::evaluate </td>
+          <td class="memname">math_evaluate_t&lt;T, U&gt; piranha::math::evaluate </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"><em>x</em>, </td>
@@ -980,8 +980,8 @@ template&lt;typename U , typename T &gt; </div>
 </div><div class="memdoc">
 
 <p>Evaluation. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>evaluate_impl&lt;T,U&gt;{}(x,dict)</code> is a valid expression, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
-<p>Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary <code>dict</code> specifies the quantity (value) that will be susbstituted for each argument (key), represented as a string. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1evaluate__impl.html" title="Default functor for the implementation of piranha::math::evaluate(). ">piranha::math::evaluate_impl</a> functor. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> evaluate_impl&lt;T,U&gt;{}(x,dict);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>evaluate_impl&lt;T,U&gt;{}(x,dict)</code> is a valid expression, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<p>Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary <code>dict</code> specifies the quantity (value) that will be susbstituted for each argument (key), represented as a string. The actual implementation of this function is in the <a class="el" href="classpiranha_1_1math_1_1evaluate__impl.html" title="Default functor for the implementation of piranha::math::evaluate(). ">piranha::math::evaluate_impl</a> functor. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> evaluate_impl&lt;T,U&gt;{}(x,dict);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>quantity that will be evaluated. </td></tr>
     <tr><td class="paramname">dict</td><td>dictionary that will be used to perform the substitution.</td></tr>
@@ -991,12 +991,12 @@ template&lt;typename U , typename T &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd><code>x</code> evaluated according to <code>dict</code>.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">unspecified</td><td>any exception thrown by the call operator of <a class="el" href="structpiranha_1_1math_1_1evaluate__impl.html" title="Default functor for the implementation of piranha::math::evaluate(). ">piranha::math::evaluate_impl</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by the call operator of <a class="el" href="classpiranha_1_1math_1_1evaluate__impl.html" title="Default functor for the implementation of piranha::math::evaluate(). ">piranha::math::evaluate_impl</a>. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l00823">823</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l00858">858</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -1043,7 +1043,7 @@ template&lt;std::size_t SSize&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l00255">255</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l00254">254</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1101,7 +1101,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02898">2898</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02929">2929</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -1166,7 +1166,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02967">2967</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02998">2998</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -1207,7 +1207,7 @@ template&lt;typename T &gt; </div>
 </div><div class="memdoc">
 
 <p>Integration. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>integrate_impl&lt;T&gt;{}(x,str)</code> is valid, returning a type that satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>integrate_impl&lt;T&gt;{}(x,str)</code> is valid, returning a type that satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Return the antiderivative of <code>x</code> with respect to the symbolic quantity named <code>str</code>. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1integrate__impl.html" title="Default functor for the implementation of piranha::math::integrate(). ">piranha::math::integrate_impl</a> functor. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> integrate_impl&lt;T&gt;{}(x,str);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>argument for the integration. </td></tr>
@@ -1323,7 +1323,7 @@ template&lt;typename T , typename U &gt; </div>
 </div><div class="memdoc">
 
 <p>Substitution of integral power. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>ipow_subs_impl&lt;T, U&gt;{}(x, name, n, y)</code> is valid, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>ipow_subs_impl&lt;T, U&gt;{}(x, name, n, y)</code> is valid, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Substitute, in <code>x</code>, <code>name**n</code> with <code>y</code>. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1ipow__subs__impl.html" title="Default functor for the implementation of piranha::math::ipow_subs(). ">piranha::math::ipow_subs_impl</a> functor's call operator. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> ipow_subs_impl&lt;T, U&gt;{}(x, name, n, y);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>quantity that will be subject to substitution. </td></tr>
@@ -1341,7 +1341,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l00313">313</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l00312">312</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1417,7 +1417,7 @@ template&lt;typename T , typename U , typename Int &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l00519">519</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mp__integer_8hpp_source.html#l00518">518</a> of file <a class="el" href="mp__integer_8hpp_source.html">mp_integer.hpp</a>.</p>
 
 </div>
 </div>
@@ -1513,8 +1513,8 @@ template&lt;typename T , detail::math_is_zero_enabler&lt; T &gt;  = 0&gt; </div>
 
 </div>
 </div>
-<a id="a6fbf22d958ba696f713feb60ce502373"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6fbf22d958ba696f713feb60ce502373">&#9670;&nbsp;</a></span>lambdify()</h2>
+<a id="ae1e6a2d4227c2ed2383dc33f6c53ef50"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae1e6a2d4227c2ed2383dc33f6c53ef50">&#9670;&nbsp;</a></span>lambdify()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1540,7 +1540,7 @@ template&lt;typename U , typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">detail::math_lambdify_extra_map_type&lt; T, U &gt;&#160;</td>
-          <td class="paramname"><em>extra_map</em> = <code>detail::math_lambdify_extra_map_type&lt;T,&#160;U&gt;{}</code>&#160;</td>
+          <td class="paramname"><em>extra_map</em> = <code>{}</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1555,7 +1555,7 @@ template&lt;typename U , typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Create a functor interface for <a class="el" href="namespacepiranha_1_1math.html#a7b7051ad0e4cd2e7373bb71747e2116a" title="Evaluation. ">piranha::math::evaluate()</a>. </p>
+<p>Create a functor interface for <a class="el" href="namespacepiranha_1_1math.html#a6ef0a582db726a9a28e8351faa08bcaa" title="Evaluation. ">piranha::math::evaluate()</a>. </p>
 <dl class="section note"><dt>Note</dt><dd>This function is enabled only if the decay types of <code>T</code> and <code>U</code> can be used as template parameters in <a class="el" href="classpiranha_1_1math_1_1lambdified.html" title="Functor interface for piranha::math::evaluate(). ">piranha::math::lambdified</a>.</dd></dl>
 <p>This utility function will create an object of type <a class="el" href="classpiranha_1_1math_1_1lambdified.html" title="Functor interface for piranha::math::evaluate(). ">piranha::math::lambdified</a> that can be used to evaluate <code>x</code> with a function-like interface. The parameters of this function are passed to the constructor of the returned <a class="el" href="classpiranha_1_1math_1_1lambdified.html" title="Functor interface for piranha::math::evaluate(). ">piranha::math::lambdified</a> object. For example: </p><div class="fragment"><div class="line">polynomial&lt;integer,k_monomial&gt; x{<span class="stringliteral">&quot;x&quot;</span>}, y{<span class="stringliteral">&quot;y&quot;</span>}, z{<span class="stringliteral">&quot;z&quot;</span>};</div><div class="line"><span class="keyword">auto</span> l = lambdify&lt;double&gt;(x-2*y+3*z,{<span class="stringliteral">&quot;z&quot;</span>,<span class="stringliteral">&quot;y&quot;</span>,<span class="stringliteral">&quot;x&quot;</span>});</div></div><!-- fragment --><p> The object <code>l</code> can then be used to evaluate <code>x-2*y+3*z</code> in the following way: </p><div class="fragment"><div class="line">l({1.,2.,3.});</div></div><!-- fragment --><p> That is, <code>x-2*y+3*z</code> is evaluated with <code>x=3.</code>, <code>y=2.</code> and <code>z=1.</code>.</p>
 <p>The optional parameter <code>extra_map</code> (of type <a class="el" href="classpiranha_1_1math_1_1lambdified.html#a8a37396a62ec2f0f32995f991104ac94" title="The map type for the custom evaluation of symbols. ">piranha::math::lambdified::extra_map_type</a>) is a map specifying how specific symbols should be evaluated. It is most useful when symbols have an implicit dependency on other symbols. For instance, suppose that the symbol \(z\) is implicitly dependent on the symbols \(x\) and \(y\) via \(z\left(x,y\right) = \sqrt{x+y}\). Then in order to evaluate \(x + y + z\) we can write: </p><div class="fragment"><div class="line">polynomial&lt;integer,k_monomial&gt; x{<span class="stringliteral">&quot;x&quot;</span>}, y{<span class="stringliteral">&quot;y&quot;</span>}, z{<span class="stringliteral">&quot;z&quot;</span>};</div><div class="line"><span class="keyword">auto</span> l = lambdify&lt;double&gt;(x+y+z,{<span class="stringliteral">&quot;x&quot;</span>,<span class="stringliteral">&quot;y&quot;</span>},{{<span class="stringliteral">&quot;z&quot;</span>,[](<span class="keyword">const</span> std::vector&lt;double&gt; &amp;v) {<span class="keywordflow">return</span> std::sqrt(v[0]+v[1]);}}});</div><div class="line">std::cout &lt;&lt; l({1.,2.}) &lt;&lt; <span class="charliteral">&#39;\n&#39;</span> <span class="comment">// This will print 1.+2.+sqrt(1.+2.) = 4.7320508076...</span></div></div><!-- fragment --><p> See the constructor of <a class="el" href="classpiranha_1_1math_1_1lambdified.html" title="Functor interface for piranha::math::evaluate(). ">piranha::math::lambdified</a> for more details on the <code>extra_map</code> argument.</p>
@@ -1576,7 +1576,7 @@ template&lt;typename U , typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="lambdify_8hpp_source.html#l00397">397</a> of file <a class="el" href="lambdify_8hpp_source.html">lambdify.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="lambdify_8hpp_source.html#l00398">398</a> of file <a class="el" href="lambdify_8hpp_source.html">lambdify.hpp</a>.</p>
 
 </div>
 </div>
@@ -1624,7 +1624,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01390">1390</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01425">1425</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -1683,7 +1683,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01410">1410</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01445">1445</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -1748,7 +1748,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02746">2746</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02777">2777</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -1898,7 +1898,7 @@ template&lt;typename T &gt; </div>
 </div><div class="memdoc">
 
 <p>Partial derivative. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>partial_impl&lt;T&gt;{}(x,str)</code> is valid, returning a type that satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>partial_impl&lt;T&gt;{}(x,str)</code> is valid, returning a type that satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Return the partial derivative of <code>x</code> with respect to the symbolic quantity named <code>str</code>. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1partial__impl.html" title="Default functor for the implementation of piranha::math::partial(). ">piranha::math::partial_impl</a> functor. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> partial_impl&lt;T&gt;{}(x,str);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>argument for the partial derivative. </td></tr>
@@ -1990,7 +1990,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01151">1151</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01186">1186</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2032,7 +2032,7 @@ template&lt;typename T , typename U &gt; </div>
 
 <p>Exponentiation. </p>
 <p>Generic binary exponentiation.</p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>pow_impl&lt;T, U&gt;{}(x, y)</code> is valid, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>pow_impl&lt;T, U&gt;{}(x, y)</code> is valid, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Return <code>x</code> to the power of <code>y</code>. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1pow__impl.html" title="Default functor for the implementation of piranha::math::pow(). ">piranha::math::pow_impl</a> functor's call operator. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> pow_impl&lt;T, U&gt;{}(x, y);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>base. </td></tr>
@@ -2079,7 +2079,7 @@ template&lt;typename T &gt; </div>
 </div><div class="memdoc">
 
 <p>Sine. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>sin_impl&lt;T&gt;{}(x)</code> is valid, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if the expression <code>sin_impl&lt;T&gt;{}(x)</code> is valid, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Returns the sine of <code>x</code>. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1sin__impl.html" title="Default functor for the implementation of piranha::math::sin(). ">piranha::math::sin_impl</a> functor's call operator. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> sin_impl&lt;T&gt;{}(x);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>sine argument.</td></tr>
@@ -2159,7 +2159,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02674">2674</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l02705">2705</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2206,7 +2206,7 @@ template&lt;typename T , typename U &gt; </div>
 </div><div class="memdoc">
 
 <p>Substitution. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>subs_impl&lt;T,U&gt;{}(x,name,y)</code> is a valid expression, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>subs_impl&lt;T,U&gt;{}(x,name,y)</code> is a valid expression, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Substitute a symbolic variable with a generic object. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1subs__impl.html" title="Default functor for the implementation of piranha::math::subs(). ">piranha::math::subs_impl</a> functor. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> subs_impl&lt;T,U&gt;{}(x,name,y);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>quantity that will be subject to substitution. </td></tr>
@@ -2223,7 +2223,7 @@ template&lt;typename T , typename U &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l00876">876</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l00911">911</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2274,7 +2274,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01447">1447</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01482">1482</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2334,7 +2334,7 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacepiranha_1_1math.html#a9cb790b56c7e9e146af38442d0aa21e7" title="Total trigonometric degree. ">piranha::math::t_degree()</a>. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01469">1469</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01504">1504</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2385,7 +2385,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01506">1506</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01541">1541</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2445,7 +2445,7 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacepiranha_1_1math.html#ad2b8b1f80aee0a381281198ff64365cf" title="Total trigonometric low degree. ">piranha::math::t_ldegree()</a>. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01528">1528</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01563">1563</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2496,7 +2496,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01630">1630</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01665">1665</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2556,7 +2556,7 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacepiranha_1_1math.html#af2332cb80565e16bd33b18556e526e09" title="Total trigonometric low order. ">piranha::math::t_lorder()</a>. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01652">1652</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01687">1687</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2607,7 +2607,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01568">1568</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01603">1603</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2667,7 +2667,7 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacepiranha_1_1math.html#a0bbc2ff5743dc9f7a7bb7a78d0bea14a" title="Total trigonometric order. ">piranha::math::t_order()</a>. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01590">1590</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01625">1625</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2720,7 +2720,7 @@ template&lt;typename T , typename U , typename V &gt; </div>
 </div><div class="memdoc">
 
 <p>Trigonometric substitution. </p>
-<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>t_subs_impl&lt;T,U,V&gt;{}(x,name,c,s)</code> is a valid expression, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function is enabled only if <code>t_subs_impl&lt;T,U,V&gt;{}(x,name,c,s)</code> is a valid expression, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>Substitute the cosine and sine of a symbolic variable with generic objects. The actual implementation of this function is in the <a class="el" href="structpiranha_1_1math_1_1t__subs__impl.html" title="Default functor for the implementation of piranha::math::t_subs(). ">piranha::math::t_subs_impl</a> functor. The body of this function is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> t_subs_impl&lt;T,U,V&gt;{}(x,name,c,s);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>quantity that will be subject to substitution. </td></tr>
@@ -2738,7 +2738,7 @@ template&lt;typename T , typename U , typename V &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l00931">931</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l00966">966</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2821,7 +2821,7 @@ template&lt;typename T , detail::is_canonical_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01282">1282</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01317">1317</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2891,7 +2891,7 @@ template&lt;typename T , detail::is_canonical_enabler&lt; T &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01305">1305</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01340">1340</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -2950,7 +2950,7 @@ template&lt;typename T , typename U , detail::truncate_degree_enabler&lt; T, U &
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01711">1711</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01746">1746</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>
@@ -3016,7 +3016,7 @@ template&lt;typename T , typename U , detail::truncate_pdegree_enabler&lt; T, U 
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01739">1739</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="math_8hpp_source.html#l01774">1774</a> of file <a class="el" href="math_8hpp_source.html">math.hpp</a>.</p>
 
 </div>
 </div>

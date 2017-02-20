@@ -698,7 +698,7 @@ template&lt;typename U &gt; </div>
 </div><div class="memdoc">
 
 <p>Evaluation. </p>
-<dl class="section note"><dt>Note</dt><dd>This template method is activated only if <code>U</code> supports the mathematical operations needed to compute the return type, and if it is suitable for use in <a class="el" href="classpiranha_1_1symbol__set_1_1positions__map.html" title="Positions map class. ">piranha::symbol_set::positions_map</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This template method is activated only if <code>U</code> supports the mathematical operations needed to compute the return type, and if it satisfies <a class="el" href="classpiranha_1_1is__mappable.html" title="Detect types that can be used as mapped values in associative containers. ">piranha::is_mappable</a>.</dd></dl>
 <p>The return value will be built by applying <a class="el" href="namespacepiranha_1_1math.html#ae72b05770e0a4508814e7506f8a84e6f" title="Cosine. ">piranha::math::cos()</a> or <a class="el" href="namespacepiranha_1_1math.html" title="Math namespace. ">piranha::math</a>:sin() to the linear combination of the values in <code>pmap</code> with the multipliers. If the size of the monomial is zero, 1 will be returned if the monomial is a cosine, 0 otherwise. If the positions in <code>pmap</code> do not reference only and all the multipliers in the monomial, an error will be thrown.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">

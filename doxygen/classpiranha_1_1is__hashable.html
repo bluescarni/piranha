@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>piranha: piranha::is_hashable&lt; T, typename &gt; Class Template Reference</title>
+<title>piranha: piranha::is_hashable&lt; T &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -73,7 +73,7 @@ $(function() {
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="classpiranha_1_1is__hashable-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::is_hashable&lt; T, typename &gt; Class Template Reference</div>  </div>
+<div class="title">piranha::is_hashable&lt; T &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -84,24 +84,21 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a57c723c783a41aa15848be791efa07aa"><td class="memItemLeft" align="right" valign="top"><a id="a57c723c783a41aa15848be791efa07aa"></a>
-static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__hashable.html#a57c723c783a41aa15848be791efa07aa">value</a> = false</td></tr>
-<tr class="memdesc:a57c723c783a41aa15848be791efa07aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
-<tr class="separator:a57c723c783a41aa15848be791efa07aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2761225baecf52abfd9a9781556b5b3a"><td class="memItemLeft" align="right" valign="top"><a id="a2761225baecf52abfd9a9781556b5b3a"></a>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__hashable.html#a2761225baecf52abfd9a9781556b5b3a">value</a> = implementation_defined</td></tr>
+<tr class="memdesc:a2761225baecf52abfd9a9781556b5b3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
+<tr class="separator:a2761225baecf52abfd9a9781556b5b3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename T, typename = void&gt;<br />
-class piranha::is_hashable&lt; T, typename &gt;</h3>
+<div class="textblock"><h3>template&lt;typename T&gt;<br />
+class piranha::is_hashable&lt; T &gt;</h3>
 
 <p>Hashable type trait. </p>
-<p>This type trait will be <code>true</code> if the decay type of <code>T</code> is hashable, <code>false</code> otherwise.</p>
-<p>A type <code>T</code> is hashable when supplied with a specialisation of <code>std::hash</code> which:</p><ul>
-<li>has a call operator complying to the interface specified by the C++ standard,</li>
-<li>satisfies <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a>.</li>
-</ul>
+<p>This type trait will be <code>true</code> if <code>T</code> is hashable (after the removal of cv/ref qualifiers), <code>false</code> otherwise.</p>
+<p>A type <code>T</code> is hashable when supplied with a specialisation of <code>std::hash</code> which satisfies <a class="el" href="classpiranha_1_1is__hash__function__object.html" title="Type trait to detect hash function objects. ">piranha::is_hash_function_object</a>.</p>
 <p>Note that depending on the implementation of the default <code>std::hash</code> class, using this type trait with a type which does not provide a specialisation for <code>std::hash</code> could result in a compilation error (e.g., if the unspecialised <code>std::hash</code> includes a <code>false</code> <code>static_assert</code>). </p>
 
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00575">575</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00705">705</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>

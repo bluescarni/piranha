@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>piranha: piranha::is_equality_function_object&lt; T, U, typename &gt; Class Template Reference</title>
+<title>piranha: piranha::is_equality_function_object&lt; T, U &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -73,7 +73,7 @@ $(function() {
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="classpiranha_1_1is__equality__function__object-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::is_equality_function_object&lt; T, U, typename &gt; Class Template Reference</div>  </div>
+<div class="title">piranha::is_equality_function_object&lt; T, U &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -85,22 +85,21 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:aaf8a316c082febfde2891151b1ab347b"><td class="memItemLeft" align="right" valign="top"><a id="aaf8a316c082febfde2891151b1ab347b"></a>
-static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__equality__function__object.html#aaf8a316c082febfde2891151b1ab347b">value</a> = false</td></tr>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__equality__function__object.html#aaf8a316c082febfde2891151b1ab347b">value</a> = implementation_defined</td></tr>
 <tr class="memdesc:aaf8a316c082febfde2891151b1ab347b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
 <tr class="separator:aaf8a316c082febfde2891151b1ab347b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename T, typename U, typename = void&gt;<br />
-class piranha::is_equality_function_object&lt; T, U, typename &gt;</h3>
+<div class="textblock"><h3>template&lt;typename T, typename U&gt;<br />
+class piranha::is_equality_function_object&lt; T, U &gt;</h3>
 
 <p>Type trait to detect equality function objects. </p>
 <p><code>T</code> is an equality function object for <code>U</code> if the following requirements are met:</p><ul>
 <li><code>T</code> is a function object with const call operator accepting as input two const <code>U</code> and returning <code>bool</code>,</li>
-<li><code>T</code> satisfies <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a>.</li>
+<li><code>T</code> satisfies <a class="el" href="structpiranha_1_1is__container__element.html" title="Type trait for well-behaved container elements. ">piranha::is_container_element</a>. </li>
 </ul>
-<p>The decay type of <code>U</code> is considered in this type trait. </p>
 
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00686">686</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00677">677</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>

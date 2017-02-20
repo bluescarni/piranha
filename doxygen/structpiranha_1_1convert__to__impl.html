@@ -126,7 +126,7 @@ template&lt;typename From2 &gt; </div>
 </div><div class="memdoc">
 
 <p>Call operator. </p>
-<dl class="section note"><dt>Note</dt><dd>This call operator is enabled only if <code>static_cast&lt;To&gt;(x)</code> is a well-formed expression, returning a type which satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This call operator is enabled only if <code>static_cast&lt;To&gt;(x)</code> is a well-formed expression, returning a type which satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</dd></dl>
 <p>The body of this operator is equivalent to: </p><div class="fragment"><div class="line"><span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>To<span class="keyword">&gt;</span>(x);</div></div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>conversion argument.</td></tr>

@@ -92,7 +92,6 @@ $(function() {
 <code>#include &lt;type_traits&gt;</code><br />
 <code>#include &lt;utility&gt;</code><br />
 <code>#include &lt;piranha/config.hpp&gt;</code><br />
-<code>#include &lt;piranha/detail/sfinae_types.hpp&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
@@ -128,6 +127,18 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__divisible__in__place.html">piranha::is_divisible_in_place&lt; T, U &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place divisible type trait.  <a href="classpiranha_1_1is__divisible__in__place.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__left__shift.html">piranha::has_left_shift&lt; T, U &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Left-shift type trait.  <a href="classpiranha_1_1has__left__shift.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__right__shift.html">piranha::has_right_shift&lt; T, U &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Right-shift type trait.  <a href="classpiranha_1_1has__right__shift.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__left__shift__in__place.html">piranha::has_left_shift_in_place&lt; T, U &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place left-shift type trait.  <a href="classpiranha_1_1has__left__shift__in__place.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__right__shift__in__place.html">piranha::has_right_shift_in_place&lt; T, U &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place right-shift type trait.  <a href="classpiranha_1_1has__right__shift__in__place.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__equality__comparable.html">piranha::is_equality_comparable&lt; T, U &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equality-comparable type trait.  <a href="classpiranha_1_1is__equality__comparable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -146,53 +157,41 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__ostreamable.html">piranha::is_ostreamable&lt; T &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type trait for classes that can be output-streamed.  <a href="classpiranha_1_1is__ostreamable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__hashable.html">piranha::is_hashable&lt; T, typename &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hashable type trait.  <a href="classpiranha_1_1is__hashable.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__function__object.html">piranha::is_function_object&lt; T, ReturnType, Args &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function object type trait.  <a href="classpiranha_1_1is__function__object.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__hash__function__object.html">piranha::is_hash_function_object&lt; T, U, typename &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__hash__function__object.html">piranha::is_hash_function_object&lt; T, U &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type trait to detect hash function objects.  <a href="classpiranha_1_1is__hash__function__object.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__equality__function__object.html">piranha::is_equality_function_object&lt; T, U, typename &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__equality__function__object.html">piranha::is_equality_function_object&lt; T, U &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type trait to detect equality function objects.  <a href="classpiranha_1_1is__equality__function__object.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__iterator.html">piranha::is_iterator&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterator type trait.  <a href="structpiranha_1_1is__iterator.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__hashable.html">piranha::is_hashable&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hashable type trait.  <a href="classpiranha_1_1is__hashable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__input__iterator.html">piranha::is_input_iterator&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Input iterator type trait.  <a href="structpiranha_1_1is__input__iterator.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__iterator.html">piranha::is_iterator&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterator type trait.  <a href="classpiranha_1_1is__iterator.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__forward__iterator.html">piranha::is_forward_iterator&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forward iterator type trait.  <a href="structpiranha_1_1is__forward__iterator.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__input__iterator.html">piranha::is_input_iterator&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Input iterator type trait.  <a href="classpiranha_1_1is__input__iterator.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__forward__iterator.html">piranha::is_forward_iterator&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forward iterator type trait.  <a href="classpiranha_1_1is__forward__iterator.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__begin__end.html">piranha::has_begin_end&lt; T &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect the availability of <code>std::begin()</code> and <code>std::end()</code>.  <a href="classpiranha_1_1has__begin__end.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__left__shift.html">piranha::has_left_shift&lt; T, U &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Left-shift type trait.  <a href="classpiranha_1_1has__left__shift.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__returnable.html">piranha::is_returnable&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect if type can be returned from a function.  <a href="classpiranha_1_1is__returnable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__right__shift.html">piranha::has_right_shift&lt; T, U &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Right-shift type trait.  <a href="classpiranha_1_1has__right__shift.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__mappable.html">piranha::is_mappable&lt; T &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect types that can be used as mapped values in associative containers.  <a href="classpiranha_1_1is__mappable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__left__shift__in__place.html">piranha::has_left_shift_in_place&lt; T, U &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place left-shift type trait.  <a href="classpiranha_1_1has__left__shift__in__place.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1zero__is__absorbing.html">piranha::zero_is_absorbing&lt; T, typename &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect if zero is a multiplicative absorber.  <a href="classpiranha_1_1zero__is__absorbing.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__right__shift__in__place.html">piranha::has_right_shift_in_place&lt; T, U &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place right-shift type trait.  <a href="classpiranha_1_1has__right__shift__in__place.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__returnable.html">piranha::is_returnable&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect if type can be returned from a function.  <a href="structpiranha_1_1is__returnable.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__mappable.html">piranha::is_mappable&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect types that can be used as mapped values in associative containers.  <a href="structpiranha_1_1is__mappable.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__is__absorbing.html">piranha::zero_is_absorbing&lt; T, typename &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detect if zero is a multiplicative absorber.  <a href="structpiranha_1_1zero__is__absorbing.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01fp__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html">piranha::zero_is_absorbing&lt; T, fp_zero_is_absorbing_enabler&lt; T &gt; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of <a class="el" href="structpiranha_1_1zero__is__absorbing.html" title="Detect if zero is a multiplicative absorber. ">piranha::zero_is_absorbing</a> for floating-point types.  <a href="structpiranha_1_1zero__is__absorbing_3_01_t_00_01fp__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1zero__is__absorbing_3_01_t_00_01fp__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html">piranha::zero_is_absorbing&lt; T, fp_zero_is_absorbing_enabler&lt; T &gt; &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specialisation of <a class="el" href="classpiranha_1_1zero__is__absorbing.html" title="Detect if zero is a multiplicative absorber. ">piranha::zero_is_absorbing</a> for floating-point types.  <a href="classpiranha_1_1zero__is__absorbing_3_01_t_00_01fp__zero__is__absorbing__enabler_3_01_t_01_4_01_4.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
@@ -242,13 +241,12 @@ Typedefs</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT&gt;                                                           \</div><div class="line">    class has_typedef_##type_name : piranha::detail::sfinae_types                                                      \</div><div class="line">    {                                                                                                                  \</div><div class="line">        using Td_ = <span class="keyword">typename</span> std::decay&lt;PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT&gt;::type;                                   \</div><div class="line">        template &lt;typename T_&gt;                                                                                         \</div><div class="line">        static <span class="keyword">auto</span> test(<span class="keyword">const</span> T_ *) -&gt; decltype(std::declval&lt;typename T_::type_name&gt;(), <span class="keywordtype">void</span>(), yes());               \</div><div class="line">        static no test(...);                                                                                           \</div><div class="line">                                                                                                                       \</div><div class="line">    public:                                                                                                            \</div><div class="line">        static <span class="keyword">const</span> <span class="keywordtype">bool</span> value = std::is_same&lt;yes, decltype(test((Td_ *)nullptr))&gt;::value;                            \</div><div class="line">    }</div></div><!-- fragment -->
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT&gt;                                                           \</div><div class="line">    class has_typedef_##type_name                                                                                      \</div><div class="line">    {                                                                                                                  \</div><div class="line">        using Td_ = piranha::uncvref_t&lt;PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT&gt;;                                          \</div><div class="line">        template &lt;typename U&gt;                                                                                          \</div><div class="line">        using type_t = <span class="keyword">typename</span> U::type_name;                                                                          \</div><div class="line">                                                                                                                       \</div><div class="line">    public:                                                                                                            \</div><div class="line">        static <span class="keyword">const</span> <span class="keywordtype">bool</span> value = piranha::is_detected&lt;type_t, Td_&gt;::value;                                            \</div><div class="line">    }</div></div><!-- fragment -->
 <p>Macro to test if class has type definition. </p>
-<p>This macro will declare a template struct parametrized over one type <code>T</code> and called <code>has_typedef_type_name</code>, whose static const bool member <code>value</code> will be <code>true</code> if <code>T</code> contains a <code>typedef</code> called <code>type_name</code>, false otherwise.</p>
-<p>For instance: </p><div class="fragment"><div class="line"><a class="code" href="type__traits_8hpp.html#a495588fa727310858a8d390095c6fe21">PIRANHA_DECLARE_HAS_TYPEDEF</a>(foo_type);</div><div class="line"><span class="keyword">struct </span>foo</div><div class="line">{</div><div class="line">        <span class="keyword">typedef</span> <span class="keywordtype">int</span> foo_type;</div><div class="line">};</div><div class="line"><span class="keyword">struct </span>bar {};</div></div><!-- fragment --><p> <code>has_typedef_foo_type&lt;foo&gt;::value</code> will be true and <code>has_typedef_foo_type&lt;bar&gt;::value</code> will be false.</p>
-<p>The decay type of the template argument is considered by the class defined by the macro. </p>
+<p>This macro will declare a struct template parametrized over one type <code>T</code> and called <code>has_typedef_type_name</code>, whose static const bool member <code>value</code> will be <code>true</code> if <code>T</code> contains a <code>typedef</code> called <code>type_name</code>, <code>false</code> otherwise.</p>
+<p>For instance: </p><div class="fragment"><div class="line"><a class="code" href="type__traits_8hpp.html#a495588fa727310858a8d390095c6fe21">PIRANHA_DECLARE_HAS_TYPEDEF</a>(foo_type);</div><div class="line"><span class="keyword">struct </span>foo</div><div class="line">{</div><div class="line">        <span class="keyword">typedef</span> <span class="keywordtype">int</span> foo_type;</div><div class="line">};</div><div class="line"><span class="keyword">struct </span>bar {};</div></div><!-- fragment --><p> <code>has_typedef_foo_type&lt;foo&gt;::value</code> will be true and <code>has_typedef_foo_type&lt;bar&gt;::value</code> will be false. </p>
 
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00732">732</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00735">735</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>
@@ -281,7 +279,7 @@ Typedefs</h2></td></tr>
 <p>Macro for static type trait checks. </p>
 <p>This macro will check via a <code>static_assert</code> that the template type trait <code>tt</code> provides a <code>true</code> <code>value</code>. The variadic arguments are interpreted as the template arguments of <code>tt</code>. </p>
 
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00750">750</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00752">752</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 
 </div>
 </div>

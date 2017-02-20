@@ -84,8 +84,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:af27fac0ef9c0a6111997c5eed0b64e23"><td class="memItemLeft" align="right" valign="top">static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__container__element.html#af27fac0ef9c0a6111997c5eed0b64e23">value</a></td></tr>
-<tr class="memdesc:af27fac0ef9c0a6111997c5eed0b64e23"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait.  <a href="#af27fac0ef9c0a6111997c5eed0b64e23">More...</a><br /></td></tr>
+<tr class="memitem:af27fac0ef9c0a6111997c5eed0b64e23"><td class="memItemLeft" align="right" valign="top"><a id="af27fac0ef9c0a6111997c5eed0b64e23"></a>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__container__element.html#af27fac0ef9c0a6111997c5eed0b64e23">value</a> = implementation_defined</td></tr>
+<tr class="memdesc:af27fac0ef9c0a6111997c5eed0b64e23"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
 <tr class="separator:af27fac0ef9c0a6111997c5eed0b64e23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -102,37 +103,8 @@ struct piranha::is_container_element&lt; T &gt;</h3>
 </ul>
 <p>If the <a class="el" href="structpiranha_1_1enable__noexcept__checks.html" title="Enable noexcept checks. ">piranha::enable_noexcept_checks</a> trait is <code>false</code> for <code>T</code>, then the nothrow checks will be discarded. </p>
 
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00494">494</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="af27fac0ef9c0a6111997c5eed0b64e23"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af27fac0ef9c0a6111997c5eed0b64e23">&#9670;&nbsp;</a></span>value</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const bool <a class="el" href="structpiranha_1_1is__container__element.html">piranha::is_container_element</a>&lt; T &gt;::value</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= std::is_default_constructible&lt;T&gt;::value &amp;&amp; std::is_copy_constructible&lt;T&gt;::value</div><div class="line">                              &amp;&amp; (!<a class="code" href="structpiranha_1_1enable__noexcept__checks.html#ae07809c8d8408076b1027e38a7b57098">enable_noexcept_checks&lt;T&gt;::value</a></div><div class="line">                                  || (std::is_nothrow_destructible&lt;T&gt;::value</div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line">                                      &amp;&amp; std::is_nothrow_move_constructible&lt;T&gt;::value</div><div class="line">                                      &amp;&amp; std::is_nothrow_move_assignable&lt;T&gt;::value</div><div class="line"></div><div class="line">                                      ))</div></div><!-- fragment -->
-<p>Value of the type trait. </p>
-
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00498">498</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-
-</div>
-</div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00573">573</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>
 </div><!-- contents -->

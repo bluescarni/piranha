@@ -127,9 +127,9 @@ class piranha::symbol_set::positions_map&lt; T &gt;</h3>
 <p>This class is similar to <a class="el" href="classpiranha_1_1symbol__set_1_1positions.html" title="Positions class. ">piranha::symbol_set::positions</a>. In addition to storing the positions of the symbols from a map <code>b</code> with respect to a reference <a class="el" href="classpiranha_1_1symbol__set.html" title="Symbol set. ">piranha::symbol_set</a> <code>a</code>, it will also store the instances of <code>T</code> that were originally mapped to the symbols in <code>b</code>.</p>
 <p>For instance, if <code>T</code> is <code>int</code>, <code>a</code> contains the symbols <code>[B,C,D,E]</code> and <code>b</code> is the map <code>[(A,10),(B,20),(D,30),(F,40)]</code>, then an instance of this class constructed passing <code>a</code> and <code>b</code> as parameters will contain the vector <code>[(0,20),(2,30)]</code>. The internal vector is guaranteed to be sorted according to the position of the symbols.</p>
 <h2>Type requirements</h2>
-<p><code>T</code> must be destructible, copy-constructible, move-constructible and move-assignable. </p>
+<p><code>T</code> must satisfy <a class="el" href="classpiranha_1_1is__mappable.html" title="Detect types that can be used as mapped values in associative containers. ">piranha::is_mappable</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00197">197</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00183">183</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="a2baf99772571f7ec34acfb08ff8c12bf"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2baf99772571f7ec34acfb08ff8c12bf">&#9670;&nbsp;</a></span>value_type</h2>
@@ -148,7 +148,7 @@ template&lt;typename T&gt; </div>
 <p>Value type. </p>
 <p>The stored value type is the <code>(position,T)</code> pair. </p>
 
-<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00207">207</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00193">193</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
 
 </div>
 </div>
@@ -205,7 +205,7 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00600">600</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00586">586</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
 
 </div>
 </div>
@@ -238,7 +238,7 @@ template&lt;typename T&gt; </div>
 <p>Last element. </p>
 <dl class="section return"><dt>Returns</dt><dd>a const reference to the last element. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00249">249</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00235">235</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
 
 </div>
 </div>
@@ -270,7 +270,7 @@ template&lt;typename T&gt; </div>
 <p>Begin iterator. </p>
 <dl class="section return"><dt>Returns</dt><dd>an iterator to the begin of the internal vector. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00225">225</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00211">211</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
 
 </div>
 </div>
@@ -302,7 +302,7 @@ template&lt;typename T&gt; </div>
 <p>End iterator. </p>
 <dl class="section return"><dt>Returns</dt><dd>an iterator to the end of the internal vector. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00233">233</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00219">219</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
 
 </div>
 </div>
@@ -334,7 +334,7 @@ template&lt;typename T&gt; </div>
 <p>Size. </p>
 <dl class="section return"><dt>Returns</dt><dd>the size of the internal vector. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00241">241</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="symbol__set_8hpp_source.html#l00227">227</a> of file <a class="el" href="symbol__set_8hpp_source.html">symbol_set.hpp</a>.</p>
 
 </div>
 </div>

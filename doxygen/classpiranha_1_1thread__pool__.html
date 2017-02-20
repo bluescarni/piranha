@@ -116,7 +116,7 @@ class piranha::thread_pool_&lt; T &gt;</h3>
 <p>This class manages, via a set of static methods, a pool of threads created at program startup. The number of threads created initially is equal to <a class="el" href="classpiranha_1_1runtime__info.html#ac3fd942fc4483b8b12a1214e13acea9b" title="Hardware concurrency. ">piranha::runtime_info::get_hardware_concurrency()</a>. If the hardware concurrency cannot be determined, the size of the thread pool will be one.</p>
 <p>This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool, resize the pool and configure the thread binding policy. All methods, unless otherwise specified, are thread-safe, and they provide the strong exception safety guarantee. </p>
 
-<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00295">295</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00279">279</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="ab9d1fe61963e14532c7f18254c703b45"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab9d1fe61963e14532c7f18254c703b45">&#9670;&nbsp;</a></span>enqueue()</h2>
@@ -165,10 +165,10 @@ template&lt;typename F , typename... Args&gt; </div>
 <p>Enqueue task. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is enabled only if:<ul>
 <li>a nullary wrapper for <code>F(args...)</code> can be created via <code>std::bind()</code> (which requires <code>F</code> and <code>Args</code> to be copy/move constructible, and <code>F(args...)</code> to be a well-formed expression),</li>
-<li>the type returned by <code>F(args...)</code> satisfies <a class="el" href="structpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</li>
+<li>the type returned by <code>F(args...)</code> satisfies <a class="el" href="classpiranha_1_1is__returnable.html" title="Detect if type can be returned from a function. ">piranha::is_returnable</a>.</li>
 </ul>
 </dd></dl>
-<p>This method will add a task to the <code>n</code>-th thread in the pool. The task is represented by a callable <code>F</code> and its arguments <code>args</code>, which will be copied/moved via an <code>std::bind()</code> wrapper into an execution queue consumed by the thread to which the task is assigned. The return value is an <code>std::future</code> which can be used to retrieve the return value of (or the exception throw by) the callable.</p>
+<p>This method will add a task to the <code>n</code>-th thread in the pool. The task is represented by a callable <code>F</code> and its arguments <code>args</code>, which will be copied/moved via an <code>std::bind()</code> wrapper into an execution queue consumed by the thread to which the task is assigned. The return value is an <code>std::future</code> which can be used to retrieve the return value of (or the exception thrown by) the callable.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">n</td><td>index of the thread that will consume the task. </td></tr>
@@ -192,7 +192,7 @@ template&lt;typename F , typename... Args&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00338">338</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00322">322</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -225,7 +225,7 @@ template&lt;typename T  = void&gt; </div>
 <p>This method returns the flag set by <a class="el" href="classpiranha_1_1thread__pool__.html#acae84bb597dd00a9a0bb3ea5dcaa355c" title="Set the thread binding policy. ">set_binding()</a>. The threads created on program startup are not bound to specific processors/cores.</p>
 <dl class="section return"><dt>Returns</dt><dd>a boolean flag representing the active thread binding policy. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00450">450</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00434">434</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -275,7 +275,7 @@ template&lt;typename T  = void&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00399">399</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00383">383</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -325,7 +325,7 @@ template&lt;typename T  = void&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00432">432</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00416">416</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -357,7 +357,7 @@ template&lt;typename T  = void&gt; </div>
 <p>Size. </p>
 <dl class="section return"><dt>Returns</dt><dd>the number of threads in the pool. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00353">353</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00337">337</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>
@@ -419,7 +419,7 @@ template&lt;typename Int , use_threads_enabler&lt; Int &gt;  = 0&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00476">476</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="thread__pool_8hpp_source.html#l00460">460</a> of file <a class="el" href="thread__pool_8hpp_source.html">thread_pool.hpp</a>.</p>
 
 </div>
 </div>

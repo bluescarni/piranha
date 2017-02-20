@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>piranha: piranha::is_input_iterator&lt; T &gt; Struct Template Reference</title>
+<title>piranha: piranha::is_mappable&lt; T &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -65,39 +65,45 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="structpiranha_1_1is__input__iterator.html">is_input_iterator</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacepiranha.html">piranha</a></li><li class="navelem"><a class="el" href="classpiranha_1_1is__mappable.html">is_mappable</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
-<a href="structpiranha_1_1is__input__iterator-members.html">List of all members</a>  </div>
+<a href="classpiranha_1_1is__mappable-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">piranha::is_input_iterator&lt; T &gt; Struct Template Reference</div>  </div>
+<div class="title">piranha::is_mappable&lt; T &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Input iterator type trait.  
- <a href="structpiranha_1_1is__input__iterator.html#details">More...</a></p>
+<p>Detect types that can be used as mapped values in associative containers.  
+ <a href="classpiranha_1_1is__mappable.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a896b4f51984c48ec3a7849e81a447098"><td class="memItemLeft" align="right" valign="top"><a id="a896b4f51984c48ec3a7849e81a447098"></a>
-static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpiranha_1_1is__input__iterator.html#a896b4f51984c48ec3a7849e81a447098">value</a> = detail::is_input_iterator_impl&lt;typename std::decay&lt;T&gt;::type&gt;::value</td></tr>
-<tr class="memdesc:a896b4f51984c48ec3a7849e81a447098"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
-<tr class="separator:a896b4f51984c48ec3a7849e81a447098"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a810598bb6e7c7bbe1a5a47e2ee1c322a"><td class="memItemLeft" align="right" valign="top"><a id="a810598bb6e7c7bbe1a5a47e2ee1c322a"></a>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__mappable.html#a810598bb6e7c7bbe1a5a47e2ee1c322a">value</a> = implementation_defined</td></tr>
+<tr class="memdesc:a810598bb6e7c7bbe1a5a47e2ee1c322a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
+<tr class="separator:a810598bb6e7c7bbe1a5a47e2ee1c322a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T&gt;<br />
-struct piranha::is_input_iterator&lt; T &gt;</h3>
+class piranha::is_mappable&lt; T &gt;</h3>
 
-<p>Input iterator type trait. </p>
-<p>This type trait will be <code>true</code> if the decay type of <code>T</code> satisfies the compile-time requirements of an input iterator (as defined by the C++ standard), <code>false</code> otherwise. </p>
+<p>Detect types that can be used as mapped values in associative containers. </p>
+<p>This type trait is intended to detect whether <code>T</code> supports typical operations that can be performed on the mapped values in associative containers. Specifically, this trait will be <code>true</code> if all the following conditions hold:</p><ul>
+<li><code>T</code> is default constructible,</li>
+<li><code>T</code> is copy constructible and assignable,</li>
+<li><code>T</code> is move constructible and assignable,</li>
+<li><code>T</code> is destructible.</li>
+</ul>
+<p>Otherwise, the value of this trait will be <code>false</code>. </p>
 
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00979">979</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l01120">1120</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>
 </div><!-- contents -->

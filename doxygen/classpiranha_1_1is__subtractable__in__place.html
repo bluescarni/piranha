@@ -81,13 +81,11 @@ $(function() {
  <a href="classpiranha_1_1is__subtractable__in__place.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>&gt;</code></p>
-
-<p>Inherits piranha::detail::sfinae_types.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:ab9bb656a11220b6a2dec2497934a06c8"><td class="memItemLeft" align="right" valign="top"><a id="ab9bb656a11220b6a2dec2497934a06c8"></a>
-static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__subtractable__in__place.html#ab9bb656a11220b6a2dec2497934a06c8">value</a> = arith_tt_helper&lt;T, U, <a class="el" href="classpiranha_1_1is__subtractable__in__place.html">is_subtractable_in_place</a>&gt;::value</td></tr>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1is__subtractable__in__place.html#ab9bb656a11220b6a2dec2497934a06c8">value</a> = implementation_defined</td></tr>
 <tr class="memdesc:ab9bb656a11220b6a2dec2497934a06c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
 <tr class="separator:ab9bb656a11220b6a2dec2497934a06c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -96,9 +94,8 @@ static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="e
 class piranha::is_subtractable_in_place&lt; T, U &gt;</h3>
 
 <p>In-place subtractable type trait. </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="classpiranha_1_1is__addable__in__place.html" title="In-place addable type trait. ">piranha::is_addable_in_place</a>. </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00289">289</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+<p>This type trait will be <code>true</code> if objects of type <code>U</code> can be subtracted in-place from objects of type <code>T</code>, <code>false</code> otherwise. The operator will be tested in the form: </p><div class="fragment"><div class="line">operator-=(T &amp;, <span class="keyword">const</span> U &amp;)</div></div><!-- fragment --> 
+<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l00275">275</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>

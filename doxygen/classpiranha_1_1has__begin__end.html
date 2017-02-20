@@ -81,13 +81,12 @@ $(function() {
  <a href="classpiranha_1_1has__begin__end.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>&gt;</code></p>
-
-<p>Inherits piranha::detail::sfinae_types.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a468197ba4ce4cb1a7970a2eb0ba1ff56"><td class="memItemLeft" align="right" valign="top">static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__begin__end.html#a468197ba4ce4cb1a7970a2eb0ba1ff56">value</a></td></tr>
-<tr class="memdesc:a468197ba4ce4cb1a7970a2eb0ba1ff56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait.  <a href="#a468197ba4ce4cb1a7970a2eb0ba1ff56">More...</a><br /></td></tr>
+<tr class="memitem:a468197ba4ce4cb1a7970a2eb0ba1ff56"><td class="memItemLeft" align="right" valign="top"><a id="a468197ba4ce4cb1a7970a2eb0ba1ff56"></a>
+static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpiranha_1_1has__begin__end.html#a468197ba4ce4cb1a7970a2eb0ba1ff56">value</a> = implementation_defined</td></tr>
+<tr class="memdesc:a468197ba4ce4cb1a7970a2eb0ba1ff56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the type trait. <br /></td></tr>
 <tr class="separator:a468197ba4ce4cb1a7970a2eb0ba1ff56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -98,41 +97,11 @@ class piranha::has_begin_end&lt; T &gt;</h3>
 <p>This type trait will be <code>true</code> if all the following conditions are fulfilled:</p>
 <ul>
 <li><code>std::begin()</code> and <code>std::end()</code> can be called on instances of <code>T</code>, yielding the type <code>It</code>,</li>
-<li><code>It</code> is an input iterator.</li>
+<li><code>It</code> is an input iterator. </li>
 </ul>
-<p>Any reference qualification in <code>T</code> is ignored by this type trait. </p>
 
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l01073">1073</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a468197ba4ce4cb1a7970a2eb0ba1ff56"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a468197ba4ce4cb1a7970a2eb0ba1ff56">&#9670;&nbsp;</a></span>value</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const bool <a class="el" href="classpiranha_1_1has__begin__end.html">piranha::has_begin_end</a>&lt; T &gt;::value</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= is_input_iterator&lt;decltype(test1(std::declval&lt;Td &amp;&gt;()))&gt;::<a class="code" href="classpiranha_1_1has__begin__end.html#a468197ba4ce4cb1a7970a2eb0ba1ff56">value</a></div><div class="line">          &amp;&amp; is_input_iterator&lt;decltype(test2(std::declval&lt;Td &amp;&gt;()))&gt;<a class="code" href="classpiranha_1_1has__begin__end.html#a468197ba4ce4cb1a7970a2eb0ba1ff56">::value</a></div><div class="line">          &amp;&amp; std::is_same&lt;decltype(test1(std::declval&lt;Td &amp;&gt;())), decltype(test2(std::declval&lt;Td &amp;&gt;()))&gt;<a class="code" href="classpiranha_1_1has__begin__end.html#a468197ba4ce4cb1a7970a2eb0ba1ff56">::value</a></div></div><!-- fragment -->
-<p>Value of the type trait. </p>
-
-<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l01086">1086</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
-
-</div>
-</div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<p class="definition">Definition at line <a class="el" href="type__traits_8hpp_source.html#l01068">1068</a> of file <a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a>.</p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li><a class="el" href="type__traits_8hpp_source.html">type_traits.hpp</a></li>
 </ul>
 </div><!-- contents -->

@@ -439,7 +439,7 @@ template&lt;typename U &gt; </div>
 
 <p>Evaluation. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is available only if <code>U</code> satisfies the following requirements:<ul>
-<li>it can be used in <a class="el" href="classpiranha_1_1symbol__set_1_1positions__map.html" title="Positions map class. ">piranha::symbol_set::positions_map</a>,</li>
+<li>it satisfies <a class="el" href="classpiranha_1_1is__mappable.html" title="Detect types that can be used as mapped values in associative containers. ">piranha::is_mappable</a>,</li>
 <li>it supports the arithmetic operations necessary to construct the return type.</li>
 </ul>
 </dd></dl>
@@ -823,7 +823,7 @@ template&lt;typename U  = divisor, msgpack_convert_enabler&lt; U &gt;  = 0&gt; <
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">std::invalid_argument</td><td>if the deserialized divisor fails internal consistency checks, or if it is not compatible with <code>args</code>. </td></tr>
-    <tr><td class="paramname">unspecified</td><td>any exception throw by <a class="el" href="namespacepiranha.html#a719a5c93291c56fe1442005d5f76e5e5" title="Convert msgpack object. ">piranha::msgpack_convert()</a>. </td></tr>
+    <tr><td class="paramname">unspecified</td><td>any exception thrown by <a class="el" href="namespacepiranha.html#a719a5c93291c56fe1442005d5f76e5e5" title="Convert msgpack object. ">piranha::msgpack_convert()</a>. </td></tr>
   </table>
   </dd>
 </dl>

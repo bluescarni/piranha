@@ -917,7 +917,7 @@ template&lt;typename U &gt; </div>
 
 <p>Evaluation. </p>
 <dl class="section note"><dt>Note</dt><dd>This method is available only if <code>U</code> satisfies the following requirements:<ul>
-<li>it can be used in <a class="el" href="classpiranha_1_1symbol__set_1_1positions__map.html" title="Positions map class. ">piranha::symbol_set::positions_map</a>,</li>
+<li>it satisfies <a class="el" href="classpiranha_1_1is__mappable.html" title="Detect types that can be used as mapped values in associative containers. ">piranha::is_mappable</a>,</li>
 <li>it can be used in <a class="el" href="namespacepiranha_1_1math.html#a38c4927a813897b54020e9e8d6a08a13" title="Exponentiation. ">piranha::math::pow()</a> with the monomial exponents as powers, yielding a type <code>eval_type</code>,</li>
 <li><code>eval_type</code> is constructible from <code>int</code>,</li>
 <li><code>eval_type</code> is multipliable in place.</li>

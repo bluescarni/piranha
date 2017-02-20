@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['abs',['abs',['../classmppp_1_1mp__integer.html#aefb1bb36658f0142ace086c63f0c1e62',1,'mppp::mp_integer::abs()'],['../classpiranha_1_1mp__rational.html#add49387bd1ce841210945fe8775a7dce',1,'piranha::mp_rational::abs()'],['../classpiranha_1_1real.html#aaa6bf270ac580532562c6bb6fa27ff02',1,'piranha::real::abs()'],['../namespacepiranha_1_1math.html#a9fad3b6f8a6178867eeac66f69531397',1,'piranha::math::abs()']]],
+  ['abs',['abs',['../classpiranha_1_1mp__rational.html#add49387bd1ce841210945fe8775a7dce',1,'piranha::mp_rational::abs()'],['../classmppp_1_1mp__integer.html#aefb1bb36658f0142ace086c63f0c1e62',1,'mppp::mp_integer::abs()'],['../classpiranha_1_1real.html#aaa6bf270ac580532562c6bb6fa27ff02',1,'piranha::real::abs()'],['../namespacepiranha_1_1math.html#a9fad3b6f8a6178867eeac66f69531397',1,'piranha::math::abs()']]],
   ['add',['add',['../classpiranha_1_1small__vector.html#aea98589f1bbf3879bdfdfda81291e8e6',1,'piranha::small_vector::add()'],['../classpiranha_1_1symbol__set.html#a13101abf79be11e045539f82be6f120f',1,'piranha::symbol_set::add(const symbol &amp;s)'],['../classpiranha_1_1symbol__set.html#a0f4b9702296aa16288369a63aae5ab21',1,'piranha::symbol_set::add(const std::string &amp;name)']]],
   ['add3',['add3',['../namespacepiranha_1_1math.html#ae11fd337327c260a957de8b40c2b8bfc',1,'piranha::math']]],
   ['aligned_5fpalloc',['aligned_palloc',['../namespacepiranha.html#a41914add70b267b6e4f3c686817c9d8a',1,'piranha']]],
