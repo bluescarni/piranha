@@ -29,15 +29,16 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SYMBOL_HPP
 #define PIRANHA_SYMBOL_HPP
 
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <iostream>
-#include <mutex>
-#include <set>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/atomic_lock_guard.hpp>
 
 namespace piranha
 {
@@ -45,29 +46,27 @@ namespace piranha
 namespace detail
 {
 
-template <typename = int>
+template <typename = void>
 struct base_symbol {
-    static std::mutex m_mutex;
-    static std::set<std::string> m_symbol_list;
+    static std::atomic_flag m_mutex;
+    static std::unordered_set<std::string> m_symbol_list;
 };
 
 template <typename T>
-std::mutex base_symbol<T>::m_mutex;
+std::atomic_flag base_symbol<T>::m_mutex = ATOMIC_FLAG_INIT;
 
 template <typename T>
-std::set<std::string> base_symbol<T>::m_symbol_list;
+std::unordered_set<std::string> base_symbol<T>::m_symbol_list;
 }
 
 /// Literal symbol class.
 /**
  * This class represents a symbolic variable uniquely identified by its name. Symbol instances
  * are tracked in a global list for the duration of the program, so that different instances of symbols with the same
- * name are always
- * referring to the same underlying object.
+ * name are always referring to the same underlying object.
  *
  * The methods of this class, unless specified otherwise, are thread-safe: it is possible to create, access and operate
- * on objects of this class
- * concurrently from multiple threads
+ * on objects of this class concurrently from multiple threads
  *
  * ## Exception safety guarantee ##
  *
@@ -86,7 +85,7 @@ public:
      *
      * @param name name of the symbol.
      *
-     * @throws unspecified any exception thrown by <tt>std::set::insert()</tt>.
+     * @throws unspecified any exception thrown by <tt>std::unordered_set::insert()</tt>.
      */
     explicit symbol(const std::string &name) : m_ptr(get_pointer(name))
     {
@@ -141,7 +140,7 @@ public:
     }
     /// Less-than comparison.
     /**
-     * Will compare lexicographically the names of the two symbols.
+     * This method will compare lexicographically the names of the two symbols.
      *
      * @param other comparison argument.
      *
@@ -177,7 +176,7 @@ public:
 private:
     static std::string const *get_pointer(const std::string &name)
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        detail::atomic_lock_guard lock(m_mutex);
         auto it = m_symbol_list.find(name);
         if (it == m_symbol_list.end()) {
             // If symbol is not present in the list, add it.
@@ -188,8 +187,8 @@ private:
         // Final check, just for peace of mind.
         piranha_assert(it != m_symbol_list.end());
         // Extract and return the pointer.
-        // NOTE: this is legal, as std::set is a standard container:
-        // http://www.gotw.ca/gotw/050.htm
+        // NOTE: this should be alright: the standard containers' iterators should return references
+        // and std::string shouldn't have operator&() overloaded.
         return &*it;
     }
 
