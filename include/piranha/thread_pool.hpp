@@ -68,15 +68,12 @@ inline namespace impl
 // Task queue class. Inspired by:
 // https://github.com/progschj/ThreadPool
 struct task_queue {
-    struct runner {
-        runner(task_queue *ptr, unsigned n, bool bind) : m_ptr(ptr), m_n(n), m_bind(bind)
-        {
-        }
-        void operator()() const
-        {
-            if (m_bind) {
+    task_queue(unsigned n, bool bind) : m_stop(false)
+    {
+        auto runner = [this, n, bind]() {
+            if (bind) {
                 try {
-                    bind_to_proc(m_n);
+                    bind_to_proc(n);
                 } catch (...) {
                     // Don't stop if we cannot bind.
                     // NOTE: logging candidate.
@@ -84,21 +81,21 @@ struct task_queue {
             }
             try {
                 while (true) {
-                    std::unique_lock<std::mutex> lock(m_ptr->m_mutex);
-                    while (!m_ptr->m_stop && m_ptr->m_tasks.empty()) {
+                    std::unique_lock<std::mutex> lock(this->m_mutex);
+                    while (!this->m_stop && this->m_tasks.empty()) {
                         // Need to wait for something to happen only if the task
                         // list is empty and we are not stopping.
                         // NOTE: wait will be noexcept in C++14.
-                        m_ptr->m_cond.wait(lock);
+                        this->m_cond.wait(lock);
                     }
-                    if (m_ptr->m_stop && m_ptr->m_tasks.empty()) {
+                    if (this->m_stop && this->m_tasks.empty()) {
                         // If the stop flag was set, and we do not have more tasks,
                         // just exit.
                         break;
                     }
                     // NOTE: move constructor of std::function could throw, unfortunately.
-                    std::function<void()> task(std::move(m_ptr->m_tasks.front()));
-                    m_ptr->m_tasks.pop();
+                    std::function<void()> task(std::move(this->m_tasks.front()));
+                    this->m_tasks.pop();
                     lock.unlock();
                     task();
                 }
@@ -114,21 +111,8 @@ struct task_queue {
             }
             // Free the MPFR caches.
             ::mpfr_free_cache();
-        }
-        task_queue *m_ptr;
-        const unsigned m_n;
-        const bool m_bind;
-    };
-
-    task_queue(unsigned n, bool bind) : m_stop(false)
-    {
-        // NOTE: this seems to be ok wrt order of evaluation, since the ctor of runner cannot throw.
-        // In general, it could happen that:
-        // - new allocates,
-        // - runner is constructed and throws,
-        // - the memory allocated by new is not freed.
-        // See the classic: http://gotw.ca/gotw/056.htm
-        m_thread.reset(new std::thread(runner{this, n, bind}));
+        };
+        m_thread = std::thread(std::move(runner));
     }
     ~task_queue()
     {
@@ -213,14 +197,14 @@ struct task_queue {
         // Notify the thread that queue has been stopped, wait for it
         // to consume the remaining tasks and exit.
         m_cond.notify_one();
-        m_thread->join();
+        m_thread.join();
     }
-
+    // Data members.
     bool m_stop;
     std::condition_variable m_cond;
     std::mutex m_mutex;
     std::queue<std::function<void()>> m_tasks;
-    std::unique_ptr<std::thread> m_thread;
+    std::thread m_thread;
 };
 
 // Type to represent thread queues: a vector of task queues paired with a set of thread ids.
@@ -245,7 +229,7 @@ inline thread_queues_t get_initial_thread_queues()
     }
     // Generate the set of thread IDs.
     for (const auto &ptr : retval.first) {
-        auto p = retval.second.insert(ptr->m_thread->get_id());
+        auto p = retval.second.insert(ptr->m_thread.get_id());
         (void)p;
         piranha_assert(p.second);
     }
@@ -318,7 +302,7 @@ public:
      * This method will add a task to the <tt>n</tt>-th thread in the pool. The task is represented
      * by a callable \p F and its arguments \p args, which will be copied/moved via an \p std::bind() wrapper into an
      * execution queue consumed by the thread to which the task is assigned. The return value is an \p std::future
-     * which can be used to retrieve the return value of (or the exception throw by) the callable.
+     * which can be used to retrieve the return value of (or the exception thrown by) the callable.
      *
      * @param n index of the thread that will consume the task.
      * @param f callable object representing the task.
@@ -338,7 +322,7 @@ public:
     static enqueue_t<F &&, Args &&...> enqueue(unsigned n, F &&f, Args &&... args)
     {
         detail::atomic_lock_guard lock(s_atf);
-        if (n >= s_queues.first.size()) {
+        if (unlikely(n >= s_queues.first.size())) {
             piranha_throw(std::invalid_argument, "the thread index " + std::to_string(n)
                                                      + " is out of range, the thread pool contains only "
                                                      + std::to_string(s_queues.first.size()) + " threads");
@@ -368,7 +352,7 @@ private:
         }
         // Fill in the thread ids set.
         for (const auto &ptr : new_queues.first) {
-            auto p = new_queues.second.insert(ptr->m_thread->get_id());
+            auto p = new_queues.second.insert(ptr->m_thread.get_id());
             (void)p;
             piranha_assert(p.second);
         }

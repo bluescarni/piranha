@@ -152,20 +152,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
     using base = array_key<T, monomial<T, S>, S>;
-    // Eval and subs type definition.
-    template <typename U, typename = void>
-    struct eval_type_ {
-    };
-    template <typename U>
-    using e_type = decltype(math::pow(std::declval<U const &>(), std::declval<T const &>()));
-    template <typename U>
-    struct eval_type_<U, typename std::enable_if<is_multipliable_in_place<e_type<U>>::value
-                                                 && std::is_constructible<e_type<U>, int>::value
-                                                 && detail::is_pmappable<U>::value>::type> {
-        using type = e_type<U>;
-    };
-    template <typename U>
-    using eval_type = typename eval_type_<U>::type;
     // Enabler for ctor from init list.
     template <typename U>
     using init_list_enabler =
@@ -267,23 +253,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     using partial_enabler =
         typename std::enable_if<std::is_assignable<U &, decltype(std::declval<U &>() - std::declval<U>())>::value,
                                 int>::type;
-    // Subs support.
-    // NOTE: this can obviously be compressed and implemented more cleanly with a single enable_if, but unfortunately
-    // when this pattern is used both here and in k_monomial, a weird compiler error results with both GCC 4.8 and 4.9.
-    // We need to check with GCC 5 what happens, and in case the problem is still there, it needs to be reported.
-    template <typename U>
-    using subs_type__ = decltype(math::pow(std::declval<const U &>(), std::declval<const T &>()));
-    template <typename U, typename = void>
-    struct subs_type_ {
-    };
-    template <typename U>
-    struct subs_type_<U,
-                      typename std::enable_if<std::is_constructible<subs_type__<U>, int>::value
-                                              && std::is_assignable<subs_type__<U> &, subs_type__<U>>::value>::type> {
-        using type = subs_type__<U>;
-    };
-    template <typename U>
-    using subs_type = typename subs_type_<U>::type;
     // ipow subs support.
     template <typename U>
     using ipow_subs_type__ = decltype(math::pow(std::declval<const U &>(), std::declval<const integer &>()));
@@ -621,8 +590,8 @@ public:
     template <typename U, pow_enabler<U> = 0>
     monomial pow(const U &x, const symbol_set &args) const
     {
-        typedef typename base::size_type size_type;
-        if (!is_compatible(args)) {
+        using size_type = typename base::size_type;
+        if (unlikely(!is_compatible(args))) {
             piranha_throw(std::invalid_argument, "invalid size of arguments set");
         }
         // Init with zeroes.
@@ -740,7 +709,7 @@ public:
                 // NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
                 // we are never going to land here as args[i] is at this point never going to be s.
                 ip_inc(retval[i]);
-                if (math::is_zero(retval[i])) {
+                if (unlikely(math::is_zero(retval[i]))) {
                     piranha_throw(std::invalid_argument,
                                   "unable to perform monomial integration: negative unitary exponent");
                 }
@@ -811,10 +780,14 @@ public:
         for (typename base::size_type i = 0u; i < this->size(); ++i) {
             cur_value = (*this)[i];
             if (!math::is_zero(cur_value)) {
-                // NOTE: the sequencing rules of the ternary operator ensure that math::negate(cur_value) is
-                // evaluated after zero < cur_value.
-                cur_oss
-                    = (zero < cur_value) ? std::addressof(oss_num) : (math::negate(cur_value), std::addressof(oss_den));
+                // NOTE: use this weird form for the test because the presence of operator<()
+                // is already guaranteed and thus we don't need additional requirements on T.
+                if (zero < cur_value) {
+                    cur_oss = std::addressof(oss_num);
+                } else {
+                    math::negate(cur_value);
+                    cur_oss = std::addressof(oss_den);
+                }
                 (*cur_oss) << "{" << args[i].get_name() << "}";
                 if (!math::is_unitary(cur_value)) {
                     (*cur_oss) << "^{" << detail::prepare_for_print(cur_value) << "}";
@@ -830,11 +803,22 @@ public:
             os << "\\frac{1}{" << den_str << "}";
         }
     }
+
+private:
+    // Eval type definition.
+    template <typename U>
+    using e_type = decltype(math::pow(std::declval<U const &>(), std::declval<T const &>()));
+    template <typename U>
+    using eval_type = enable_if_t<conjunction<is_multipliable_in_place<e_type<U>>,
+                                              std::is_constructible<e_type<U>, int>, is_mappable<U>>::value,
+                                  e_type<U>>;
+
+public:
     /// Evaluation.
     /**
      * \note
      * This method is available only if \p U satisfies the following requirements:
-     * - it can be used in piranha::symbol_set::positions_map,
+     * - it satisfies piranha::is_mappable,
      * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
      * - \p eval_type is constructible from \p int,
      * - \p eval_type is multipliable in place.
@@ -878,6 +862,15 @@ public:
         piranha_assert(it == pmap.end());
         return retval;
     }
+
+private:
+    // Subs support (re-uses the e_type typedef from the eval type).
+    template <typename U>
+    using subs_type = enable_if_t<conjunction<std::is_constructible<e_type<U>, int>,
+                                              std::is_assignable<e_type<U> &, e_type<U>>>::value,
+                                  e_type<U>>;
+
+public:
     /// Substitution.
     /**
      * \note
@@ -885,14 +878,11 @@ public:
      * - \p U can be raised to the value type, yielding a type \p subs_type,
      * - \p subs_type can be constructed from \p int and it is assignable.
      *
-     * Substitute the symbol called \p s in the monomial with quantity \p x. The return value is vector containing one
-     * pair in which the first
-     * element is the result of substituting \p s with \p x (i.e., \p x raised to the power of the exponent
-     * corresponding
-     * to \p s), and the second element the monomial after the substitution has been performed (i.e., with the exponent
-     * corresponding to \p s set to zero). If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e.,
-     * the
-     * monomial is unchanged and the substitution yields 1).
+     * Substitute the symbol called \p s in the monomial with quantity \p x. The return value is vector containing
+     * one pair in which the first element is the result of substituting \p s with \p x (i.e., \p x raised to the power
+     * of the exponent corresponding to \p s), and the second element the monomial after the substitution has been
+     * performed (i.e., with the exponent corresponding to \p s set to zero). If \p s is not in \p args, the return
+     * value will be <tt>(1,this)</tt> (i.e., the monomial is unchanged and the substitution yields 1).
      *
      * @param s name of the symbol that will be substituted.
      * @param x quantity that will be substituted in place of \p s.
@@ -926,7 +916,7 @@ public:
             }
         }
         piranha_assert(retval_key.size() == this->size());
-        retval.push_back(std::make_pair(std::move(retval_s), std::move(retval_key)));
+        retval.emplace_back(std::move(retval_s), std::move(retval_key));
         return retval;
     }
     /// Substitution of integral power.
@@ -989,7 +979,7 @@ public:
             }
         }
         std::vector<std::pair<s_type, monomial>> retval;
-        retval.push_back(std::make_pair(std::move(retval_s), std::move(retval_key)));
+        retval.emplace_back(std::move(retval_s), std::move(retval_key));
         return retval;
     }
     /// Multiply terms with a monomial key.

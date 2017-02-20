@@ -446,13 +446,13 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
     auto tmp1 = (real(0) + real(1) * pow(real(1.234), 1) * pow(real(5.678), 0)
                  + real(1) * pow(real(1.234), 0) * pow(real(5.678), 1))
                 * cos(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
-    BOOST_CHECK_EQUAL(tmp1, s1.evaluate(dict));
-    BOOST_CHECK((std::is_same<real, decltype(s1.evaluate(dict))>::value));
+    BOOST_CHECK_EQUAL(math::evaluate(s1, dict), tmp1);
+    BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s1, dict))>::value));
     auto s2 = pow(y, 3) * sin(x + y);
     auto tmp2 = (real(0) + real(1) * pow(real(1.234), 0) * pow(real(5.678), 3))
                 * sin(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
-    BOOST_CHECK_EQUAL(tmp2, s2.evaluate(dict));
-    BOOST_CHECK((std::is_same<real, decltype(s2.evaluate(dict))>::value));
+    BOOST_CHECK_EQUAL(tmp2, math::evaluate(s2, dict));
+    BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s2, dict))>::value));
     // NOTE: here it seems to be quite a brittle test: if one changes the order of the operands s1 and s2,
     // the test fails on my test machine due to differences of order epsilon. Most likely it's a matter
     // of ordering of the floating-point operations and it will depend on a ton of factors. Better just disable it,

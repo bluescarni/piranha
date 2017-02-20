@@ -259,8 +259,6 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 // Some evaluation tests after we added the improved checking + error message logic in series.
 BOOST_AUTO_TEST_CASE(series_evaluation_test)
 {
-    // Series not evaluable due to nasty type.
-    BOOST_CHECK((!is_evaluable<g_series_type2<double, int>, double>::value));
     using math::evaluate;
     using p_type = polynomial<integer, monomial<int>>;
     p_type x{"x"}, y{"y"}, z{"z"};

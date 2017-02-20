@@ -229,15 +229,15 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
                               .subs("x", rational(3, 2))
                               .subs("y", rational(4, 5))
                               .subs("z", -rational(6, 7)),
-                          (math::pow(x, 2) + x * y + z)
-                              .evaluate(std::unordered_map<std::string, rational>{
-                                  {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
+                          math::evaluate(math::pow(x, 2) + x * y + z,
+                                         std::unordered_map<std::string, rational>{
+                                             {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
         BOOST_CHECK_EQUAL(math::subs(math::pow(x, 2) + x * y + z, "x", rational(3, 2))
                               .subs("y", rational(4, 5))
                               .subs("z", -rational(6, 7)),
-                          (math::pow(x, 2) + x * y + z)
-                              .evaluate(std::unordered_map<std::string, rational>{
-                                  {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
+                          math::evaluate(math::pow(x, 2) + x * y + z,
+                                         std::unordered_map<std::string, rational>{
+                                             {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
         BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x", integer(1))), p_type1>::value));
         BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x", rational(1))), p_type1>::value));
         BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("k", rational(3, 2)), x * x + x * y + z);

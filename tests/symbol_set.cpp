@@ -423,10 +423,4 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_map_test)
     std::vector<pmap::value_type> cmp3{{3u, -5}};
     BOOST_CHECK(std::equal(pm3.begin(), pm3.end(), cmp3.begin()));
     BOOST_CHECK((pm3.back() == pmap::value_type{3u, -5}));
-    // pmappable type trait.
-    BOOST_CHECK(detail::is_pmappable<pmap1_t>::value);
-    BOOST_CHECK(!detail::is_pmappable<pmap2_t>::value);
-    BOOST_CHECK(!detail::is_pmappable<pmap3_t>::value);
-    BOOST_CHECK(!detail::is_pmappable<pmap4_t>::value);
-    BOOST_CHECK(!detail::is_pmappable<pmap5_t>::value);
 }

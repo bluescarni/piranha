@@ -339,10 +339,13 @@ BOOST_AUTO_TEST_CASE(math_evaluate_test)
                       std::complex<double>(5., 4.));
     BOOST_CHECK_EQUAL(math::evaluate(std::complex<long double>(5., 4.), std::unordered_map<std::string, double>{}),
                       std::complex<long double>(5., 4.));
-    BOOST_CHECK((std::is_same<decltype(math::evaluate(5, std::unordered_map<std::string, double>{})), int>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(5, std::unordered_map<std::string, double>{})), double>::value));
+    BOOST_CHECK(
+        (std::is_same<decltype(math::evaluate(std::complex<double>(3, 5), std::unordered_map<std::string, int>{})),
+                      std::complex<double>>::value));
     BOOST_CHECK_EQUAL(math::evaluate(5., std::unordered_map<std::string, int>{}), 5.);
     BOOST_CHECK((std::is_same<decltype(math::evaluate(5., std::unordered_map<std::string, short>{})), double>::value));
-    BOOST_CHECK_EQUAL(math::evaluate(5ul, std::unordered_map<std::string, double>{}), 5ul);
+    BOOST_CHECK_EQUAL(math::evaluate(5ul, std::unordered_map<std::string, double>{}), 5.);
     BOOST_CHECK(
         (std::is_same<decltype(math::evaluate(5ul, std::unordered_map<std::string, short>{})), unsigned long>::value));
     // Test the syntax with explicit template parameter.

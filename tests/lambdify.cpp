@@ -83,7 +83,6 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
         using p_type = polynomial<integer, k_monomial>;
         p_type x{"x"}, y{"y"}, z{"z"};
         BOOST_CHECK((has_lambdify<p_type, integer>::value));
-        BOOST_CHECK((!has_lambdify<p_type, std::string>::value));
         auto l0 = lambdify<integer>(x + y + z, {"x", "y", "z"});
         BOOST_CHECK(!std::is_copy_assignable<decltype(l0)>::value);
         BOOST_CHECK(!std::is_move_assignable<decltype(l0)>::value);

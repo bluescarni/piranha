@@ -145,7 +145,6 @@ BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
     BOOST_CHECK((is_evaluable<p_type1, float>::value));
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
     BOOST_CHECK((is_evaluable<p_type1, rational>::value));
-    BOOST_CHECK((!is_evaluable<p_type1, std::string>::value));
     BOOST_CHECK((is_evaluable<p_type1, integer>::value));
     BOOST_CHECK((is_evaluable<p_type1, int>::value));
     BOOST_CHECK((is_evaluable<p_type1, long>::value));

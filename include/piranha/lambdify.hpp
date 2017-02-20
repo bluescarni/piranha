@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -54,8 +55,8 @@ namespace detail
 // Requirements for the lambdified template parameters (after decay).
 template <typename T, typename U>
 using math_lambdified_reqs
-    = std::integral_constant<bool, is_evaluable<T, U>::value && is_mappable<U>::value
-                                       && std::is_copy_constructible<T>::value && std::is_move_constructible<T>::value>;
+    = std::integral_constant<bool, conjunction<is_evaluable<T, U>, is_mappable<U>, std::is_copy_constructible<T>,
+                                               std::is_move_constructible<T>>::value>;
 }
 
 namespace math
@@ -185,7 +186,7 @@ public:
      * - the copy constructor of \p T,
      * - the construction of objects of type \p U.
      */
-    explicit lambdified(const T &x, const std::vector<std::string> &names, extra_map_type extra_map = extra_map_type{})
+    explicit lambdified(const T &x, const std::vector<std::string> &names, extra_map_type extra_map = {})
         : m_x(x), m_names(names), m_extra_map(extra_map)
     {
         construct();
@@ -207,7 +208,7 @@ public:
      * - the move constructor of \p T,
      * - the construction of objects of type \p U.
      */
-    explicit lambdified(T &&x, const std::vector<std::string> &names, extra_map_type extra_map = extra_map_type{})
+    explicit lambdified(T &&x, const std::vector<std::string> &names, extra_map_type extra_map = {})
         : m_x(std::move(x)), m_names(names), m_extra_map(extra_map)
     {
         construct();
@@ -395,8 +396,7 @@ namespace math
  */
 template <typename U, typename T>
 inline detail::math_lambdify_type<T, U> lambdify(T &&x, const std::vector<std::string> &names,
-                                                 detail::math_lambdify_extra_map_type<T, U> extra_map
-                                                 = detail::math_lambdify_extra_map_type<T, U>{})
+                                                 detail::math_lambdify_extra_map_type<T, U> extra_map = {})
 {
     return lambdified<typename std::decay<T>::type, typename std::decay<U>::type>(std::forward<T>(x), names, extra_map);
 }

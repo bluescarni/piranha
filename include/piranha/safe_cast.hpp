@@ -213,7 +213,7 @@ using safe_cast_type
  *
  * @return \p x converted to \p To.
  *
- * @throws unspecified any exception throw by the call operator of piranha::safe_cast_impl.
+ * @throws unspecified any exception thrown by the call operator of piranha::safe_cast_impl.
  */
 template <typename To, typename From>
 inline safe_cast_type<To, From> safe_cast(const From &x)

@@ -1606,7 +1606,7 @@ inline void save_file(const T &x, const std::string &filename, data_format f, co
  * @param filename the desired file name.
  *
  * @throws std::invalid_argument if the compression and data formats cannot be deduced.
- * @throws unspecified any exception throw by the first overload of piranha::save_file().
+ * @throws unspecified any exception thrown by the first overload of piranha::save_file().
  */
 template <typename T>
 inline void save_file(const T &x, const std::string &filename)
@@ -1668,7 +1668,7 @@ inline void load_file(T &x, const std::string &filename, data_format f, compress
  * @param filename source file name.
  *
  * @throws std::invalid_argument if the compression and data formats cannot be deduced.
- * @throws unspecified any exception throw by the first overload of piranha::load_file().
+ * @throws unspecified any exception thrown by the first overload of piranha::load_file().
  */
 template <typename T, load_file_enabler<T> = 0>
 inline void load_file(T &x, const std::string &filename)

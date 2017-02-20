@@ -749,50 +749,85 @@ inline detail::math_integrate_type<T> integrate(const T &x, const std::string &s
 {
     return integrate_impl<T>{}(x, str);
 }
+}
+
+inline namespace impl
+{
+
+// The default implementation of evaluate_impl inherits from this.
+struct default_math_evaluate_tag {
+};
+}
+
+namespace math
+{
 
 /// Default functor for the implementation of piranha::math::evaluate().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism.
+ * This functor can be specialised via the \p std::enable_if mechanism.
  */
-template <typename T, typename U, typename Enable = void>
-struct evaluate_impl {
-private:
-    template <typename V>
-    using enabler = typename std::enable_if<std::is_copy_constructible<V>::value && is_returnable<V>::value, int>::type;
+template <typename T, typename U, typename = void>
+class evaluate_impl : default_math_evaluate_tag
+{
+    template <typename T1, typename, typename = void>
+    struct ret_type_ {
+        using type = T1;
+    };
+    template <typename T1, typename U1>
+    using add_t = decltype(std::declval<const T1 &>() + std::declval<const U1 &>());
+    template <typename T1, typename U1>
+    struct ret_type_<T1, U1, enable_if_t<is_detected<add_t, T1, U1>::value>> {
+        using type = add_t<T1, U1>;
+    };
+    template <typename T1, typename U1>
+    using ret_type
+        = enable_if_t<conjunction<is_returnable<typename ret_type_<T1, U1>::type>,
+                                  std::is_constructible<typename ret_type_<T1, U1>::type, const T1 &>>::value,
+                      typename ret_type_<T1, U1>::type>;
 
 public:
     /// Call operator.
     /**
      * \note
-     * This operator is enabled only if \p V is copy-constructible and if it satisfies piranha::is_returnable.
+     * This operator is enabled only if the procedure outlined below for the creation of the return value
+     * succeeds.
      *
-     * The default behaviour is to return the input value \p x unchanged.
+     * The implementation follows these rules:
+     * - if <tt>a+b</tt> (with \p a of type \p T1 and \p b of type \p U1) is a well-formed expression
+     *   of type \p R, then the return value will be an instance of \p R constructed from \p x;
+     * - otherwise, a copy of \p x will be returned.
+     *
+     * If the return value cannot be constructed from \p x or if its type does not satisfy piranha::is_returnable,
+     * the operator will be disabled.
+     *
+     * The intent of this default-implementation of piranha::math::evaluate() is to either promote \p x to
+     * the common type of \p T and \p U, if it exists, or just return \p x as-is if a common type does not exist.
      *
      * @param x evaluation argument.
      *
-     * @return copy of \p x.
+     * @return an instance of the return type constructed from \p x.
      *
-     * @throws unspecified any exception thrown by the invoked copy constructor.
+     * @throws unspecified any exception thrown by the invoked constructors.
      */
-    template <typename V, enabler<V> = 0>
-    V operator()(const V &x, const std::unordered_map<std::string, U> &) const
+    template <typename T1, typename U1>
+    ret_type<T1, U1> operator()(const T1 &x, const std::unordered_map<std::string, U1> &) const
     {
-        return x;
+        return ret_type<T1, U1>(x);
     }
 };
 }
 
-namespace detail
+inline namespace impl
 {
 
 // Return type for math::evaluate().
 template <typename T, typename U>
-using math_evaluate_type_ = decltype(
+using math_evaluate_t_ = decltype(
     math::evaluate_impl<T, U>{}(std::declval<const T &>(), std::declval<const std::unordered_map<std::string, U> &>()));
 
 template <typename T, typename U>
-using math_evaluate_type =
-    typename std::enable_if<is_returnable<math_evaluate_type_<T, U>>::value, math_evaluate_type_<T, U>>::type;
+using math_evaluate_t =
+    typename std::enable_if<is_returnable<math_evaluate_t_<T, U>>::value, math_evaluate_t_<T, U>>::type;
 }
 
 namespace math
@@ -820,7 +855,7 @@ namespace math
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
 template <typename U, typename T>
-inline detail::math_evaluate_type<T, U> evaluate(const T &x, const std::unordered_map<std::string, U> &dict)
+inline math_evaluate_t<T, U> evaluate(const T &x, const std::unordered_map<std::string, U> &dict)
 {
     return evaluate_impl<T, U>{}(x, dict);
 }
@@ -1817,11 +1852,11 @@ struct is_differential_key_pair<Key, std::pair<PairFirst, Key>> {
  *
  * The decay type of \p Key is considered in this type trait.
  */
-template <typename T>
+template <typename Key>
 class key_is_differentiable : detail::sfinae_types
 {
-    using Td = typename std::decay<T>::type;
-    PIRANHA_TT_CHECK(is_key, Td);
+    using Keyd = typename std::decay<Key>::type;
+    PIRANHA_TT_CHECK(is_key, Keyd);
     template <typename U>
     static auto test(const U &u)
         -> decltype(u.partial(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()));
@@ -1829,11 +1864,11 @@ class key_is_differentiable : detail::sfinae_types
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::is_differential_key_pair<Td, decltype(test(std::declval<Td>()))>::value;
+    static const bool value = detail::is_differential_key_pair<Keyd, decltype(test(std::declval<Keyd>()))>::value;
 };
 
-template <typename T>
-const bool key_is_differentiable<T>::value;
+template <typename Key>
+const bool key_is_differentiable<Key>::value;
 
 /// Type trait for integrable types.
 /**
@@ -2412,21 +2447,18 @@ public:
 template <typename T>
 const bool has_multiply_accumulate<T>::value;
 
-/// Type trait to detect the availability of piranha::math::evaluate.
+/// Type trait to detect the availability of piranha::math::evaluate().
 /**
- * This type trait will be \p true if piranha::math::evaluate can be called with arguments of type \p T and \p U,
+ * This type trait will be \p true if piranha::math::evaluate() can be called with arguments of type \p T and \p U,
  * \p false otherwise.
  */
 template <typename T, typename U>
-class is_evaluable : detail::sfinae_types
+class is_evaluable
 {
-    template <typename T2, typename U2>
-    static auto test(const T2 &t, const std::unordered_map<std::string, U2> &dict)
-        -> decltype(math::evaluate(t, dict), void(), yes());
-    static no test(...);
-    static const bool implementation_defined
-        = std::is_same<decltype(test(std::declval<T>(), std::declval<std::unordered_map<std::string, U>>())),
-                       yes>::value;
+    template <typename T1, typename U1>
+    using eval_t = decltype(
+        math::evaluate(std::declval<const T1 &>(), std::declval<const std::unordered_map<std::string, U1> &>()));
+    static const bool implementation_defined = is_detected<eval_t, T, U>::value;
 
 public:
     /// Value of the type trait.
@@ -2439,9 +2471,8 @@ const bool is_evaluable<T, U>::value;
 /// Type trait to detect evaluable keys.
 /**
  * This type trait will be \p true if \p Key is a key type providing a const method <tt>evaluate()</tt> taking a const
- * instance of
- * piranha::symbol_set::positions_map of \p T and a const instance of piranha::symbol_set as input, \p false otherwise.
- * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ * instance of piranha::symbol_set::positions_map of \p T and a const instance of piranha::symbol_set as input, \p false
+ * otherwise. If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
  *
  * The decay type of \p Key is considered in this type trait.
  */

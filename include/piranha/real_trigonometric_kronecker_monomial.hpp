@@ -222,7 +222,7 @@ private:
                                                               decltype(math::sin(std::declval<e_type<U>>()))>::value
                                               && std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())),
                                                                        int>::value
-                                              && detail::is_pmappable<U>::value>::type> {
+                                              && is_mappable<U>::value>::type> {
         using type = decltype(math::cos(std::declval<e_type<U>>()));
     };
     // Final typedef for the eval type.
@@ -1080,7 +1080,7 @@ public:
     /**
      * \note
      * This template method is activated only if \p U supports the mathematical operations needed to compute
-     * the return type, and if it is suitable for use in piranha::symbol_set::positions_map.
+     * the return type, and if it satisfies piranha::is_mappable.
      *
      * The return value will be built by applying piranha::math::cos() or piranha::math:sin()
      * to the linear combination of the values in \p pmap with the multipliers.
@@ -1201,15 +1201,15 @@ public:
         const auto new_int = ka::encode(new_v);
         real_trigonometric_kronecker_monomial cos_key(new_int, true), sin_key(new_int, false);
         if (get_flavour()) {
-            retval.push_back(std::make_pair(std::move(retval_s_cos), std::move(cos_key)));
-            retval.push_back(std::make_pair(std::move(retval_s_sin), std::move(sin_key)));
+            retval.emplace_back(std::move(retval_s_cos), std::move(cos_key));
+            retval.emplace_back(std::move(retval_s_sin), std::move(sin_key));
             // Need to flip the sign on the sin * sin product if sign was not changed.
             if (!sign_changed) {
                 math::negate(retval[1u].first);
             }
         } else {
-            retval.push_back(std::make_pair(std::move(retval_s_sin), std::move(cos_key)));
-            retval.push_back(std::make_pair(std::move(retval_s_cos), std::move(sin_key)));
+            retval.emplace_back(std::move(retval_s_sin), std::move(cos_key));
+            retval.emplace_back(std::move(retval_s_cos), std::move(sin_key));
             // Need to flip the sign on the cos * sin product if sign was changed.
             if (sign_changed) {
                 math::negate(retval[1u].first);
@@ -1300,15 +1300,15 @@ public:
         real_trigonometric_kronecker_monomial cos_key(new_int, true), sin_key(new_int, false);
         ret_type retval;
         if (get_flavour()) {
-            retval.push_back(std::make_pair(std::move(cos_nx), std::move(cos_key)));
-            retval.push_back(std::make_pair(std::move(sin_nx), std::move(sin_key)));
+            retval.emplace_back(std::move(cos_nx), std::move(cos_key));
+            retval.emplace_back(std::move(sin_nx), std::move(sin_key));
             // Need to flip the sign on the sin * sin product if sign was not changed.
             if (!sign_changed) {
                 math::negate(retval[1u].first);
             }
         } else {
-            retval.push_back(std::make_pair(std::move(sin_nx), std::move(cos_key)));
-            retval.push_back(std::make_pair(std::move(cos_nx), std::move(sin_key)));
+            retval.emplace_back(std::move(sin_nx), std::move(cos_key));
+            retval.emplace_back(std::move(cos_nx), std::move(sin_key));
             // Need to flip the sign on the cos * sin product if sign was changed.
             if (sign_changed) {
                 math::negate(retval[1u].first);
