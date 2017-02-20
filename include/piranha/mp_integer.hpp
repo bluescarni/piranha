@@ -45,7 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
 #define MPPP_WITH_LONG_DOUBLE
-#include <piranha/mp++/mp++.hpp>
+#include <piranha/mppp/mp++.hpp>
 #undef MPPP_WITH_LONG_DOUBLE
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>

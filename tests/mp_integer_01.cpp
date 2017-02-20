@@ -40,7 +40,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/init.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp++/mp++.hpp>
+#include <piranha/mppp/mp++.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/type_traits.hpp>
 
