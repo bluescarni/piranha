@@ -29,6 +29,8 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_DIVISOR_SERIES_HPP
 #define PIRANHA_DIVISOR_SERIES_HPP
 
+#include <algorithm>
+#include <iterator>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -300,12 +302,13 @@ class divisor_series
                 auto lc = s._container().begin()->m_cf.integral_combination();
                 // NOTE: lc cannot be empty as we are coming in with a non-zero polynomial.
                 piranha_assert(!lc.empty());
+                symbol_set ss(lc.begin(), lc.end(),
+                              [](const typename decltype(lc)::value_type &p) { return symbol(p.first); });
+                // NOTE: lc contains unique strings, so the symbol_set should not contain any duplicate.
+                piranha_assert(ss.size() == lc.size());
                 std::vector<integer> v_int;
-                symbol_set ss;
-                for (const auto &p : lc) {
-                    ss.add(symbol(p.first));
-                    v_int.push_back(p.second);
-                }
+                std::transform(lc.begin(), lc.end(), std::back_inserter(v_int),
+                               [](const typename decltype(lc)::value_type &p) { return p.second; });
                 // We need to canonicalise the term: switch the sign if the first
                 // nonzero element is negative, and divide by the common denom.
                 bool first_nonzero_found = false, need_negate = false;
@@ -320,7 +323,7 @@ class divisor_series
                     if (need_negate) {
                         math::negate(n);
                     }
-                    // NOTE: gcd(0,n) == n (or +-n, in our case) for all n, zero included.
+                    // NOTE: gcd(0,n) == n for all n, zero included.
                     // NOTE: the gcd computation here is safe as we are operating on integers.
                     math::gcd3(cd, cd, n);
                 }

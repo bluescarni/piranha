@@ -637,10 +637,8 @@ public:
             if (math::is_zero(math::partial(it->m_cf, name))) {
                 polynomial tmp;
                 symbol_set sset = this->m_symbol_set;
-                // If the variable does not exist in the arguments set, add it.
-                if (!std::binary_search(sset.begin(), sset.end(), s)) {
-                    sset.add(s);
-                }
+                // Try to add the variable (insertion will have no effect if the variable is already present).
+                sset.add(s);
                 tmp.set_symbol_set(sset);
                 auto key_int = it->m_key.integrate(s, this->m_symbol_set);
                 tmp.insert(term_type(cf_type(1), std::move(key_int.second)));

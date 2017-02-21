@@ -188,16 +188,18 @@ class poisson_series
         }
         // Return value.
         RetT retval;
-        // Build vector of integral multipliers.
+        // Build vector of integral multipliers and the symbol set.
+        retval.set_symbol_set(symbol_set(lc.begin(), lc.end(),
+                                         [](const typename decltype(lc)::value_type &p) { return symbol(p.first); }));
+        piranha_assert(retval.get_symbol_set().size() == lc.size());
         std::vector<value_type> v;
-        for (auto it = lc.begin(); it != lc.end(); ++it) {
-            retval.m_symbol_set.add(it->first);
+        std::transform(lc.begin(), lc.end(), std::back_inserter(v), [](const typename decltype(lc)::value_type &p) {
             // NOTE: this should probably be a safe_cast.
             // The value type here could be anything, and not guaranteed to be castable,
             // even if in the current implementation this is guaranteed to be a signed
             // int of some kind.
-            v.push_back(static_cast<value_type>(it->second));
-        }
+            return static_cast<value_type>(p.second);
+        });
         // Build term, fix signs and flavour and move-insert it.
         term_type term(cf_type(1), key_type(v.begin(), v.end()));
         if (!IsCos) {
@@ -434,10 +436,8 @@ class poisson_series
         return_type retval(0);
         // Setup of the symbol set.
         piranha_assert(names.size() == this->m_symbol_set.size());
-        symbol_set div_symbols;
-        for (const auto &name : names) {
-            div_symbols.add(name);
-        }
+        const symbol_set div_symbols(names.begin(), names.end());
+        piranha_assert(div_symbols.size() == names.size());
         // A temp vector of integers used to normalise the divisors coming
         // out of the integration operation from the trig keys.
         std::vector<integer> tmp_int;
@@ -706,9 +706,8 @@ public:
     ti_type<T> t_integrate() const
     {
         std::vector<std::string> names;
-        for (auto it = this->m_symbol_set.begin(); it != this->m_symbol_set.end(); ++it) {
-            names.push_back("\\nu_{" + it->get_name() + "}");
-        }
+        std::transform(this->m_symbol_set.begin(), this->m_symbol_set.end(), std::back_inserter(names),
+                       [](const symbol &s) { return "\\nu_{" + s.get_name() + "}"; });
         return t_integrate_impl(names);
     }
     /// Time integration (alternative overload).
@@ -737,8 +736,7 @@ public:
             piranha_throw(std::invalid_argument, "the list of symbol names must be ordered lexicographically");
         }
         // Remove duplicates.
-        auto new_end = std::unique(names.begin(), names.end());
-        names.erase(new_end, names.end());
+        names.erase(std::unique(names.begin(), names.end()), names.end());
         if (unlikely(names.size() != this->m_symbol_set.size())) {
             piranha_throw(std::invalid_argument, "the number of symbols passed in input must be equal to the "
                                                  "number of symbols of the Poisson series");

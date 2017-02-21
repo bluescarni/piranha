@@ -67,7 +67,6 @@ class symbol_set
 {
     bool check() const
     {
-        // GCOV_EXCL_START
         // Check for sorted range.
         if (!std::is_sorted(begin(), end())) {
             return false;
@@ -81,7 +80,6 @@ class symbol_set
                 return false;
             }
         }
-        // GCOV_EXCL_END
         return true;
     }
 
@@ -262,8 +260,52 @@ private:
         = enable_if_t<conjunction<is_input_iterator<Iterator>,
                                   std::is_constructible<symbol, decltype(*(std::declval<const Iterator &>()))>>::value,
                       int>;
+    template <typename Iterator, typename F>
+    using it_ctor_extract_enabler
+        = enable_if_t<conjunction<is_input_iterator<Iterator>,
+                                  is_function_object<F, symbol,
+                                                     const typename std::iterator_traits<Iterator>::value_type &>,
+                                  std::is_copy_constructible<F>>::value,
+                      int>;
+    template <typename Iterator, typename F>
+    void iterator_ctor(Iterator begin, Iterator end, const F &f)
+    {
+        assert(m_values.empty());
+        // Copy the values from the range into m_values.
+        std::transform(begin, end, std::back_inserter(m_values), f);
+        // Sort them in ascending order.
+        // NOTE: there might be room for improvement here, if we expect this to be called
+        // often on already-sorted data. In that cast, doing an is_sorted check beforehand
+        // could be helpful.
+        std::sort(m_values.begin(), m_values.end());
+        // Remove duplicates.
+        m_values.erase(std::unique(m_values.begin(), m_values.end()), m_values.end());
+    }
 
 public:
+    /// Constructor from range and extractor.
+    /**
+     * \note
+     * This constructor is enabled only if \p Iterator is an input iterator with value type \p V,
+     * and \p F is a copy-constructible function object accepting <tt>const V &</tt> as only parameter and returning
+     * piranha::symbol.
+     *
+     * The set will be initialised with symbols constructed from the application of the function object
+     * \p f to the elements of the input range.
+     *
+     * @param begin begin iterator.
+     * @param end end iterator.
+     * @param f a function object that will be used to construct instances of piranha::symbol from
+     * the elements in the input range.
+     *
+     * @throws unspecified any exception thrown by operations on standard containers or by
+     * the invocation of \p f.
+     */
+    template <typename Iterator, typename F, it_ctor_extract_enabler<Iterator, F> = 0>
+    explicit symbol_set(Iterator begin, Iterator end, const F &f)
+    {
+        iterator_ctor(begin, end, f);
+    }
     /// Constructor from range.
     /**
      * \note
@@ -281,13 +323,8 @@ public:
     template <typename Iterator, it_ctor_enabler<Iterator> = 0>
     explicit symbol_set(Iterator begin, Iterator end)
     {
-        // Copy the values from the range into m_values.
-        std::transform(begin, end, std::back_inserter(m_values),
-                       [](const typename std::iterator_traits<Iterator>::value_type &x) { return symbol{x}; });
-        // Sort them in ascending order.
-        std::sort(m_values.begin(), m_values.end());
-        // Remove duplicates.
-        m_values.erase(std::unique(m_values.begin(), m_values.end()), m_values.end());
+        iterator_ctor(begin, end,
+                      [](const typename std::iterator_traits<Iterator>::value_type &x) { return symbol{x}; });
     }
 
 private:
@@ -390,6 +427,8 @@ public:
      */
     bool add(const symbol &s)
     {
+        // NOTE: the reason we use m_values.begin() rather than just begin() is due to a GCC 4.8 bug:
+        // the insert() method does not accept a const_iterator, which is what begin() returns.
         const auto it = std::lower_bound(m_values.begin(), m_values.end(), s);
         if (unlikely(it != end() && *it == s)) {
             // The symbol is there already.
@@ -428,6 +467,7 @@ public:
      */
     bool remove(const symbol &s)
     {
+        // NOTE: see the comment above in the add() method.
         const auto it = std::lower_bound(m_values.begin(), m_values.end(), s);
         if (likely(it != end() && *it == s)) {
             m_values.erase(it);
@@ -441,6 +481,9 @@ public:
      * Equivalent to constructing a piranha::symbol from \p name and then invoking the other overload of this method.
      *
      * @param name name of the piranha::symbol to be removed.
+     *
+     * @return \p true if the removal took place, \p false if the removal did not take place
+     * because the symbol \p s is not present in the set.
      *
      * @throws unspecified any exception thrown by the other overload of this method or by the construction
      * of piranha::symbol from \p std::string.

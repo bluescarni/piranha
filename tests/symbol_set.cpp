@@ -32,7 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
-#include <boost/lexical_cast.hpp>
+#include <initializer_list>
 #include <limits>
 #include <list>
 #include <random>
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
     BOOST_CHECK(ss4 == symbol_set({symbol("c"), symbol("b"), symbol("a")}));
 #endif
     BOOST_CHECK(std::is_nothrow_move_constructible<symbol_set>::value);
-    // Constructor from iterators.
+    // Constructors from iterators.
     std::vector<std::string> vs1 = {"a", "b", "c"};
     symbol_set ss5(vs1.begin(), vs1.end());
     BOOST_CHECK_EQUAL(ss5.size(), 3u);
@@ -106,8 +106,19 @@ BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
     symbol_set ss8(ls1.begin(), ls1.end());
     BOOST_CHECK_EQUAL(ss8.size(), 3u);
     BOOST_CHECK(std::equal(ss8.begin(), ss8.end(), ls1.begin(), cmp));
-    std::vector<int> vint;
+    std::vector<int> vint{1, 2, 3};
     BOOST_CHECK((!std::is_constructible<symbol_set, decltype(vint.begin()), decltype(vint.end())>::value));
+    auto e1 = [](int n) { return symbol{std::to_string(n)}; };
+    BOOST_CHECK((std::is_constructible<symbol_set, decltype(vint.begin()), decltype(vint.end()), decltype(e1)>::value));
+    symbol_set ss9(vint.begin(), vint.end(), e1);
+    BOOST_CHECK(ss9.size() == 3u);
+    BOOST_CHECK(std::equal(ss9.begin(), ss9.end(), symbol_set{"1", "2", "3"}.begin()));
+    auto e2 = [](int n) { return std::to_string(n); };
+    BOOST_CHECK(
+        (!std::is_constructible<symbol_set, decltype(vint.begin()), decltype(vint.end()), decltype(e2)>::value));
+    auto e3 = [](const std::string &) { return symbol{"aaa"}; };
+    BOOST_CHECK(
+        (!std::is_constructible<symbol_set, decltype(vint.begin()), decltype(vint.end()), decltype(e3)>::value));
 }
 
 BOOST_AUTO_TEST_CASE(symbol_set_add_test)
@@ -291,8 +302,8 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
             for (int j = 0; j < 6; ++j) {
                 try {
                     int tmp = dist(rng);
-                    a.add(boost::lexical_cast<std::string>(tmp));
-                    b.add(boost::lexical_cast<std::string>(tmp + 1));
+                    a.add(std::to_string(tmp));
+                    b.add(std::to_string(tmp + 1));
                 } catch (...) {
                     // Just ignore any existing symbol (unlikely).
                 }
@@ -306,8 +317,8 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
             for (int j = 0; j < 6; ++j) {
                 try {
                     int tmp = dist(rng);
-                    a.add(boost::lexical_cast<std::string>(tmp));
-                    b.add(boost::lexical_cast<std::string>(tmp));
+                    a.add(std::to_string(tmp));
+                    b.add(std::to_string(tmp));
                 } catch (...) {
                 }
             }
@@ -320,15 +331,15 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
             for (int j = 0; j < 6; ++j) {
                 try {
                     int tmp = dist(rng);
-                    a.add(boost::lexical_cast<std::string>(tmp));
-                    b.add(boost::lexical_cast<std::string>(tmp));
+                    a.add(std::to_string(tmp));
+                    b.add(std::to_string(tmp));
                 } catch (...) {
                 }
             }
             for (int j = 0; j < 6; ++j) {
                 try {
                     int tmp = dist(rng);
-                    a.add(boost::lexical_cast<std::string>(tmp));
+                    a.add(std::to_string(tmp));
                 } catch (...) {
                 }
             }
@@ -341,15 +352,15 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
             for (int j = 0; j < 6; ++j) {
                 try {
                     int tmp = dist(rng);
-                    a.add(boost::lexical_cast<std::string>(tmp));
-                    b.add(boost::lexical_cast<std::string>(tmp));
+                    a.add(std::to_string(tmp));
+                    b.add(std::to_string(tmp));
                 } catch (...) {
                 }
             }
             for (int j = 0; j < 6; ++j) {
                 try {
                     int tmp = dist(rng);
-                    b.add(boost::lexical_cast<std::string>(tmp));
+                    b.add(std::to_string(tmp));
                 } catch (...) {
                 }
             }
