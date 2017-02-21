@@ -390,7 +390,7 @@ public:
      */
     bool add(const symbol &s)
     {
-        const auto it = std::lower_bound(begin(), end(), s);
+        const auto it = std::lower_bound(m_values.begin(), m_values.end(), s);
         if (unlikely(it != end() && *it == s)) {
             // The symbol is there already.
             return false;
@@ -428,7 +428,7 @@ public:
      */
     bool remove(const symbol &s)
     {
-        const auto it = std::lower_bound(begin(), end(), s);
+        const auto it = std::lower_bound(m_values.begin(), m_values.end(), s);
         if (likely(it != end() && *it == s)) {
             m_values.erase(it);
             piranha_assert(check());
