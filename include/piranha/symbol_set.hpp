@@ -32,17 +32,16 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <initializer_list>
 #include <iterator>
-#include <limits>
-#include <set>
+#include <limits> // TODO check.
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_map>
+#include <unordered_map> // TODO check.
 #include <utility>
 #include <vector>
 
 #include <piranha/config.hpp>
 #include <piranha/detail/init_data.hpp>
-#include <piranha/exceptions.hpp>
+#include <piranha/exceptions.hpp> // TODO check.
 #include <piranha/symbol.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -51,8 +50,9 @@ namespace piranha
 
 /// Symbol set.
 /**
- * This class represents an ordered set of piranha::symbol, stored internally as an ordered vector.
- * The individual piranha::symbol instances can be accessed via iterators or the index operator.
+ * This class represents an ordered set of unique piranha::symbol objects, stored internally in a vector sorted
+ * lexicographically according to the symbols' names. The individual piranha::symbol instances can be accessed via
+ * iterators or the index operator.
  *
  * ## Exception safety guarantee ##
  *
@@ -67,7 +67,7 @@ class symbol_set
 {
     bool check() const
     {
-        // LCOV_EXCL_START
+        // GCOV_EXCL_START
         // Check for sorted range.
         if (!std::is_sorted(begin(), end())) {
             return false;
@@ -81,15 +81,9 @@ class symbol_set
                 return false;
             }
         }
-        // LCOV_EXCL_STOP
+        // GCOV_EXCL_END
         return true;
     }
-    // Enabler for ctor from iterator.
-    template <typename Iterator, typename Symbol>
-    using it_ctor_enabler
-        = enable_if_t<conjunction<is_input_iterator<Iterator>,
-                                  std::is_constructible<Symbol, decltype(*(std::declval<const Iterator &>()))>>::value,
-                      int>;
 
 public:
     /// Size type.
@@ -250,39 +244,31 @@ public:
     using const_iterator = std::vector<symbol>::const_iterator;
     /// Defaulted default constructor.
     /**
-     * Will construct an empty set.
+     * This constructor will construct an empty set.
      */
     symbol_set() = default;
     /// Defaulted copy constructor.
     /**
-     * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
+     * @throws unspecified any exception thrown by the copy constructor of \p std::vector.
      */
     symbol_set(const symbol_set &) = default;
     /// Defaulted move constructor.
     symbol_set(symbol_set &&) = default;
-    /// Constructor from initializer list of piranha::symbol.
-    /**
-     * Each symbol in the list will be added via add() to the set.
-     *
-     * @param l list of symbols used for construction.
-     *
-     * @throws unspecified any exception thrown by add().
-     */
-    explicit symbol_set(std::initializer_list<symbol> l)
-    {
-        // NOTE: for these types of initialisations from other containers
-        // it might make sense eventually to avoid all these adds, and do
-        // the sorting and elimination of duplicates in one pass to lower
-        // algorithmic complexity.
-        for (const auto &s : l) {
-            add(s);
-        }
-    }
+
+private:
+    // Enabler for ctor from iterator.
+    template <typename Iterator>
+    using it_ctor_enabler
+        = enable_if_t<conjunction<is_input_iterator<Iterator>,
+                                  std::is_constructible<symbol, decltype(*(std::declval<const Iterator &>()))>>::value,
+                      int>;
+
+public:
     /// Constructor from range.
     /**
      * \note
-     * This constructor is enabled only if \p Iterator is an input iterator and
-     * piranha::symbol is constructible from its value type.
+     * This constructor is enabled only if \p Iterator is an input iterator
+     * from whose value type piranha::symbol is constructible.
      *
      * The set will be initialised with symbols constructed from the elements of the range.
      *
@@ -292,17 +278,38 @@ public:
      * @throws unspecified any exception thrown by operations on standard containers or by
      * the invoked constructor of piranha::symbol.
      */
-    template <typename Iterator, it_ctor_enabler<Iterator, symbol> = 0>
-    explicit symbol_set(const Iterator &begin, const Iterator &end)
+    template <typename Iterator, it_ctor_enabler<Iterator> = 0>
+    explicit symbol_set(Iterator begin, Iterator end)
     {
-        // NOTE: this is one possible way of doing this, probably a sorted vector
-        // with std::unique will be faster. Also, this can be shared with the ctor
-        // from init list which can be furtherly generalised.
-        std::set<symbol> s_set;
-        for (Iterator it = begin; it != end; ++it) {
-            s_set.emplace(*it);
-        }
-        std::copy(s_set.begin(), s_set.end(), std::back_inserter(m_values));
+        // Copy the values from the range into m_values.
+        std::transform(begin, end, std::back_inserter(m_values),
+                       [](const typename std::iterator_traits<Iterator>::value_type &x) { return symbol{x}; });
+        // Sort them in ascending order.
+        std::sort(m_values.begin(), m_values.end());
+        // Remove duplicates.
+        m_values.erase(std::unique(m_values.begin(), m_values.end()), m_values.end());
+    }
+
+private:
+    template <typename T>
+    using init_list_ctor_enabler = enable_if_t<std::is_constructible<symbol, const T &>::value, int>;
+
+public:
+    /// Constructor from initializer list.
+    /**
+     * \note
+     * This constructor is enabled only if piranha::symbol is constructible from \p T.
+     *
+     * This constructor will use symbol_set::symbol_set(Iterator, Iterator) internally
+     * to construct a piranha::symbol_set from the values in the input initializer list \p l.
+     *
+     * @param l list of objects used for the construction of the symbols.
+     *
+     * @throws unspecified any exception thrown by symbol_set::symbol_set(Iterator, Iterator).
+     */
+    template <typename T, init_list_ctor_enabler<T> = 0>
+    explicit symbol_set(std::initializer_list<T> l) : symbol_set(l.begin(), l.end())
+    {
     }
     /// Copy assignment operator.
     /**
@@ -310,13 +317,12 @@ public:
      *
      * @return reference to \p this.
      *
-     * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
+     * @throws unspecified any exception thrown by the copy constructor.
      */
     symbol_set &operator=(const symbol_set &other)
     {
         if (likely(this != &other)) {
-            symbol_set tmp(other);
-            *this = std::move(tmp);
+            *this = symbol_set(other);
         }
         return *this;
     }
@@ -375,23 +381,21 @@ public:
      *
      * @param s piranha::symbol to be inserted.
      *
-     * @throws std::invalid_argument if \p s is already present in the set.
-     * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
+     * @return \p true if the insertion took place, \p false if the insertion did not take place
+     * because an identical symbol is already present in the set.
+     *
+     * @throws unspecified any exception thrown by the public interface of \p std::vector.
      */
-    void add(const symbol &s)
+    bool add(const symbol &s)
     {
-        // Copy it to provide strong exception safety.
-        std::vector<symbol> new_values;
-        new_values.reserve(size() + size_type(1u));
-        std::copy(begin(), end(), std::back_inserter(new_values));
-        const auto it = std::lower_bound(new_values.begin(), new_values.end(), s);
-        if (unlikely(it != new_values.end() && *it == s)) {
-            piranha_throw(std::invalid_argument, "symbol already present in this set");
+        const auto it = std::lower_bound(begin(), end(), s);
+        if (unlikely(it != end() && *it == s)) {
+            // The symbol is there already.
+            return false;
         }
-        new_values.insert(it, s);
-        // Move in the new args vector.
-        m_values = std::move(new_values);
+        m_values.insert(it, s);
         piranha_assert(check());
+        return true;
     }
     /// Add symbol to the set.
     /**
@@ -399,12 +403,15 @@ public:
      *
      * @param name name of the piranha::symbol to be inserted.
      *
+     * @return \p true if the insertion took place, \p false if the insertion did not take place
+     * because an identical symbol is already present in the set.
+     *
      * @throws unspecified any exception thrown by the other overload of this method or by the construction
      * of piranha::symbol from \p std::string.
      */
-    void add(const std::string &name)
+    bool add(const std::string &name)
     {
-        add(symbol(name));
+        return add(symbol(name));
     }
     /// Remove symbol from the set.
     /**
@@ -412,20 +419,20 @@ public:
      *
      * @param s piranha::symbol to be removed.
      *
-     * @throws std::invalid_argument if \p s is not present in the set.
-     * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
+     * @return \p true if the removal took place, \p false if the removal did not take place
+     * because the symbol \p s is not present in the set.
+     *
+     * @throws unspecified any exception thrown by the public interface of \p std::vector.
      */
-    void remove(const symbol &s)
+    bool remove(const symbol &s)
     {
-        // Operate on a copy to provide strong exception safety.
-        std::vector<symbol> new_values;
-        std::remove_copy_if(begin(), end(), std::back_inserter(new_values),
-                            [&s](const symbol &sym) { return sym == s; });
-        if (new_values.size() == size()) {
-            piranha_throw(std::invalid_argument, "symbol is not present in this set");
+        const auto it = std::lower_bound(begin(), end(), s);
+        if (likely(it != end() && *it == s)) {
+            m_values.erase(it);
+            piranha_assert(check());
+            return true;
         }
-        m_values = std::move(new_values);
-        piranha_assert(check());
+        return false;
     }
     /// Remove symbol from the set.
     /**
@@ -436,9 +443,9 @@ public:
      * @throws unspecified any exception thrown by the other overload of this method or by the construction
      * of piranha::symbol from \p std::string.
      */
-    void remove(const std::string &name)
+    bool remove(const std::string &name)
     {
-        remove(symbol(name));
+        return remove(symbol(name));
     }
     /// Set size.
     /**
@@ -454,14 +461,13 @@ public:
      *
      * @return a new set containing the union of the elements present in \p this and \p other.
      *
-     * @throws unspecified any exception thrown by \p std::vector::push_back().
+     * @throws unspecified any exception thrown by the public interface of \p std::vector.
      */
     symbol_set merge(const symbol_set &other) const
     {
         symbol_set retval;
-        retval.m_values.reserve(other.size() + size());
-        auto bi_it = std::back_insert_iterator<std::vector<symbol>>(retval.m_values);
-        std::set_union(begin(), end(), other.begin(), other.end(), bi_it);
+        retval.m_values.reserve(static_cast<size_type>(other.size() + size()));
+        std::set_union(begin(), end(), other.begin(), other.end(), std::back_inserter(retval.m_values));
         piranha_assert(retval.check());
         return retval;
     }
@@ -471,11 +477,12 @@ public:
      *
      * @return a new set containing the elements of \p this which are not present in \p other.
      *
-     * @throws unspecified any exception thrown by \p std::vector::push_back().
+     * @throws unspecified any exception thrown by the public interface of \p std::vector.
      */
     symbol_set diff(const symbol_set &other) const
     {
         symbol_set retval;
+        retval.m_values.reserve(size());
         std::set_difference(begin(), end(), other.begin(), other.end(), std::back_inserter(retval.m_values));
         piranha_assert(retval.check());
         return retval;
@@ -533,12 +540,10 @@ public:
 private:
     bool run_destruction_checks() const
     {
-        // LCOV_EXCL_START
         // Run destruction checks only if we are not in the shutdown phase.
         if (shutdown()) {
             return true;
         }
-        // LCOV_EXCL_STOP
         return check();
     }
 

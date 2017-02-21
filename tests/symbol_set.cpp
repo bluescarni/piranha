@@ -73,6 +73,10 @@ BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
     symbol_set ss4({symbol("a"), symbol("c"), symbol("b")});
     BOOST_CHECK(ss4 == symbol_set({symbol("a"), symbol("b"), symbol("c")}));
     BOOST_CHECK(ss4 == symbol_set({symbol("c"), symbol("b"), symbol("a")}));
+    symbol_set ss4a{"a", "c", "b"};
+    BOOST_CHECK(ss4 == ss4a);
+    symbol_set ss4b{std::string("a"), std::string("c"), std::string("b")};
+    BOOST_CHECK(ss4 == ss4b);
     // Self assignment.
     ss4 = ss4;
     BOOST_CHECK(ss4 == symbol_set({symbol("c"), symbol("b"), symbol("a")}));
@@ -109,17 +113,19 @@ BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
 BOOST_AUTO_TEST_CASE(symbol_set_add_test)
 {
     symbol_set ss;
-    ss.add(symbol("b"));
+    BOOST_CHECK(ss.add(symbol("b")));
     BOOST_CHECK(ss.size() == 1u);
     BOOST_CHECK(ss[0u] == symbol("b"));
-    ss.add(symbol("a"));
+    BOOST_CHECK(ss.add(symbol("a")));
     BOOST_CHECK(ss[0u] == symbol("a"));
     BOOST_CHECK(ss[1u] == symbol("b"));
-    ss.add("c");
+    BOOST_CHECK(ss.add("c"));
     BOOST_CHECK(ss[0u] == symbol("a"));
     BOOST_CHECK(ss[1u] == symbol("b"));
     BOOST_CHECK(ss[2u] == symbol("c"));
-    BOOST_CHECK_THROW(ss.add(symbol("b")), std::invalid_argument);
+    BOOST_CHECK(!ss.add(symbol("a")));
+    BOOST_CHECK(!ss.add(symbol("b")));
+    BOOST_CHECK(!ss.add(symbol("c")));
 }
 
 BOOST_AUTO_TEST_CASE(symbol_set_equality_test)
@@ -168,12 +174,12 @@ BOOST_AUTO_TEST_CASE(symbol_set_merge_test)
 BOOST_AUTO_TEST_CASE(symbol_set_remove_test)
 {
     symbol_set ss;
-    ss.add(symbol("c"));
-    ss.add(symbol("b"));
-    ss.add(symbol("d"));
-    BOOST_CHECK_THROW(ss.remove(symbol("a")), std::invalid_argument);
+    BOOST_CHECK(ss.add(symbol("c")));
+    BOOST_CHECK(ss.add(symbol("b")));
+    BOOST_CHECK(ss.add(symbol("d")));
+    BOOST_CHECK(!ss.remove(symbol("a")));
     BOOST_CHECK_EQUAL(ss.size(), 3u);
-    BOOST_CHECK_THROW(ss.remove("a"), std::invalid_argument);
+    BOOST_CHECK(!ss.remove("a"));
     BOOST_CHECK_EQUAL(ss.size(), 3u);
     BOOST_CHECK_NO_THROW(ss.remove(symbol("b")));
     BOOST_CHECK_EQUAL(ss.size(), 2u);
@@ -181,7 +187,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_remove_test)
     BOOST_CHECK_EQUAL(ss.size(), 1u);
     BOOST_CHECK_NO_THROW(ss.remove("d"));
     BOOST_CHECK_EQUAL(ss.size(), 0u);
-    BOOST_CHECK_THROW(ss.remove("a"), std::invalid_argument);
+    BOOST_CHECK(!ss.remove("a"));
     BOOST_CHECK_EQUAL(ss.size(), 0u);
 }
 
