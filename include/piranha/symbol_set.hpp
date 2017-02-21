@@ -350,6 +350,8 @@ public:
     }
     /// Index operator.
     /**
+     * **NOTE**: the behaviour will be undefined if \p n is not less than the size of \p this.
+     *
      * @param n index of the element to be accessed.
      *
      * @return const reference to the element at index \p n.
