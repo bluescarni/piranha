@@ -630,6 +630,9 @@ const bool is_ostreamable<T>::value;
  * \p T can be const qualified (in which case the call operator must be also const in order for the type trait to be
  * satisfied).
  */
+// NOTE: the standard includes among function objects also function pointers. It would be nice in the future
+// to exactly map the standard definition of callable into this type trait. See, e.g.:
+// http://stackoverflow.com/questions/19278424/what-is-a-callable-object-in-c
 template <typename T, typename ReturnType, typename... Args>
 class is_function_object
 {
