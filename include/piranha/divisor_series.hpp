@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_DIVISOR_SERIES_HPP
 
 #include <algorithm>
+#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <stdexcept>
@@ -486,7 +487,7 @@ public:
         using cf_type = typename term_type::cf_type;
         partial_type<T> retval(0);
         const auto it_f = this->m_container.end();
-        const symbol_set::positions pos(this->m_symbol_set, symbol_set{symbol(name)});
+        const symbol_set::positions pos(this->m_symbol_set, symbol_set{name});
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             divisor_series tmp;
             tmp.set_symbol_set(this->m_symbol_set);
@@ -523,7 +524,7 @@ public:
         integrate_type<T> retval(0);
         const auto it_f = this->m_container.end();
         // Turn name into symbol position.
-        const symbol_set::positions pos(this->m_symbol_set, symbol_set{symbol(name)});
+        const symbol_set::positions pos(this->m_symbol_set, symbol_set{name});
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             if (pos.size() == 1u) {
                 // If the variable is in the symbol set, then we need to make sure
