@@ -147,6 +147,7 @@ struct zero_division_error final : std::domain_error {
 struct precondition_error final : std::runtime_error {
     using std::runtime_error::runtime_error;
 };
+}
 
 #if defined(NDEBUG)
 
@@ -175,7 +176,8 @@ struct precondition_error final : std::runtime_error {
         }                                                                                                              \
     } while (false)
 
-#endif
-}
+#define PIRANHA_CHECK_PRECONDITION_ENABLED
+
+#endif // NDEBUG
 
 #endif
