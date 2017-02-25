@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -34,12 +34,12 @@ see https://www.gnu.org/licenses/. */
 #include <cstdint>
 #include <tuple>
 
-#include "../src/kronecker_monomial.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/real.hpp"
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/real.hpp>
 
 namespace pyranha
 {
@@ -63,14 +63,10 @@ struct polynomial_descriptor {
         // Rational.
         std::tuple<piranha::rational, piranha::monomial<piranha::rational>>,
         std::tuple<piranha::rational, piranha::monomial<std::int_least16_t>>,
-        std::tuple<piranha::rational, piranha::kronecker_monomial<>>,
-        // Real.
-        std::tuple<piranha::real, piranha::monomial<piranha::rational>>,
-        std::tuple<piranha::real, piranha::monomial<std::int_least16_t>>,
-        std::tuple<piranha::real, piranha::kronecker_monomial<>>>;
-    using interop_types = std::tuple<double, piranha::integer, piranha::real, piranha::rational>;
+        std::tuple<piranha::rational, piranha::kronecker_monomial<>>>;
+    using interop_types = std::tuple<double, piranha::integer, piranha::rational>;
     using pow_types = interop_types;
-    using eval_types = interop_types;
+    using eval_types = std::tuple<double, piranha::integer, piranha::rational, piranha::real>;
     using subs_types = interop_types;
     // For now, we have only degrees computed as integers or rationals.
     using degree_truncation_types = std::tuple<piranha::integer, piranha::rational>;

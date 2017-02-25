@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+# Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 #
 # This file is part of the Piranha library.
 #
@@ -36,7 +36,7 @@ __all__ = ['celmec', 'math', 'test', 'types']
 
 import threading as _thr
 from ._common import _cpp_type_catcher, _monkey_patching
-from ._core import polynomial_gcd_algorithm, data_format as _df, compression as _cf
+from ._core import data_format as _df, compression as _cf
 
 # Run the monkey patching.
 _monkey_patching()

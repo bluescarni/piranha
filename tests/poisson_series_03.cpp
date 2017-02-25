@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,23 +26,23 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/poisson_series.hpp"
+#include <piranha/poisson_series.hpp>
 
 #define BOOST_TEST_MODULE poisson_series_03_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <sstream>
 
-#include "../src/config.hpp"
-#include "../src/divisor.hpp"
-#include "../src/divisor_series.hpp"
-#include "../src/init.hpp"
-#include "../src/invert.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/s11n.hpp"
+#include <piranha/config.hpp>
+#include <piranha/divisor.hpp>
+#include <piranha/divisor_series.hpp>
+#include <piranha/init.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/s11n.hpp>
 
 using namespace piranha;
 

@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -47,25 +47,26 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/binomial.hpp"
-#include "../src/config.hpp"
-#include "../src/divisor.hpp"
-#include "../src/divisor_series.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/invert.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/safe_cast.hpp"
-#include "../src/thread_pool.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/binomial.hpp>
+#include <piranha/config.hpp>
+#include <piranha/divisor.hpp>
+#include <piranha/divisor_series.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/safe_cast.hpp>
+#include <piranha/thread_pool.hpp>
+#include <piranha/type_traits.hpp>
+
 #include "exceptions.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
@@ -164,13 +165,17 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::rational_converter ra_c;
     pyranha::real_converter re_c;
     // Exceptions translation.
-    pyranha::generic_translate<&PyExc_ZeroDivisionError, piranha::zero_division_error>();
-    pyranha::generic_translate<&PyExc_NotImplementedError, piranha::not_implemented_error>();
+    // NOTE: the order matters here, as translators registered later are tried first.
+    // Since some of our exceptions derive from std exceptions, we want to make sure
+    // our more specific exceptions have the priority when translating.
+    pyranha::generic_translate<&PyExc_ValueError, std::domain_error>();
     pyranha::generic_translate<&PyExc_OverflowError, std::overflow_error>();
+    pyranha::generic_translate<&PyExc_ZeroDivisionError, piranha::zero_division_error>();
+    pyranha::generic_translate<&PyExc_ZeroDivisionError, mppp::zero_division_error>();
+    pyranha::generic_translate<&PyExc_NotImplementedError, piranha::not_implemented_error>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::positive_overflow>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::negative_overflow>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::bad_numeric_cast>();
-    pyranha::generic_translate<&PyExc_ArithmeticError, piranha::math::inexact_division>();
     pyranha::generic_translate<&PyExc_ValueError, piranha::safe_cast_failure>();
 #if defined(PIRANHA_WITH_MSGPACK)
     pyranha::generic_translate<&PyExc_TypeError, msgpack::type_error>();
@@ -201,9 +206,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_polynomials_8();
     pyranha::expose_polynomials_9();
     pyranha::expose_polynomials_10();
-    pyranha::expose_polynomials_11();
-    pyranha::expose_polynomials_12();
-    pyranha::expose_polynomials_13();
     // Expose Poisson series.
     pyranha::instantiate_type_generator_template<piranha::poisson_series>("poisson_series", types_module);
     pyranha::expose_poisson_series_0();
@@ -218,9 +220,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_poisson_series_9();
     pyranha::expose_poisson_series_10();
     pyranha::expose_poisson_series_11();
-    pyranha::expose_poisson_series_12();
-    pyranha::expose_poisson_series_13();
-    pyranha::expose_poisson_series_14();
     // Expose divisor series.
     pyranha::instantiate_type_generator_template<piranha::divisor_series>("divisor_series", types_module);
     pyranha::expose_divisor_series_0();
@@ -229,9 +228,6 @@ BOOST_PYTHON_MODULE(_core)
     pyranha::expose_divisor_series_3();
     pyranha::expose_divisor_series_4();
     pyranha::expose_divisor_series_5();
-    pyranha::expose_divisor_series_6();
-    pyranha::expose_divisor_series_7();
-    pyranha::expose_divisor_series_8();
     // Expose the settings class.
     bp::class_<piranha::settings> settings_class("_settings", bp::init<>());
     settings_class.def("_get_max_term_output", piranha::settings::get_max_term_output)
@@ -254,7 +250,7 @@ BOOST_PYTHON_MODULE(_core)
     settings_class.def("_get_thread_binding", piranha::settings::get_thread_binding)
         .staticmethod("_get_thread_binding");
     // Factorial.
-    bp::def("_factorial", &piranha::math::factorial<0>);
+    bp::def("_factorial", &piranha::math::factorial<1>);
 // Binomial coefficient.
 #define PYRANHA_EXPOSE_BINOMIAL(top, bot) bp::def("_binomial", &piranha::math::binomial<top, bot>)
     PYRANHA_EXPOSE_BINOMIAL(double, double);
@@ -299,7 +295,6 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_test_bn_poverflow_error", &test_exception<boost::numeric::positive_overflow>);
     bp::def("_test_bn_noverflow_error", &test_exception<boost::numeric::negative_overflow>);
     bp::def("_test_bn_bnc", &test_exception<boost::numeric::bad_numeric_cast>);
-    bp::def("_test_inexact_division", &test_exception<piranha::math::inexact_division>);
     // Helper to generate an argument error.
     bp::def("_generate_argument_error", &generate_argument_error);
 

@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/series.hpp"
+#include <piranha/series.hpp>
 
 #define BOOST_TEST_MODULE series_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -43,23 +43,23 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_map>
 #include <utility>
 
-#include "../src/base_series_multiplier.hpp"
-#include "../src/debug_access.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/forwarding.hpp"
-#include "../src/init.hpp"
-#include "../src/key_is_multipliable.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/series_multiplier.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/base_series_multiplier.hpp>
+#include <piranha/debug_access.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/forwarding.hpp>
+#include <piranha/init.hpp>
+#include <piranha/key_is_multipliable.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/series_multiplier.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/type_traits.hpp>
 
 static const int ntries = 1000;
 static std::mt19937 rng;
@@ -399,41 +399,42 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
     BOOST_CHECK((is_evaluable<p_type1, integer>::value));
     BOOST_CHECK((is_evaluable<p_type1, int>::value));
     BOOST_CHECK((is_evaluable<p_type1, long>::value));
-    BOOST_CHECK((std::is_same<rational, decltype(p_type1{}.evaluate(dict_type_int{}))>::value));
-    BOOST_CHECK((std::is_same<rational, decltype(p_type1{}.evaluate(dict_type_long{}))>::value));
-    BOOST_CHECK_EQUAL(p_type1{}.evaluate(dict_type{}), 0);
+    BOOST_CHECK((std::is_same<rational, decltype(math::evaluate(p_type1{}, dict_type_int{}))>::value));
+    BOOST_CHECK((std::is_same<rational, decltype(math::evaluate(p_type1{}, dict_type_long{}))>::value));
+    BOOST_CHECK_EQUAL(math::evaluate(p_type1{}, dict_type{}), 0);
     p_type1 x{"x"}, y{"y"};
-    BOOST_CHECK_THROW(x.evaluate(dict_type{}), std::invalid_argument);
-    BOOST_CHECK_EQUAL(x.evaluate(dict_type{{"x", rational(1)}}), 1);
-    BOOST_CHECK_THROW((x + (2 * y).pow(3)).evaluate(dict_type{{"x", rational(1)}}), std::invalid_argument);
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
+    BOOST_CHECK_THROW(math::evaluate(x, dict_type{}), std::invalid_argument);
+    BOOST_CHECK_EQUAL(math::evaluate(x, dict_type{{"x", rational(1)}}), 1);
+    BOOST_CHECK_THROW(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}}), std::invalid_argument);
+    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       rational(1) + (2 * rational(2, 3)).pow(3));
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
+    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}));
-    BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type{})), rational>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type{})), rational>::value));
     typedef std::unordered_map<std::string, real> dict_type2;
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
-                      real(1.234) + math::pow(2 * real(-5.678), 3));
     BOOST_CHECK_EQUAL(
-        (x + (2 * y).pow(3)).evaluate(dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
+        math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
+        real(1.234) + math::pow(2 * real(-5.678), 3));
+    BOOST_CHECK_EQUAL(
+        math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
         math::evaluate(x + math::pow(2 * y, 3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}));
-    BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type2{})), real>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type2{})), real>::value));
     typedef std::unordered_map<std::string, double> dict_type3;
     BOOST_CHECK((is_evaluable<p_type1, double>::value));
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
+    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
                       1.234 + math::pow(2 * -5.678, 3));
-    BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
+    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
                       math::evaluate(x + math::pow(2 * y, 3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}));
-    BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type3{})), double>::value));
-    BOOST_CHECK((!is_evaluable<g_series_type3<double, mock_key>, double>::value));
-    // NOTE: this used to be true before we changed the ctor from int of mock_cf to explicit.
-    BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf, monomial<int>>, double>::value));
-    BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf, mock_key>, double>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type3{})), double>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate<double>(g_series_type3<double, mock_key>{}, {})),
+                              g_series_type3<double, mock_key>>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate<double>(g_series_type3<mock_cf, monomial<int>>{}, {})),
+                              g_series_type3<mock_cf, monomial<int>>>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate<double>(g_series_type3<mock_cf, mock_key>{}, {})),
+                              g_series_type3<mock_cf, mock_key>>::value));
     BOOST_CHECK((is_evaluable<g_series_type3<double, monomial<int>>, double>::value));
     // Check the syntax from initializer list with explicit template parameter.
-    BOOST_CHECK_EQUAL(p_type1{}.evaluate<int>({{"foo", 4.}}), 0);
-    BOOST_CHECK_EQUAL(p_type1{}.evaluate<double>({{"foo", 4.}, {"bar", 7}}), 0);
     BOOST_CHECK_EQUAL(math::evaluate<int>(p_type1{}, {{"foo", 4.}}), 0);
     BOOST_CHECK_EQUAL(math::evaluate<double>(p_type1{}, {{"foo", 4.}, {"bar", 7}}), 0);
 }
@@ -1806,7 +1807,12 @@ public:
             BOOST_CHECK(it2->m_key.size() == 1u);
             BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
             // Test division by zero of empty series.
-            if (std::is_same<integer, Cf>::value || std::is_same<rational, Cf>::value) {
+            if (std::is_same<integer, Cf>::value) {
+                BOOST_CHECK_THROW(p_type1{} / 0, mppp::zero_division_error);
+                p_type1 zero;
+                BOOST_CHECK_THROW(zero /= 0, mppp::zero_division_error);
+            }
+            if (std::is_same<rational, Cf>::value) {
                 BOOST_CHECK_THROW(p_type1{} / 0, zero_division_error);
                 p_type1 zero;
                 BOOST_CHECK_THROW(zero /= 0, zero_division_error);
@@ -1869,7 +1875,7 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
     BOOST_CHECK(tmp.empty());
     // Check zero division error.
     tmp = 2 * x + y;
-    BOOST_CHECK_THROW(tmp /= 0, zero_division_error);
+    BOOST_CHECK_THROW(tmp /= 0, mppp::zero_division_error);
     BOOST_CHECK(tmp.empty());
 }
 

@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,25 +26,22 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/mp_rational.hpp"
+#include <piranha/mp_rational.hpp>
 
 #define BOOST_TEST_MODULE mp_rational_02_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
-#include <boost/fusion/algorithm.hpp>
-#include <boost/fusion/include/algorithm.hpp>
-#include <boost/fusion/include/sequence.hpp>
-#include <boost/fusion/sequence.hpp>
 #include <random>
 #include <sstream>
+#include <tuple>
 #include <type_traits>
 
-#include "../src/config.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/s11n.hpp"
+#include <piranha/config.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/s11n.hpp>
 
 using namespace piranha;
 
@@ -55,13 +52,9 @@ using boost::archive::text_iarchive;
 using boost::archive::xml_oarchive;
 using boost::archive::xml_iarchive;
 
-using size_types = boost::mpl::vector<std::integral_constant<int, 0>, std::integral_constant<int, 8>,
-                                      std::integral_constant<int, 16>, std::integral_constant<int, 32>
-#if defined(PIRANHA_UINT128_T)
-                                      ,
-                                      std::integral_constant<int, 64>
-#endif
-                                      >;
+using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integral_constant<std::size_t, 2>,
+                              std::integral_constant<std::size_t, 3>, std::integral_constant<std::size_t, 7>,
+                              std::integral_constant<std::size_t, 10>>;
 
 template <typename OArchive, typename IArchive, typename T>
 static inline void boost_roundtrip(const T &x)
@@ -85,7 +78,7 @@ static std::mt19937 rng;
 
 struct boost_s11n_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         BOOST_CHECK((has_boost_save<binary_oarchive, q_type>::value));
@@ -128,7 +121,7 @@ struct boost_s11n_tester {
 BOOST_AUTO_TEST_CASE(mp_rational_boost_s11n_test)
 {
     init();
-    boost::mpl::for_each<size_types>(boost_s11n_tester());
+    tuple_for_each(size_types{}, boost_s11n_tester());
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -147,7 +140,7 @@ static inline T msgpack_roundtrip(const T &x, msgpack_format f)
 
 struct msgpack_s11n_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using q_type = mp_rational<T::value>;
         using int_type = typename q_type::int_type;
@@ -224,7 +217,7 @@ struct msgpack_s11n_tester {
 
 BOOST_AUTO_TEST_CASE(mp_rational_msgpack_s11n_test)
 {
-    boost::mpl::for_each<size_types>(msgpack_s11n_tester());
+    tuple_for_each(size_types{}, msgpack_s11n_tester());
 }
 
 #endif

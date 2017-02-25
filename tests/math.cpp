@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/math.hpp"
+#include <piranha/math.hpp>
 
 #define BOOST_TEST_MODULE math_test
 #include <boost/test/included/unit_test.hpp>
@@ -37,7 +37,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
-#include <boost/math/special_functions/binomial.hpp>
 #include <cmath>
 #include <complex>
 #include <cstddef>
@@ -53,19 +52,18 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/binomial.hpp"
-#include "../src/forwarding.hpp"
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/forwarding.hpp>
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
@@ -252,35 +250,6 @@ BOOST_AUTO_TEST_CASE(math_multiply_accumulate_test)
     BOOST_CHECK(!has_multiply_accumulate<no_fma &>::value);
 }
 
-BOOST_AUTO_TEST_CASE(math_pow_test)
-{
-    BOOST_CHECK(math::pow(2., 2.) == std::pow(2., 2.));
-    BOOST_CHECK(math::pow(2.f, 2.) == std::pow(2.f, 2.));
-    BOOST_CHECK(math::pow(2., 2.f) == std::pow(2., 2.f));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2., 2.)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2.f)), float>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2., 2.f)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2.)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2.L)), long double>::value));
-    BOOST_CHECK(math::pow(2., 2) == std::pow(2., 2));
-    BOOST_CHECK(math::pow(2.f, 2) == std::pow(2.f, 2));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2., 2)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, 2)), double>::value));
-    BOOST_CHECK((std::is_same<decltype(math::pow(2.f, char(2))), double>::value));
-    BOOST_CHECK((is_exponentiable<double, double>::value));
-    BOOST_CHECK((is_exponentiable<double, unsigned short>::value));
-    BOOST_CHECK((is_exponentiable<double &, double>::value));
-    BOOST_CHECK((is_exponentiable<const double, double>::value));
-    BOOST_CHECK((is_exponentiable<double &, double &>::value));
-    BOOST_CHECK((is_exponentiable<double &, double const &>::value));
-    BOOST_CHECK((is_exponentiable<double, double &>::value));
-    BOOST_CHECK((is_exponentiable<float, double>::value));
-    BOOST_CHECK((is_exponentiable<double, float>::value));
-    BOOST_CHECK((is_exponentiable<double, int>::value));
-    BOOST_CHECK((is_exponentiable<float, char>::value));
-}
-
 struct cos_00 {
 };
 
@@ -370,10 +339,13 @@ BOOST_AUTO_TEST_CASE(math_evaluate_test)
                       std::complex<double>(5., 4.));
     BOOST_CHECK_EQUAL(math::evaluate(std::complex<long double>(5., 4.), std::unordered_map<std::string, double>{}),
                       std::complex<long double>(5., 4.));
-    BOOST_CHECK((std::is_same<decltype(math::evaluate(5, std::unordered_map<std::string, double>{})), int>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(5, std::unordered_map<std::string, double>{})), double>::value));
+    BOOST_CHECK(
+        (std::is_same<decltype(math::evaluate(std::complex<double>(3, 5), std::unordered_map<std::string, int>{})),
+                      std::complex<double>>::value));
     BOOST_CHECK_EQUAL(math::evaluate(5., std::unordered_map<std::string, int>{}), 5.);
     BOOST_CHECK((std::is_same<decltype(math::evaluate(5., std::unordered_map<std::string, short>{})), double>::value));
-    BOOST_CHECK_EQUAL(math::evaluate(5ul, std::unordered_map<std::string, double>{}), 5ul);
+    BOOST_CHECK_EQUAL(math::evaluate(5ul, std::unordered_map<std::string, double>{}), 5.);
     BOOST_CHECK(
         (std::is_same<decltype(math::evaluate(5ul, std::unordered_map<std::string, short>{})), unsigned long>::value));
     // Test the syntax with explicit template parameter.
@@ -451,6 +423,14 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
 
 BOOST_AUTO_TEST_CASE(math_abs_test)
 {
+    BOOST_CHECK(has_abs<int>::value);
+    BOOST_CHECK(has_abs<int &>::value);
+    BOOST_CHECK(has_abs<const int &>::value);
+    BOOST_CHECK(has_abs<const int>::value);
+    BOOST_CHECK(has_abs<float>::value);
+    BOOST_CHECK(has_abs<double &&>::value);
+    BOOST_CHECK(!has_abs<void>::value);
+    BOOST_CHECK(!has_abs<std::string>::value);
     BOOST_CHECK_EQUAL(math::abs((signed char)(4)), (signed char)(4));
     BOOST_CHECK_EQUAL(math::abs((signed char)(-4)), (signed char)(4));
     BOOST_CHECK_EQUAL(math::abs(short(4)), short(4));
@@ -537,88 +517,6 @@ BOOST_AUTO_TEST_CASE(math_key_has_t_lorder_test)
 {
     BOOST_CHECK(!key_has_t_lorder<monomial<int>>::value);
     BOOST_CHECK(!key_has_t_lorder<kronecker_monomial<>>::value);
-}
-
-BOOST_AUTO_TEST_CASE(math_fp_binomial_test)
-{
-    // Random testing.
-    std::uniform_real_distribution<double> rdist(-100., 100.);
-    for (int i = 0; i < ntries; ++i) {
-        const double x = rdist(rng), y = rdist(rng);
-        // NOTE: at the moment we have nothing to check this against,
-        // maybe in the future we can check against real.
-        BOOST_CHECK(std::isfinite(detail::fp_binomial(x, y)));
-    }
-    std::uniform_int_distribution<int> idist(-100, 100);
-    for (int i = 0; i < ntries; ++i) {
-        // NOTE: maybe this could be checked against the mp_integer implementation.
-        const int x = idist(rng), y = idist(rng);
-        BOOST_CHECK(std::isfinite(detail::fp_binomial(static_cast<double>(x), static_cast<double>(y))));
-        BOOST_CHECK(std::isfinite(detail::fp_binomial(static_cast<long double>(x), static_cast<long double>(y))));
-    }
-}
-
-struct b_00 {
-    b_00() = default;
-    b_00(const b_00 &) = delete;
-    b_00(b_00 &&) = delete;
-};
-
-struct b_01 {
-    b_01() = default;
-    b_01(const b_01 &) = default;
-    b_01(b_01 &&) = default;
-    ~b_01() = delete;
-};
-
-namespace piranha
-{
-
-namespace math
-{
-
-template <>
-struct binomial_impl<b_00, b_00, void> {
-    b_00 operator()(const b_00 &, const b_00 &) const;
-};
-
-template <>
-struct binomial_impl<b_01, b_01, void> {
-    b_01 operator()(const b_01 &, const b_01 &) const;
-};
-}
-}
-
-BOOST_AUTO_TEST_CASE(math_binomial_test)
-{
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0))>::value));
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0u))>::value));
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0l))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0u))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0ll))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, 0))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, char(0)))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, short(0)))>::value));
-    BOOST_CHECK((has_binomial<double, int>::value));
-    BOOST_CHECK((has_binomial<double, unsigned>::value));
-    BOOST_CHECK((has_binomial<float, char>::value));
-    BOOST_CHECK((has_binomial<float, float>::value));
-    BOOST_CHECK((has_binomial<float, double>::value));
-    if (std::numeric_limits<double>::has_quiet_NaN && std::numeric_limits<double>::has_infinity) {
-        BOOST_CHECK_THROW(math::binomial(1., std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(1., std::numeric_limits<double>::infinity()), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::quiet_NaN(), 1.), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::infinity(), 1.), std::invalid_argument);
-        BOOST_CHECK_THROW(
-            math::binomial(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity()),
-            std::invalid_argument);
-        BOOST_CHECK_THROW(
-            math::binomial(std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()),
-            std::invalid_argument);
-    }
-    BOOST_CHECK((!has_binomial<b_00, b_00>::value));
-    BOOST_CHECK((!has_binomial<b_01, b_01>::value));
 }
 
 BOOST_AUTO_TEST_CASE(math_t_subs_test)
@@ -879,7 +777,7 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
         // Addition.
         BOOST_CHECK(has_add3<int>::value);
         BOOST_CHECK(has_add3<int &>::value);
-        BOOST_CHECK(has_add3<const int &>::value);
+        BOOST_CHECK(!has_add3<const int &>::value);
         int i1 = 0;
         math::add3(i1, 3, 4);
         BOOST_CHECK_EQUAL(i1, 7);
@@ -903,7 +801,7 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
         // Subtraction.
         BOOST_CHECK(has_sub3<int>::value);
         BOOST_CHECK(has_sub3<int &>::value);
-        BOOST_CHECK(has_sub3<const int &>::value);
+        BOOST_CHECK(!has_sub3<const int &>::value);
         int i1 = 0;
         math::sub3(i1, 3, 4);
         BOOST_CHECK_EQUAL(i1, -1);
@@ -924,7 +822,7 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
         // Multiplication.
         BOOST_CHECK(has_mul3<int>::value);
         BOOST_CHECK(has_mul3<int &>::value);
-        BOOST_CHECK(has_mul3<const int &>::value);
+        BOOST_CHECK(!has_mul3<const int &>::value);
         int i1 = 0;
         math::mul3(i1, 3, 4);
         BOOST_CHECK_EQUAL(i1, 12);
@@ -945,7 +843,7 @@ BOOST_AUTO_TEST_CASE(math_ternary_ops_test)
         // Division.
         BOOST_CHECK(has_div3<int>::value);
         BOOST_CHECK(has_div3<int &>::value);
-        BOOST_CHECK(has_div3<const int &>::value);
+        BOOST_CHECK(!has_div3<const int &>::value);
         int i1 = 0;
         math::div3(i1, 6, 3);
         BOOST_CHECK_EQUAL(i1, 2);
@@ -1046,7 +944,10 @@ BOOST_AUTO_TEST_CASE(math_gcd_test)
     }
     // Check the type traits.
     BOOST_CHECK((has_gcd<int>::value));
+    BOOST_CHECK((!has_gcd<void>::value));
     BOOST_CHECK((has_gcd<int, long>::value));
+    BOOST_CHECK((!has_gcd<int, void>::value));
+    BOOST_CHECK((!has_gcd<void, int>::value));
     BOOST_CHECK((has_gcd<int &, char &>::value));
     BOOST_CHECK((!has_gcd<double>::value));
     BOOST_CHECK((!has_gcd<double, int>::value));
@@ -1057,7 +958,9 @@ BOOST_AUTO_TEST_CASE(math_gcd_test)
     BOOST_CHECK(has_gcd3<short>::value);
     BOOST_CHECK(has_gcd3<long long>::value);
     BOOST_CHECK(has_gcd3<long long &>::value);
-    BOOST_CHECK(has_gcd3<const long long &>::value);
+    BOOST_CHECK(!has_gcd3<long long const>::value);
+    BOOST_CHECK(!has_gcd3<void>::value);
+    BOOST_CHECK(!has_gcd3<const long long &>::value);
     BOOST_CHECK(!has_gcd3<double>::value);
     BOOST_CHECK(!has_gcd3<double &&>::value);
     BOOST_CHECK(!has_gcd3<std::string>::value);
@@ -1069,12 +972,4 @@ BOOST_AUTO_TEST_CASE(math_gcd_test)
     BOOST_CHECK_NO_THROW(gcd(mock_type{}, mock_type{}));
     mock_type m0;
     BOOST_CHECK_NO_THROW(gcd3(m0, mock_type{}, mock_type{}));
-}
-
-BOOST_AUTO_TEST_CASE(math_divexact_test)
-{
-    BOOST_CHECK(!has_exact_division<int>::value);
-    BOOST_CHECK(!has_exact_division<double>::value);
-    BOOST_CHECK(!has_exact_division<const short &>::value);
-    BOOST_CHECK(!has_exact_division<char &&>::value);
 }

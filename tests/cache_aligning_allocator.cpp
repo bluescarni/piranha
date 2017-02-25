@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/cache_aligning_allocator.hpp"
+#include <piranha/cache_aligning_allocator.hpp>
 
 #define BOOST_TEST_MODULE cache_aligning_allocator_test
 #include <boost/test/included/unit_test.hpp>
@@ -34,11 +34,11 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/init.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/runtime_info.hpp"
-#include "../src/settings.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/init.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/runtime_info.hpp>
+#include <piranha/settings.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

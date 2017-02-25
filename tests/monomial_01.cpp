@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/monomial.hpp"
+#include <piranha/monomial.hpp>
 
 #define BOOST_TEST_MODULE monomial_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -48,21 +48,21 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_set>
 #include <vector>
 
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/key_is_convertible.hpp"
-#include "../src/key_is_multipliable.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/term.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/key_is_convertible.hpp>
+#include <piranha/key_is_multipliable.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/term.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
@@ -1454,125 +1454,4 @@ BOOST_AUTO_TEST_CASE(monomial_comparison_test)
     BOOST_CHECK(!(k_type_00{1, 2, 3, 4} < k_type_00{1, 2, 3, 4}));
     BOOST_CHECK_THROW((void)(k_type_00{} < k_type_00{1}), std::invalid_argument);
     BOOST_CHECK_THROW((void)(k_type_00{1} < k_type_00{}), std::invalid_argument);
-}
-
-struct split_tester {
-    template <typename T>
-    struct runner {
-        template <typename U>
-        void operator()(const U &)
-        {
-            using k_type = monomial<T, U>;
-            symbol_set vs;
-            BOOST_CHECK_THROW(k_type{}.split(vs), std::invalid_argument);
-            vs.add("x");
-            BOOST_CHECK_THROW(k_type{}.split(vs), std::invalid_argument);
-            BOOST_CHECK_THROW(k_type{T(1)}.split(vs), std::invalid_argument);
-            vs.add("y");
-            auto res = k_type{T(1), T(2)}.split(vs);
-            BOOST_CHECK_EQUAL(res.first.size(), 1u);
-            BOOST_CHECK_EQUAL(res.first[0u], T(2));
-            BOOST_CHECK_EQUAL(res.second.size(), 1u);
-            BOOST_CHECK_EQUAL(res.second[0u], T(1));
-            vs.add("z");
-            BOOST_CHECK_THROW((k_type{T(1), T(2)}.split(vs)), std::invalid_argument);
-            res = k_type{T(1), T(2), T(3)}.split(vs);
-            BOOST_CHECK_EQUAL(res.first.size(), 2u);
-            BOOST_CHECK_EQUAL(res.first[0u], T(2));
-            BOOST_CHECK_EQUAL(res.first[1u], T(3));
-            BOOST_CHECK_EQUAL(res.second.size(), 1u);
-            BOOST_CHECK_EQUAL(res.second[0u], T(1));
-        }
-    };
-    template <typename T>
-    void operator()(const T &)
-    {
-        boost::mpl::for_each<size_types>(runner<T>());
-    }
-};
-
-BOOST_AUTO_TEST_CASE(monomial_split_test)
-{
-    boost::mpl::for_each<expo_types>(split_tester());
-}
-
-struct extract_exponents_tester {
-    template <typename T>
-    struct runner {
-        template <typename U>
-        void operator()(const U &)
-        {
-            using key_type = monomial<T, U>;
-            std::vector<T> out;
-            key_type k{};
-            symbol_set ss;
-            k.extract_exponents(out, ss);
-            BOOST_CHECK_EQUAL(out.size(), 0u);
-            ss.add(symbol{"a"});
-            BOOST_CHECK_THROW(k.extract_exponents(out, ss), std::invalid_argument);
-            BOOST_CHECK_EQUAL(out.size(), 0u);
-            k = key_type{T(-2)};
-            k.extract_exponents(out, ss);
-            BOOST_CHECK_EQUAL(out.size(), 1u);
-            BOOST_CHECK_EQUAL(out[0u], T(-2));
-            ss.add(symbol{"b"});
-            BOOST_CHECK_THROW(k.extract_exponents(out, ss), std::invalid_argument);
-            BOOST_CHECK_EQUAL(out.size(), 1u);
-            BOOST_CHECK_EQUAL(out[0u], T(-2));
-            k = key_type{T(-2), T(3)};
-            out.resize(4u);
-            k.extract_exponents(out, ss);
-            BOOST_CHECK_EQUAL(out.size(), 2u);
-            BOOST_CHECK_EQUAL(out[0u], T(-2));
-            BOOST_CHECK_EQUAL(out[1u], T(3));
-        }
-    };
-    template <typename T>
-    void operator()(const T &)
-    {
-        boost::mpl::for_each<size_types>(runner<T>());
-    }
-};
-
-BOOST_AUTO_TEST_CASE(monomial_extract_exponents_test)
-{
-    boost::mpl::for_each<expo_types>(extract_exponents_tester());
-}
-
-struct has_negative_exponent_tester {
-    template <typename T>
-    struct runner {
-        template <typename U>
-        void operator()(const U &)
-        {
-            using key_type = monomial<T, U>;
-            key_type k{};
-            symbol_set ss;
-            BOOST_CHECK(!k.has_negative_exponent(ss));
-            ss.add("x");
-            BOOST_CHECK_THROW(k.has_negative_exponent(ss), std::invalid_argument);
-            k = key_type{T(1)};
-            BOOST_CHECK(!k.has_negative_exponent(ss));
-            k = key_type{T(0)};
-            BOOST_CHECK(!k.has_negative_exponent(ss));
-            k = key_type{T(-1)};
-            BOOST_CHECK(k.has_negative_exponent(ss));
-            ss.add("y");
-            BOOST_CHECK_THROW(k.has_negative_exponent(ss), std::invalid_argument);
-            k = key_type{T(0), T(1)};
-            BOOST_CHECK(!k.has_negative_exponent(ss));
-            k = key_type{T(0), T(-1)};
-            BOOST_CHECK(k.has_negative_exponent(ss));
-        }
-    };
-    template <typename T>
-    void operator()(const T &)
-    {
-        boost::mpl::for_each<size_types>(runner<T>());
-    }
-};
-
-BOOST_AUTO_TEST_CASE(monomial_has_negative_exponent_test)
-{
-    boost::mpl::for_each<expo_types>(has_negative_exponent_tester());
 }

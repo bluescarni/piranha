@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -41,12 +41,12 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/type_id.hpp>
 #include <string>
 
-#include "../src/config.hpp"
-#include "../src/detail/mpfr.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/real.hpp"
-#include "../src/safe_cast.hpp"
+#include <piranha/config.hpp>
+#include <piranha/detail/mpfr.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/real.hpp>
+#include <piranha/safe_cast.hpp>
 
 // NOTE: useful resources for python converters and C API:
 // - http://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters

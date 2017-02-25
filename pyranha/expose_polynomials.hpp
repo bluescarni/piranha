@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -30,21 +30,16 @@ see https://www.gnu.org/licenses/. */
 #define PYRANHA_EXPOSE_POLYNOMIALS_HPP
 
 #include <boost/python/class.hpp>
-#include <boost/python/def.hpp>
 #include <boost/python/list.hpp>
-#include <boost/python/operators.hpp>
-#include <boost/python/self.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <utility>
 
-#include "../src/math.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/type_traits.hpp"
-#include "expose_utils.hpp"
+#include <piranha/polynomial.hpp>
+#include <piranha/type_traits.hpp>
+
 #include "type_system.hpp"
 
 namespace pyranha
@@ -166,141 +161,6 @@ struct poly_custom_hook {
         bp::stl_input_iterator<expo_type> begin(l), end;
         return s.find_cf(std::vector<expo_type>(begin, end));
     }
-    // Division exposition.
-    template <typename T>
-    static bp::tuple udivrem_wrapper(const T &n, const T &d)
-    {
-        auto retval = T::udivrem(n, d);
-        return bp::make_tuple(std::move(retval.first), std::move(retval.second));
-    }
-    template <typename T>
-    static T uprem_wrapper(const T &n, const T &d)
-    {
-        return T::uprem(n, d);
-    }
-    template <typename T,
-              typename std::enable_if<piranha::detail::true_tt<piranha::detail::ptd::enabler<T, T>>::value, int>::type
-              = 0>
-    void expose_division(bp::class_<T> &series_class) const
-    {
-        series_class.def("udivrem", udivrem_wrapper<T>);
-        series_class.staticmethod("udivrem");
-        series_class.def("uprem", uprem_wrapper<T>);
-        series_class.staticmethod("uprem");
-    }
-    template <typename T, typename... Args>
-    void expose_division(bp::class_<T> &, const Args &...) const
-    {
-    }
-    // Split and join.
-    template <typename T>
-    static auto split_wrapper(const T &p) -> decltype(p.split())
-    {
-        return p.split();
-    }
-    template <typename T>
-    static auto join_wrapper(const T &p) -> decltype(p.join())
-    {
-        return p.join();
-    }
-    template <typename T, typename = decltype(std::declval<const T &>().join())>
-    void expose_join(bp::class_<T> &series_class) const
-    {
-        series_class.def("join", join_wrapper<T>);
-    }
-    template <typename... Args>
-    void expose_join(Args &&...) const
-    {
-    }
-    // GCD.
-    template <typename T>
-    static bp::tuple static_gcd_wrapper(const T &a, const T &b)
-    {
-        auto retval = T::gcd(a, b);
-        return bp::make_tuple(std::move(std::get<0u>(retval)), std::move(std::get<1u>(retval)),
-                              std::move(std::get<2u>(retval)));
-    }
-    template <typename T>
-    static bp::tuple static_gcd_wrapper_algo(const T &a, const T &b, piranha::polynomial_gcd_algorithm algo)
-    {
-        auto retval = T::gcd(a, b, false, algo);
-        return bp::make_tuple(std::move(std::get<0u>(retval)), std::move(std::get<1u>(retval)),
-                              std::move(std::get<2u>(retval)));
-    }
-    template <typename T>
-    static bp::tuple static_gcd_wrapper_cofac_algo(const T &a, const T &b, bool with_cofactors,
-                                                   piranha::polynomial_gcd_algorithm algo)
-    {
-        auto retval = T::gcd(a, b, with_cofactors, algo);
-        return bp::make_tuple(std::move(std::get<0u>(retval)), std::move(std::get<1u>(retval)),
-                              std::move(std::get<2u>(retval)));
-    }
-    template <typename T>
-    static bp::tuple static_gcd_wrapper_cofac(const T &a, const T &b, bool with_cofactors)
-    {
-        auto retval = T::gcd(a, b, with_cofactors);
-        return bp::make_tuple(std::move(std::get<0u>(retval)), std::move(std::get<1u>(retval)),
-                              std::move(std::get<2u>(retval)));
-    }
-    template <typename T, typename std::enable_if<piranha::has_gcd<T>::value, int>::type = 0>
-    void expose_gcd(bp::class_<T> &series_class) const
-    {
-        bp::def("_gcd", piranha::math::gcd<T, T>);
-        series_class.def("gcd", static_gcd_wrapper<T>);
-        series_class.def("gcd", static_gcd_wrapper_algo<T>);
-        series_class.def("gcd", static_gcd_wrapper_cofac_algo<T>);
-        series_class.def("gcd", static_gcd_wrapper_cofac<T>);
-        series_class.staticmethod("gcd");
-    }
-    template <typename T, typename std::enable_if<!piranha::has_gcd<T>::value, int>::type = 0>
-    void expose_gcd(bp::class_<T> &) const
-    {
-    }
-    // Height.
-    template <typename T>
-    static auto height_wrapper(const T &p) -> decltype(p.height())
-    {
-        return p.height();
-    }
-    template <typename T, typename = decltype(std::declval<const T &>().height())>
-    void expose_height(bp::class_<T> &series_class) const
-    {
-        series_class.def("height", height_wrapper<T>);
-    }
-    template <typename... Args>
-    void expose_height(Args &&...) const
-    {
-    }
-    // Content.
-    template <typename T>
-    static auto content_wrapper(const T &p) -> decltype(p.content())
-    {
-        return p.content();
-    }
-    template <typename T, typename = decltype(std::declval<const T &>().content())>
-    void expose_content(bp::class_<T> &series_class) const
-    {
-        series_class.def("content", content_wrapper<T>);
-    }
-    template <typename... Args>
-    void expose_content(Args &&...) const
-    {
-    }
-    // Primitive part.
-    template <typename T>
-    static auto primitive_part_wrapper(const T &p) -> decltype(p.primitive_part())
-    {
-        return p.primitive_part();
-    }
-    template <typename T, typename = decltype(std::declval<const T &>().primitive_part())>
-    void expose_primitive_part(bp::class_<T> &series_class) const
-    {
-        series_class.def("primitive_part", primitive_part_wrapper<T>);
-    }
-    template <typename... Args>
-    void expose_primitive_part(Args &&...) const
-    {
-    }
     // The call operator.
     template <typename T>
     void operator()(bp::class_<T> &series_class) const
@@ -316,25 +176,6 @@ struct poly_custom_hook {
             .staticmethod("untruncated_multiplication");
         // find_cf().
         series_class.def("find_cf", find_cf_wrapper<T>);
-        // Division.
-        expose_division(series_class);
-        // Split and join.
-        series_class.def("split", split_wrapper<T>);
-        expose_join(series_class);
-        // GCD.
-        expose_gcd(series_class);
-        series_class.def("get_default_gcd_algorithm", T::get_default_gcd_algorithm);
-        series_class.staticmethod("get_default_gcd_algorithm");
-        series_class.def("set_default_gcd_algorithm", T::set_default_gcd_algorithm);
-        series_class.staticmethod("set_default_gcd_algorithm");
-        series_class.def("reset_default_gcd_algorithm", T::reset_default_gcd_algorithm);
-        series_class.staticmethod("reset_default_gcd_algorithm");
-        // Height.
-        expose_height(series_class);
-        // Content.
-        expose_content(series_class);
-        // Primitive part.
-        expose_primitive_part(series_class);
     }
 };
 
@@ -349,9 +190,6 @@ void expose_polynomials_7();
 void expose_polynomials_8();
 void expose_polynomials_9();
 void expose_polynomials_10();
-void expose_polynomials_11();
-void expose_polynomials_12();
-void expose_polynomials_13();
 }
 
 #endif

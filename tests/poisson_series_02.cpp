@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/poisson_series.hpp"
+#include <piranha/poisson_series.hpp>
 
 #define BOOST_TEST_MODULE poisson_series_02_test
 #include <boost/test/included/unit_test.hpp>
@@ -38,21 +38,21 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/detail/polynomial_fwd.hpp"
-#include "../src/divisor.hpp"
-#include "../src/divisor_series.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/invert.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/series.hpp"
+#include <piranha/detail/polynomial_fwd.hpp>
+#include <piranha/divisor.hpp>
+#include <piranha/divisor_series.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/series.hpp>
 
 using namespace piranha;
 
@@ -145,7 +145,6 @@ BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
     BOOST_CHECK((is_evaluable<p_type1, float>::value));
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
     BOOST_CHECK((is_evaluable<p_type1, rational>::value));
-    BOOST_CHECK((!is_evaluable<p_type1, std::string>::value));
     BOOST_CHECK((is_evaluable<p_type1, integer>::value));
     BOOST_CHECK((is_evaluable<p_type1, int>::value));
     BOOST_CHECK((is_evaluable<p_type1, long>::value));
@@ -312,7 +311,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
     BOOST_CHECK((std::is_same<pt0, decltype(math::invert(pt0{}))>::value));
     BOOST_CHECK_EQUAL(math::invert(pt0{1}), 1);
     BOOST_CHECK_EQUAL(math::invert(pt0{2}), 0);
-    BOOST_CHECK_THROW(math::invert(pt0{0}), zero_division_error);
+    BOOST_CHECK_THROW(math::invert(pt0{0}), mppp::zero_division_error);
     BOOST_CHECK_EQUAL(math::invert(pt0{"x"}), math::pow(pt0{"x"}, -1));
     using pt1 = poisson_series<polynomial<rational, monomial<long>>>;
     BOOST_CHECK(is_invertible<pt1>::value);

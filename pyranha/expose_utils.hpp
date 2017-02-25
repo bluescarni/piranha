@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -58,20 +58,20 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/detail/demangle.hpp"
-#include "../src/detail/sfinae_types.hpp"
-#include "../src/detail/type_in_tuple.hpp"
-#include "../src/invert.hpp"
-#include "../src/lambdify.hpp"
-#include "../src/math.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/pow.hpp"
-#include "../src/power_series.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/series.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/detail/demangle.hpp>
+#include <piranha/detail/sfinae_types.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/lambdify.hpp>
+#include <piranha/math.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/power_series.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/series.hpp>
+#include <piranha/type_traits.hpp>
+
 #include "type_system.hpp"
 #include "utils.hpp"
 
@@ -79,6 +79,16 @@ namespace pyranha
 {
 
 namespace bp = boost::python;
+
+// TMP to check if a type is in a tuple.
+template <typename, typename>
+struct type_in_tuple {
+};
+
+template <typename T, typename... Args>
+struct type_in_tuple<T, std::tuple<Args...>>
+    : std::integral_constant<bool, piranha::disjunction<std::is_same<T, Args>...>::value> {
+};
 
 // Generic pickle support via Boost serialization.
 template <typename Series>
@@ -171,19 +181,6 @@ template <typename S>
 inline S generic_deepcopy_wrapper(const S &s, bp::dict)
 {
     return s;
-}
-
-// Generic evaluate wrapper.
-template <typename S, typename T>
-inline auto generic_evaluate_wrapper(const S &s, bp::dict dict, const T &)
-    -> decltype(piranha::math::evaluate(s, std::declval<std::unordered_map<std::string, T>>()))
-{
-    std::unordered_map<std::string, T> cpp_dict;
-    bp::stl_input_iterator<std::string> it(dict), end;
-    for (; it != end; ++it) {
-        cpp_dict[*it] = bp::extract<T>(dict[*it])();
-    }
-    return piranha::math::evaluate(s, cpp_dict);
 }
 
 // Generic lambdify wrapper.
@@ -578,8 +575,15 @@ class series_exposer
         template <typename T>
         void operator()(const T &, typename std::enable_if<piranha::is_evaluable<S, T>::value>::type * = nullptr) const
         {
-            m_series_class.def("_evaluate", generic_evaluate_wrapper<S, T>);
-            bp::def("_evaluate", generic_evaluate_wrapper<S, T>);
+            bp::def("_evaluate", +[](const S &s, bp::dict dict, const T &) -> decltype(
+                                     piranha::math::evaluate(s, std::declval<std::unordered_map<std::string, T>>())) {
+                std::unordered_map<std::string, T> cpp_dict;
+                bp::stl_input_iterator<std::string> it(dict), end;
+                for (; it != end; ++it) {
+                    cpp_dict[*it] = bp::extract<T>(dict[*it])();
+                }
+                return piranha::math::evaluate(s, cpp_dict);
+            });
             bp::def("_lambdify", generic_lambdify_wrapper<S, T>);
             generic_expose_lambdified<S, T>();
         }
@@ -696,17 +700,15 @@ class series_exposer
         }
     };
     // Here we have three implementations of this function. The final objective is to enable construction and
-    // arithmetics
-    // with respect to the coefficient type, and, recursively, the coefficient type of the coefficient type.
+    // arithmetics with respect to the coefficient type, and, recursively, the coefficient type of the coefficient type.
     // 1. Series2 is a series type whose cf is not among interoperable types.
-    // In this case, we expose the interoperability with the cf, and we try to expose also the interoperability with the
-    // coefficient
-    // type of cf, if it is a series type.
+    // In this case, we expose the interoperability with the cf, and we try to expose also the interoperability with
+    // the coefficient type of cf, if it is a series type.
     template <typename InteropTypes, typename Series2, typename S>
-    static void
-    expose_cf_interop(bp::class_<S> &series_class,
-                      typename std::enable_if<!piranha::detail::type_in_tuple<typename Series2::term_type::cf_type,
-                                                                              InteropTypes>::value>::type * = nullptr)
+    static void expose_cf_interop(
+        bp::class_<S> &series_class,
+        typename std::enable_if<!type_in_tuple<typename Series2::term_type::cf_type, InteropTypes>::value>::type
+            * = nullptr)
     {
         using cf_type = typename Series2::term_type::cf_type;
         cf_type cf;
@@ -716,10 +718,10 @@ class series_exposer
     }
     // 2. Series2 is a series type whose cf is among the interoperable types. Try to go deeper in the hierarchy.
     template <typename InteropTypes, typename Series2, typename S>
-    static void
-    expose_cf_interop(bp::class_<S> &series_class,
-                      typename std::enable_if<piranha::detail::type_in_tuple<typename Series2::term_type::cf_type,
-                                                                             InteropTypes>::value>::type * = nullptr)
+    static void expose_cf_interop(
+        bp::class_<S> &series_class,
+        typename std::enable_if<type_in_tuple<typename Series2::term_type::cf_type, InteropTypes>::value>::type
+            * = nullptr)
     {
         expose_cf_interop<InteropTypes, typename Series2::term_type::cf_type>(series_class);
     }
@@ -1102,7 +1104,8 @@ class series_exposer
             series_class.def(+bp::self);
             series_class.def(-bp::self);
             // NOTE: here this method is available if is_identical() is (that is, if the series are comparable), so
-            // put it here - even if logically it belongs to exponentiation. We assume the series are comparable anyway.
+            // put it here - even if logically it belongs to exponentiation. We assume the series are comparable
+            // anyway.
             series_class.def("clear_pow_cache", s_type::template clear_pow_cache<s_type, 0>)
                 .staticmethod("clear_pow_cache");
             // Expose interoperable types.

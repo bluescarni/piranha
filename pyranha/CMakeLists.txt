@@ -1,7 +1,3 @@
-# NOTE: this is already included from above, but keep it here
-# in case one day we decide to split off Pyranha.
-include(YACMAPythonSetup)
-
 # Python version check.
 if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTHON_VERSION_MINOR} LESS 6))
 	message(FATAL_ERROR "Minimum supported Python version is 2.6.")
@@ -18,7 +14,7 @@ set(PYRANHA_TUTORIAL_FILES
 	tutorial/rational.py
 )
 
-YACMA_PYTHON_MODULE(_core SHARED
+YACMA_PYTHON_MODULE(_core
 	# General.
 	core.cpp
 	type_system.cpp
@@ -42,9 +38,6 @@ YACMA_PYTHON_MODULE(_core SHARED
 	expose_polynomials_8.cpp
 	expose_polynomials_9.cpp
 	expose_polynomials_10.cpp
-	expose_polynomials_11.cpp
-	expose_polynomials_12.cpp
-	expose_polynomials_13.cpp
 	# Poisson series.
 	poisson_series_descriptor.hpp
 	expose_poisson_series.hpp
@@ -60,9 +53,6 @@ YACMA_PYTHON_MODULE(_core SHARED
 	expose_poisson_series_9.cpp
 	expose_poisson_series_10.cpp
 	expose_poisson_series_11.cpp
-	expose_poisson_series_12.cpp
-	expose_poisson_series_13.cpp
-	expose_poisson_series_14.cpp
 	# Divisor series.
 	divisor_series_descriptor.hpp
 	expose_divisor_series.hpp
@@ -72,19 +62,18 @@ YACMA_PYTHON_MODULE(_core SHARED
 	expose_divisor_series_3.cpp
 	expose_divisor_series_4.cpp
 	expose_divisor_series_5.cpp
-	expose_divisor_series_6.cpp
-	expose_divisor_series_7.cpp
-	expose_divisor_series_8.cpp
-	# Python files.
-	__init__.py _common.py celmec.py math.py test.py types.py "${CMAKE_CURRENT_BINARY_DIR}/_version.py"
-	${PYRANHA_TUTORIAL_FILES}
 )
 
  # Setup the installation path.
 set(PYRANHA_INSTALL_PATH "${YACMA_PYTHON_MODULES_INSTALL_PATH}/pyranha")
 
-# The module needs Boost.Python and the Python libs, plus the mandatory libraries.
-target_link_libraries(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES})
+target_compile_options(_core PRIVATE "$<$<CONFIG:DEBUG>:${PIRANHA_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PIRANHA_CXX_FLAGS_RELEASE}>")
+# The module needs Boost.Python and the mandatory libraries. Python libs and includes are already linked in
+# by YACMA_PYTHON_MODULE().
+target_link_libraries(_core PRIVATE piranha Boost::python ${PIRANHA_MANDATORY_LINK_TARGETS})
+set_property(TARGET _core PROPERTY CXX_STANDARD 11)
+set_property(TARGET _core PROPERTY CXX_STANDARD_REQUIRED YES)
+set_property(TARGET _core PROPERTY CXX_EXTENSIONS NO)
 install(TARGETS _core
 	RUNTIME DESTINATION ${PYRANHA_INSTALL_PATH}
 	LIBRARY DESTINATION ${PYRANHA_INSTALL_PATH}

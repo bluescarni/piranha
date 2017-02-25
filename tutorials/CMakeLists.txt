@@ -1,0 +1,13 @@
+function(ADD_PIRANHA_TUTORIAL arg1)
+	add_executable("${arg1}" "${arg1}.cpp")
+	target_compile_options(${arg1} PRIVATE "$<$<CONFIG:DEBUG>:${PIRANHA_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PIRANHA_CXX_FLAGS_RELEASE}>")
+	target_link_libraries(${arg1} piranha)
+	set_property(TARGET ${arg1} PROPERTY CXX_STANDARD 11)
+	set_property(TARGET ${arg1} PROPERTY CXX_STANDARD_REQUIRED YES)
+	set_property(TARGET ${arg1} PROPERTY CXX_EXTENSIONS NO)
+endfunction()
+
+ADD_PIRANHA_TUTORIAL(hello_piranha)
+ADD_PIRANHA_TUTORIAL(integer)
+ADD_PIRANHA_TUTORIAL(rational)
+ADD_PIRANHA_TUTORIAL(real_)

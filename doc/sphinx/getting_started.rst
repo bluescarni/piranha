@@ -132,7 +132,7 @@ mode can be set with the ``CMAKE_BUILD_TYPE`` CMake variable, e.g.,
 
    $ cmake ../ -DCMAKE_BUILD_TYPE=Debug
 
-In order to compile Pyranha, the ``BUILD_PYRANHA`` option must be enabled:
+In order to compile Pyranha, the ``PIRANHA_BUILD_PYRANHA`` option must be enabled:
 
 .. code-block:: console
 

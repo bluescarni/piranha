@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/power_series.hpp"
+#include <piranha/power_series.hpp>
 
 #define BOOST_TEST_MODULE power_series_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -37,16 +37,16 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/init.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/real.hpp"
-#include "../src/real_trigonometric_kronecker_monomial.hpp"
-#include "../src/series.hpp"
+#include <piranha/init.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/real.hpp>
+#include <piranha/real_trigonometric_kronecker_monomial.hpp>
+#include <piranha/series.hpp>
 
 using namespace piranha;
 

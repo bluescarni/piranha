@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/kronecker_monomial.hpp"
+#include <piranha/kronecker_monomial.hpp>
 
 #define BOOST_TEST_MODULE kronecker_monomial_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -50,23 +50,23 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_set>
 #include <vector>
 
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/is_key.hpp"
-#include "../src/key_is_convertible.hpp"
-#include "../src/key_is_multipliable.hpp"
-#include "../src/kronecker_array.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/term.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/is_key.hpp>
+#include <piranha/key_is_convertible.hpp>
+#include <piranha/key_is_multipliable.hpp>
+#include <piranha/kronecker_array.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/term.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
@@ -1221,104 +1221,4 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_comparison_test)
     BOOST_CHECK(!(k_monomial{1} < k_monomial{1}));
     BOOST_CHECK(!(k_monomial{2} < k_monomial{1}));
     BOOST_CHECK(k_monomial{1} < k_monomial{2});
-}
-
-struct split_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        using k_type = kronecker_monomial<T>;
-        symbol_set vs;
-        BOOST_CHECK_THROW(k_type{}.split(vs), std::invalid_argument);
-        vs.add("x");
-        BOOST_CHECK_THROW(k_type{}.split(vs), std::invalid_argument);
-        vs.add("y");
-        std::vector<T> v;
-        v.emplace_back(1);
-        v.emplace_back(2);
-        auto res = k_type(v.begin(), v.end()).split(vs);
-        BOOST_CHECK_EQUAL(res.first.get_int(), 2);
-        BOOST_CHECK_EQUAL(res.second.get_int(), 1);
-        // signed char does not have enough range for this.
-        if (std::is_same<T, signed char>::value) {
-            return;
-        }
-        v.emplace_back(-3);
-        auto old_vs(vs);
-        vs.add("z");
-        res = k_type(v.begin(), v.end()).split(vs);
-        BOOST_CHECK_EQUAL(res.second.get_int(), 1);
-        BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[0u], 2);
-        BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[1u], -3);
-        v.emplace_back(-2);
-        old_vs = vs;
-        vs.add("u");
-        res = k_type(v.begin(), v.end()).split(vs);
-        BOOST_CHECK_EQUAL(res.second.get_int(), 1);
-        BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[0u], 2);
-        BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[1u], -3);
-        BOOST_CHECK_EQUAL(res.first.unpack(old_vs)[2u], -2);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_monomial_split_test)
-{
-    boost::mpl::for_each<int_types>(split_tester());
-}
-
-struct extract_exponents_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        using key_type = kronecker_monomial<T>;
-        std::vector<T> out;
-        key_type k{};
-        symbol_set ss;
-        k.extract_exponents(out, ss);
-        BOOST_CHECK_EQUAL(out.size(), 0u);
-        ss.add(symbol{"a"});
-        k = key_type{T(-2)};
-        k.extract_exponents(out, ss);
-        BOOST_CHECK_EQUAL(out.size(), 1u);
-        BOOST_CHECK_EQUAL(out[0u], T(-2));
-        ss.add(symbol{"b"});
-        k = key_type{T(-2), T(3)};
-        out.resize(4u);
-        k.extract_exponents(out, ss);
-        BOOST_CHECK_EQUAL(out.size(), 2u);
-        BOOST_CHECK_EQUAL(out[0u], T(-2));
-        BOOST_CHECK_EQUAL(out[1u], T(3));
-    }
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_monomial_extract_exponents_test)
-{
-    boost::mpl::for_each<int_types>(extract_exponents_tester());
-}
-
-struct has_negative_exponent_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        using key_type = kronecker_monomial<T>;
-        key_type k{};
-        symbol_set ss;
-        BOOST_CHECK(!k.has_negative_exponent(ss));
-        ss.add("x");
-        BOOST_CHECK(!k.has_negative_exponent(ss));
-        k = key_type{1};
-        BOOST_CHECK(!k.has_negative_exponent(ss));
-        k = key_type{-1};
-        BOOST_CHECK(k.has_negative_exponent(ss));
-        ss.add("y");
-        k = key_type{1, 0};
-        BOOST_CHECK(!k.has_negative_exponent(ss));
-        k = key_type{-1, 2};
-        BOOST_CHECK(k.has_negative_exponent(ss));
-    }
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_monomial_has_negative_exponent_test)
-{
-    boost::mpl::for_each<int_types>(has_negative_exponent_tester());
 }

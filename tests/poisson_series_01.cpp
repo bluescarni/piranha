@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/poisson_series.hpp"
+#include <piranha/poisson_series.hpp>
 
 #define BOOST_TEST_MODULE poisson_series_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -40,19 +40,19 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
-#include "../src/divisor.hpp"
-#include "../src/divisor_series.hpp"
-#include "../src/init.hpp"
-#include "../src/invert.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/series.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/divisor.hpp>
+#include <piranha/divisor_series.hpp>
+#include <piranha/init.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/series.hpp>
+#include <piranha/type_traits.hpp>
 
 struct foo {
 };
@@ -446,13 +446,13 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
     auto tmp1 = (real(0) + real(1) * pow(real(1.234), 1) * pow(real(5.678), 0)
                  + real(1) * pow(real(1.234), 0) * pow(real(5.678), 1))
                 * cos(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
-    BOOST_CHECK_EQUAL(tmp1, s1.evaluate(dict));
-    BOOST_CHECK((std::is_same<real, decltype(s1.evaluate(dict))>::value));
+    BOOST_CHECK_EQUAL(math::evaluate(s1, dict), tmp1);
+    BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s1, dict))>::value));
     auto s2 = pow(y, 3) * sin(x + y);
     auto tmp2 = (real(0) + real(1) * pow(real(1.234), 0) * pow(real(5.678), 3))
                 * sin(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
-    BOOST_CHECK_EQUAL(tmp2, s2.evaluate(dict));
-    BOOST_CHECK((std::is_same<real, decltype(s2.evaluate(dict))>::value));
+    BOOST_CHECK_EQUAL(tmp2, math::evaluate(s2, dict));
+    BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s2, dict))>::value));
     // NOTE: here it seems to be quite a brittle test: if one changes the order of the operands s1 and s2,
     // the test fails on my test machine due to differences of order epsilon. Most likely it's a matter
     // of ordering of the floating-point operations and it will depend on a ton of factors. Better just disable it,

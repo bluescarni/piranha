@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/lambdify.hpp"
+#include <piranha/lambdify.hpp>
 
 #define BOOST_TEST_MODULE lambdify_test
 #include <boost/test/included/unit_test.hpp>
@@ -37,15 +37,14 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/math.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/rational_function.hpp"
-#include "../src/real.hpp"
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
+#include <piranha/math.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/real.hpp>
 
 using namespace piranha;
 using math::lambdify;
@@ -84,7 +83,6 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
         using p_type = polynomial<integer, k_monomial>;
         p_type x{"x"}, y{"y"}, z{"z"};
         BOOST_CHECK((has_lambdify<p_type, integer>::value));
-        BOOST_CHECK((!has_lambdify<p_type, std::string>::value));
         auto l0 = lambdify<integer>(x + y + z, {"x", "y", "z"});
         BOOST_CHECK(!std::is_copy_assignable<decltype(l0)>::value);
         BOOST_CHECK(!std::is_move_assignable<decltype(l0)>::value);
@@ -114,19 +112,6 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
         BOOST_CHECK((std::is_same<decltype(l5({})), double>::value));
         BOOST_CHECK_EQUAL(l5({1., 2., 3.}), 1. - 3.);
         BOOST_CHECK_THROW(l5({1., 3.}), std::invalid_argument);
-    }
-    {
-        using r_type = rational_function<k_monomial>;
-        r_type x{"x"}, y{"y"}, z{"z"};
-        BOOST_CHECK((has_lambdify<r_type, integer>::value));
-        BOOST_CHECK((!has_lambdify<r_type, std::string>::value));
-        auto l0 = lambdify<rational>((x + y) / (y - z), {"x", "y", "z"});
-        BOOST_CHECK((std::is_same<decltype(l0({})), rational>::value));
-        BOOST_CHECK_EQUAL(l0({1_q, 3 / 5_q, 9_q}), (1 + 3 / 5_q) / (3 / 5_q - 9));
-        BOOST_CHECK_THROW(l0({1_q, 3 / 5_q, 3 / 5_q}), zero_division_error);
-        BOOST_CHECK((has_lambdify<r_type, real>::value));
-        auto l1 = lambdify<real>((x + y) / (y - z), {"x", "y", "z"});
-        BOOST_CHECK((std::is_same<decltype(l1({})), real>::value));
     }
     {
         BOOST_CHECK((has_lambdify<double, integer>::value));

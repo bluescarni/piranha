@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -29,7 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PYRANHA_EXPOSE_DIVISOR_SERIES_HPP
 #define PYRANHA_EXPOSE_DIVISOR_SERIES_HPP
 
-#include "../src/divisor_series.hpp"
+#include <piranha/divisor_series.hpp>
 
 #include "type_system.hpp"
 
@@ -44,9 +44,6 @@ void expose_divisor_series_2();
 void expose_divisor_series_3();
 void expose_divisor_series_4();
 void expose_divisor_series_5();
-void expose_divisor_series_6();
-void expose_divisor_series_7();
-void expose_divisor_series_8();
 }
 
 #endif

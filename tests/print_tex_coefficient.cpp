@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/print_tex_coefficient.hpp"
+#include <piranha/print_tex_coefficient.hpp>
 
 #define BOOST_TEST_MODULE print_tex_coefficient_test
 #include <boost/test/included/unit_test.hpp>
@@ -36,9 +36,9 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include "../src/init.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/real.hpp"
+#include <piranha/init.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/real.hpp>
 
 using namespace piranha;
 

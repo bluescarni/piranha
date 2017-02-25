@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/safe_cast.hpp"
+#include <piranha/safe_cast.hpp>
 
 #define BOOST_TEST_MODULE safe_cast_test
 #include <boost/test/included/unit_test.hpp>
@@ -38,9 +38,9 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include "../src/config.hpp"
-#include "../src/init.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/config.hpp>
+#include <piranha/init.hpp>
+#include <piranha/type_traits.hpp>
 
 using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,
                              unsigned long, long long, unsigned long long>;

@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/symbol_set.hpp"
+#include <piranha/symbol_set.hpp>
 
 #define BOOST_TEST_MODULE symbol_set_test
 #include <boost/test/included/unit_test.hpp>
@@ -43,9 +43,9 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_map>
 #include <vector>
 
-#include "../src/config.hpp"
-#include "../src/init.hpp"
-#include "../src/symbol.hpp"
+#include <piranha/config.hpp>
+#include <piranha/init.hpp>
+#include <piranha/symbol.hpp>
 
 static std::mt19937 rng;
 static const int ntries = 1000;
@@ -423,10 +423,4 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_map_test)
     std::vector<pmap::value_type> cmp3{{3u, -5}};
     BOOST_CHECK(std::equal(pm3.begin(), pm3.end(), cmp3.begin()));
     BOOST_CHECK((pm3.back() == pmap::value_type{3u, -5}));
-    // pmappable type trait.
-    BOOST_CHECK(detail::is_pmappable<pmap1_t>::value);
-    BOOST_CHECK(!detail::is_pmappable<pmap2_t>::value);
-    BOOST_CHECK(!detail::is_pmappable<pmap3_t>::value);
-    BOOST_CHECK(!detail::is_pmappable<pmap4_t>::value);
-    BOOST_CHECK(!detail::is_pmappable<pmap5_t>::value);
 }

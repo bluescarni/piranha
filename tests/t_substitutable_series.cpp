@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/t_substitutable_series.hpp"
+#include <piranha/t_substitutable_series.hpp>
 
 #define BOOST_TEST_MODULE t_substitutable_series_test
 #include <boost/test/included/unit_test.hpp>
@@ -41,18 +41,18 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/forwarding.hpp"
-#include "../src/init.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/poisson_series.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/pow.hpp"
-#include "../src/real.hpp"
-#include "../src/s11n.hpp"
-#include "../src/symbol_set.hpp"
+#include <piranha/forwarding.hpp>
+#include <piranha/init.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/poisson_series.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/pow.hpp>
+#include <piranha/real.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/symbol_set.hpp>
 
 using namespace piranha;
 
@@ -185,12 +185,13 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK_EQUAL(
         math::t_subs(math::pow(math::sin(p_type3{"x"}), 7), "x", real(math::pow(real(3), .5)) / 2, real(.5)),
         math::pow(real(.5), 7));
-    BOOST_CHECK(math::abs(((math::pow(math::sin(p_type3{"x"}), 5) * math::pow(math::cos(p_type3{"x"}), 5))
-                               .t_subs("x", real(math::pow(real(3), .5)) / 2, real(.5))
-                           - math::pow(real(.5), 5) * math::pow(real(math::pow(real(3), .5)) / 2, 5))
-                              .trim()
-                              .evaluate(std::unordered_map<std::string, real>{}))
-                < 1E-9);
+    BOOST_CHECK(
+        math::abs(math::evaluate(((math::pow(math::sin(p_type3{"x"}), 5) * math::pow(math::cos(p_type3{"x"}), 5))
+                                      .t_subs("x", real(math::pow(real(3), .5)) / 2, real(.5))
+                                  - math::pow(real(.5), 5) * math::pow(real(math::pow(real(3), .5)) / 2, 5))
+                                     .trim(),
+                                 std::unordered_map<std::string, real>{}))
+        < 1E-9);
     BOOST_CHECK((has_t_subs<p_type3, p_type3, p_type3>::value));
     BOOST_CHECK((has_t_subs<p_type3, double, double>::value));
     BOOST_CHECK((has_t_subs<p_type3, real, real>::value));

@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/series.hpp"
+#include <piranha/series.hpp>
 
 #define BOOST_TEST_MODULE series_05_test
 #include <boost/test/included/unit_test.hpp>
@@ -37,14 +37,14 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
-#include "../src/exceptions.hpp"
-#include "../src/forwarding.hpp"
-#include "../src/init.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/exceptions.hpp>
+#include <piranha/forwarding.hpp>
+#include <piranha/init.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
@@ -104,11 +104,11 @@ BOOST_AUTO_TEST_CASE(series_division_test)
         s_type x{"x"}, y{"y"};
         BOOST_CHECK((std::is_same<s_type, decltype(x / y)>::value));
         BOOST_CHECK_EQUAL(s_type{4} / s_type{-3}, -1);
-        BOOST_CHECK_THROW(s_type{4} / s_type{}, zero_division_error);
+        BOOST_CHECK_THROW(s_type{4} / s_type{}, mppp::zero_division_error);
         BOOST_CHECK_EQUAL(s_type{0} / s_type{-3}, 0);
         BOOST_CHECK_THROW(x / y, std::invalid_argument);
         s_type tmp{4};
-        BOOST_CHECK_THROW(tmp /= s_type{}, zero_division_error);
+        BOOST_CHECK_THROW(tmp /= s_type{}, mppp::zero_division_error);
         tmp /= s_type{-3};
         BOOST_CHECK_EQUAL(tmp, -1);
         BOOST_CHECK_THROW(x /= y, std::invalid_argument);
@@ -125,11 +125,11 @@ BOOST_AUTO_TEST_CASE(series_division_test)
         s_type2 y{"y"};
         BOOST_CHECK((std::is_same<s_type1, decltype(x / y)>::value));
         BOOST_CHECK_EQUAL(s_type1{4} / s_type2{-3}, -1);
-        BOOST_CHECK_THROW(s_type1{4} / s_type2{}, zero_division_error);
+        BOOST_CHECK_THROW(s_type1{4} / s_type2{}, mppp::zero_division_error);
         BOOST_CHECK_EQUAL(s_type1{0} / s_type2{-3}, 0);
         BOOST_CHECK_THROW(x / y, std::invalid_argument);
         s_type1 tmp{4};
-        BOOST_CHECK_THROW(tmp /= s_type2{}, zero_division_error);
+        BOOST_CHECK_THROW(tmp /= s_type2{}, mppp::zero_division_error);
         tmp /= s_type2{-3};
         BOOST_CHECK_EQUAL(tmp, -1);
         BOOST_CHECK_THROW(x /= y, std::invalid_argument);
@@ -146,11 +146,11 @@ BOOST_AUTO_TEST_CASE(series_division_test)
         s_type2 y{"y"};
         BOOST_CHECK((std::is_same<s_type2, decltype(x / y)>::value));
         BOOST_CHECK_EQUAL(s_type1{4} / s_type2{-3}, -1);
-        BOOST_CHECK_THROW(s_type1{4} / s_type2{}, zero_division_error);
+        BOOST_CHECK_THROW(s_type1{4} / s_type2{}, mppp::zero_division_error);
         BOOST_CHECK_EQUAL(s_type1{0} / s_type2{-3}, 0);
         BOOST_CHECK_THROW(x / y, std::invalid_argument);
         s_type1 tmp{4};
-        BOOST_CHECK_THROW(tmp /= s_type2{}, zero_division_error);
+        BOOST_CHECK_THROW(tmp /= s_type2{}, mppp::zero_division_error);
         tmp /= s_type2{-3};
         BOOST_CHECK_EQUAL(tmp, -1);
         BOOST_CHECK_THROW(x /= y, std::invalid_argument);
@@ -259,8 +259,6 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 // Some evaluation tests after we added the improved checking + error message logic in series.
 BOOST_AUTO_TEST_CASE(series_evaluation_test)
 {
-    // Series not evaluable due to nasty type.
-    BOOST_CHECK((!is_evaluable<g_series_type2<double, int>, double>::value));
     using math::evaluate;
     using p_type = polynomial<integer, monomial<int>>;
     p_type x{"x"}, y{"y"}, z{"z"};

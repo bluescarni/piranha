@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/divisor.hpp"
+#include <piranha/divisor.hpp>
 
 #define BOOST_TEST_MODULE divisor_01_test
 #include <boost/test/included/unit_test.hpp>
@@ -46,21 +46,21 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/detail/vector_hasher.hpp"
-#include "../src/exceptions.hpp"
-#include "../src/init.hpp"
-#include "../src/key_is_convertible.hpp"
-#include "../src/key_is_multipliable.hpp"
-#include "../src/math.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/mp_rational.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/real.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
-#include "../src/term.hpp"
-#include "../src/type_traits.hpp"
+#include <piranha/detail/vector_hasher.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/init.hpp>
+#include <piranha/key_is_convertible.hpp>
+#include <piranha/key_is_multipliable.hpp>
+#include <piranha/math.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/mp_integer.hpp>
+#include <piranha/mp_rational.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/real.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
+#include <piranha/term.hpp>
+#include <piranha/type_traits.hpp>
 
 using namespace piranha;
 

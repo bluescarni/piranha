@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -37,8 +37,9 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "../src/detail/sfinae_types.hpp"
-#include "../src/poisson_series.hpp"
+#include <piranha/detail/sfinae_types.hpp>
+#include <piranha/poisson_series.hpp>
+
 #include "type_system.hpp"
 
 namespace pyranha
@@ -99,9 +100,6 @@ void expose_poisson_series_8();
 void expose_poisson_series_9();
 void expose_poisson_series_10();
 void expose_poisson_series_11();
-void expose_poisson_series_12();
-void expose_poisson_series_13();
-void expose_poisson_series_14();
 }
 
 #endif

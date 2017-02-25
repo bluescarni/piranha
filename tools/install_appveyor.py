@@ -80,7 +80,9 @@ run_command(r'7z x -aoa -oC:\\ msgpack.7z', verbose=False)
 
 # Setup of the dependencies for a Python build.
 if is_python_build:
-    if BUILD_TYPE == 'Python35':
+    if BUILD_TYPE == 'Python36':
+        python_version = '36'
+    elif BUILD_TYPE == 'Python35':
         python_version = '35'
     elif BUILD_TYPE == 'Python34':
         python_version = '34'
@@ -108,7 +110,7 @@ if is_python_build:
     run_command(r'7z x -aoa -oC:\\ boost_python.7z', verbose=False)
     # Install pip and deps.
     wget(r'https://bootstrap.pypa.io/get-pip.py', 'get-pip.py')
-    run_command(pinterp + ' get-pip.py')
+    run_command(pinterp + ' get-pip.py --force-reinstall')
     run_command(pip + ' install numpy')
     run_command(pip + ' install mpmath')
     if is_release_build:
@@ -121,18 +123,19 @@ os.environ['PATH'] = os.environ['PATH'] + r';c:\\local\\lib'
 os.makedirs('build')
 os.chdir('build')
 
-common_cmake_opts = r'-DCMAKE_PREFIX_PATH=c:\\local -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_62.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_62.dll'
+common_cmake_opts = r'-DCMAKE_PREFIX_PATH=c:\\local -DPIRANHA_WITH_BZIP2=yes -DBZIP2_INCLUDE_DIR=c:\\local\\include -DBZIP2_LIBRARY_RELEASE=c:\\local\\lib\\libboost_bzip2-mgw62-mt-1_63.dll -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DZLIB_INCLUDE_DIR=c:\\local\\include -DZLIB_LIBRARY_RELEASE=c:\\local\\lib\\libboost_zlib-mgw62-mt-1_63.dll'
 
 # Configuration step.
 if is_python_build:
-    run_command(r'cmake -G "MinGW Makefiles" ..  -DBUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s ' + common_cmake_opts + r' -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python' +
-                (python_version[0] if python_version[0] == '3' else r'') + r'-mgw62-mt-1_62.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + r'\\libs\\python' + python_version + r'.dll')
+    run_command(r'cmake -G "MinGW Makefiles" ..  -DPIRANHA_BUILD_PYRANHA=yes -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-s ' + common_cmake_opts + r' -DBoost_PYTHON_LIBRARY_RELEASE=c:\\local\\lib\\libboost_python' +
+                (python_version[0] if python_version[0] == '3' else r'') + r'-mgw62-mt-1_63.dll -DPYTHON_EXECUTABLE=C:\\Python' + python_version + r'\\python.exe -DPYTHON_LIBRARY=C:\\Python' + python_version + r'\\libs\\python' + python_version + r'.dll' +
+                r' -DPYTHON_INCLUDE_DIR=C:\\Python' + python_version + r'\\include')
 elif BUILD_TYPE in ['Release', 'Debug']:
     TEST_NSPLIT = os.environ['TEST_NSPLIT']
     SPLIT_TEST_NUM = os.environ['SPLIT_TEST_NUM']
-    cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + r' -DBUILD_TESTS=yes -DPIRANHA_TEST_NSPLIT=' + \
+    cmake_opts = r'-DCMAKE_BUILD_TYPE=' + BUILD_TYPE + (r' -DPIRANHA_BUILD_TESTS=yes' if BUILD_TYPE == 'Debug' else r' -DPIRANHA_BUILD_BENCHMARKS=yes') + r' -DPIRANHA_TEST_NSPLIT=' + \
         TEST_NSPLIT + r' -DPIRANHA_TEST_SPLIT_NUM=' + \
-        SPLIT_TEST_NUM + r' ' + common_cmake_opts
+        SPLIT_TEST_NUM + r' ' + common_cmake_opts + (r' -DCMAKE_CXX_FLAGS_DEBUG="-g0 -Os"' if BUILD_TYPE == 'Debug' else r'')
     run_command(r'cmake -G "MinGW Makefiles" .. ' + cmake_opts)
 else:
     raise RuntimeError('Unsupported build type: ' + BUILD_TYPE)
@@ -157,14 +160,13 @@ if is_python_build:
     run_command(pinterp + r' setup.py bdist_wheel')
     os.environ['PATH'] = ORIGINAL_PATH
     run_command(pip + r' install dist\\' + os.listdir('dist')[0])
-    os.chdir(r'c:\\')
     run_command(
-        pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"')
+        pinterp + r' -c "import pyranha.test; pyranha.test.run_test_suite()"', directory=r'c:\\')
     if is_release_build:
         run_command(twine + r' upload -u bluescarni dist\\' +
                     os.listdir('dist')[0])
 elif BUILD_TYPE == 'Release':
-    run_command(r'ctest -VV -E "gastineau|pearce2_unpacked|s11n_perf"')
+    pass
 elif BUILD_TYPE == 'Debug':
     run_command(r'ctest -VV')
 else:

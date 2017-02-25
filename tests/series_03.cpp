@@ -1,4 +1,4 @@
-/* Copyright 2009-2016 Francesco Biscani (bluescarni@gmail.com)
+/* Copyright 2009-2017 Francesco Biscani (bluescarni@gmail.com)
 
 This file is part of the Piranha library.
 
@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include "../src/series.hpp"
+#include <piranha/series.hpp>
 
 #define BOOST_TEST_MODULE series_03_test
 #include <boost/test/included/unit_test.hpp>
@@ -35,13 +35,13 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 
-#include "../src/forwarding.hpp"
-#include "../src/init.hpp"
-#include "../src/invert.hpp"
-#include "../src/monomial.hpp"
-#include "../src/polynomial.hpp"
-#include "../src/symbol.hpp"
-#include "../src/symbol_set.hpp"
+#include <piranha/forwarding.hpp>
+#include <piranha/init.hpp>
+#include <piranha/invert.hpp>
+#include <piranha/monomial.hpp>
+#include <piranha/polynomial.hpp>
+#include <piranha/symbol.hpp>
+#include <piranha/symbol_set.hpp>
 
 using namespace piranha;
 
