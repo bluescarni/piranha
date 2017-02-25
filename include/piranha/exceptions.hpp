@@ -40,6 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <piranha/config.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -109,6 +110,8 @@ struct ex_thrower {
  * piranha_throw(std::bad_alloc,);
  * @endcode
  * is correct.
+ *
+ * @param exception_type the type of the exception to be thrown.
  */
 // NOTE: we need the struct here because we need to split off the __VA_ARGS__ into a separate function call, otherwise
 // there could be situations in which the throwing function would be called with a set of arguments (a,b,c,), which
@@ -134,6 +137,45 @@ struct not_implemented_error final : std::runtime_error {
 struct zero_division_error final : std::domain_error {
     using std::domain_error::domain_error;
 };
+
+/// Precondition error.
+/**
+ * This class is used to signal that a precondition for the use of a function has been violated.
+ *
+ * This class inherits the constructors from \p std::runtime_error.
+ */
+struct precondition_error final : std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
+#if defined(NDEBUG)
+
+#define piranha_check_precondition(precondition) ((void)0)
+
+#else
+
+/// Check precondition.
+/**
+ * If \p NDEBUG is defined, this macro will evaluate to the empty statement
+ * @code
+ * ((void)0)
+ * @endcode
+ * Otherwise, this macro will try to convert to \p bool the value of \p precondition, and, if the result is
+ * \p false, it will raise an exception of type piranha::precondition_error.
+ *
+ * This macro is intended to be used to check function preconditions.
+ *
+ * @param precondition the condition that will be checked.
+ */
+#define piranha_check_precondition(precondition)                                                                       \
+    do {                                                                                                               \
+        if (unlikely(!static_cast<bool>(precondition))) {                                                              \
+            piranha_throw(piranha::precondition_error,                                                                 \
+                          "the following precondition has been violated: " #precondition);                             \
+        }                                                                                                              \
+    } while (false)
+
+#endif
 }
 
 #endif
