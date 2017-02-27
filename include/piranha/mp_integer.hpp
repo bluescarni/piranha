@@ -49,7 +49,7 @@ see https://www.gnu.org/licenses/. */
 #undef MPPP_WITH_LONG_DOUBLE
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -546,7 +546,7 @@ const bool has_ipow_subs<T, U>::value;
 /**
  * This type trait will be \p true if \p Key provides a const method <tt>ipow_subs()</tt> accepting as
  * const parameters a string, an instance of piranha::integer, an instance of \p T and an instance of
- * piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
+ * piranha::symbol_fset. The return value of the method must be an <tt>std::vector</tt>
  * of pairs in which the second type must be \p Key itself (after the removal of cv/reference qualifiers).
  * The <tt>ipow_subs()</tt> method represents the substitution
  * of the integral power of a symbol with an instance of type \p T.
@@ -561,7 +561,7 @@ class key_has_ipow_subs
     template <typename Key1, typename T1>
     using key_ipow_subs_t = decltype(
         std::declval<const Key1 &>().ipow_subs(std::declval<const std::string &>(), std::declval<const integer &>(),
-                                               std::declval<const T1 &>(), std::declval<const symbol_set &>()));
+                                               std::declval<const T1 &>(), std::declval<const symbol_fset &>()));
     template <typename T1>
     struct check_result_type : std::false_type {
     };

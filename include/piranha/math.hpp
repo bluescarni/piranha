@@ -47,7 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -1825,46 +1825,45 @@ public:
 template <typename T>
 const bool is_differentiable<T>::value;
 
-namespace detail
+inline namespace impl
 {
 
-// A key is differentiable if the type returned by the partial method
+// A key is differentiable/integrable if the type returned by the partial/integrate method
 // is a pair (sometype,key).
-template <typename Key, typename Pair>
-struct is_differential_key_pair {
-    static const bool value = false;
+template <typename, typename>
+struct is_differential_key_pair : std::false_type {
 };
 
-template <typename Key, typename PairFirst>
-struct is_differential_key_pair<Key, std::pair<PairFirst, Key>> {
-    static const bool value = true;
+template <typename Key, typename T>
+struct is_differential_key_pair<Key, std::pair<T, Key>> : std::true_type {
 };
 }
 
 /// Type trait to detect differentiable keys.
 /**
- * This type trait will be \p true if \p Key is a key type providing a const method <tt>partial()</tt> taking a const
- * instance of
- * piranha::symbol_set::positions and a const instance of piranha::symbol_set as input, and returning an
- * <tt>std::pair</tt> of
- * any type and \p Key. Otherwise, the type trait will be \p false.
- * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * std::pair<T,uncvref_t<Key>> partial(const symbol_idx &, const symbol_fset &) const;
+ * @endcode
+ * where \p T is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. Otherwise, the type
+ * trait will be \p false.
  *
- * The decay type of \p Key is considered in this type trait.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_is_differentiable : detail::sfinae_types
+class key_is_differentiable
 {
-    using Keyd = typename std::decay<Key>::type;
-    PIRANHA_TT_CHECK(is_key, Keyd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename U>
-    static auto test(const U &u)
-        -> decltype(u.partial(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()));
-    static no test(...);
+    using key_partial_t = decltype(
+        std::declval<const U &>().partial(std::declval<const symbol_idx &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = is_differential_key_pair<uncvref_t<Key>, detected_t<key_partial_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::is_differential_key_pair<Keyd, decltype(test(std::declval<Keyd>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename Key>
@@ -1893,27 +1892,29 @@ const bool is_integrable<T>::value;
 
 /// Type trait to detect integrable keys.
 /**
- * This type trait will be \p true if \p Key is a key type providing a const method <tt>integrate()</tt> taking a const
- * instance of
- * piranha::symbol and a const instance of piranha::symbol_set as input, and returning an <tt>std::pair</tt> of
- * any type and \p Key. Otherwise, the type trait will be \p false.
- * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * std::pair<T,uncvref_t<Key>> integrate(const symbol_idx &, const symbol_fset &) const;
+ * @endcode
+ * where \p T is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. Otherwise, the type
+ * trait will be \p false.
  *
- * The decay type of \p Key is considered in this type trait.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
-template <typename T>
-class key_is_integrable : detail::sfinae_types
+template <typename Key>
+class key_is_integrable
 {
-    using Td = typename std::decay<T>::type;
-    PIRANHA_TT_CHECK(is_key, Td);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename U>
-    static auto test(const U &u)
-        -> decltype(u.integrate(std::declval<const symbol &>(), std::declval<const symbol_set &>()));
-    static no test(...);
+    using key_integrate_t = decltype(
+        std::declval<const U &>().integrate(std::declval<const symbol_idx &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = is_differential_key_pair<uncvref_t<Key>, detected_t<key_integrate_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::is_differential_key_pair<Td, decltype(test(std::declval<Td>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -2078,33 +2079,31 @@ const bool has_t_lorder<T>::value;
 /// Type trait to detect if a key type has a degree property.
 /**
  * The type trait has the same meaning as piranha::has_degree, but it's meant for use with key types.
- * It will test the presence of two <tt>degree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T degree(const symbol_fset &) const;
+ * U degree(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_degree : detail::sfinae_types
+class key_has_degree
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    // NOTE: here it works (despite the difference in constness with the use below) because none of the two versions
-    // of test1() is an exact match, and the conversion in constness has a higher priority than the ellipsis conversion.
-    // For more info:
-    // http://cpp0x.centaur.ath.cx/over.ics.rank.html
-    template <typename T>
-    static auto test1(const T *t) -> decltype(t->degree(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(const T *t)
-        -> decltype(t->degree(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_degree_t = decltype(std::declval<const U &>().degree(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_degree_t = decltype(
+        std::declval<const U &>().degree(std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_degree_t, Key>, is_detected<partial_degree_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename Key>
@@ -2113,29 +2112,31 @@ const bool key_has_degree<Key>::value;
 /// Type trait to detect if a key type has a low degree property.
 /**
  * The type trait has the same meaning as piranha::has_ldegree, but it's meant for use with key types.
- * It will test the presence of two <tt>ldegree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T ldegree(const symbol_fset &) const;
+ * U ldegree(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_ldegree : detail::sfinae_types
+class key_has_ldegree
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(const T *t) -> decltype(t->ldegree(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(const T *t)
-        -> decltype(t->ldegree(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_ldegree_t = decltype(std::declval<const U &>().ldegree(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_ldegree_t = decltype(std::declval<const U &>().ldegree(std::declval<const symbol_idx_fset &>(),
+                                                                         std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_ldegree_t, Key>, is_detected<partial_ldegree_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename Key>
@@ -2144,29 +2145,31 @@ const bool key_has_ldegree<Key>::value;
 /// Type trait to detect if a key type has a trigonometric degree property.
 /**
  * The type trait has the same meaning as piranha::has_t_degree, but it's meant for use with key types.
- * It will test the presence of two <tt>t_degree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T t_degree(const symbol_fset &) const;
+ * U t_degree(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_t_degree : detail::sfinae_types
+class key_has_t_degree
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(T const *t)
-        -> decltype(t->t_degree(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_t_degree_t = decltype(std::declval<const U &>().t_degree(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_t_degree_t = decltype(std::declval<const U &>().t_degree(std::declval<const symbol_idx_fset &>(),
+                                                                           std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_t_degree_t, Key>, is_detected<partial_t_degree_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key const *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key const *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2176,29 +2179,31 @@ const bool key_has_t_degree<T>::value;
 /// Type trait to detect if a key type has a trigonometric low degree property.
 /**
  * The type trait has the same meaning as piranha::has_t_ldegree, but it's meant for use with key types.
- * It will test the presence of two <tt>t_ldegree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T t_ldegree(const symbol_fset &) const;
+ * U t_ldegree(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_t_ldegree : detail::sfinae_types
+class key_has_t_ldegree
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(T const *t)
-        -> decltype(t->t_ldegree(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_t_ldegree_t = decltype(std::declval<const U &>().t_ldegree(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_t_ldegree_t = decltype(std::declval<const U &>().t_ldegree(std::declval<const symbol_idx_fset &>(),
+                                                                             std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_t_ldegree_t, Key>, is_detected<partial_t_ldegree_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key const *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key const *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2208,29 +2213,31 @@ const bool key_has_t_ldegree<T>::value;
 /// Type trait to detect if a key type has a trigonometric order property.
 /**
  * The type trait has the same meaning as piranha::has_t_order, but it's meant for use with key types.
- * It will test the presence of two <tt>t_order()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T t_order(const symbol_fset &) const;
+ * U t_order(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_t_order : detail::sfinae_types
+class key_has_t_order
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(T const *t) -> decltype(t->t_order(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(T const *t)
-        -> decltype(t->t_order(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_t_order_t = decltype(std::declval<const U &>().t_order(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_t_order_t = decltype(std::declval<const U &>().t_order(std::declval<const symbol_idx_fset &>(),
+                                                                         std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_t_order_t, Key>, is_detected<partial_t_order_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key const *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key const *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2240,29 +2247,31 @@ const bool key_has_t_order<T>::value;
 /// Type trait to detect if a key type has a trigonometric low order property.
 /**
  * The type trait has the same meaning as piranha::has_t_lorder, but it's meant for use with key types.
- * It will test the presence of two <tt>t_lorder()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T t_lorder(const symbol_fset &) const;
+ * U t_lorder(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_t_lorder : detail::sfinae_types
+class key_has_t_lorder
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(T const *t)
-        -> decltype(t->t_lorder(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_t_lorder_t = decltype(std::declval<const U &>().t_lorder(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_t_lorder_t = decltype(std::declval<const U &>().t_lorder(std::declval<const symbol_idx_fset &>(),
+                                                                           std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_t_lorder_t, Key>, is_detected<partial_t_lorder_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key const *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key const *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2343,42 +2352,46 @@ public:
 template <typename T, typename U, typename V>
 const bool has_t_subs<T, U, V>::value;
 
+inline namespace impl
+{
+
+// Check the result of key subs methods.
+template <typename, typename>
+struct key_subs_check_type : std::false_type {
+};
+
+template <typename Key, typename T>
+struct key_subs_check_type<Key, std::vector<std::pair<T, Key>>> : std::true_type {
+};
+}
+
 /// Type trait to detect the presence of the trigonometric substitution method in keys.
 /**
- * This type trait will be \p true if the decay type of \p Key provides a const method <tt>t_subs()</tt> accepting as
- * const parameters a string,
- * an instance of \p T, an instance of \p U and an instance of piranha::symbol_set. The return value of the method must
- * be an <tt>std::vector</tt>
- * of pairs in which the second type must be \p Key itself. The <tt>t_subs()</tt> represents the substitution of a
- * symbol with its cosine
- * and sine passed as instances of \p T and \p U respectively.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * std::vector<std::pair<R,uncvref_t<Key>>> t_subs(const symbol_idx &, const T &, const U &, const symbol_fset &) const;
+ * @endcode
+ * where \p R is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. The <tt>t_subs()</tt>
+ * methods represents the substitution of a symbol with its cosine and sine passed as instances of \p T and \p U
+ * respectively.
  *
- * The decay type of \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key, typename T, typename U>
-class key_has_t_subs : detail::sfinae_types
+class key_has_t_subs
 {
-    typedef typename std::decay<Key>::type Keyd;
-    typedef typename std::decay<T>::type Td;
-    typedef typename std::decay<U>::type Ud;
-    PIRANHA_TT_CHECK(is_key, Keyd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1, typename T1, typename U1>
-    static auto test(const Key1 &k, const T1 &t, const U1 &u)
-        -> decltype(k.t_subs(std::declval<const std::string &>(), t, u, std::declval<const symbol_set &>()));
-    static no test(...);
-    template <typename T1>
-    struct check_result_type {
-        static const bool value = false;
-    };
-    template <typename Res>
-    struct check_result_type<std::vector<std::pair<Res, Keyd>>> {
-        static const bool value = true;
-    };
+    using t_subs_t = decltype(
+        std::declval<const Key1 &>().t_subs(std::declval<const symbol_idx &>(), std::declval<const T1 &>(),
+                                            std::declval<const U1 &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = key_subs_check_type<uncvref_t<Key>, detected_t<t_subs_t, Key, T, U>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = check_result_type<decltype(test(std::declval<Keyd>(), std::declval<Td>(), std::declval<Ud>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2387,38 +2400,28 @@ const bool key_has_t_subs<Key, T, U>::value;
 
 /// Type trait to detect the presence of the substitution method in keys.
 /**
- * This type trait will be \p true if the decay type of \p Key provides a const method <tt>subs()</tt> accepting as
- * const parameters a string,
- * an instance of \p T and an instance of piranha::symbol_set. The return value of the method must be an
- * <tt>std::vector</tt>
- * of pairs in which the second type must be \p Key itself. The <tt>subs()</tt> method represents the substitution of a
- * symbol with
- * an instance of type \p T.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * std::vector<std::pair<R,uncvref_t<Key>>> subs(const symbol_idx &, const T &, const symbol_fset &) const;
+ * @endcode
+ * where \p R is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. The <tt>subs()</tt>
+ * methods represents the substitution of a symbol with an instance of \p T.
  *
- * The decay type of \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key, typename T>
-class key_has_subs : detail::sfinae_types
+class key_has_subs
 {
-    typedef typename std::decay<Key>::type Keyd;
-    typedef typename std::decay<T>::type Td;
-    PIRANHA_TT_CHECK(is_key, Keyd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1, typename T1>
-    static auto test(const Key1 &k, const T1 &t)
-        -> decltype(k.subs(std::declval<const std::string &>(), t, std::declval<const symbol_set &>()));
-    static no test(...);
-    template <typename T1>
-    struct check_result_type {
-        static const bool value = false;
-    };
-    template <typename Res>
-    struct check_result_type<std::vector<std::pair<Res, Keyd>>> {
-        static const bool value = true;
-    };
+    using subs_t = decltype(std::declval<const Key1 &>().subs(
+        std::declval<const symbol_idx &>(), std::declval<const T1 &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined = key_subs_check_type<uncvref_t<Key>, detected_t<subs_t, Key, T>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = check_result_type<decltype(test(std::declval<Keyd>(), std::declval<Td>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2470,26 +2473,27 @@ const bool is_evaluable<T, U>::value;
 
 /// Type trait to detect evaluable keys.
 /**
- * This type trait will be \p true if \p Key is a key type providing a const method <tt>evaluate()</tt> taking a const
- * instance of piranha::symbol_set::positions_map of \p T and a const instance of piranha::symbol_set as input, \p false
- * otherwise. If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * R evaluate(const std::vector<T> &, const symbol_fset &) const;
+ * @endcode
+ * where \p R is any type.
  *
- * The decay type of \p Key is considered in this type trait.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key, typename T>
-class key_is_evaluable : detail::sfinae_types
+class key_is_evaluable
 {
-    typedef typename std::decay<Key>::type Keyd;
-    PIRANHA_TT_CHECK(is_key, Keyd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1, typename T1>
-    static auto test(const Key1 &k, const symbol_set::positions_map<T1> &pmap)
-        -> decltype(k.evaluate(pmap, std::declval<const symbol_set &>()), void(), yes());
-    static no test(...);
+    using evaluate_t = decltype(std::declval<const Key1 &>().evaluate(std::declval<const std::vector<T1> &>(),
+                                                                      std::declval<const symbol_fset &>()));
+    static const bool implementation_defined = is_detected<evaluate_t, Key, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = std::is_same<decltype(test(std::declval<Keyd>(), std::declval<symbol_set::positions_map<T>>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename Key, typename T>

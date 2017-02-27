@@ -176,7 +176,11 @@ struct precondition_error final : std::runtime_error {
         }                                                                                                              \
     } while (false)
 
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+
 #define PIRANHA_CHECK_PRECONDITION_ENABLED
+
+#endif
 
 #endif // NDEBUG
 

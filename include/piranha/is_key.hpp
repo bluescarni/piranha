@@ -33,93 +33,79 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
-#include <piranha/detail/sfinae_types.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
 {
 
-namespace detail
-{
-
-// Test the presence of requested key methods.
-template <typename T>
-struct is_key_impl : sfinae_types {
-    template <typename U>
-    static auto test0(const U &u) -> decltype(u.is_compatible(std::declval<symbol_set const &>()));
-    static no test0(...);
-    template <typename U>
-    static auto test1(const U &u) -> decltype(u.is_ignorable(std::declval<symbol_set const &>()));
-    static no test1(...);
-    template <typename U>
-    static auto test2(const U &u)
-        -> decltype(u.merge_args(std::declval<symbol_set const &>(), std::declval<symbol_set const &>()));
-    static no test2(...);
-    template <typename U>
-    static auto test3(const U &u) -> decltype(u.is_unitary(std::declval<symbol_set const &>()));
-    static no test3(...);
-    template <typename U>
-    static auto test4(const U &u)
-        -> decltype(u.print(std::declval<std::ostream &>(), std::declval<symbol_set const &>()), void(), yes());
-    static no test4(...);
-    template <typename U>
-    static auto test5(const U &u)
-        -> decltype(u.print_tex(std::declval<std::ostream &>(), std::declval<symbol_set const &>()), void(), yes());
-    static no test5(...);
-    template <typename U>
-    static auto test6(const U &u)
-        -> decltype(u.trim_identify(std::declval<symbol_set &>(), std::declval<symbol_set const &>()), void(), yes());
-    static no test6(...);
-    template <typename U>
-    static auto test7(const U &u)
-        -> decltype(u.trim(std::declval<symbol_set const &>(), std::declval<symbol_set const &>()));
-    static no test7(...);
-    static const bool value = std::is_same<bool, decltype(test0(std::declval<T>()))>::value
-                              && std::is_same<bool, decltype(test1(std::declval<T>()))>::value
-                              && std::is_same<T, decltype(test2(std::declval<T>()))>::value
-                              && std::is_same<bool, decltype(test3(std::declval<T>()))>::value
-                              && std::is_same<yes, decltype(test4(std::declval<T>()))>::value
-                              && std::is_same<yes, decltype(test5(std::declval<T>()))>::value
-                              && std::is_same<yes, decltype(test6(std::declval<T>()))>::value
-                              && std::is_same<T, decltype(test7(std::declval<T>()))>::value;
-};
-}
-
-/// Type trait to detect key types.
+/// Key type concept check.
 /**
- * This type trait will be \p true if \p T can be used as a key type, \p false otherwise.
- * The requisites for \p T are the following:
+ * This type trait will be \p true if \p T satisfies all the requirements of a key type, \p false otherwise.
  *
- * - it must satisfy piranha::is_container_element,
- * - it must be constructible from a const piranha::symbol_set reference,
- * - it must satisfy piranha::is_equality_comparable,
- * - it must satisfy piranha::is_hashable,
- * - it must be provided with a const non-throwing \p is_compatible method accepting a const piranha::symbol_set
- *   reference as input and returning a \p bool,
- * - it must be provided with a const non-throwing \p is_ignorable method accepting a const piranha::symbol_set
- *   reference as input and returning \p bool,
- * - it must be provided with a const \p merge_args method accepting two const piranha::symbol_set
- *   references as inputs and returning \p T,
- * - it must be provided with a const \p is_unitary method accepting a const piranha::symbol_set
- *   reference as input and returning \p bool,
- * - it must be provided with const \p print and \p print_tex methods accepting an \p std::ostream reference as first
- * argument
- *   and a const piranha::symbol_set reference as second argument,
- * - it must be provided with a const \p trim_identify method accepting a reference to piranha::symbol_set and a const
- * reference
- *   to piranha::symbol_set,
- * - it must be provided with a const \p trim method accepting a const reference to piranha::symbol_set and a const
- * reference
- *   to piranha::symbol_set, and returning \p T.
+ * Key types must implement the following methods:
+ * @code{.unparsed}
+ * bool is_compatible(const symbol_fset &) const noexcept;
+ * bool is_zero(const symbol_fset &) const noexcept;
+ * bool is_unitary(const symbol_fset &) const;
+ * T merge_symbols(const symbol_fset &, const symbol_fset &) const;
+ * void print(std::ostream &, const symbol_fset &) const;
+ * void print_tex(std::ostream &, const symbol_fset &) const;
+ * void trim_identify(symbol_idx_uset &, const symbol_fset &) const;
+ * T trim(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * Additionally, \p T must also be constructible from a const piranha::symbol_fset reference and satisfy the following
+ * type traits: piranha::is_container_element, piranha::is_equality_comparable and piranha::is_hashable.
  */
 // \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
 // polynomial ctors from symbol) -> note that both these two checks have to go in the runtime requirements of key
 // when they get documented.
-template <typename T, typename = void>
+template <typename T>
 class is_key
 {
-    static const bool implementation_defined = false;
+    template <typename U>
+    using is_compatible_t = decltype(std::declval<const U &>().is_compatible(std::declval<symbol_fset const &>()));
+    template <typename U>
+    using is_zero_t = decltype(std::declval<const U &>().is_zero(std::declval<symbol_fset const &>()));
+    template <typename U>
+    using merge_symbols_t = decltype(std::declval<const U &>().merge_symbols(std::declval<symbol_fset const &>(),
+                                                                             std::declval<symbol_fset const &>()));
+    template <typename U>
+    using is_unitary_t = decltype(std::declval<const U &>().is_unitary(std::declval<symbol_fset const &>()));
+    template <typename U>
+    using print_t = decltype(
+        std::declval<const U &>().print(std::declval<std::ostream &>(), std::declval<symbol_fset const &>()));
+    template <typename U>
+    using print_tex_t = decltype(
+        std::declval<const U &>().print_tex(std::declval<std::ostream &>(), std::declval<symbol_fset const &>()));
+    template <typename U>
+    using trim_identify_t = decltype(std::declval<const U &>().trim_identify(std::declval<symbol_idx_uset &>(),
+                                                                             std::declval<symbol_fset const &>()));
+    template <typename U>
+    using trim_t = decltype(
+        std::declval<const U &>().trim(std::declval<const symbol_idx_fset &>(), std::declval<symbol_fset const &>()));
+    template <typename U>
+    using check_methods_t = std::integral_constant<bool, conjunction<std::is_same<detected_t<is_compatible_t, U>, bool>,
+                                                                     std::is_same<detected_t<is_zero_t, U>, bool>,
+                                                                     std::is_same<detected_t<merge_symbols_t, U>, U>,
+                                                                     std::is_same<detected_t<is_unitary_t, U>, bool>,
+                                                                     std::is_same<detected_t<print_t, U>, void>,
+                                                                     std::is_same<detected_t<print_tex_t, U>, void>,
+                                                                     std::is_same<detected_t<trim_identify_t, U>, void>,
+                                                                     std::is_same<detected_t<trim_t, U>, U>>::value>;
+    template <typename U, typename = void>
+    struct is_key_impl {
+        static const bool value = false;
+    };
+    template <typename U>
+    struct is_key_impl<U, enable_if_t<check_methods_t<U>::value>> {
+        static const bool value
+            = conjunction<is_container_element<U>, std::is_constructible<U, const symbol_fset &>,
+                          is_equality_comparable<U>, is_hashable<U>>::value
+              && noexcept(std::declval<const U &>().is_compatible(std::declval<const symbol_fset &>()))
+              && noexcept(std::declval<const U &>().is_zero(std::declval<const symbol_fset &>()));
+    };
+    static const bool implementation_defined = is_key_impl<T>::value;
 
 public:
     /// Value of the type trait.
@@ -127,23 +113,7 @@ public:
 };
 
 template <typename T>
-class is_key<T, typename std::enable_if<detail::is_key_impl<T>::value>::type>
-{
-    static const bool implementation_defined
-        = is_container_element<T>::value && std::is_constructible<T, const symbol_set &>::value
-          && is_equality_comparable<T>::value && is_hashable<T>::value
-          && noexcept(std::declval<T const &>().is_compatible(std::declval<symbol_set const &>()))
-          && noexcept(std::declval<T const &>().is_ignorable(std::declval<symbol_set const &>()));
-
-public:
-    static const bool value = implementation_defined;
-};
-
-template <typename T, typename Enable>
-const bool is_key<T, Enable>::value;
-
-template <typename T>
-const bool is_key<T, typename std::enable_if<detail::is_key_impl<T>::value>::type>::value;
+const bool is_key<T>::value;
 }
 
 #endif

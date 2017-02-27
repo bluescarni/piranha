@@ -54,7 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/safe_cast.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -509,9 +509,9 @@ const bool has_boost_load<Archive, T>::value;
 /// Wrapper for the serialization of keys via Boost.
 /**
  * This is a simple struct that stores a reference to a key (possibly const-qualified) and a const reference
- * to a piranha::symbol_set. The Boost serialization routines of piranha::series will save/load keys via this
+ * to a piranha::symbol_fset. The Boost serialization routines of piranha::series will save/load keys via this
  * wrapper rather than trying to save/load keys directly. The reason for this is that keys might
- * need external information (in the form of the series' piranha::symbol_set) in order for the (de)serialization to be
+ * need external information (in the form of the series' piranha::symbol_fset) in order for the (de)serialization to be
  * successful.
  *
  * Consequently, rather that implementing specialisations of piranha::boost_save_impl and piranha::boost_load_impl
@@ -526,21 +526,21 @@ private:
     PIRANHA_TT_CHECK(is_key, Key);
 
 public:
-    /// Constructor from key and piranha::symbol_set.
+    /// Constructor from key and piranha::symbol_fset.
     /**
      * @param k the input key.
-     * @param ss the reference piranha::symbol_set.
+     * @param ss the reference piranha::symbol_fset.
      */
-    explicit boost_s11n_key_wrapper(Key &k, const symbol_set &ss)
+    explicit boost_s11n_key_wrapper(Key &k, const symbol_fset &ss)
         : m_key_m(std::addressof(k)), m_key_c(m_key_m), m_ss(ss)
     {
     }
-    /// Constructor from const key and piranha::symbol_set.
+    /// Constructor from const key and piranha::symbol_fset.
     /**
      * @param k the input key.
-     * @param ss the reference piranha::symbol_set.
+     * @param ss the reference piranha::symbol_fset.
      */
-    explicit boost_s11n_key_wrapper(const Key &k, const symbol_set &ss)
+    explicit boost_s11n_key_wrapper(const Key &k, const symbol_fset &ss)
         : m_key_m(nullptr), m_key_c(std::addressof(k)), m_ss(ss)
     {
     }
@@ -571,9 +571,9 @@ public:
     }
     /// Const reference to the symbol set.
     /**
-     * @return a const reference to the piranha::symbol_set used as a construction argument.
+     * @return a const reference to the piranha::symbol_fset used as a construction argument.
      */
-    const symbol_set &ss() const
+    const symbol_fset &ss() const
     {
         return m_ss;
     }
@@ -581,7 +581,7 @@ public:
 private:
     Key *m_key_m;
     const Key *m_key_c;
-    const symbol_set &m_ss;
+    const symbol_fset &m_ss;
 };
 }
 
@@ -1108,7 +1108,7 @@ inline namespace impl
 
 template <typename Stream, typename Key>
 using key_msgpack_pack_t = decltype(std::declval<const Key &>().msgpack_pack(
-    std::declval<msgpack::packer<Stream> &>(), std::declval<msgpack_format>(), std::declval<const symbol_set &>()));
+    std::declval<msgpack::packer<Stream> &>(), std::declval<msgpack_format>(), std::declval<const symbol_fset &>()));
 }
 
 /// Detect the presence of the <tt>%msgpack_pack()</tt> method in keys.
@@ -1116,7 +1116,7 @@ using key_msgpack_pack_t = decltype(std::declval<const Key &>().msgpack_pack(
  * This type trait will be \p true if \p Stream satisfies piranha::is_msgpack_stream and the \p Key type has
  * a method whose signature is compatible with:
  * @code
- * Key::msgpack_pack(msgpack::packer<Stream> &, msgpack_format, const symbol_set &) const;
+ * Key::msgpack_pack(msgpack::packer<Stream> &, msgpack_format, const symbol_fset &) const;
  * @endcode
  * The return type of the method is ignored by this type trait.
  *
@@ -1143,14 +1143,14 @@ inline namespace impl
 
 template <typename Key>
 using key_msgpack_convert_t = decltype(std::declval<Key &>().msgpack_convert(
-    std::declval<const msgpack::object &>(), std::declval<msgpack_format>(), std::declval<const symbol_set &>()));
+    std::declval<const msgpack::object &>(), std::declval<msgpack_format>(), std::declval<const symbol_fset &>()));
 }
 
 /// Detect the presence of the <tt>%msgpack_convert()</tt> method in keys.
 /**
  * This type trait will be \p true if the \p Key type has a method whose signature is compatible with:
  * @code
- * Key::msgpack_convert(const msgpack::object &, msgpack_format, const symbol_set &);
+ * Key::msgpack_convert(const msgpack::object &, msgpack_format, const symbol_fset &);
  * @endcode
  * The return type of the method is ignored by this type trait.
  *

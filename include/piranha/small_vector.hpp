@@ -184,12 +184,12 @@ public:
     }
     value_type &operator[](const size_type &n)
     {
-        piranha_assert(n < m_size);
+        piranha_check_precondition(n < m_size);
         return m_ptr[n];
     }
     const value_type &operator[](const size_type &n) const
     {
-        piranha_assert(n < m_size);
+        piranha_check_precondition(n < m_size);
         return m_ptr[n];
     }
     size_type size() const
@@ -713,22 +713,28 @@ public:
     small_vector &operator=(small_vector &&) = default;
     /// Const subscript operator.
     /**
+     * *Preconditions*:  <tt>n < size()</tt>.
+     *
      * @param n index of the element to be accessed.
      *
      * @return const reference to the <tt>n</tt>-th element of the vector.
      */
     const value_type &operator[](const size_type &n) const
     {
+        piranha_check_precondition(n < size());
         return begin()[n];
     }
     /// Subscript operator.
     /**
+     * *Preconditions*:  <tt>n < size()</tt>.
+     *
      * @param n index of the element to be accessed.
      *
      * @return reference to the <tt>n</tt>-th element of the vector.
      */
     value_type &operator[](const size_type &n)
     {
+        piranha_check_precondition(n < size());
         return begin()[n];
     }
     /// Copy-add element at the end.
