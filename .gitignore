@@ -1,7 +1,8 @@
 # Build dirs.
 build*
 
-# Documentation.
+# Documentation. Note that Doxyfile is generated automatically.
+doc/doxygen/Doxyfile
 doc/doxygen/html/
 doc/doxygen/latex/
 doc/doxygen/xml/

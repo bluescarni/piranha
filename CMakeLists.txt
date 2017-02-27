@@ -156,6 +156,10 @@ message(STATUS "Piranha version: ${piranha_VERSION}")
 # Configure config.hpp.
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/piranha/config.hpp")
 
+# Configure Doxyfile.
+set(PIRANHA_DOXYGEN_STRIP_FROM_INC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile.in" "${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile" @ONLY)
+
 # Setup the piranha interface library.
 add_library(piranha INTERFACE)
 target_include_directories(piranha INTERFACE
