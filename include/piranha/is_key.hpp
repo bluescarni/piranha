@@ -48,10 +48,10 @@ namespace piranha
  * bool is_compatible(const symbol_fset &) const noexcept;
  * bool is_zero(const symbol_fset &) const noexcept;
  * bool is_unitary(const symbol_fset &) const;
- * T merge_symbols(const symbol_fset &, const symbol_fset &) const;
+ * T merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
  * void print(std::ostream &, const symbol_fset &) const;
  * void print_tex(std::ostream &, const symbol_fset &) const;
- * void trim_identify(symbol_idx_uset &, const symbol_fset &) const;
+ * void trim_identify(symbol_idx_fmap<bool> &, const symbol_fset &) const;
  * T trim(const symbol_idx_fset &, const symbol_fset &) const;
  * @endcode
  * Additionally, \p T must also be constructible from a const piranha::symbol_fset reference and satisfy the following
@@ -68,8 +68,8 @@ class is_key
     template <typename U>
     using is_zero_t = decltype(std::declval<const U &>().is_zero(std::declval<symbol_fset const &>()));
     template <typename U>
-    using merge_symbols_t = decltype(std::declval<const U &>().merge_symbols(std::declval<symbol_fset const &>(),
-                                                                             std::declval<symbol_fset const &>()));
+    using merge_symbols_t = decltype(std::declval<const U &>().merge_symbols(
+        std::declval<const symbol_idx_fmap<symbol_fset> &>(), std::declval<symbol_fset const &>()));
     template <typename U>
     using is_unitary_t = decltype(std::declval<const U &>().is_unitary(std::declval<symbol_fset const &>()));
     template <typename U>
@@ -79,7 +79,7 @@ class is_key
     using print_tex_t = decltype(
         std::declval<const U &>().print_tex(std::declval<std::ostream &>(), std::declval<symbol_fset const &>()));
     template <typename U>
-    using trim_identify_t = decltype(std::declval<const U &>().trim_identify(std::declval<symbol_idx_uset &>(),
+    using trim_identify_t = decltype(std::declval<const U &>().trim_identify(std::declval<symbol_idx_fmap<bool> &>(),
                                                                              std::declval<symbol_fset const &>()));
     template <typename U>
     using trim_t = decltype(

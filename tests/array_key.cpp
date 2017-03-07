@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE array_key_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -259,36 +260,24 @@ struct merge_symbols_tester {
         template <typename U>
         void operator()(const U &) const
         {
-            typedef g_key_type<T, U> key_type;
-            symbol_fset v1, v2;
-            v2.insert("a");
+            using key_type = g_key_type<T, U>;
             key_type k;
-            auto out = k.merge_symbols(v1, v2);
+            auto out = k.merge_symbols({{0, {"a"}}}, symbol_fset{});
             BOOST_CHECK((std::is_same<decltype(out), key_type>::value));
             BOOST_CHECK_EQUAL(out.size(), 1u);
             BOOST_CHECK_EQUAL(out[0], T(0));
-            v2.insert("b");
-            v2.insert("c");
-            v2.insert("d");
-            v1.insert("b");
-            v1.insert("d");
             k.push_back(T(2));
             k.push_back(T(4));
-            out = k.merge_symbols(v1, v2);
+            out = k.merge_symbols({{0, {"a"}}, {1, {"c"}}}, {"b", "d"});
             BOOST_CHECK_EQUAL(out.size(), 4u);
             BOOST_CHECK_EQUAL(out[0], T(0));
             BOOST_CHECK_EQUAL(out[1], T(2));
             BOOST_CHECK_EQUAL(out[2], T(0));
             BOOST_CHECK_EQUAL(out[3], T(4));
-            v2.insert("e");
-            v2.insert("f");
-            v2.insert("g");
-            v2.insert("h");
-            v1.insert("e");
-            v1.insert("g");
+            out = k.merge_symbols({{0, {"a"}}, {1, {"c"}}}, {"b", "d"});
             k.push_back(T(5));
             k.push_back(T(7));
-            out = k.merge_symbols(v1, v2);
+            out = k.merge_symbols({{0, {"a"}}, {4, {"h"}}, {3, {"f"}}, {1, {"c"}}}, {"b", "d", "g", "e"});
             BOOST_CHECK_EQUAL(out.size(), 8u);
             BOOST_CHECK_EQUAL(out[0], T(0));
             BOOST_CHECK_EQUAL(out[1], T(2));
@@ -298,16 +287,95 @@ struct merge_symbols_tester {
             BOOST_CHECK_EQUAL(out[5], T(0));
             BOOST_CHECK_EQUAL(out[6], T(7));
             BOOST_CHECK_EQUAL(out[7], T(0));
-#if defined(PIRANHA_CHECK_PRECONDITION_ENABLED)
-            // Check various precondition errors.
-            BOOST_CHECK_THROW(k.merge_symbols(v2, v1), precondition_error);
-            BOOST_CHECK_THROW(k.merge_symbols(v1, symbol_fset{}), precondition_error);
-            v1.insert("z");
-            BOOST_CHECK_THROW(k.merge_symbols(v1, v2), precondition_error);
-#endif
-            // Check cheap error throwing.
-            BOOST_CHECK_THROW(key_type{}.merge_symbols(symbol_fset{}, symbol_fset{}), std::invalid_argument);
-            BOOST_CHECK_THROW(key_type{T(1)}.merge_symbols({"a", "b"}, {"a", "b", "c"}), std::invalid_argument);
+            k = key_type{T(2), T(4)};
+            out = k.merge_symbols({{0, {"a", "b", "c", "d"}}, {1, {"f"}}, {2, {"h"}}}, {"g", "e"});
+            BOOST_CHECK_EQUAL(out.size(), 8u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(2));
+            BOOST_CHECK_EQUAL(out[5], T(0));
+            BOOST_CHECK_EQUAL(out[6], T(4));
+            BOOST_CHECK_EQUAL(out[7], T(0));
+            out = k.merge_symbols({{0, {"a"}}, {1, {"f", "e", "c", "d"}}, {2, {"h"}}}, {"b", "g"});
+            BOOST_CHECK_EQUAL(out.size(), 8u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(2));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(0));
+            BOOST_CHECK_EQUAL(out[5], T(0));
+            BOOST_CHECK_EQUAL(out[6], T(4));
+            BOOST_CHECK_EQUAL(out[7], T(0));
+            k = key_type{T(2)};
+            out = k.merge_symbols({{1, {"f", "g", "h"}}, {0, {"a", "b", "c", "d"}}}, {"e"});
+            BOOST_CHECK_EQUAL(out.size(), 8u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(2));
+            BOOST_CHECK_EQUAL(out[5], T(0));
+            BOOST_CHECK_EQUAL(out[6], T(0));
+            BOOST_CHECK_EQUAL(out[7], T(0));
+            k = key_type{};
+            out = k.merge_symbols({{0, {"a", "b", "c", "d"}}}, symbol_fset{});
+            BOOST_CHECK_EQUAL(out.size(), 4u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            k = key_type{T(2)};
+            out = k.merge_symbols({{1, {"c", "d", "e", "f"}}}, {"b"});
+            BOOST_CHECK_EQUAL(out.size(), 5u);
+            BOOST_CHECK_EQUAL(out[0], T(2));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(0));
+            k = key_type{T(2)};
+            out = k.merge_symbols({{0, {"c", "d", "e", "f"}}}, {"g"});
+            BOOST_CHECK_EQUAL(out.size(), 5u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(2));
+            // Test from the documentation.
+            k = key_type{T(1), T(2), T(3), T(4)};
+            out = k.merge_symbols({{0, {"a", "b"}}, {1, {"d"}}, {2, {"f"}}, {4, {"i"}}}, {"c", "e", "g", "h"});
+            BOOST_CHECK_EQUAL(out.size(), 9u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(1));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(2));
+            BOOST_CHECK_EQUAL(out[5], T(0));
+            BOOST_CHECK_EQUAL(out[6], T(3));
+            BOOST_CHECK_EQUAL(out[7], T(4));
+            BOOST_CHECK_EQUAL(out[8], T(0));
+            // Check errors.
+            k = key_type{T(2)};
+            BOOST_CHECK_EXCEPTION(k.merge_symbols({{0, {"c", "d", "e", "f"}}}, {"g", "h"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(
+                                          e.what(),
+                                          "invalid argument(s) for symbol set merging: the size of the original "
+                                          "symbol set (2) must be equal to the key's size (1)");
+                                  });
+            BOOST_CHECK_EXCEPTION(
+                k.merge_symbols(symbol_idx_fmap<symbol_fset>{}, {"g"}), std::invalid_argument,
+                [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(), "invalid argument(s) for symbol set merging: the insertion map cannot be empty");
+                });
+            BOOST_CHECK_EXCEPTION(k.merge_symbols({{2, {"f", "g", "h"}}, {0, {"a", "b", "c", "d"}}}, {"g"}),
+                                  std::invalid_argument, [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "invalid argument(s) for symbol set merging: "
+                                                                       "the last index of the insertion map (2) must "
+                                                                       "not be greater than the key's size (1)");
+                                  });
         }
     };
     template <typename T>
@@ -447,30 +515,54 @@ struct trim_identify_tester {
         template <typename U>
         void operator()(const U &) const
         {
-            typedef g_key_type<T, U> key_type;
+            using key_type = g_key_type<T, U>;
             key_type k0;
-            symbol_idx_uset us;
+            symbol_idx_fmap<bool> us;
             k0.resize(1u);
-            BOOST_CHECK_THROW(k0.trim_identify(us, symbol_fset{}), std::invalid_argument);
-            k0.resize(2u);
-            k0[0u] = T(1);
-            k0[1u] = T(2);
-            us.insert(0u);
-            k0.trim_identify(us, {"x", "y"});
-            BOOST_CHECK(us.empty());
-            k0[0u] = T(0);
-            us.insert(0);
-            us.insert(1);
-            k0.trim_identify(us, {"x", "y"});
-            BOOST_CHECK(us == symbol_idx_uset{0u});
-            k0[0u] = T(0);
-            k0[1u] = T(0);
-            us.insert(1);
-            k0.trim_identify(us, {"x", "y"});
-            BOOST_CHECK((us == symbol_idx_uset{0u, 1u}));
-            k0[0u] = T(1);
-            k0.trim_identify(us, {"x", "y"});
-            BOOST_CHECK(us == symbol_idx_uset{1u});
+            BOOST_CHECK_EXCEPTION(
+                k0.trim_identify(us, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "invalid arguments set for trim_identify(): the array "
+                                                     "has a size of 1, the reference symbol set has a size of 0");
+                });
+            BOOST_CHECK_EXCEPTION(
+                k0.trim_identify(us, {"a"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "invalid candidates set for trim_identify(): the size of the "
+                                                     "candidates set (0) is different from the size of the reference "
+                                                     "symbol set (1)");
+                });
+            us[2] = true;
+            BOOST_CHECK_EXCEPTION(
+                k0.trim_identify(us, {"a"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "invalid candidates set for trim_identify(): the largest index of "
+                                                     "the candidates set (2) is greater than the largest index of "
+                                                     "the reference symbol set (0)");
+                });
+            us.clear();
+            k0 = key_type{};
+            k0.trim_identify(us, symbol_fset{});
+            us = {{0, true}, {1, true}, {2, true}};
+            k0 = key_type{T(1), T(0), T(2)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, false}, {1, true}, {2, false}}));
+            k0 = key_type{T(1), T(3), T(2)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, false}, {1, false}, {2, false}}));
+            us = {{0, true}, {1, true}, {2, true}};
+            k0 = key_type{T(0), T(0), T(0)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, true}, {1, true}, {2, true}}));
+            k0 = key_type{T(0), T(0), T(1)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, true}, {1, true}, {2, false}}));
+            k0 = key_type{T(0), T(0), T(0)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, true}, {1, true}, {2, false}}));
+            k0 = key_type{T(1), T(0), T(0)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, false}, {1, true}, {2, false}}));
+            k0 = key_type{T(0), T(1), T(0)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, false}, {1, false}, {2, false}}));
         }
     };
     template <typename T>

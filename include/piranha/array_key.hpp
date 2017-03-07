@@ -351,27 +351,45 @@ public:
     /// Identify symbols that can be trimmed.
     /**
      * This method is used in piranha::series::trim(). The input parameter \p candidates
-     * contains a set of symbol indices in \p args that are candidates for elimination. The method will remove
-     * from \p candidates those indices whose corresponding element in \p this is not zero.
+     * contains a map of symbol indices in \p args that are candidates for elimination. The method will set
+     * to \p false the mapped values in \p candidates whose indices correspond to nonzero elements in \p this.
      *
-     * @param candidates set of candidate indices for elimination.
+     * @param candidates map of candidate indices for elimination.
      * @param args reference symbol set.
      *
-     * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
-     * @throws unspecified any exception thrown by piranha::math::is_zero() or the <tt>erase()</tt> method
-     * of piranha::symbol_idx_uset.
+     * @throws std::invalid_argument in the following cases:
+     * - the sizes of \p this or \p candidates differ from the size of \p args,
+     * - the index of the last element of \p candidates, if it exists, is not equal to the size of \p args minus one.
+     * @throws unspecified any exception thrown by piranha::math::is_zero().
      */
-    void trim_identify(symbol_idx_uset &candidates, const symbol_fset &args) const
+    void trim_identify(symbol_idx_fmap<bool> &candidates, const symbol_fset &args) const
     {
         if (unlikely(m_container.size() != args.size())) {
             piranha_throw(std::invalid_argument, "invalid arguments set for trim_identify(): the array "
                                                  "has a size of "
                                                      + std::to_string(m_container.size())
-                                                     + ", the symbol set has a size of " + std::to_string(args.size()));
+                                                     + ", the reference symbol set has a size of "
+                                                     + std::to_string(args.size()));
         }
-        for (size_type i = 0; i < m_container.size(); ++i) {
+        if (unlikely(candidates.size() != args.size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid candidates set for trim_identify(): the size of the candidates set ("
+                              + std::to_string(candidates.size())
+                              + ") is different from the size of the reference symbol set ("
+                              + std::to_string(args.size()) + ")");
+        }
+        if (unlikely(args.size() && candidates.rbegin()->first != args.size() - 1u)) {
+            piranha_throw(std::invalid_argument,
+                          "invalid candidates set for trim_identify(): the largest index of the candidates set ("
+                              + std::to_string(candidates.rbegin()->first)
+                              + ") is greater than the largest index of the reference symbol set ("
+                              + std::to_string(args.size() - 1u) + ")");
+        }
+        auto it_cand = candidates.begin();
+        for (size_type i = 0; i < m_container.size(); ++i, ++it_cand) {
+            piranha_assert(it_cand != candidates.end() && it_cand->first == i);
             if (!math::is_zero(m_container[i])) {
-                candidates.erase(static_cast<symbol_idx_uset::value_type>(i));
+                it_cand->second = false;
             }
         }
     }
@@ -461,30 +479,33 @@ public:
     /// Merge symbols.
     /**
      * This method will return a copy of \p this in which the value 0 has been inserted
-     * at the positions corresponding to the symbols appearing in \p new_args and missing from \p orig_args.
+     * at the positions specified by \p ins_map. Specifically, a number of zeroes equal to the size of
+     * the corresponding piranha::symbol_fset will be inserted before each index appearing in \p ins_map.
+     *
      * For instance, given a piranha::array_key containing the values <tt>[1,2,3,4]</tt>, a symbol set
-     * \p orig_args containing <tt>["c","e","g","h"]</tt> and a symbol set \p new_args containing
-     * <tt>["a","b","c","d","e","f",g","h","i"]</tt>, the output of this method will be
-     * <tt>[0,0,1,0,2,0,3,4,0]</tt>.
+     * \p args containing <tt>["c","e","g","h"]</tt> and an insertion map \p ins_map containing the pairs
+     * <tt>[(0,["a","b"]),(1,["d"]),(2,["f"]),(4,["i"])]</tt>, the output of this method will be
+     * <tt>[0,0,1,0,2,0,3,4,0]</tt>. That is, the symbols appearing in \p ins_map are merged into \p this
+     * with a value of zero at the specified positions.
      *
-     * *Preconditions*: all symbols in \p orig_args must be present in \p new_args.
+     * @param args reference symbol set for \p this.
+     * @param ins_map the insertion map.
      *
-     * @param orig_args current reference symbol set for \p this.
-     * @param new_args new symbol set.
-     *
-     * @return a \p Derived instance resulting from merging \p new_args into \p this.
+     * @return a \p Derived instance resulting from inserting into \p this zeroes at the positions specified by \p
+     * ins_map.
      *
      * @throws std::invalid_argument in the following cases:
-     * - the size of \p this is different from the size of \p orig_args,
-     * - the size of \p new_args is not greater than the size of \p orig_args.
+     * - the size of \p this is different from the size of \p args,
+     * - the size of \p ins_map is zero,
+     * - the last index in \p ins_map is greater than the size of \p this.
      * @throws unspecified any exception thrown by:
      * - piranha::small_vector::push_back(),
-     * - the construction of instances of type \p value_type from the integral constant 0.
+     * - the construction of instances of type array_key::value_type from the integral constant 0.
      */
-    Derived merge_symbols(const symbol_fset &orig_args, const symbol_fset &new_args) const
+    Derived merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map, const symbol_fset &args) const
     {
         Derived retval;
-        retval.m_container = vector_key_merge_symbols(m_container, orig_args, new_args);
+        vector_key_merge_symbols(retval.m_container, m_container, ins_map, args);
         return retval;
     }
 

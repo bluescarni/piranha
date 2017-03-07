@@ -57,7 +57,7 @@ struct key02 {
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
-    void trim_identify(symbol_idx_uset &, const symbol_fset &) const;
+    void trim_identify(symbol_idx_fmap<bool> &, const symbol_fset &) const;
     key02 trim(const symbol_idx_fset &, const symbol_fset &) const;
 };
 
