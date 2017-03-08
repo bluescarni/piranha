@@ -1805,44 +1805,44 @@ struct bad_begin_end_03 {
     double *end();
 };
 
-BOOST_AUTO_TEST_CASE(type_traits_has_begin_end_test)
+BOOST_AUTO_TEST_CASE(type_traits_has_input_begin_end_test)
 {
-    BOOST_CHECK(has_begin_end<std::vector<int>>::value);
-    BOOST_CHECK(has_begin_end<std::vector<double>>::value);
-    BOOST_CHECK(has_begin_end<std::initializer_list<int>>::value);
-    BOOST_CHECK(has_begin_end<std::initializer_list<long>>::value);
-    BOOST_CHECK(has_begin_end<std::vector<int> &>::value);
-    BOOST_CHECK(has_begin_end<std::vector<double> &>::value);
-    BOOST_CHECK(has_begin_end<std::initializer_list<int> &>::value);
-    BOOST_CHECK(has_begin_end<std::initializer_list<long> &>::value);
-    BOOST_CHECK(has_begin_end<const std::vector<int>>::value);
-    BOOST_CHECK(has_begin_end<const std::vector<double>>::value);
-    BOOST_CHECK(has_begin_end<const std::initializer_list<int>>::value);
-    BOOST_CHECK(has_begin_end<const std::initializer_list<long>>::value);
-    BOOST_CHECK(has_begin_end<const std::vector<int> &>::value);
-    BOOST_CHECK(has_begin_end<const std::vector<double> &>::value);
-    BOOST_CHECK(has_begin_end<const std::initializer_list<int> &>::value);
-    BOOST_CHECK(has_begin_end<const std::initializer_list<long> &>::value);
-    BOOST_CHECK(has_begin_end<good_begin_end_mut>::value);
+    BOOST_CHECK(has_input_begin_end<std::vector<int>>::value);
+    BOOST_CHECK(has_input_begin_end<std::vector<double>>::value);
+    BOOST_CHECK(has_input_begin_end<std::initializer_list<int>>::value);
+    BOOST_CHECK(has_input_begin_end<std::initializer_list<long>>::value);
+    BOOST_CHECK(has_input_begin_end<std::vector<int> &>::value);
+    BOOST_CHECK(has_input_begin_end<std::vector<double> &>::value);
+    BOOST_CHECK(has_input_begin_end<std::initializer_list<int> &>::value);
+    BOOST_CHECK(has_input_begin_end<std::initializer_list<long> &>::value);
+    BOOST_CHECK(has_input_begin_end<const std::vector<int>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::vector<double>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::initializer_list<int>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::initializer_list<long>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::vector<int> &>::value);
+    BOOST_CHECK(has_input_begin_end<const std::vector<double> &>::value);
+    BOOST_CHECK(has_input_begin_end<const std::initializer_list<int> &>::value);
+    BOOST_CHECK(has_input_begin_end<const std::initializer_list<long> &>::value);
+    BOOST_CHECK(has_input_begin_end<good_begin_end_mut>::value);
     // No const version.
-    BOOST_CHECK(!has_begin_end<const good_begin_end_mut>::value);
-    BOOST_CHECK(has_begin_end<good_begin_end_const>::value);
-    BOOST_CHECK(has_begin_end<const good_begin_end_const>::value);
-    BOOST_CHECK(!has_begin_end<bad_begin_end_00>::value);
-    BOOST_CHECK(!has_begin_end<const bad_begin_end_00>::value);
-    BOOST_CHECK(!has_begin_end<bad_begin_end_01>::value);
-    BOOST_CHECK(!has_begin_end<const bad_begin_end_01>::value);
-    BOOST_CHECK(!has_begin_end<bad_begin_end_02>::value);
-    BOOST_CHECK(!has_begin_end<const bad_begin_end_02>::value);
-    BOOST_CHECK(!has_begin_end<bad_begin_end_03>::value);
-    BOOST_CHECK(!has_begin_end<const bad_begin_end_03>::value);
+    BOOST_CHECK(!has_input_begin_end<const good_begin_end_mut>::value);
+    BOOST_CHECK(has_input_begin_end<good_begin_end_const>::value);
+    BOOST_CHECK(has_input_begin_end<const good_begin_end_const>::value);
+    BOOST_CHECK(!has_input_begin_end<bad_begin_end_00>::value);
+    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_00>::value);
+    BOOST_CHECK(!has_input_begin_end<bad_begin_end_01>::value);
+    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_01>::value);
+    BOOST_CHECK(!has_input_begin_end<bad_begin_end_02>::value);
+    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_02>::value);
+    BOOST_CHECK(!has_input_begin_end<bad_begin_end_03>::value);
+    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_03>::value);
     // Some tests with other containers.
-    BOOST_CHECK(has_begin_end<std::list<int>>::value);
-    BOOST_CHECK(has_begin_end<const std::list<double>>::value);
-    BOOST_CHECK(has_begin_end<std::set<int>>::value);
-    BOOST_CHECK(has_begin_end<const std::set<long>>::value);
+    BOOST_CHECK(has_input_begin_end<std::list<int>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::list<double>>::value);
+    BOOST_CHECK(has_input_begin_end<std::set<int>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::set<long>>::value);
     // C array.
-    BOOST_CHECK(has_begin_end<int[3]>::value);
+    BOOST_CHECK(has_input_begin_end<int[3]>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_shift_test)

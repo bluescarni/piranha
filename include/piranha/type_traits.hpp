@@ -1066,9 +1066,8 @@ const bool true_tt<T>::value;
  * - <tt>std::begin()</tt> and <tt>std::end()</tt> can be called on instances of \p T, yielding the type \p It,
  * - \p It is an input iterator.
  */
-// NOTE: maybe this should be called has_input_begin_end.
 template <typename T>
-class has_begin_end
+class has_input_begin_end
 {
     template <typename U>
     using begin_t = decltype(std::begin(std::declval<U &>()));
@@ -1084,7 +1083,7 @@ public:
 };
 
 template <typename T>
-const bool has_begin_end<T>::value;
+const bool has_input_begin_end<T>::value;
 
 /// Detect if type can be returned from a function.
 /**

@@ -417,7 +417,7 @@ class polynomial
         typename std::enable_if<std::is_constructible<
                                     typename base::term_type::key_type, decltype(std::begin(std::declval<const T &>())),
                                     decltype(std::end(std::declval<const T &>())), const symbol_set &>::value
-                                    && has_begin_end<const T>::value,
+                                    && has_input_begin_end<const T>::value,
                                 int>::type;
     template <typename T>
     using find_cf_init_list_enabler = find_cf_enabler<std::initializer_list<T>>;
@@ -766,7 +766,7 @@ public:
     /**
      * \note
      * This method is enabled only if:
-     * - \p T satisfies piranha::has_begin_end,
+     * - \p T satisfies piranha::has_input_begin_end,
      * - \p Key can be constructed from the begin/end iterators of \p c and a piranha::symbol_set.
      *
      * This method will first construct a term with zero coefficient and key initialised from the begin/end iterators
