@@ -104,20 +104,14 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
     const auto map_end = ins_map.end();
     for (decltype(v.size()) i = 0; i < v.size(); ++i) {
         if (map_it != map_end && map_it->first == i) {
-            for (symbol_fset::size_type j = 0; j < map_it->second.size(); ++j) {
-                // NOTE: here and below we should really use emplace_back, if we ever implement it
-                // in static/small vector.
-                retval.push_back(value_type(0));
-            }
+            std::fill_n(std::back_inserter(retval), map_it->second.size(), value_type(0));
             ++map_it;
         }
         retval.push_back(v[i]);
     }
     // We could still have symbols which need to be appended at the end.
     if (map_it != map_end) {
-        for (symbol_fset::size_type j = 0; j < map_it->second.size(); ++j) {
-            retval.push_back(value_type(0));
-        }
+        std::fill_n(std::back_inserter(retval), map_it->second.size(), value_type(0));
         piranha_assert(map_it + 1 == map_end);
     }
 }
