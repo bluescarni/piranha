@@ -116,8 +116,7 @@ public:
     }
     /// Copy assignment operator.
     /**
-     * If the copy assignment of \p Key throws, the assignment of
-     * the coefficient of \p other to the coefficient of \p this will not be rolled back.
+     * The copy assignment operator offers the basic exception safety guarantee.
      *
      * @param other assignment argument.
      *
