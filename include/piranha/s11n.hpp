@@ -1786,4 +1786,6 @@ using msgpack_convert_array_enabler
 
 #undef PIRANHA_ZLIB_CONDITIONAL
 
+#undef PIRANHA_BZIP2_CONDITIONAL
+
 #endif
