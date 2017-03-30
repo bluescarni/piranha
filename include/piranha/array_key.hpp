@@ -398,7 +398,7 @@ public:
      * This method will return a copy of \p this without the elements at the indices specified by \p trim_idx.
      *
      * @param trim_idx indices of the elements which will be removed.
-     * @param args reference symbol set.
+     * @param args reference piranha::symbol_fset.
      *
      * @return a trimmed copy of \p this.
      *
