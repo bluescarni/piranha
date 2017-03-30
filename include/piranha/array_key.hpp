@@ -355,7 +355,7 @@ public:
      * to \p false the mapped values in \p candidates whose indices correspond to nonzero elements in \p this.
      *
      * @param candidates map of candidate indices for elimination.
-     * @param args reference symbol set.
+     * @param args reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument in the following cases:
      * - the sizes of \p this or \p candidates differ from the size of \p args,
