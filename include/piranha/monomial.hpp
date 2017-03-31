@@ -61,8 +61,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/pow.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -152,10 +151,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
     using base = array_key<T, monomial<T, S>, S>;
-    // Enabler for ctor from init list.
-    template <typename U>
-    using init_list_enabler =
-        typename std::enable_if<std::is_constructible<base, std::initializer_list<U>>::value, int>::type;
     // Multiplication and division.
     template <typename Cf, typename U>
     using multiply_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
@@ -270,12 +265,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     };
     template <typename U>
     using ipow_subs_type = typename ipow_subs_type_<U>::type;
-    // Enabler for ctor from range.
-    template <typename Iterator>
-    using it_ctor_enabler =
-        typename std::enable_if<is_input_iterator<Iterator>::value
-                                    && has_safe_cast<T, typename std::iterator_traits<Iterator>::value_type>::value,
-                                int>::type;
     // Less-than operator.
     template <typename U>
     using comparison_enabler = typename std::enable_if<is_less_than_comparable<U>::value, int>::type;
@@ -289,6 +278,13 @@ public:
     monomial(const monomial &) = default;
     /// Defaulted move constructor.
     monomial(monomial &&) = default;
+
+private:
+    // Enabler for ctor from init list.
+    template <typename U>
+    using init_list_enabler = enable_if_t<std::is_constructible<base, std::initializer_list<U>>::value, int>;
+
+public:
     /// Constructor from initializer list.
     /**
      * \note
@@ -302,6 +298,16 @@ public:
     explicit monomial(std::initializer_list<U> list) : base(list)
     {
     }
+
+private:
+    // Enabler for ctor from range.
+    template <typename Iterator>
+    using it_ctor_enabler
+        = enable_if_t<conjunction<is_input_iterator<Iterator>,
+                                  has_safe_cast<T, typename std::iterator_traits<Iterator>::value_type>>::value,
+                      int>;
+
+public:
     /// Constructor from range and symbol set.
     /**
      * \note
@@ -323,13 +329,17 @@ public:
      * - push_back().
      */
     template <typename Iterator, it_ctor_enabler<Iterator> = 0>
-    explicit monomial(Iterator begin, Iterator end, const symbol_set &s)
+    explicit monomial(Iterator begin, Iterator end, const symbol_fset &s)
     {
         for (; begin != end; ++begin) {
             this->push_back(safe_cast<T>(*begin));
         }
         if (unlikely(this->size() != s.size())) {
-            piranha_throw(std::invalid_argument, "invalid monomial");
+            piranha_throw(std::invalid_argument, "the monomial constructor from range and symbol set "
+                                                 "yielded an invalid monomial: the final size is "
+                                                     + std::to_string(this->size())
+                                                     + ", while the size of the symbol set is "
+                                                     + std::to_string(s.size()));
         }
     }
     /// Constructor from range.
@@ -356,7 +366,7 @@ public:
         }
     }
     PIRANHA_FORWARDING_CTOR(monomial, base)
-    /// Trivial destructor.
+    /// Destructor.
     ~monomial()
     {
         PIRANHA_TT_CHECK(is_key, monomial);
@@ -381,52 +391,51 @@ public:
     /**
      * A monomial and a set of arguments are compatible if their sizes coincide.
      *
-     * @param args reference arguments set.
+     * @param args reference piranha::symbol_fset.
      *
      * @return <tt>this->size() == args.size()</tt>.
      */
-    bool is_compatible(const symbol_set &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const noexcept
     {
-        return (this->size() == args.size());
+        return this->size() == args.size();
     }
     /// Ignorability check.
     /**
      * A monomial is never ignorable by definition.
      *
-     * @param args reference arguments set.
-     *
      * @return \p false.
      */
-    bool is_ignorable(const symbol_set &args) const noexcept
+    bool is_ignorable(const symbol_set &) const noexcept
     {
-        (void)args;
-        piranha_assert(is_compatible(args));
         return false;
     }
     /// Check if monomial is unitary.
     /**
      * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.
      *
-     * @param args reference set of piranha::symbol.
+     * @param args reference piranha::symbol_fset.
      *
      * @return \p true if the monomial is unitary, \p false otherwise.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception thrown by piranha::math::is_zero().
      */
-    bool is_unitary(const symbol_set &args) const
+    bool is_unitary(const symbol_fset &args) const
     {
-        if (unlikely(args.size() != this->size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        const auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument,
+                          "invalid sizes in 'monomial::is_unitary()': the monomial has a size of "
+                              + std::to_string(std::get<0>(sbe)) + ", while the reference symbol set has a size of "
+                              + std::to_string(args.size()));
         }
-        return std::all_of(this->begin(), this->end(), [](const T &element) { return math::is_zero(element); });
+        return std::all_of(std::get<1>(sbe), std::get<2>(sbe), [](const T &element) { return math::is_zero(element); });
     }
     /// Degree.
     /**
      * \note
-     * This method is enabled only if \p T is addable and the type resulting from the addition is constructible from \p
-     * int
-     * and monomial::value_type can be added in-place to it.
+     * This method is enabled only if \p T is addable and the type resulting from the addition is constructible from
+     * \p int and monomial::value_type can be added in-place to it.
      *
      * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
      * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.

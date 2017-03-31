@@ -36,8 +36,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/math.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 // Common routines for use in kronecker monomial classes.
@@ -48,7 +47,7 @@ namespace detail
 {
 
 template <typename VType, typename KaType, typename T>
-inline VType km_unpack(const symbol_set &args, const T &value)
+inline VType km_unpack(const symbol_fset &args, const T &value)
 {
     if (unlikely(args.size() > VType::max_size)) {
         piranha_throw(std::invalid_argument, "input set of arguments is too large for unpacking");
@@ -60,57 +59,82 @@ inline VType km_unpack(const symbol_set &args, const T &value)
 }
 
 template <typename VType, typename KaType, typename T>
-inline T km_merge_args(const symbol_set &orig_args, const symbol_set &new_args, const T &value)
+inline T km_merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map, const symbol_fset &args, const T &value)
 {
-    using size_type = min_int<typename VType::size_type, decltype(new_args.size())>;
-    if (unlikely(new_args.size() <= orig_args.size()
-                 || !std::includes(new_args.begin(), new_args.end(), orig_args.begin(), orig_args.end()))) {
-        piranha_throw(std::invalid_argument, "invalid argument(s) for symbol set merging");
+    if (unlikely(!ins_map.size())) {
+        // If we have nothing to insert, it means something is wrong: we should never invoke
+        // symbol merging if there's nothing to merge.
+        piranha_throw(std::invalid_argument,
+                      "invalid argument(s) for symbol set merging: the insertion map cannot be empty");
     }
-    piranha_assert(std::is_sorted(orig_args.begin(), orig_args.end()));
-    piranha_assert(std::is_sorted(new_args.begin(), new_args.end()));
-    const auto old_vector = km_unpack<VType, KaType>(orig_args, value);
+    if (unlikely(ins_map.rbegin()->first > args.size())) {
+        // The last element of the insertion map must be at most args.size(), which means that there
+        // are symbols to be appended at the end.
+        piranha_throw(std::invalid_argument,
+                      "invalid argument(s) for symbol set merging: the last index of the insertion map ("
+                          + std::to_string(ins_map.rbegin()->first) + ") must not be greater than the key's size ("
+                          + std::to_string(args.size()) + ")");
+    }
+    const auto old_vector = km_unpack<VType, KaType>(args, value);
     VType new_vector;
-    auto it_new = new_args.begin();
-    for (size_type i = 0u; i < old_vector.size(); ++i, ++it_new) {
-        while (*it_new != orig_args[i]) {
-            // NOTE: for arbitrary int types, value_type(0) might throw. Update docs
-            // if needed.
-            new_vector.push_back(T(0));
-            piranha_assert(it_new != new_args.end());
-            ++it_new;
-            piranha_assert(it_new != new_args.end());
+    auto map_it = ins_map.begin();
+    const auto map_end = ins_map.end();
+    for (decltype(old_vector.size()) i = 0; i < old_vector.size(); ++i) {
+        if (map_it != map_end && map_it->first == i) {
+            // NOTE: if we move to TLS vector for unpacking, this can just
+            // become a resize (below as well).
+            std::fill_n(std::back_inserter(new_vector), map_it->second.size(), T(0));
+            ++map_it;
         }
         new_vector.push_back(old_vector[i]);
     }
-    // Fill up arguments at the tail of new_args but not in orig_args.
-    for (; it_new != new_args.end(); ++it_new) {
-        new_vector.push_back(T(0));
+    // We could still have symbols which need to be appended at the end.
+    if (map_it != map_end) {
+        std::fill_n(std::back_inserter(new_vector), map_it->second.size(), T(0));
+        piranha_assert(map_it + 1 == map_end);
     }
-    piranha_assert(new_vector.size() == new_args.size());
     // Return new encoded value.
     return KaType::encode(new_vector);
 }
 
 template <typename VType, typename KaType, typename T>
-inline void km_trim_identify(symbol_set &candidates, const symbol_set &args, const T &value)
+inline void km_trim_identify(symbol_idx_fmap<bool> &candidates, const symbol_fset &args, const T &value)
 {
+    if (unlikely(candidates.size() != args.size())) {
+        piranha_throw(std::invalid_argument,
+                      "invalid candidates set for trim_identify(): the size of the candidates set ("
+                          + std::to_string(candidates.size())
+                          + ") is different from the size of the reference symbol set (" + std::to_string(args.size())
+                          + ")");
+    }
+    if (unlikely(args.size() && candidates.rbegin()->first != args.size() - 1u)) {
+        piranha_throw(std::invalid_argument,
+                      "invalid candidates set for trim_identify(): the largest index of the candidates set ("
+                          + std::to_string(candidates.rbegin()->first)
+                          + ") is greater than the largest index of the reference symbol set ("
+                          + std::to_string(args.size() - 1u) + ")");
+    }
     const VType tmp = km_unpack<VType, KaType>(args, value);
-    for (min_int<decltype(tmp.size()), decltype(args.size())> i = 0u; i < tmp.size(); ++i) {
-        if (!math::is_zero(tmp[i]) && std::binary_search(candidates.begin(), candidates.end(), args[i])) {
-            candidates.remove(args[i]);
+    auto it_cand = candidates.begin();
+    for (decltype(tmp.size()) i = 0; i < tmp.size(); ++i, ++it_cand) {
+        piranha_assert(it_cand != candidates.end() && it_cand->first == i);
+        if (tmp[i] != T(0)) {
+            it_cand->second = false;
         }
     }
 }
 
 template <typename VType, typename KaType, typename T>
-inline T km_trim(const symbol_set &trim_args, const symbol_set &orig_args, const T &value)
+inline T km_trim(const symbol_idx_fset &trim_idx, const symbol_fset &args, const T &value)
 {
-    using size_type = min_int<typename VType::size_type, decltype(orig_args.size())>;
-    const VType tmp = km_unpack<VType, KaType>(orig_args, value);
+    const VType tmp = km_unpack<VType, KaType>(args, value);
+    auto idx_it = trim_idx.begin();
+    const auto idx_end = trim_idx.end();
     VType new_vector;
-    for (size_type i = 0u; i < tmp.size(); ++i) {
-        if (!std::binary_search(trim_args.begin(), trim_args.end(), orig_args[i])) {
+    for (decltype(tmp.size()) i = 0; i < tmp.size(); ++i) {
+        if (idx_it != idx_end && i == *idx_it) {
+            ++idx_it;
+        } else {
             new_vector.push_back(tmp[i]);
         }
     }

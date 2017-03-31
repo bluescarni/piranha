@@ -49,8 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/init.hpp>
 #include <piranha/s11n.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
