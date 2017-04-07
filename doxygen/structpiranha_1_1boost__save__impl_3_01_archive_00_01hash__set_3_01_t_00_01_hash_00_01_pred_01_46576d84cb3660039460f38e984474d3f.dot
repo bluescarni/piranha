@@ -1,8 +1,0 @@
-digraph "piranha::boost_save_impl&lt; Archive, hash_set&lt; T, Hash, Pred &gt;, hash_set_boost_save_enabler&lt; Archive, T, Hash, Pred &gt; &gt;"
-{
-  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
-  node [fontname="Helvetica",fontsize="10",shape=record];
-  Node0 [label="piranha::boost_save\l_impl\< Archive, hash\l_set\< T, Hash, Pred \>\l, hash_set_boost_save\l_enabler\< Archive, T, Hash,\l Pred \> \>",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node1 -> Node0 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node1 [label="piranha::boost_save\l_via_boost_api\< Archive,\l hash_set\< T, Hash, Pred \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__via__boost__api.html"];
-}

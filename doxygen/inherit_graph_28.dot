@@ -1,9 +1,0 @@
-digraph "Graphical Class Hierarchy"
-{
-  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
-  node [fontname="Helvetica",fontsize="10",shape=record];
-  rankdir="LR";
-  Node0 [label="piranha::boost_save\l_via_boost_api\< Archive,\l mp_integer\< SSize \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__via__boost__api.html"];
-  Node0 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node1 [label="piranha::boost_save\l_impl\< Archive, mp_integer\l\< SSize \>, mp_integer_boost\l_save_enabler\< Archive \> \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__save__impl_3_01_archive_00_01mp__integer_3_01_s_size_01_4_00_01mp__integ6e8d5814db630c88abd9a3e2c646e949.html",tooltip="Specialisation of piranha::boost_save() for piranha::mp_integer. "];
-}

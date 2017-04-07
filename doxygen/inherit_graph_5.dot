@@ -1,7 +1,0 @@
-digraph "Graphical Class Hierarchy"
-{
-  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
-  node [fontname="Helvetica",fontsize="10",shape=record];
-  rankdir="LR";
-  Node0 [label="piranha::boost_load\l_impl\< Archive, T, typename \>",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structpiranha_1_1boost__load__impl.html",tooltip="Default implementation of piranha::boost_load(). "];
-}
