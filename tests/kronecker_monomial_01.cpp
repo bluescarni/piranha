@@ -218,16 +218,23 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_compatibility_test)
 {
     tuple_for_each(int_types{}, compatibility_tester{});
 }
-#if 0
+
 struct merge_args_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
-        typedef kronecker_array<T> ka;
+        using k_type = kronecker_monomial<T>;
         k_type k1;
-        symbol_fset vs1{"a"};
-        BOOST_CHECK(k1.merge_symbols({}, vs1).get_int() == 0);
+        BOOST_CHECK_THROW(k1.merge_symbols({}, symbol_fset{}), std::invalid_argument);
+        BOOST_CHECK_THROW(k1.merge_symbols({}, symbol_fset{"d"}), std::invalid_argument);
+        BOOST_CHECK((k1.merge_symbols({{0, {"a", "b"}}}, symbol_fset{"d"}) == k_type{0, 0, 0}));
+        BOOST_CHECK((k_type{1}.merge_symbols({{0, {"a", "b"}}}, symbol_fset{"d"}) == k_type{0, 0, 1}));
+        BOOST_CHECK((k_type{1}.merge_symbols({{1, {"e", "f"}}}, symbol_fset{"d"}) == k_type{1, 0, 0}));
+        BOOST_CHECK((k_type{1, 1}.merge_symbols({{0, {"a", "b"}}}, symbol_fset{"d", "n"}) == k_type{0, 0, 1, 1}));
+        BOOST_CHECK((k_type{1, 1}.merge_symbols({{1, {"e", "f"}}}, symbol_fset{"d", "n"}) == k_type{1, 0, 0, 1}));
+        BOOST_CHECK((k_type{1, 1}.merge_symbols({{2, {"f", "g"}}}, symbol_fset{"d", "e"}) == k_type{1, 1, 0, 0}));
+
+        // BOOST_CHECK(k1.merge_symbols({}, vs1).get_int() == 0);
         // std::vector<T> v1(1);
         // ka::decode(v1, k1.merge_args(empty, vs1).get_int());
         // BOOST_CHECK(v1[0] == 0);
@@ -256,7 +263,7 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_merge_args_test)
 {
     tuple_for_each(int_types{}, merge_args_tester{});
 }
-
+#if 0
 struct is_unitary_tester {
     template <typename T>
     void operator()(const T &)
