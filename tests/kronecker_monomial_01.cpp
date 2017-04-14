@@ -233,6 +233,8 @@ struct merge_args_tester {
         BOOST_CHECK((k_type{1, 1}.merge_symbols({{0, {"a", "b"}}}, symbol_fset{"d", "n"}) == k_type{0, 0, 1, 1}));
         BOOST_CHECK((k_type{1, 1}.merge_symbols({{1, {"e", "f"}}}, symbol_fset{"d", "n"}) == k_type{1, 0, 0, 1}));
         BOOST_CHECK((k_type{1, 1}.merge_symbols({{2, {"f", "g"}}}, symbol_fset{"d", "e"}) == k_type{1, 1, 0, 0}));
+        BOOST_CHECK_THROW((k_type{1, 1}.merge_symbols({{3, {"f", "g"}}}, symbol_fset{"d", "e"})),
+                          std::invalid_argument);
 
         // BOOST_CHECK(k1.merge_symbols({}, vs1).get_int() == 0);
         // std::vector<T> v1(1);
