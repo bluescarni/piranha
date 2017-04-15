@@ -32,10 +32,12 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
+#include <iterator>
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_set>
 
 namespace piranha
@@ -115,6 +117,69 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
         piranha_assert(map_it + 1 == map_end);
     }
 }
+}
+
+/// Merge symbol sets.
+/**
+ * This function will merge the input piranha::symbol_fset \p s1 and \p s2, returning a tuple
+ * of three elements:
+ * - a piranha::symbol_fset representing the union \p u of \p s1 and \p s2,
+ * - two <em>insertion maps</em> \p m1 and \p m2 representing the set differences <tt>u\\s1</tt>
+ *   and <tt>u\\s2</tt> respectively.
+ *
+ * The insertion maps contain the indices in \p s1 and \p s2 at which symbols must be added
+ * so that \p s1 and \p s2, after the insertion of the symbols in \p m1 and \p m2, become identical to \p u.
+ *
+ * For example, given the input sets <tt>s1 = ["b", "c", "e"]</tt> and <tt>s2 = ["a", "c", "d", "f", "g"]</tt>,
+ * the return values will be:
+ * - <tt>u = ["a", "b", "c", "d", "e", "f", "g"]</tt>,
+ * - <tt>m1 = [(0, ["a"]), (2, ["d"]), (3, ["f", "g"])]</tt>,
+ * - <tt>m2 = [(1, ["b"]), (3, ["e"])]</tt>.
+ *
+ * @param s1 the first set.
+ * @param s2 the second set.
+ *
+ * @return a triple containing the union \p u of \p s1 and \p s2 and the set differences <tt>u\\s1</tt>
+ * and <tt>u\\s2</tt>.
+ *
+ * @throws unspecified any exception thrown by memory allocation errors.
+ */
+inline std::tuple<symbol_fset, symbol_idx_fmap<symbol_fset>, symbol_idx_fmap<symbol_fset>>
+merge_symbol_fsets(const symbol_fset &s1, const symbol_fset &s2)
+{
+    symbol_fset u_set;
+    // NOTE: the max size of the union is the sum of the two sizes.
+    u_set.reserve(static_cast<decltype(u_set.size())>(s1.size() + s2.size()));
+    std::set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), std::inserter(u_set, u_set.end()));
+    auto compute_map = [&u_set](const symbol_fset &s) {
+        symbol_idx_fmap<symbol_fset> retval;
+        // NOTE: max size of retval is the original size + 1
+        // (there could be an insertion before each and every element of s, plus an
+        // insertion at the end).
+        retval.reserve(static_cast<decltype(retval.size())>(s.size() + 1u));
+        auto u_it = u_set.cbegin();
+        for (decltype(s.size()) i = 0; i < s.size(); ++i, ++u_it) {
+            piranha_assert(u_it != u_set.end());
+            const auto &cur_sym = *s.nth(i);
+            if (*u_it < cur_sym) {
+                const auto new_it = retval.emplace_hint(retval.end(), i, symbol_fset{*(u_it++)});
+                for (; *u_it < cur_sym; ++u_it) {
+                    piranha_assert(u_it != u_set.end());
+                    new_it->second.emplace_hint(new_it->second.end(), *u_it);
+                }
+                piranha_assert(*u_it == cur_sym);
+            }
+        }
+        // Insertions at the end.
+        if (u_it != u_set.cend()) {
+            const auto new_it = retval.emplace_hint(retval.end(), s.size(), symbol_fset{*(u_it++)});
+            for (; u_it != u_set.cend(); ++u_it) {
+                new_it->second.emplace_hint(new_it->second.end(), *u_it);
+            }
+        }
+        return retval;
+    };
+    return std::make_tuple(std::move(u_set), compute_map(s1), compute_map(s2));
 }
 }
 
