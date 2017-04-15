@@ -770,11 +770,6 @@ struct subscript_tester {
     {
         typedef g_key_type<int, T> key_type;
         key_type k0;
-#if defined(PIRANHA_CHECK_PRECONDITION_ENABLED)
-        BOOST_CHECK_THROW(k0[0], precondition_error);
-        k0.push_back(0);
-        BOOST_CHECK_THROW(k0[1], precondition_error);
-#endif
         BOOST_CHECK_EQUAL(k0[0], 0);
         BOOST_CHECK_EQUAL(static_cast<key_type const &>(k0)[0], 0);
     }

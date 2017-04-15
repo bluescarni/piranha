@@ -54,7 +54,7 @@ namespace piranha
 /**
  * This class represents an array-like dense sequence of instances of type \p T. Interface and semantics
  * mimic those of \p std::vector. The underlying container used to store the elements is piranha::small_vector.
- * The template argument \p S is passed down as second argument to piranha::small_vector in the definition
+ * The template argument \p S is passed as second argument to piranha::small_vector in the definition
  * of the internal container.
  *
  * This class is intended as a base class for the implementation of a key type, but it does *not* satisfy
@@ -119,8 +119,7 @@ public:
 private:
     // Enabler for constructor from init list.
     template <typename U>
-    using init_list_enabler =
-        typename std::enable_if<std::is_constructible<container_type, std::initializer_list<U>>::value, int>::type;
+    using init_list_enabler = enable_if_t<std::is_constructible<container_type, std::initializer_list<U>>::value, int>;
 
 public:
     /// Constructor from initializer list.
@@ -158,7 +157,7 @@ public:
 private:
     // Enabler for generic ctor.
     template <typename U>
-    using generic_ctor_enabler = typename std::enable_if<has_safe_cast<value_type, U>::value, int>::type;
+    using generic_ctor_enabler = enable_if_t<has_safe_cast<value_type, U>::value, int>;
 
 public:
     /// Constructor from piranha::array_key parametrized on a generic type.
@@ -268,8 +267,6 @@ public:
     }
     /// Element access.
     /**
-     * *Preconditions*:  <tt>i < size()</tt>.
-     *
      * @param i index of the element to be accessed.
      *
      * @return reference to the element of the container at index \p i.
@@ -280,8 +277,6 @@ public:
     }
     /// Const element access.
     /**
-     * *Preconditions*:  <tt>i < size()</tt>.
-     *
      * @param i index of the element to be accessed.
      *
      * @return const reference to the element of the container at index \p i.

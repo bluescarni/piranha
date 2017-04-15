@@ -343,28 +343,22 @@ public:
     }
     /// Const subscript operator.
     /**
-     * *Preconditions*: <tt>n < size()</tt>.
-     *
      * @param n index of the desired element.
      *
      * @return const reference to the element contained at index \p n;
      */
     const value_type &operator[](const size_type &n) const
     {
-        piranha_check_precondition(n < m_size);
         return ptr()[n];
     }
     /// Subscript operator.
     /**
-     * *Preconditions*: <tt>n < size()</tt>.
-     *
      * @param n index of the desired element.
      *
      * @return reference to the element contained at index \p n;
      */
     value_type &operator[](const size_type &n)
     {
-        piranha_check_precondition(n < m_size);
         return ptr()[n];
     }
     /// Begin iterator.

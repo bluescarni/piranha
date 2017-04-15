@@ -85,14 +85,4 @@ BOOST_AUTO_TEST_CASE(exception_test_00)
     BOOST_CHECK_THROW(piranha_throw(std::bad_alloc, ), std::bad_alloc);
     BOOST_CHECK_THROW(piranha_throw(exc0, 1, 2.3), exc0);
     BOOST_CHECK_THROW(piranha_throw(exc1, 1), exc1);
-#if defined(PIRANHA_CHECK_PRECONDITION_ENABLED)
-    // Check the precondition error.
-    BOOST_CHECK_NO_THROW(piranha_check_precondition(11 > 0));
-    BOOST_CHECK_EXCEPTION(piranha_check_precondition(11 < 0), precondition_error, [](const precondition_error &e) {
-        return boost::contains(e.what(), "the following precondition has been violated: 11 < 0");
-    });
-    BOOST_CHECK_EXCEPTION(piranha_check_precondition(11 < 0), std::runtime_error, [](const std::runtime_error &e) {
-        return boost::contains(e.what(), "the following precondition has been violated: 11 < 0");
-    });
-#endif
 }
