@@ -30,7 +30,6 @@ environment:
       TEST_NSPLIT: "4"
       SPLIT_TEST_NUM: "3"
     - BUILD_TYPE: "Python27"
-    - BUILD_TYPE: "Python34"
     - BUILD_TYPE: "Python35"
     - BUILD_TYPE: "Python36"
 
@@ -44,7 +43,6 @@ install:
 
 build_script:
 
-- cd C:\projects\piranha
 - C:\python4appveyor\Python35\python.exe tools\install_appveyor.py
 
 artifacts:
