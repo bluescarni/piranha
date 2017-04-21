@@ -1,5 +1,5 @@
 # Piranha
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/bluescarni/piranha?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/bluescarni/piranha)
 [![Build Status](https://travis-ci.org/bluescarni/piranha.svg?branch=master)](https://travis-ci.org/bluescarni/piranha)
 [![Build status](https://ci.appveyor.com/api/projects/status/27ssomrhwjsy2hda/branch/master?svg=true)](https://ci.appveyor.com/project/bluescarni/piranha/branch/master)
 [![PyPI](https://img.shields.io/pypi/v/pyranha.svg)](https://pypi.python.org/pypi/pyranha)
