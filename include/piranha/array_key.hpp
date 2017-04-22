@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
@@ -346,18 +347,24 @@ public:
     /// Identify symbols that can be trimmed.
     /**
      * This method is used in piranha::series::trim(). The input parameter \p candidates
-     * contains a map of symbol indices in \p args that are candidates for elimination. The method will set
-     * to \p false the mapped values in \p candidates whose indices correspond to nonzero elements in \p this.
+     * is a vector of boolean flags which signals which elements in \p args are candidates
+     * for trimming (i.e., a zero value means that the symbol at the corresponding position
+     * in \p args is *not* a candidate for trimming, while a nonzero value means that the symbol is
+     * a candidate for trimming). This method will set to zero those values in \p candidates
+     * for which the corresponding element in \p this is zero.
      *
-     * @param candidates map of candidate indices for elimination.
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p candidates originally contains
+     * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p candidates will contain
+     * <tt>[1,0,0,1,0]</tt> (that is, the second element was set from 1 to 0 as the corresponding element
+     * in \p this has a value of 5 and thus must not be trimmed).
+     *
+     * @param candidates list of candidates for trimming.
      * @param args reference piranha::symbol_fset.
      *
-     * @throws std::invalid_argument in the following cases:
-     * - the sizes of \p this or \p candidates differ from the size of \p args,
-     * - the index of the last element of \p candidates, if it exists, is not equal to the size of \p args minus one.
+     * @throws std::invalid_argument if the sizes of \p this or \p candidates differ from the size of \p args.
      * @throws unspecified any exception thrown by piranha::math::is_zero().
      */
-    void trim_identify(symbol_idx_fmap<bool> &candidates, const symbol_fset &args) const
+    void trim_identify(std::vector<char> &candidates, const symbol_fset &args) const
     {
         if (unlikely(m_container.size() != args.size())) {
             piranha_throw(std::invalid_argument, "invalid arguments set for trim_identify(): the array "
@@ -373,18 +380,9 @@ public:
                               + ") is different from the size of the reference symbol set ("
                               + std::to_string(args.size()) + ")");
         }
-        if (unlikely(args.size() && candidates.rbegin()->first != args.size() - 1u)) {
-            piranha_throw(std::invalid_argument,
-                          "invalid candidates set for trim_identify(): the largest index of the candidates set ("
-                              + std::to_string(candidates.rbegin()->first)
-                              + ") is greater than the largest index of the reference symbol set ("
-                              + std::to_string(args.size() - 1u) + ")");
-        }
-        auto it_cand = candidates.begin();
-        for (size_type i = 0; i < m_container.size(); ++i, ++it_cand) {
-            piranha_assert(it_cand != candidates.end() && it_cand->first == i);
+        for (size_type i = 0; i < m_container.size(); ++i) {
             if (!math::is_zero(m_container[i])) {
-                it_cand->second = false;
+                candidates[static_cast<decltype(candidates.size())>(i)] = 0;
             }
         }
     }

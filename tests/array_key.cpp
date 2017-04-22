@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 #include <piranha/exceptions.hpp>
 #include <piranha/init.hpp>
@@ -517,7 +518,7 @@ struct trim_identify_tester {
         {
             using key_type = g_key_type<T, U>;
             key_type k0;
-            symbol_idx_fmap<bool> us;
+            std::vector<char> us;
             k0.resize(1u);
             BOOST_CHECK_EXCEPTION(
                 k0.trim_identify(us, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
@@ -530,39 +531,32 @@ struct trim_identify_tester {
                                                      "candidates set (0) is different from the size of the reference "
                                                      "symbol set (1)");
                 });
-            us[2] = true;
-            BOOST_CHECK_EXCEPTION(
-                k0.trim_identify(us, {"a"}), std::invalid_argument, [](const std::invalid_argument &e) {
-                    return boost::contains(e.what(), "invalid candidates set for trim_identify(): the largest index of "
-                                                     "the candidates set (2) is greater than the largest index of "
-                                                     "the reference symbol set (0)");
-                });
-            us.clear();
             k0 = key_type{};
             k0.trim_identify(us, symbol_fset{});
-            us = {{0, true}, {1, true}, {2, true}};
+            BOOST_CHECK(us.empty());
+            us.resize(3, 1);
             k0 = key_type{T(1), T(0), T(2)};
             k0.trim_identify(us, {"a", "b", "c"});
-            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, false}, {1, true}, {2, false}}));
+            BOOST_CHECK((us == std::vector<char>{0, 1, 0}));
             k0 = key_type{T(1), T(3), T(2)};
             k0.trim_identify(us, {"a", "b", "c"});
-            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, false}, {1, false}, {2, false}}));
-            us = {{0, true}, {1, true}, {2, true}};
+            BOOST_CHECK((us == std::vector<char>{0, 0, 0}));
+            us.assign(3, 1);
             k0 = key_type{T(0), T(0), T(0)};
             k0.trim_identify(us, {"a", "b", "c"});
-            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, true}, {1, true}, {2, true}}));
+            BOOST_CHECK((us == std::vector<char>{1, 1, 1}));
             k0 = key_type{T(0), T(0), T(1)};
             k0.trim_identify(us, {"a", "b", "c"});
-            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, true}, {1, true}, {2, false}}));
+            BOOST_CHECK((us == std::vector<char>{1, 1, 0}));
             k0 = key_type{T(0), T(0), T(0)};
             k0.trim_identify(us, {"a", "b", "c"});
-            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, true}, {1, true}, {2, false}}));
+            BOOST_CHECK((us == std::vector<char>{1, 1, 0}));
             k0 = key_type{T(1), T(0), T(0)};
             k0.trim_identify(us, {"a", "b", "c"});
-            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, false}, {1, true}, {2, false}}));
+            BOOST_CHECK((us == std::vector<char>{0, 1, 0}));
             k0 = key_type{T(0), T(1), T(0)};
             k0.trim_identify(us, {"a", "b", "c"});
-            BOOST_CHECK((us == symbol_idx_fmap<bool>{{0, false}, {1, false}, {2, false}}));
+            BOOST_CHECK((us == std::vector<char>{0, 0, 0}));
         }
     };
     template <typename T>
