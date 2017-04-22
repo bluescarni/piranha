@@ -1,6 +1,6 @@
 # Python version check.
-if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTHON_VERSION_MINOR} LESS 6))
-	message(FATAL_ERROR "Minimum supported Python version is 2.6.")
+if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTHON_VERSION_MINOR} LESS 7))
+	message(FATAL_ERROR "Minimum supported Python version is 2.7.")
 endif()
 
 # Helper file with version number.

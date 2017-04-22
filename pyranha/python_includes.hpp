@@ -42,8 +42,8 @@ see https://www.gnu.org/licenses/. */
 #endif
 // clang-format on
 
-#if PY_MAJOR_VERSION < 2 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6)
-#error Minimum supported Python version is 2.6.
+#if PY_MAJOR_VERSION < 2 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 7)
+#error Minimum supported Python version is 2.7.
 #endif
 
 #endif
