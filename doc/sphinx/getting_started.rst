@@ -48,7 +48,7 @@ Piranha has a few mandatory dependencies:
 * the `bzip2 <http://www.bzip.org/>`__ compression library.
 
 The optional Python bindings, Pyranha, need the `Python <http://www.python.org/>`__ programming language (Python
-2.6 and later versions, including Python 3.x, are supported). `CMake <http://www.cmake.org/>`__ is the build system
+2.7 and later versions, including Python 3.x, are supported). `CMake <http://www.cmake.org/>`__ is the build system
 used by Piranha and must also be installed.
 
 These dependencies should be installed on your system before attempting to compile Piranha. On GNU/Linux
