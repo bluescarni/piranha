@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -51,7 +52,7 @@ namespace piranha
  * T merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
  * void print(std::ostream &, const symbol_fset &) const;
  * void print_tex(std::ostream &, const symbol_fset &) const;
- * void trim_identify(symbol_idx_fmap<bool> &, const symbol_fset &) const;
+ * void trim_identify(std::vector<char> &, const symbol_fset &) const;
  * T trim(const symbol_idx_fset &, const symbol_fset &) const;
  * @endcode
  * Additionally, \p T must also be constructible from a const piranha::symbol_fset reference and satisfy the following
@@ -79,7 +80,7 @@ class is_key
     using print_tex_t = decltype(
         std::declval<const U &>().print_tex(std::declval<std::ostream &>(), std::declval<symbol_fset const &>()));
     template <typename U>
-    using trim_identify_t = decltype(std::declval<const U &>().trim_identify(std::declval<symbol_idx_fmap<bool> &>(),
+    using trim_identify_t = decltype(std::declval<const U &>().trim_identify(std::declval<std::vector<char> &>(),
                                                                              std::declval<symbol_fset const &>()));
     template <typename U>
     using trim_t = decltype(
