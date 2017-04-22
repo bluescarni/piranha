@@ -17,6 +17,10 @@ New
 Changes
 ~~~~~~~
 
+- Bump the minimum python version to 2.7. [Francesco Biscani]
+
+- Require Boost >= 1.58 and CMake >= 3.2. [Francesco Biscani]
+
 - Remove for the time being all functionality related to polynomial
   division/gcd, including rational functions. [Francesco Biscani]
 
@@ -24,6 +28,8 @@ Changes
 
 Fix
 ~~~
+
+- Fix missing #undef for an internal macro. [Francesco Biscani]
 
 - Fix building with BZip2 support on older CMake versions. [Francesco
   Biscani]
