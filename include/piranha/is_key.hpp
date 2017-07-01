@@ -53,7 +53,7 @@ namespace piranha
  * void print(std::ostream &, const symbol_fset &) const;
  * void print_tex(std::ostream &, const symbol_fset &) const;
  * void trim_identify(std::vector<char> &, const symbol_fset &) const;
- * T trim(const symbol_idx_fset &, const symbol_fset &) const;
+ * T trim(const std::vector<char> &, const symbol_fset &) const;
  * @endcode
  * Additionally, \p T must also be constructible from a const piranha::symbol_fset reference and satisfy the following
  * type traits: piranha::is_container_element, piranha::is_equality_comparable and piranha::is_hashable.
@@ -84,7 +84,7 @@ class is_key
                                                                              std::declval<symbol_fset const &>()));
     template <typename U>
     using trim_t = decltype(
-        std::declval<const U &>().trim(std::declval<const symbol_idx_fset &>(), std::declval<symbol_fset const &>()));
+        std::declval<const U &>().trim(std::declval<const std::vector<char> &>(), std::declval<symbol_fset const &>()));
     template <typename U>
     using check_methods_t = std::integral_constant<bool, conjunction<std::is_same<detected_t<is_compatible_t, U>, bool>,
                                                                      std::is_same<detected_t<is_zero_t, U>, bool>,

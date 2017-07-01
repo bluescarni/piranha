@@ -119,7 +119,18 @@ struct constructor_tester {
             BOOST_CHECK_EQUAL(k2[1], T(0));
             BOOST_CHECK_EQUAL(k2[2], T(0));
             // Generic constructor for use in series.
-            BOOST_CHECK_THROW(key_type tmp(k2, symbol_fset{}), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(key_type tmp(k2, symbol_fset{}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "inconsistent sizes in the generic array_key "
+                                                                       "constructor: the size of the array (3) differs "
+                                                                       "from the size of the symbol set (0)");
+                                  });
+            BOOST_CHECK_EXCEPTION(key_type tmp(k2, symbol_fset{"a", "b"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "inconsistent sizes in the generic array_key "
+                                                                       "constructor: the size of the array (3) differs "
+                                                                       "from the size of the symbol set (2)");
+                                  });
             key_type k3(k2, vs);
             BOOST_CHECK_EQUAL(k3.size(), vs.size());
             BOOST_CHECK_EQUAL(k3[0], T(0));
@@ -522,14 +533,13 @@ struct trim_identify_tester {
             k0.resize(1u);
             BOOST_CHECK_EXCEPTION(
                 k0.trim_identify(us, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
-                    return boost::contains(e.what(), "invalid arguments set for trim_identify(): the array "
-                                                     "has a size of 1, the reference symbol set has a size of 0");
+                    return boost::contains(e.what(), "invalid arguments set for trim_identify(): the size of the array "
+                                                     "(1) differs from the size of the reference symbol set (0)");
                 });
             BOOST_CHECK_EXCEPTION(
                 k0.trim_identify(us, {"a"}), std::invalid_argument, [](const std::invalid_argument &e) {
-                    return boost::contains(e.what(), "invalid candidates set for trim_identify(): the size of the "
-                                                     "candidates set (0) is different from the size of the reference "
-                                                     "symbol set (1)");
+                    return boost::contains(e.what(), "invalid mask for trim_identify(): the size of the "
+                                                     "array (1) differs from the size of the mask (0)");
                 });
             k0 = key_type{};
             k0.trim_identify(us, symbol_fset{});
@@ -579,15 +589,25 @@ struct trim_tester {
         {
             typedef g_key_type<T, U> key_type;
             key_type k0;
-            BOOST_CHECK_THROW(k0.trim(symbol_idx_fset{}, symbol_fset{"x", "y", "z"}), std::invalid_argument);
+            BOOST_CHECK((k0.trim(std::vector<char>{}, symbol_fset{}) == key_type{}));
+            BOOST_CHECK_EXCEPTION(k0.trim(std::vector<char>{}, symbol_fset{"x", "y", "z"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(
+                                          e.what(), "invalid arguments set for trim(): the size of the array (0) "
+                                                    "differs from the size of the reference symbol set (3)");
+                                  });
             k0 = key_type{T(1), T(2), T(3)};
-            BOOST_CHECK((k0.trim(symbol_idx_fset{0u}, symbol_fset{"x", "y", "z"}) == key_type{T(2), T(3)}));
-            BOOST_CHECK((k0.trim(symbol_idx_fset{0u, 2u, 456u}, symbol_fset{"x", "y", "z"}) == key_type{T(2)}));
-            BOOST_CHECK((k0.trim(symbol_idx_fset{0u, 1u, 2u, 456u}, symbol_fset{"x", "y", "z"}) == key_type{}));
-            BOOST_CHECK((k0.trim(symbol_idx_fset{1u, 456u}, symbol_fset{"x", "y", "z"}) == key_type{T(1), T(3)}));
+            BOOST_CHECK_EXCEPTION(k0.trim(std::vector<char>{true, false}, symbol_fset{"x", "y", "z"}),
+                                  std::invalid_argument, [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(),
+                                                             "invalid mask for trim(): the size of the "
+                                                             "array (3) differs from the size of the mask (2)");
+                                  });
             BOOST_CHECK(
-                (k0.trim(symbol_idx_fset{1u, 2u, 5u, 67u, 456u}, symbol_fset{"x", "y", "z"}) == key_type{T(1)}));
-            BOOST_CHECK((k0.trim(symbol_idx_fset{}, symbol_fset{"x", "y", "z"}) == k0));
+                (k0.trim(std::vector<char>{true, false, false}, symbol_fset{"x", "y", "z"}) == key_type{T(2), T(3)}));
+            BOOST_CHECK((k0.trim(std::vector<char>{2, 0, -1}, symbol_fset{"x", "y", "z"}) == key_type{T(2)}));
+            BOOST_CHECK((k0.trim(std::vector<char>{true, true, true}, symbol_fset{"x", "y", "z"}) == key_type{}));
+            BOOST_CHECK((k0.trim(std::vector<char>{false, false, false}, symbol_fset{"x", "y", "z"}) == k0));
         }
     };
     template <typename T>

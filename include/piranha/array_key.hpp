@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -130,7 +131,7 @@ public:
      *
      * \p list will be forwarded to construct the internal piranha::small_vector.
      *
-     * @param list initializer list.
+     * @param list the initializer list.
      *
      * @throws unspecified any exception thrown by the corresponding constructor of piranha::small_vector.
      */
@@ -143,7 +144,7 @@ public:
      * The key will be created with a number of variables equal to <tt>args.size()</tt>
      * and filled with elements constructed from the integral constant 0.
      *
-     * @param args piranha::symbol_fset used for construction.
+     * @param args the piranha::symbol_fset used for construction.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::small_vector::push_back(),
@@ -172,8 +173,8 @@ public:
      * if the values are of different type). If the size of \p x is different from the size of \p args, a runtime error
      * will be produced.
      *
-     * @param other construction argument.
-     * @param args reference piranha::symbol_fset.
+     * @param other the construction argument.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the sizes of \p x and \p args differ.
      * @throws unspecified any exception thrown by:
@@ -184,10 +185,10 @@ public:
     explicit array_key(const array_key<U, Derived2, S2> &other, const symbol_fset &args)
     {
         if (unlikely(other.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "inconsistent sizes in the generic array_key constructor: the array "
-                                                 "has a size of "
-                                                     + std::to_string(other.size()) + ", the symbol set has a size of "
-                                                     + std::to_string(args.size()));
+            piranha_throw(std::invalid_argument,
+                          "inconsistent sizes in the generic array_key constructor: the size of the array ("
+                              + std::to_string(other.size()) + ") differs from the size of the symbol set ("
+                              + std::to_string(args.size()) + ")");
         }
         std::transform(other.begin(), other.end(), std::back_inserter(m_container),
                        [](const U &x) { return safe_cast<value_type>(x); });
@@ -258,7 +259,7 @@ public:
     /**
      * Equivalent to piranha::small_vector::resize().
      *
-     * @param new_size desired new size for the internal container.
+     * @param new_size the desired new size for the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::resize().
      */
@@ -268,7 +269,7 @@ public:
     }
     /// Element access.
     /**
-     * @param i index of the element to be accessed.
+     * @param i the index of the element to be accessed.
      *
      * @return reference to the element of the container at index \p i.
      */
@@ -278,7 +279,7 @@ public:
     }
     /// Const element access.
     /**
-     * @param i index of the element to be accessed.
+     * @param i the index of the element to be accessed.
      *
      * @return const reference to the element of the container at index \p i.
      */
@@ -300,7 +301,7 @@ public:
     /**
      * Move-add \p x at the end of the internal container.
      *
-     * @param x element to be added to the internal container.
+     * @param x the element to be added to the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::push_back().
      */
@@ -312,7 +313,7 @@ public:
     /**
      * Copy-add \p x at the end of the internal container.
      *
-     * @param x element to be added to the internal container.
+     * @param x the element to be added to the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::push_back().
      */
@@ -322,7 +323,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param other comparison argument.
+     * @param other the comparison argument.
      *
      * @return the result of piranha::small_vector::operator==().
      *
@@ -334,7 +335,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param other comparison argument.
+     * @param other the comparison argument.
      *
      * @return the negation of operator==().
      *
@@ -346,74 +347,82 @@ public:
     }
     /// Identify symbols that can be trimmed.
     /**
-     * This method is used in piranha::series::trim(). The input parameter \p candidates
-     * is a vector of boolean flags which signals which elements in \p args are candidates
+     * This method is used in piranha::series::trim(). The input parameter \p trim_candidates
+     * is a vector of boolean flags (i.e., a mask) which signals which elements in \p args are candidates
      * for trimming (i.e., a zero value means that the symbol at the corresponding position
      * in \p args is *not* a candidate for trimming, while a nonzero value means that the symbol is
-     * a candidate for trimming). This method will set to zero those values in \p candidates
+     * a candidate for trimming). This method will set to zero those values in \p trim_candidates
      * for which the corresponding element in \p this is zero.
      *
-     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p candidates originally contains
-     * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p candidates will contain
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_candidates originally contains
+     * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p trim_candidates will contain
      * <tt>[1,0,0,1,0]</tt> (that is, the second element was set from 1 to 0 as the corresponding element
      * in \p this has a value of 5 and thus must not be trimmed).
      *
-     * @param candidates list of candidates for trimming.
-     * @param args reference piranha::symbol_fset.
+     * @param trim_candidates a mask signalling candidate elements for trimming.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @throws std::invalid_argument if the sizes of \p this or \p candidates differ from the size of \p args.
+     * @throws std::invalid_argument if the sizes of \p this or \p trim_candidates differ from the size of \p args.
      * @throws unspecified any exception thrown by piranha::math::is_zero().
      */
-    void trim_identify(std::vector<char> &candidates, const symbol_fset &args) const
+    void trim_identify(std::vector<char> &trim_candidates, const symbol_fset &args) const
     {
-        if (unlikely(m_container.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "invalid arguments set for trim_identify(): the array "
-                                                 "has a size of "
-                                                     + std::to_string(m_container.size())
-                                                     + ", the reference symbol set has a size of "
-                                                     + std::to_string(args.size()));
+        auto sbe = size_begin_end();
+        if (unlikely(std::get<0>(sbe) != args.size())) {
+            piranha_throw(
+                std::invalid_argument,
+                "invalid arguments set for trim_identify(): the size of the array (" + std::to_string(std::get<0>(sbe))
+                    + ") differs from the size of the reference symbol set (" + std::to_string(args.size()) + ")");
         }
-        if (unlikely(candidates.size() != args.size())) {
+        if (unlikely(std::get<0>(sbe) != trim_candidates.size())) {
             piranha_throw(std::invalid_argument,
-                          "invalid candidates set for trim_identify(): the size of the candidates set ("
-                              + std::to_string(candidates.size())
-                              + ") is different from the size of the reference symbol set ("
-                              + std::to_string(args.size()) + ")");
+                          "invalid mask for trim_identify(): the size of the array (" + std::to_string(std::get<0>(sbe))
+                              + ") differs from the size of the mask (" + std::to_string(trim_candidates.size()) + ")");
         }
-        for (size_type i = 0; i < m_container.size(); ++i) {
-            if (!math::is_zero(m_container[i])) {
-                candidates[static_cast<decltype(candidates.size())>(i)] = 0;
+        for (decltype(trim_candidates.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+            if (!math::is_zero(*std::get<1>(sbe))) {
+                trim_candidates[i] = 0;
             }
         }
     }
     /// Trim.
     /**
-     * This method will return a copy of \p this without the elements at the indices specified by \p trim_idx.
+     * This method is used in piranha::series::trim(). The input mask \p trim_mask
+     * is a vector of boolean flags signalling (with nonzero values) elements
+     * of \p this to be removed. The method will return a copy of \p this in which
+     * the specified elements have been removed.
      *
-     * @param trim_idx indices of the elements which will be removed.
-     * @param args reference piranha::symbol_fset.
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask contains
+     * the values <tt>[false,false,false,true,false]</tt>, then the output of this method will be
+     * the array of values <tt>[0,5,3,4]</tt> (that is, the fourth element has been removed as indicated
+     * by a \p true value in <tt>trim_mask</tt>'s fourth element).
+     *
+     * @param trim_mask a mask indicating which element will be removed.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return a trimmed copy of \p this.
      *
-     * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
+     * @throws std::invalid_argument if the sizes of \p this or \p trim_mask differ from the size of \p args.
      * @throws unspecified any exception thrown by push_back().
      */
-    Derived trim(const symbol_idx_fset &trim_idx, const symbol_fset &args) const
+    Derived trim(const std::vector<char> &trim_mask, const symbol_fset &args) const
     {
-        if (unlikely(m_container.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "invalid arguments set for trim(): the array "
-                                                 "has a size of "
-                                                     + std::to_string(m_container.size())
-                                                     + ", the symbol set has a size of " + std::to_string(args.size()));
+        auto sbe = size_begin_end();
+        if (unlikely(std::get<0>(sbe) != args.size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid arguments set for trim(): the size of the array (" + std::to_string(std::get<0>(sbe))
+                              + ") differs from the size of the reference symbol set (" + std::to_string(args.size())
+                              + ")");
         }
-        auto idx_it = trim_idx.begin();
-        const auto idx_end = trim_idx.end();
+        if (unlikely(std::get<0>(sbe) != trim_mask.size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid mask for trim(): the size of the array (" + std::to_string(std::get<0>(sbe))
+                              + ") differs from the size of the mask (" + std::to_string(trim_mask.size()) + ")");
+        }
         Derived retval;
-        for (size_type i = 0; i < m_container.size(); ++i) {
-            if (idx_it != idx_end && i == *idx_it) {
-                ++idx_it;
-            } else {
-                retval.push_back(m_container[i]);
+        for (decltype(trim_mask.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+            if (!trim_mask[i]) {
+                retval.push_back(*std::get<1>(sbe));
             }
         }
         return retval;
@@ -440,8 +449,8 @@ public:
      * Equivalent to calling piranha::small_vector::add() on the internal containers of \p this
      * and of the arguments.
      *
-     * @param retval piranha::array_key that will hold the result of the addition.
-     * @param other piranha::array_key that will be added to \p this.
+     * @param retval the piranha::array_key that will hold the result of the addition.
+     * @param other the piranha::array_key that will be added to \p this.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::add().
      */
@@ -459,8 +468,8 @@ public:
      * Equivalent to calling piranha::small_vector::sub() on the internal containers of \p this
      * and of the arguments.
      *
-     * @param retval piranha::array_key that will hold the result of the subtraction.
-     * @param other piranha::array_key that will be subtracted from \p this.
+     * @param retval the piranha::array_key that will hold the result of the subtraction.
+     * @param other the piranha::array_key that will be subtracted from \p this.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::sub().
      */
@@ -472,8 +481,8 @@ public:
     /// Merge symbols.
     /**
      * This method will return a copy of \p this in which the value 0 has been inserted
-     * at the positions specified by \p ins_map. Specifically, a number of zeroes equal to the size of
-     * the corresponding piranha::symbol_fset will be inserted before each index appearing in \p ins_map.
+     * at the positions specified by \p ins_map. Specifically, before each index appearing in \p ins_map
+     * a number of zeroes equal to the size of the mapped piranha::symbol_fset will be inserted.
      *
      * For instance, given a piranha::array_key containing the values <tt>[1,2,3,4]</tt>, a symbol set
      * \p args containing <tt>["c","e","g","h"]</tt> and an insertion map \p ins_map containing the pairs
@@ -481,8 +490,8 @@ public:
      * <tt>[0,0,1,0,2,0,3,4,0]</tt>. That is, the symbols appearing in \p ins_map are merged into \p this
      * with a value of zero at the specified positions.
      *
-     * @param args reference symbol set for \p this.
      * @param ins_map the insertion map.
+     * @param args the reference symbol set for \p this.
      *
      * @return a \p Derived instance resulting from inserting into \p this zeroes at the positions specified by \p
      * ins_map.
@@ -540,7 +549,7 @@ struct hash<piranha::array_key<T, Derived, S>> {
     typedef piranha::array_key<T, Derived, S> argument_type;
     /// Hash operator.
     /**
-     * @param a piranha::array_key whose hash value will be returned.
+     * @param a the piranha::array_key whose hash value will be returned.
      *
      * @return piranha::array_key::hash().
      */

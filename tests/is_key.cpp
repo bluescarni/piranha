@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <piranha/init.hpp>
 #include <piranha/symbol_utils.hpp>
+#include <vector>
 
 using namespace piranha;
 
@@ -53,12 +54,12 @@ struct key02 {
     bool operator!=(const key02 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     bool is_zero(const symbol_fset &) const noexcept;
-    key02 merge_symbols(const symbol_fset &, const symbol_fset &) const;
+    key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
-    void trim_identify(symbol_idx_fmap<bool> &, const symbol_fset &) const;
-    key02 trim(const symbol_idx_fset &, const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    key02 trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 struct key03 {
@@ -72,7 +73,7 @@ struct key03 {
     bool operator!=(const key03 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     bool is_zero(const symbol_fset &) const noexcept;
-    key03 merge_symbols(const symbol_fset &, const symbol_fset &) const;
+    key03 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
@@ -89,7 +90,7 @@ struct key04 {
     bool operator!=(const key04 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     bool is_zero(const symbol_fset &) const noexcept;
-    key04 merge_symbols(const symbol_fset &, const symbol_fset &) const;
+    key04 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
@@ -106,7 +107,7 @@ struct key05 {
     bool operator!=(const key05 &) const;
     bool is_compatible(const symbol_fset &) const;
     bool is_zero(const symbol_fset &) const noexcept;
-    key05 merge_symbols(const symbol_fset &, const symbol_fset &) const;
+    key05 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
@@ -123,7 +124,7 @@ struct key06 {
     bool operator!=(const key06 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     bool is_zero(const symbol_fset &) const;
-    key06 merge_symbols(const symbol_fset &, const symbol_fset &) const;
+    key06 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
@@ -140,7 +141,7 @@ struct key07 {
     bool operator!=(const key07 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     bool is_zero(const symbol_fset &) const noexcept;
-    key07 merge_symbols(const symbol_fset &, const symbol_fset &) const;
+    key07 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
 };
@@ -156,7 +157,7 @@ struct key08 {
     bool operator!=(const key08 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     bool is_zero(const symbol_fset &) const noexcept;
-    key08 merge_symbols(const symbol_fset &, const symbol_fset &) const;
+    key08 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
