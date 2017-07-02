@@ -347,25 +347,25 @@ public:
     }
     /// Identify symbols that can be trimmed.
     /**
-     * This method is used in piranha::series::trim(). The input parameter \p trim_candidates
+     * This method is used in piranha::series::trim(). The input parameter \p trim_mask
      * is a vector of boolean flags (i.e., a mask) which signals which elements in \p args are candidates
      * for trimming (i.e., a zero value means that the symbol at the corresponding position
      * in \p args is *not* a candidate for trimming, while a nonzero value means that the symbol is
-     * a candidate for trimming). This method will set to zero those values in \p trim_candidates
+     * a candidate for trimming). This method will set to zero those values in \p trim_mask
      * for which the corresponding element in \p this is zero.
      *
-     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_candidates originally contains
-     * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p trim_candidates will contain
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask originally contains
+     * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p trim_mask will contain
      * <tt>[1,0,0,1,0]</tt> (that is, the second element was set from 1 to 0 as the corresponding element
      * in \p this has a value of 5 and thus must not be trimmed).
      *
-     * @param trim_candidates a mask signalling candidate elements for trimming.
+     * @param trim_mask a mask signalling candidate elements for trimming.
      * @param args the reference piranha::symbol_fset.
      *
-     * @throws std::invalid_argument if the sizes of \p this or \p trim_candidates differ from the size of \p args.
+     * @throws std::invalid_argument if the sizes of \p this or \p trim_mask differ from the size of \p args.
      * @throws unspecified any exception thrown by piranha::math::is_zero().
      */
-    void trim_identify(std::vector<char> &trim_candidates, const symbol_fset &args) const
+    void trim_identify(std::vector<char> &trim_mask, const symbol_fset &args) const
     {
         auto sbe = size_begin_end();
         if (unlikely(std::get<0>(sbe) != args.size())) {
@@ -374,14 +374,14 @@ public:
                 "invalid arguments set for trim_identify(): the size of the array (" + std::to_string(std::get<0>(sbe))
                     + ") differs from the size of the reference symbol set (" + std::to_string(args.size()) + ")");
         }
-        if (unlikely(std::get<0>(sbe) != trim_candidates.size())) {
+        if (unlikely(std::get<0>(sbe) != trim_mask.size())) {
             piranha_throw(std::invalid_argument,
                           "invalid mask for trim_identify(): the size of the array (" + std::to_string(std::get<0>(sbe))
-                              + ") differs from the size of the mask (" + std::to_string(trim_candidates.size()) + ")");
+                              + ") differs from the size of the mask (" + std::to_string(trim_mask.size()) + ")");
         }
-        for (decltype(trim_candidates.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+        for (decltype(trim_mask.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
             if (!math::is_zero(*std::get<1>(sbe))) {
-                trim_candidates[i] = 0;
+                trim_mask[i] = 0;
             }
         }
     }
