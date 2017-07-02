@@ -38,8 +38,6 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <iterator>
 #include <limits>
-#include <memory>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -70,7 +68,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-// TODO is this needed?
+// TODO is this needed? Can't we move this below without fwd decl?
 
 // Fwd declaration.
 template <typename>
@@ -105,11 +103,11 @@ inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker
         typename piranha::kronecker_monomial<T>::v_type tmp;
         piranha::boost_load(ar, tmp);
         if (unlikely(tmp.size() != k.ss().size())) {
-            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
-                                                 "monomial: the deserialized size is "
-                                                     + std::to_string(tmp.size())
-                                                     + " but the reference symbol set has a size of "
-                                                     + std::to_string(k.ss().size()));
+            piranha_throw(std::invalid_argument,
+                          "invalid size detected in the deserialization of a Kronercker "
+                          "monomial: the deserialized size ("
+                              + std::to_string(tmp.size()) + ") differs from the size of the reference symbol set ("
+                              + std::to_string(k.ss().size()) + ")");
         }
         k.key() = piranha::kronecker_monomial<T>(tmp);
     }
@@ -264,8 +262,8 @@ public:
      * result to the internal integer instance. The value type of the iterator is converted to \p T using
      * piranha::safe_cast().
      *
-     * @param begin beginning of the range.
-     * @param end end of the range.
+     * @param begin the beginning of the range.
+     * @param end the end of the range.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::kronecker_array::encode(),
@@ -287,9 +285,9 @@ public:
      * This constructor is identical to the constructor from range. In addition, after construction
      * it will also check that the distance between \p begin and \p end is equal to the size of \p s.
      *
-     * @param begin beginning of the range.
-     * @param end end of the range.
-     * @param s reference piranha::symbol_fset.
+     * @param begin the beginning of the range.
+     * @param end the end of the range.
+     * @param s the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the distance between \p begin and \p end is different from
      * the size of \p s.
@@ -300,10 +298,11 @@ public:
     {
         const auto c_size = construct_from_range(begin, end);
         if (unlikely(c_size != s.size())) {
-            piranha_throw(std::invalid_argument, "the Kronecker monomial constructor from range and symbol set "
-                                                 "yielded an invalid monomial: the final size is "
-                                                     + std::to_string(c_size) + ", while the size of the symbol set is "
-                                                     + std::to_string(s.size()));
+            piranha_throw(std::invalid_argument,
+                          "the Kronecker monomial constructor from range and symbol set "
+                          "yielded an invalid monomial: the range length ("
+                              + std::to_string(c_size) + ") differs from the size of the symbol set ("
+                              + std::to_string(s.size()) + ")");
         }
     }
     /// Constructor from set of symbols.
@@ -318,7 +317,7 @@ public:
      * This constructor is for use when converting from one term type to another in piranha::series. It will
      * set the internal integer instance to the same value of \p other.
      *
-     * @param other construction argument.
+     * @param other the construction argument.
      */
     explicit kronecker_monomial(const kronecker_monomial &other, const symbol_fset &) : m_value(other.m_value)
     {
@@ -328,7 +327,7 @@ public:
      * This constructor will initialise the internal integer instance
      * to \p n.
      *
-     * @param n initializer for the internal integer instance.
+     * @param n the value that will be used to construct the internal integer instance.
      */
     explicit kronecker_monomial(const T &n) : m_value(n)
     {
@@ -346,8 +345,6 @@ public:
      * @param other the assignment argument.
      *
      * @return a reference to \p this.
-     *
-     * @throws unspecified any exception thrown by the assignment operator of the base class.
      */
     kronecker_monomial &operator=(const kronecker_monomial &other) = default;
     /// Defaulted move assignment operator.
@@ -359,7 +356,7 @@ public:
     kronecker_monomial &operator=(kronecker_monomial &&other) = default;
     /// Set the internal integer instance.
     /**
-     * @param n value to which the internal integer instance will be set.
+     * @param n the value to which the internal integer instance will be set.
      */
     void set_int(const T &n)
     {
@@ -375,16 +372,16 @@ public:
     }
     /// Compatibility check.
     /**
-     * A monomial is considered incompatible if any of these conditions holds:
+     * A monomial is considered incompatible with a piranha::symbol_fset if any of these conditions holds:
      *
      * - the size of \p args is zero and the internal integer is not zero,
      * - the size of \p args is equal to or larger than the size of the output of
      *   piranha::kronecker_array::get_limits(),
      * - the internal integer is not within the limits reported by piranha::kronecker_array::get_limits().
      *
-     * Otherwise, the monomial is considered to be compatible for insertion.
+     * Otherwise, the monomial is considered to be incompatible.
      *
-     * @param args reference piranha::symbol_fset.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return compatibility flag for the monomial.
      */
@@ -420,8 +417,8 @@ public:
     /// Merge symbols.
     /**
      * This method will return a copy of \p this in which the value 0 has been inserted
-     * at the positions specified by \p ins_map. Specifically, a number of zeroes equal to the size of
-     * the corresponding piranha::symbol_fset will be inserted before each index appearing in \p ins_map.
+     * at the positions specified by \p ins_map. Specifically, before each index appearing in \p ins_map
+     * a number of zeroes equal to the size of the mapped piranha::symbol_fset will be inserted.
      *
      * For instance, given a piranha::kronecker_monomial containing the values <tt>[1,2,3,4]</tt>, a symbol set
      * \p args containing <tt>["c","e","g","h"]</tt> and an insertion map \p ins_map containing the pairs
@@ -429,8 +426,8 @@ public:
      * <tt>[0,0,1,0,2,0,3,4,0]</tt>. That is, the symbols appearing in \p ins_map are merged into \p this
      * with a value of zero at the specified positions.
      *
-     * @param args reference symbol set for \p this.
      * @param ins_map the insertion map.
+     * @param args the reference symbol set for \p this.
      *
      * @return a piranha::kronecker_monomial resulting from inserting into \p this zeroes at the positions
      * specified by \p ins_map.
@@ -467,9 +464,9 @@ public:
      * The type returned by this method is the type resulting from the addition of two instances
      * of \p T.
      *
-     * @param args reference piranha::symbol_fset.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return degree of the monomial.
+     * @return the degree of the monomial.
      *
      * @throws std::overflow_error if the computation of the degree overflows.
      * @throws unspecified any exception thrown by unpack().
@@ -489,7 +486,7 @@ public:
     }
     /// Low degree (equivalent to the degree).
     /**
-     * @param args reference piranha::symbol_fset.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return the output of degree(const symbol_fset &) const.
      *
@@ -505,11 +502,13 @@ public:
      * The type returned by this method is the type resulting from the addition of two instances
      * of \p T.
      *
-     * @param p positions of the symbols to be considered in the calculation of the degree.
-     * @param args reference piranha::symbol_fset.
+     * @param p the positions of the symbols to be considered in the calculation of the degree.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return the summation of the exponents of the monomial at the positions specified by \p p.
      *
+     * @throws std::invalid_argument if the last element of \p p, if existing, is not less than the size
+     * of \p args.
      * @throws std::overflow_error if the computation of the degree overflows.
      * @throws unspecified any exception thrown by unpack().
      */
@@ -517,17 +516,24 @@ public:
     {
         const auto tmp = unpack(args);
         piranha_assert(tmp.size() == args.size());
+        if (unlikely(p.size() && *p.rbegin() >= tmp.size())) {
+            piranha_throw(std::invalid_argument,
+                          "the largest value in the positions set for the computation of the "
+                          "partial degree of a Kronecker monomial is "
+                              + std::to_string(*p.rbegin()) + ", but the monomial has a size of only "
+                              + std::to_string(tmp.size()));
+        }
         const auto cit = tmp.begin();
         degree_type retval(0);
-        for (auto it = p.begin(); it != p.end() && *it < tmp.size(); ++it) {
-            detail::safe_integral_adder(retval, static_cast<degree_type>(cit[*it]));
+        for (auto idx : p) {
+            detail::safe_integral_adder(retval, static_cast<degree_type>(cit[idx]));
         }
         return retval;
     }
     /// Partial low degree (equivalent to the partial degree).
     /**
-     * @param p positions of the symbols to be considered in the calculation of the degree.
-     * @param args reference piranha::symbol_fset.
+     * @param p the positions of the symbols to be considered in the calculation of the degree.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return the output of degree(const symbol_idx_fset &, const symbol_fset &) const.
      *
@@ -557,9 +563,9 @@ public:
      * No check is performed for overflow of either the limits of the integral type or the limits of the Kronecker
      * codification.
      *
-     * @param res return value.
-     * @param t1 first argument.
-     * @param t2 second argument.
+     * @param res the return value.
+     * @param t1 the first argument.
+     * @param t2 the second argument.
      *
      * @throws unspecified any exception thrown by piranha::math::mul3().
      */
@@ -579,9 +585,9 @@ public:
      * No check is performed for overflow of either the limits of the integral type or the limits of the Kronecker
      * codification.
      *
-     * @param res return value.
-     * @param a first argument.
-     * @param b second argument.
+     * @param res the return value.
+     * @param a the first argument.
+     * @param b the second argument.
      */
     static void multiply(kronecker_monomial &res, const kronecker_monomial &a, const kronecker_monomial &b,
                          const symbol_fset &)
@@ -598,7 +604,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param other comparison argument.
+     * @param other the comparison argument.
      *
      * @return \p true if the internal integral instance of \p this is equal to the integral instance of \p other,
      * \p false otherwise.
@@ -609,20 +615,20 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param other comparison argument.
+     * @param other the comparison argument.
      *
      * @return the opposite of operator==().
      */
     bool operator!=(const kronecker_monomial &other) const
     {
-        return m_value != other.m_value;
+        return !operator==(other);
     }
     /// Name of the linear argument.
     /**
      * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
      * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
      *
-     * @param args reference piranha::symbol_fset.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return name of the linear variable.
      *
@@ -634,26 +640,25 @@ public:
         const auto v = unpack(args);
         const auto size = v.size();
         typename v_type::size_type n_linear = 0, candidate = 0;
-        auto it_args = args.begin(), it_cand = it_args;
-        for (typename v_type::size_type i = 0; i < size; ++i, ++it_args) {
+        for (typename v_type::size_type i = 0; i < size; ++i) {
             if (!v[i]) {
                 continue;
             }
             if (unlikely(v[i] != T(1))) {
-                piranha_throw(std::invalid_argument, "while attempting to extract the linear argument "
-                                                     "from a Kronecker monomial, a non-unitary exponent was "
-                                                     "encountered in correspondence of the variable '"
-                                                         + (*it_args) + "'");
+                piranha_throw(std::invalid_argument,
+                              "while attempting to extract the linear argument "
+                              "from a Kronecker monomial, a non-unitary exponent was "
+                              "encountered in correspondence of the variable '"
+                                  + (*args.nth(static_cast<decltype(args.size())>(i))) + "'");
             }
             candidate = i;
-            it_cand = it_args;
             ++n_linear;
         }
         if (unlikely(n_linear != 1u)) {
             piranha_throw(std::invalid_argument, "the extraction of the linear argument "
                                                  "from a Kronecker monomial failed: the monomial is not linear");
         }
-        return *it_cand;
+        return *args.nth(static_cast<decltype(args.size())>(candidate));
     }
 
 private:
@@ -674,8 +679,8 @@ public:
      * is computed via the multiplication of the exponents promoted to piranha::integer by \p x. The result will
      * be cast back to \p T via piranha::safe_cast().
      *
-     * @param x exponent.
-     * @param args reference piranha::symbol_fset.
+     * @param x the exponent.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return \p this to the power of \p x.
      *
@@ -692,16 +697,14 @@ public:
         for (auto &n : v) {
             n = safe_cast<T>(integer(n) * x);
         }
-        kronecker_monomial retval;
-        retval.m_value = ka::encode(v);
-        return retval;
+        return kronecker_monomial(ka::encode(v));
     }
     /// Unpack internal integer instance.
     /**
      * This method will decode the internal integral instance into a piranha::static_vector of size equal to the size of
      * \p args.
      *
-     * @param args reference piranha::symbol_fset.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return piranha::static_vector containing the result of decoding the internal integral instance via
      * piranha::kronecker_array.
@@ -717,8 +720,8 @@ public:
     /**
      * This method will print to stream a human-readable representation of the monomial.
      *
-     * @param os target stream.
-     * @param args reference piranha::symbol_fset.
+     * @param os the target stream.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws unspecified any exception thrown by unpack() or by streaming instances of \p T.
      */
@@ -728,13 +731,12 @@ public:
         piranha_assert(tmp.size() == args.size());
         const T zero(0), one(1);
         bool empty_output = true;
-        auto it_args = args.begin();
-        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i, ++it_args) {
+        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
             if (tmp[i] != zero) {
                 if (!empty_output) {
                     os << '*';
                 }
-                os << *it_args;
+                os << *args.nth(static_cast<decltype(args.size())>(i));
                 empty_output = false;
                 if (tmp[i] != one) {
                     os << "**" << detail::prepare_for_print(tmp[i]);
@@ -746,8 +748,8 @@ public:
     /**
      * This method will print to stream a TeX representation of the monomial.
      *
-     * @param os target stream.
-     * @param args reference piranha::symbol_fset.
+     * @param os the target stream.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws unspecified any exception thrown by unpack() or by streaming instances of \p T.
      */
@@ -757,14 +759,12 @@ public:
         std::ostringstream oss_num, oss_den, *cur_oss;
         const T zero(0), one(1);
         T cur_value;
-        auto it_args = args.begin();
-        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i, ++it_args) {
+        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
             cur_value = tmp[i];
             if (cur_value != zero) {
                 // NOTE: here negate() is safe because of the symmetry in kronecker_array.
-                cur_oss
-                    = (cur_value > zero) ? std::addressof(oss_num) : (math::negate(cur_value), std::addressof(oss_den));
-                (*cur_oss) << "{" << *it_args << "}";
+                cur_oss = (cur_value > zero) ? &oss_num : (math::negate(cur_value), &oss_den);
+                (*cur_oss) << "{" << *args.nth(static_cast<decltype(args.size())>(i)) << "}";
                 if (cur_value != one) {
                     (*cur_oss) << "^{" << static_cast<long long>(cur_value) << "}";
                 }
@@ -784,12 +784,12 @@ public:
      * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by
      * \p p. The result is a pair consisting of the exponent associated to \p p before differentiation and the monomial
      * itself after differentiation. If \p p is not smaller than the size of \p args or if its corresponding exponent is
-     * zero, the returned pair will be <tt>(0,kronecker_monomial{args})</tt>.
+     * zero, the returned pair will be <tt>(0,kronecker_monomial{})</tt>.
      *
-     * @param p position of the symbol with respect to which the differentiation will be calculated.
-     * @param args reference piranha::symbol_fset.
+     * @param p the position of the symbol with respect to which the differentiation will be calculated.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return result of the differentiation.
+     * @return the result of the differentiation.
      *
      * @throws std::overflow_error if the computation of the derivative causes a negative overflow.
      * @throws unspecified any exception thrown by:
@@ -802,20 +802,18 @@ public:
         if (p >= args.size() || v[static_cast<size_type>(p)] == T(0)) {
             // Derivative wrt a variable not in the monomial: position is outside the bounds, or it refers to a
             // variable with zero exponent.
-            return {T(0), kronecker_monomial(args)};
+            return std::make_pair(T(0), kronecker_monomial{});
         }
         auto v_b = v.begin();
         // Original exponent.
-        T n(v_b[p]);
+        const T n(v_b[p]);
         // Decrement the exponent in the monomial.
         if (unlikely(n == std::numeric_limits<T>::min())) {
             piranha_throw(std::overflow_error, "negative overflow error in the calculation of the "
                                                "partial derivative of a Kronecker monomial");
         }
         v_b[p] = static_cast<T>(n - T(1));
-        kronecker_monomial tmp_km;
-        tmp_km.m_value = ka::encode(v);
-        return {n, tmp_km};
+        return std::make_pair(n, kronecker_monomial(ka::encode(v)));
     }
     /// Integration.
     /**
@@ -825,8 +823,8 @@ public:
      * set to 1 in the same position \p s would have if it were added to \p args.
      * If the exponent corresponding to \p s is -1, an error will be produced.
      *
-     * @param s symbol with respect to which the integration will be calculated.
-     * @param args reference piranha::symbol_fset.
+     * @param s the symbol with respect to which the integration will be calculated.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return result of the integration.
      *
@@ -840,9 +838,9 @@ public:
     {
         v_type v = unpack(args), retval;
         T expo(0), one(1);
-        auto it_args = args.begin();
-        for (size_type i = 0; i < v.size(); ++i, ++it_args) {
-            if (expo == T(0) && s < *it_args) {
+        for (size_type i = 0; i < v.size(); ++i) {
+            const auto &cur_sym = *args.nth(static_cast<decltype(args.size())>(i));
+            if (expo == T(0) && s < cur_sym) {
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
                 // a new exponent.
@@ -850,9 +848,9 @@ public:
                 expo = one;
             }
             retval.push_back(v[i]);
-            if (*it_args == s) {
+            if (cur_sym == s) {
                 // NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
-                // we are never going to land here as *it_args is at this point never going to be s.
+                // we are never going to land here as cur_sym is at this point never going to be s.
                 if (unlikely(retval[i] == std::numeric_limits<T>::max())) {
                     piranha_throw(std::overflow_error,
                                   "positive overflow error in the calculation of the integral of a Kronecker monomial");
@@ -862,7 +860,7 @@ public:
                     piranha_throw(std::invalid_argument,
                                   "unable to perform Kronecker monomial integration: a negative "
                                   "unitary exponent was encountered in correspondence of the variable '"
-                                      + (*it_args) + "'");
+                                      + cur_sym + "'");
                 }
                 expo = retval[i];
             }
@@ -872,7 +870,7 @@ public:
             retval.push_back(one);
             expo = one;
         }
-        return {expo, kronecker_monomial{ka::encode(retval)}};
+        return std::make_pair(expo, kronecker_monomial(ka::encode(retval)));
     }
 
 private:
@@ -898,11 +896,11 @@ public:
      * returned.
      *
      * @param values the values will be used for substitution.
-     * @param args reference piranha::symbol_fset.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return the result of evaluating \p this with the values provided in \p values.
      *
-     * @throws std::invalid_argument if the size of \p values and \p args differ.
+     * @throws std::invalid_argument if the sizes of \p values and \p args differ.
      * @throws unspecified any exception thrown by:
      * - unpack(),
      * - construction of the return type,
@@ -911,19 +909,19 @@ public:
     template <typename U>
     eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
     {
-        using return_type = eval_type<U>;
-        using size_type = typename v_type::size_type;
         // NOTE: here we can check the values size only against args.
         if (unlikely(values.size() != args.size())) {
-            piranha_throw(std::invalid_argument,
-                          "invalid vector of values for Kronecker monomial evaluation: the vector of values has size "
-                              + std::to_string(values.size()) + ", while the reference set of symbols has a size of "
-                              + std::to_string(args.size()));
+            piranha_throw(
+                std::invalid_argument,
+                "invalid vector of values for Kronecker monomial evaluation: the size of the vector of values ("
+                    + std::to_string(values.size()) + ") differs from the size of the reference set of symbols ("
+                    + std::to_string(args.size()) + ")");
         }
-        auto v = unpack(args);
-        return_type retval(1);
-        for (size_type i = 0; i < v.size(); ++i) {
-            retval *= math::pow(values[static_cast<typename std::vector<U>::size_type>(i)], v[i]);
+        const auto v = unpack(args);
+        eval_type<U> retval(1);
+        for (decltype(v.size()) i = 0; i < v.size(); ++i) {
+            // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
+            retval *= math::pow(values[static_cast<decltype(values.size())>(i)], v[i]);
         }
         return retval;
     }
@@ -948,9 +946,9 @@ public:
      * than the size of \p args, the return value will be <tt>(1,this)</tt> (i.e., the monomial is unchanged and the
      * substitution yields 1).
      *
-     * @param p position of the symbol that will be substituted.
-     * @param x quantity that will be substituted.
-     * @param args reference piranha::symbol_fset.
+     * @param p the position of the symbol that will be substituted.
+     * @param x the quantity that will be substituted.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return the result of substituting \p x for the symbol at the position \p p.
      *
@@ -965,15 +963,18 @@ public:
     std::vector<std::pair<subs_type<U>, kronecker_monomial>> subs(const symbol_idx &p, const U &x,
                                                                   const symbol_fset &args) const
     {
+        std::vector<std::pair<subs_type<U>, kronecker_monomial>> retval;
         if (p < args.size()) {
             // If the position is within the monomial, the result of the subs will come from pow() and
             // we will have to set to 0 the affected symbol.
             auto v = unpack(args);
             v[static_cast<size_type>(p)] = T(0);
-            return {{math::pow(x, v[static_cast<size_type>(p)]), kronecker_monomial{ka::encode(v)}}};
+            retval.emplace_back(math::pow(x, v[static_cast<size_type>(p)]), kronecker_monomial(ka::encode(v)));
+        } else {
+            // Otherwise, the substitution yields 1 and the monomial is the original one.
+            retval.emplace_back(subs_type<U>(1), *this);
         }
-        // Otherwise, the substitution yields 1 and the monomial is the original one.
-        return {{subs_type<U>(1), *this}};
+        return retval;
     }
 
 private:
@@ -1002,10 +1003,10 @@ public:
      * <tt>a**3 * y</tt>, and the substitution of <tt>y**-2</tt> with \p a in the monomial <tt>y**-7</tt> will produce
      * <tt>a**3 * y**-1</tt>.
      *
-     * @param p position of the symbol that will be substituted.
-     * @param n integral power that will be substituted.
-     * @param x quantity that will be substituted.
-     * @param args reference piranha::symbol_fset.
+     * @param p the position of the symbol that will be substituted.
+     * @param n the integral power that will be substituted.
+     * @param x the quantity that will be substituted.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return the result of substituting \p x for the <tt>n</tt>-th power of the symbol at the position \p p.
      *
@@ -1026,51 +1027,67 @@ public:
             piranha_throw(std::invalid_argument,
                           "invalid integral exponent in ipow_subs(): the exponent must be nonzero");
         }
+        std::vector<std::pair<ipow_subs_type<U>, kronecker_monomial>> retval;
         if (p < args.size()) {
             auto v = unpack(args);
             const auto q = v[static_cast<size_type>(p)] / n;
             if (q >= 1) {
                 v[static_cast<size_type>(p)] -= q * n;
-                return {{math::pow(x, q), kronecker_monomial{ka::encode(v)}}};
+                retval.emplace_back(math::pow(x, q), kronecker_monomial(ka::encode(v)));
+                return retval;
             }
         }
         // Otherwise, the substitution yields 1 and the monomial is the original one.
-        return {{ipow_subs_type<U>(1), *this}};
+        retval.emplace_back(ipow_subs_type<U>(1), *this);
+        return retval;
     }
     /// Identify symbols that can be trimmed.
     /**
-     * This method is used in piranha::series::trim(). The input parameter \p candidates
-     * contains a map of symbol indices in \p args that are candidates for elimination. The method will set
-     * to \p false the mapped values in \p candidates whose indices correspond to nonzero elements in \p this.
+     * This method is used in piranha::series::trim(). The input parameter \p trim_mask
+     * is a vector of boolean flags (i.e., a mask) which signals which elements in \p args are candidates
+     * for trimming (i.e., a zero value means that the symbol at the corresponding position
+     * in \p args is *not* a candidate for trimming, while a nonzero value means that the symbol is
+     * a candidate for trimming). This method will set to zero those values in \p trim_mask
+     * for which the corresponding element in \p this is zero.
      *
-     * @param candidates map of candidate indices for elimination.
-     * @param args reference piranha::symbol_fset.
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask originally contains
+     * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p trim_mask will contain
+     * <tt>[1,0,0,1,0]</tt> (that is, the second element was set from 1 to 0 as the corresponding element
+     * in \p this has a value of 5 and thus must not be trimmed).
      *
-     * @throws std::invalid_argument in the following cases:
-     * - the size of \p candidates differs from the size of \p args,
-     * - the index of the last element of \p candidates, if it exists, is not equal to the size of \p args minus one.
+     * @param trim_mask a mask signalling candidate elements for trimming.
+     * @param args the reference piranha::symbol_fset.
+     *
+     * @throws std::invalid_argument if the size of \p trim_mask differs from the size of \p args.
      * @throws unspecified any exception thrown by unpack().
      */
-    void trim_identify(symbol_idx_fmap<bool> &candidates, const symbol_fset &args) const
+    void trim_identify(std::vector<char> &trim_mask, const symbol_fset &args) const
     {
-        return detail::km_trim_identify<v_type, ka>(candidates, args, m_value);
+        detail::km_trim_identify<v_type, ka>(trim_mask, args, m_value);
     }
     /// Trim.
     /**
-     * This method will return a copy of \p this without the elements at the indices specified by \p trim_idx.
+     * This method is used in piranha::series::trim(). The input mask \p trim_mask
+     * is a vector of boolean flags signalling (with nonzero values) elements
+     * of \p this to be removed. The method will return a copy of \p this in which
+     * the specified elements have been removed.
      *
-     * @param trim_idx indices of the elements which will be removed.
-     * @param args reference piranha::symbol_fset.
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask contains
+     * the values <tt>[false,false,false,true,false]</tt>, then the output of this method will be
+     * the array of values <tt>[0,5,3,4]</tt> (that is, the fourth element has been removed as indicated
+     * by a \p true value in <tt>trim_mask</tt>'s fourth element).
+     *
+     * @param trim_mask a mask indicating which element will be removed.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return a trimmed copy of \p this.
      *
-     * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - piranha::static_vector::push_back().
+     * @throws std::invalid_argument if the size of \p trim_mask differs from the size of \p args.
+     * @throws unspecified any exception thrown by unpack() or piranha::static_vector::push_back().
      */
-    kronecker_monomial trim(const symbol_idx_fset &trim_idx, const symbol_fset &args) const
+    kronecker_monomial trim(const std::vector<char> &trim_mask, const symbol_fset &args) const
     {
-        return kronecker_monomial{detail::km_trim<v_type, ka>(trim_idx, args, m_value)};
+        return kronecker_monomial(detail::km_trim<v_type, ka>(trim_mask, args, m_value));
     }
     /// Comparison operator.
     /**
@@ -1150,11 +1167,11 @@ public:
             v_type tmp;
             piranha::msgpack_convert(tmp, o, f);
             if (unlikely(tmp.size() != s.size())) {
-                piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
-                                                     "symbol set has a size of "
-                                                         + std::to_string(s.size())
-                                                         + ", while the monomial being deserialized has a size of "
-                                                         + std::to_string(tmp.size()));
+                piranha_throw(
+                    std::invalid_argument,
+                    "incompatible symbol set in monomial serialization: the size of the reference symbol set ("
+                        + std::to_string(s.size()) + ") differs from the size of the monomial being deserialized ("
+                        + std::to_string(tmp.size()) + ")");
             }
             *this = kronecker_monomial(tmp);
         }

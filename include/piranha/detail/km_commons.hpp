@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
@@ -50,7 +51,9 @@ template <typename VType, typename KaType, typename T>
 inline VType km_unpack(const symbol_fset &args, const T &value)
 {
     if (unlikely(args.size() > VType::max_size)) {
-        piranha_throw(std::invalid_argument, "input set of arguments is too large for unpacking");
+        piranha_throw(std::invalid_argument,
+                      "the size of the input arguments set (" + std::to_string(args.size())
+                          + ") is larger than the maximum allowed size (" + std::to_string(VType::max_size) + ")");
     }
     VType retval(static_cast<typename VType::size_type>(args.size()), 0);
     piranha_assert(args.size() == retval.size());
@@ -98,43 +101,35 @@ inline T km_merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map, const sym
 }
 
 template <typename VType, typename KaType, typename T>
-inline void km_trim_identify(symbol_idx_fmap<bool> &candidates, const symbol_fset &args, const T &value)
+inline void km_trim_identify(std::vector<char> &candidates, const symbol_fset &args, const T &value)
 {
     if (unlikely(candidates.size() != args.size())) {
         piranha_throw(std::invalid_argument,
-                      "invalid candidates set for trim_identify(): the size of the candidates set ("
-                          + std::to_string(candidates.size())
-                          + ") is different from the size of the reference symbol set (" + std::to_string(args.size())
+                      "invalid mask for trim_identify(): the size of the mask (" + std::to_string(candidates.size())
+                          + ") differs from the size of the reference symbol set (" + std::to_string(args.size())
                           + ")");
     }
-    if (unlikely(args.size() && candidates.rbegin()->first != args.size() - 1u)) {
-        piranha_throw(std::invalid_argument,
-                      "invalid candidates set for trim_identify(): the largest index of the candidates set ("
-                          + std::to_string(candidates.rbegin()->first)
-                          + ") is greater than the largest index of the reference symbol set ("
-                          + std::to_string(args.size() - 1u) + ")");
-    }
     const VType tmp = km_unpack<VType, KaType>(args, value);
-    auto it_cand = candidates.begin();
-    for (decltype(tmp.size()) i = 0; i < tmp.size(); ++i, ++it_cand) {
-        piranha_assert(it_cand != candidates.end() && it_cand->first == i);
+    for (decltype(tmp.size()) i = 0; i < tmp.size(); ++i) {
         if (tmp[i] != T(0)) {
-            it_cand->second = false;
+            candidates[static_cast<decltype(candidates.size())>(i)] = 0;
         }
     }
 }
 
 template <typename VType, typename KaType, typename T>
-inline T km_trim(const symbol_idx_fset &trim_idx, const symbol_fset &args, const T &value)
+inline T km_trim(const std::vector<char> &trim_idx, const symbol_fset &args, const T &value)
 {
+    if (unlikely(trim_idx.size() != args.size())) {
+        piranha_throw(std::invalid_argument,
+                      "invalid mask for trim(): the size of the mask (" + std::to_string(trim_idx.size())
+                          + ") differs from the size of the reference symbol set (" + std::to_string(args.size())
+                          + ")");
+    }
     const VType tmp = km_unpack<VType, KaType>(args, value);
-    auto idx_it = trim_idx.begin();
-    const auto idx_end = trim_idx.end();
     VType new_vector;
     for (decltype(tmp.size()) i = 0; i < tmp.size(); ++i) {
-        if (idx_it != idx_end && i == *idx_it) {
-            ++idx_it;
-        } else {
+        if (!trim_idx[static_cast<decltype(trim_idx.size())>(i)]) {
             new_vector.push_back(tmp[i]);
         }
     }
