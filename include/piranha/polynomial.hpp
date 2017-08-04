@@ -1728,6 +1728,56 @@ private:
         };
         // Task block size.
         const size_type block_size = safe_cast<size_type>(tuning::get_multiplication_block_size());
+
+        if (v1.size() > 20000u && v2.size() > 20000u) {
+            std::cout << "special sauce\n";
+            std::vector<std::tuple<size_type, size_type, size_type, size_type>> vt;
+            for (size_type i = 0; i < v1.size(); i += block_size) {
+                for (size_type j = 0; j < v2.size(); j += block_size) {
+                    vt.emplace_back(i, std::min(i + block_size, v1.size()), j, std::min(j + block_size, v2.size()));
+                }
+            }
+            constexpr size_type slength = 2;
+            constexpr size_type buf_size = (slength + 1) * slength + 1;
+            term_type buffer[buf_size];
+            const auto it_end = container.end();
+            for (const auto &t : vt) {
+                const size_type s1 = std::get<0>(t), e1 = std::get<1>(t), s2 = std::get<2>(t), e2 = std::get<3>(t);
+                for (size_type i = s1; i < e1; i += slength) {
+                    for (size_type j = s2; j < e2; j += slength) {
+                        size_type cur_size = 0;
+                        const auto end_k = std::min(e1, i + slength);
+                        const auto end_l = std::min(e2, j + slength);
+                        for (size_type k = i; k < end_k; ++k) {
+                            for (size_type l = j; l < end_l; ++l) {
+                                buffer[cur_size].m_key.set_int(v1[k]->m_key.get_int() + v2[l]->m_key.get_int());
+                                size_type m = 0;
+                                for (; buffer[m].m_key != buffer[cur_size].m_key; ++m) {
+                                }
+                                if (m != cur_size) {
+                                    this->fma_wrap(buffer[m].m_cf, v1[k]->m_cf, v2[l]->m_cf);
+                                } else {
+                                    detail::cf_mult_impl(buffer[m].m_cf, v1[k]->m_cf, v2[l]->m_cf);
+                                    ++cur_size;
+                                }
+                            }
+                        }
+                        // std::cout << "size: " << cur_size << '\n';
+                        for (size_type m = 0; m < cur_size; ++m) {
+                            auto bucket_idx = container._bucket(buffer[m]);
+                            const auto it = container._find(buffer[m], bucket_idx);
+                            if (it == it_end) {
+                                container._unique_insert(std::move(buffer[m]), bucket_idx);
+                            } else {
+                                math::add3(it->m_cf, it->m_cf, buffer[m].m_cf);
+                            }
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
         // Task splitter: split a task in block_size sized tasks and append them to out.
         auto task_split = [block_size](const task_type &t, std::vector<task_type> &out) {
             size_type start = std::get<1u>(t), end = std::get<2u>(t);
