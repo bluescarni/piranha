@@ -29,7 +29,11 @@ Changes
 Fix
 ~~~
 
-- Fix missing #undef for an internal macro. [Francesco Biscani]
+- Fix missing #undef for an internal macro (`#104 <https://github.com/bluescarni/piranha/pull/104>`__).
+
+- Fix pyranha's compilation against recent Boost versions (`#110 <https://github.com/bluescarni/piranha/pull/110>`__).
+
+- Build system fixes for recent GCC versions (`#110 <https://github.com/bluescarni/piranha/pull/110>`__).
 
 - Fix building with BZip2 support on older CMake versions. [Francesco
   Biscani]

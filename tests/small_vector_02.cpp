@@ -95,10 +95,10 @@ struct boost_s11n_tester {
             BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, v_type>::value));
             BOOST_CHECK((!has_boost_load<void, v_type>::value));
             using size_type = typename v_type::size_type;
-            std::uniform_int_distribution<size_type> sdist(0u, 20u);
+            std::uniform_int_distribution<unsigned> sdist(0u, 20u);
             std::uniform_int_distribution<int> edist(-10, 10);
             for (int i = 0; i < ntries; ++i) {
-                auto size = sdist(rng);
+                auto size = static_cast<size_type>(sdist(rng));
                 v_type v;
                 for (decltype(size) j = 0; j < size; ++j) {
                     v.push_back(T(edist(rng)));
@@ -160,11 +160,11 @@ struct msgpack_s11n_tester {
             BOOST_CHECK((!has_msgpack_convert<const v_type &>::value));
             BOOST_CHECK((!has_msgpack_convert<const v_type &>::value));
             using size_type = typename v_type::size_type;
-            std::uniform_int_distribution<size_type> sdist(0u, 20u);
+            std::uniform_int_distribution<unsigned> sdist(0u, 20u);
             std::uniform_int_distribution<int> edist(-10, 10);
             for (int i = 0; i < ntries; ++i) {
                 for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
-                    auto size = sdist(rng);
+                    auto size = static_cast<size_type>(sdist(rng));
                     v_type v;
                     for (decltype(size) j = 0; j < size; ++j) {
                         v.push_back(T(edist(rng)));
