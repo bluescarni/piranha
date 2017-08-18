@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Piranha polynomials and series &#8212; Piranha 0.10 documentation</title>
-    
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootswatch-3.3.6/flatly/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -141,7 +137,7 @@
   <div class="section" id="piranha-polynomials-and-series">
 <span id="polynomials"></span><h1>Piranha polynomials and series<a class="headerlink" href="#piranha-polynomials-and-series" title="Permalink to this headline">¶</a></h1>
 <p>In Piranha a <code class="docutils literal"><span class="pre">series</span></code> is a collection of terms where a sum operation is implied between terms. Each term, in turn, is a pair made of a coefficient and a key. The key uniquely identifies a term in a series, in the sense that no terms with equivalent key can exist inside the same series (e.g., the terms <code class="docutils literal"><span class="pre">7*x</span></code> and <code class="docutils literal"><span class="pre">6*x</span></code> would be compressed into the single term <code class="docutils literal"><span class="pre">13*x</span></code> in a <code class="docutils literal"><span class="pre">polynomial</span></code>).</p>
-<p>Piranha implements so far three different <strong>key</strong> types: <code class="docutils literal"><span class="pre">monomial</span></code> (here meaning a product of powers of symbolic variables, where the powers are not limited to being integral values), trigonometric monomials (e.g., objects of the type &#8220;cos(2*x-y)&#8221;) and <code class="docutils literal"><span class="pre">divisors</span></code> (e.g., objects of the type 1/[(x-y)**n*(x+2*y)**m]). A <strong>coefficient</strong> type can be any type that satisfies a few basic requirements (e.g., it must support basic arithmetic operations). Piranha provides some useful coefficient types such as arbitrary-precision integrals/rationals/reals:</p>
+<p>Piranha implements so far three different <strong>key</strong> types: <code class="docutils literal"><span class="pre">monomial</span></code> (here meaning a product of powers of symbolic variables, where the powers are not limited to being integral values), trigonometric monomials (e.g., objects of the type “cos(2*x-y)”) and <code class="docutils literal"><span class="pre">divisors</span></code> (e.g., objects of the type 1/[(x-y)**n*(x+2*y)**m]). A <strong>coefficient</strong> type can be any type that satisfies a few basic requirements (e.g., it must support basic arithmetic operations). Piranha provides some useful coefficient types such as arbitrary-precision integrals/rationals/reals:</p>
 <ul class="simple">
 <li><a class="reference internal" href="fundamental_types.html#fundamental-types"><span class="std std-ref">Fundamental numerical types in Piranha</span></a></li>
 </ul>
@@ -149,7 +145,7 @@
 <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">p_type</span> <span class="o">=</span> <span class="n">polynomial</span><span class="o">&lt;</span><span class="n">integer</span><span class="p">,</span><span class="n">monomial</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Here we are selecting &#8220;integer&#8221; as coefficient type and <code class="docutils literal"><span class="pre">monomial&lt;int&gt;</span></code> as key type. <code class="docutils literal"><span class="pre">monomial&lt;int&gt;</span></code> represents monomial as arrays of type <code class="docutils literal"><span class="pre">int</span></code>. If you need more range for the exponents you could do:</p>
+<p>Here we are selecting “integer” as coefficient type and <code class="docutils literal"><span class="pre">monomial&lt;int&gt;</span></code> as key type. <code class="docutils literal"><span class="pre">monomial&lt;int&gt;</span></code> represents monomial as arrays of type <code class="docutils literal"><span class="pre">int</span></code>. If you need more range for the exponents you could do:</p>
 <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">p_type</span> <span class="o">=</span> <span class="n">polynomial</span><span class="o">&lt;</span><span class="n">integer</span><span class="p">,</span><span class="n">monomial</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;&gt;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -169,7 +165,7 @@
 <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">p_type</span> <span class="n">x</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">};</span>
 </pre></div>
 </div>
-<p><code class="docutils literal"><span class="pre">x</span></code> will be a polynomial in 1 variable, &#8220;x&#8221;, with one term with coefficient 1 and monomial <code class="docutils literal"><span class="pre">x**1</span></code>. All series types support basic arithmetic:</p>
+<p><code class="docutils literal"><span class="pre">x</span></code> will be a polynomial in 1 variable, “x”, with one term with coefficient 1 and monomial <code class="docutils literal"><span class="pre">x**1</span></code>. All series types support basic arithmetic:</p>
 <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">p_type</span> <span class="n">x</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">},</span> <span class="n">y</span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">};</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">x</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span>  <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// This will print &quot;x+2y&quot; or &quot;2y+x&quot;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="p">)</span>  <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span> <span class="c1">// This will print &quot;x**2-y**2&quot; or &quot;y**2-x**2&quot;</span>
@@ -178,7 +174,7 @@
 <p>Division is supported only wrt to scalar (that is, there is no true polynomial division algorithm implemented in Piranha at the moment).</p>
 <div class="section" id="degree-truncation">
 <h2>Degree truncation<a class="headerlink" href="#degree-truncation" title="Permalink to this headline">¶</a></h2>
-<p>For truncated power series, you might be interested in Piranha&#8217;s truncated multiplication:</p>
+<p>For truncated power series, you might be interested in Piranha’s truncated multiplication:</p>
 <div class="highlight-c++"><div class="highlight"><pre><span></span><span class="n">p_type</span> <span class="n">x</span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">},</span> <span class="n">y</span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">};</span>
 <span class="n">p_type</span><span class="o">::</span><span class="n">set_auto_truncate_degree</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
@@ -202,7 +198,7 @@
 </pre></div>
 </div>
 <p>This provides the best performance, but the exponents range and number of possible variables representable in a monomial are limited.</p>
-<p>Internally, Piranha stores the collection of terms using a hash table and it is thus optimised to deal with large sparse multivariate polynomials. That is, Piranha will probably be suboptimal with respect to a dense univariate representation if all you want to do is to represent the MacLaurin expansion of sin(x). Please see this page with recent benchmarks on Piranha&#8217;s performance when multiplying very large polynomials:</p>
+<p>Internally, Piranha stores the collection of terms using a hash table and it is thus optimised to deal with large sparse multivariate polynomials. That is, Piranha will probably be suboptimal with respect to a dense univariate representation if all you want to do is to represent the MacLaurin expansion of sin(x). Please see this page with recent benchmarks on Piranha’s performance when multiplying very large polynomials:</p>
 <p><a class="reference external" href="http://bluescarni.github.io/new-series-multipliers-in-piranha.html">http://bluescarni.github.io/new-series-multipliers-in-piranha.html</a></p>
 </div>
 </div>
@@ -220,7 +216,7 @@
     </p>
     <p>
         &copy; Copyright 2009-2017, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

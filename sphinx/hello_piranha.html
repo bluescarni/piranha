@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Hello Piranha! &#8212; Piranha 0.10 documentation</title>
-    
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootswatch-3.3.6/flatly/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -206,7 +202,7 @@ the compilation to be successful. For instance, on a modern GNU/Linux distributi
 Piranha is written in C++11, and this flag is necessary as long as GCC does not default to C++11 mode;</li>
 <li>we specify via the <code class="docutils literal"><span class="pre">-lmpfr</span> <span class="pre">-lgmp</span></code> flags that the executable needs to be linked to the GMP and MPFR libraries (if
 you do not do this, the program will still compile but the final linking will fail due to undefined references);</li>
-<li>for this simple example, it is not necessary to link to any other library. If, however, Piranha&#8217;s serialization capabilities
+<li>for this simple example, it is not necessary to link to any other library. If, however, Piranha’s serialization capabilities
 are used, then it will be necessary to link the executable to the Boost Serialization library and to the bzip2 library;</li>
 <li>Piranha itself is header-only, so there is no <code class="docutils literal"><span class="pre">-lpiranha</span></code> to link to.</li>
 </ul>
@@ -214,7 +210,7 @@ are used, then it will be necessary to link the executable to the Boost Serializ
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> g++ -O2 -DNDEBUG -std<span class="o">=</span>c++11 hello_piranha.cpp -lmpfr -lgmp -lpthread -pthread
 </pre></div>
 </div>
-<p>If <code class="docutils literal"><span class="pre">NDEBUG</span></code> is not defined, a noticeable runtime overhead due to Piranha&#8217;s self-checking mechanism will be introduced.</p>
+<p>If <code class="docutils literal"><span class="pre">NDEBUG</span></code> is not defined, a noticeable runtime overhead due to Piranha’s self-checking mechanism will be introduced.</p>
 <p>If you installed Piranha in a custom <code class="docutils literal"><span class="pre">PREFIX</span></code>, you will need to specify on the command line where
 the Piranha headers are located via the <code class="docutils literal"><span class="pre">-I</span></code> switch. E.g.,</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> g++ -I/home/username/.local/include -std<span class="o">=</span>c++11 hello_piranha.cpp -lmpfr -lgmp -lpthread -pthread
@@ -284,7 +280,7 @@ when called from Python.</p>
     </p>
     <p>
         &copy; Copyright 2009-2017, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>pyranha &#8212; Piranha 0.10 documentation</title>
-    
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootswatch-3.3.6/flatly/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
@@ -25,7 +21,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -38,7 +34,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -172,8 +168,8 @@
     <span class="c1"># Main lock for protecting reads/writes from multiple threads.</span>
     <span class="n">__lock</span> <span class="o">=</span> <span class="n">_thr</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_max_term_output">[docs]</a>    <span class="k">def</span> <span class="nf">get_max_term_output</span><span class="p">():</span>
+<div class="viewcode-block" id="settings.get_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_max_term_output">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_max_term_output</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Get the maximum number of series terms to print.</span>
 
 <span class="sd">        :returns: the maximum number of series terms to print</span>
@@ -186,8 +182,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_max_term_output</span><span class="p">()</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_max_term_output">[docs]</a>    <span class="k">def</span> <span class="nf">set_max_term_output</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<div class="viewcode-block" id="settings.set_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_max_term_output">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_max_term_output</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the maximum number of series terms to print.</span>
 
 <span class="sd">        :param n: number of series terms to print</span>
@@ -211,8 +207,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_max_term_output</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.reset_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_max_term_output">[docs]</a>    <span class="k">def</span> <span class="nf">reset_max_term_output</span><span class="p">():</span>
+<div class="viewcode-block" id="settings.reset_max_term_output"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_max_term_output">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">reset_max_term_output</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Reset the maximum number of series terms to print to the default value.</span>
 
 <span class="sd">        :raises: any exception raised by the invoked low-level function</span>
@@ -228,8 +224,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_max_term_output</span><span class="p">()</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_n_threads">[docs]</a>    <span class="k">def</span> <span class="nf">get_n_threads</span><span class="p">():</span>
+<div class="viewcode-block" id="settings.get_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_n_threads">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_n_threads</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Get the number of threads that can be used by Piranha.</span>
 
 <span class="sd">        The initial value is auto-detected on program startup.</span>
@@ -243,8 +239,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_n_threads</span><span class="p">()</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_n_threads">[docs]</a>    <span class="k">def</span> <span class="nf">set_n_threads</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<div class="viewcode-block" id="settings.set_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_n_threads">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_n_threads</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the number of threads that can be used by Piranha.</span>
 
 <span class="sd">        :param n: desired number of threads</span>
@@ -268,8 +264,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_n_threads</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.reset_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_n_threads">[docs]</a>    <span class="k">def</span> <span class="nf">reset_n_threads</span><span class="p">():</span>
+<div class="viewcode-block" id="settings.reset_n_threads"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_n_threads">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">reset_n_threads</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Reset the number of threads that can be used by Piranha to the default value.</span>
 
 <span class="sd">        :raises: any exception raised by the invoked low-level function</span>
@@ -286,8 +282,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_n_threads</span><span class="p">()</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_latex_repr">[docs]</a>    <span class="k">def</span> <span class="nf">get_latex_repr</span><span class="p">():</span>
+<div class="viewcode-block" id="settings.get_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_latex_repr">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_latex_repr</span><span class="p">():</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Check if the TeX representation of exposed types is enabled.</span>
 
 <span class="sd">        The ``_repr_latex_()`` method, if present, is used by the Jupyter notebook to display the TeX</span>
@@ -313,8 +309,8 @@
         <span class="k">with</span> <span class="n">settings</span><span class="o">.</span><span class="n">__lock</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span> <span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_latex_repr">[docs]</a>    <span class="k">def</span> <span class="nf">set_latex_repr</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
+<div class="viewcode-block" id="settings.set_latex_repr"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_latex_repr">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_latex_repr</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Set the availability of the ``_repr_latex_()`` method for the exposed types.</span>
 
 <span class="sd">        If *flag* is ``True``, the ``_repr_latex_()`` method of exposed types will be enabled. Otherwise,</span>
@@ -360,8 +356,8 @@
                     <span class="k">assert</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span> <span class="s1">&#39;_repr_latex_&#39;</span><span class="p">))</span>
                     <span class="nb">delattr</span><span class="p">(</span><span class="n">s_type</span><span class="p">,</span> <span class="s1">&#39;_repr_latex_&#39;</span><span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_min_work_per_thread">[docs]</a>    <span class="k">def</span> <span class="nf">get_min_work_per_thread</span><span class="p">():</span>
+<div class="viewcode-block" id="settings.get_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_min_work_per_thread">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_min_work_per_thread</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Get the minimum work per thread.</span>
 
 <span class="sd">        &gt;&gt;&gt; settings.get_min_work_per_thread() # doctest: +SKIP</span>
@@ -371,8 +367,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_get_min_work_per_thread</span><span class="p">()</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_min_work_per_thread">[docs]</a>    <span class="k">def</span> <span class="nf">set_min_work_per_thread</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<div class="viewcode-block" id="settings.set_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_min_work_per_thread">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_min_work_per_thread</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the minimum work per thread.</span>
 
 <span class="sd">        :param n: desired work per thread</span>
@@ -396,8 +392,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_min_work_per_thread</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.reset_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_min_work_per_thread">[docs]</a>    <span class="k">def</span> <span class="nf">reset_min_work_per_thread</span><span class="p">():</span>
+<div class="viewcode-block" id="settings.reset_min_work_per_thread"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.reset_min_work_per_thread">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">reset_min_work_per_thread</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Reset the minimum work per thread.</span>
 
 <span class="sd">        &gt;&gt;&gt; n = settings.get_min_work_per_thread()</span>
@@ -412,8 +408,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_s</span><span class="o">.</span><span class="n">_reset_min_work_per_thread</span><span class="p">()</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.set_thread_binding"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_thread_binding">[docs]</a>    <span class="k">def</span> <span class="nf">set_thread_binding</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
+<div class="viewcode-block" id="settings.set_thread_binding"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.set_thread_binding">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_thread_binding</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the thread binding policy.</span>
 
 <span class="sd">        By default, the threads created by Piranha are not bound to specific processors/cores.</span>
@@ -443,8 +439,8 @@
         <span class="kn">from</span> <span class="nn">._core</span> <span class="k">import</span> <span class="n">_settings</span> <span class="k">as</span> <span class="n">_s</span>
         <span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_s</span><span class="o">.</span><span class="n">_set_thread_binding</span><span class="p">,</span> <span class="n">flag</span><span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
-<div class="viewcode-block" id="settings.get_thread_binding"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_thread_binding">[docs]</a>    <span class="k">def</span> <span class="nf">get_thread_binding</span><span class="p">():</span>
+<div class="viewcode-block" id="settings.get_thread_binding"><a class="viewcode-back" href="../pyranha_root.html#pyranha.settings.get_thread_binding">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_thread_binding</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Get the thread binding policy.</span>
 
 <span class="sd">        This method will return the flag set by :py:meth:`pyranha.settings.set_thread_binding`.</span>
@@ -631,7 +627,7 @@
     </p>
     <p>
         &copy; Copyright 2009-2017, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

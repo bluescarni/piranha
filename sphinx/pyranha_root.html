@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>pyranha &#8212; Piranha 0.10 documentation</title>
-    
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootswatch-3.3.6/flatly/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -321,7 +317,7 @@ description of how the method is used.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) &#8211; availability flag for the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) – availability flag for the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if <em>flag</em> is not a <code class="docutils literal"><span class="pre">bool</span></code></td>
 </tr>
@@ -356,7 +352,7 @@ description of how the method is used.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) &#8211; number of series terms to print</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – number of series terms to print</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
 </tr>
@@ -386,7 +382,7 @@ description of how the method is used.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) &#8211; desired work per thread</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – desired work per thread</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
 </tr>
@@ -416,7 +412,7 @@ description of how the method is used.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) &#8211; desired number of threads</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) – desired number of threads</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
 </tr>
@@ -451,7 +447,7 @@ free to migrate across processors/cores.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) &#8211; the desired thread binding policy</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) – the desired thread binding policy</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
 </tr>
@@ -576,10 +572,10 @@ error will be produced.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obj</strong> (<em>a supported symbolic type</em>) &#8211; the symbolic object that will be saved to file</li>
-<li><strong>name</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; the file name</li>
-<li><strong>df</strong> &#8211; the desired data format (see <a class="reference internal" href="#pyranha.data_format" title="pyranha.data_format"><code class="xref py py-class docutils literal"><span class="pre">pyranha.data_format</span></code></a>)</li>
-<li><strong>cf</strong> &#8211; the desired compression format (see <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a>)</li>
+<li><strong>obj</strong> (<em>a supported symbolic type</em>) – the symbolic object that will be saved to file</li>
+<li><strong>name</strong> (<code class="docutils literal"><span class="pre">str</span></code>) – the file name</li>
+<li><strong>df</strong> – the desired data format (see <a class="reference internal" href="#pyranha.data_format" title="pyranha.data_format"><code class="xref py py-class docutils literal"><span class="pre">pyranha.data_format</span></code></a>)</li>
+<li><strong>cf</strong> – the desired compression format (see <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a>)</li>
 </ul>
 </td>
 </tr>
@@ -632,10 +628,10 @@ as data format and <em>cf</em> as compression format. The possible values for <e
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obj</strong> (<em>a supported symbolic type</em>) &#8211; the symbolic object into which the file&#8217;s data will be loaded</li>
-<li><strong>name</strong> (<code class="docutils literal"><span class="pre">str</span></code>) &#8211; the source file name</li>
-<li><strong>df</strong> &#8211; the desired data format (see <a class="reference internal" href="#pyranha.data_format" title="pyranha.data_format"><code class="xref py py-class docutils literal"><span class="pre">pyranha.data_format</span></code></a>)</li>
-<li><strong>cf</strong> &#8211; the desired compression format (see <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a>)</li>
+<li><strong>obj</strong> (<em>a supported symbolic type</em>) – the symbolic object into which the file’s data will be loaded</li>
+<li><strong>name</strong> (<code class="docutils literal"><span class="pre">str</span></code>) – the source file name</li>
+<li><strong>df</strong> – the desired data format (see <a class="reference internal" href="#pyranha.data_format" title="pyranha.data_format"><code class="xref py py-class docutils literal"><span class="pre">pyranha.data_format</span></code></a>)</li>
+<li><strong>cf</strong> – the desired compression format (see <a class="reference internal" href="#pyranha.compression" title="pyranha.compression"><code class="xref py py-class docutils literal"><span class="pre">pyranha.compression</span></code></a>)</li>
 </ul>
 </td>
 </tr>
@@ -667,7 +663,7 @@ as data format and <em>cf</em> as compression format. The possible values for <e
     </p>
     <p>
         &copy; Copyright 2009-2017, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

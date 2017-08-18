@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Quick install &#8212; Piranha 0.10 documentation</title>
-    
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootswatch-3.3.6/flatly/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -157,7 +153,7 @@ of the Piranha headers in <code class="docutils literal"><span class="pre">/usr/
 <span class="gp">$</span> sudo make install
 </pre></div>
 </div>
-<p>The commands above assume that Git, a compiler toolchain, CMake and all of Piranha&#8217;s dependencies have already been
+<p>The commands above assume that Git, a compiler toolchain, CMake and all of Piranha’s dependencies have already been
 installed on the system. The following sections explain the installation process in detail (including the installation
 of the Python bindings).</p>
 </div>
@@ -190,7 +186,7 @@ should be <a class="reference external" href="https://github.com/bluescarni/pira
 2.7 and later versions, including Python 3.x, are supported). <a class="reference external" href="http://www.cmake.org/">CMake</a> is the build system
 used by Piranha and must also be installed.</p>
 <p>These dependencies should be installed on your system before attempting to compile Piranha. On GNU/Linux
-and BSD flavours, the best way to proceed is to install them via the distribution&#8217;s package manager
+and BSD flavours, the best way to proceed is to install them via the distribution’s package manager
 (remembering to install also the <code class="docutils literal"><span class="pre">-devel</span></code> counterparts of the packages). If the dependencies are installed
 in non-standard locations (as it can often happen on OSX and Windows), a certain degree of manual tweaking
 of the <a class="reference internal" href="#getting-started-configuration"><span class="std std-ref">configuration process</span></a> will probably be required.</p>
@@ -237,13 +233,13 @@ generated during the build process are separated from the original source files.
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> cmake ../
 </pre></div>
 </div>
-<p>CMake will look for Piranha&#8217;s dependencies in standard paths, and it will produce an error message if it cannot
+<p>CMake will look for Piranha’s dependencies in standard paths, and it will produce an error message if it cannot
 detect them. It is possible to tell explicitly CMake where to find a specific library by passing the information
 on the command line. For instance,</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> cmake ../ -DGMP_LIBRARIES<span class="o">=</span>/custom/location/for/libgmp.so
 </pre></div>
 </div>
-<p>will instruct CMake to use the GMP library at the location <code class="docutils literal"><span class="pre">/custom/location/for/libgmp.so</span></code>. CMake&#8217;s GUIs are handy
+<p>will instruct CMake to use the GMP library at the location <code class="docutils literal"><span class="pre">/custom/location/for/libgmp.so</span></code>. CMake’s GUIs are handy
 to discover, set and, if necessary, override the internal variables set by CMake during the configuration phase.
 This is particularily useful on platforms such as OSX and Windows.</p>
 <p>Piranha can be built either in <code class="docutils literal"><span class="pre">Debug</span></code> or in <code class="docutils literal"><span class="pre">Release</span></code> mode. In <code class="docutils literal"><span class="pre">Debug</span></code> mode, the code will perform
@@ -285,7 +281,7 @@ jobs:</p>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">Be aware that the compilation of Piranha&#8217;s unit tests and Python bindings consumes a
+<p class="last">Be aware that the compilation of Piranha’s unit tests and Python bindings consumes a
 large amount of memory. At least 8GB of RAM are suggested for the compilation of the Python bindings.</p>
 </div>
 <p>After a successful build in <code class="docutils literal"><span class="pre">Debug</span></code> mode, it is good practice to run the test suite:</p>
@@ -343,7 +339,7 @@ while monitoring the memory usage in order to avoid heavy thrashing.</p>
 of <code class="docutils literal"><span class="pre">PREFIX</span></code> where Python modules can be found by the Python interpreter (e.g., something like <code class="docutils literal"><span class="pre">PREFIX/lib/python2.7/site-packages</span></code> in a
 typical Python 2.7 installation on GNU/Linux).</p>
 <p>If you do not have write permissions in <code class="docutils literal"><span class="pre">/usr/local</span></code>, it is possible to change the <code class="docutils literal"><span class="pre">PREFIX</span></code> in the configuration phase. It is
-advisable to set the <code class="docutils literal"><span class="pre">PREFIX</span></code> to a subdirectory in the user&#8217;s home directory (e.g., <code class="docutils literal"><span class="pre">/home/username/.local</span></code>).
+advisable to set the <code class="docutils literal"><span class="pre">PREFIX</span></code> to a subdirectory in the user’s home directory (e.g., <code class="docutils literal"><span class="pre">/home/username/.local</span></code>).
 The <code class="docutils literal"><span class="pre">PREFIX</span></code> can be set via the <code class="docutils literal"><span class="pre">CMAKE_INSTALL_PREFIX</span></code> CMake variable during the
 <a class="reference internal" href="#getting-started-configuration"><span class="std std-ref">configuration process</span></a>.</p>
 <p>On the Python side, in order to check that the installation of the Pyranha module was successful it will be enough to
@@ -389,7 +385,7 @@ environment variable in order for the Python interpreter to locate Pyranha. More
     </p>
     <p>
         &copy; Copyright 2009-2017, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

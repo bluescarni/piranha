@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Fundamental numerical types in Piranha &#8212; Piranha 0.10 documentation</title>
-    
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootswatch-3.3.6/flatly/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -25,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,7 +36,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -145,18 +141,18 @@
 <span id="fundamental-types"></span><h1>Fundamental numerical types in Piranha<a class="headerlink" href="#fundamental-numerical-types-in-piranha" title="Permalink to this headline">¶</a></h1>
 <p>Any computer algebra system needs to be able to represent fundamental numerical types such as
 integers, rationals, (approximations of) reals, etc. C++ and Python provide basic numerical types
-that can be used with Piranha&#8217;s generic algorithms and data structures. However, especially in
+that can be used with Piranha’s generic algorithms and data structures. However, especially in
 C++, the numerical types provided by the language - while having the advantage of providing
 very high performance - can be unsuitable for certain applications (e.g., all the standard integral
 types provided by C++ have a finite range).</p>
 <p>On the C++ side Piranha provides a set of additional fundamental numerical types that can interoperate
-with the C++ fundamental types and that can be used with Piranha&#8217;s generic algorithms and data structures
-(e.g., as coefficient types in a polynomial). On the Python side, Piranha&#8217;s fundamental types are
-automatically translated to/from corresponding Python types whenever Pyranha&#8217;s routine and data
+with the C++ fundamental types and that can be used with Piranha’s generic algorithms and data structures
+(e.g., as coefficient types in a polynomial). On the Python side, Piranha’s fundamental types are
+automatically translated to/from corresponding Python types whenever Pyranha’s routine and data
 structures are used.</p>
 <div class="section" id="the-integer-type">
 <h2>The <code class="docutils literal"><span class="pre">integer</span></code> type<a class="headerlink" href="#the-integer-type" title="Permalink to this headline">¶</a></h2>
-<p>Piranha&#8217;s <code class="docutils literal"><span class="pre">integer</span></code> type is used to represent signed integers of arbitrary size (that is, the range
+<p>Piranha’s <code class="docutils literal"><span class="pre">integer</span></code> type is used to represent signed integers of arbitrary size (that is, the range
 of the type is limited only by the available memory). The type is based on the <code class="docutils literal"><span class="pre">mpz_t</span></code> type from the
 <a class="reference external" href="http://www.gmplib.org/">GMP library</a>. As an optimisation, for small numbers <code class="docutils literal"><span class="pre">integer</span></code> avoids
 using dynamic memory allocation and can thus have better performance than a straightforward <code class="docutils literal"><span class="pre">mpz_t</span></code>
@@ -266,12 +262,12 @@ from string that allows to initialise an <code class="docutils literal"><span cl
 some examples of arithmetics with basic C++ types are illustrated.</p>
 <p>On line 28, we can see how the <code class="docutils literal"><span class="pre">math::pow()</span></code> function can be invoked in order to compute the exponentiation of
 an <code class="docutils literal"><span class="pre">integer</span></code>. C++ lacks a dedicated exponentiation operator and thus the functionality is provided by a function
-instead. The <code class="docutils literal"><span class="pre">math::pow()</span></code> function is part of Piranha&#8217;s mathematical library.</p>
+instead. The <code class="docutils literal"><span class="pre">math::pow()</span></code> function is part of Piranha’s mathematical library.</p>
 <p>Line 38 highlights a couple of handy C++11 features. The snippet <code class="docutils literal"><span class="pre">42_z</span></code> is a <em>user-defined literal</em>: it results
 in the construction of an <code class="docutils literal"><span class="pre">integer</span></code> object via the string <code class="docutils literal"><span class="pre">&quot;42&quot;</span></code>. The constructed temporary object
 is then assigned to a variable <code class="docutils literal"><span class="pre">n</span></code> in the statement <code class="docutils literal"><span class="pre">auto</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">42_z</span></code>. The type of <code class="docutils literal"><span class="pre">n</span></code> is automatically
 deduced via the keyword <code class="docutils literal"><span class="pre">auto</span></code> from the right-hand side of the assignment, thus <code class="docutils literal"><span class="pre">n</span></code> is an <code class="docutils literal"><span class="pre">integer</span></code> object.
-This is arguably the C++ syntax that most closely matches Python&#8217;s syntax.</p>
+This is arguably the C++ syntax that most closely matches Python’s syntax.</p>
 <p>On line 42, we use the <code class="docutils literal"><span class="pre">math::binomial()</span></code> function from the math library to compute the binomial coefficient
 <span class="math">\({42 \choose 21}\)</span>, passing the two arguments as <code class="docutils literal"><span class="pre">integer</span></code> objects created via the user-defined literal <code class="docutils literal"><span class="pre">_z</span></code>.</p>
 <p>As expected, on the Python side things look simpler:</p>
@@ -747,7 +743,7 @@ to a <code class="docutils literal"><span class="pre">real</span></code> which w
     </p>
     <p>
         &copy; Copyright 2009-2017, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>
