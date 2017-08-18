@@ -25,6 +25,10 @@ Changes
 Fix
 ~~~
 
+- Fix pyranha's compilation against recent Boost versions (`#110 <https://github.com/bluescarni/piranha/pull/110>`__).
+
+- Build system fixes for recent GCC versions (`#110 <https://github.com/bluescarni/piranha/pull/110>`__).
+
 - Fix building with BZip2 support on older CMake versions. [Francesco
   Biscani]
 
