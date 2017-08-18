@@ -67,6 +67,16 @@ YACMA_PYTHON_MODULE(_core
  # Setup the installation path.
 set(PYRANHA_INSTALL_PATH "${YACMA_PYTHON_MODULES_INSTALL_PATH}/pyranha")
 
+# Boost.Python version 1.64 (and possibly later?) has issues with default hidden visibility.
+if(${Boost_MAJOR_VERSION} GREATER 1 OR (${Boost_MAJOR_VERSION} EQUAL 1 AND ${Boost_MINOR_VERSION} GREATER 63))
+	list(FIND PIRANHA_CXX_FLAGS_DEBUG "-fvisibility=hidden" _PYGMO_HAS_VHIDDEN)
+	if (NOT ${_PYGMO_HAS_VHIDDEN} EQUAL -1)
+		message(STATUS "Removing the '-fvisibility=hidden' flag for Boost.Python > 1.63.")
+		list(REMOVE_ITEM PIRANHA_CXX_FLAGS_DEBUG "-fvisibility=hidden")
+		list(REMOVE_ITEM PIRANHA_CXX_FLAGS_RELEASE "-fvisibility=hidden")
+	endif()
+endif()
+
 target_compile_options(_core PRIVATE "$<$<CONFIG:DEBUG>:${PIRANHA_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PIRANHA_CXX_FLAGS_RELEASE}>")
 # The module needs Boost.Python and the mandatory libraries. Python libs and includes are already linked in
 # by YACMA_PYTHON_MODULE().
