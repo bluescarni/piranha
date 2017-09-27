@@ -1,4 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structpiranha_1_1boost__load__via__boost__api.html" title="piranha::boost_load\l_via_boost_api\&lt; Archive,\l mp_integer\&lt; SSize \&gt; \&gt;" alt="" coords="7,13,175,77"/>
-<area shape="rect" id="node3" href="$structpiranha_1_1boost__load__impl_3_01_archive_00_01mp__integer_3_01_s_size_01_4_00_01mp__integ4fce64e951f33f83e5e78e341aeb2c08.html" title="Specialisation of piranha::boost_load() for piranha::mp_integer. " alt="" coords="224,5,416,86"/>
+<area shape="rect" id="node1" href="$structpiranha_1_1boost__load__via__boost__api.html" title="piranha::boost_load\l_via_boost_api\&lt; Archive,\l mp_integer\&lt; SSize \&gt; \&gt;" alt="" coords="6,12,175,68"/>
+<area shape="rect" id="node2" href="$structpiranha_1_1boost__load__impl_3_01_archive_00_01mp__integer_3_01_s_size_01_4_00_01mp__integ4fce64e951f33f83e5e78e341aeb2c08.html" title="Specialisation of piranha::boost_load() for piranha::mp_integer. " alt="" coords="224,5,416,75"/>
 </map>

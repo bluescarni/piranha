@@ -1,12 +1,12 @@
 <map id="forwarding.hpp" name="forwarding.hpp">
-<area shape="rect" id="node3" href="$divisor__series_8hpp_source.html" title="divisor_series.hpp" alt="" coords="130,179,255,208"/>
-<area shape="rect" id="node7" href="$ipow__substitutable__series_8hpp_source.html" title="ipow_substitutable\l_series.hpp" alt="" coords="27,83,158,130"/>
-<area shape="rect" id="node11" href="$poisson__series_8hpp_source.html" title="poisson_series.hpp" alt="" coords="330,179,463,208"/>
-<area shape="rect" id="node14" href="$polynomial_8hpp_source.html" title="polynomial.hpp" alt="" coords="538,179,647,208"/>
-<area shape="rect" id="node17" href="$monomial_8hpp_source.html" title="monomial.hpp" alt="" coords="1001,92,1102,121"/>
-<area shape="rect" id="node23" href="$power__series_8hpp_source.html" title="power_series.hpp" alt="" coords="182,92,305,121"/>
-<area shape="rect" id="node29" href="$substitutable__series_8hpp_source.html" title="substitutable_series.hpp" alt="" coords="379,92,542,121"/>
-<area shape="rect" id="node35" href="$t__substitutable__series_8hpp_source.html" title="t_substitutable_series.hpp" alt="" coords="566,92,739,121"/>
-<area shape="rect" id="node40" href="$trigonometric__series_8hpp_source.html" title="trigonometric_series.hpp" alt="" coords="763,92,926,121"/>
-<area shape="rect" id="node5" href="$piranha_8hpp.html" title="Global piranha header file. " alt="" coords="457,256,545,285"/>
+<area shape="rect" id="node2" href="$divisor__series_8hpp_source.html" title="divisor_series.hpp" alt="" coords="131,171,257,197"/>
+<area shape="rect" id="node4" href="$ipow__substitutable__series_8hpp_source.html" title="ipow_substitutable\l_series.hpp" alt="" coords="28,81,157,122"/>
+<area shape="rect" id="node5" href="$poisson__series_8hpp_source.html" title="poisson_series.hpp" alt="" coords="334,171,468,197"/>
+<area shape="rect" id="node6" href="$polynomial_8hpp_source.html" title="polynomial.hpp" alt="" coords="544,171,653,197"/>
+<area shape="rect" id="node7" href="$monomial_8hpp_source.html" title="monomial.hpp" alt="" coords="1007,88,1109,115"/>
+<area shape="rect" id="node8" href="$power__series_8hpp_source.html" title="power_series.hpp" alt="" coords="182,88,305,115"/>
+<area shape="rect" id="node9" href="$substitutable__series_8hpp_source.html" title="substitutable_series.hpp" alt="" coords="381,88,544,115"/>
+<area shape="rect" id="node10" href="$t__substitutable__series_8hpp_source.html" title="t_substitutable_series.hpp" alt="" coords="568,88,742,115"/>
+<area shape="rect" id="node11" href="$trigonometric__series_8hpp_source.html" title="trigonometric_series.hpp" alt="" coords="767,88,930,115"/>
+<area shape="rect" id="node3" href="$piranha_8hpp.html" title="Global piranha header file. " alt="" coords="462,245,550,272"/>
 </map>

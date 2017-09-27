@@ -1,6 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classpiranha_1_1base__series__multiplier.html" title="Base series multiplier. " alt="" coords="7,118,148,165"/>
-<area shape="rect" id="node3" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1divisor__series__multiplier__enabler_3_01_series_01_4_01_4.html" title="Specialisation of piranha::series_multiplier for piranha::divisor_series. " alt="" coords="213,5,384,86"/>
-<area shape="rect" id="node5" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html" title="Specialisation of piranha::series_multiplier for piranha::polynomial. " alt="" coords="199,109,399,173"/>
-<area shape="rect" id="node7" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1ps__series__multiplier__enabler_3_01_series_01_4_01_4.html" title="Specialisation of piranha::series_multiplier for piranha::poisson_series. " alt="" coords="197,197,400,261"/>
+<area shape="rect" id="node1" href="$classpiranha_1_1base__series__multiplier.html" title="Base series multiplier. " alt="" coords="6,107,149,149"/>
+<area shape="rect" id="node2" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1divisor__series__multiplier__enabler_3_01_series_01_4_01_4.html" title="Specialisation of piranha::series_multiplier for piranha::divisor_series. " alt="" coords="213,5,385,75"/>
+<area shape="rect" id="node3" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1poly__multiplier__enabler_3_01_series_01_4_01_4.html" title="Specialisation of piranha::series_multiplier for piranha::polynomial. " alt="" coords="198,100,399,156"/>
+<area shape="rect" id="node4" href="$classpiranha_1_1series__multiplier_3_01_series_00_01detail_1_1ps__series__multiplier__enabler_3_01_series_01_4_01_4.html" title="Specialisation of piranha::series_multiplier for piranha::poisson_series. " alt="" coords="197,180,400,236"/>
 </map>

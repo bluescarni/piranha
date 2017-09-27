@@ -1,4 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structpiranha_1_1boost__save__via__boost__api.html" title="piranha::boost_save\l_via_boost_api\&lt; Archive,\l hash_set\&lt; T, Hash, Pred \&gt; \&gt;" alt="" coords="5,31,203,95"/>
-<area shape="rect" id="node3" href="$structpiranha_1_1boost__save__impl_3_01_archive_00_01hash__set_3_01_t_00_01_hash_00_01_pred_01_4592d403f6f7b648832368fe72e24c39f.html" title="Specialisation of piranha::boost_save() for piranha::hash_set. " alt="" coords="251,5,437,121"/>
+<area shape="rect" id="node1" href="$structpiranha_1_1boost__save__via__boost__api.html" title="piranha::boost_save\l_via_boost_api\&lt; Archive,\l hash_set\&lt; T, Hash, Pred \&gt; \&gt;" alt="" coords="5,27,203,83"/>
+<area shape="rect" id="node2" href="$structpiranha_1_1boost__save__impl_3_01_archive_00_01hash__set_3_01_t_00_01_hash_00_01_pred_01_4592d403f6f7b648832368fe72e24c39f.html" title="Specialisation of piranha::boost_save() for piranha::hash_set. " alt="" coords="251,5,437,105"/>
 </map>
