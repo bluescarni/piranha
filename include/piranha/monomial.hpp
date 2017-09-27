@@ -260,12 +260,11 @@ class monomial : public array_key<T, monomial<T, S>, S>
     struct ipow_subs_type_ {
     };
     template <typename U>
-    struct ipow_subs_type_<U, typename std::enable_if<std::is_constructible<ipow_subs_type__<U>, int>::value
-                                                      && std::is_assignable<ipow_subs_type__<U> &,
-                                                                            ipow_subs_type__<U>>::value
-                                                      && has_safe_cast<rational, typename base::value_type>::value
-                                                      && is_subtractable_in_place<typename base::value_type,
-                                                                                  integer>::value>::type> {
+    struct ipow_subs_type_<
+        U, typename std::enable_if<std::is_constructible<ipow_subs_type__<U>, int>::value
+                                   && std::is_assignable<ipow_subs_type__<U> &, ipow_subs_type__<U>>::value
+                                   && has_safe_cast<rational, typename base::value_type>::value
+                                   && is_subtractable_in_place<typename base::value_type, integer>::value>::type> {
         using type = ipow_subs_type__<U>;
     };
     template <typename U>
@@ -723,6 +722,26 @@ public:
         }
         return std::make_pair(std::move(expo), std::move(retval));
     }
+
+private:
+    // Let's hard code the custom behaviour for rational exponents for the moment.
+    // We can offer a customization point in the future.
+    template <typename U, enable_if_t<is_mp_rational<U>::value, int> = 0>
+    static void print_exponent(std::ostream &os, const U &e)
+    {
+        if (math::is_unitary(e.den())) {
+            os << e;
+        } else {
+            os << '(' << e << ')';
+        }
+    }
+    template <typename U, enable_if_t<!is_mp_rational<U>::value, int> = 0>
+    static void print_exponent(std::ostream &os, const U &e)
+    {
+        os << detail::prepare_for_print(e);
+    }
+
+public:
     /// Print.
     /**
      * This method will print to stream a human-readable representation of the monomial.
@@ -751,7 +770,8 @@ public:
                 os << args[i].get_name();
                 empty_output = false;
                 if (!math::is_unitary((*this)[i])) {
-                    os << "**" << detail::prepare_for_print((*this)[i]);
+                    os << "**";
+                    print_exponent(os, (*this)[i]);
                 }
             }
         }
@@ -809,9 +829,9 @@ private:
     template <typename U>
     using e_type = decltype(math::pow(std::declval<U const &>(), std::declval<T const &>()));
     template <typename U>
-    using eval_type = enable_if_t<conjunction<is_multipliable_in_place<e_type<U>>,
-                                              std::is_constructible<e_type<U>, int>, is_mappable<U>>::value,
-                                  e_type<U>>;
+    using eval_type = enable_if_t<
+        conjunction<is_multipliable_in_place<e_type<U>>, std::is_constructible<e_type<U>, int>, is_mappable<U>>::value,
+        e_type<U>>;
 
 public:
     /// Evaluation.
@@ -866,9 +886,9 @@ public:
 private:
     // Subs support (re-uses the e_type typedef from the eval type).
     template <typename U>
-    using subs_type = enable_if_t<conjunction<std::is_constructible<e_type<U>, int>,
-                                              std::is_assignable<e_type<U> &, e_type<U>>>::value,
-                                  e_type<U>>;
+    using subs_type = enable_if_t<
+        conjunction<std::is_constructible<e_type<U>, int>, std::is_assignable<e_type<U> &, e_type<U>>>::value,
+        e_type<U>>;
 
 public:
     /// Substitution.
@@ -1104,10 +1124,8 @@ private:
 #if defined(PIRANHA_WITH_MSGPACK)
     // Enablers for msgpack serialization.
     template <typename Stream>
-    using msgpack_pack_enabler
-        = enable_if_t<conjunction<is_msgpack_stream<Stream>,
-                                  has_msgpack_pack<Stream, typename base::container_type>>::value,
-                      int>;
+    using msgpack_pack_enabler = enable_if_t<
+        conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename base::container_type>>::value, int>;
     template <typename U>
     using msgpack_convert_enabler = enable_if_t<has_msgpack_convert<typename U::container_type>::value, int>;
 
