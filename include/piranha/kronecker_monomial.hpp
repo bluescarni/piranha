@@ -103,11 +103,11 @@ inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker
         typename piranha::kronecker_monomial<T>::v_type tmp;
         piranha::boost_load(ar, tmp);
         if (unlikely(tmp.size() != k.ss().size())) {
-            piranha_throw(std::invalid_argument,
-                          "invalid size detected in the deserialization of a Kronercker "
-                          "monomial: the deserialized size ("
-                              + std::to_string(tmp.size()) + ") differs from the size of the reference symbol set ("
-                              + std::to_string(k.ss().size()) + ")");
+            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
+                                                 "monomial: the deserialized size ("
+                                                     + std::to_string(tmp.size())
+                                                     + ") differs from the size of the reference symbol set ("
+                                                     + std::to_string(k.ss().size()) + ")");
         }
         k.key() = piranha::kronecker_monomial<T>(tmp);
     }
@@ -178,9 +178,7 @@ public:
     /**
      * After construction all exponents in the monomial will be zero.
      */
-    kronecker_monomial() : m_value(0)
-    {
-    }
+    kronecker_monomial() : m_value(0) {}
     /// Defaulted copy constructor.
     kronecker_monomial(const kronecker_monomial &) = default;
     /// Defaulted move constructor.
@@ -298,20 +296,18 @@ public:
     {
         const auto c_size = construct_from_range(begin, end);
         if (unlikely(c_size != s.size())) {
-            piranha_throw(std::invalid_argument,
-                          "the Kronecker monomial constructor from range and symbol set "
-                          "yielded an invalid monomial: the range length ("
-                              + std::to_string(c_size) + ") differs from the size of the symbol set ("
-                              + std::to_string(s.size()) + ")");
+            piranha_throw(std::invalid_argument, "the Kronecker monomial constructor from range and symbol set "
+                                                 "yielded an invalid monomial: the range length ("
+                                                     + std::to_string(c_size)
+                                                     + ") differs from the size of the symbol set ("
+                                                     + std::to_string(s.size()) + ")");
         }
     }
     /// Constructor from set of symbols.
     /**
      * After construction all exponents in the monomial will be zero.
      */
-    explicit kronecker_monomial(const symbol_fset &) : kronecker_monomial()
-    {
-    }
+    explicit kronecker_monomial(const symbol_fset &) : kronecker_monomial() {}
     /// Converting constructor.
     /**
      * This constructor is for use when converting from one term type to another in piranha::series. It will
@@ -319,9 +315,7 @@ public:
      *
      * @param other the construction argument.
      */
-    explicit kronecker_monomial(const kronecker_monomial &other, const symbol_fset &) : m_value(other.m_value)
-    {
-    }
+    explicit kronecker_monomial(const kronecker_monomial &other, const symbol_fset &) : m_value(other.m_value) {}
     /// Constructor from \p T.
     /**
      * This constructor will initialise the internal integer instance
@@ -329,9 +323,7 @@ public:
      *
      * @param n the value that will be used to construct the internal integer instance.
      */
-    explicit kronecker_monomial(const T &n) : m_value(n)
-    {
-    }
+    explicit kronecker_monomial(const T &n) : m_value(n) {}
     /// Destructor.
     ~kronecker_monomial()
     {
@@ -517,11 +509,11 @@ public:
         const auto tmp = unpack(args);
         piranha_assert(tmp.size() == args.size());
         if (unlikely(p.size() && *p.rbegin() >= tmp.size())) {
-            piranha_throw(std::invalid_argument,
-                          "the largest value in the positions set for the computation of the "
-                          "partial degree of a Kronecker monomial is "
-                              + std::to_string(*p.rbegin()) + ", but the monomial has a size of only "
-                              + std::to_string(tmp.size()));
+            piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
+                                                 "partial degree of a Kronecker monomial is "
+                                                     + std::to_string(*p.rbegin())
+                                                     + ", but the monomial has a size of only "
+                                                     + std::to_string(tmp.size()));
         }
         const auto cit = tmp.begin();
         degree_type retval(0);
@@ -645,11 +637,10 @@ public:
                 continue;
             }
             if (unlikely(v[i] != T(1))) {
-                piranha_throw(std::invalid_argument,
-                              "while attempting to extract the linear argument "
-                              "from a Kronecker monomial, a non-unitary exponent was "
-                              "encountered in correspondence of the variable '"
-                                  + (*args.nth(static_cast<decltype(args.size())>(i))) + "'");
+                piranha_throw(std::invalid_argument, "while attempting to extract the linear argument "
+                                                     "from a Kronecker monomial, a non-unitary exponent was "
+                                                     "encountered in correspondence of the variable '"
+                                                         + (*args.nth(static_cast<decltype(args.size())>(i))) + "'");
             }
             candidate = i;
             ++n_linear;
@@ -1105,13 +1096,12 @@ public:
 private:
     // Enablers for msgpack serialization.
     template <typename Stream>
-    using msgpack_pack_enabler = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
-                                                         has_msgpack_pack<Stream, v_type>>::value,
-                                             int>;
+    using msgpack_pack_enabler = enable_if_t<
+        conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>, has_msgpack_pack<Stream, v_type>>::value,
+        int>;
     template <typename U>
-    using msgpack_convert_enabler = enable_if_t<conjunction<has_msgpack_convert<typename U::value_type>,
-                                                            has_msgpack_convert<typename U::v_type>>::value,
-                                                int>;
+    using msgpack_convert_enabler = enable_if_t<
+        conjunction<has_msgpack_convert<typename U::value_type>, has_msgpack_convert<typename U::v_type>>::value, int>;
 
 public:
     /// Serialize in msgpack format.
@@ -1189,14 +1179,12 @@ inline namespace impl
 {
 
 template <typename Archive, typename T>
-using k_monomial_boost_save_enabler
-    = enable_if_t<conjunction<has_boost_save<Archive, T>,
-                              has_boost_save<Archive, typename kronecker_monomial<T>::v_type>>::value>;
+using k_monomial_boost_save_enabler = enable_if_t<
+    conjunction<has_boost_save<Archive, T>, has_boost_save<Archive, typename kronecker_monomial<T>::v_type>>::value>;
 
 template <typename Archive, typename T>
-using k_monomial_boost_load_enabler
-    = enable_if_t<conjunction<has_boost_load<Archive, T>,
-                              has_boost_load<Archive, typename kronecker_monomial<T>::v_type>>::value>;
+using k_monomial_boost_load_enabler = enable_if_t<
+    conjunction<has_boost_load<Archive, T>, has_boost_load<Archive, typename kronecker_monomial<T>::v_type>>::value>;
 }
 
 /// Specialisation of piranha::boost_save() for piranha::kronecker_monomial.
