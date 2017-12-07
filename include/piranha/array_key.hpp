@@ -349,15 +349,14 @@ public:
     /**
      * This method is used in piranha::series::trim(). The input parameter \p trim_mask
      * is a vector of boolean flags (i.e., a mask) which signals which elements in \p args are candidates
-     * for trimming (i.e., a zero value means that the symbol at the corresponding position
-     * in \p args is *not* a candidate for trimming, while a nonzero value means that the symbol is
-     * a candidate for trimming). This method will set to zero those values in \p trim_mask
-     * for which the corresponding element in \p this is zero.
+     * for trimming: a nonzero value means that the symbol at the corresponding position is a candidate for trimming,
+     * while a zero value means that the symbol is not a candidate for trimming. This method will set to zero those
+     * values in \p trim_mask for which the corresponding element in \p this is nonzero.
      *
      * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask originally contains
      * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p trim_mask will contain
      * <tt>[1,0,0,1,0]</tt> (that is, the second element was set from 1 to 0 as the corresponding element
-     * in \p this has a value of 5 and thus must not be trimmed).
+     * in \p this has a value of 5 and thus it must not be trimmed).
      *
      * @param trim_mask a mask signalling candidate elements for trimming.
      * @param args the reference piranha::symbol_fset.
@@ -369,10 +368,10 @@ public:
     {
         auto sbe = size_begin_end();
         if (unlikely(std::get<0>(sbe) != args.size())) {
-            piranha_throw(
-                std::invalid_argument,
-                "invalid arguments set for trim_identify(): the size of the array (" + std::to_string(std::get<0>(sbe))
-                    + ") differs from the size of the reference symbol set (" + std::to_string(args.size()) + ")");
+            piranha_throw(std::invalid_argument, "invalid symbol set for trim_identify(): the size of the array ("
+                                                     + std::to_string(std::get<0>(sbe))
+                                                     + ") differs from the size of the reference symbol set ("
+                                                     + std::to_string(args.size()) + ")");
         }
         if (unlikely(std::get<0>(sbe) != trim_mask.size())) {
             piranha_throw(std::invalid_argument,
@@ -381,6 +380,8 @@ public:
         }
         for (decltype(trim_mask.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
             if (!math::is_zero(*std::get<1>(sbe))) {
+                // The current element of the array is nonzero, set the
+                // corresponding element in the mask to zero.
                 trim_mask[i] = 0;
             }
         }
@@ -409,10 +410,10 @@ public:
     {
         auto sbe = size_begin_end();
         if (unlikely(std::get<0>(sbe) != args.size())) {
-            piranha_throw(std::invalid_argument,
-                          "invalid arguments set for trim(): the size of the array (" + std::to_string(std::get<0>(sbe))
-                              + ") differs from the size of the reference symbol set (" + std::to_string(args.size())
-                              + ")");
+            piranha_throw(std::invalid_argument, "invalid arguments set for trim(): the size of the array ("
+                                                     + std::to_string(std::get<0>(sbe))
+                                                     + ") differs from the size of the reference symbol set ("
+                                                     + std::to_string(args.size()) + ")");
         }
         if (unlikely(std::get<0>(sbe) != trim_mask.size())) {
             piranha_throw(std::invalid_argument,

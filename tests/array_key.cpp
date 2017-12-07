@@ -533,7 +533,7 @@ struct trim_identify_tester {
             k0.resize(1u);
             BOOST_CHECK_EXCEPTION(
                 k0.trim_identify(us, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
-                    return boost::contains(e.what(), "invalid arguments set for trim_identify(): the size of the array "
+                    return boost::contains(e.what(), "invalid symbol set for trim_identify(): the size of the array "
                                                      "(1) differs from the size of the reference symbol set (0)");
                 });
             BOOST_CHECK_EXCEPTION(
