@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <array>
+#include <boost/algorithm/string/predicate.hpp>
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
@@ -145,7 +146,14 @@ struct constructor_tester {
         v2 = {-3};
         k1 = k_type(v2.begin(), v2.end(), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(k1.get_int(), -3);
-        BOOST_CHECK_THROW(k1 = k_type(v2.begin(), v2.end(), symbol_fset{}), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(
+            k1 = k_type(v2.begin(), v2.end(), symbol_fset{}), std::invalid_argument,
+            [](const std::invalid_argument &e) {
+                return boost::contains(
+                    e.what(),
+                    "the Kronecker monomial constructor from range and symbol set "
+                    "yielded an invalid monomial: the range length (1) differs from the size of the symbol set (0)");
+            });
         v2 = {-1, 0};
         k1 = k_type(v2.begin(), v2.end(), symbol_fset{"x", "y"});
         ka::decode(v2, k1.get_int());
@@ -157,7 +165,14 @@ struct constructor_tester {
         l2 = {-3};
         k1 = k_type(l2.begin(), l2.end(), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(k1.get_int(), -3);
-        BOOST_CHECK_THROW(k1 = k_type(l2.begin(), l2.end(), symbol_fset{}), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(
+            k1 = k_type(l2.begin(), l2.end(), symbol_fset{}), std::invalid_argument,
+            [](const std::invalid_argument &e) {
+                return boost::contains(
+                    e.what(),
+                    "the Kronecker monomial constructor from range and symbol set "
+                    "yielded an invalid monomial: the range length (1) differs from the size of the symbol set (0)");
+            });
         l2 = {-1, 0};
         k1 = k_type(l2.begin(), l2.end(), symbol_fset{"x", "y"});
         ka::decode(v2, k1.get_int());
@@ -225,39 +240,40 @@ struct merge_args_tester {
     {
         using k_type = kronecker_monomial<T>;
         k_type k1;
-        BOOST_CHECK_THROW(k1.merge_symbols({}, symbol_fset{}), std::invalid_argument);
-        BOOST_CHECK_THROW(k1.merge_symbols({}, symbol_fset{"d"}), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(
+            k1.merge_symbols({}, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(),
+                                       "invalid argument(s) for symbol set merging: the insertion map cannot be empty");
+            });
+        BOOST_CHECK_EXCEPTION(
+            k1.merge_symbols({}, symbol_fset{"d"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(),
+                                       "invalid argument(s) for symbol set merging: the insertion map cannot be empty");
+            });
         BOOST_CHECK((k1.merge_symbols({{0, {"a", "b"}}}, symbol_fset{"d"}) == k_type{0, 0, 0}));
         BOOST_CHECK((k_type{1}.merge_symbols({{0, {"a", "b"}}}, symbol_fset{"d"}) == k_type{0, 0, 1}));
         BOOST_CHECK((k_type{1}.merge_symbols({{1, {"e", "f"}}}, symbol_fset{"d"}) == k_type{1, 0, 0}));
         BOOST_CHECK((k_type{1, 1}.merge_symbols({{0, {"a", "b"}}}, symbol_fset{"d", "n"}) == k_type{0, 0, 1, 1}));
         BOOST_CHECK((k_type{1, 1}.merge_symbols({{1, {"e", "f"}}}, symbol_fset{"d", "n"}) == k_type{1, 0, 0, 1}));
         BOOST_CHECK((k_type{1, 1}.merge_symbols({{2, {"f", "g"}}}, symbol_fset{"d", "e"}) == k_type{1, 1, 0, 0}));
-        BOOST_CHECK_THROW((k_type{1, 1}.merge_symbols({{3, {"f", "g"}}}, symbol_fset{"d", "e"})),
-                          std::invalid_argument);
-
-        // BOOST_CHECK(k1.merge_symbols({}, vs1).get_int() == 0);
-        // std::vector<T> v1(1);
-        // ka::decode(v1, k1.merge_args(empty, vs1).get_int());
-        // BOOST_CHECK(v1[0] == 0);
-        // auto vs2 = vs1;
-        // vs2.insert("b");
-        // k_type k2({-1});
-        // BOOST_CHECK(k2.merge_args(vs1, vs2).get_int() == ka::encode(std::vector<int>({-1, 0})));
-        // vs1.insert("c");
-        // vs2.insert("c");
-        // vs2.insert("d");
-        // k_type k3({-1, -1});
-        // BOOST_CHECK(k3.merge_args(vs1, vs2).get_int() == ka::encode(std::vector<int>({-1, 0, -1, 0})));
-        // vs1 = symbol_fset{"c"};
-        // k_type k4({-1});
-        // BOOST_CHECK(k4.merge_args(vs1, vs2).get_int() == ka::encode(std::vector<int>({0, 0, -1, 0})));
-        // vs1 = symbol_fset{};
-        // k_type k5({});
-        // BOOST_CHECK(k5.merge_args(vs1, vs2).get_int() == ka::encode(std::vector<int>({0, 0, 0, 0})));
-        // vs1.insert("e");
-        // BOOST_CHECK_THROW(k5.merge_args(vs1, vs2), std::invalid_argument);
-        // BOOST_CHECK_THROW(k5.merge_args(vs2, vs1), std::invalid_argument);
+        BOOST_CHECK(
+            (k_type{-1, -1}.merge_symbols({{0, {"a"}}, {2, {"f"}}}, symbol_fset{"d", "e"}) == k_type{0, -1, -1, 0}));
+        BOOST_CHECK((k_type{-1, -1}.merge_symbols({{0, {"a"}}, {1, std::initializer_list<std::string>{}}, {2, {"f"}}},
+                                                  symbol_fset{"d", "e"})
+                     == k_type{0, -1, -1, 0}));
+        BOOST_CHECK_EXCEPTION((k_type{1, 1}.merge_symbols({{3, {"f", "g"}}}, symbol_fset{"d", "e"})),
+                              std::invalid_argument, [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "invalid argument(s) for symbol set merging: the "
+                                                                   "last index of the insertion map (3) must not be "
+                                                                   "greater than the key's size (2)");
+                              });
+        if (std::numeric_limits<T>::max() >= std::numeric_limits<int>::max()) {
+            BOOST_CHECK((k_type{-1, -1}.merge_symbols({{0, {"a"}}, {2, {"f"}}, {1, {"b"}}}, symbol_fset{"d", "e"})
+                         == k_type{0, -1, 0, -1, 0}));
+            BOOST_CHECK(
+                (k_type{-1, -1, 3}.merge_symbols({{0, {"a"}}, {3, {"f"}}, {1, {"b"}}}, symbol_fset{"d", "e1", "e2"})
+                 == k_type{0, -1, 0, -1, 3, 0}));
+        }
     }
 };
 

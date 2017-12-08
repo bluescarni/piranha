@@ -46,6 +46,8 @@ namespace detail
 // https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html
 // Apparently from GCC 5 onwards:
 // https://software.intel.com/en-us/forums/intel-c-compiler/topic/720757
+// And clang from 3.4:
+// http://releases.llvm.org/3.4/tools/clang/docs/LanguageExtensions.html
 
 // An overloaded helper function to perform safely the addition in-place of two integral values. It will throw
 // std::overflow_error in case of out-of-range conditions.

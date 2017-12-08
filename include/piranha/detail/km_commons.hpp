@@ -51,9 +51,9 @@ template <typename VType, typename KaType, typename T>
 inline VType km_unpack(const symbol_fset &args, const T &value)
 {
     if (unlikely(args.size() > VType::max_size)) {
-        piranha_throw(std::invalid_argument,
-                      "the size of the input arguments set (" + std::to_string(args.size())
-                          + ") is larger than the maximum allowed size (" + std::to_string(VType::max_size) + ")");
+        piranha_throw(std::invalid_argument, "the size of the input arguments set (" + std::to_string(args.size())
+                                                 + ") is larger than the maximum allowed size ("
+                                                 + std::to_string(VType::max_size) + ")");
     }
     VType retval(static_cast<typename VType::size_type>(args.size()), 0);
     piranha_assert(args.size() == retval.size());
@@ -104,10 +104,10 @@ template <typename VType, typename KaType, typename T>
 inline void km_trim_identify(std::vector<char> &candidates, const symbol_fset &args, const T &value)
 {
     if (unlikely(candidates.size() != args.size())) {
-        piranha_throw(std::invalid_argument,
-                      "invalid mask for trim_identify(): the size of the mask (" + std::to_string(candidates.size())
-                          + ") differs from the size of the reference symbol set (" + std::to_string(args.size())
-                          + ")");
+        piranha_throw(std::invalid_argument, "invalid mask for trim_identify(): the size of the mask ("
+                                                 + std::to_string(candidates.size())
+                                                 + ") differs from the size of the reference symbol set ("
+                                                 + std::to_string(args.size()) + ")");
     }
     const VType tmp = km_unpack<VType, KaType>(args, value);
     for (decltype(tmp.size()) i = 0; i < tmp.size(); ++i) {
@@ -121,10 +121,10 @@ template <typename VType, typename KaType, typename T>
 inline T km_trim(const std::vector<char> &trim_idx, const symbol_fset &args, const T &value)
 {
     if (unlikely(trim_idx.size() != args.size())) {
-        piranha_throw(std::invalid_argument,
-                      "invalid mask for trim(): the size of the mask (" + std::to_string(trim_idx.size())
-                          + ") differs from the size of the reference symbol set (" + std::to_string(args.size())
-                          + ")");
+        piranha_throw(std::invalid_argument, "invalid mask for trim(): the size of the mask ("
+                                                 + std::to_string(trim_idx.size())
+                                                 + ") differs from the size of the reference symbol set ("
+                                                 + std::to_string(args.size()) + ")");
     }
     const VType tmp = km_unpack<VType, KaType>(args, value);
     VType new_vector;
