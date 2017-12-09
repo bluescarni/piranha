@@ -515,10 +515,9 @@ public:
                                                      + ", but the monomial has a size of only "
                                                      + std::to_string(tmp.size()));
         }
-        const auto cit = tmp.begin();
         degree_type retval(0);
         for (auto idx : p) {
-            detail::safe_integral_adder(retval, static_cast<degree_type>(cit[idx]));
+            detail::safe_integral_adder(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
         }
         return retval;
     }

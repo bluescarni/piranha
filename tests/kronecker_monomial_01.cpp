@@ -281,114 +281,89 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_merge_args_test)
 {
     tuple_for_each(int_types{}, merge_args_tester{});
 }
-#if 0
+
 struct is_unitary_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
-        typedef kronecker_array<T> ka;
+        using k_type = kronecker_monomial<T>;
         k_type k1;
-        symbol_set vs1;
-        BOOST_CHECK(k1.is_unitary(vs1));
+        BOOST_CHECK(k1.is_unitary(symbol_fset{}));
         k_type k2({-1});
-        vs1.add(symbol("a"));
-        BOOST_CHECK(!k2.is_unitary(vs1));
+        BOOST_CHECK(!k2.is_unitary(symbol_fset{"a"}));
         k_type k3({0});
-        BOOST_CHECK(k3.is_unitary(vs1));
-        vs1.add(symbol("b"));
+        BOOST_CHECK(k3.is_unitary(symbol_fset{"a"}));
         k_type k4({0, 0});
-        BOOST_CHECK(k4.is_unitary(vs1));
+        BOOST_CHECK(k4.is_unitary(symbol_fset{"a", "b"}));
         k_type k5({0, 1});
-        BOOST_CHECK(!k5.is_unitary(vs1));
-        BOOST_CHECK_THROW(k5.is_unitary(symbol_set{}), std::invalid_argument);
-        symbol_set vs2;
-        const auto &l = ka::get_limits();
-        typedef decltype(l.size()) size_type;
-        for (size_type i = 0u; i <= l.size(); ++i) {
-            vs2.add(std::to_string(i));
-        }
-        BOOST_CHECK_THROW(k5.is_unitary(vs2), std::invalid_argument);
+        BOOST_CHECK(!k5.is_unitary(symbol_fset{"a", "b"}));
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_is_unitary_test)
 {
-    boost::mpl::for_each<int_types>(is_unitary_tester());
+    tuple_for_each(int_types{}, is_unitary_tester{});
 }
 
 struct degree_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
+        using k_type = kronecker_monomial<T>;
         k_type k1;
-        symbol_set vs1;
         if (std::is_same<T, signed char>::value) {
-            BOOST_CHECK((std::is_same<decltype(k1.degree(vs1)), int>::value));
+            BOOST_CHECK((std::is_same<decltype(k1.degree(symbol_fset{})), int>::value));
         } else {
-            BOOST_CHECK((std::is_same<decltype(k1.degree(vs1)), T>::value));
+            BOOST_CHECK((std::is_same<decltype(k1.degree(symbol_fset{})), T>::value));
         }
-        BOOST_CHECK(k1.degree(vs1) == 0);
-        BOOST_CHECK(k1.ldegree(vs1) == 0);
+        BOOST_CHECK(k1.degree(symbol_fset{}) == 0);
+        BOOST_CHECK(k1.ldegree(symbol_fset{}) == 0);
         k_type k2({0});
-        vs1.add(symbol("a"));
-        BOOST_CHECK(k2.degree(vs1) == 0);
-        BOOST_CHECK(k2.ldegree(vs1) == 0);
+        BOOST_CHECK(k2.degree(symbol_fset{"a"}) == 0);
+        BOOST_CHECK(k2.ldegree(symbol_fset{"a"}) == 0);
         k_type k3({-1});
-        BOOST_CHECK(k3.degree(vs1) == -1);
-        BOOST_CHECK(k3.ldegree(vs1) == -1);
-        vs1.add(symbol("b"));
+        BOOST_CHECK(k3.degree(symbol_fset{"a"}) == -1);
+        BOOST_CHECK(k3.ldegree(symbol_fset{"a"}) == -1);
         k_type k4({0, 0});
-        BOOST_CHECK(k4.degree(vs1) == 0);
-        BOOST_CHECK(k4.ldegree(vs1) == 0);
+        BOOST_CHECK(k4.degree(symbol_fset{"a", "b"}) == 0);
+        BOOST_CHECK(k4.ldegree(symbol_fset{"a", "b"}) == 0);
         k_type k5({-1, -1});
-        BOOST_CHECK(k5.degree(vs1) == -2);
-        using positions = symbol_set::positions;
-        auto ss_to_pos = [](const symbol_set &v, const std::set<std::string> &s) {
-            symbol_set tmp;
-            for (const auto &str : s) {
-                tmp.add(str);
-            }
-            return positions(v, tmp);
-        };
+        BOOST_CHECK(k5.degree(symbol_fset{"a", "b"}) == -2);
         if (std::is_same<T, signed char>::value) {
-            BOOST_CHECK((std::is_same<decltype(k5.degree(ss_to_pos(vs1, {"a"}), vs1)), int>::value));
+            BOOST_CHECK((std::is_same<decltype(k5.degree(symbol_idx_fset{}, symbol_fset{})), int>::value));
         } else {
-            BOOST_CHECK((std::is_same<decltype(k5.degree(ss_to_pos(vs1, {"a"}), vs1)), T>::value));
+            BOOST_CHECK((std::is_same<decltype(k5.degree(symbol_idx_fset{}, symbol_fset{})), T>::value));
         }
-        BOOST_CHECK(k5.degree(ss_to_pos(vs1, {"a"}), vs1) == -1);
-        // NOTE: here it seems the compilation error arising when only {} is used (as opposed
-        // to std::set<std::string>{}) is a bug in libc++. See:
-        // http://clang-developers.42468.n3.nabble.com/C-11-error-about-initializing-explicit-constructor-with-td4029849.html
-        BOOST_CHECK(k5.degree(ss_to_pos(vs1, std::set<std::string>{}), vs1) == 0);
-        BOOST_CHECK(k5.degree(ss_to_pos(vs1, {"f"}), vs1) == 0);
-        BOOST_CHECK(k5.degree(ss_to_pos(vs1, {"a", "b"}), vs1) == -2);
-        BOOST_CHECK(k5.degree(ss_to_pos(vs1, {"a", "c"}), vs1) == -1);
-        BOOST_CHECK(k5.degree(ss_to_pos(vs1, {"d", "c"}), vs1) == 0);
-        BOOST_CHECK(k5.degree(ss_to_pos(vs1, {"d", "b"}), vs1) == -1);
-        BOOST_CHECK(k5.degree(ss_to_pos(vs1, {"A", "a"}), vs1) == -1);
-        BOOST_CHECK(k5.ldegree(vs1) == -2);
-        BOOST_CHECK(k5.ldegree(ss_to_pos(vs1, {"a"}), vs1) == -1);
-        BOOST_CHECK(k5.ldegree(ss_to_pos(vs1, std::set<std::string>{}), vs1) == 0);
-        BOOST_CHECK(k5.ldegree(ss_to_pos(vs1, {"f"}), vs1) == 0);
-        BOOST_CHECK(k5.ldegree(ss_to_pos(vs1, {"a", "b"}), vs1) == -2);
-        BOOST_CHECK(k5.ldegree(ss_to_pos(vs1, {"a", "c"}), vs1) == -1);
-        BOOST_CHECK(k5.ldegree(ss_to_pos(vs1, {"d", "c"}), vs1) == 0);
-        BOOST_CHECK(k5.ldegree(ss_to_pos(vs1, {"d", "b"}), vs1) == -1);
-        BOOST_CHECK(k5.ldegree(ss_to_pos(vs1, {"A", "a"}), vs1) == -1);
+        BOOST_CHECK(k5.degree(symbol_idx_fset{0}, symbol_fset{"a", "b"}) == -1);
+        BOOST_CHECK(k5.degree(symbol_idx_fset{}, symbol_fset{"a", "b"}) == 0);
+        BOOST_CHECK(k5.degree(symbol_idx_fset{0, 1}, symbol_fset{"a", "b"}) == -2);
+        BOOST_CHECK(k5.degree(symbol_idx_fset{1}, symbol_fset{"a", "b"}) == -1);
+        BOOST_CHECK(k5.ldegree(symbol_fset{"a", "b"}) == -2);
+        BOOST_CHECK(k5.ldegree(symbol_idx_fset{0}, symbol_fset{"a", "b"}) == -1);
+        BOOST_CHECK(k5.ldegree(symbol_idx_fset{}, symbol_fset{"a", "b"}) == 0);
+        BOOST_CHECK(k5.ldegree(symbol_idx_fset{0, 1}, symbol_fset{"a", "b"}) == -2);
+        BOOST_CHECK(k5.ldegree(symbol_idx_fset{1}, symbol_fset{"a", "b"}) == -1);
         // Try partials with bogus positions.
-        symbol_set v2({symbol("a"), symbol("b"), symbol("c")});
-        BOOST_CHECK_THROW(k5.degree(ss_to_pos(v2, {"c"}), vs1), std::invalid_argument);
-        BOOST_CHECK_THROW(k5.ldegree(ss_to_pos(v2, {"c"}), vs1), std::invalid_argument);
-        // Wrong symbol set, will not throw because positions are empty.
-        BOOST_CHECK_EQUAL(k5.degree(ss_to_pos(v2, {"d"}), vs1), 0);
+        BOOST_CHECK_EXCEPTION(
+            (k5.degree(symbol_idx_fset{2}, symbol_fset{"a", "b"})), std::invalid_argument,
+            [](const std::invalid_argument &e) {
+                return boost::contains(
+                    e.what(), "the largest value in the positions set for the computation of the "
+                              "partial degree of a Kronecker monomial is 2, but the monomial has a size of only 2");
+            });
+        BOOST_CHECK_EXCEPTION(
+            (k5.ldegree(symbol_idx_fset{4}, symbol_fset{"a", "b"})), std::invalid_argument,
+            [](const std::invalid_argument &e) {
+                return boost::contains(
+                    e.what(), "the largest value in the positions set for the computation of the "
+                              "partial degree of a Kronecker monomial is 4, but the monomial has a size of only 2");
+            });
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_degree_test)
 {
-    boost::mpl::for_each<int_types>(degree_tester());
+    tuple_for_each(int_types{}, degree_tester{});
 }
 
 // Mock cf with wrong specialisation of mul3.
@@ -424,7 +399,7 @@ struct mul3_impl<T, typename std::enable_if<std::is_same<T, mock_cf3>::value>::t
 
 struct multiply_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
         typedef kronecker_array<T> ka;
@@ -435,29 +410,26 @@ struct multiply_tester {
         BOOST_CHECK(is_key<k_type>::value);
         term_type t1, t2;
         std::array<term_type, 1u> result;
-        symbol_set vs1;
-        k_type::multiply(result, t1, t2, vs1);
+        k_type::multiply(result, t1, t2, symbol_fset{});
         BOOST_CHECK(result[0u].m_cf == 0);
         BOOST_CHECK(result[0u].m_key.get_int() == 0);
         t1.m_cf = 2;
         t2.m_cf = 3;
         t1.m_key = k_type({0});
         t2.m_key = k_type({0});
-        vs1.add(symbol("a"));
-        k_type::multiply(result, t1, t2, vs1);
+        k_type::multiply(result, t1, t2, symbol_fset{"a"});
         BOOST_CHECK(result[0u].m_cf == 6);
         BOOST_CHECK(result[0u].m_key.get_int() == 0);
         t1.m_key = k_type({1});
         t2.m_key = k_type({2});
-        k_type::multiply(result, t1, t2, vs1);
+        k_type::multiply(result, t1, t2, symbol_fset{"a"});
         BOOST_CHECK(result[0u].m_cf == 6);
         BOOST_CHECK(result[0u].m_key.get_int() == 3);
         t1.m_cf = 2;
         t2.m_cf = -4;
         t1.m_key = k_type({1, -1});
         t2.m_key = k_type({2, 0});
-        vs1.add(symbol("b"));
-        k_type::multiply(result, t1, t2, vs1);
+        k_type::multiply(result, t1, t2, symbol_fset{"a", "b"});
         BOOST_CHECK(result[0u].m_cf == -8);
         std::vector<int> tmp(2u);
         ka::decode(tmp, result[0u].m_key.get_int());
@@ -471,7 +443,7 @@ struct multiply_tester {
         tb.m_cf = -4 / 5_q;
         ta.m_key = k_type({1, -1});
         tb.m_key = k_type({2, 0});
-        k_type::multiply(result2, ta, tb, vs1);
+        k_type::multiply(result2, ta, tb, symbol_fset{"a", "b"});
         BOOST_CHECK(result2[0u].m_cf == -8);
         ka::decode(tmp, result2[0u].m_key.get_int());
         BOOST_CHECK(tmp[0u] == 3);
@@ -481,58 +453,32 @@ struct multiply_tester {
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_multiply_test)
 {
-    boost::mpl::for_each<int_types>(multiply_tester());
+    tuple_for_each(int_types{}, multiply_tester{});
 }
 
 struct monomial_multiply_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
         k_type k1, k2, res;
-        symbol_set vs;
-        k_type::multiply(res, k1, k2, vs);
+        k_type::multiply(res, k1, k2, symbol_fset{});
         BOOST_CHECK_EQUAL(res.get_int(), 0);
         k1 = k_type{-5};
         k2 = k_type{7};
-        k_type::multiply(res, k1, k2, vs);
+        k_type::multiply(res, k1, k2, symbol_fset{});
         BOOST_CHECK_EQUAL(res.get_int(), 2);
-        vs.add("x");
-        vs.add("y");
-        k_type::multiply(res, k1, k2, vs);
+        k_type::multiply(res, k1, k2, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res.get_int(), 2);
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_monomial_multiply_test)
 {
-    boost::mpl::for_each<int_types>(monomial_multiply_tester());
+    tuple_for_each(int_types{}, monomial_multiply_tester{});
 }
 
-struct monomial_divide_tester {
-    template <typename T>
-    void operator()(const T &)
-    {
-        typedef kronecker_monomial<T> k_type;
-        k_type k1, k2, res;
-        symbol_set vs;
-        k_type::divide(res, k1, k2, vs);
-        BOOST_CHECK_EQUAL(res.get_int(), 0);
-        k1 = k_type{-5};
-        k2 = k_type{7};
-        k_type::divide(res, k1, k2, vs);
-        BOOST_CHECK_EQUAL(res.get_int(), -12);
-        vs.add("x");
-        vs.add("y");
-        k_type::divide(res, k1, k2, vs);
-        BOOST_CHECK_EQUAL(res.get_int(), -12);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_monomial_monomial_divide_test)
-{
-    boost::mpl::for_each<int_types>(monomial_divide_tester());
-}
+#if 0
 
 struct equality_tester {
     template <typename T>
