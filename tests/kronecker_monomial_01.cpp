@@ -478,11 +478,9 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_monomial_multiply_test)
     tuple_for_each(int_types{}, monomial_multiply_tester{});
 }
 
-#if 0
-
 struct equality_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
         k_type k1, k2;
@@ -512,51 +510,50 @@ struct equality_tester {
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_equality_test)
 {
-    boost::mpl::for_each<int_types>(equality_tester());
+    tuple_for_each(int_types{}, equality_tester{});
 }
 
 struct hash_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
         k_type k1;
-        BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+        BOOST_CHECK(k1.hash() == static_cast<std::size_t>(k1.get_int()));
         k1 = k_type({0});
-        BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+        BOOST_CHECK(k1.hash() == static_cast<std::size_t>(k1.get_int()));
         k1 = k_type({0, 1});
-        BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+        BOOST_CHECK(k1.hash() == static_cast<std::size_t>(k1.get_int()));
         k1 = k_type({0, 1, -1});
-        BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
-        BOOST_CHECK(std::hash<k_type>()(k1) == (std::size_t)(k1.get_int()));
+        BOOST_CHECK(k1.hash() == static_cast<std::size_t>(k1.get_int()));
+        BOOST_CHECK(std::hash<k_type>()(k1) == static_cast<std::size_t>(k1.get_int()));
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_hash_test)
 {
-    boost::mpl::for_each<int_types>(hash_tester());
+    tuple_for_each(int_types{}, hash_tester{});
 }
 
 struct unpack_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
-        symbol_set vs1;
         k_type k1({0});
-        auto t1 = k1.unpack(vs1);
+        auto t1 = k1.unpack(symbol_fset{});
         typedef decltype(t1) s_vector_type;
         BOOST_CHECK(!t1.size());
-        vs1.add(symbol("a"));
         k1.set_int(-1);
-        auto t2 = k1.unpack(vs1);
+        auto t2 = k1.unpack(symbol_fset{"a"});
         BOOST_CHECK(t2.size());
         BOOST_CHECK(t2[0u] == -1);
         // Check for overflow condition.
+        symbol_fset vs1{"a"};
         std::string tmp = "";
         for (integer i(0u); i < integer(s_vector_type::max_size) + 1; ++i) {
             tmp += "b";
-            vs1.add(symbol(tmp));
+            vs1.insert(vs1.end(), tmp);
         }
         BOOST_CHECK_THROW(k1.unpack(vs1), std::invalid_argument);
     }
@@ -564,47 +561,44 @@ struct unpack_tester {
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_unpack_test)
 {
-    boost::mpl::for_each<int_types>(unpack_tester());
+    tuple_for_each(int_types{}, unpack_tester{});
 }
 
 struct print_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
-        symbol_set vs;
         k_type k1;
         std::ostringstream oss;
-        k1.print(oss, vs);
+        k1.print(oss, symbol_fset{});
         BOOST_CHECK(oss.str().empty());
-        vs.add("x");
-        k_type k2(vs);
-        k2.print(oss, vs);
+        k_type k2(symbol_fset{"x"});
+        k2.print(oss, symbol_fset{"x"});
         BOOST_CHECK(oss.str().empty());
         k_type k3({T(-1)});
-        k3.print(oss, vs);
+        k3.print(oss, symbol_fset{"x"});
         BOOST_CHECK(oss.str() == "x**-1");
         k_type k4({T(1)});
         oss.str("");
-        k4.print(oss, vs);
+        k4.print(oss, symbol_fset{"x"});
         BOOST_CHECK(oss.str() == "x");
         k_type k5({T(-1), T(1)});
-        vs.add("y");
         oss.str("");
-        k5.print(oss, vs);
+        k5.print(oss, symbol_fset{"x", "y"});
         BOOST_CHECK(oss.str() == "x**-1*y");
         k_type k6({T(-1), T(-2)});
         oss.str("");
-        k6.print(oss, vs);
+        k6.print(oss, symbol_fset{"x", "y"});
         BOOST_CHECK(oss.str() == "x**-1*y**-2");
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_print_test)
 {
-    boost::mpl::for_each<int_types>(print_tester());
+    tuple_for_each(int_types{}, print_tester{});
 }
-
+#if 0
 struct linear_argument_tester {
     template <typename T>
     void operator()(const T &)
