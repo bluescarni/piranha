@@ -60,6 +60,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/pow.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
+#include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
@@ -598,128 +599,147 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_print_test)
 {
     tuple_for_each(int_types{}, print_tester{});
 }
-#if 0
+
 struct linear_argument_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
-        symbol_set vs;
-        BOOST_CHECK_THROW(k_type().linear_argument(vs), std::invalid_argument);
-        vs.add("x");
-        BOOST_CHECK_THROW(k_type().linear_argument(vs), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(
+            k_type().linear_argument(symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "the extraction of the linear argument "
+                                                 "from a Kronecker monomial failed: the monomial is not linear");
+            });
+        BOOST_CHECK_EXCEPTION(
+            k_type().linear_argument(symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "the extraction of the linear argument "
+                                                 "from a Kronecker monomial failed: the monomial is not linear");
+            });
         k_type k({T(1)});
-        BOOST_CHECK_EQUAL(k.linear_argument(vs), "x");
+        BOOST_CHECK_EQUAL(k.linear_argument(symbol_fset{"x"}), "x");
         k = k_type({T(0), T(1)});
-        vs.add("y");
-        BOOST_CHECK_EQUAL(k.linear_argument(vs), "y");
+        BOOST_CHECK_EQUAL(k.linear_argument(symbol_fset{"x", "y"}), "y");
         k = k_type({T(0), T(2)});
-        BOOST_CHECK_THROW(k.linear_argument(vs), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(
+            k.linear_argument(symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "while attempting to extract the linear argument "
+                                                 "from a Kronecker monomial, a non-unitary exponent was "
+                                                 "encountered in correspondence of the variable 'y'");
+            });
         k = k_type({T(2), T(0)});
-        BOOST_CHECK_THROW(k.linear_argument(vs), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(
+            k.linear_argument(symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "while attempting to extract the linear argument "
+                                                 "from a Kronecker monomial, a non-unitary exponent was "
+                                                 "encountered in correspondence of the variable 'x'");
+            });
         k = k_type({T(1), T(1)});
-        BOOST_CHECK_THROW(k.linear_argument(vs), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(
+            k.linear_argument(symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "the extraction of the linear argument "
+                                                 "from a Kronecker monomial failed: the monomial is not linear");
+            });
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_linear_argument_test)
 {
-    boost::mpl::for_each<int_types>(linear_argument_tester());
+    tuple_for_each(int_types{}, linear_argument_tester{});
 }
 
 struct pow_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
         typedef kronecker_array<T> ka;
         const auto &limits = ka::get_limits();
         k_type k1;
         k1.set_int(1);
-        symbol_set vs;
-        BOOST_CHECK_THROW(k1.pow(42, vs), std::invalid_argument);
-        vs.add("x");
-        BOOST_CHECK_THROW(k1.pow(42.5, vs), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(k1.pow(42, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "a vector of size 0 must always be encoded as 0");
+        });
+        BOOST_CHECK_EXCEPTION(k1.pow(42.5, symbol_fset{"x"}), safe_cast_failure, [](const safe_cast_failure &e) {
+            return boost::contains(e.what(), "the floating-point value with nonzero fractional part "
+                                                 + std::to_string(42.5) + " cannot be converted to the integral type '"
+                                                 + detail::demangle<T>()
+                                                 + "', as the conversion cannot preserve the original value");
+        });
         k1 = k_type{2};
         k_type k2({4});
-        BOOST_CHECK(k1.pow(2, vs) == k2);
-        BOOST_CHECK_THROW(k1.pow(std::numeric_limits<T>::max(), vs), std::invalid_argument);
+        BOOST_CHECK(k1.pow(2, symbol_fset{"x"}) == k2);
+        BOOST_CHECK_EXCEPTION(
+            k1.pow(std::numeric_limits<T>::max(), symbol_fset{"x"}), safe_cast_failure, [](const safe_cast_failure &e) {
+                return boost::contains(e.what(), "the arbitrary-precision integer "
+                                                     + (2 * integer{std::numeric_limits<T>::max()}).to_string()
+                                                     + " cannot be converted to the type '" + detail::demangle<T>()
+                                                     + "', as the conversion cannot preserve the original value");
+            });
         k1 = k_type{1};
         if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
-            BOOST_CHECK_THROW(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), vs), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), symbol_fset{"x"}), std::invalid_argument,
+                                  [&limits](const std::invalid_argument &e) {
+                                      return boost::contains(
+                                          e.what(), "a component of the vector to be encoded is out of bounds");
+                                  });
         }
-        k1 = k_type{2};
-        BOOST_CHECK(k1.pow(0, vs) == k_type{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_pow_test)
 {
-    boost::mpl::for_each<int_types>(pow_tester());
+    tuple_for_each(int_types{}, pow_tester{});
 }
 
 struct partial_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
         BOOST_CHECK(key_is_differentiable<k_type>::value);
-        using positions = symbol_set::positions;
-        auto s_to_pos = [](const symbol_set &v, const symbol &s) {
-            symbol_set tmp{s};
-            return positions(v, tmp);
-        };
-        symbol_set vs;
         k_type k1;
         k1.set_int(T(1));
         // An empty symbol set must always be related to a zero encoded value.
-        BOOST_CHECK_THROW(k1.partial(s_to_pos(vs, symbol("x")), vs), std::invalid_argument);
-        vs.add("x");
+        BOOST_CHECK_EXCEPTION(k1.partial(5, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "a vector of size 0 must always be encoded as 0");
+        });
         k1 = k_type({T(2)});
-        auto ret = k1.partial(s_to_pos(vs, symbol("x")), vs);
+        auto ret = k1.partial(0, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.first, 2);
         BOOST_CHECK(ret.second == k_type({T(1)}));
         // y is not in the monomial.
-        ret = k1.partial(s_to_pos(vs, symbol("y")), vs);
+        ret = k1.partial(1, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.first, 0);
-        BOOST_CHECK(ret.second == k_type(vs));
+        BOOST_CHECK(ret.second == k_type(symbol_fset{"x"}));
         // x is in the monomial but it is zero.
         k1 = k_type({T(0)});
-        ret = k1.partial(s_to_pos(vs, symbol("x")), vs);
+        ret = k1.partial(0, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.first, 0);
-        BOOST_CHECK(ret.second == k_type(vs));
+        BOOST_CHECK(ret.second == k_type(symbol_fset{"x"}));
         // y in the monomial but zero.
-        vs.add("y");
         k1 = k_type({T(-1), T(0)});
-        ret = k1.partial(s_to_pos(vs, symbol("y")), vs);
+        ret = k1.partial(1, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.first, 0);
-        BOOST_CHECK(ret.second == k_type(vs));
-        ret = k1.partial(s_to_pos(vs, symbol("x")), vs);
+        BOOST_CHECK(ret.second == k_type(symbol_fset{"x", "y"}));
+        ret = k1.partial(0, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.first, -1);
         BOOST_CHECK(ret.second == k_type({T(-2), T(0)}));
         // Check limits violation.
         typedef kronecker_array<T> ka;
         const auto &limits = ka::get_limits();
         k1 = k_type{-std::get<0u>(limits[2u])[0u], -std::get<0u>(limits[2u])[0u]};
-        BOOST_CHECK_THROW(ret = k1.partial(s_to_pos(vs, symbol("x")), vs), std::invalid_argument);
-        // Check with bogus positions.
-        symbol_set vs2;
-        vs2.add("x");
-        vs2.add("y");
-        vs2.add("z");
-        // The z variable is in position 2, which is outside the size of the monomial.
-        BOOST_CHECK_THROW(k1.partial(s_to_pos(vs2, symbol("z")), vs), std::invalid_argument);
-        // Derivative wrt multiple variables.
-        BOOST_CHECK_THROW(k1.partial(symbol_set::positions(vs2, symbol_set({symbol("x"), symbol("y")})), vs),
-                          std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(
+            ret = k1.partial(0, symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "a component of the vector to be encoded is out of bounds");
+            });
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_partial_test)
 {
-    boost::mpl::for_each<int_types>(partial_tester());
+    tuple_for_each(int_types{}, partial_tester{});
 }
-
+#if 0
 struct evaluate_tester {
     template <typename T>
     void operator()(const T &)

@@ -621,7 +621,7 @@ public:
      *
      * @param args the reference piranha::symbol_fset.
      *
-     * @return name of the linear variable.
+     * @return the name of the linear variable.
      *
      * @throws std::invalid_argument if the monomial is not linear.
      * @throws unspecified any exception thrown by unpack().
@@ -630,8 +630,8 @@ public:
     {
         const auto v = unpack(args);
         const auto size = v.size();
-        typename v_type::size_type n_linear = 0, candidate = 0;
-        for (typename v_type::size_type i = 0; i < size; ++i) {
+        decltype(v.size()) n_linear = 0, candidate = 0;
+        for (decltype(v.size()) i = 0; i < size; ++i) {
             if (!v[i]) {
                 continue;
             }
@@ -789,7 +789,7 @@ public:
     std::pair<T, kronecker_monomial> partial(const symbol_idx &p, const symbol_fset &args) const
     {
         auto v = unpack(args);
-        if (p >= args.size() || v[static_cast<size_type>(p)] == T(0)) {
+        if (p >= args.size() || v[static_cast<decltype(v.size())>(p)] == T(0)) {
             // Derivative wrt a variable not in the monomial: position is outside the bounds, or it refers to a
             // variable with zero exponent.
             return std::make_pair(T(0), kronecker_monomial{});
@@ -798,6 +798,7 @@ public:
         // Original exponent.
         const T n(v_b[p]);
         // Decrement the exponent in the monomial.
+        // NOTE: maybe replace with the safe integral subber, eventually.
         if (unlikely(n == std::numeric_limits<T>::min())) {
             piranha_throw(std::overflow_error, "negative overflow error in the calculation of the "
                                                "partial derivative of a Kronecker monomial");
