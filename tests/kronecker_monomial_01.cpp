@@ -44,8 +44,6 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include <piranha/exceptions.hpp>
@@ -739,77 +737,63 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_partial_test)
 {
     tuple_for_each(int_types{}, partial_tester{});
 }
-#if 0
+
 struct evaluate_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using k_type = kronecker_monomial<T>;
-        using dict_type1 = std::unordered_map<symbol, integer>;
-        using pmap_type1 = symbol_set::positions_map<integer>;
         BOOST_CHECK((key_is_evaluable<k_type, integer>::value));
-        symbol_set vs;
         k_type k1;
-        BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs, dict_type1{}), vs), integer(1));
-        vs.add("x");
-        BOOST_CHECK_THROW(k1.evaluate(pmap_type1(vs, dict_type1{}), vs), std::invalid_argument);
+        BOOST_CHECK_EQUAL(k1.template evaluate<integer>({}, symbol_fset{}), integer(1));
+        BOOST_CHECK_EXCEPTION(k1.template evaluate<integer>({}, symbol_fset{"x"}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "invalid vector of values for Kronecker monomial "
+                                                                   "evaluation: the size of the vector of values (0) "
+                                                                   "differs from the size of the reference set of "
+                                                                   "symbols (1)");
+                              });
         k1 = k_type({T(1)});
-        BOOST_CHECK_THROW(k1.evaluate(pmap_type1(vs, dict_type1{}), vs), std::invalid_argument);
-        BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs, dict_type1{{symbol("x"), integer(1)}}), vs), 1);
-        // pmap with invalid position, 1, where the monomial has only 1 element.
-        BOOST_CHECK_THROW(
-            k1.evaluate(pmap_type1(symbol_set{symbol{"a"}, symbol{"b"}}, dict_type1{{symbol{"b"}, integer(4)}}), vs),
-            std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(k1.template evaluate<integer>({}, symbol_fset{"x"}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "invalid vector of values for Kronecker monomial "
+                                                                   "evaluation: the size of the vector of values (0) "
+                                                                   "differs from the size of the reference set of "
+                                                                   "symbols (1)");
+                              });
+        BOOST_CHECK_EQUAL(k1.template evaluate<integer>({1_z}, symbol_fset{"x"}), 1);
+        BOOST_CHECK_EXCEPTION(k1.template evaluate<integer>({1_z, 2_z}, symbol_fset{"x"}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "invalid vector of values for Kronecker monomial "
+                                                                   "evaluation: the size of the vector of values (2) "
+                                                                   "differs from the size of the reference set of "
+                                                                   "symbols (1)");
+                              });
         k1 = k_type({T(2)});
-        BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs, dict_type1{{symbol("x"), integer(3)}}), vs), 9);
-        BOOST_CHECK_EQUAL(
-            k1.evaluate(pmap_type1(vs, dict_type1{{symbol("x"), integer(3)}, {symbol("y"), integer(4)}}), vs), 9);
+        BOOST_CHECK_EQUAL(k1.template evaluate<integer>({3_z}, symbol_fset{"x"}), 9);
         k1 = k_type({T(2), T(3)});
-        vs.add("y");
-        BOOST_CHECK_EQUAL(
-            k1.evaluate(pmap_type1(vs, dict_type1{{symbol("x"), integer(3)}, {symbol("y"), integer(4)}}), vs), 576);
-        BOOST_CHECK_EQUAL(
-            k1.evaluate(pmap_type1(vs, dict_type1{{symbol("y"), integer(4)}, {symbol("x"), integer(3)}}), vs), 576);
-        // pmap has correctly 2 elements, but they refer to indices 0 and 2.
-        BOOST_CHECK_THROW(k1.evaluate(pmap_type1(symbol_set{symbol{"a"}, symbol{"b"}, symbol{"c"}},
-                                                 dict_type1{{symbol{"a"}, integer(4)}, {symbol{"c"}, integer(4)}}),
-                                      vs),
-                          std::invalid_argument);
-        // Same with indices 1 and 2.
-        BOOST_CHECK_THROW(k1.evaluate(pmap_type1(symbol_set{symbol{"a"}, symbol{"b"}, symbol{"c"}},
-                                                 dict_type1{{symbol{"b"}, integer(4)}, {symbol{"c"}, integer(4)}}),
-                                      vs),
-                          std::invalid_argument);
-        using dict_type2 = std::unordered_map<symbol, double>;
-        using pmap_type2 = symbol_set::positions_map<double>;
-        BOOST_CHECK_EQUAL(k1.evaluate(pmap_type2(vs, dict_type2{{symbol("y"), -4.3}, {symbol("x"), 3.2}}), vs),
-                          math::pow(3.2, 2) * math::pow(-4.3, 3));
-        using dict_type3 = std::unordered_map<symbol, rational>;
-        using pmap_type3 = symbol_set::positions_map<rational>;
-        BOOST_CHECK_EQUAL(
-            k1.evaluate(pmap_type3(vs, dict_type3{{symbol("y"), rational(1, 2)}, {symbol("x"), rational(-4, 3)}}), vs),
-            math::pow(rational(4, -3), 2) * math::pow(rational(-1, -2), 3));
+        BOOST_CHECK_EQUAL(k1.template evaluate<integer>({3_z, 4_z}, symbol_fset{"x", "y"}), 576);
+        BOOST_CHECK_EQUAL(k1.template evaluate<double>({-4.3, 3.2}, symbol_fset{"x", "y"}),
+                          math::pow(-4.3, 2) * math::pow(3.2, 3));
+        BOOST_CHECK_EQUAL(k1.template evaluate<rational>({-4_q / 3, 1_q / 2}, symbol_fset{"x", "y"}),
+                          math::pow(rational(4, -3), 2) * math::pow(rational(-1, -2), 3));
         k1 = k_type({T(-2), T(-3)});
-        BOOST_CHECK_EQUAL(
-            k1.evaluate(pmap_type3(vs, dict_type3{{symbol("y"), rational(1, 2)}, {symbol("x"), rational(-4, 3)}}), vs),
-            math::pow(rational(4, -3), -2) * math::pow(rational(-1, -2), -3));
-        using dict_type4 = std::unordered_map<symbol, real>;
-        using pmap_type4 = symbol_set::positions_map<real>;
-        BOOST_CHECK_EQUAL(
-            k1.evaluate(pmap_type4(vs, dict_type4{{symbol("y"), real(1.234)}, {symbol("x"), real(5.678)}}), vs),
-            math::pow(real(5.678), -2) * math::pow(real(1.234), -3));
+        BOOST_CHECK_EQUAL(k1.template evaluate<rational>({-4_q / 3, 1_q / 2}, symbol_fset{"x", "y"}),
+                          math::pow(rational(4, -3), -2) * math::pow(rational(-1, -2), -3));
+        BOOST_CHECK_EQUAL(k1.template evaluate<real>({real(1.234), real(5.678)}, symbol_fset{"x", "y"}),
+                          math::pow(real(5.678), -3) * math::pow(real(1.234), -2));
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_evaluate_test)
 {
-    boost::mpl::for_each<int_types>(evaluate_tester());
+    tuple_for_each(int_types{}, evaluate_tester{});
     BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>, std::vector<int>>::value));
     BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>, char *>::value));
     BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>, std::string>::value));
     BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>, void *>::value));
 }
-
+#if 0
 struct subs_tester {
     template <typename T>
     void operator()(const T &)
