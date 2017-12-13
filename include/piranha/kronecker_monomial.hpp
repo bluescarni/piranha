@@ -719,16 +719,15 @@ public:
     {
         const auto tmp = unpack(args);
         piranha_assert(tmp.size() == args.size());
-        const T zero(0), one(1);
         bool empty_output = true;
         for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
-            if (tmp[i] != zero) {
+            if (tmp[i] != T(0)) {
                 if (!empty_output) {
                     os << '*';
                 }
                 os << *args.nth(static_cast<decltype(args.size())>(i));
                 empty_output = false;
-                if (tmp[i] != one) {
+                if (tmp[i] != T(1)) {
                     os << "**" << detail::prepare_for_print(tmp[i]);
                 }
             }
@@ -747,15 +746,14 @@ public:
     {
         const auto tmp = unpack(args);
         std::ostringstream oss_num, oss_den, *cur_oss;
-        const T zero(0), one(1);
         T cur_value;
         for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
             cur_value = tmp[i];
-            if (cur_value != zero) {
+            if (cur_value != T(0)) {
                 // NOTE: here negate() is safe because of the symmetry in kronecker_array.
-                cur_oss = (cur_value > zero) ? &oss_num : (math::negate(cur_value), &oss_den);
+                cur_oss = (cur_value > T(0)) ? &oss_num : (math::negate(cur_value), &oss_den);
                 (*cur_oss) << "{" << *args.nth(static_cast<decltype(args.size())>(i)) << "}";
-                if (cur_value != one) {
+                if (cur_value != T(1)) {
                     (*cur_oss) << "^{" << static_cast<long long>(cur_value) << "}";
                 }
             }
@@ -828,15 +826,15 @@ public:
     std::pair<T, kronecker_monomial> integrate(const std::string &s, const symbol_fset &args) const
     {
         v_type v = unpack(args), retval;
-        T expo(0), one(1);
+        T expo(0);
         for (size_type i = 0; i < v.size(); ++i) {
             const auto &cur_sym = *args.nth(static_cast<decltype(args.size())>(i));
             if (expo == T(0) && s < cur_sym) {
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
                 // a new exponent.
-                retval.push_back(one);
-                expo = one;
+                retval.push_back(T(1));
+                expo = T(1);
             }
             retval.push_back(v[i]);
             if (cur_sym == s) {
@@ -858,8 +856,8 @@ public:
         }
         // If expo is still zero, it means we need to add a new exponent at the end.
         if (expo == T(0)) {
-            retval.push_back(one);
-            expo = one;
+            retval.push_back(T(1));
+            expo = T(1);
         }
         return std::make_pair(expo, kronecker_monomial(ka::encode(retval)));
     }
