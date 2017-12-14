@@ -104,9 +104,8 @@ namespace detail
 
 // Enabler for math::is_zero().
 template <typename T>
-using math_is_zero_enabler = typename std::
-    enable_if<std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())), bool>::value,
-              int>::type;
+using math_is_zero_enabler = typename std::enable_if<
+    std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())), bool>::value, int>::type;
 }
 
 namespace math
@@ -213,9 +212,8 @@ namespace detail
 
 // Enabler for piranha::math::is_unitary().
 template <typename T>
-using math_is_unitary_enabler = typename std::
-    enable_if<std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())), bool>::value,
-              int>::type;
+using math_is_unitary_enabler = typename std::enable_if<
+    std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())), bool>::value, int>::type;
 }
 
 namespace math
@@ -305,10 +303,8 @@ namespace detail
 
 // Enabler for math::negate().
 template <typename T>
-using math_negate_enabler =
-    typename std::enable_if<!std::is_const<T>::value
-                                && true_tt<decltype(math::negate_impl<T>{}(std::declval<T &>()))>::value,
-                            int>::type;
+using math_negate_enabler = typename std::enable_if<
+    !std::is_const<T>::value && true_tt<decltype(math::negate_impl<T>{}(std::declval<T &>()))>::value, int>::type;
 }
 
 namespace math
@@ -726,9 +722,9 @@ namespace math
 
 /// Integration.
 /**
-* \note
-* This function is enabled only if the expression <tt>integrate_impl<T>{}(x,str)</tt> is valid, returning a type that
-* satisfies piranha::is_returnable.
+ * \note
+ * This function is enabled only if the expression <tt>integrate_impl<T>{}(x,str)</tt> is valid, returning a type that
+ * satisfies piranha::is_returnable.
  *
  * Return the antiderivative of \p x with respect to the symbolic quantity named \p str. The actual
  * implementation of this function is in the piranha::math::integrate_impl functor. The body of this function
@@ -1129,16 +1125,15 @@ struct pbracket_type_ {
 };
 
 template <typename T>
-struct pbracket_type_<T,
-                      typename std::enable_if<std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
-                                                                    + std::declval<const pbracket_type_tmp<T> &>()),
-                                                           pbracket_type_tmp<T>>::value
-                                              && std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
-                                                                       - std::declval<const pbracket_type_tmp<T> &>()),
-                                                              pbracket_type_tmp<T>>::value
-                                              && std::is_constructible<pbracket_type_tmp<T>, int>::value
-                                              && std::is_assignable<pbracket_type_tmp<T> &,
-                                                                    pbracket_type_tmp<T>>::value>::type> {
+struct pbracket_type_<
+    T, typename std::enable_if<std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
+                                                     + std::declval<const pbracket_type_tmp<T> &>()),
+                                            pbracket_type_tmp<T>>::value
+                               && std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
+                                                        - std::declval<const pbracket_type_tmp<T> &>()),
+                                               pbracket_type_tmp<T>>::value
+                               && std::is_constructible<pbracket_type_tmp<T>, int>::value
+                               && std::is_assignable<pbracket_type_tmp<T> &, pbracket_type_tmp<T>>::value>::type> {
     using type = pbracket_type_tmp<T>;
 };
 
@@ -1703,19 +1698,17 @@ namespace detail
 
 // Enablers for the degree truncation methods.
 template <typename T, typename U>
-using truncate_degree_enabler =
-    typename std::enable_if<std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(),
-                                                                                     std::declval<const U &>())),
-                                         T>::value,
-                            int>::type;
+using truncate_degree_enabler = typename std::enable_if<
+    std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(), std::declval<const U &>())),
+                 T>::value,
+    int>::type;
 
 template <typename T, typename U>
-using truncate_pdegree_enabler =
-    typename std::enable_if<std::is_same<decltype(math::truncate_degree_impl<T, U>()(
-                                             std::declval<const T &>(), std::declval<const U &>(),
-                                             std::declval<const std::vector<std::string> &>())),
-                                         T>::value,
-                            int>::type;
+using truncate_pdegree_enabler = typename std::enable_if<
+    std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(), std::declval<const U &>(),
+                                                             std::declval<const std::vector<std::string> &>())),
+                 T>::value,
+    int>::type;
 }
 
 namespace math
@@ -2402,10 +2395,10 @@ const bool key_has_t_subs<Key, T, U>::value;
 /**
  * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
  * @code{.unparsed}
- * std::vector<std::pair<R,uncvref_t<Key>>> subs(const symbol_idx &, const T &, const symbol_fset &) const;
+ * std::vector<std::pair<R,uncvref_t<Key>>> subs(const symbol_idx_fmap<T> &, const symbol_fset &) const;
  * @endcode
  * where \p R is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. The <tt>subs()</tt>
- * methods represents the substitution of a symbol with an instance of \p T.
+ * methods implements the substitution of a group of symbols with instances of \p T.
  *
  * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
  * produced.
@@ -2415,8 +2408,8 @@ class key_has_subs
 {
     PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1, typename T1>
-    using subs_t = decltype(std::declval<const Key1 &>().subs(
-        std::declval<const symbol_idx &>(), std::declval<const T1 &>(), std::declval<const symbol_fset &>()));
+    using subs_t = decltype(std::declval<const Key1 &>().subs(std::declval<const symbol_idx_fmap<T1> &>(),
+                                                              std::declval<const symbol_fset &>()));
     static const bool implementation_defined = key_subs_check_type<uncvref_t<Key>, detected_t<subs_t, Key, T>>::value;
 
 public:

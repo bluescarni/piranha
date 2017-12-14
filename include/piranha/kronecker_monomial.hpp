@@ -918,47 +918,67 @@ public:
 private:
     // Subs utilities. Subs type is same as e_type.
     template <typename U>
-    using subs_type = enable_if_t<std::is_constructible<e_type<U>, int>::value, e_type<U>>;
+    using subs_type = eval_type<U>;
 
 public:
     /// Substitution.
     /**
      * \note
-     * This method is enabled only if:
-     * - \p U can be raised to the value type, yielding a type \p subs_type,
-     * - \p subs_type can be constructed from \p int.
+     * This method is available only if \p U satisfies the following requirements:
+     * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p subs_type,
+     * - \p subs_type is constructible from \p int,
+     * - \p subs_type is multipliable in place.
      *
-     * This method will substitute the symbol at the position \p p in the monomial with the quantity \p x. The return
-     * value is a vector containing one pair in which the first element is the result of the substitution (i.e., \p x
-     * raised to the power of the exponent corresponding to \p p), and the second element is the monomial after the
-     * substitution has been performed (i.e., with the exponent corresponding to \p p set to zero). If \p p is not less
-     * than the size of \p args, the return value will be <tt>(1,this)</tt> (i.e., the monomial is unchanged and the
-     * substitution yields 1).
+     * This method will substitute the symbols at the positions specified in the keys of ``smap`` with the mapped
+     * values. The return value is a vector containing one pair in which the first element is the result of the
+     * substitution (i.e., the product of the values of ``smap`` raised to the corresponding exponents in the monomial),
+     * and the second element is the monomial after the substitution has been performed (i.e., with the exponents
+     * at the positions specified by the keys of ``smap`` set to zero). If ``smap`` is empty,
+     * the return value will be <tt>(1,this)</tt> (i.e., the monomial is unchanged and the substitution yields 1).
      *
-     * @param p the position of the symbol that will be substituted.
-     * @param x the quantity that will be substituted.
+     * For instance, given the monomial ``[2,3,4]``, the reference piranha::symbol_fset ``["x","y","z"]``
+     * and the substitution map ``[(0,1),(2,-3)]``, then the return value will be a vector containing
+     * the single pair ``(81,[0,3,0])``.
+     *
+     * @param smap the map relating the positions of the symbols to be substituted to the values
+     * they will be substituted with.
      * @param args the reference piranha::symbol_fset.
      *
-     * @return the result of substituting \p x for the symbol at the position \p p.
+     * @return the result of the substitution.
      *
      * @throws unspecified any exception thrown by:
      * - unpack(),
      * - the construction of the return value,
-     * - piranha::math::pow(),
-     * - piranha::static_vector::push_back(),
+     * - piranha::math::pow() or the in-place multiplication operator of the return type,
      * - piranha::kronecker_array::encode().
      */
     template <typename U>
-    std::vector<std::pair<subs_type<U>, kronecker_monomial>> subs(const symbol_idx &p, const U &x,
+    std::vector<std::pair<subs_type<U>, kronecker_monomial>> subs(const symbol_idx_fmap<U> &smap,
                                                                   const symbol_fset &args) const
     {
+        if (unlikely(smap.size() && smap.rbegin()->first >= args.size())) {
+            // The last element of the insertion map must be a valid index into args.
+            piranha_throw(
+                std::invalid_argument,
+                "invalid argument(s) for substitution in a Kronecker monomial: the last index of the substitution map ("
+                    + std::to_string(smap.rbegin()->first) + ") must be smaller than the monomial's size ("
+                    + std::to_string(args.size()) + ")");
+        }
         std::vector<std::pair<subs_type<U>, kronecker_monomial>> retval;
-        if (p < args.size()) {
-            // If the position is within the monomial, the result of the subs will come from pow() and
-            // we will have to set to 0 the affected symbol.
+        if (smap.size()) {
+            // The substitution map contains something, proceed to the substitution.
             auto v = unpack(args);
-            v[static_cast<size_type>(p)] = T(0);
-            retval.emplace_back(math::pow(x, v[static_cast<size_type>(p)]), kronecker_monomial(ka::encode(v)));
+            // Init the return value from the exponentiation of the first value
+            // in the map.
+            auto it = smap.begin();
+            auto ret(math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]));
+            // Zero out the corresponding exponent.
+            v[static_cast<decltype(v.size())>(it->first)] = T(0);
+            for (; it != smap.end(); ++it) {
+                ret *= math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]);
+                v[static_cast<decltype(v.size())>(it->first)] = T(0);
+            }
+            retval.emplace_back(std::move(ret), kronecker_monomial(ka::encode(v)));
         } else {
             // Otherwise, the substitution yields 1 and the monomial is the original one.
             retval.emplace_back(subs_type<U>(1), *this);

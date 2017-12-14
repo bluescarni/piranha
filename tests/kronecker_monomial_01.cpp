@@ -217,7 +217,7 @@ struct compatibility_tester {
         if (limits.size() < 255u) {
             symbol_fset v2;
             for (auto i = 0u; i < 255; ++i) {
-                v2.insert(std::string(1u, (char)i));
+                v2.insert(std::string(1u, static_cast<char>(i)));
             }
             BOOST_CHECK(!k1.is_compatible(v2));
         }
@@ -676,7 +676,7 @@ struct pow_tester {
         k1 = k_type{1};
         if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
             BOOST_CHECK_EXCEPTION(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), symbol_fset{"x"}), std::invalid_argument,
-                                  [&limits](const std::invalid_argument &e) {
+                                  [](const std::invalid_argument &e) {
                                       return boost::contains(
                                           e.what(), "a component of the vector to be encoded is out of bounds");
                                   });
@@ -793,13 +793,12 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_evaluate_test)
     BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>, std::string>::value));
     BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>, void *>::value));
 }
-#if 0
+
 struct subs_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
-        symbol_set vs;
+        using k_type = kronecker_monomial<T>;
         // Test the type trait.
         BOOST_CHECK((key_has_subs<k_type, integer>::value));
         BOOST_CHECK((key_has_subs<k_type, rational>::value));
@@ -808,47 +807,78 @@ struct subs_tester {
         BOOST_CHECK((!key_has_subs<k_type, std::string>::value));
         BOOST_CHECK((!key_has_subs<k_type, std::vector<std::string>>::value));
         k_type k1;
-        auto ret = k1.subs("x", integer(4), vs);
+        auto ret = k1.template subs<integer>({}, symbol_fset{});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, 1);
         BOOST_CHECK((std::is_same<integer, decltype(ret[0u].first)>::value));
         BOOST_CHECK(ret[0u].second == k1);
         k1 = k_type({T(1)});
-        BOOST_CHECK_THROW(k1.subs("x", integer(4), vs), std::invalid_argument);
-        vs.add("x");
+        BOOST_CHECK_EXCEPTION(k1.template subs<integer>({{0, 4_z}}, symbol_fset{}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(
+                                      e.what(), "invalid argument(s) for substitution in a "
+                                                "Kronecker monomial: the last index of the "
+                                                "substitution map (0) must be smaller than the monomial's size (0)");
+                              });
+        BOOST_CHECK_EXCEPTION(
+            k1.template subs<integer>({{0, 4_z}, {1, 4_z}, {2, 4_z}, {7, 4_z}}, symbol_fset{"x", "y"}),
+            std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "invalid argument(s) for substitution in a "
+                                                 "Kronecker monomial: the last index of the "
+                                                 "substitution map (7) must be smaller than the monomial's size (2)");
+            });
         k1 = k_type({T(2)});
-        ret = k1.subs("y", integer(4), vs);
+        ret = k1.template subs<integer>({}, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, 1);
         BOOST_CHECK(ret[0u].second == k1);
-        ret = k1.subs("x", integer(4), vs);
+        ret = k1.template subs<integer>({{0, 4_z}}, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(4), T(2)));
         BOOST_CHECK(ret[0u].second == k_type{T(0)});
         k1 = k_type({T(2), T(3)});
-        vs.add("y");
-        ret = k1.subs("y", integer(-2), vs);
+        ret = k1.template subs<integer>({{1, -2_z}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(-2), T(3)));
         BOOST_CHECK((ret[0u].second == k_type{T(2), T(0)}));
-        auto ret2 = k1.subs("x", real(-2.345), vs);
+        auto ret2 = k1.template subs<real>({{0, real(-2.345)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 1u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(2)));
         BOOST_CHECK((ret2[0u].second == k_type{T(0), T(3)}));
         BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
-        auto ret3 = k1.subs("x", rational(-1, 2), vs);
+        auto ret3 = k1.template subs<rational>({{0, -1_q / 2}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret3.size(), 1u);
         BOOST_CHECK_EQUAL(ret3[0u].first, rational(1, 4));
         BOOST_CHECK((ret3[0u].second == k_type{T(0), T(3)}));
         BOOST_CHECK((std::is_same<rational, decltype(ret3[0u].first)>::value));
+        ret3 = k1.template subs<rational>({{1, 3_q / 2}, {0, -1_q / 2}}, symbol_fset{"x", "y"});
+        BOOST_CHECK_EQUAL(ret3.size(), 1u);
+        BOOST_CHECK_EQUAL(ret3[0u].first, rational(27, 32));
+        BOOST_CHECK((ret3[0u].second == k_type{T(0), T(0)}));
+        if (std::numeric_limits<T>::max() >= std::numeric_limits<int>::max()) {
+            k1 = k_type({T(-2), T(2), T(3)});
+            ret3 = k1.template subs<rational>({{2, 3_q / 2}, {0, -1_q / 2}}, symbol_fset{"x", "y", "z"});
+            BOOST_CHECK_EQUAL(ret3.size(), 1u);
+            BOOST_CHECK_EQUAL(ret3[0u].first, rational(27, 2));
+            BOOST_CHECK((ret3[0u].second == k_type{T(0), T(2), T(0)}));
+            ret3 = k1.template subs<rational>({{2, 3_q / 2}, {0, -1_q / 2}, {1, 2_q / 3}}, symbol_fset{"x", "y", "z"});
+            BOOST_CHECK_EQUAL(ret3.size(), 1u);
+            BOOST_CHECK_EQUAL(ret3[0u].first, rational(6, 1));
+            BOOST_CHECK((ret3[0u].second == k_type{T(0), T(0), T(0)}));
+            k1 = k_type({T(2), T(3), T(4)});
+            ret3 = k1.template subs<rational>({{0, 1_q}, {2, -3_q}}, symbol_fset{"x", "y", "z"});
+            BOOST_CHECK_EQUAL(ret3.size(), 1u);
+            BOOST_CHECK_EQUAL(ret3[0u].first, 81);
+            BOOST_CHECK((ret3[0u].second == k_type{T(0), T(3), T(0)}));
+        }
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_subs_test)
 {
-    boost::mpl::for_each<int_types>(subs_tester());
+    tuple_for_each(int_types{}, subs_tester{});
 }
-
+#if 0
 struct print_tex_tester {
     template <typename T>
     void operator()(const T &)
