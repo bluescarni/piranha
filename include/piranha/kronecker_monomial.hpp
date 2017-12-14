@@ -867,9 +867,9 @@ private:
     template <typename U>
     using e_type = decltype(math::pow(std::declval<const U &>(), std::declval<const T &>()));
     template <typename U>
-    using eval_type
-        = enable_if_t<conjunction<is_multipliable_in_place<e_type<U>>, std::is_constructible<e_type<U>, int>>::value,
-                      e_type<U>>;
+    using eval_type = enable_if_t<conjunction<is_multipliable_in_place<e_type<U>>,
+                                              std::is_constructible<e_type<U>, int>, is_returnable<e_type<U>>>::value,
+                                  e_type<U>>;
 
 public:
     /// Evaluation.
@@ -878,7 +878,8 @@ public:
      * This method is available only if \p U satisfies the following requirements:
      * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
      * - \p eval_type is constructible from \p int,
-     * - \p eval_type is multipliable in place.
+     * - \p eval_type is multipliable in place,
+     * - \p eval_type satisfies piranha::is_returnable.
      *
      * The return value will be built by iteratively applying piranha::math::pow() using the values provided
      * by \p values as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
@@ -906,17 +907,20 @@ public:
                     + std::to_string(values.size()) + ") differs from the size of the reference set of symbols ("
                     + std::to_string(args.size()) + ")");
         }
-        const auto v = unpack(args);
-        eval_type<U> retval(1);
-        for (decltype(v.size()) i = 0; i < v.size(); ++i) {
-            // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
-            retval *= math::pow(values[static_cast<decltype(values.size())>(i)], v[i]);
+        if (args.size()) {
+            const auto v = unpack(args);
+            eval_type<U> retval(math::pow(values[0], v[0]));
+            for (decltype(v.size()) i = 1; i < v.size(); ++i) {
+                // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
+                retval *= math::pow(values[static_cast<decltype(values.size())>(i)], v[i]);
+            }
+            return retval;
         }
-        return retval;
+        return eval_type<U>(1);
     }
 
 private:
-    // Subs utilities. Subs type is same as e_type.
+    // Subs type is same as eval_type.
     template <typename U>
     using subs_type = eval_type<U>;
 
@@ -927,7 +931,8 @@ public:
      * This method is available only if \p U satisfies the following requirements:
      * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p subs_type,
      * - \p subs_type is constructible from \p int,
-     * - \p subs_type is multipliable in place.
+     * - \p subs_type is multipliable in place,
+     * - \p subs_type satisfies piranha::is_returnable.
      *
      * This method will substitute the symbols at the positions specified in the keys of ``smap`` with the mapped
      * values. The return value is a vector containing one pair in which the first element is the result of the
@@ -968,13 +973,13 @@ public:
         if (smap.size()) {
             // The substitution map contains something, proceed to the substitution.
             auto v = unpack(args);
-            // Init the return value from the exponentiation of the first value
-            // in the map.
+            // Init the return value from the exponentiation of the first value in the map.
             auto it = smap.begin();
             auto ret(math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]));
             // Zero out the corresponding exponent.
             v[static_cast<decltype(v.size())>(it->first)] = T(0);
-            for (; it != smap.end(); ++it) {
+            //  NOTE: move to the next element in the init statement of the for loop.
+            for (++it; it != smap.end(); ++it) {
                 ret *= math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]);
                 v[static_cast<decltype(v.size())>(it->first)] = T(0);
             }
