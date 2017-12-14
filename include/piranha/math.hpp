@@ -1887,7 +1887,7 @@ const bool is_integrable<T>::value;
 /**
  * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
  * @code{.unparsed}
- * std::pair<T,uncvref_t<Key>> integrate(const symbol_idx &, const symbol_fset &) const;
+ * std::pair<T,uncvref_t<Key>> integrate(const std::string &, const symbol_fset &) const;
  * @endcode
  * where \p T is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. Otherwise, the type
  * trait will be \p false.
@@ -1901,7 +1901,7 @@ class key_is_integrable
     PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename U>
     using key_integrate_t = decltype(
-        std::declval<const U &>().integrate(std::declval<const symbol_idx &>(), std::declval<const symbol_fset &>()));
+        std::declval<const U &>().integrate(std::declval<const std::string &>(), std::declval<const symbol_fset &>()));
     static const bool implementation_defined
         = is_differential_key_pair<uncvref_t<Key>, detected_t<key_integrate_t, Key>>::value;
 

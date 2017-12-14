@@ -878,141 +878,138 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_subs_test)
 {
     tuple_for_each(int_types{}, subs_tester{});
 }
-#if 0
+
 struct print_tex_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
-        symbol_set vs;
+        using k_type = kronecker_monomial<T>;
         k_type k1;
         std::ostringstream oss;
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{});
         BOOST_CHECK(oss.str().empty());
         k1 = k_type({T(1)});
-        BOOST_CHECK_THROW(k1.print_tex(oss, vs), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(k1.print_tex(oss, symbol_fset{}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "a vector of size 0 must always be encoded as 0");
+                              });
         k1 = k_type({T(0)});
-        vs.add("x");
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "");
         k1 = k_type({T(1)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "{x}");
         oss.str("");
         k1 = k_type({T(-1)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{{x}}");
         oss.str("");
         k1 = k_type({T(2)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "{x}^{2}");
         oss.str("");
         k1 = k_type({T(-2)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{{x}^{2}}");
-        vs.add("y");
         oss.str("");
         k1 = k_type({T(-2), T(1)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\frac{{y}}{{x}^{2}}");
         oss.str("");
         k1 = k_type({T(-2), T(3)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\frac{{y}^{3}}{{x}^{2}}");
         oss.str("");
         k1 = k_type({T(-2), T(-3)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{{x}^{2}{y}^{3}}");
         oss.str("");
         k1 = k_type({T(2), T(3)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "{x}^{2}{y}^{3}");
         oss.str("");
         k1 = k_type({T(1), T(3)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "{x}{y}^{3}");
         oss.str("");
         k1 = k_type({T(0), T(3)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "{y}^{3}");
         oss.str("");
         k1 = k_type({T(0), T(0)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "");
         oss.str("");
         k1 = k_type({T(0), T(1)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "{y}");
         oss.str("");
         k1 = k_type({T(0), T(-1)});
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{{y}}");
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_print_tex_test)
 {
-    boost::mpl::for_each<int_types>(print_tex_tester());
+    tuple_for_each(int_types{}, print_tex_tester{});
 }
 
 struct integrate_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
+        using k_type = kronecker_monomial<T>;
         BOOST_CHECK(key_is_integrable<k_type>::value);
-        symbol_set vs;
         k_type k1;
-        auto ret = k1.integrate(symbol("a"), vs);
+        auto ret = k1.integrate("a", symbol_fset{});
         BOOST_CHECK_EQUAL(ret.first, T(1));
         BOOST_CHECK(ret.second == k_type({T(1)}));
         k1 = k_type{T(1)};
-        BOOST_CHECK_THROW(k1.integrate(symbol("b"), vs), std::invalid_argument);
-        vs.add("b");
-        ret = k1.integrate(symbol("b"), vs);
+        BOOST_CHECK_THROW(k1.integrate("b", symbol_fset{}), std::invalid_argument);
+        ret = k1.integrate("b", symbol_fset{"b"});
         BOOST_CHECK_EQUAL(ret.first, T(2));
         BOOST_CHECK(ret.second == k_type({T(2)}));
         k1 = k_type{T(2)};
-        ret = k1.integrate(symbol("c"), vs);
+        ret = k1.integrate("c", symbol_fset{"b"});
         BOOST_CHECK_EQUAL(ret.first, T(1));
         BOOST_CHECK(ret.second == k_type({T(2), T(1)}));
-        ret = k1.integrate(symbol("a"), vs);
+        ret = k1.integrate("a", symbol_fset{"b"});
         BOOST_CHECK_EQUAL(ret.first, T(1));
         BOOST_CHECK(ret.second == k_type({T(1), T(2)}));
         k1 = k_type{T(0), T(1)};
-        vs.add("d");
-        ret = k1.integrate(symbol("a"), vs);
+        ret = k1.integrate("a", symbol_fset{"b", "d"});
         BOOST_CHECK_EQUAL(ret.first, T(1));
         BOOST_CHECK(ret.second == k_type({T(1), T(0), T(1)}));
-        ret = k1.integrate(symbol("b"), vs);
+        ret = k1.integrate("b", symbol_fset{"b", "d"});
         BOOST_CHECK_EQUAL(ret.first, T(1));
         BOOST_CHECK(ret.second == k_type({T(1), T(1)}));
-        ret = k1.integrate(symbol("c"), vs);
+        ret = k1.integrate("c", symbol_fset{"b", "d"});
         BOOST_CHECK_EQUAL(ret.first, T(1));
         BOOST_CHECK(ret.second == k_type({T(0), T(1), T(1)}));
-        ret = k1.integrate(symbol("d"), vs);
+        ret = k1.integrate("d", symbol_fset{"b", "d"});
         BOOST_CHECK_EQUAL(ret.first, T(2));
         BOOST_CHECK(ret.second == k_type({T(0), T(2)}));
-        ret = k1.integrate(symbol("e"), vs);
+        ret = k1.integrate("e", symbol_fset{"b", "d"});
         BOOST_CHECK_EQUAL(ret.first, T(1));
         BOOST_CHECK(ret.second == k_type({T(0), T(1), T(1)}));
         k1 = k_type{T(-1), T(0)};
-        BOOST_CHECK_THROW(k1.integrate(symbol("b"), vs), std::invalid_argument);
+        BOOST_CHECK_THROW(k1.integrate("b", symbol_fset{"b", "d"}), std::invalid_argument);
         k1 = k_type{T(0), T(-1)};
-        BOOST_CHECK_THROW(k1.integrate(symbol("d"), vs), std::invalid_argument);
+        BOOST_CHECK_THROW(k1.integrate("d", symbol_fset{"b", "d"}), std::invalid_argument);
         // Check limits violation.
         typedef kronecker_array<T> ka;
         const auto &limits = ka::get_limits();
         k1 = k_type{std::get<0u>(limits[2u])[0u], std::get<0u>(limits[2u])[0u]};
-        BOOST_CHECK_THROW(ret = k1.integrate(symbol("b"), vs), std::invalid_argument);
+        BOOST_CHECK_THROW(ret = k1.integrate("b", symbol_fset{"b", "d"}), std::invalid_argument);
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_integrate_test)
 {
-    boost::mpl::for_each<int_types>(integrate_tester());
+    tuple_for_each(int_types{}, integrate_tester{});
 }
-
+#if 0
 struct trim_identify_tester {
     template <typename T>
     void operator()(const T &)

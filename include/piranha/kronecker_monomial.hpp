@@ -827,7 +827,7 @@ public:
     {
         v_type v = unpack(args), retval;
         T expo(0);
-        for (size_type i = 0; i < v.size(); ++i) {
+        for (decltype(v.size()) i = 0; i < v.size(); ++i) {
             const auto &cur_sym = *args.nth(static_cast<decltype(args.size())>(i));
             if (expo == T(0) && s < cur_sym) {
                 // If we went past the position of s in args and still we
@@ -996,7 +996,9 @@ private:
     template <typename U>
     using ips_type = decltype(math::pow(std::declval<const U &>(), std::declval<const integer &>()));
     template <typename U>
-    using ipow_subs_type = enable_if_t<std::is_constructible<ips_type<U>, int>::value, ips_type<U>>;
+    using ipow_subs_type
+        = enable_if_t<conjunction<std::is_constructible<ips_type<U>, int>, is_returnable<ips_type<U>>>::value,
+                      ips_type<U>>;
 
 public:
     /// Substitution of integral power.
@@ -1004,7 +1006,8 @@ public:
      * \note
      * This method is enabled only if:
      * - \p U can be raised to a piranha::integer power, yielding a type \p subs_type,
-     * - \p subs_type is constructible from \p int.
+     * - \p subs_type is constructible from \p int,
+     * - \p subs_type satisfies piranha::is_returnable.
      *
      * This method will substitute the <tt>n</tt>-th power of the symbol at the position \p p with the quantity \p x.
      * The return value is a vector containing a single pair in which the first element is the result of the
@@ -1030,7 +1033,6 @@ public:
      * - construction of the return value,
      * - piranha::math::pow(),
      * - arithmetics on piranha::integer,
-     * - the in-place subtraction operator of the exponent type,
      * - piranha::kronecker_array::encode().
      */
     template <typename U>
@@ -1043,10 +1045,12 @@ public:
         }
         std::vector<std::pair<ipow_subs_type<U>, kronecker_monomial>> retval;
         if (p < args.size()) {
+            PIRANHA_MAYBE_TLS integer q, r, d;
             auto v = unpack(args);
-            const auto q = v[static_cast<size_type>(p)] / n;
-            if (q >= 1) {
-                v[static_cast<size_type>(p)] -= q * n;
+            d = v[static_cast<size_type>(p)];
+            tdiv_qr(q, r, d, n);
+            if (q.sgn() > 0) {
+                v[static_cast<size_type>(p)] = static_cast<T>(r);
                 retval.emplace_back(math::pow(x, q), kronecker_monomial(ka::encode(v)));
                 return retval;
             }
