@@ -1040,17 +1040,18 @@ public:
                                                                             const U &x, const symbol_fset &args) const
     {
         if (unlikely(!n.sgn())) {
-            piranha_throw(std::invalid_argument,
-                          "invalid integral exponent in ipow_subs(): the exponent must be nonzero");
+            piranha_throw(
+                std::invalid_argument,
+                "invalid integral exponent in for ipow_subs() in a Kronecker monomial: the exponent must be nonzero");
         }
         std::vector<std::pair<ipow_subs_type<U>, kronecker_monomial>> retval;
         if (p < args.size()) {
             PIRANHA_MAYBE_TLS integer q, r, d;
             auto v = unpack(args);
-            d = v[static_cast<size_type>(p)];
+            d = v[static_cast<decltype(v.size())>(p)];
             tdiv_qr(q, r, d, n);
             if (q.sgn() > 0) {
-                v[static_cast<size_type>(p)] = static_cast<T>(r);
+                v[static_cast<decltype(v.size())>(p)] = static_cast<T>(r);
                 retval.emplace_back(math::pow(x, q), kronecker_monomial(ka::encode(v)));
                 return retval;
             }
@@ -1066,7 +1067,7 @@ public:
      * for trimming (i.e., a zero value means that the symbol at the corresponding position
      * in \p args is *not* a candidate for trimming, while a nonzero value means that the symbol is
      * a candidate for trimming). This method will set to zero those values in \p trim_mask
-     * for which the corresponding element in \p this is zero.
+     * for which the corresponding element in \p this is nonzero.
      *
      * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask originally contains
      * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p trim_mask will contain

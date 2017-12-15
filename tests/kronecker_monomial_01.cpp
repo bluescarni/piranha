@@ -1009,111 +1009,139 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_integrate_test)
 {
     tuple_for_each(int_types{}, integrate_tester{});
 }
-#if 0
+
 struct trim_identify_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
+        using k_type = kronecker_monomial<T>;
         k_type k0;
-        symbol_set v1, v2;
+        std::vector<char> mask;
+        BOOST_CHECK_NO_THROW(k0.trim_identify(mask, symbol_fset{}));
+        BOOST_CHECK(mask.size() == 0u);
         k0.set_int(1);
-        BOOST_CHECK_THROW(k0.trim_identify(v2, v2), std::invalid_argument);
-        v1.add("x");
-        v2.add("y");
-        v2.add("x");
+        BOOST_CHECK_EXCEPTION(
+            k0.trim_identify(mask, symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "invalid mask for trim_identify(): the size of the mask (0) differs "
+                                                 "from the size of the reference symbol set (1)");
+            });
+        mask = {1};
+        BOOST_CHECK_EXCEPTION(
+            k0.trim_identify(mask, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "invalid mask for trim_identify(): the size of the mask (1) differs "
+                                                 "from the size of the reference symbol set (0)");
+            });
+        k0.trim_identify(mask, symbol_fset{"x"});
+        BOOST_CHECK(!mask[0]);
+        mask = {1};
+        k0 = k_type{0};
+        k0.trim_identify(mask, symbol_fset{"x"});
+        BOOST_CHECK(mask[0]);
         k0 = k_type({T(1), T(2)});
-        k0.trim_identify(v1, v2);
-        BOOST_CHECK(v1 == symbol_set());
+        mask = {1, 1};
+        k0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{0, 0}));
         k0 = k_type({T(0), T(2)});
-        v1.add("x");
-        v1.add("y");
-        k0.trim_identify(v1, v2);
-        BOOST_CHECK(v1 == symbol_set({symbol("x")}));
+        mask = {1, 1};
+        k0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{1, 0}));
         k0 = k_type({T(0), T(0)});
-        v1.add("y");
-        k0.trim_identify(v1, v2);
-        BOOST_CHECK(v1 == symbol_set({symbol("x"), symbol("y")}));
+        mask = {1, 1};
+        k0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{1, 1}));
         k0 = k_type({T(1), T(0)});
-        k0.trim_identify(v1, v2);
-        BOOST_CHECK(v1 == symbol_set({symbol("y")}));
+        mask = {1, 1};
+        k0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{0, 1}));
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_trim_identify_test)
 {
-    boost::mpl::for_each<int_types>(trim_identify_tester());
+    tuple_for_each(int_types{}, trim_identify_tester{});
 }
 
 struct trim_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
+        using k_type = kronecker_monomial<T>;
         k_type k0;
-        symbol_set v1, v2;
+        BOOST_CHECK(k0.trim({}, symbol_fset{}) == k0);
         k0.set_int(1);
-        BOOST_CHECK_THROW(k0.trim(v1, v2), std::invalid_argument);
-        v1.add("x");
-        v1.add("y");
-        v1.add("z");
+        BOOST_CHECK_EXCEPTION(k0.trim({}, symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "invalid mask for trim(): the size of the mask (0) differs from the size "
+                                             "of the reference symbol set (1)");
+        });
+        BOOST_CHECK_EXCEPTION(k0.trim({1}, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "invalid mask for trim(): the size of the mask (1) differs from the size "
+                                             "of the reference symbol set (0)");
+        });
         k0 = k_type{T(1), T(0), T(-1)};
-        v2.add("x");
-        BOOST_CHECK((k0.trim(v2, v1) == k_type{T(0), T(-1)}));
-        v2.add("z");
-        v2.add("a");
-        BOOST_CHECK((k0.trim(v2, v1) == k_type{T(0)}));
-        v2.add("y");
-        BOOST_CHECK((k0.trim(v2, v1) == k_type{}));
-        v2 = symbol_set();
-        BOOST_CHECK((k0.trim(v2, v1) == k0));
+        BOOST_CHECK((k0.trim({0, 1, 0}, symbol_fset{"x", "y", "z"}) == k_type{1, -1}));
+        BOOST_CHECK((k0.trim({1, 0, 0}, symbol_fset{"x", "y", "z"}) == k_type{0, -1}));
+        BOOST_CHECK((k0.trim({0, 0, 0}, symbol_fset{"x", "y", "z"}) == k0));
+        BOOST_CHECK((k0.trim({1, 0, 1}, symbol_fset{"x", "y", "z"}) == k_type{0}));
+        BOOST_CHECK((k0.trim({1, 1, 0}, symbol_fset{"x", "y", "z"}) == k_type{-1}));
+        BOOST_CHECK((k0.trim({0, 1, 1}, symbol_fset{"x", "y", "z"}) == k_type{1}));
+        BOOST_CHECK((k0.trim({1, 1, 1}, symbol_fset{"x", "y", "z"}) == k_type{}));
     }
 };
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_trim_test)
 {
-    boost::mpl::for_each<int_types>(trim_tester());
+    tuple_for_each(int_types{}, trim_tester{});
 }
 
 struct ipow_subs_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef kronecker_monomial<T> k_type;
+        using k_type = kronecker_monomial<T>;
         // Test the type trait.
         BOOST_CHECK((key_has_ipow_subs<k_type, integer>::value));
         BOOST_CHECK((key_has_ipow_subs<k_type, double>::value));
         BOOST_CHECK((key_has_ipow_subs<k_type, real>::value));
         BOOST_CHECK((key_has_ipow_subs<k_type, rational>::value));
         BOOST_CHECK((!key_has_ipow_subs<k_type, std::string>::value));
-        symbol_set vs;
         k_type k1;
-        auto ret = k1.ipow_subs("x", integer(45), integer(4), vs);
+        auto ret = k1.ipow_subs(1, integer(45), integer(4), symbol_fset{});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, 1);
         BOOST_CHECK((std::is_same<integer, decltype(ret[0u].first)>::value));
         BOOST_CHECK(ret[0u].second == k1);
-        k1.set_int(1);
-        BOOST_CHECK_THROW(k1.ipow_subs("x", integer(35), integer(4), vs), std::invalid_argument);
-        vs.add("x");
+        ret = k1.ipow_subs(0, integer(45), integer(4), symbol_fset{});
+        BOOST_CHECK_EQUAL(ret.size(), 1u);
+        BOOST_CHECK_EQUAL(ret[0u].first, 1);
+        BOOST_CHECK((std::is_same<integer, decltype(ret[0u].first)>::value));
+        BOOST_CHECK(ret[0u].second == k1);
+        BOOST_CHECK_EXCEPTION(k1.ipow_subs(0, integer(0), integer(4), symbol_fset{}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "invalid integral exponent in for ipow_subs() in a "
+                                                                   "Kronecker monomial: the exponent must be nonzero");
+                              });
         k1 = k_type({T(2)});
-        ret = k1.ipow_subs("y", integer(2), integer(4), vs);
+        ret = k1.ipow_subs(1, integer(2), integer(4), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, 1);
         BOOST_CHECK(ret[0u].second == k1);
-        ret = k1.ipow_subs("x", integer(1), integer(4), vs);
+        ret = k1.ipow_subs(0, integer(2), integer(4), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
-        BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(4), T(2)));
-        BOOST_CHECK(ret[0u].second == k_type({T(0)}));
-        ret = k1.ipow_subs("x", integer(2), integer(4), vs);
+        BOOST_CHECK_EQUAL(ret[0u].first, 4);
+        BOOST_CHECK(ret[0u].second == k_type{T(0)});
+        ret = k1.ipow_subs(0, integer(1), integer(4), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
-        BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(4), T(1)));
-        BOOST_CHECK(ret[0u].second == k_type({T(0)}));
-        ret = k1.ipow_subs("x", integer(-1), integer(4), vs);
+        BOOST_CHECK_EQUAL(ret[0u].first, 16);
+        BOOST_CHECK(ret[0u].second == k_type{T(0)});
+        ret = k1.ipow_subs(0, integer(3), integer(4), symbol_fset{"x"});
+        BOOST_CHECK_EQUAL(ret.size(), 1u);
+        BOOST_CHECK_EQUAL(ret[0u].first, 1);
+        BOOST_CHECK(ret[0u].second == k1);
+        ret = k1.ipow_subs(0, integer(-1), integer(4), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, 1);
         BOOST_CHECK(ret[0u].second == k_type({T(2)}));
-        ret = k1.ipow_subs("x", integer(4), integer(4), vs);
+        ret = k1.ipow_subs(0, integer(4), integer(4), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, 1);
         BOOST_CHECK(ret[0u].second == k_type({T(2)}));
@@ -1122,45 +1150,43 @@ struct ipow_subs_tester {
             return;
         }
         k1 = k_type({T(7), T(2)});
-        vs.add("y");
-        ret = k1.ipow_subs("x", integer(3), integer(2), vs);
+        ret = k1.ipow_subs(0, integer(3), integer(2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
         BOOST_CHECK((ret[0u].second == k_type{T(1), T(2)}));
-        ret = k1.ipow_subs("x", integer(4), integer(2), vs);
+        ret = k1.ipow_subs(0, integer(4), integer(2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(1)));
         BOOST_CHECK((ret[0u].second == k_type{T(3), T(2)}));
-        ret = k1.ipow_subs("x", integer(-4), integer(2), vs);
+        ret = k1.ipow_subs(0, integer(-4), integer(2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, 1);
         BOOST_CHECK((ret[0u].second == k_type{T(7), T(2)}));
         k1 = k_type({T(-7), T(2)});
-        ret = k1.ipow_subs("x", integer(4), integer(2), vs);
+        ret = k1.ipow_subs(0, integer(4), integer(2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, 1);
         BOOST_CHECK((ret[0u].second == k_type{T(-7), T(2)}));
-        ret = k1.ipow_subs("x", integer(-4), integer(2), vs);
+        ret = k1.ipow_subs(0, integer(-4), integer(2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(1)));
         BOOST_CHECK((ret[0u].second == k_type{T(-3), T(2)}));
-        ret = k1.ipow_subs("x", integer(-3), integer(2), vs);
+        ret = k1.ipow_subs(0, integer(-3), integer(2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
         BOOST_CHECK((ret[0u].second == k_type{T(-1), T(2)}));
         k1 = k_type({T(2), T(-7)});
-        ret = k1.ipow_subs("y", integer(-3), integer(2), vs);
+        ret = k1.ipow_subs(1, integer(-3), integer(2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
         BOOST_CHECK((ret[0u].second == k_type{T(2), T(-1)}));
-        BOOST_CHECK_THROW(k1.ipow_subs("y", integer(0), integer(2), vs), zero_division_error);
         k1 = k_type({T(-7), T(2)});
-        auto ret2 = k1.ipow_subs("x", integer(-4), real(-2.345), vs);
+        auto ret2 = k1.ipow_subs(0, integer(-4), real(-2.345), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 1u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(1)));
         BOOST_CHECK((ret2[0u].second == k_type{T(-3), T(2)}));
         BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
-        auto ret3 = k1.ipow_subs("x", integer(-3), rational(-1, 2), vs);
+        auto ret3 = k1.ipow_subs(0, integer(-3), rational(-1, 2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret3.size(), 1u);
         BOOST_CHECK_EQUAL(ret3[0u].first, math::pow(rational(-1, 2), T(2)));
         BOOST_CHECK((ret3[0u].second == k_type{T(-1), T(2)}));
@@ -1170,12 +1196,12 @@ struct ipow_subs_tester {
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_ipow_subs_test)
 {
-    boost::mpl::for_each<int_types>(ipow_subs_tester());
+    tuple_for_each(int_types{}, ipow_subs_tester{});
 }
 
 struct tt_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
         BOOST_CHECK((!key_has_t_subs<k_type, int, int>::value));
@@ -1193,15 +1219,13 @@ struct tt_tester {
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_type_traits_test)
 {
-    boost::mpl::for_each<int_types>(tt_tester());
+    tuple_for_each(int_types{}, tt_tester{});
 }
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_kic_test)
 {
     BOOST_CHECK((key_is_convertible<k_monomial, k_monomial>::value));
     BOOST_CHECK((!key_is_convertible<kronecker_monomial<int>, kronecker_monomial<long>>::value));
-    BOOST_CHECK((!key_is_convertible<k_monomial, monomial<int>>::value));
-    BOOST_CHECK((!key_is_convertible<monomial<int>, k_monomial>::value));
 }
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_comparison_test)
@@ -1212,4 +1236,3 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_comparison_test)
     BOOST_CHECK(!(k_monomial{2} < k_monomial{1}));
     BOOST_CHECK(k_monomial{1} < k_monomial{2});
 }
-#endif
