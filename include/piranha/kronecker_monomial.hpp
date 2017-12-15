@@ -68,12 +68,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-// TODO is this needed? Can't we move this below without fwd decl?
-
-// Fwd declaration.
-template <typename>
-class kronecker_monomial;
-
 inline namespace impl
 {
 
@@ -94,50 +88,6 @@ inline void k_monomial_load_check_sizes(T s1, U s2)
     }
 }
 }
-}
-
-// Implementation of the Boost s11n api.
-namespace boost
-{
-namespace serialization
-{
-
-template <typename Archive, typename T>
-inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned)
-{
-    if (std::is_same<Archive, boost::archive::binary_oarchive>::value) {
-        piranha::boost_save(ar, k.key().get_int());
-    } else {
-        auto tmp = k.key().unpack(k.ss());
-        piranha::boost_save(ar, tmp);
-    }
-}
-
-template <typename Archive, typename T>
-inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned)
-{
-    if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
-        T value;
-        piranha::boost_load(ar, value);
-        k.key().set_int(value);
-    } else {
-        typename piranha::kronecker_monomial<T>::v_type tmp;
-        piranha::boost_load(ar, tmp);
-        piranha::k_monomial_load_check_sizes(tmp.size(), k.ss().size());
-        k.key() = piranha::kronecker_monomial<T>(tmp);
-    }
-}
-
-template <typename Archive, typename T>
-inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned version)
-{
-    split_free(ar, k, version);
-}
-}
-}
-
-namespace piranha
-{
 
 /// Kronecker monomial class.
 /**
@@ -1211,6 +1161,50 @@ private:
 
 /// Alias for piranha::kronecker_monomial with default type.
 using k_monomial = kronecker_monomial<>;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T>
+inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned)
+{
+    if (std::is_same<Archive, boost::archive::binary_oarchive>::value) {
+        piranha::boost_save(ar, k.key().get_int());
+    } else {
+        auto tmp = k.key().unpack(k.ss());
+        piranha::boost_save(ar, tmp);
+    }
+}
+
+template <typename Archive, typename T>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned)
+{
+    if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
+        T value;
+        piranha::boost_load(ar, value);
+        k.key().set_int(value);
+    } else {
+        typename piranha::kronecker_monomial<T>::v_type tmp;
+        piranha::boost_load(ar, tmp);
+        piranha::k_monomial_load_check_sizes(tmp.size(), k.ss().size());
+        k.key() = piranha::kronecker_monomial<T>(tmp);
+    }
+}
+
+template <typename Archive, typename T>
+inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker_monomial<T>> &k, unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
+
+namespace piranha
+{
 
 inline namespace impl
 {
