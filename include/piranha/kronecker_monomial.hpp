@@ -73,6 +73,27 @@ namespace piranha
 // Fwd declaration.
 template <typename>
 class kronecker_monomial;
+
+inline namespace impl
+{
+
+// Check the size of a k_monomial after deserialization (s1) against the
+// size of the reference symbol set (s2).
+template <typename T, typename U>
+inline void k_monomial_load_check_sizes(T s1, U s2)
+{
+    static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value && std::is_integral<U>::value
+                      && std::is_unsigned<U>::value,
+                  "Type error: this function requires unsigned integral types as input.");
+    if (unlikely(s1 != s2)) {
+        piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
+                                             "monomial: the deserialized size ("
+                                                 + std::to_string(s1)
+                                                 + ") differs from the size of the reference symbol set ("
+                                                 + std::to_string(s2) + ")");
+    }
+}
+}
 }
 
 // Implementation of the Boost s11n api.
@@ -102,13 +123,7 @@ inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kronecker
     } else {
         typename piranha::kronecker_monomial<T>::v_type tmp;
         piranha::boost_load(ar, tmp);
-        if (unlikely(tmp.size() != k.ss().size())) {
-            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
-                                                 "monomial: the deserialized size ("
-                                                     + std::to_string(tmp.size())
-                                                     + ") differs from the size of the reference symbol set ("
-                                                     + std::to_string(k.ss().size()) + ")");
-        }
+        piranha::k_monomial_load_check_sizes(tmp.size(), k.ss().size());
         k.key() = piranha::kronecker_monomial<T>(tmp);
     }
 }
@@ -1184,13 +1199,7 @@ public:
         } else {
             v_type tmp;
             piranha::msgpack_convert(tmp, o, f);
-            if (unlikely(tmp.size() != s.size())) {
-                piranha_throw(
-                    std::invalid_argument,
-                    "incompatible symbol set in monomial serialization: the size of the reference symbol set ("
-                        + std::to_string(s.size()) + ") differs from the size of the monomial being deserialized ("
-                        + std::to_string(tmp.size()) + ")");
-            }
+            k_monomial_load_check_sizes(tmp.size(), s.size());
             *this = kronecker_monomial(tmp);
         }
     }
