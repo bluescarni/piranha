@@ -361,7 +361,8 @@ inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_
         return;
     }
     // Destroy functor.
-    auto destroy_function = [](T *start, T *end) {
+    auto destroy_function = [](T * start, T * end) noexcept(noexcept(start->~T()))
+    {
         for (; start != end; ++start) {
             start->~T();
         }
