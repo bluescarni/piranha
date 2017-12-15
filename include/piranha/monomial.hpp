@@ -189,25 +189,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     using pow_enabler =
         typename std::enable_if<has_safe_cast<T, decltype(std::declval<pow_type>() * std::declval<const U &>())>::value,
                                 int>::type;
-    // Machinery to determine the degree type.
-    // NOTE: add_type<U> will be promoted to a int/unsigned in case U is a short int.
-    template <typename U>
-    using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
-    template <typename U>
-    using degree_type = typename std::enable_if<std::is_constructible<add_type<U>, int>::value
-                                                    && is_addable_in_place<add_type<U>, U>::value,
-                                                add_type<U>>::type;
-    // Helpers to add exponents in the degree computation.
-    template <typename U, typename std::enable_if<std::is_integral<U>::value, int>::type = 0>
-    static void expo_add(degree_type<U> &retval, const U &n)
-    {
-        detail::safe_integral_adder(retval, static_cast<degree_type<U>>(n));
-    }
-    template <typename U, typename std::enable_if<!std::is_integral<U>::value, int>::type = 0>
-    static void expo_add(degree_type<U> &retval, const U &x)
-    {
-        retval += x;
-    }
     // Integrate utils.
     // In-place increment by one, checked for integral types.
     template <typename U, typename std::enable_if<std::is_integral<U>::value, int>::type = 0>
@@ -255,12 +236,11 @@ class monomial : public array_key<T, monomial<T, S>, S>
     struct ipow_subs_type_ {
     };
     template <typename U>
-    struct ipow_subs_type_<U, typename std::enable_if<std::is_constructible<ipow_subs_type__<U>, int>::value
-                                                      && std::is_assignable<ipow_subs_type__<U> &,
-                                                                            ipow_subs_type__<U>>::value
-                                                      && has_safe_cast<rational, typename base::value_type>::value
-                                                      && is_subtractable_in_place<typename base::value_type,
-                                                                                  integer>::value>::type> {
+    struct ipow_subs_type_<
+        U, typename std::enable_if<std::is_constructible<ipow_subs_type__<U>, int>::value
+                                   && std::is_assignable<ipow_subs_type__<U> &, ipow_subs_type__<U>>::value
+                                   && has_safe_cast<rational, typename base::value_type>::value
+                                   && is_subtractable_in_place<typename base::value_type, integer>::value>::type> {
         using type = ipow_subs_type__<U>;
     };
     template <typename U>
@@ -308,40 +288,6 @@ private:
                       int>;
 
 public:
-    /// Constructor from range and symbol set.
-    /**
-     * \note
-     * This constructor is enabled only if \p Iterator is an input iterator whose value type
-     * can be cast safely to \p T.
-     *
-     * This constructor will copy the elements from the range defined by \p begin and \p end into \p this,
-     * using piranha::safe_cast() for any necessary type conversion. If the final size of \p this is different
-     * from the size of \p s, a runtime error will be produced. This constructor is used by
-     * piranha::polynomial::find_cf().
-     *
-     * @param begin beginning of the range.
-     * @param end end of the range.
-     * @param s reference symbol set.
-     *
-     * @throws std::invalid_argument if the final size of \p this and the size of \p s differ.
-     * @throws unspecified any exception thrown by:
-     * - piranha::safe_cast(),
-     * - push_back().
-     */
-    template <typename Iterator, it_ctor_enabler<Iterator> = 0>
-    explicit monomial(Iterator begin, Iterator end, const symbol_fset &s)
-    {
-        for (; begin != end; ++begin) {
-            this->push_back(safe_cast<T>(*begin));
-        }
-        if (unlikely(this->size() != s.size())) {
-            piranha_throw(std::invalid_argument, "the monomial constructor from range and symbol set "
-                                                 "yielded an invalid monomial: the final size is "
-                                                     + std::to_string(this->size())
-                                                     + ", while the size of the symbol set is "
-                                                     + std::to_string(s.size()));
-        }
-    }
     /// Constructor from range.
     /**
      * \note
@@ -363,6 +309,37 @@ public:
     {
         for (; begin != end; ++begin) {
             this->push_back(safe_cast<T>(*begin));
+        }
+    }
+    /// Constructor from range and symbol set.
+    /**
+     * \note
+     * This constructor is enabled only if \p Iterator is an input iterator whose value type
+     * can be cast safely to \p T.
+     *
+     * This constructor will copy the elements from the range defined by \p begin and \p end into \p this,
+     * using piranha::safe_cast() for any necessary type conversion. If the final size of \p this is different
+     * from the size of \p s, a runtime error will be produced. This constructor is used by
+     * piranha::polynomial::find_cf().
+     *
+     * @param begin beginning of the range.
+     * @param end end of the range.
+     * @param s reference symbol set.
+     *
+     * @throws std::invalid_argument if the final size of \p this and the size of \p s differ.
+     * @throws unspecified any exception thrown by:
+     * - piranha::safe_cast(),
+     * - push_back().
+     */
+    template <typename Iterator, it_ctor_enabler<Iterator> = 0>
+    explicit monomial(Iterator begin, Iterator end, const symbol_fset &s) : monomial(begin, end)
+    {
+        if (unlikely(this->size() != s.size())) {
+            piranha_throw(std::invalid_argument, "the monomial constructor from range and symbol set "
+                                                 "yielded an invalid monomial: the final size is "
+                                                     + std::to_string(this->size())
+                                                     + ", while the size of the symbol set is "
+                                                     + std::to_string(s.size()));
         }
     }
     PIRANHA_FORWARDING_CTOR(monomial, base)
@@ -387,29 +364,30 @@ public:
      * @return a reference to \p this.
      */
     monomial &operator=(monomial &&other) = default;
-    /// Compatibility check
+    /// Compatibility check.
     /**
      * A monomial and a set of arguments are compatible if their sizes coincide.
      *
      * @param args reference piranha::symbol_fset.
      *
-     * @return <tt>this->size() == args.size()</tt>.
+     * @return ``true`` if the size of ``this`` is equal to the size of ``args``, ``false``
+     * otherwise.
      */
     bool is_compatible(const symbol_fset &args) const noexcept
     {
         return this->size() == args.size();
     }
-    /// Ignorability check.
+    /// Zero check.
     /**
-     * A monomial is never ignorable by definition.
+     * A monomial is never zero.
      *
      * @return \p false.
      */
-    bool is_ignorable(const symbol_set &) const noexcept
+    bool is_zero(const symbol_fset &) const noexcept
     {
         return false;
     }
-    /// Check if monomial is unitary.
+    /// Check if the monomial is unitary.
     /**
      * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.
      *
@@ -425,12 +403,35 @@ public:
         const auto sbe = this->get_size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument,
-                          "invalid sizes in 'monomial::is_unitary()': the monomial has a size of "
+                          "invalid sizes in the invocation of is_unitary() for a monomial: the monomial has a size of "
                               + std::to_string(std::get<0>(sbe)) + ", while the reference symbol set has a size of "
                               + std::to_string(args.size()));
         }
         return std::all_of(std::get<1>(sbe), std::get<2>(sbe), [](const T &element) { return math::is_zero(element); });
     }
+
+private:
+    // Machinery to determine the degree type.
+    // NOTE: add_type<U> will be promoted to a int/unsigned in case U is a short int.
+    template <typename U>
+    using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
+    template <typename U>
+    using degree_type
+        = enable_if_t<conjunction<std::is_constructible<add_type<U>, int>, is_addable_in_place<add_type<U>, U>>::value,
+                      add_type<U>>;
+    // Helpers to add exponents in the degree computation.
+    template <typename U, enable_if_t<std::is_integral<U>::value, int> = 0>
+    static void expo_add(degree_type<U> &retval, const U &n)
+    {
+        detail::safe_integral_adder(retval, static_cast<degree_type<U>>(n));
+    }
+    template <typename U, enable_if_t<!std::is_integral<U>::value, int> = 0>
+    static void expo_add(degree_type<U> &retval, const U &x)
+    {
+        retval += x;
+    }
+
+public:
     /// Degree.
     /**
      * \note
@@ -818,9 +819,9 @@ private:
     template <typename U>
     using e_type = decltype(math::pow(std::declval<U const &>(), std::declval<T const &>()));
     template <typename U>
-    using eval_type = enable_if_t<conjunction<is_multipliable_in_place<e_type<U>>,
-                                              std::is_constructible<e_type<U>, int>, is_mappable<U>>::value,
-                                  e_type<U>>;
+    using eval_type = enable_if_t<
+        conjunction<is_multipliable_in_place<e_type<U>>, std::is_constructible<e_type<U>, int>, is_mappable<U>>::value,
+        e_type<U>>;
 
 public:
     /// Evaluation.
@@ -875,9 +876,9 @@ public:
 private:
     // Subs support (re-uses the e_type typedef from the eval type).
     template <typename U>
-    using subs_type = enable_if_t<conjunction<std::is_constructible<e_type<U>, int>,
-                                              std::is_assignable<e_type<U> &, e_type<U>>>::value,
-                                  e_type<U>>;
+    using subs_type = enable_if_t<
+        conjunction<std::is_constructible<e_type<U>, int>, std::is_assignable<e_type<U> &, e_type<U>>>::value,
+        e_type<U>>;
 
 public:
     /// Substitution.
@@ -1113,10 +1114,8 @@ private:
 #if defined(PIRANHA_WITH_MSGPACK)
     // Enablers for msgpack serialization.
     template <typename Stream>
-    using msgpack_pack_enabler
-        = enable_if_t<conjunction<is_msgpack_stream<Stream>,
-                                  has_msgpack_pack<Stream, typename base::container_type>>::value,
-                      int>;
+    using msgpack_pack_enabler = enable_if_t<
+        conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename base::container_type>>::value, int>;
     template <typename U>
     using msgpack_convert_enabler = enable_if_t<has_msgpack_convert<typename U::container_type>::value, int>;
 
