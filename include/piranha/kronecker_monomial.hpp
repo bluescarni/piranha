@@ -579,19 +579,20 @@ public:
     {
         return !operator==(other);
     }
-    /// Name of the linear argument.
+    /// Detect linear monomial.
     /**
      * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
-     * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
+     * exponent), then this method will return a pair formed by the ``true`` value and the position,
+     * in ``args``, of the linear variable. Otherwise, the returned value will be a pair formed by the
+     * ``false`` value and an unspecified position value.
      *
      * @param args the reference piranha::symbol_fset.
      *
-     * @return the name of the linear variable.
+     * @return a pair indicating if the monomial is linear.
      *
-     * @throws std::invalid_argument if the monomial is not linear.
      * @throws unspecified any exception thrown by unpack().
      */
-    std::string linear_argument(const symbol_fset &args) const
+    std::pair<bool, symbol_idx> is_linear(const symbol_fset &args) const
     {
         const auto v = unpack(args);
         const auto size = v.size();
@@ -600,20 +601,16 @@ public:
             if (!v[i]) {
                 continue;
             }
-            if (unlikely(v[i] != T(1))) {
-                piranha_throw(std::invalid_argument, "while attempting to extract the linear argument "
-                                                     "from a Kronecker monomial, a non-unitary exponent was "
-                                                     "encountered in correspondence of the variable '"
-                                                         + (*args.nth(static_cast<decltype(args.size())>(i))) + "'");
+            if (v[i] != T(1)) {
+                return std::make_pair(false, symbol_idx{0});
             }
             candidate = i;
             ++n_linear;
         }
-        if (unlikely(n_linear != 1u)) {
-            piranha_throw(std::invalid_argument, "the extraction of the linear argument "
-                                                 "from a Kronecker monomial failed: the monomial is not linear");
+        if (n_linear != 1u) {
+            return std::make_pair(false, symbol_idx{0});
         }
-        return *args.nth(static_cast<decltype(args.size())>(candidate));
+        return std::make_pair(true, symbol_idx{candidate});
     }
 
 private:

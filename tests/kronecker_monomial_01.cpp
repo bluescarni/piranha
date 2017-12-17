@@ -598,51 +598,31 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_print_test)
     tuple_for_each(int_types{}, print_tester{});
 }
 
-struct linear_argument_tester {
+struct is_linear_tester {
     template <typename T>
     void operator()(const T &) const
     {
         typedef kronecker_monomial<T> k_type;
-        BOOST_CHECK_EXCEPTION(
-            k_type().linear_argument(symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
-                return boost::contains(e.what(), "the extraction of the linear argument "
-                                                 "from a Kronecker monomial failed: the monomial is not linear");
-            });
-        BOOST_CHECK_EXCEPTION(
-            k_type().linear_argument(symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
-                return boost::contains(e.what(), "the extraction of the linear argument "
-                                                 "from a Kronecker monomial failed: the monomial is not linear");
-            });
+        BOOST_CHECK(!k_type().is_linear(symbol_fset{}).first);
+        BOOST_CHECK(!k_type().is_linear(symbol_fset{"x"}).first);
         k_type k({T(1)});
-        BOOST_CHECK_EQUAL(k.linear_argument(symbol_fset{"x"}), "x");
+        BOOST_CHECK(k.is_linear(symbol_fset{"x"}).first);
+        BOOST_CHECK_EQUAL(k.is_linear(symbol_fset{"x"}).second, 0u);
         k = k_type({T(0), T(1)});
-        BOOST_CHECK_EQUAL(k.linear_argument(symbol_fset{"x", "y"}), "y");
+        BOOST_CHECK(k.is_linear(symbol_fset{"x", "y"}).first);
+        BOOST_CHECK_EQUAL(k.is_linear(symbol_fset{"x", "y"}).second, 1u);
         k = k_type({T(0), T(2)});
-        BOOST_CHECK_EXCEPTION(
-            k.linear_argument(symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
-                return boost::contains(e.what(), "while attempting to extract the linear argument "
-                                                 "from a Kronecker monomial, a non-unitary exponent was "
-                                                 "encountered in correspondence of the variable 'y'");
-            });
+        BOOST_CHECK(!k.is_linear(symbol_fset{"x", "y"}).first);
         k = k_type({T(2), T(0)});
-        BOOST_CHECK_EXCEPTION(
-            k.linear_argument(symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
-                return boost::contains(e.what(), "while attempting to extract the linear argument "
-                                                 "from a Kronecker monomial, a non-unitary exponent was "
-                                                 "encountered in correspondence of the variable 'x'");
-            });
+        BOOST_CHECK(!k.is_linear(symbol_fset{"x", "y"}).first);
         k = k_type({T(1), T(1)});
-        BOOST_CHECK_EXCEPTION(
-            k.linear_argument(symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
-                return boost::contains(e.what(), "the extraction of the linear argument "
-                                                 "from a Kronecker monomial failed: the monomial is not linear");
-            });
+        BOOST_CHECK(!k.is_linear(symbol_fset{"x", "y"}).first);
     }
 };
 
-BOOST_AUTO_TEST_CASE(kronecker_monomial_linear_argument_test)
+BOOST_AUTO_TEST_CASE(kronecker_monomial_is_linear_test)
 {
-    tuple_for_each(int_types{}, linear_argument_tester{});
+    tuple_for_each(int_types{}, is_linear_tester{});
 }
 
 struct pow_tester {
