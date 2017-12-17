@@ -435,13 +435,15 @@ public:
     /// Degree.
     /**
      * \note
-     * This method is enabled only if \p T is addable and the type resulting from the addition is constructible from
-     * \p int and monomial::value_type can be added in-place to it.
+     * This method is enabled only if:
+     * - \p T is addable, yielding a type ``degree_type``,
+     * - ``degree_type`` is constructible from \p int,
+     * - monomial::value_type can be added in-place to ``degree_type``.
      *
      * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
      * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
      *
-     * @param args reference set of piranha::symbol.
+     * @param args reference piranha::symbol_fset.
      *
      * @return the degree of the monomial.
      *
@@ -451,11 +453,15 @@ public:
      * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
      */
     template <typename U = T>
-    degree_type<U> degree(const symbol_set &args) const
+    degree_type<U> degree(const symbol_fset &args) const
     {
         // This is a fast check, better always to keep it.
         if (unlikely(args.size() != this->size())) {
-            piranha_throw(std::invalid_argument, "invalid arguments set");
+            piranha_throw(
+                std::invalid_argument,
+                "invalid symbol set for the computation of the degree of a monomial: the size of the symbol set ("
+                    + std::to_string(args.size()) + ") differs from the size of the monomial ("
+                    + std::to_string(this->size()) + ")");
         }
         degree_type<U> retval(0);
         for (const auto &x : *this) {
@@ -466,34 +472,45 @@ public:
     /// Partial degree.
     /**
      * \note
-     * This method is enabled only if \p T is addable and the type resulting from the addition is constructible from \p
-     * int
-     * and monomial::value_type can be added in-place to it.
+     * This method is enabled only if:
+     * - \p T is addable, yielding a type ``degree_type``,
+     * - ``degree_type`` is constructible from \p int,
+     * - monomial::value_type can be added in-place to ``degree_type``.
      *
      * This method will return the partial degree of the monomial, computed via the summation of the exponents of the
-     * monomial.
-     * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
+     * monomial. If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
      *
-     * The \p p argument is used to indicate which exponents are to be taken into account when computing the partial
-     * degree.
-     * Exponents not in \p p will be discarded during the computation of the partial degree.
+     * The \p p argument is used to indicate the positions of the exponents to be taken into account when computing the
+     * partial degree. Exponents at positions not present in \p p will be discarded during the computation of the
+     * partial degree.
      *
      * @param p positions of the symbols to be considered.
-     * @param args reference set of piranha::symbol.
+     * @param args reference piranha::symbol_fset.
      *
      * @return the partial degree of the monomial.
      *
-     * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if \p p is
-     * not compatible with the monomial.
+     * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if the largest value in \p p is
+     * not less than the size of the monomial.
      * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
      * of the degree overflows.
      * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
      */
     template <typename U = T>
-    degree_type<U> degree(const symbol_set::positions &p, const symbol_set &args) const
+    degree_type<U> degree(const symbol_idx_fset &p, const symbol_fset &args) const
     {
-        if (unlikely(args.size() != this->size() || (p.size() && p.back() >= this->size()))) {
-            piranha_throw(std::invalid_argument, "invalid arguments set or positions");
+        if (unlikely(args.size() != this->size())) {
+            piranha_throw(std::invalid_argument, "invalid symbol set for the computation of the partial degree of a "
+                                                 "monomial: the size of the symbol set ("
+                                                     + std::to_string(args.size())
+                                                     + ") differs from the size of the monomial ("
+                                                     + std::to_string(this->size()) + ")");
+        }
+        if (unlikely(p.size() && *p.rbegin() >= args.size())) {
+            piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
+                                                 "partial degree of a monomial is "
+                                                     + std::to_string(*p.rbegin())
+                                                     + ", but the monomial has a size of only "
+                                                     + std::to_string(args.size()));
         }
         auto cit = this->begin();
         degree_type<U> retval(0);
@@ -504,28 +521,28 @@ public:
     }
     /// Low degree (equivalent to the degree).
     /**
-     * @param args reference set of piranha::symbol.
+     * @param args reference piranha::symbol_fset.
      *
-     * @return the output of degree(const symbol_set &args) const.
+     * @return the output of degree(const symbol_fset &args) const.
      *
-     * @throws unspecified any exception thrown by degree(const symbol_set &args) const.
+     * @throws unspecified any exception thrown by degree(const symbol_fset &args) const.
      */
     template <typename U = T>
-    degree_type<U> ldegree(const symbol_set &args) const
+    degree_type<U> ldegree(const symbol_fset &args) const
     {
         return degree(args);
     }
     /// Partial low degree (equivalent to the partial degree).
     /**
      * @param p positions of the symbols to be considered.
-     * @param args reference set of piranha::symbol.
+     * @param args reference piranha::symbol_fset.
      *
-     * @return the output of degree(const symbol_set::positions &, const symbol_set &) const.
+     * @return the output of degree(const symbol_idx_fset &, const symbol_fset &) const.
      *
-     * @throws unspecified any exception thrown by degree(const symbol_set::positions &, const symbol_set &) const.
+     * @throws unspecified any exception thrown by degree(const symbol_idx_fset &, const symbol_fset &) const.
      */
     template <typename U = T>
-    degree_type<U> ldegree(const symbol_set::positions &p, const symbol_set &args) const
+    degree_type<U> ldegree(const symbol_idx_fset &p, const symbol_fset &args) const
     {
         return degree(p, args);
     }
@@ -537,22 +554,27 @@ public:
      * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
      * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
      *
-     * @param args reference set of piranha::symbol.
+     * @param args reference piranha::symbol_fset.
      *
      * @return name of the linear variable.
      *
      * @throws std::invalid_argument if the monomial is not linear or if the sizes of \p args and \p this differ.
      * @throws unspecified any exception thrown by:
      * - piranha::safe_cast(),
-     * - piranha::math::is_zero() or piranha::is_unitary().
+     * - piranha::math::is_zero(),
+     * - piranha::math::is_unitary().
      */
     template <typename U = T, linarg_enabler<U> = 0>
-    std::string linear_argument(const symbol_set &args) const
+    std::string linear_argument(const symbol_fset &args) const
     {
-        if (!is_compatible(args)) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        if (unlikely(args.size() != this->size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid symbol set for the identification of the linear argument in a "
+                          "monomial: the size of the symbol set ("
+                              + std::to_string(args.size()) + ") differs from the size of the monomial ("
+                              + std::to_string(this->size()) + ")");
         }
-        typedef typename base::size_type size_type;
+        using size_type = typename base::size_type;
         const size_type size = this->size();
         size_type n_linear = 0u, candidate = 0u;
         for (size_type i = 0u; i < size; ++i) {
