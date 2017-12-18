@@ -116,16 +116,12 @@ struct trivial {
 };
 
 struct nontrivial_copy {
-    nontrivial_copy(nontrivial_copy &&) noexcept(false)
-    {
-    }
+    nontrivial_copy(nontrivial_copy &&) noexcept(false) {}
     nontrivial_copy &operator=(nontrivial_copy &&) noexcept(false)
     {
         return *this;
     }
-    nontrivial_copy(const nontrivial_copy &other) : n(other.n)
-    {
-    }
+    nontrivial_copy(const nontrivial_copy &other) : n(other.n) {}
     int n;
 };
 
@@ -137,9 +133,7 @@ struct trivial_copy {
 
 struct nontrivial_dtor {
     nontrivial_dtor(const nontrivial_dtor &) = default;
-    nontrivial_dtor(nontrivial_dtor &&) noexcept(false)
-    {
-    }
+    nontrivial_dtor(nontrivial_dtor &&) noexcept(false) {}
     nontrivial_dtor &operator=(nontrivial_dtor &&) noexcept(false)
     {
         return *this;
@@ -715,9 +709,7 @@ template <>
 struct hash<unhashable10> {
     hash(const hash &) = default;
     std::size_t operator()(const unhashable10 &) const;
-    ~hash() noexcept(false)
-    {
-    }
+    ~hash() noexcept(false) {}
 };
 
 template <>
@@ -2092,4 +2084,25 @@ BOOST_AUTO_TEST_CASE(type_traits_zero_is_absorbing)
         BOOST_CHECK((!zero_is_absorbing<const float &>::value));
         BOOST_CHECK((!zero_is_absorbing<float &&>::value));
     }
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_disj_idx)
+{
+    BOOST_CHECK(disjunction_idx<>::value == 0u);
+    BOOST_CHECK((disjunction_idx<std::is_same<int, int>>::value == 0u));
+    BOOST_CHECK((disjunction_idx<std::is_same<int, long>>::value == 1u));
+    BOOST_CHECK((disjunction_idx<std::is_same<int, long>, std::is_same<int, int>>::value == 1u));
+    BOOST_CHECK((disjunction_idx<std::is_same<int, long>, std::is_same<int, double>>::value == 2u));
+    BOOST_CHECK((disjunction_idx<std::is_same<int, int>, std::is_same<int, double>>::value == 0u));
+    BOOST_CHECK(
+        (disjunction_idx<std::is_same<int, int>, std::is_same<int, double>, std::is_same<int, std::string>>::value
+         == 0u));
+    BOOST_CHECK(
+        (disjunction_idx<std::is_same<int, float>, std::is_same<int, int>, std::is_same<int, std::string>>::value
+         == 1u));
+    BOOST_CHECK(
+        (disjunction_idx<std::is_same<int, float>, std::is_same<int, float>, std::is_same<int, int>>::value == 2u));
+    BOOST_CHECK(
+        (disjunction_idx<std::is_same<int, float>, std::is_same<int, float>, std::is_same<int, std::string>>::value
+         == 3u));
 }

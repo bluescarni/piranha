@@ -121,6 +121,29 @@ template <class B>
 struct negation : std::integral_constant<bool, !B::value> {
 };
 
+// This is like disjunction, but instead of providing true/false it provides
+// the index of the first boolean class which evaluates to true. If no class
+// evaluates to true, then it will return the number of boolean classes
+// used in the instantiation.
+template <std::size_t CurIdx, class...>
+struct disjunction_idx_impl : std::integral_constant<std::size_t, 0u> {
+};
+
+template <std::size_t CurIdx, class B1>
+struct disjunction_idx_impl<CurIdx, B1>
+    : std::integral_constant<std::size_t, (B1::value != false) ? CurIdx : CurIdx + 1u> {
+};
+
+template <std::size_t CurIdx, class B1, class... Bn>
+struct disjunction_idx_impl<CurIdx, B1, Bn...>
+    : std::conditional<B1::value != false, std::integral_constant<std::size_t, CurIdx>,
+                       disjunction_idx_impl<CurIdx + 1u, Bn...>>::type {
+};
+
+template <class... Bs>
+struct disjunction_idx : disjunction_idx_impl<0u, Bs...> {
+};
+
 // std::index_sequence and std::make_index_sequence implementation for C++11. These are available
 // in the std library in C++14. Implementation taken from:
 // http://stackoverflow.com/questions/17424477/implementation-c14-make-integer-sequence
@@ -931,33 +954,31 @@ struct arrow_operator_type<U, enable_if_t<is_detected<rec_arrow_op_t, U>::value>
     using type = rec_arrow_op_t<U>;
 };
 
+// NOTE: need the SFINAE wrapper here and below because we need to soft-error
+// out in case the types in std::iterator_traits are not defined.
 template <typename T, typename = void>
 struct is_input_iterator_impl : std::false_type {
 };
 
 template <typename T>
-struct
-    is_input_iterator_impl<T,
-                           enable_if_t<conjunction<is_iterator<T>, is_equality_comparable<T>,
-                                                   std::is_convertible<decltype(*std::declval<T &>()),
-                                                                       typename std::iterator_traits<T>::value_type>,
-                                                   std::is_same<decltype(++std::declval<T &>()), T &>,
-                                                   std::is_same<decltype((void)std::declval<T &>()++),
-                                                                decltype((void)++std::declval<T &>())>,
-                                                   std::is_convertible<decltype(*std::declval<T &>()++),
-                                                                       typename std::iterator_traits<T>::value_type>,
-                                                   // NOTE: here we know that the arrow op has to return a pointer, if
-                                                   // implemented correctly, and that the syntax it->m must be
-                                                   // equivalent to (*it).m. This means that, barring differences in
-                                                   // reference qualifications, it-> and *it must return the same thing.
-                                                   std::is_same<unref_t<decltype(*std::declval<arrow_operator_t<T>>())>,
-                                                                unref_t<decltype(*std::declval<T &>())>>,
-                                                   // NOTE: here the usage of is_convertible guarantees we catch both
-                                                   // iterators higher in the type hierarchy and the Boost versions of
-                                                   // standard iterators as well.
-                                                   std::is_convertible<
-                                                       typename std::iterator_traits<T>::iterator_category,
-                                                       std::input_iterator_tag>>::value>> : std::true_type {
+struct is_input_iterator_impl<
+    T,
+    enable_if_t<conjunction<
+        is_iterator<T>, is_equality_comparable<T>,
+        std::is_convertible<decltype(*std::declval<T &>()), typename std::iterator_traits<T>::value_type>,
+        std::is_same<decltype(++std::declval<T &>()), T &>,
+        std::is_same<decltype((void)std::declval<T &>()++), decltype((void)++std::declval<T &>())>,
+        std::is_convertible<decltype(*std::declval<T &>()++), typename std::iterator_traits<T>::value_type>,
+        // NOTE: here we know that the arrow op has to return a pointer, if
+        // implemented correctly, and that the syntax it->m must be
+        // equivalent to (*it).m. This means that, barring differences in
+        // reference qualifications, it-> and *it must return the same thing.
+        std::is_same<unref_t<decltype(*std::declval<arrow_operator_t<T>>())>, unref_t<decltype(*std::declval<T &>())>>,
+        // NOTE: here the usage of is_convertible guarantees we catch both
+        // iterators higher in the type hierarchy and the Boost versions of
+        // standard iterators as well.
+        std::is_convertible<typename std::iterator_traits<T>::iterator_category, std::input_iterator_tag>>::value>>
+    : std::true_type {
 };
 
 #endif
@@ -989,21 +1010,17 @@ struct is_forward_iterator_impl : std::false_type {
 };
 
 template <typename T>
-struct is_forward_iterator_impl<T,
-                                enable_if_t<conjunction<is_input_iterator<T>, std::is_default_constructible<T>,
-                                                        disjunction<std::is_same<
-                                                                        typename std::iterator_traits<T>::value_type &,
-                                                                        typename std::iterator_traits<T>::reference>,
-                                                                    std::is_same<
-                                                                        typename std::iterator_traits<T>::
-                                                                            value_type const &,
-                                                                        typename std::iterator_traits<T>::reference>>,
-                                                        std::is_convertible<decltype(std::declval<T &>()++), const T &>,
-                                                        std::is_same<decltype(*std::declval<T &>()++),
-                                                                     typename std::iterator_traits<T>::reference>,
-                                                        std::is_convertible<
-                                                            typename std::iterator_traits<T>::iterator_category,
-                                                            std::forward_iterator_tag>>::value>> : std::true_type {
+struct is_forward_iterator_impl<
+    T, enable_if_t<conjunction<
+           is_input_iterator<T>, std::is_default_constructible<T>,
+           disjunction<std::is_same<typename std::iterator_traits<T>::value_type &,
+                                    typename std::iterator_traits<T>::reference>,
+                       std::is_same<typename std::iterator_traits<T>::value_type const &,
+                                    typename std::iterator_traits<T>::reference>>,
+           std::is_convertible<decltype(std::declval<T &>()++), const T &>,
+           std::is_same<decltype(*std::declval<T &>()++), typename std::iterator_traits<T>::reference>,
+           std::is_convertible<typename std::iterator_traits<T>::iterator_category, std::forward_iterator_tag>>::value>>
+    : std::true_type {
 };
 }
 
