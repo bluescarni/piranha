@@ -151,7 +151,7 @@ class monomial : public array_key<T, monomial<T, S>, S>
     PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
     using base = array_key<T, monomial<T, S>, S>;
-    // Multiplication and division.
+    // Multiplication.
     template <typename Cf, typename U>
     using multiply_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
                                                          std::declval<U &>(), std::declval<U const &>()))>::value
@@ -161,33 +161,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     using monomial_multiply_enabler =
         typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
                                     std::declval<U &>(), std::declval<U const &>()))>::value,
-                                int>::type;
-    template <typename U>
-    using monomial_divide_enabler =
-        typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_sub(
-                                    std::declval<U &>(), std::declval<U const &>()))>::value,
-                                int>::type;
-    // Enabler for linear argument.
-    template <typename U>
-    using linarg_enabler = typename std::enable_if<has_safe_cast<integer, U>::value, int>::type;
-    // Enabler and machinery for pow.
-    // When the exponent is an integral, promote to integer during exponentiation
-    // for safe operations.
-    template <typename U, typename std::enable_if<std::is_integral<U>::value, int>::type = 0>
-    static integer get_pow_arg(const U &n)
-    {
-        return integer(n);
-    }
-    // Otherwise, just return the unchanged reference.
-    template <typename U, typename std::enable_if<!std::is_integral<U>::value, int>::type = 0>
-    static const U &get_pow_arg(const U &x)
-    {
-        return x;
-    }
-    using pow_type = typename std::conditional<std::is_integral<T>::value, integer &&, const T &>::type;
-    template <typename U>
-    using pow_enabler =
-        typename std::enable_if<has_safe_cast<T, decltype(std::declval<pow_type>() * std::declval<const U &>())>::value,
                                 int>::type;
     // Integrate utils.
     // In-place increment by one, checked for integral types.
@@ -546,85 +519,125 @@ public:
     {
         return degree(p, args);
     }
-    /// Name of the linear argument.
+    /// Detect linear monomial.
     /**
-     * \note
-     * This method is enabled only if the exponent type supports piranha::safe_cast() to piranha::integer.
-     *
      * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
-     * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
+     * exponent), then this method will return a pair formed by the ``true`` value and the position,
+     * in ``args``, of the linear variable. Otherwise, the returned value will be a pair formed by the
+     * ``false`` value and an unspecified position value.
      *
-     * @param args reference piranha::symbol_fset.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return name of the linear variable.
+     * @return a pair indicating if the monomial is linear.
      *
-     * @throws std::invalid_argument if the monomial is not linear or if the sizes of \p args and \p this differ.
-     * @throws unspecified any exception thrown by:
-     * - piranha::safe_cast(),
-     * - piranha::math::is_zero(),
-     * - piranha::math::is_unitary().
+     * @throws std::invalid_argument if the sizes of ``this`` and ``args`` differ.
+     * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::math::is_unitary().
      */
-    template <typename U = T, linarg_enabler<U> = 0>
-    std::string linear_argument(const symbol_fset &args) const
+    std::pair<bool, symbol_idx> is_linear(const symbol_fset &args) const
     {
         if (unlikely(args.size() != this->size())) {
-            piranha_throw(std::invalid_argument,
-                          "invalid symbol set for the identification of the linear argument in a "
-                          "monomial: the size of the symbol set ("
-                              + std::to_string(args.size()) + ") differs from the size of the monomial ("
-                              + std::to_string(this->size()) + ")");
+            piranha_throw(std::invalid_argument, "invalid symbol set for the identification of a linear "
+                                                 "monomial: the size of the symbol set ("
+                                                     + std::to_string(args.size())
+                                                     + ") differs from the size of the monomial ("
+                                                     + std::to_string(this->size()) + ")");
         }
         using size_type = typename base::size_type;
         const size_type size = this->size();
         size_type n_linear = 0u, candidate = 0u;
         for (size_type i = 0u; i < size; ++i) {
-            integer tmp;
-            try {
-                tmp = safe_cast<integer>((*this)[i]);
-            } catch (const safe_cast_failure &) {
-                piranha_throw(std::invalid_argument, "exponent is not an integer");
-            }
-            if (math::is_zero(tmp)) {
+            // NOTE: is_zero()'s availability is guaranteed by array_key's reqs,
+            // is_unitary() is required by the monomial reqs.
+            if (math::is_zero((*this)[i])) {
                 continue;
             }
-            if (!math::is_unitary(tmp)) {
-                piranha_throw(std::invalid_argument, "exponent is not unitary");
+            if (!math::is_unitary((*this)[i])) {
+                return std::make_pair(false, symbol_idx{0});
             }
             candidate = i;
             ++n_linear;
         }
         if (n_linear != 1u) {
-            piranha_throw(std::invalid_argument, "monomial is not linear");
+            return std::make_pair(false, symbol_idx{0});
         }
-        return args[static_cast<decltype(args.size())>(candidate)].get_name();
+        return std::make_pair(true, symbol_idx{candidate});
     }
+
+private:
+    template <typename U1, typename U2>
+    using mult_t = decltype(std::declval<const U1 &>() * std::declval<const U2 &>());
+    template <typename U>
+    using pow_dispatcher = disjunction_idx<
+        // dasdasd
+        conjunction<std::is_integral<T>, std::is_integral<U>>,
+        // dasdas
+        conjunction<std::is_same<T, U>, has_mul3<U>>,
+        // sda
+        std::is_same<detected_t<mult_t, T, U>, T>,
+        // dasdas
+        has_safe_cast<T, detected_t<mult_t, T, U>>>;
+    template <typename U>
+    static void pow_mult_exp(T &ret, const T &exp, const U &x, std::integral_constant<std::size_t, 0u>{})
+    {
+        PIRANHA_MAYBE_TLS integer tmp1, tmp2, tmp3;
+        tmp1 = exp;
+        tmp2 = x;
+        mul(tmp3, tmp1, tmp2);
+        ret = static_cast<T>(tmp3);
+    }
+    template <typename U>
+    static void pow_mult_exp(T &ret, const T &exp, const U &x, std::integral_constant<std::size_t, 1u>{})
+    {
+        math::mul3(ret, exp, x);
+    }
+    template <typename U>
+    static void pow_mult_exp(T &ret, const T &exp, const U &x, std::integral_constant<std::size_t, 2u>{})
+    {
+        ret = exp * x;
+    }
+    template <typename U>
+    static void pow_mult_exp(T &ret, const T &exp, const U &x, std::integral_constant<std::size_t, 3u>{})
+    {
+        ret = safe_cast<T>(exp * x);
+    }
+    // The enabler.
+    template <typename U>
+    using pow_mult_exp_t = decltype(
+        pow_mult_exp(std::declval<T &>(), std::declval<const T &>(), std::declval<const U &>(), pow_dispatcher<U>{}));
+    template <typename U>
+    using pow_enabler = enable_if_t<is_detected<pow_mult_exp_t, U>::value, int>;
+
+public:
     /// Monomial exponentiation.
     /**
      * \note
-     * This method is enabled if the exponent type (or its promoted piranha::integer counterpart)
+     * This method is enabled if the monomial's exponent type (or its promoted piranha::integer counterpart)
      * is multipliable by \p U and the result type can be cast safely back to the exponent type.
      *
-     * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
+     * This method will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
      * is computed via the multiplication of the exponents by \p x. If the exponent type is a C++
      * integral type, each exponent will be promoted to piranha::integer before the exponentiation
-     * takes place.
+     * takes place, in order to ensure that the exponentiation does not result in overflow.
      *
-     * @param x exponent.
-     * @param args reference set of piranha::symbol.
+     * @param x the exponent.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return \p this to the power of \p x.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-     * @throws unspecified any exception thrown by monomial copy construction
-     * or in-place multiplication of exponents by \p x, and by the invoked
-     * operations on piranha::integer, if any.
+     * @throws unspecified any exception thrown by piranha::monomial's copy constructor, TODO TODO TODO
+     * or by the computation of the
      */
     template <typename U, pow_enabler<U> = 0>
     monomial pow(const U &x, const symbol_set &args) const
     {
         using size_type = typename base::size_type;
-        if (unlikely(!is_compatible(args))) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        if (unlikely(args.size() != this->size())) {
+            piranha_throw(std::invalid_argument, "invalid symbol set for the exponentiation of a "
+                                                 "monomial: the size of the symbol set ("
+                                                     + std::to_string(args.size())
+                                                     + ") differs from the size of the monomial ("
+                                                     + std::to_string(this->size()) + ")");
         }
         // Init with zeroes.
         monomial retval(args);
@@ -1075,31 +1088,6 @@ public:
             piranha_throw(std::invalid_argument, "invalid size of arguments set");
         }
         a.vector_add(out, b);
-    }
-    /// Divide monomials.
-    /**
-     * \note
-     * This method is enabled only if piranha::array_key::vector_sub() is enabled for \p a.
-     *
-     * Divide \p a by \p b, storing the result in \p out.
-     *
-     * This method offers the basic exception safety guarantee.
-     *
-     * @param out return value.
-     * @param a first argument.
-     * @param b second argument.
-     * @param args reference set of arguments.
-     *
-     * @throws std::invalid_argument if the size of \p a differs from the size of \p args.
-     * @throws unspecified any exception thrown by piranha::array_key::vector_sub().
-     */
-    template <typename U = monomial, monomial_divide_enabler<U> = 0>
-    static void divide(monomial &out, const monomial &a, const monomial &b, const symbol_set &args)
-    {
-        if (unlikely(a.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
-        }
-        a.vector_sub(out, b);
     }
     /// Comparison operator.
     /**
