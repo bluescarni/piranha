@@ -643,7 +643,7 @@ public:
         monomial retval(args);
         const size_type size = retval.size();
         for (decltype(retval.size()) i = 0u; i < size; ++i) {
-            retval[i] = safe_cast<T>(get_pow_arg((*this)[i]) * x);
+            pow_mult_exp(retval[i], (*this)[i], x);
         }
         return retval;
     }

@@ -1004,7 +1004,7 @@ public:
         if (unlikely(!n.sgn())) {
             piranha_throw(
                 std::invalid_argument,
-                "invalid integral exponent in for ipow_subs() in a Kronecker monomial: the exponent must be nonzero");
+                "invalid integral power in for ipow_subs() in a Kronecker monomial: the power must be nonzero");
         }
         std::vector<std::pair<ipow_subs_type<U>, kronecker_monomial>> retval;
         if (p < args.size()) {
