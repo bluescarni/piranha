@@ -642,7 +642,7 @@ public:
      * causes overflow.
      * @throws unspecified any exception thrown by:
      * - unpack(),
-     * - the multiplication of the monomial's exponents by ``x``.
+     * - the multiplication of the monomial's exponents by ``x``,
      * - piranha::safe_cast(),
      * - piranha::kronecker_array::encode().
      */
