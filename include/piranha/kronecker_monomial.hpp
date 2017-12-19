@@ -622,19 +622,28 @@ private:
 public:
     /// Exponentiation.
     /**
-     * This method will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
-     * is computed via the multiplication of the exponents by \p x. The result will
-     * be cast back to \p T via piranha::safe_cast().
+     * This method will return a monomial corresponding to \p this raised to the ``x``-th power. The exponentiation
+     * is computed via the multiplication of the exponents by \p x. The multiplication is performed in different
+     * ways, depending on the type ``U``:
+     * - if ``U`` is a C++ integral type, the multiplication is checked for overflow; otherwise,
+     * - if the multiplication of ``T`` by ``U`` results in another type ``T2``, then the multiplication
+     *   is performed via the binary multiplication operator and the result is cast back to ``T`` via
+     *   piranha::safe_cast().
+     *
+     * If the type ``U`` cannot be used as indicated above (e.g., because the multiplication of ``T`` by ``U`` is
+     * not available, or ``T2`` does not support piranha::safe_cast()), then the method will be disabled.
      *
      * @param x the exponent.
      * @param args the reference piranha::symbol_fset.
      *
      * @return \p this to the power of \p x.
      *
+     * @throws std::overflow_error if ``U`` is an integral type and the exponentiation
+     * causes overflow.
      * @throws unspecified any exception thrown by:
      * - unpack(),
+     * - the multiplication of the monomial's exponents by ``x``.
      * - piranha::safe_cast(),
-     * - the constructor and multiplication operator of piranha::integer,
      * - piranha::kronecker_array::encode().
      */
     template <typename U, pow_enabler<U> = 0>

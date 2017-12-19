@@ -73,6 +73,8 @@ inline void monomial_pow_mult_exp(T &ret, const T &exp, const U &x, const std::i
     tmp2 = x;
     mul(tmp3, tmp1, tmp2);
     // NOTE: we are assuming that T is move-assignable here.
+    // This will result in std::overflow_error in case the result is too
+    // large or small.
     ret = static_cast<T>(tmp3);
 }
 
