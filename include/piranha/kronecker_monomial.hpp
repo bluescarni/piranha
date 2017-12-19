@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/detail/cf_mult_impl.hpp>
 #include <piranha/detail/km_commons.hpp>
+#include <piranha/detail/monomial_common.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/detail/safe_integral_adder.hpp>
 #include <piranha/exceptions.hpp>
@@ -616,19 +617,13 @@ public:
 private:
     // Enabler for pow.
     template <typename U>
-    using pow_enabler
-        = enable_if_t<has_safe_cast<T, decltype(std::declval<const integer &>() * std::declval<const U &>())>::value,
-                      int>;
+    using pow_enabler = monomial_pow_enabler<T, U>;
 
 public:
     /// Exponentiation.
     /**
-     * \note
-     * This method is enabled only if \p U is multipliable by piranha::integer and the result type can be
-     * safely cast back to \p T.
-     *
      * This method will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
-     * is computed via the multiplication of the exponents promoted to piranha::integer by \p x. The result will
+     * is computed via the multiplication of the exponents by \p x. The result will
      * be cast back to \p T via piranha::safe_cast().
      *
      * @param x the exponent.
@@ -647,7 +642,7 @@ public:
     {
         auto v = unpack(args);
         for (auto &n : v) {
-            n = safe_cast<T>(integer(n) * x);
+            monomial_pow_mult_exp(n, n, x, monomial_pow_dispatcher<T, U>{});
         }
         return kronecker_monomial(ka::encode(v));
     }
@@ -874,6 +869,8 @@ public:
             eval_type<U> retval(math::pow(values[0], v[0]));
             for (decltype(v.size()) i = 1; i < v.size(); ++i) {
                 // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
+                // NOTE: math::pow() for C++ integrals produces an integer result, no need
+                // to worry about overflows.
                 retval *= math::pow(values[static_cast<decltype(values.size())>(i)], v[i]);
             }
             return retval;

@@ -309,6 +309,14 @@ public:
 template <typename T, typename U>
 const bool is_subtractable_in_place<T, U>::value;
 
+inline namespace impl
+{
+
+// Type resulting from the multiplication of T and U.
+template <typename T, typename U>
+using mul_t = decltype(std::declval<const T &>() * std::declval<const U &>());
+}
+
 /// Multipliable type trait.
 /**
  * This type trait will be \p true if objects of type \p T can be multiplied by objects of type \p U using the binary
@@ -320,8 +328,6 @@ const bool is_subtractable_in_place<T, U>::value;
 template <typename T, typename U = T>
 class is_multipliable
 {
-    template <typename T1, typename U1>
-    using mul_t = decltype(std::declval<const T1 &>() * std::declval<const U1 &>());
     static const bool implementation_defined = is_detected<mul_t, T, U>::value;
 
 public:

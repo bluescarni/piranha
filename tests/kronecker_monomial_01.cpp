@@ -44,6 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <typeinfo>
 #include <vector>
 
 #include <piranha/exceptions.hpp>
@@ -646,13 +647,13 @@ struct pow_tester {
         k1 = k_type{2};
         k_type k2({4});
         BOOST_CHECK(k1.pow(2, symbol_fset{"x"}) == k2);
-        BOOST_CHECK_EXCEPTION(
-            k1.pow(std::numeric_limits<T>::max(), symbol_fset{"x"}), safe_cast_failure, [](const safe_cast_failure &e) {
-                return boost::contains(e.what(), "the arbitrary-precision integer "
-                                                     + (2 * integer{std::numeric_limits<T>::max()}).to_string()
-                                                     + " cannot be converted to the type '" + detail::demangle<T>()
-                                                     + "', as the conversion cannot preserve the original value");
-            });
+        BOOST_CHECK_EXCEPTION(k1.pow(std::numeric_limits<T>::max(), symbol_fset{"x"}), std::overflow_error,
+                              [](const std::overflow_error &e) {
+                                  return boost::contains(
+                                      e.what(), "Conversion of the integer "
+                                                    + (integer{2} * std::numeric_limits<T>::max()).to_string()
+                                                    + " to the type " + typeid(T).name() + " results in overflow");
+                              });
         k1 = k_type{1};
         if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
             BOOST_CHECK_EXCEPTION(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), symbol_fset{"x"}), std::invalid_argument,

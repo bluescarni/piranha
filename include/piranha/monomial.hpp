@@ -563,50 +563,6 @@ public:
         return std::make_pair(true, symbol_idx{candidate});
     }
 
-private:
-    template <typename U1, typename U2>
-    using mult_t = decltype(std::declval<const U1 &>() * std::declval<const U2 &>());
-    template <typename U>
-    using pow_dispatcher = disjunction_idx<
-        // dasdasd
-        conjunction<std::is_integral<T>, std::is_integral<U>>,
-        // dasdas
-        conjunction<std::is_same<T, U>, has_mul3<U>>,
-        // sda
-        std::is_same<detected_t<mult_t, T, U>, T>,
-        // dasdas
-        has_safe_cast<T, detected_t<mult_t, T, U>>>;
-    template <typename U>
-    static void pow_mult_exp(T &ret, const T &exp, const U &x, std::integral_constant<std::size_t, 0u>{})
-    {
-        PIRANHA_MAYBE_TLS integer tmp1, tmp2, tmp3;
-        tmp1 = exp;
-        tmp2 = x;
-        mul(tmp3, tmp1, tmp2);
-        ret = static_cast<T>(tmp3);
-    }
-    template <typename U>
-    static void pow_mult_exp(T &ret, const T &exp, const U &x, std::integral_constant<std::size_t, 1u>{})
-    {
-        math::mul3(ret, exp, x);
-    }
-    template <typename U>
-    static void pow_mult_exp(T &ret, const T &exp, const U &x, std::integral_constant<std::size_t, 2u>{})
-    {
-        ret = exp * x;
-    }
-    template <typename U>
-    static void pow_mult_exp(T &ret, const T &exp, const U &x, std::integral_constant<std::size_t, 3u>{})
-    {
-        ret = safe_cast<T>(exp * x);
-    }
-    // The enabler.
-    template <typename U>
-    using pow_mult_exp_t = decltype(
-        pow_mult_exp(std::declval<T &>(), std::declval<const T &>(), std::declval<const U &>(), pow_dispatcher<U>{}));
-    template <typename U>
-    using pow_enabler = enable_if_t<is_detected<pow_mult_exp_t, U>::value, int>;
-
 public:
     /// Monomial exponentiation.
     /**
