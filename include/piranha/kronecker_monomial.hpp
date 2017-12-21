@@ -625,7 +625,7 @@ public:
      * This method will return a monomial corresponding to \p this raised to the ``x``-th power. The exponentiation
      * is computed via the multiplication of the exponents by \p x. The multiplication is performed in different
      * ways, depending on the type ``U``:
-     * - if ``U`` is a C++ integral type, the multiplication is checked for overflow; otherwise,
+     * - if ``U`` is a C++ integral type, then the multiplication is checked for overflow; otherwise,
      * - if the multiplication of ``T`` by ``U`` results in another type ``T2``, then the multiplication
      *   is performed via the binary multiplication operator and the result is cast back to ``T`` via
      *   piranha::safe_cast().

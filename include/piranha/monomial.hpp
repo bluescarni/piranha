@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/array_key.hpp>
 #include <piranha/config.hpp>
 #include <piranha/detail/cf_mult_impl.hpp>
+#include <piranha/detail/monomial_common.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/detail/safe_integral_adder.hpp>
 #include <piranha/exceptions.hpp>
@@ -181,26 +182,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     template <typename U>
     using integrate_enabler =
         typename std::enable_if<std::is_assignable<U &, decltype(std::declval<U &>() + std::declval<U>())>::value,
-                                int>::type;
-    // Partial utils.
-    // In-place decrement by one, checked for integral types.
-    template <typename U, typename std::enable_if<std::is_integral<U>::value, int>::type = 0>
-    static void ip_dec(U &x)
-    {
-        if (unlikely(x == std::numeric_limits<U>::min())) {
-            piranha_throw(std::invalid_argument, "negative overflow error in the calculation of the "
-                                                 "partial derivative of a monomial");
-        }
-        x = static_cast<U>(x - U(1));
-    }
-    template <typename U, typename std::enable_if<!std::is_integral<U>::value, int>::type = 0>
-    static void ip_dec(U &x)
-    {
-        x = x - U(1);
-    }
-    template <typename U>
-    using partial_enabler =
-        typename std::enable_if<std::is_assignable<U &, decltype(std::declval<U &>() - std::declval<U>())>::value,
                                 int>::type;
     // ipow subs support.
     template <typename U>
@@ -563,17 +544,27 @@ public:
         return std::make_pair(true, symbol_idx{candidate});
     }
 
+private:
+    // Enabler for pow.
+    template <typename U>
+    using pow_enabler = monomial_pow_enabler<T, U>;
+
 public:
     /// Monomial exponentiation.
     /**
-     * \note
-     * This method is enabled if the monomial's exponent type (or its promoted piranha::integer counterpart)
-     * is multipliable by \p U and the result type can be cast safely back to the exponent type.
+     * This method will return a monomial corresponding to \p this raised to the ``x``-th power. The exponentiation
+     * is computed via the multiplication of the exponents by \p x. The multiplication is performed in different
+     * ways, depending on the type ``U``:
+     * - if ``T`` and ``U`` are C++ integral types, then the multiplication is checked for overflow; otherwise,
+     * - if ``T`` and ``U`` are the same type, and they support math::mul3(), then math::mul3() is used
+     *   to compute the product; otherwise,
+     * - if the multiplication of ``T`` by ``U`` produces a result of type ``T``, then the binary multiplication
+     *   operator is used to compute the product; otherwise,
+     * - if the multiplication of ``T`` by ``U`` results in another type ``T2``, then the multiplication
+     *   is performed via the binary multiplication operator and the result is cast back to ``T`` via
+     *   piranha::safe_cast().
      *
-     * This method will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
-     * is computed via the multiplication of the exponents by \p x. If the exponent type is a C++
-     * integral type, each exponent will be promoted to piranha::integer before the exponentiation
-     * takes place, in order to ensure that the exponentiation does not result in overflow.
+     * If the type ``U`` cannot be used as indicated above, then the method will be disabled.
      *
      * @param x the exponent.
      * @param args the reference piranha::symbol_fset.
@@ -581,13 +572,17 @@ public:
      * @return \p this to the power of \p x.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-     * @throws unspecified any exception thrown by piranha::monomial's copy constructor, TODO TODO TODO
-     * or by the computation of the
+     * @throws std::overflow_error if both ``T`` and ``U`` are integral types and the exponentiation
+     * results in overflow.
+     * @throws unspecified any exception thrown by:
+     * - the construction of a piranha::monomial,
+     * - math::mul3(),
+     * - the multiplication of the monomial's exponents by ``x``,
+     * - piranha::safe_cast().
      */
     template <typename U, pow_enabler<U> = 0>
-    monomial pow(const U &x, const symbol_set &args) const
+    monomial pow(const U &x, const symbol_fset &args) const
     {
-        using size_type = typename base::size_type;
         if (unlikely(args.size() != this->size())) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the exponentiation of a "
                                                  "monomial: the size of the symbol set ("
@@ -597,66 +592,97 @@ public:
         }
         // Init with zeroes.
         monomial retval(args);
-        const size_type size = retval.size();
+        const auto size = retval.size();
         for (decltype(retval.size()) i = 0u; i < size; ++i) {
-            pow_mult_exp(retval[i], (*this)[i], x);
+            monomial_pow_mult_exp(retval[i], (*this)[i], x, monomial_pow_dispatcher<T, U>{});
         }
         return retval;
     }
+
+private:
+    // Partial utils.
+    // Detect decrement operator.
+    template <typename U>
+    using dec_t = decltype(--std::declval<U &>());
+    // Main dispatcher.
+    template <typename U>
+    using monomial_partial_dispatcher = disjunction_idx<
+        // Case 0: U is integral.
+        std::is_integral<U>,
+        // Case 1: U supports the decrement operator.
+        is_detected<dec_t, U>>;
+    // In-place decrement by one, checked for integral types.
+    template <typename U>
+    static void ip_dec(U &x, const std::integral_constant<std::size_t, 0u> &)
+    {
+        // NOTE: maybe replace with the safe integral subber, eventually.
+        if (unlikely(x == std::numeric_limits<U>::min())) {
+            piranha_throw(std::overflow_error, "negative overflow error in the calculation of the "
+                                               "partial derivative of a monomial");
+        }
+        x = static_cast<U>(x - U(1));
+    }
+    template <typename U>
+    static void ip_dec(U &x, const std::integral_constant<std::size_t, 1u> &)
+    {
+        --x;
+    }
+    // The enabler.
+    template <typename U>
+    using ip_dec_t = decltype(ip_dec(std::declval<U &>(), monomial_partial_dispatcher<U>{}));
+    template <typename U>
+    using partial_enabler = enable_if_t<is_detected<ip_dec_t, U>::value, int>;
+
+public:
     /// Partial derivative.
     /**
      * \note
-     * This method is enabled only if the exponent type is subtractable and the result of the operation
-     * can be assigned back to the exponent type.
+     * This method is enabled only if the exponent type supports the pre-decrement operator.
      *
      * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by
-     * \p p.
-     * The result is a pair consisting of the exponent associated to \p p before differentiation and the monomial itself
-     * after differentiation. If \p p is empty or if the exponent associated to it is zero,
-     * the returned pair will be <tt>(0,monomial{args})</tt>.
+     * \p p. The result is a pair consisting of the exponent associated to \p p before differentiation and the monomial
+     * itself after differentiation. If \p p is not smaller than the size of \p args or if its corresponding exponent is
+     * zero, the returned pair will be <tt>(0,kronecker_monomial{})</tt>.
      *
      * If the exponent type is an integral type, then the decrement-by-one operation on the affected exponent is checked
      * for negative overflow.
      *
-     * @param p position of the symbol with respect to which the differentiation will be calculated.
-     * @param args reference set of piranha::symbol.
+     * @param p the position of the symbol with respect to which the differentiation will be calculated.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return result of the differentiation.
+     * @return the result of the differentiation.
      *
-     * @throws std::invalid_argument if the sizes of \p args and \p this differ, if the size of \p p is
-     * greater than one, if the position specified by \p p is invalid or if the computation on integral exponents
-     * results in an overflow error.
+     * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+     * @throws std::overflow_error if the decrement of the affected exponent results in overflow.
      * @throws unspecified any exception thrown by:
-     * - monomial and exponent construction,
-     * - the exponent type's subtraction operator,
+     * - the construction of the return value,
+     * - the exponent type's pre-decrement operator,
      * - piranha::math::is_zero().
      */
     template <typename U = T, partial_enabler<U> = 0>
-    std::pair<U, monomial> partial(const symbol_set::positions &p, const symbol_set &args) const
+    std::pair<T, monomial> partial(const symbol_idx &p, const symbol_fset &args) const
     {
-        if (!is_compatible(args)) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        if (unlikely(args.size() != this->size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid symbol set for the computation of the partial derivative of a "
+                          "monomial: the size of the symbol set ("
+                              + std::to_string(args.size()) + ") differs from the size of the monomial ("
+                              + std::to_string(this->size()) + ")");
         }
-        // Cannot take derivative wrt more than one variable, and the position of that variable
-        // must be compatible with the monomial.
-        if (p.size() > 1u || (p.size() == 1u && p.back() >= args.size())) {
-            piranha_throw(std::invalid_argument, "invalid size of symbol_set::positions");
+        using size_type = typename base::size_type;
+        if (p >= args.size() || math::is_zero((*this)[static_cast<size_type>(p)])) {
+            // Derivative wrt a variable not in the monomial: position is outside the bounds, or it refers to a
+            // variable with zero exponent.
+            return std::make_pair(T(0), monomial{});
         }
-        // Derivative wrt a variable not in the monomial: position is empty, or refers to a
-        // variable with zero exponent.
-        // NOTE: safe to take this->begin() here, as the checks on the positions above ensure
-        // there is a valid position and hence the size must be not zero.
-        if (!p.size() || math::is_zero(this->begin()[*p.begin()])) {
-            return std::make_pair(U(0), monomial(args));
-        }
-        // Copy of the original monomial.
+        // Copy the original exponent.
+        T expo((*this)[static_cast<size_type>(p)]);
+        // Copy the original monomial.
         monomial m(*this);
-        auto m_b = m.begin();
-        // Original exponent.
-        U v(m_b[*p.begin()]);
-        // Decrement the exponent in the monomial.
-        ip_dec(m_b[*p.begin()]);
-        return std::make_pair(std::move(v), std::move(m));
+        // Decrement the affected exponent in m.
+        ip_dec(m[static_cast<size_type>(p)], monomial_partial_dispatcher<U>{});
+        // Return the result.
+        return std::make_pair(std::move(expo), std::move(m));
     }
     /// Integration.
     /**
