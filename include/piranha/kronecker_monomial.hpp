@@ -863,7 +863,7 @@ public:
      * @throws std::invalid_argument if the sizes of \p values and \p args differ.
      * @throws unspecified any exception thrown by:
      * - unpack(),
-     * - construction of the return type,
+     * - the construction of the return type,
      * - piranha::math::pow() or the in-place multiplication operator of the return type.
      */
     template <typename U>

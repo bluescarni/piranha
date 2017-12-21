@@ -867,60 +867,61 @@ public:
 private:
     // Eval type definition.
     template <typename U>
-    using e_type = decltype(math::pow(std::declval<U const &>(), std::declval<T const &>()));
-    template <typename U>
-    using eval_type = enable_if_t<
-        conjunction<is_multipliable_in_place<e_type<U>>, std::is_constructible<e_type<U>, int>, is_mappable<U>>::value,
-        e_type<U>>;
+    using eval_type = enable_if_t<conjunction<is_multipliable_in_place<pow_t<T, U>>,
+                                              std::is_constructible<pow_t<T, U>, int>, is_returnable<U>>::value,
+                                  pow_t<T, U>>;
 
 public:
     /// Evaluation.
     /**
      * \note
      * This method is available only if \p U satisfies the following requirements:
-     * - it satisfies piranha::is_mappable,
      * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
      * - \p eval_type is constructible from \p int,
-     * - \p eval_type is multipliable in place.
+     * - \p eval_type is multipliable in place,
+     * - \p eval_type satisfies piranha::is_returnable.
      *
      * The return value will be built by iteratively applying piranha::math::pow() using the values provided
-     * by \p pmap as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
-     * returned. If \p args is not compatible with \p this and \p pmap, or the positions in \p pmap do not reference
-     * only and all the exponents in the monomial, an error will be thrown.
+     * by \p values as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
+     * returned.
      *
-     * @param pmap piranha::symbol_set::positions_map that will be used for substitution.
-     * @param args reference set of piranha::symbol.
+     * @param values the values will be used for substitution.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the result of evaluating \p this with the values provided in \p pmap.
+     * @return the result of evaluating \p this with the values provided in \p values.
      *
-     * @throws std::invalid_argument if there exist an incompatibility between \p this,
-     * \p args or \p pmap.
+     * @throws std::invalid_argument if the sizes of \p values and \p args differ,
+     * or if the sizes of \p this and \p args differ.
      * @throws unspecified any exception thrown by:
-     * - construction of the return type,
+     * - the construction of the return type,
      * - piranha::math::pow() or the in-place multiplication operator of the return type.
      */
     template <typename U>
-    eval_type<U> evaluate(const symbol_set::positions_map<U> &pmap, const symbol_set &args) const
+    eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
     {
-        using return_type = eval_type<U>;
-        using size_type = typename base::size_type;
-        // NOTE: the positions map must have the same number of elements as this, and it must
-        // be made of consecutive positions [0,size - 1].
-        if (unlikely(pmap.size() != this->size() || (pmap.size() && pmap.back().first != pmap.size() - 1u))) {
-            piranha_throw(std::invalid_argument, "invalid positions map for evaluation");
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument,
+                          "cannot evaluate monomial: the size of the symbol set (" + std::to_string(args.size())
+                              + ") differs from the size of the monomial (" + std::to_string(std::get<0>(sbe)) + ")");
         }
-        // Args must be compatible with this.
-        if (unlikely(args.size() != this->size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        if (unlikely(values.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument,
+                          "cannot evaluate monomial: the size of the vector of values (" + std::to_string(values.size())
+                              + ") differs from the size of the monomial (" + std::to_string(std::get<0>(sbe)) + ")");
         }
-        return_type retval(1);
-        auto it = pmap.begin();
-        for (size_type i = 0u; i < this->size(); ++i, ++it) {
-            piranha_assert(it != pmap.end() && it->first == i);
-            retval *= math::pow(it->second, (*this)[i]);
+        if (args.size()) {
+            eval_type<U> retval(math::pow(values[0], *std::get<1>(sbe)++));
+            for (decltype(values.size()) i = 1; i < values.size(); ++i, ++std::get<1>(sbe)) {
+                // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
+                // NOTE: math::pow() for C++ integrals produces an integer result, no need
+                // to worry about overflows.
+                retval *= math::pow(values[i], *std::get<1>(sbe));
+            }
+            piranha_assert(std::get<1>(sbe) == std::get<2>(sbe));
+            return retval;
         }
-        piranha_assert(it == pmap.end());
-        return retval;
+        return eval_type<U>(1);
     }
 
 private:
