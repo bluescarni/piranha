@@ -163,26 +163,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
         typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
                                     std::declval<U &>(), std::declval<U const &>()))>::value,
                                 int>::type;
-    // Integrate utils.
-    // In-place increment by one, checked for integral types.
-    template <typename U, typename std::enable_if<std::is_integral<U>::value, int>::type = 0>
-    static void ip_inc(U &x)
-    {
-        if (unlikely(x == std::numeric_limits<U>::max())) {
-            piranha_throw(std::invalid_argument, "positive overflow error in the calculation of the "
-                                                 "integral of a monomial");
-        }
-        x = static_cast<U>(x + U(1));
-    }
-    template <typename U, typename std::enable_if<!std::is_integral<U>::value, int>::type = 0>
-    static void ip_inc(U &x)
-    {
-        x = x + U(1);
-    }
-    template <typename U>
-    using integrate_enabler =
-        typename std::enable_if<std::is_assignable<U &, decltype(std::declval<U &>() + std::declval<U>())>::value,
-                                int>::type;
     // ipow subs support.
     template <typename U>
     using ipow_subs_type__ = decltype(math::pow(std::declval<const U &>(), std::declval<const integer &>()));
@@ -684,63 +664,108 @@ public:
         // Return the result.
         return std::make_pair(std::move(expo), std::move(m));
     }
+
+private:
+    // Integrate utils.
+    // Detect increment operator.
+    template <typename U>
+    using inc_t = decltype(++std::declval<U &>());
+    // Main dispatcher.
+    template <typename U>
+    using monomial_int_dispatcher = disjunction_idx<
+        // Case 0: U is integral.
+        std::is_integral<U>,
+        // Case 1: U supports the increment operator.
+        is_detected<inc_t, U>>;
+    // In-place increment by one, checked for integral types.
+    template <typename U>
+    static void ip_inc(U &x, const std::integral_constant<std::size_t, 0u> &)
+    {
+        // NOTE: maybe replace with the safe integral adder, eventually.
+        if (unlikely(x == std::numeric_limits<U>::max())) {
+            piranha_throw(std::overflow_error, "positive overflow error in the calculation of the "
+                                               "antiderivative of a monomial");
+        }
+        x = static_cast<U>(x + U(1));
+    }
+    template <typename U>
+    static void ip_inc(U &x, const std::integral_constant<std::size_t, 1u> &)
+    {
+        ++x;
+    }
+    // The enabler.
+    template <typename U>
+    using ip_inc_t = decltype(ip_inc(std::declval<U &>(), monomial_int_dispatcher<U>{}));
+    template <typename U>
+    using integrate_enabler = enable_if_t<is_detected<ip_inc_t, U>::value, int>;
+
+public:
     /// Integration.
     /**
      * \note
-     * This method is enabled only if the exponent type is addable and the result of the operation
-     * can be assigned back to the exponent type.
+     * This method is enabled only if the exponent type supports the pre-increment operator.
      *
-     * Will return the antiderivative of \p this with respect to symbol \p s. The result is a pair
+     * This method will return the antiderivative of \p this with respect to the symbol \p s. The result is a pair
      * consisting of the exponent associated to \p s increased by one and the monomial itself
      * after integration. If \p s is not in \p args, the returned monomial will have an extra exponent
      * set to 1 in the same position \p s would have if it were added to \p args.
-     *
      * If the exponent corresponding to \p s is -1, an error will be produced.
      *
      * If the exponent type is an integral type, then the increment-by-one operation on the affected exponent is checked
      * for negative overflow.
      *
-     * @param s symbol with respect to which the integration will be calculated.
-     * @param args reference set of piranha::symbol.
+     * @param s the symbol with respect to which the integration will be calculated.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return result of the integration.
+     * @return the result of the integration.
      *
-     * @throws std::invalid_argument if the sizes of \p args and \p this differ,
-     * if the exponent associated to \p s is -1, or if the computation on integral exponents
-     * results in an overflow error.
+     * @throws std::invalid_argument if the sizes of \p args and \p this differ, or
+     * if the exponent associated to \p s is -1.
+     * @throws std::overflow_error if \p T is a C++ integral type and the integration leads
+     * to integer overflow.
      * @throws unspecified any exception thrown by:
      * - piranha::math::is_zero(),
      * - exponent construction,
      * - push_back(),
-     * - the exponent type's addition and assignment operators.
+     * - the exponent type's pre-increment operator.
      */
     template <typename U = T, integrate_enabler<U> = 0>
-    std::pair<U, monomial> integrate(const symbol &s, const symbol_set &args) const
+    std::pair<T, monomial> integrate(const std::string &s, const symbol_fset &args) const
     {
-        typedef typename base::size_type size_type;
-        if (!is_compatible(args)) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument, "invalid symbol set for the computation of the antiderivative of a "
+                                                 "monomial: the size of the symbol set ("
+                                                     + std::to_string(args.size())
+                                                     + ") differs from the size of the monomial ("
+                                                     + std::to_string(std::get<0>(sbe)) + ")");
         }
         monomial retval;
-        T expo(0), one(1);
-        for (size_type i = 0u; i < args.size(); ++i) {
-            if (math::is_zero(expo) && s < args[i]) {
+        T expo(0);
+        const PIRANHA_MAYBE_TLS T one(1);
+        for (decltype(retval.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+            const auto &cur_sym = *args.nth(static_cast<decltype(args.size())>(i));
+            if (math::is_zero(expo) && s < cur_sym) {
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
                 // a new exponent.
                 retval.push_back(one);
                 expo = one;
             }
-            retval.push_back((*this)[i]);
-            if (args[i] == s) {
+            retval.push_back(*std::get<1>(sbe));
+            if (cur_sym == s) {
                 // NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
-                // we are never going to land here as args[i] is at this point never going to be s.
-                ip_inc(retval[i]);
-                if (unlikely(math::is_zero(retval[i]))) {
+                // we are never going to land here as cur_sym is at this point never going to be s.
+                auto &ref = retval[i];
+                // Do the addition and check for zero later, to detect -1 expo.
+                ip_inc(ref, monomial_int_dispatcher<U>{});
+                if (unlikely(math::is_zero(ref))) {
                     piranha_throw(std::invalid_argument,
-                                  "unable to perform monomial integration: negative unitary exponent");
+                                  "unable to perform monomial integration: a negative "
+                                  "unitary exponent was encountered in correspondence of the variable '"
+                                      + cur_sym + "'");
                 }
-                expo = retval[i];
+                expo = ref;
             }
         }
         // If expo is still zero, it means we need to add a new exponent at the end.

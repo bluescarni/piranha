@@ -781,9 +781,10 @@ public:
      * @param s the symbol with respect to which the integration will be calculated.
      * @param args the reference piranha::symbol_fset.
      *
-     * @return result of the integration.
+     * @return the result of the integration.
      *
-     * @throws std::invalid_argument if the exponent associated to \p s is -1 or if the value of an exponent overflows.
+     * @throws std::invalid_argument if the exponent associated to \p s is -1.
+     * @throws std::overflow_error if the integration leads to integer overflow.
      * @throws unspecified any exception thrown by:
      * - unpack(),
      * - piranha::static_vector::push_back(),
@@ -791,7 +792,8 @@ public:
      */
     std::pair<T, kronecker_monomial> integrate(const std::string &s, const symbol_fset &args) const
     {
-        v_type v = unpack(args), retval;
+        const v_type v = unpack(args);
+        v_type retval;
         T expo(0);
         for (decltype(v.size()) i = 0; i < v.size(); ++i) {
             const auto &cur_sym = *args.nth(static_cast<decltype(args.size())>(i));
@@ -807,11 +809,13 @@ public:
                 // NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
                 // we are never going to land here as cur_sym is at this point never going to be s.
                 if (unlikely(retval[i] == std::numeric_limits<T>::max())) {
-                    piranha_throw(std::overflow_error,
-                                  "positive overflow error in the calculation of the integral of a Kronecker monomial");
+                    piranha_throw(
+                        std::overflow_error,
+                        "positive overflow error in the calculation of the antiderivative of a Kronecker monomial");
                 }
+                // Do the addition and check for zero later, to detect -1 expo.
                 retval[i] = static_cast<T>(retval[i] + T(1));
-                if (math::is_zero(retval[i])) {
+                if (unlikely(math::is_zero(retval[i]))) {
                     piranha_throw(std::invalid_argument,
                                   "unable to perform Kronecker monomial integration: a negative "
                                   "unitary exponent was encountered in correspondence of the variable '"
