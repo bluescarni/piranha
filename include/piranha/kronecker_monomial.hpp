@@ -934,7 +934,7 @@ public:
                                                                   const symbol_fset &args) const
     {
         if (unlikely(smap.size() && smap.rbegin()->first >= args.size())) {
-            // The last element of the insertion map must be a valid index into args.
+            // The last element of the substitution map must be a valid index into args.
             piranha_throw(
                 std::invalid_argument,
                 "invalid argument(s) for substitution in a Kronecker monomial: the last index of the substitution map ("
