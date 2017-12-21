@@ -779,41 +779,44 @@ public:
     /**
      * This method will print to stream a human-readable representation of the monomial.
      *
-     * @param os target stream.
-     * @param args reference set of piranha::symbol.
+     * @param os the target stream.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception resulting from:
      * - printing exponents to stream and the public interface of \p os,
      * - piranha::math::is_zero(), piranha::math::is_unitary().
      */
-    void print(std::ostream &os, const symbol_set &args) const
+    void print(std::ostream &os, const symbol_fset &args) const
     {
-        if (unlikely(args.size() != this->size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument,
+                          "cannot print monomial: the size of the symbol set (" + std::to_string(args.size())
+                              + ") differs from the size of the monomial (" + std::to_string(std::get<0>(sbe)) + ")");
         }
         bool empty_output = true;
-        for (typename base::size_type i = 0u; i < this->size(); ++i) {
-            if (!math::is_zero((*this)[i])) {
+        for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+            if (!math::is_zero(*std::get<1>(sbe))) {
                 // If we are going to print a symbol, and something has been printed before,
                 // then we are going to place the multiplication sign.
                 if (!empty_output) {
                     os << '*';
                 }
-                os << args[i].get_name();
+                os << *args.nth(i);
                 empty_output = false;
-                if (!math::is_unitary((*this)[i])) {
-                    os << "**" << detail::prepare_for_print((*this)[i]);
+                if (!math::is_unitary(*std::get<1>(sbe))) {
+                    os << "**" << detail::prepare_for_print(*std::get<1>(sbe));
                 }
             }
         }
     }
     /// Print in TeX mode.
     /**
-     * Will print to stream a TeX representation of the monomial.
+     * This method will print to stream a TeX representation of the monomial.
      *
-     * @param os target stream.
-     * @param args reference set of piranha::symbol.
+     * @param os the target stream.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception resulting from:
@@ -823,26 +826,31 @@ public:
      */
     void print_tex(std::ostream &os, const symbol_set &args) const
     {
-        if (unlikely(args.size() != this->size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument, "cannot print monomial in TeX mode: the size of the symbol set ("
+                                                     + std::to_string(args.size())
+                                                     + ") differs from the size of the monomial ("
+                                                     + std::to_string(std::get<0>(sbe)) + ")");
         }
         std::ostringstream oss_num, oss_den, *cur_oss;
-        const T zero(0);
+        const PIRANHA_MAYBE_TLS T zero(0);
         T cur_value;
-        for (typename base::size_type i = 0u; i < this->size(); ++i) {
-            cur_value = (*this)[i];
+        for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+            cur_value = *std::get<1>(sbe);
             if (!math::is_zero(cur_value)) {
                 // NOTE: use this weird form for the test because the presence of operator<()
                 // is already guaranteed and thus we don't need additional requirements on T.
+                // Maybe in the future we want to do it with a math::sign() function.
                 if (zero < cur_value) {
                     cur_oss = std::addressof(oss_num);
                 } else {
                     math::negate(cur_value);
                     cur_oss = std::addressof(oss_den);
                 }
-                (*cur_oss) << "{" << args[i].get_name() << "}";
+                *cur_oss << "{" << *args.nth(i) << "}";
                 if (!math::is_unitary(cur_value)) {
-                    (*cur_oss) << "^{" << detail::prepare_for_print(cur_value) << "}";
+                    *cur_oss << "^{" << detail::prepare_for_print(cur_value) << "}";
                 }
             }
         }
