@@ -215,6 +215,10 @@ template <typename T>
 using is_nonconst_rvalue_ref
     = std::integral_constant<bool,
                              conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>::value>;
+
+// The type resulting from the addition of T and U.
+template <typename T, typename U>
+using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
 }
 
 /// Addable type trait.
@@ -228,8 +232,6 @@ using is_nonconst_rvalue_ref
 template <typename T, typename U = T>
 class is_addable
 {
-    template <typename T1, typename U1>
-    using add_t = decltype(std::declval<const T1 &>() + std::declval<const U1 &>());
     static const bool implementation_defined = is_detected<add_t, T, U>::value;
 
 public:

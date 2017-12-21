@@ -951,6 +951,8 @@ public:
                 ret *= math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]);
                 v[static_cast<decltype(v.size())>(it->first)] = T(0);
             }
+            // NOTE: the is_returnable requirement ensures we can emplace back a pair
+            // containing the subs type.
             retval.emplace_back(std::move(ret), kronecker_monomial(ka::encode(v)));
         } else {
             // Otherwise, the substitution yields 1 and the monomial is the original one.

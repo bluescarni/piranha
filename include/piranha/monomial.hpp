@@ -366,13 +366,10 @@ public:
 
 private:
     // Machinery to determine the degree type.
-    // NOTE: add_type<U> will be promoted to a int/unsigned in case U is a short int.
     template <typename U>
-    using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
-    template <typename U>
-    using degree_type
-        = enable_if_t<conjunction<std::is_constructible<add_type<U>, int>, is_addable_in_place<add_type<U>, U>>::value,
-                      add_type<U>>;
+    using degree_type = enable_if_t<conjunction<std::is_constructible<add_t<U, U>, int>,
+                                                is_addable_in_place<add_t<U, U>, U>, is_returnable<add_t<U, U>>>::value,
+                                    add_t<U, U>>;
     // Helpers to add exponents in the degree computation.
     template <typename U, enable_if_t<std::is_integral<U>::value, int> = 0>
     static void expo_add(degree_type<U> &retval, const U &n)
@@ -392,7 +389,8 @@ public:
      * This method is enabled only if:
      * - \p T is addable, yielding a type ``degree_type``,
      * - ``degree_type`` is constructible from \p int,
-     * - monomial::value_type can be added in-place to ``degree_type``.
+     * - monomial::value_type can be added in-place to ``degree_type``,
+     * - ``degree_type`` satisfies piranha::is_returnable.
      *
      * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
      * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
@@ -409,17 +407,17 @@ public:
     template <typename U = T>
     degree_type<U> degree(const symbol_fset &args) const
     {
-        // This is a fast check, better always to keep it.
-        if (unlikely(args.size() != this->size())) {
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(
                 std::invalid_argument,
                 "invalid symbol set for the computation of the degree of a monomial: the size of the symbol set ("
                     + std::to_string(args.size()) + ") differs from the size of the monomial ("
-                    + std::to_string(this->size()) + ")");
+                    + std::to_string(std::get<0>(sbe)) + ")");
         }
         degree_type<U> retval(0);
-        for (const auto &x : *this) {
-            expo_add(retval, x);
+        for (; std::get<1>(sbe) != std::get<2>(sbe); ++std::get<1>(sbe)) {
+            expo_add(retval, *std::get<1>(sbe));
         }
         return retval;
     }
@@ -429,7 +427,8 @@ public:
      * This method is enabled only if:
      * - \p T is addable, yielding a type ``degree_type``,
      * - ``degree_type`` is constructible from \p int,
-     * - monomial::value_type can be added in-place to ``degree_type``.
+     * - monomial::value_type can be added in-place to ``degree_type``,
+     * - ``degree_type`` satisfies piranha::is_returnable.
      *
      * This method will return the partial degree of the monomial, computed via the summation of the exponents of the
      * monomial. If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
@@ -452,12 +451,13 @@ public:
     template <typename U = T>
     degree_type<U> degree(const symbol_idx_fset &p, const symbol_fset &args) const
     {
-        if (unlikely(args.size() != this->size())) {
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the computation of the partial degree of a "
                                                  "monomial: the size of the symbol set ("
                                                      + std::to_string(args.size())
                                                      + ") differs from the size of the monomial ("
-                                                     + std::to_string(this->size()) + ")");
+                                                     + std::to_string(std::get<0>(sbe)) + ")");
         }
         if (unlikely(p.size() && *p.rbegin() >= args.size())) {
             piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
@@ -466,10 +466,9 @@ public:
                                                      + ", but the monomial has a size of only "
                                                      + std::to_string(args.size()));
         }
-        auto cit = this->begin();
         degree_type<U> retval(0);
         for (const auto &i : p) {
-            expo_add(retval, cit[i]);
+            expo_add(retval, std::get<1>(sbe)[i]);
         }
         return retval;
     }
@@ -516,28 +515,29 @@ public:
      */
     std::pair<bool, symbol_idx> is_linear(const symbol_fset &args) const
     {
-        if (unlikely(args.size() != this->size())) {
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the identification of a linear "
                                                  "monomial: the size of the symbol set ("
                                                      + std::to_string(args.size())
                                                      + ") differs from the size of the monomial ("
-                                                     + std::to_string(this->size()) + ")");
+                                                     + std::to_string(std::get<0>(sbe)) + ")");
         }
         using size_type = typename base::size_type;
-        const size_type size = this->size();
         size_type n_linear = 0u, candidate = 0u;
-        for (size_type i = 0u; i < size; ++i) {
+        for (size_type i = 0u; i < std::get<0>(sbe); ++i, ++std::get<1>(sbe)) {
             // NOTE: is_zero()'s availability is guaranteed by array_key's reqs,
             // is_unitary() is required by the monomial reqs.
-            if (math::is_zero((*this)[i])) {
+            if (math::is_zero(*std::get<1>(sbe))) {
                 continue;
             }
-            if (!math::is_unitary((*this)[i])) {
+            if (!math::is_unitary(*std::get<1>(sbe))) {
                 return std::make_pair(false, symbol_idx{0});
             }
             candidate = i;
             ++n_linear;
         }
+        piranha_assert(std::get<1>(sbe) == std::get<2>(sbe));
         if (n_linear != 1u) {
             return std::make_pair(false, symbol_idx{0});
         }
@@ -583,18 +583,18 @@ public:
     template <typename U, pow_enabler<U> = 0>
     monomial pow(const U &x, const symbol_fset &args) const
     {
-        if (unlikely(args.size() != this->size())) {
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the exponentiation of a "
                                                  "monomial: the size of the symbol set ("
                                                      + std::to_string(args.size())
                                                      + ") differs from the size of the monomial ("
-                                                     + std::to_string(this->size()) + ")");
+                                                     + std::to_string(std::get<0>(sbe)) + ")");
         }
         // Init with zeroes.
         monomial retval(args);
-        const auto size = retval.size();
-        for (decltype(retval.size()) i = 0u; i < size; ++i) {
-            monomial_pow_mult_exp(retval[i], (*this)[i], x, monomial_pow_dispatcher<T, U>{});
+        for (decltype(retval.size()) i = 0u; i < std::get<0>(sbe); ++i, ++std::get<1>(sbe)) {
+            monomial_pow_mult_exp(retval[i], *std::get<1>(sbe), x, monomial_pow_dispatcher<T, U>{});
         }
         return retval;
     }
@@ -662,25 +662,25 @@ public:
     template <typename U = T, partial_enabler<U> = 0>
     std::pair<T, monomial> partial(const symbol_idx &p, const symbol_fset &args) const
     {
-        if (unlikely(args.size() != this->size())) {
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument,
                           "invalid symbol set for the computation of the partial derivative of a "
                           "monomial: the size of the symbol set ("
                               + std::to_string(args.size()) + ") differs from the size of the monomial ("
-                              + std::to_string(this->size()) + ")");
+                              + std::to_string(std::get<0>(sbe)) + ")");
         }
-        using size_type = typename base::size_type;
-        if (p >= args.size() || math::is_zero((*this)[static_cast<size_type>(p)])) {
+        if (p >= std::get<0>(sbe) || math::is_zero(std::get<1>(sbe)[p])) {
             // Derivative wrt a variable not in the monomial: position is outside the bounds, or it refers to a
             // variable with zero exponent.
             return std::make_pair(T(0), monomial{});
         }
         // Copy the original exponent.
-        T expo((*this)[static_cast<size_type>(p)]);
+        T expo(std::get<1>(sbe)[p]);
         // Copy the original monomial.
         monomial m(*this);
         // Decrement the affected exponent in m.
-        ip_dec(m[static_cast<size_type>(p)], monomial_partial_dispatcher<U>{});
+        ip_dec(m[static_cast<typename base::size_type>(p)], monomial_partial_dispatcher<U>{});
         // Return the result.
         return std::make_pair(std::move(expo), std::move(m));
     }

@@ -2000,9 +2000,6 @@ BOOST_AUTO_TEST_CASE(type_traits_void_t)
     BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
 }
 
-template <typename T, typename U>
-using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
-
 BOOST_AUTO_TEST_CASE(type_traits_is_detected)
 {
     BOOST_CHECK((is_detected<add_t, int, int>::value));

@@ -770,8 +770,6 @@ class evaluate_impl : default_math_evaluate_tag
         using type = T1;
     };
     template <typename T1, typename U1>
-    using add_t = decltype(std::declval<const T1 &>() + std::declval<const U1 &>());
-    template <typename T1, typename U1>
     struct ret_type_<T1, U1, enable_if_t<is_detected<add_t, T1, U1>::value>> {
         using type = add_t<T1, U1>;
     };
