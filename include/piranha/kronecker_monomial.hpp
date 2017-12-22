@@ -686,12 +686,13 @@ public:
         const auto tmp = unpack(args);
         piranha_assert(tmp.size() == args.size());
         bool empty_output = true;
-        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+        auto it_args = args.begin();
+        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i, ++it_args) {
             if (tmp[i] != T(0)) {
                 if (!empty_output) {
                     os << '*';
                 }
-                os << *args.nth(static_cast<decltype(args.size())>(i));
+                os << *it_args;
                 empty_output = false;
                 if (tmp[i] != T(1)) {
                     os << "**" << detail::prepare_for_print(tmp[i]);
@@ -713,14 +714,15 @@ public:
         const auto tmp = unpack(args);
         std::ostringstream oss_num, oss_den, *cur_oss;
         T cur_value;
-        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+        auto it_args = args.begin();
+        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i, ++it_args) {
             cur_value = tmp[i];
             if (cur_value != T(0)) {
                 // NOTE: here negate() is safe because of the symmetry in kronecker_array.
                 cur_oss = (cur_value > T(0)) ? &oss_num : (math::negate(cur_value), &oss_den);
-                (*cur_oss) << "{" << *args.nth(static_cast<decltype(args.size())>(i)) << "}";
+                *cur_oss << "{" << *it_args << "}";
                 if (cur_value != T(1)) {
-                    (*cur_oss) << "^{" << static_cast<long long>(cur_value) << "}";
+                    *cur_oss << "^{" << static_cast<long long>(cur_value) << "}";
                 }
             }
         }
@@ -738,7 +740,7 @@ public:
      * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by
      * \p p. The result is a pair consisting of the exponent associated to \p p before differentiation and the monomial
      * itself after differentiation. If \p p is not smaller than the size of \p args or if its corresponding exponent is
-     * zero, the returned pair will be <tt>(0,kronecker_monomial{})</tt>.
+     * zero, the returned pair will be <tt>(0,kronecker_monomial{args})</tt>.
      *
      * @param p the position of the symbol with respect to which the differentiation will be calculated.
      * @param args the reference piranha::symbol_fset.
@@ -756,7 +758,7 @@ public:
         if (p >= args.size() || v[static_cast<decltype(v.size())>(p)] == T(0)) {
             // Derivative wrt a variable not in the monomial: position is outside the bounds, or it refers to a
             // variable with zero exponent.
-            return std::make_pair(T(0), kronecker_monomial{});
+            return std::make_pair(T(0), kronecker_monomial{args});
         }
         auto v_b = v.begin();
         // Original exponent.
@@ -795,8 +797,9 @@ public:
         const v_type v = unpack(args);
         v_type retval;
         T expo(0);
-        for (decltype(v.size()) i = 0; i < v.size(); ++i) {
-            const auto &cur_sym = *args.nth(static_cast<decltype(args.size())>(i));
+        auto it_args = args.begin();
+        for (decltype(v.size()) i = 0; i < v.size(); ++i, ++it_args) {
+            const auto &cur_sym = *it_args;
             if (expo == T(0) && s < cur_sym) {
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
