@@ -626,6 +626,9 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_is_linear_test)
     tuple_for_each(int_types{}, is_linear_tester{});
 }
 
+template <typename K, typename E>
+using k_pow_t = decltype(std::declval<const K &>().pow(std::declval<const E &>(), symbol_fset{}));
+
 struct pow_tester {
     template <typename T>
     void operator()(const T &) const
@@ -662,6 +665,8 @@ struct pow_tester {
                                           e.what(), "a component of the vector to be encoded is out of bounds");
                                   });
         }
+        BOOST_CHECK((is_detected<k_pow_t, k_type, int>::value));
+        BOOST_CHECK((!is_detected<k_pow_t, k_type, std::string>::value));
     }
 };
 

@@ -163,22 +163,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
         typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
                                     std::declval<U &>(), std::declval<U const &>()))>::value,
                                 int>::type;
-    // ipow subs support.
-    template <typename U>
-    using ipow_subs_type__ = decltype(math::pow(std::declval<const U &>(), std::declval<const integer &>()));
-    template <typename U, typename = void>
-    struct ipow_subs_type_ {
-    };
-    template <typename U>
-    struct ipow_subs_type_<
-        U, typename std::enable_if<std::is_constructible<ipow_subs_type__<U>, int>::value
-                                   && std::is_assignable<ipow_subs_type__<U> &, ipow_subs_type__<U>>::value
-                                   && has_safe_cast<rational, typename base::value_type>::value
-                                   && is_subtractable_in_place<typename base::value_type, integer>::value>::type> {
-        using type = ipow_subs_type__<U>;
-    };
-    template <typename U>
-    using ipow_subs_type = typename ipow_subs_type_<U>::type;
     // Less-than operator.
     template <typename U>
     using comparison_enabler = typename std::enable_if<is_less_than_comparable<U>::value, int>::type;
@@ -585,12 +569,11 @@ private:
     template <typename U>
     using dec_t = decltype(--std::declval<U &>());
     // Main dispatcher.
-    template <typename U>
     using monomial_partial_dispatcher = disjunction_idx<
-        // Case 0: U is integral.
-        std::is_integral<U>,
-        // Case 1: U supports the decrement operator.
-        is_detected<dec_t, U>>;
+        // Case 0: T is integral.
+        std::is_integral<T>,
+        // Case 1: T supports the decrement operator.
+        is_detected<dec_t, T>>;
     // In-place decrement by one, checked for integral types.
     template <typename U>
     static void ip_dec(U &x, const std::integral_constant<std::size_t, 0u> &)
@@ -609,9 +592,7 @@ private:
     }
     // The enabler.
     template <typename U>
-    using ip_dec_t = decltype(ip_dec(std::declval<U &>(), monomial_partial_dispatcher<U>{}));
-    template <typename U>
-    using partial_enabler = enable_if_t<is_detected<ip_dec_t, U>::value, int>;
+    using partial_enabler = enable_if_t<(monomial_partial_dispatcher<U>::value < 2u), int>;
 
 public:
     /// Partial derivative.
@@ -671,12 +652,11 @@ private:
     template <typename U>
     using inc_t = decltype(++std::declval<U &>());
     // Main dispatcher.
-    template <typename U>
     using monomial_int_dispatcher = disjunction_idx<
-        // Case 0: U is integral.
-        std::is_integral<U>,
-        // Case 1: U supports the increment operator.
-        is_detected<inc_t, U>>;
+        // Case 0: T is integral.
+        std::is_integral<T>,
+        // Case 1: T supports the increment operator.
+        is_detected<inc_t, T>>;
     // In-place increment by one, checked for integral types.
     template <typename U>
     static void ip_inc(U &x, const std::integral_constant<std::size_t, 0u> &)
@@ -695,9 +675,7 @@ private:
     }
     // The enabler.
     template <typename U>
-    using ip_inc_t = decltype(ip_inc(std::declval<U &>(), monomial_int_dispatcher<U>{}));
-    template <typename U>
-    using integrate_enabler = enable_if_t<is_detected<ip_inc_t, U>::value, int>;
+    using integrate_enabler = enable_if_t<(monomial_int_dispatcher<U>::value < 2u), int>;
 
 public:
     /// Integration.
@@ -1011,67 +989,123 @@ public:
         }
         return retval;
     }
+
+private:
+    // ipow subs utilities.
+    // Dispatcher for the assignment of an exponent to an integer.
+    using ipow_subs_d_assign_dispatcher = disjunction_idx<
+        // Case 0: T is integer or a C++ integral.
+        disjunction<std::is_integral<T>, std::is_same<integer, T>>,
+        // Case 1: T supports safe cast to integer.
+        has_safe_cast<integer, T>>;
+    template <typename U>
+    static void ipow_subs_d_assign(integer &d, const U &expo, const std::integral_constant<std::size_t, 0> &)
+    {
+        d = expo;
+    }
+    template <typename U>
+    static void ipow_subs_d_assign(integer &d, const U &expo, const std::integral_constant<std::size_t, 1> &)
+    {
+        d = safe_cast<integer>(expo);
+    }
+    // Dispatcher for the assignment of an integer to an exponent.
+    using ipow_subs_expo_assign_dispatcher = disjunction_idx<
+        // Case 0: T is integer.
+        std::is_same<integer, T>,
+        // Case 1: integer supports safe cast to T.
+        has_safe_cast<T, integer>>;
+    template <typename U>
+    static void ipow_subs_expo_assign(U &expo, const integer &r, const std::integral_constant<std::size_t, 0> &)
+    {
+        expo = r;
+    }
+    template <typename U>
+    static void ipow_subs_expo_assign(U &expo, const integer &r, const std::integral_constant<std::size_t, 1> &)
+    {
+        expo = safe_cast<U>(r);
+    }
+    // Definition of the return type.
+    template <typename U>
+    using ips_type = decltype(math::pow(std::declval<const U &>(), std::declval<const integer &>()));
+    // Final enabler.
+    template <typename U>
+    using ipow_subs_type
+        = enable_if_t<conjunction<std::is_constructible<ips_type<U>, int>, is_returnable<ips_type<U>>>::value
+                          && (ipow_subs_d_assign_dispatcher<T>::value < 2u)
+                          && (ipow_subs_expo_assign_dispatcher<T>::value < 2u),
+                      ips_type<U>>;
+
+public:
     /// Substitution of integral power.
     /**
      * \note
      * This method is enabled only if:
      * - \p U can be raised to a piranha::integer power, yielding a type \p subs_type,
-     * - \p subs_type is constructible from \p int and assignable,
-     * - the value type of the monomial can be cast safely to piranha::rational and it supports
-     *   in-place subtraction with piranha::integer.
+     * - \p subs_type is constructible from \p int,
+     * - \p subs_type satisfies piranha::is_returnable,
+     * - the exponent type can be safely cast to piranha::integer, and piranha::integer can be safely
+     *   cast to the exponent type.
      *
-     * Substitute the symbol called \p s to the power of \p n with quantity \p x. The return value is a vector
-     * containing a single pair in which the first
-     * element is the result of the substitution, and the second element the monomial after the substitution has been
-     * performed.
-     * If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
-     * monomial is unchanged and the substitution yields 1).
+     * This method will substitute the <tt>n</tt>-th power of the symbol at the position \p p with the quantity \p x.
+     * The return value is a vector containing a single pair in which the first element is the result of the
+     * substitution, and the second element the monomial after the substitution has been performed.
+     * If \p p is not less than the size of \p args, the return value will be <tt>(1,this)</tt> (i.e., the monomial is
+     * unchanged and the substitution yields 1).
      *
-     * The method will substitute also \p s to powers higher than \p n in absolute value.
-     * For instance, substitution of <tt>y**2</tt> with \p a in <tt>y**7</tt> will produce <tt>a**3 * y</tt>, and
-     * substitution of <tt>y**-2</tt> with \p a in <tt>y**-7</tt> will produce <tt>a**3 * y**-1</tt>.
+     * The method will substitute also powers higher than \p n in absolute value.
+     * For instance, the substitution of <tt>y**2</tt> with \p a in the monomial <tt>y**7</tt> will produce
+     * <tt>a**3 * y</tt>, and the substitution of <tt>y**-2</tt> with \p a in the monomial <tt>y**-7</tt> will produce
+     * <tt>a**3 * y**-1</tt>.
      *
-     * @param s name of the symbol that will be substituted.
-     * @param n power of \p s that will be substituted.
-     * @param x quantity that will be substituted in place of \p s to the power of \p n.
-     * @param args reference set of piranha::symbol.
+     * @param p the position of the symbol that will be substituted.
+     * @param n the integral power that will be substituted.
+     * @param x the quantity that will be substituted.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the result of substituting \p x for \p s to the power of \p n.
+     * @return the result of substituting \p x for the <tt>n</tt>-th power of the symbol at the position \p p.
      *
-     * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+     * @throws std::invalid_argument is \p n is zero, or if the sizes of \p args and \p this differ.
      * @throws unspecified any exception thrown by:
-     * - construction and assignment of the return value,
-     * - construction of piranha::rational,
+     * - the construction of the return value,
      * - piranha::safe_cast(),
      * - piranha::math::pow(),
-     * - piranha::array_key::push_back(),
-     * - the in-place subtraction operator of the exponent type.
+     * - arithmetics on piranha::integer,
+     * - the copy assignment operator of the exponent type,
+     * - memory errors in standard containers.
      */
     template <typename U>
-    std::vector<std::pair<ipow_subs_type<U>, monomial>> ipow_subs(const std::string &s, const integer &n, const U &x,
-                                                                  const symbol_set &args) const
+    std::vector<std::pair<ipow_subs_type<U>, monomial>> ipow_subs(const symbol_idx &p, const integer &n, const U &x,
+                                                                  const symbol_fset &args) const
     {
-        using s_type = ipow_subs_type<U>;
-        if (unlikely(args.size() != this->size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        if (unlikely(this->size() != args.size())) {
+            piranha_throw(std::invalid_argument,
+                          "cannot perform integral power substitution in a monomial: the size of the symbol set ("
+                              + std::to_string(args.size()) + ") differs from the size of the monomial ("
+                              + std::to_string(std::get<0>(sbe)) + ")");
         }
-        s_type retval_s(1);
-        monomial retval_key;
-        for (typename base::size_type i = 0u; i < this->size(); ++i) {
-            retval_key.push_back((*this)[i]);
-            if (args[i].get_name() == s) {
-                const rational tmp(safe_cast<rational>((*this)[i]) / n);
-                if (tmp >= 1) {
-                    const auto tmp_t = static_cast<integer>(tmp);
-                    retval_s = math::pow(x, tmp_t);
-                    // NOTE: chance for a multsub, or maybe a multadd
-                    // after changing the sign of tmp_t?
-                    retval_key[i] -= tmp_t * n;
-                }
+        if (unlikely(!n.sgn())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid integral power in for ipow_subs() in a monomial: the power must be nonzero");
+        }
+        // Initialise the return value.
+        std::vector<std::pair<ipow_subs_type<U>, monomial>> retval;
+        auto mon(*this);
+        if (p < args.size()) {
+            PIRANHA_MAYBE_TLS integer q, r, d;
+            auto &expo = mon[static_cast<decltype(mon.size())>(p)];
+            // Assign expo to d, possibly safely converting it.
+            ipow_subs_d_assign(d, expo, ipow_subs_d_assign_dispatcher<T>{});
+            tdiv_qr(q, r, d, n);
+            if (q.sgn() > 0) {
+                // Assign back the remainder r to expo, possibly with a safe
+                // conversion involved.
+                ipow_subs_expo_assign(expo, r, ipow_subs_expo_assign_dispatcher<T>{});
+                retval.emplace_back(math::pow(x, q), std::move(mon));
+                return retval;
             }
         }
-        std::vector<std::pair<s_type, monomial>> retval;
-        retval.emplace_back(std::move(retval_s), std::move(retval_key));
+        // Otherwise, the substitution yields 1 and the monomial is the original one.
+        retval.emplace_back(ipow_subs_type<U>(1), std::move(mon));
         return retval;
     }
     /// Multiply terms with a monomial key.
