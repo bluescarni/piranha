@@ -1009,7 +1009,7 @@ public:
      * @throws std::invalid_argument is \p n is zero.
      * @throws unspecified any exception thrown by:
      * - unpack(),
-     * - construction of the return value,
+     * - the construction of the return value,
      * - piranha::math::pow(),
      * - arithmetics on piranha::integer,
      * - piranha::kronecker_array::encode().

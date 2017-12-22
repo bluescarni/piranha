@@ -112,11 +112,7 @@ inline void monomial_pow_mult_exp(T &ret, const T &exp, const U &x, const std::i
 
 // The enabler.
 template <typename T, typename U>
-using monomial_pow_mult_exp_t = decltype(monomial_pow_mult_exp(
-    std::declval<T &>(), std::declval<const T &>(), std::declval<const U &>(), monomial_pow_dispatcher<T, U>{}));
-
-template <typename T, typename U>
-using monomial_pow_enabler = enable_if_t<is_detected<monomial_pow_mult_exp_t, T, U>::value, int>;
+using monomial_pow_enabler = enable_if_t<(monomial_pow_dispatcher<T, U>::value < 4u), int>;
 }
 }
 
