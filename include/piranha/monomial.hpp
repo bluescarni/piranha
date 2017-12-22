@@ -824,7 +824,7 @@ public:
      * - printing exponents to stream and the public interface of \p os,
      * - piranha::math::negate(), piranha::math::is_zero(), piranha::math::is_unitary().
      */
-    void print_tex(std::ostream &os, const symbol_set &args) const
+    void print_tex(std::ostream &os, const symbol_fset &args) const
     {
         auto sbe = this->get_size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
