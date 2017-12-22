@@ -152,17 +152,6 @@ class monomial : public array_key<T, monomial<T, S>, S>
     PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
     using base = array_key<T, monomial<T, S>, S>;
-    // Multiplication.
-    template <typename Cf, typename U>
-    using multiply_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
-                                                         std::declval<U &>(), std::declval<U const &>()))>::value
-                                                         && detail::true_tt<detail::cf_mult_enabler<Cf>>::value,
-                                                     int>::type;
-    template <typename U>
-    using monomial_multiply_enabler =
-        typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
-                                    std::declval<U &>(), std::declval<U const &>()))>::value,
-                                int>::type;
     // Less-than operator.
     template <typename U>
     using comparison_enabler = typename std::enable_if<is_less_than_comparable<U>::value, int>::type;
@@ -1108,6 +1097,21 @@ public:
         retval.emplace_back(ipow_subs_type<U>(1), std::move(mon));
         return retval;
     }
+
+private:
+    // Multiplication.
+    template <typename Cf, typename U>
+    using multiply_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
+                                                         std::declval<U &>(), std::declval<U const &>()))>::value
+                                                         && detail::true_tt<detail::cf_mult_enabler<Cf>>::value,
+                                                     int>::type;
+    template <typename U>
+    using monomial_multiply_enabler =
+        typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
+                                    std::declval<U &>(), std::declval<U const &>()))>::value,
+                                int>::type;
+
+public:
     /// Multiply terms with a monomial key.
     /**
      * \note
