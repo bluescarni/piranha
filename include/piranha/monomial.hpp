@@ -622,7 +622,7 @@ public:
      * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by
      * \p p. The result is a pair consisting of the exponent associated to \p p before differentiation and the monomial
      * itself after differentiation. If \p p is not smaller than the size of \p args or if its corresponding exponent is
-     * zero, the returned pair will be <tt>(0,kronecker_monomial{})</tt>.
+     * zero, the returned pair will be <tt>(0,monomial{args})</tt>.
      *
      * If the exponent type is an integral type, then the decrement-by-one operation on the affected exponent is checked
      * for negative overflow.
@@ -653,7 +653,7 @@ public:
         if (p >= std::get<0>(sbe) || math::is_zero(std::get<1>(sbe)[p])) {
             // Derivative wrt a variable not in the monomial: position is outside the bounds, or it refers to a
             // variable with zero exponent.
-            return std::make_pair(T(0), monomial{});
+            return std::make_pair(T(0), monomial{args});
         }
         // Copy the original exponent.
         T expo(std::get<1>(sbe)[p]);
@@ -743,8 +743,9 @@ public:
         monomial retval;
         T expo(0);
         const PIRANHA_MAYBE_TLS T one(1);
-        for (decltype(retval.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
-            const auto &cur_sym = *args.nth(static_cast<decltype(args.size())>(i));
+        auto it_args = args.begin();
+        for (decltype(retval.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe), ++it_args) {
+            const auto &cur_sym = *it_args;
             if (math::is_zero(expo) && s < cur_sym) {
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
@@ -796,14 +797,15 @@ public:
                               + ") differs from the size of the monomial (" + std::to_string(std::get<0>(sbe)) + ")");
         }
         bool empty_output = true;
-        for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+        auto it_args = args.begin();
+        for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe), ++it_args) {
             if (!math::is_zero(*std::get<1>(sbe))) {
                 // If we are going to print a symbol, and something has been printed before,
                 // then we are going to place the multiplication sign.
                 if (!empty_output) {
                     os << '*';
                 }
-                os << *args.nth(i);
+                os << *it_args;
                 empty_output = false;
                 if (!math::is_unitary(*std::get<1>(sbe))) {
                     os << "**" << detail::prepare_for_print(*std::get<1>(sbe));
@@ -836,7 +838,8 @@ public:
         std::ostringstream oss_num, oss_den, *cur_oss;
         const PIRANHA_MAYBE_TLS T zero(0);
         T cur_value;
-        for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+        auto it_args = args.begin();
+        for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe), ++it_args) {
             cur_value = *std::get<1>(sbe);
             if (!math::is_zero(cur_value)) {
                 // NOTE: use this weird form for the test because the presence of operator<()
@@ -848,7 +851,7 @@ public:
                     math::negate(cur_value);
                     cur_oss = std::addressof(oss_den);
                 }
-                *cur_oss << "{" << *args.nth(i) << "}";
+                *cur_oss << "{" << *it_args << "}";
                 if (!math::is_unitary(cur_value)) {
                     *cur_oss << "^{" << detail::prepare_for_print(cur_value) << "}";
                 }
@@ -885,7 +888,7 @@ public:
      * by \p values as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
      * returned.
      *
-     * @param values the values will be used for substitution.
+     * @param values the values will be used for the evaluation.
      * @param args the reference piranha::symbol_fset.
      *
      * @return the result of evaluating \p this with the values provided in \p values.
@@ -894,7 +897,7 @@ public:
      * or if the sizes of \p this and \p args differ.
      * @throws unspecified any exception thrown by:
      * - the construction of the return type,
-     * - piranha::math::pow() or the in-place multiplication operator of the return type.
+     * - math::pow() or the in-place multiplication operator of the return type.
      */
     template <typename U>
     eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
@@ -925,59 +928,87 @@ public:
     }
 
 private:
-    // Subs support (re-uses the e_type typedef from the eval type).
+    // Subs type is the same as eval type.
     template <typename U>
-    using subs_type = enable_if_t<
-        conjunction<std::is_constructible<e_type<U>, int>, std::is_assignable<e_type<U> &, e_type<U>>>::value,
-        e_type<U>>;
+    using subs_type = eval_type<U>;
 
 public:
     /// Substitution.
     /**
      * \note
-     * This method is enabled only if:
-     * - \p U can be raised to the value type, yielding a type \p subs_type,
-     * - \p subs_type can be constructed from \p int and it is assignable.
+     * This method is available only if \p U satisfies the following requirements:
+     * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
+     * - \p eval_type is constructible from \p int,
+     * - \p eval_type is multipliable in place,
+     * - \p eval_type satisfies piranha::is_returnable.
      *
-     * Substitute the symbol called \p s in the monomial with quantity \p x. The return value is vector containing
-     * one pair in which the first element is the result of substituting \p s with \p x (i.e., \p x raised to the power
-     * of the exponent corresponding to \p s), and the second element the monomial after the substitution has been
-     * performed (i.e., with the exponent corresponding to \p s set to zero). If \p s is not in \p args, the return
-     * value will be <tt>(1,this)</tt> (i.e., the monomial is unchanged and the substitution yields 1).
+     * This method will substitute the symbols at the positions specified in the keys of ``smap`` with the mapped
+     * values. The return value is a vector containing one pair in which the first element is the result of the
+     * substitution (i.e., the product of the values of ``smap`` raised to the corresponding exponents in the monomial),
+     * and the second element is the monomial after the substitution has been performed (i.e., with the exponents
+     * at the positions specified by the keys of ``smap`` set to zero). If ``smap`` is empty,
+     * the return value will be <tt>(1,this)</tt> (i.e., the monomial is unchanged and the substitution yields 1).
      *
-     * @param s name of the symbol that will be substituted.
-     * @param x quantity that will be substituted in place of \p s.
-     * @param args reference set of piranha::symbol.
+     * For instance, given the monomial ``[2,3,4]``, the reference piranha::symbol_fset ``["x","y","z"]``
+     * and the substitution map ``[(0,1),(2,-3)]``, then the return value will be a vector containing
+     * the single pair ``(81,[0,3,0])``.
      *
-     * @return the result of substituting \p x for \p s.
+     * @param smap the map relating the positions of the symbols to be substituted to the values
+     * they will be substituted with.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+     * @return the result of the substitution.
+     *
+     * @throws std::invalid_argument if the last element of the substitution map is not smaller
+     * than the size of ``this``, or if the sizes of ``this`` and ``args`` differ.
      * @throws unspecified any exception thrown by:
-     * - construction and assignment of the return value,
-     * - construction of an exponent from zero,
-     * - piranha::math::pow(),
-     * - piranha::array_key::push_back().
+     * - the construction of the return value,
+     * - the construction of an exponent from zero,
+     * - the copy assignment of the exponent type,
+     * - piranha::math::pow() or the in-place multiplication operator of the return type,
+     * - memory errors in standard containers.
      */
     template <typename U>
-    std::vector<std::pair<subs_type<U>, monomial>> subs(const std::string &s, const U &x, const symbol_set &args) const
+    std::vector<std::pair<subs_type<U>, monomial>> subs(const symbol_idx_fmap<U> &smap, const symbol_fset &args) const
     {
-        using s_type = subs_type<U>;
-        if (unlikely(args.size() != this->size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+        auto sbe = this->get_size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument,
+                          "cannot perform substitution in a monomial: the size of the symbol set ("
+                              + std::to_string(args.size()) + ") differs from the size of the monomial ("
+                              + std::to_string(std::get<0>(sbe)) + ")");
         }
-        std::vector<std::pair<s_type, monomial>> retval;
-        s_type retval_s(1);
-        monomial retval_key;
-        for (typename base::size_type i = 0u; i < this->size(); ++i) {
-            if (args[i].get_name() == s) {
-                retval_s = math::pow(x, (*this)[i]);
-                retval_key.push_back(T(0));
-            } else {
-                retval_key.push_back((*this)[i]);
+        if (unlikely(smap.size() && smap.rbegin()->first >= std::get<0>(sbe))) {
+            // The last element of the substitution map must be a valid index.
+            piranha_throw(std::invalid_argument,
+                          "invalid argument(s) for substitution in a monomial: the last index of the substitution map ("
+                              + std::to_string(smap.rbegin()->first) + ") must be smaller than the monomial's size ("
+                              + std::to_string(std::get<0>(sbe)) + ")");
+        }
+        std::vector<std::pair<subs_type<U>, monomial>> retval;
+        if (smap.size()) {
+            // The substitution map contains something, proceed to the substitution.
+            // Cache-init the zero constant.
+            const PIRANHA_MAYBE_TLS T zero(0);
+            // Init the subs return value from the exponentiation of the first value in the map.
+            auto it = smap.begin();
+            auto ret(math::pow(it->second, std::get<1>(sbe)[it->first]));
+            // Init the monomial return value with a copy of this.
+            auto mon_ret(*this);
+            // Zero out the corresponding exponent.
+            mon_ret[static_cast<decltype(mon_ret.size())>(it->first)] = zero;
+            //  NOTE: move to the next element in the init statement of the for loop.
+            for (++it; it != smap.end(); ++it) {
+                ret *= math::pow(it->second, std::get<1>(sbe)[it->first]);
+                mon_ret[static_cast<decltype(mon_ret.size())>(it->first)] = zero;
             }
+            // NOTE: the is_returnable requirement ensures we can emplace back a pair
+            // containing the subs type.
+            retval.emplace_back(std::move(ret), std::move(mon_ret));
+        } else {
+            // Otherwise, the substitution yields 1 and the monomial is the original one.
+            retval.emplace_back(subs_type<U>(1), *this);
         }
-        piranha_assert(retval_key.size() == this->size());
-        retval.emplace_back(std::move(retval_s), std::move(retval_key));
         return retval;
     }
     /// Substitution of integral power.

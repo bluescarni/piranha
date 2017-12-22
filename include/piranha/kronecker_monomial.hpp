@@ -858,7 +858,7 @@ public:
      * by \p values as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
      * returned.
      *
-     * @param values the values will be used for substitution.
+     * @param values the values will be used for the evaluation.
      * @param args the reference piranha::symbol_fset.
      *
      * @return the result of evaluating \p this with the values provided in \p values.
@@ -926,6 +926,8 @@ public:
      *
      * @return the result of the substitution.
      *
+     * @throws std::invalid_argument if the last element of the substitution map is not smaller
+     * than the size of ``args``.
      * @throws unspecified any exception thrown by:
      * - unpack(),
      * - the construction of the return value,
