@@ -38,7 +38,6 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <limits>
 #include <list>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>

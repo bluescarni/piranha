@@ -31,22 +31,17 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE monomial_01_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <limits>
 #include <list>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include <piranha/exceptions.hpp>
