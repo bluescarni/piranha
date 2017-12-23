@@ -456,28 +456,6 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_multiply_test)
     tuple_for_each(int_types{}, multiply_tester{});
 }
 
-struct monomial_multiply_tester {
-    template <typename T>
-    void operator()(const T &) const
-    {
-        typedef kronecker_monomial<T> k_type;
-        k_type k1, k2, res;
-        k_type::multiply(res, k1, k2, symbol_fset{});
-        BOOST_CHECK_EQUAL(res.get_int(), 0);
-        k1 = k_type{-5};
-        k2 = k_type{7};
-        k_type::multiply(res, k1, k2, symbol_fset{});
-        BOOST_CHECK_EQUAL(res.get_int(), 2);
-        k_type::multiply(res, k1, k2, symbol_fset{"x", "y"});
-        BOOST_CHECK_EQUAL(res.get_int(), 2);
-    }
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_monomial_monomial_multiply_test)
-{
-    tuple_for_each(int_types{}, monomial_multiply_tester{});
-}
-
 struct equality_tester {
     template <typename T>
     void operator()(const T &) const

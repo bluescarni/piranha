@@ -558,11 +558,12 @@ private:
     template <typename U>
     using dec_t = decltype(--std::declval<U &>());
     // Main dispatcher.
+    template <typename U>
     using monomial_partial_dispatcher = disjunction_idx<
-        // Case 0: T is integral.
-        std::is_integral<T>,
-        // Case 1: T supports the decrement operator.
-        is_detected<dec_t, T>>;
+        // Case 0: U is integral.
+        std::is_integral<U>,
+        // Case 1: U supports the decrement operator.
+        is_detected<dec_t, U>>;
     // In-place decrement by one, checked for integral types.
     template <typename U>
     static void ip_dec(U &x, const std::integral_constant<std::size_t, 0u> &)
@@ -641,11 +642,12 @@ private:
     template <typename U>
     using inc_t = decltype(++std::declval<U &>());
     // Main dispatcher.
+    template <typename U>
     using monomial_int_dispatcher = disjunction_idx<
-        // Case 0: T is integral.
-        std::is_integral<T>,
-        // Case 1: T supports the increment operator.
-        is_detected<inc_t, T>>;
+        // Case 0: U is integral.
+        std::is_integral<U>,
+        // Case 1: U supports the increment operator.
+        is_detected<inc_t, U>>;
     // In-place increment by one, checked for integral types.
     template <typename U>
     static void ip_inc(U &x, const std::integral_constant<std::size_t, 0u> &)
@@ -982,11 +984,12 @@ public:
 private:
     // ipow subs utilities.
     // Dispatcher for the assignment of an exponent to an integer.
+    template <typename U>
     using ipow_subs_d_assign_dispatcher = disjunction_idx<
-        // Case 0: T is integer or a C++ integral.
-        disjunction<std::is_integral<T>, std::is_same<integer, T>>,
-        // Case 1: T supports safe cast to integer.
-        has_safe_cast<integer, T>>;
+        // Case 0: U is integer or a C++ integral.
+        disjunction<std::is_integral<U>, std::is_same<integer, U>>,
+        // Case 1: U supports safe cast to integer.
+        has_safe_cast<integer, U>>;
     template <typename U>
     static void ipow_subs_d_assign(integer &d, const U &expo, const std::integral_constant<std::size_t, 0> &)
     {
@@ -998,11 +1001,12 @@ private:
         d = safe_cast<integer>(expo);
     }
     // Dispatcher for the assignment of an integer to an exponent.
+    template <typename U>
     using ipow_subs_expo_assign_dispatcher = disjunction_idx<
-        // Case 0: T is integer.
-        std::is_same<integer, T>,
-        // Case 1: integer supports safe cast to T.
-        has_safe_cast<T, integer>>;
+        // Case 0: U is integer.
+        std::is_same<integer, U>,
+        // Case 1: integer supports safe cast to U.
+        has_safe_cast<U, integer>>;
     template <typename U>
     static void ipow_subs_expo_assign(U &expo, const integer &r, const std::integral_constant<std::size_t, 0> &)
     {
@@ -1070,7 +1074,7 @@ public:
             piranha_throw(std::invalid_argument,
                           "cannot perform integral power substitution in a monomial: the size of the symbol set ("
                               + std::to_string(args.size()) + ") differs from the size of the monomial ("
-                              + std::to_string(std::get<0>(sbe)) + ")");
+                              + std::to_string(this->size()) + ")");
         }
         if (unlikely(!n.sgn())) {
             piranha_throw(std::invalid_argument,
@@ -1100,79 +1104,48 @@ public:
 
 private:
     // Multiplication.
-    template <typename Cf, typename U>
-    using multiply_enabler = typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
-                                                         std::declval<U &>(), std::declval<U const &>()))>::value
-                                                         && detail::true_tt<detail::cf_mult_enabler<Cf>>::value,
-                                                     int>::type;
-    template <typename U>
-    using monomial_multiply_enabler =
-        typename std::enable_if<detail::true_tt<decltype(std::declval<U const &>().vector_add(
-                                    std::declval<U &>(), std::declval<U const &>()))>::value,
-                                int>::type;
+    template <typename Cf>
+    using multiply_enabler = enable_if_t<conjunction<has_add3<T>, has_mul3<Cf>>::value, int>;
 
 public:
     /// Multiply terms with a monomial key.
     /**
      * \note
      * This method is enabled only if the following conditions hold:
-     * - piranha::array_key::vector_add() is enabled for \p t1,
-     * - \p Cf satisfies piranha::is_cf and piranha::has_mul3.
+     * - \p T satisfies piranha::has_add3,
+     * - \p Cf satisfies piranha::has_mul3.
      *
      * Multiply \p t1 by \p t2, storing the result in the only element of \p res. If \p Cf is an instance of
-     * piranha::mp_rational, then
-     * only the numerators of the coefficients will be multiplied.
+     * piranha::mp_rational, then only the numerators of the coefficients will be multiplied.
      *
      * This method offers the basic exception safety guarantee.
      *
-     * @param res return value.
-     * @param t1 first argument.
-     * @param t2 second argument.
-     * @param args reference set of arguments.
+     * @param res the return value.
+     * @param t1 the first argument.
+     * @param t2 the second argument.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the size of \p t1 differs from the size of \p args.
      * @throws unspecified any exception thrown by piranha::array_key::vector_add(), or by piranha::math::mul3().
      */
     // NOTE: it should be ok to use this method (and the one below) with overlapping arguments, as this is allowed
     // in small_vector::add().
-    template <typename Cf, typename U = monomial, multiply_enabler<Cf, U> = 0>
+    template <typename Cf, multiply_enabler<Cf> = 0>
     static void multiply(std::array<term<Cf, monomial>, multiply_arity> &res, const term<Cf, monomial> &t1,
-                         const term<Cf, monomial> &t2, const symbol_set &args)
+                         const term<Cf, monomial> &t2, const symbol_fset &args)
     {
         term<Cf, monomial> &t = res[0u];
         // NOTE: the check on the monomials' size is in vector_add().
         if (unlikely(t1.m_key.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+            piranha_throw(std::invalid_argument,
+                          "cannot multiply terms with monomial keys: the size of the symbol set ("
+                              + std::to_string(args.size()) + ") differs from the size of the first monomial ("
+                              + std::to_string(t1.m_key.size()) + ")");
         }
         // Coefficient.
-        detail::cf_mult_impl(t.m_cf, t1.m_cf, t2.m_cf);
+        cf_mult_impl(t.m_cf, t1.m_cf, t2.m_cf);
         // Now deal with the key.
         t1.m_key.vector_add(t.m_key, t2.m_key);
-    }
-    /// Multiply monomials.
-    /**
-     * \note
-     * This method is enabled only if piranha::array_key::vector_add() is enabled for \p a.
-     *
-     * Multiply \p a by \p b, storing the result in \p out.
-     *
-     * This method offers the basic exception safety guarantee.
-     *
-     * @param out return value.
-     * @param a first argument.
-     * @param b second argument.
-     * @param args reference set of arguments.
-     *
-     * @throws std::invalid_argument if the size of \p a differs from the size of \p args.
-     * @throws unspecified any exception thrown by piranha::array_key::vector_add().
-     */
-    template <typename U = monomial, monomial_multiply_enabler<U> = 0>
-    static void multiply(monomial &out, const monomial &a, const monomial &b, const symbol_set &args)
-    {
-        if (unlikely(a.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
-        }
-        a.vector_add(out, b);
     }
     /// Comparison operator.
     /**
@@ -1190,7 +1163,10 @@ public:
         const auto sbe1 = this->size_begin_end();
         const auto sbe2 = other.size_begin_end();
         if (unlikely(std::get<0u>(sbe1) != std::get<0u>(sbe2))) {
-            piranha_throw(std::invalid_argument, "mismatched sizes in monomial comparison");
+            piranha_throw(std::invalid_argument,
+                          "mismatched sizes in a monomial comparison: the first monomial has a size of "
+                              + std::to_string(std::get<0u>(sbe1)) + ", the second monomial has a size of "
+                              + std::to_string(std::get<0u>(sbe2)));
         }
         return std::lexicographical_compare(std::get<1u>(sbe1), std::get<2u>(sbe1), std::get<1u>(sbe2),
                                             std::get<2u>(sbe2));
@@ -1225,13 +1201,13 @@ public:
      *
      * @param packer the target packer.
      * @param f the serialization format.
-     * @param s reference arguments set.
+     * @param s the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the sizes of \p s and \p this differ.
      * @throws unspecified any exception thrown by piranha::msgpack_pack().
      */
     template <typename Stream, msgpack_pack_enabler<Stream> = 0>
-    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
+    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_fset &s) const
     {
         if (unlikely(this->size() != s.size())) {
             piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
@@ -1252,13 +1228,13 @@ public:
      *
      * @param o msgpack object that will be deserialized.
      * @param f serialization format.
-     * @param s reference arguments set.
+     * @param s the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
      * @throws unspecified any exception thrown by piranha::msgpack_convert().
      */
     template <typename U = monomial, msgpack_convert_enabler<U> = 0>
-    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
+    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_fset &s)
     {
         piranha::msgpack_convert(this->m_container, o, f);
         if (unlikely(this->size() != s.size())) {
@@ -1293,7 +1269,7 @@ using monomial_boost_load_enabler
  * \note
  * This specialisation is enabled only if piranha::monomial::container_type satisfies piranha::has_boost_save.
  *
- * @throws std::invalid_argument if the size of the monomial differs from the size of the piranha::symbol_set.
+ * @throws std::invalid_argument if the size of the monomial differs from the size of the piranha::symbol_fset.
  * @throws unspecified any exception thrown by piranha::bost_save() or by the public interface of
  * piranha::boost_s11n_key_wrapper.
  */
@@ -1308,7 +1284,7 @@ struct boost_save_impl<Archive, boost_s11n_key_wrapper<monomial<T, S>>, monomial
  * This specialisation is enabled only if piranha::monomial::container_type satisfies piranha::has_boost_load.
  *
  * @throws std::invalid_argument if the size of the deserialized monomial differs from the size of
- * the piranha::symbol_set.
+ * the piranha::symbol_fset.
  * @throws unspecified any exception thrown by piranha::bost_load() or by the public interface of
  * piranha::boost_s11n_key_wrapper.
  */

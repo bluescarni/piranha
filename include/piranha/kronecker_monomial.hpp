@@ -504,13 +504,13 @@ public:
 private:
     // Enabler for multiply().
     template <typename Cf>
-    using multiply_enabler = enable_if_t<std::is_same<detail::cf_mult_enabler<Cf>, void>::value, int>;
+    using multiply_enabler = enable_if_t<has_mul3<Cf>::value, int>;
 
 public:
     /// Multiply terms with a Kronecker monomial key.
     /**
      * \note
-     * This method is enabled only if \p Cf satisfies piranha::is_cf and piranha::has_mul3.
+     * This method is enabled only if \p Cf satisfies piranha::has_mul3.
      *
      * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
      * offers the basic exception safety guarantee. If \p Cf is an instance of piranha::mp_rational, then
@@ -532,24 +532,9 @@ public:
                          const symbol_fset &)
     {
         // Coefficient first.
-        detail::cf_mult_impl(res[0u].m_cf, t1.m_cf, t2.m_cf);
+        cf_mult_impl(res[0u].m_cf, t1.m_cf, t2.m_cf);
         // Now the key.
         math::add3(res[0u].m_key.m_value, t1.m_key.get_int(), t2.m_key.get_int());
-    }
-    /// Multiply Kronecker monomials.
-    /**
-     * Multiply \p a by \p b, storing the result in \p res.
-     * No check is performed for overflow of either the limits of the integral type or the limits of the Kronecker
-     * codification.
-     *
-     * @param res the return value.
-     * @param a the first argument.
-     * @param b the second argument.
-     */
-    static void multiply(kronecker_monomial &res, const kronecker_monomial &a, const kronecker_monomial &b,
-                         const symbol_fset &)
-    {
-        math::add3(res.m_value, a.m_value, b.m_value);
     }
     /// Hash value.
     /**
