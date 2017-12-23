@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE monomial_01_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -108,7 +109,14 @@ struct constructor_tester {
             BOOST_CHECK_EQUAL(m0.size(), 2u);
             BOOST_CHECK_EQUAL(m0[0], -1);
             BOOST_CHECK_EQUAL(m0[1], 2);
-            BOOST_CHECK_THROW(m0 = monomial_type(v1.begin(), v1.end(), symbol_fset{"x"}), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(
+                m0 = monomial_type(v1.begin(), v1.end(), symbol_fset{"x"}), std::invalid_argument,
+                [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(),
+                        "the monomial constructor from range and symbol set "
+                        "yielded an invalid monomial: the final size is 2, while the size of the symbol set is 1");
+                });
             std::list<int> l1;
             m0 = monomial_type(l1.begin(), l1.end(), symbol_fset{});
             BOOST_CHECK_EQUAL(m0.size(), 0u);
@@ -121,7 +129,14 @@ struct constructor_tester {
             BOOST_CHECK_EQUAL(m0.size(), 2u);
             BOOST_CHECK_EQUAL(m0[0], -1);
             BOOST_CHECK_EQUAL(m0[1], 2);
-            BOOST_CHECK_THROW(m0 = monomial_type(l1.begin(), l1.end(), symbol_fset{"x"}), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(
+                m0 = monomial_type(l1.begin(), l1.end(), symbol_fset{"x"}), std::invalid_argument,
+                [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(),
+                        "the monomial constructor from range and symbol set "
+                        "yielded an invalid monomial: the final size is 2, while the size of the symbol set is 1");
+                });
             struct foo {
             };
             BOOST_CHECK((!std::is_constructible<monomial_type, foo *, foo *, symbol_fset>::value));
@@ -165,7 +180,12 @@ struct constructor_tester {
             BOOST_CHECK_EQUAL(k2[1], T(0));
             BOOST_CHECK_EQUAL(k2[2], T(0));
             // Generic constructor for use in series.
-            BOOST_CHECK_THROW(monomial_type tmp(k2, symbol_fset{}), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(monomial_type tmp(k2, symbol_fset{}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "inconsistent sizes in the generic array_key "
+                                                                       "constructor: the size of the array (3) differs "
+                                                                       "from the size of the symbol set (0)");
+                                  });
             monomial_type k3(k2, vs);
             BOOST_CHECK_EQUAL(k3.size(), vs.size());
             BOOST_CHECK_EQUAL(k3[0], T(0));
@@ -178,7 +198,12 @@ struct constructor_tester {
             BOOST_CHECK_EQUAL(k4[2], T(0));
             typedef monomial<int, U> monomial_type2;
             monomial_type2 k5(vs);
-            BOOST_CHECK_THROW(monomial_type tmp(k5, symbol_fset{}), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(monomial_type tmp(k5, symbol_fset{}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "inconsistent sizes in the generic array_key "
+                                                                       "constructor: the size of the array (3) differs "
+                                                                       "from the size of the symbol set (0)");
+                                  });
             monomial_type k6(k5, vs);
             BOOST_CHECK_EQUAL(k6.size(), vs.size());
             BOOST_CHECK_EQUAL(k6[0], T(0));
@@ -288,217 +313,160 @@ BOOST_AUTO_TEST_CASE(monomial_is_zero_test)
     tuple_for_each(expo_types{}, is_zero_tester{});
 }
 
-#if 0
-struct merge_args_tester {
-    template <typename T>
-    struct runner {
-        template <typename U>
-        void operator()(const U &)
-        {
-            typedef monomial<T, U> key_type;
-            symbol_set v1, v2;
-            v2.add("a");
-            key_type k;
-            auto out = k.merge_args(v1, v2);
-            BOOST_CHECK_EQUAL(out.size(), unsigned(1));
-            BOOST_CHECK_EQUAL(out[0], T(0));
-            v2.add(symbol("b"));
-            v2.add(symbol("c"));
-            v2.add(symbol("d"));
-            v1.add(symbol("b"));
-            v1.add(symbol("d"));
-            k.push_back(T(2));
-            k.push_back(T(4));
-            out = k.merge_args(v1, v2);
-            BOOST_CHECK_EQUAL(out.size(), unsigned(4));
-            BOOST_CHECK_EQUAL(out[0], T(0));
-            BOOST_CHECK_EQUAL(out[1], T(2));
-            BOOST_CHECK_EQUAL(out[2], T(0));
-            BOOST_CHECK_EQUAL(out[3], T(4));
-            v2.add(symbol("e"));
-            v2.add(symbol("f"));
-            v2.add(symbol("g"));
-            v2.add(symbol("h"));
-            v1.add(symbol("e"));
-            v1.add(symbol("g"));
-            k.push_back(T(5));
-            k.push_back(T(7));
-            out = k.merge_args(v1, v2);
-            BOOST_CHECK_EQUAL(out.size(), unsigned(8));
-            BOOST_CHECK_EQUAL(out[0], T(0));
-            BOOST_CHECK_EQUAL(out[1], T(2));
-            BOOST_CHECK_EQUAL(out[2], T(0));
-            BOOST_CHECK_EQUAL(out[3], T(4));
-            BOOST_CHECK_EQUAL(out[4], T(5));
-            BOOST_CHECK_EQUAL(out[5], T(0));
-            BOOST_CHECK_EQUAL(out[6], T(7));
-            BOOST_CHECK_EQUAL(out[7], T(0));
-        }
-    };
-    template <typename T>
-    void operator()(const T &)
-    {
-        boost::mpl::for_each<size_types>(runner<T>());
-    }
-};
-
-BOOST_AUTO_TEST_CASE(monomial_merge_args_test)
-{
-    boost::mpl::for_each<expo_types>(merge_args_tester());
-}
-
 struct is_unitary_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> key_type;
-            symbol_set v1, v2;
-            v2.add(symbol("a"));
-            key_type k(v1);
-            BOOST_CHECK(k.is_unitary(v1));
-            key_type k2(v2);
-            BOOST_CHECK(k2.is_unitary(v2));
+            key_type k(symbol_fset{});
+            BOOST_CHECK(k.is_unitary(symbol_fset{}));
+            key_type k2(symbol_fset{"a"});
+            BOOST_CHECK(k2.is_unitary(symbol_fset{"a"}));
             k2[0] = 1;
-            BOOST_CHECK(!k2.is_unitary(v2));
+            BOOST_CHECK(!k2.is_unitary(symbol_fset{"a"}));
             k2[0] = 0;
-            BOOST_CHECK(k2.is_unitary(v2));
-            BOOST_CHECK_THROW(k2.is_unitary(symbol_set{}), std::invalid_argument);
+            BOOST_CHECK(k2.is_unitary(symbol_fset{"a"}));
+            BOOST_CHECK_EXCEPTION(
+                k2.is_unitary(symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "invalid sizes in the invocation of is_unitary() for a monomial: "
+                                                     "the monomial has a size of 1, while the reference symbol set has "
+                                                     "a size of 0");
+                });
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_is_unitary_test)
 {
-    boost::mpl::for_each<expo_types>(is_unitary_tester());
+    tuple_for_each(expo_types{}, is_unitary_tester{});
 }
 
 struct degree_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> key_type;
             key_type k0;
-            symbol_set v;
             // Check the promotion of short signed ints.
             if (std::is_same<T, signed char>::value || std::is_same<T, short>::value) {
-                BOOST_CHECK((std::is_same<int, decltype(k0.degree(v))>::value));
+                BOOST_CHECK((std::is_same<int, decltype(k0.degree(symbol_fset{}))>::value));
             } else if (std::is_integral<T>::value) {
-                BOOST_CHECK((std::is_same<T, decltype(k0.degree(v))>::value));
+                BOOST_CHECK((std::is_same<T, decltype(k0.degree(symbol_fset{}))>::value));
             }
             BOOST_CHECK(key_has_degree<key_type>::value);
             BOOST_CHECK(key_has_ldegree<key_type>::value);
-            BOOST_CHECK_EQUAL(k0.degree(v), T(0));
-            BOOST_CHECK_EQUAL(k0.ldegree(v), T(0));
-            v.add(symbol("a"));
-            key_type k1(v);
-            BOOST_CHECK_EQUAL(k1.degree(v), T(0));
-            BOOST_CHECK_EQUAL(k1.ldegree(v), T(0));
+            BOOST_CHECK_EQUAL(k0.degree(symbol_fset{}), T(0));
+            BOOST_CHECK_EQUAL(k0.ldegree(symbol_fset{}), T(0));
+            key_type k1(symbol_fset{"a"});
+            BOOST_CHECK_EQUAL(k1.degree(symbol_fset{"a"}), T(0));
+            BOOST_CHECK_EQUAL(k1.ldegree(symbol_fset{"a"}), T(0));
             k1[0] = T(2);
-            BOOST_CHECK_EQUAL(k1.degree(v), T(2));
-            BOOST_CHECK_EQUAL(k1.ldegree(v), T(2));
-            v.add(symbol("b"));
-            key_type k2(v);
-            BOOST_CHECK_EQUAL(k2.degree(v), T(0));
-            BOOST_CHECK_EQUAL(k2.ldegree(v), T(0));
+            BOOST_CHECK_EQUAL(k1.degree(symbol_fset{"a"}), T(2));
+            BOOST_CHECK_EQUAL(k1.ldegree(symbol_fset{"a"}), T(2));
+            key_type k2(symbol_fset{"a", "b"});
+            BOOST_CHECK_EQUAL(k2.degree(symbol_fset{"a", "b"}), T(0));
+            BOOST_CHECK_EQUAL(k2.ldegree(symbol_fset{"a", "b"}), T(0));
             k2[0] = T(2);
             k2[1] = T(3);
-            BOOST_CHECK_EQUAL(k2.degree(v), T(2) + T(3));
-            BOOST_CHECK_THROW(k2.degree(symbol_set{}), std::invalid_argument);
+            BOOST_CHECK_EQUAL(k2.degree(symbol_fset{"a", "b"}), T(2) + T(3));
+            BOOST_CHECK_THROW(k2.degree(symbol_fset{}), std::invalid_argument);
             // Partial degree.
-            using positions = symbol_set::positions;
-            auto ss_to_pos = [](const symbol_set &vs, const std::set<std::string> &s) {
-                symbol_set tmp;
-                for (const auto &str : s) {
-                    tmp.add(str);
-                }
-                return positions(vs, tmp);
-            };
             if (std::is_same<T, signed char>::value || std::is_same<T, short>::value) {
-                BOOST_CHECK((std::is_same<int, decltype(k2.degree(ss_to_pos(v, std::set<std::string>{}), v))>::value));
+                BOOST_CHECK((std::is_same<int, decltype(k2.degree(symbol_idx_fset{}, symbol_fset{}))>::value));
             } else if (std::is_integral<T>::value) {
-                BOOST_CHECK((std::is_same<T, decltype(k2.degree(ss_to_pos(v, std::set<std::string>{}), v))>::value));
+                BOOST_CHECK((std::is_same<T, decltype(k2.degree(symbol_idx_fset{}, symbol_fset{}))>::value));
             }
-            BOOST_CHECK(k2.degree(ss_to_pos(v, std::set<std::string>{}), v) == T(0));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"a"}), v) == T(2));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"A"}), v) == T(0));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"z"}), v) == T(0));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"z", "A", "a"}), v) == T(2));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"z", "A", "b"}), v) == T(3));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"B", "A", "b"}), v) == T(3));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"a", "b", "z"}), v) == T(3) + T(2));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"a", "b", "A"}), v) == T(3) + T(2));
-            BOOST_CHECK(k2.degree(ss_to_pos(v, {"a", "b", "A", "z"}), v) == T(3) + T(2));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, std::set<std::string>{}), v) == T(0));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"a"}), v) == T(2));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"A"}), v) == T(0));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"z"}), v) == T(0));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"z", "A", "a"}), v) == T(2));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"z", "A", "b"}), v) == T(3));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"B", "A", "b"}), v) == T(3));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"a", "b", "z"}), v) == T(3) + T(2));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"a", "b", "A"}), v) == T(3) + T(2));
-            BOOST_CHECK(k2.ldegree(ss_to_pos(v, {"a", "b", "A", "z"}), v) == T(3) + T(2));
-            v.add(symbol("c"));
-            key_type k3(v);
+            BOOST_CHECK(k2.degree(symbol_idx_fset{}, symbol_fset{"a", "b"}) == T(0));
+            BOOST_CHECK(k2.degree(symbol_idx_fset{0}, symbol_fset{"a", "b"}) == T(2));
+            BOOST_CHECK(k2.degree(symbol_idx_fset{1}, symbol_fset{"a", "b"}) == T(3));
+            BOOST_CHECK(k2.degree(symbol_idx_fset{0, 1}, symbol_fset{"a", "b"}) == T(3) + T(2));
+            BOOST_CHECK(k2.ldegree(symbol_idx_fset{}, symbol_fset{"a", "b"}) == T(0));
+            BOOST_CHECK(k2.ldegree(symbol_idx_fset{0}, symbol_fset{"a", "b"}) == T(2));
+            BOOST_CHECK(k2.ldegree(symbol_idx_fset{1}, symbol_fset{"a", "b"}) == T(3));
+            BOOST_CHECK(k2.ldegree(symbol_idx_fset{0, 1}, symbol_fset{"a", "b"}) == T(3) + T(2));
+            key_type k3(symbol_fset{"a", "b", "c"});
             k3[0] = T(2);
             k3[1] = T(3);
             k3[2] = T(4);
-            BOOST_CHECK(k3.degree(ss_to_pos(v, {"a", "b", "A", "z"}), v) == T(3) + T(2));
-            BOOST_CHECK(k3.degree(ss_to_pos(v, {"a", "c", "A", "z"}), v) == T(4) + T(2));
-            BOOST_CHECK(k3.degree(ss_to_pos(v, {"a", "c", "b", "z"}), v) == T(4) + T(2) + T(3));
-            BOOST_CHECK(k3.degree(ss_to_pos(v, {"a", "c", "b", "A"}), v) == T(4) + T(2) + T(3));
-            BOOST_CHECK(k3.degree(ss_to_pos(v, {"c", "b", "A"}), v) == T(4) + T(3));
-            BOOST_CHECK(k3.degree(ss_to_pos(v, {"A", "B", "C"}), v) == T(0));
-            BOOST_CHECK(k3.degree(ss_to_pos(v, {"x", "y", "z"}), v) == T(0));
-            BOOST_CHECK(k3.degree(ss_to_pos(v, {"x", "y", "z", "A", "B", "C", "a"}), v) == T(2));
-            // Try partials with bogus positions.
-            symbol_set v2({symbol("a"), symbol("b"), symbol("c"), symbol("d")});
-            BOOST_CHECK_THROW(k3.degree(ss_to_pos(v2, {"d"}), v), std::invalid_argument);
-            BOOST_CHECK_THROW(k3.ldegree(ss_to_pos(v2, {"d"}), v), std::invalid_argument);
-            // Wrong symbol set, will not throw because positions are empty.
-            BOOST_CHECK_EQUAL(k3.degree(ss_to_pos(v2, {"e"}), v), 0);
+            BOOST_CHECK(k3.degree(symbol_idx_fset{}, symbol_fset{"a", "b", "c"}) == T(0));
+            BOOST_CHECK(k3.degree(symbol_idx_fset{0}, symbol_fset{"a", "b", "c"}) == T(2));
+            BOOST_CHECK(k3.degree(symbol_idx_fset{1}, symbol_fset{"a", "b", "c"}) == T(3));
+            BOOST_CHECK(k3.degree(symbol_idx_fset{0, 1}, symbol_fset{"a", "b", "c"}) == T(3) + T(2));
+            BOOST_CHECK(k3.degree(symbol_idx_fset{0, 2}, symbol_fset{"a", "b", "c"}) == T(4) + T(2));
+            BOOST_CHECK(k3.degree(symbol_idx_fset{1, 2}, symbol_fset{"a", "b", "c"}) == T(4) + T(3));
+            BOOST_CHECK(k3.degree(symbol_idx_fset{1, 2, 0}, symbol_fset{"a", "b", "c"}) == T(4) + T(3) + T(2));
+            BOOST_CHECK(k3.ldegree(symbol_idx_fset{}, symbol_fset{"a", "b", "c"}) == T(0));
+            BOOST_CHECK(k3.ldegree(symbol_idx_fset{0}, symbol_fset{"a", "b", "c"}) == T(2));
+            BOOST_CHECK(k3.ldegree(symbol_idx_fset{1}, symbol_fset{"a", "b", "c"}) == T(3));
+            BOOST_CHECK(k3.ldegree(symbol_idx_fset{0, 1}, symbol_fset{"a", "b", "c"}) == T(3) + T(2));
+            BOOST_CHECK(k3.ldegree(symbol_idx_fset{0, 2}, symbol_fset{"a", "b", "c"}) == T(4) + T(2));
+            BOOST_CHECK(k3.ldegree(symbol_idx_fset{1, 2}, symbol_fset{"a", "b", "c"}) == T(4) + T(3));
+            BOOST_CHECK(k3.ldegree(symbol_idx_fset{1, 2, 0}, symbol_fset{"a", "b", "c"}) == T(4) + T(3) + T(2));
+            // Error checking.
+            BOOST_CHECK_EXCEPTION(k3.degree(symbol_idx_fset{}, symbol_fset{"a", "b"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(),
+                                                             "invalid symbol set for the computation of the "
+                                                             "partial degree of a monomial: the size of the symbol "
+                                                             "set (2) differs from the size of the monomial (3)");
+                                  });
+            BOOST_CHECK_EXCEPTION(k3.degree(symbol_idx_fset{1, 2, 3}, symbol_fset{"a", "b", "c"}),
+                                  std::invalid_argument, [](const std::invalid_argument &e) {
+                                      return boost::contains(
+                                          e.what(),
+                                          "the largest value in the positions set for the computation of the "
+                                          "partial degree of a monomial is 3, but the monomial has a size of only 3");
+                                  });
+            BOOST_CHECK_EXCEPTION(k3.ldegree(symbol_idx_fset{}, symbol_fset{"a", "b"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(),
+                                                             "invalid symbol set for the computation of the "
+                                                             "partial degree of a monomial: the size of the symbol "
+                                                             "set (2) differs from the size of the monomial (3)");
+                                  });
+            BOOST_CHECK_EXCEPTION(k3.ldegree(symbol_idx_fset{1, 2, 3}, symbol_fset{"a", "b", "c"}),
+                                  std::invalid_argument, [](const std::invalid_argument &e) {
+                                      return boost::contains(
+                                          e.what(),
+                                          "the largest value in the positions set for the computation of the "
+                                          "partial degree of a monomial is 3, but the monomial has a size of only 3");
+                                  });
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_degree_test)
 {
-    boost::mpl::for_each<expo_types>(degree_tester());
+    tuple_for_each(expo_types{}, degree_tester{});
     // Test the overflowing.
     using k_type = monomial<int>;
     k_type m{std::numeric_limits<int>::max(), 1};
-    symbol_set vs{symbol{"x"}, symbol{"y"}};
-    BOOST_CHECK_THROW(m.degree(vs), std::overflow_error);
+    BOOST_CHECK_THROW(m.degree(symbol_fset{"a", "b"}), std::overflow_error);
     m = k_type{std::numeric_limits<int>::min(), -1};
-    BOOST_CHECK_THROW(m.degree(vs), std::overflow_error);
+    BOOST_CHECK_THROW(m.degree(symbol_fset{"a", "b"}), std::overflow_error);
     m = k_type{std::numeric_limits<int>::min(), 1};
-    BOOST_CHECK_EQUAL(m.degree(vs), std::numeric_limits<int>::min() + 1);
+    BOOST_CHECK_EQUAL(m.degree(symbol_fset{"a", "b"}), std::numeric_limits<int>::min() + 1);
     // Also for partial degree.
-    vs = symbol_set{symbol{"x"}, symbol{"y"}, symbol{"z"}};
     m = k_type{std::numeric_limits<int>::max(), 1, 0};
-    BOOST_CHECK_EQUAL(m.degree(symbol_set::positions(vs, symbol_set{symbol{"x"}, symbol{"z"}}), vs),
-                      std::numeric_limits<int>::max());
-    BOOST_CHECK_THROW(m.degree(symbol_set::positions(vs, symbol_set{symbol{"x"}, symbol{"y"}}), vs),
-                      std::overflow_error);
+    BOOST_CHECK_EQUAL(m.degree({0}, symbol_fset{"a", "b", "c"}), std::numeric_limits<int>::max());
+    BOOST_CHECK_THROW(m.degree({0, 1}, symbol_fset{"a", "b", "c"}), std::overflow_error);
     m = k_type{std::numeric_limits<int>::min(), 0, -1};
-    BOOST_CHECK_EQUAL(m.degree(symbol_set::positions(vs, symbol_set{symbol{"x"}, symbol{"y"}}), vs),
-                      std::numeric_limits<int>::min());
-    BOOST_CHECK_THROW(m.degree(symbol_set::positions(vs, symbol_set{symbol{"x"}, symbol{"z"}}), vs),
-                      std::overflow_error);
+    BOOST_CHECK_EQUAL(m.degree({0}, symbol_fset{"a", "b", "c"}), std::numeric_limits<int>::min());
+    BOOST_CHECK_THROW(m.degree({0, 2}, symbol_fset{"a", "b", "c"}), std::overflow_error);
 }
 
 // Mock cf with wrong specialisation of mul3.
@@ -536,21 +504,19 @@ struct multiply_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             {
                 // Integer coefficient.
                 using key_type = monomial<T, U>;
                 using term_type = term<integer, key_type>;
-                symbol_set ed;
-                ed.add("x");
                 term_type t1, t2;
                 t1.m_cf = 2;
                 t1.m_key = key_type{T(2)};
                 t2.m_cf = 3;
                 t2.m_key = key_type{T(3)};
                 std::array<term_type, 1u> res;
-                key_type::multiply(res, t1, t2, ed);
+                key_type::multiply(res, t1, t2, symbol_fset{"x"});
                 BOOST_CHECK_EQUAL(res[0].m_cf, t1.m_cf * t2.m_cf);
                 BOOST_CHECK_EQUAL(res[0].m_key[0], T(5));
             }
@@ -558,16 +524,13 @@ struct multiply_tester {
                 // Try with rational as well, check special handling.
                 using key_type = monomial<T, U>;
                 using term_type = term<rational, key_type>;
-                symbol_set ed;
-                ed.add("x");
-                ed.add("y");
                 term_type t1, t2;
                 t1.m_cf = 2 / 3_q;
                 t1.m_key = key_type{T(2), T(-1)};
                 t2.m_cf = -3;
                 t2.m_key = key_type{T(3), T(7)};
                 std::array<term_type, 1u> res;
-                key_type::multiply(res, t1, t2, ed);
+                key_type::multiply(res, t1, t2, symbol_fset{"x", "y"});
                 BOOST_CHECK_EQUAL(res[0].m_cf, -6);
                 BOOST_CHECK_EQUAL(res[0].m_key[0], T(5));
                 BOOST_CHECK_EQUAL(res[0].m_key[1], T(6));
@@ -575,15 +538,18 @@ struct multiply_tester {
             // Check throwing as well.
             using key_type = monomial<T, U>;
             using term_type = term<rational, key_type>;
-            symbol_set ed;
-            ed.add("x");
             term_type t1, t2;
             t1.m_cf = 2 / 3_q;
             t1.m_key = key_type{T(2), T(-1)};
             t2.m_cf = -3;
             t2.m_key = key_type{T(3), T(7)};
             std::array<term_type, 1u> res;
-            BOOST_CHECK_THROW(key_type::multiply(res, t1, t2, ed), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(key_type::multiply(res, t1, t2, symbol_fset{"x"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "cannot multiply terms with monomial keys: the "
+                                                                       "size of the symbol set (1) differs from the "
+                                                                       "size of the first monomial (2)");
+                                  });
             // Check the type trait.
             BOOST_CHECK((key_is_multipliable<rational, key_type>::value));
             BOOST_CHECK((key_is_multipliable<integer, key_type>::value));
@@ -592,83 +558,17 @@ struct multiply_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_multiply_test)
 {
-    boost::mpl::for_each<expo_types>(multiply_tester());
+    tuple_for_each(expo_types{}, multiply_tester{});
 }
-
-struct monomial_multiply_tester {
-    template <typename T>
-    struct runner {
-        template <typename U>
-        void operator()(const U &)
-        {
-            using key_type = monomial<T, U>;
-            symbol_set ed;
-            key_type k1, k2, res;
-            key_type::multiply(res, k1, k2, ed);
-            BOOST_CHECK(res.size() == 0u);
-            ed.add("x");
-            k1 = key_type{T(2)};
-            k2 = key_type{T(3)};
-            key_type::multiply(res, k1, k2, ed);
-            BOOST_CHECK(res == key_type{T(5)});
-            ed.add("y");
-            BOOST_CHECK_THROW(key_type::multiply(res, k1, k2, ed), std::invalid_argument);
-            BOOST_CHECK(res == key_type{T(5)});
-        }
-    };
-    template <typename T>
-    void operator()(const T &)
-    {
-        boost::mpl::for_each<size_types>(runner<T>());
-    }
-};
-
-BOOST_AUTO_TEST_CASE(monomial_monomial_multiply_test)
-{
-    boost::mpl::for_each<expo_types>(monomial_multiply_tester());
-}
-
-struct monomial_divide_tester {
-    template <typename T>
-    struct runner {
-        template <typename U>
-        void operator()(const U &)
-        {
-            using key_type = monomial<T, U>;
-            symbol_set ed;
-            key_type k1, k2, res;
-            key_type::divide(res, k1, k2, ed);
-            BOOST_CHECK(res.size() == 0u);
-            ed.add("x");
-            k1 = key_type{T(2)};
-            k2 = key_type{T(3)};
-            key_type::divide(res, k1, k2, ed);
-            BOOST_CHECK(res == key_type{T(-1)});
-            ed.add("y");
-            BOOST_CHECK_THROW(key_type::divide(res, k1, k2, ed), std::invalid_argument);
-            BOOST_CHECK(res == key_type{T(-1)});
-        }
-    };
-    template <typename T>
-    void operator()(const T &)
-    {
-        boost::mpl::for_each<size_types>(runner<T>());
-    }
-};
-
-BOOST_AUTO_TEST_CASE(monomial_monomial_divide_test)
-{
-    boost::mpl::for_each<expo_types>(monomial_divide_tester());
-}
-
+#if 0
 struct print_tester {
     template <typename T>
     struct runner {

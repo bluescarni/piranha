@@ -307,7 +307,7 @@ public:
      */
     bool is_unitary(const symbol_fset &args) const
     {
-        const auto sbe = this->get_size_begin_end();
+        const auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument,
                           "invalid sizes in the invocation of is_unitary() for a monomial: the monomial has a size of "
@@ -360,7 +360,7 @@ public:
     template <typename U = T>
     degree_type<U> degree(const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(
                 std::invalid_argument,
@@ -404,7 +404,7 @@ public:
     template <typename U = T>
     degree_type<U> degree(const symbol_idx_fset &p, const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the computation of the partial degree of a "
                                                  "monomial: the size of the symbol set ("
@@ -468,7 +468,7 @@ public:
      */
     std::pair<bool, symbol_idx> is_linear(const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the identification of a linear "
                                                  "monomial: the size of the symbol set ("
@@ -536,7 +536,7 @@ public:
     template <typename U, pow_enabler<U> = 0>
     monomial pow(const U &x, const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the exponentiation of a "
                                                  "monomial: the size of the symbol set ("
@@ -613,7 +613,7 @@ public:
     template <typename U = T, partial_enabler<U> = 0>
     std::pair<T, monomial> partial(const symbol_idx &p, const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument,
                           "invalid symbol set for the computation of the partial derivative of a "
@@ -701,7 +701,7 @@ public:
     template <typename U = T, integrate_enabler<U> = 0>
     std::pair<T, monomial> integrate(const std::string &s, const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the computation of the antiderivative of a "
                                                  "monomial: the size of the symbol set ("
@@ -759,7 +759,7 @@ public:
      */
     void print(std::ostream &os, const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument,
                           "cannot print monomial: the size of the symbol set (" + std::to_string(args.size())
@@ -797,7 +797,7 @@ public:
      */
     void print_tex(std::ostream &os, const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "cannot print monomial in TeX mode: the size of the symbol set ("
                                                      + std::to_string(args.size())
@@ -871,7 +871,7 @@ public:
     template <typename U>
     eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument,
                           "cannot evaluate monomial: the size of the symbol set (" + std::to_string(args.size())
@@ -940,7 +940,7 @@ public:
     template <typename U>
     std::vector<std::pair<subs_type<U>, monomial>> subs(const symbol_idx_fmap<U> &smap, const symbol_fset &args) const
     {
-        auto sbe = this->get_size_begin_end();
+        auto sbe = this->size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument,
                           "cannot perform substitution in a monomial: the size of the symbol set ("
