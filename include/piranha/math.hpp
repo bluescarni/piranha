@@ -1070,13 +1070,11 @@ const bool has_abs<T>::value;
  * The type trait will be \p true if piranha::math::is_zero() can be successfully called on instances of \p T.
  */
 template <typename T>
-class has_is_zero : detail::sfinae_types
+class has_is_zero
 {
-    typedef typename std::decay<T>::type Td;
-    template <typename T1>
-    static auto test(const T1 &t) -> decltype(math::is_zero(t), void(), yes());
-    static no test(...);
-    static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
+    template <typename U>
+    using is_zero_t = decltype(math::is_zero(std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<is_zero_t, T>::value;
 
 public:
     /// Value of the type trait.
@@ -1089,16 +1087,15 @@ const bool has_is_zero<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::negate function.
 /**
- * The type trait will be \p true if piranha::math::negate can be successfully called on instances of \p T
- * stripped of reference qualifiers, \p false otherwise.
+ * The type trait will be \p true if piranha::math::negate can be successfully called on instances of \p T,
+ * \p false otherwise.
  */
 template <typename T>
-class has_negate : detail::sfinae_types
+class has_negate
 {
-    template <typename T1>
-    static auto test(T1 &t) -> decltype(math::negate(t), void(), yes());
-    static no test(...);
-    static const bool implementation_defined = std::is_same<decltype(test(std::declval<T &>())), yes>::value;
+    template <typename U>
+    using negate_t = decltype(math::negate(std::declval<U &>()));
+    static const bool implementation_defined = is_detected<negate_t, T>::value;
 
 public:
     /// Value of the type trait.

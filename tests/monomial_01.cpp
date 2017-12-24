@@ -568,122 +568,135 @@ BOOST_AUTO_TEST_CASE(monomial_multiply_test)
 {
     tuple_for_each(expo_types{}, multiply_tester{});
 }
-#if 0
+
 struct print_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
-            symbol_set vs;
             k_type k1;
             std::ostringstream oss;
-            k1.print(oss, vs);
+            k1.print(oss, symbol_fset{});
             BOOST_CHECK(oss.str().empty());
-            vs.add("x");
-            k_type k2(vs);
-            k2.print(oss, vs);
+            k_type k2(symbol_fset{"x"});
+            k2.print(oss, symbol_fset{"x"});
             BOOST_CHECK(oss.str() == "");
             oss.str("");
             k_type k3({T(-1)});
-            k3.print(oss, vs);
+            k3.print(oss, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(oss.str(), "x**-1");
             k_type k4({T(1)});
             oss.str("");
-            k4.print(oss, vs);
+            k4.print(oss, symbol_fset{"x"});
             BOOST_CHECK(oss.str() == "x");
             k_type k5({T(-1), T(1)});
-            vs.add("y");
             oss.str("");
-            k5.print(oss, vs);
+            k5.print(oss, symbol_fset{"x", "y"});
             BOOST_CHECK(oss.str() == "x**-1*y");
             k_type k6({T(-1), T(-2)});
             oss.str("");
-            k6.print(oss, vs);
+            k6.print(oss, symbol_fset{"x", "y"});
             BOOST_CHECK(oss.str() == "x**-1*y**-2");
             k_type k7;
-            BOOST_CHECK_THROW(k7.print(oss, vs), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(
+                k7.print(oss, symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "cannot print monomial: the size of the symbol set (2) differs "
+                                                     "from the size of the monomial (0)");
+                });
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_print_test)
 {
-    boost::mpl::for_each<expo_types>(print_tester());
+    tuple_for_each(expo_types{}, print_tester{});
 }
 
-struct linear_argument_tester {
+struct is_linear_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
-            symbol_set vs;
-            BOOST_CHECK_THROW(k_type().linear_argument(vs), std::invalid_argument);
-            vs.add("x");
-            BOOST_CHECK_THROW(k_type().linear_argument(vs), std::invalid_argument);
-            k_type k({T(1)});
-            BOOST_CHECK_EQUAL(k.linear_argument(vs), "x");
+            BOOST_CHECK(!k_type{}.is_linear(symbol_fset{}).first);
+            BOOST_CHECK_EXCEPTION(
+                k_type{}.is_linear(symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(), "invalid symbol set for the identification of a linear "
+                                  "monomial: the size of the symbol set (1) differs from the size of the monomial (0)");
+                });
+            k_type k({T(0)});
+            BOOST_CHECK(!k.is_linear(symbol_fset{"x"}).first);
+            k = k_type({T(2)});
+            BOOST_CHECK(!k.is_linear(symbol_fset{"x"}).first);
+            k = k_type({T(1)});
+            BOOST_CHECK(k.is_linear(symbol_fset{"x"}).first);
+            BOOST_CHECK_EQUAL(k.is_linear(symbol_fset{"x"}).second, 0u);
             k = k_type({T(0), T(1)});
-            vs.add("y");
-            BOOST_CHECK_EQUAL(k.linear_argument(vs), "y");
+            BOOST_CHECK(k.is_linear(symbol_fset{"x", "y"}).first);
+            BOOST_CHECK_EQUAL(k.is_linear(symbol_fset{"x", "y"}).second, 1u);
+            k = k_type({T(1), T(0)});
+            BOOST_CHECK(k.is_linear(symbol_fset{"x", "y"}).first);
+            BOOST_CHECK_EQUAL(k.is_linear(symbol_fset{"x", "y"}).second, 0u);
             k = k_type({T(0), T(2)});
-            BOOST_CHECK_THROW(k.linear_argument(vs), std::invalid_argument);
-            k = k_type({T(2), T(0)});
-            BOOST_CHECK_THROW(k.linear_argument(vs), std::invalid_argument);
+            BOOST_CHECK(!k.is_linear(symbol_fset{"x", "y"}).first);
             k = k_type({T(1), T(1)});
-            BOOST_CHECK_THROW(k.linear_argument(vs), std::invalid_argument);
+            BOOST_CHECK(!k.is_linear(symbol_fset{"x", "y"}).first);
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
-BOOST_AUTO_TEST_CASE(monomial_linear_argument_test)
+BOOST_AUTO_TEST_CASE(monomial_is_linear_test)
 {
-    boost::mpl::for_each<expo_types>(linear_argument_tester());
+    tuple_for_each(expo_types{}, is_linear_tester{});
     typedef monomial<rational> k_type;
-    symbol_set vs;
-    vs.add("x");
     k_type k({rational(1, 2)});
-    BOOST_CHECK_THROW(k.linear_argument(vs), std::invalid_argument);
+    BOOST_CHECK(!k.is_linear(symbol_fset{"x"}).first);
     k = k_type({rational(1), rational(0)});
-    vs.add("y");
-    BOOST_CHECK_EQUAL(k.linear_argument(vs), "x");
+    BOOST_CHECK(k.is_linear(symbol_fset{"x", "y"}).first);
+    BOOST_CHECK_EQUAL(k.is_linear(symbol_fset{"x", "y"}).second, 0u);
     k = k_type({rational(2), rational(1)});
-    BOOST_CHECK_THROW(k.linear_argument(vs), std::invalid_argument);
+    BOOST_CHECK(!k.is_linear(symbol_fset{"x", "y"}).first);
 }
 
 struct pow_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
-            symbol_set vs;
             k_type k1;
-            BOOST_CHECK(k1 == k1.pow(42, vs));
-            vs.add("x");
-            BOOST_CHECK_THROW(k1.pow(42, vs), std::invalid_argument);
+            BOOST_CHECK(k1 == k1.pow(42, symbol_fset{}));
+            BOOST_CHECK_EXCEPTION(
+                k1.pow(42, symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(), "invalid symbol set for the exponentiation of a "
+                                  "monomial: the size of the symbol set (1) differs from the size of the monomial (0)");
+                });
             k1 = k_type({T(1), T(2), T(3)});
-            vs.add("y");
-            vs.add("z");
-            BOOST_CHECK(k1.pow(2, vs) == k_type({T(2), T(4), T(6)}));
-            BOOST_CHECK(k1.pow(-2, vs) == k_type({T(-2), T(-4), T(-6)}));
-            BOOST_CHECK(k1.pow(0, vs) == k_type({T(0), T(0), T(0)}));
-            vs.add("a");
-            BOOST_CHECK_THROW(k1.pow(42, vs), std::invalid_argument);
+            BOOST_CHECK(k1.pow(2, symbol_fset{"x", "y", "z"}) == k_type({T(2), T(4), T(6)}));
+            BOOST_CHECK(k1.pow(-2, symbol_fset{"x", "y", "z"}) == k_type({T(-2), T(-4), T(-6)}));
+            BOOST_CHECK(k1.pow(0, symbol_fset{"x", "y", "z"}) == k_type({T(0), T(0), T(0)}));
+            BOOST_CHECK_EXCEPTION(
+                k1.pow(42, symbol_fset{"x", "y", "z", "a"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(), "invalid symbol set for the exponentiation of a "
+                                  "monomial: the size of the symbol set (4) differs from the size of the monomial (3)");
+                });
             T tmp;
             check_overflow(k1, tmp);
         }
@@ -692,26 +705,25 @@ struct pow_tester {
     static void check_overflow(const KType &, const U &)
     {
         KType k2({2});
-        symbol_set vs2;
-        vs2.add("x");
-        BOOST_CHECK_THROW(k2.pow(std::numeric_limits<U>::max(), vs2), std::invalid_argument);
+        BOOST_CHECK_THROW(k2.pow(std::numeric_limits<U>::max(), symbol_fset{"x"}), std::overflow_error);
     }
     template <typename KType, typename U, typename std::enable_if<!std::is_integral<U>::value, int>::type = 0>
     static void check_overflow(const KType &, const U &)
     {
     }
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_pow_test)
 {
-    boost::mpl::for_each<expo_types>(pow_tester());
+    tuple_for_each(expo_types{}, pow_tester{});
 }
 
+// NOTE: this does not have the pre-decrement operator.
 struct fake_int {
     fake_int();
     explicit fake_int(int);
@@ -725,9 +737,6 @@ struct fake_int {
     bool operator<(const fake_int &) const;
     fake_int operator+(const fake_int &) const;
     fake_int &operator+=(const fake_int &);
-    // Disable the subtraction operators.
-    // fake_int operator-(const fake_int &) const;
-    // fake_int &operator-=(const fake_int &);
     friend std::ostream &operator<<(std::ostream &, const fake_int &);
 };
 
@@ -744,8 +753,7 @@ struct fake_int_01 {
     bool operator<(const fake_int_01 &) const;
     fake_int_01 operator+(const fake_int_01 &) const;
     fake_int_01 &operator+=(const fake_int_01 &);
-    fake_int_01 operator-(const fake_int_01 &) const;
-    fake_int_01 &operator-=(const fake_int_01 &);
+    fake_int_01 &operator--();
     friend std::ostream &operator<<(std::ostream &, const fake_int_01 &);
 };
 
@@ -789,66 +797,46 @@ struct partial_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
             BOOST_CHECK(key_is_differentiable<k_type>::value);
-            using positions = symbol_set::positions;
-            auto s_to_pos = [](const symbol_set &v, const symbol &s) {
-                symbol_set tmp{s};
-                return positions(v, tmp);
-            };
-            symbol_set vs;
             k_type k1;
-            vs.add("x");
-            BOOST_CHECK_THROW(k1.partial(s_to_pos(vs, symbol("x")), vs), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(
+                k1.partial(0, symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(), "invalid symbol set for the computation of the partial derivative of a "
+                                  "monomial: the size of the symbol set (1) differs from the size of the monomial (0)");
+                });
             k1 = k_type({T(2)});
-            auto ret = k1.partial(s_to_pos(vs, symbol("x")), vs);
+            auto ret = k1.partial(0, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.first, T(2));
             BOOST_CHECK(ret.second == k_type({T(1)}));
             // Derivative wrt a variable not in the monomial.
-            ret = k1.partial(s_to_pos(vs, symbol("y")), vs);
+            ret = k1.partial(1, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.first, T(0));
-            BOOST_CHECK(ret.second == k_type{vs});
+            BOOST_CHECK(ret.second == k_type{symbol_fset{"x"}});
             // Derivative wrt a variable which has zero exponent.
             k1 = k_type({T(0)});
-            ret = k1.partial(s_to_pos(vs, symbol("x")), vs);
+            ret = k1.partial(0, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.first, T(0));
-            BOOST_CHECK(ret.second == k_type{vs});
-            vs.add("y");
+            BOOST_CHECK(ret.second == k_type{symbol_fset{"x"}});
             k1 = k_type({T(-1), T(0)});
-            ret = k1.partial(s_to_pos(vs, symbol("y")), vs);
+            ret = k1.partial(1, symbol_fset{"x", "y"});
             // y has zero exponent.
             BOOST_CHECK_EQUAL(ret.first, T(0));
-            BOOST_CHECK(ret.second == k_type{vs});
-            ret = k1.partial(s_to_pos(vs, symbol("x")), vs);
+            BOOST_CHECK((ret.second == k_type{symbol_fset{"x", "y"}}));
+            ret = k1.partial(0, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.first, T(-1));
             BOOST_CHECK(ret.second == k_type({T(-2), T(0)}));
-            // Check with bogus positions.
-            symbol_set vs2;
-            vs2.add("x");
-            vs2.add("y");
-            vs2.add("z");
-            // The z variable is in position 2, which is outside the size of the monomial.
-            BOOST_CHECK_THROW(k1.partial(s_to_pos(vs2, symbol("z")), vs), std::invalid_argument);
-            // Derivative wrt multiple variables.
-            BOOST_CHECK_THROW(k1.partial(symbol_set::positions(vs2, symbol_set({symbol("x"), symbol("y")})), vs),
-                              std::invalid_argument);
             // Check the overflow check.
             overflow_check(k1);
         }
         template <typename T2, typename U2, typename std::enable_if<std::is_integral<T2>::value, int>::type = 0>
         static void overflow_check(const monomial<T2, U2> &)
         {
-            using positions = symbol_set::positions;
-            auto s_to_pos = [](const symbol_set &v, const symbol &s) {
-                symbol_set tmp{s};
-                return positions(v, tmp);
-            };
             monomial<T2, U2> k({std::numeric_limits<T2>::min()});
-            symbol_set vs;
-            vs.add("x");
-            BOOST_CHECK_THROW(k.partial(s_to_pos(vs, symbol("x")), vs), std::invalid_argument);
+            BOOST_CHECK_THROW(k.partial(0, symbol_fset{"x"}), std::overflow_error);
         }
         template <typename T2, typename U2, typename std::enable_if<!std::is_integral<T2>::value, int>::type = 0>
         static void overflow_check(const monomial<T2, U2> &)
@@ -856,9 +844,9 @@ struct partial_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
         // fake_int has no subtraction operators.
         BOOST_CHECK((!key_is_differentiable<monomial<fake_int>>::value));
         BOOST_CHECK((key_is_differentiable<monomial<fake_int_01>>::value));
@@ -867,9 +855,9 @@ struct partial_tester {
 
 BOOST_AUTO_TEST_CASE(monomial_partial_test)
 {
-    boost::mpl::for_each<expo_types>(partial_tester());
+    tuple_for_each(expo_types{}, partial_tester{});
 }
-
+#if 0
 struct evaluate_tester {
     template <typename T>
     struct runner {

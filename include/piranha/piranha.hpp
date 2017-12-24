@@ -63,7 +63,6 @@ see https://www.gnu.org/licenses/. */
  * in the from-python converters? -> if we do this last bit, we must make sure that our custom converter does not
  * override any other
  * converter that might be registered in boost python. We need to query the registry and check at runtime.
- * \todo initializer_list ctors: should they be explicit or not?
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting
  * constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must
@@ -219,26 +218,11 @@ see https://www.gnu.org/licenses/. */
  * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that
  * iteratively always increases).
  * Not sure there's a general solution.
- * \todo linear arg combination needs to be made a generic monomial requirement and it needs to throw its own
- * exception type.
- * \todo the subs methods of the keys should probably use the symbol position map and allow for more than 1 sub at a
- * time.
- * \todo we need to decide if we want to keep the postifx notation for things like eval, subs etc. or just support the
- * math:: versions. It probably does
- * not make much sense to go back and remove the methods in the toolboxes, but for documentation purposes and in python
- * particularly we should just
- * support the math:: overloads (with partial() being the lone exception).
  * \todo it seems like, at least in some cases, it is possible to avoid extra template arguments for enabling purposes
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
  * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
  * \todo is_unitary() should be implemented for real and series as well.
- * \todo we are using std::decay all over the place to, essentially, remove cv and ref qualifiers from types. But decay
- * also turns arrays into pointers and functions into pointers. Maybe we should have a remove_cvr type trait that just
- * removes
- * \todo when working on the sparse monomial, remember to check on all those uses of symbol_set::add() to build
- * a symbol set (it will be really slow when dealing with thousands of symbols)
- * cv and refs instead. Not sure if we care about plain arrays and function pointers enough though.
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.
  * \todo in the pyranha doc improvements, we should probably handle better unspecified exceptions and document
