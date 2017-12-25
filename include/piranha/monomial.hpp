@@ -839,9 +839,10 @@ public:
 private:
     // Eval type definition.
     template <typename U>
-    using eval_type = enable_if_t<conjunction<is_multipliable_in_place<pow_t<T, U>>,
-                                              std::is_constructible<pow_t<T, U>, int>, is_returnable<U>>::value,
-                                  pow_t<T, U>>;
+    using eval_type
+        = enable_if_t<conjunction<is_multipliable_in_place<pow_t<U, T>>, std::is_constructible<pow_t<U, T>, int>,
+                                  is_returnable<pow_t<U, T>>>::value,
+                      pow_t<U, T>>;
 
 public:
     /// Evaluation.
