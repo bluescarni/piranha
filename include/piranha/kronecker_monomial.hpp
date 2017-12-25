@@ -1004,15 +1004,22 @@ public:
                                                                             const U &x, const symbol_fset &args) const
     {
         if (unlikely(!n.sgn())) {
-            piranha_throw(
-                std::invalid_argument,
-                "invalid integral power in for ipow_subs() in a Kronecker monomial: the power must be nonzero");
+            piranha_throw(std::invalid_argument,
+                          "invalid integral power for ipow_subs() in a Kronecker monomial: the power must be nonzero");
         }
         std::vector<std::pair<ipow_subs_type<U>, kronecker_monomial>> retval;
         if (p < args.size()) {
             PIRANHA_MAYBE_TLS integer q, r, d;
             auto v = unpack(args);
             d = v[static_cast<decltype(v.size())>(p)];
+            // NOTE: regarding the sign of r: tdiv_qr() sets the sign of r to the sign of q.
+            // The only two cases we are interested in here are where d and n have the same sign
+            // (otherwise q will have negative sign and we never enter the 'if' below). With
+            // d and n positive, everything is straightforward (r's sign will be positive).
+            // If d and n are both negative, r will have negative sign, and it will satisfy:
+            // q*n + r == d (with d < 0 and d < q*n)
+            // This is the result we want: r is the number of steps towards -inf that q*n
+            // must take to reach d.
             tdiv_qr(q, r, d, n);
             if (q.sgn() > 0) {
                 v[static_cast<decltype(v.size())>(p)] = static_cast<T>(r);

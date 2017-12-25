@@ -937,15 +937,14 @@ BOOST_AUTO_TEST_CASE(monomial_evaluate_test)
     BOOST_CHECK((!key_is_evaluable<monomial<rational>, void *>::value));
     BOOST_CHECK((!key_is_evaluable<monomial<rational>, void>::value));
 }
-#if 0
+
 struct subs_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
-            symbol_set vs;
             k_type k1;
             // Test the type trait.
             BOOST_CHECK((key_has_subs<k_type, integer>::value));
@@ -954,35 +953,41 @@ struct subs_tester {
             BOOST_CHECK((key_has_subs<k_type, double>::value));
             BOOST_CHECK((!key_has_subs<k_type, std::string>::value));
             BOOST_CHECK((!key_has_subs<k_type, std::vector<std::string>>::value));
-            auto ret = k1.subs("x", integer(4), vs);
+            BOOST_CHECK((!key_has_subs<k_type, void>::value));
+            auto ret = k1.template subs<integer>({}, symbol_fset{});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, 1);
-            BOOST_CHECK((std::is_same<integer, decltype(ret[0u].first)>::value));
-            BOOST_CHECK(ret[0u].second == k1);
-            vs.add("x");
-            BOOST_CHECK_THROW(k1.subs("x", integer(4), vs), std::invalid_argument);
+            BOOST_CHECK_EQUAL(ret[0].first, 1u);
+            BOOST_CHECK(ret[0].second == k1);
+            BOOST_CHECK((std::is_same<decltype(ret[0].first), decltype(math::pow(integer{}, T{}))>::value));
+            BOOST_CHECK_EXCEPTION(k1.template subs<integer>({}, symbol_fset{"x"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "cannot perform substitution in a monomial: the "
+                                                                       "size of the symbol set (1) differs from the "
+                                                                       "size of the monomial (0)");
+                                  });
+            BOOST_CHECK_EXCEPTION(k1.template subs<integer>({{0, 1_z}}, symbol_fset{}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "invalid argument(s) for substitution in a "
+                                                                       "monomial: the last index of the substitution "
+                                                                       "map (0) must be smaller than the monomial's "
+                                                                       "size (0)");
+                                  });
             k1 = k_type({T(2)});
-            ret = k1.subs("y", integer(4), vs);
+            ret = k1.template subs<integer>({{0, 4_z}}, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, 1);
-            BOOST_CHECK(ret[0u].second == k1);
-            ret = k1.subs("x", integer(4), vs);
-            BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(4), T(2)));
-            BOOST_CHECK(ret[0u].second == k_type({T(0)}));
+            BOOST_CHECK_EQUAL(ret[0].first, 16);
+            BOOST_CHECK(ret[0].second == k_type({T(0)}));
             k1 = k_type({T(2), T(3)});
-            BOOST_CHECK_THROW(k1.subs("x", integer(4), vs), std::invalid_argument);
-            vs.add("y");
-            ret = k1.subs("y", integer(-2), vs);
+            ret = k1.template subs<integer>({{1, -2_z}}, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(-2), T(3)));
+            BOOST_CHECK_EQUAL(ret[0u].first, -8);
             BOOST_CHECK((ret[0u].second == k_type{T(2), T(0)}));
-            auto ret2 = k1.subs("x", real(-2.345), vs);
+            auto ret2 = k1.template subs<real>({{0, real(-2.345)}}, symbol_fset{"x", "y"});
+            BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
             BOOST_CHECK_EQUAL(ret2.size(), 1u);
             BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(2)));
             BOOST_CHECK((ret2[0u].second == k_type{T(0), T(3)}));
-            BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
-            auto ret3 = k1.subs("x", rational(-1, 2), vs);
+            auto ret3 = k1.template subs<rational>({{0, -1_q / 2}}, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret3.size(), 1u);
             BOOST_CHECK_EQUAL(ret3[0u].first, rational(1, 4));
             BOOST_CHECK((ret3[0u].second == k_type{T(0), T(3)}));
@@ -990,147 +995,161 @@ struct subs_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_subs_test)
 {
-    boost::mpl::for_each<expo_types>(subs_tester());
+    tuple_for_each(expo_types{}, subs_tester{});
 }
 
 struct print_tex_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
-            symbol_set vs;
             k_type k1;
             std::ostringstream oss;
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{});
             BOOST_CHECK(oss.str().empty());
             k1 = k_type({T(0)});
-            BOOST_CHECK_THROW(k1.print_tex(oss, vs), std::invalid_argument);
-            vs.add("x");
-            k1.print_tex(oss, vs);
+            BOOST_CHECK_THROW(k1.print_tex(oss, symbol_fset{}), std::invalid_argument);
+            k1.print_tex(oss, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(oss.str(), "");
             k1 = k_type({T(1)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(oss.str(), "{x}");
             oss.str("");
             k1 = k_type({T(-1)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{{x}}");
             oss.str("");
             k1 = k_type({T(2)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(oss.str(), "{x}^{2}");
             oss.str("");
             k1 = k_type({T(-2)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x"});
             BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{{x}^{2}}");
-            vs.add("y");
             oss.str("");
             k1 = k_type({T(-2), T(1)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "\\frac{{y}}{{x}^{2}}");
+            BOOST_CHECK_EXCEPTION(
+                k1.print_tex(oss, symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "cannot print monomial in TeX mode: the size of the symbol set "
+                                                     "(1) differs from the size of the monomial (2)");
+                });
             oss.str("");
             k1 = k_type({T(-2), T(3)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "\\frac{{y}^{3}}{{x}^{2}}");
             oss.str("");
             k1 = k_type({T(-2), T(-3)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{{x}^{2}{y}^{3}}");
             oss.str("");
             k1 = k_type({T(2), T(3)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "{x}^{2}{y}^{3}");
             oss.str("");
             k1 = k_type({T(1), T(3)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "{x}{y}^{3}");
             oss.str("");
             k1 = k_type({T(0), T(3)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "{y}^{3}");
             oss.str("");
             k1 = k_type({T(0), T(0)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "");
             oss.str("");
             k1 = k_type({T(0), T(1)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "{y}");
             oss.str("");
             k1 = k_type({T(0), T(-1)});
-            k1.print_tex(oss, vs);
+            k1.print_tex(oss, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{{y}}");
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_print_tex_test)
 {
-    boost::mpl::for_each<expo_types>(print_tex_tester());
+    tuple_for_each(expo_types{}, print_tex_tester{});
 }
 
 struct integrate_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
             BOOST_CHECK(key_is_integrable<k_type>::value);
-            symbol_set vs;
             k_type k1;
-            auto ret = k1.integrate(symbol("a"), vs);
+            auto ret = k1.integrate("a", symbol_fset{});
             BOOST_CHECK_EQUAL(ret.first, T(1));
             BOOST_CHECK(ret.second == k_type({T(1)}));
-            vs.add("b");
-            BOOST_CHECK_THROW(k1.integrate(symbol("b"), vs), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(
+                k1.integrate("b", symbol_fset{"b"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(), "invalid symbol set for the computation of the antiderivative of a "
+                                  "monomial: the size of the symbol set (1) differs from the size of the monomial (0)");
+                });
             k1 = k_type{T(1)};
-            ret = k1.integrate(symbol("b"), vs);
+            ret = k1.integrate("b", symbol_fset{"b"});
             BOOST_CHECK_EQUAL(ret.first, T(2));
             BOOST_CHECK(ret.second == k_type({T(2)}));
             k1 = k_type{T(2)};
-            ret = k1.integrate(symbol("c"), vs);
+            ret = k1.integrate("c", symbol_fset{"b"});
             BOOST_CHECK_EQUAL(ret.first, T(1));
             BOOST_CHECK(ret.second == k_type({T(2), T(1)}));
-            ret = k1.integrate(symbol("a"), vs);
+            ret = k1.integrate("a", symbol_fset{"b"});
             BOOST_CHECK_EQUAL(ret.first, T(1));
             BOOST_CHECK(ret.second == k_type({T(1), T(2)}));
             k1 = k_type{T(2), T(3)};
-            vs.add("d");
-            ret = k1.integrate(symbol("a"), vs);
+            ret = k1.integrate("a", symbol_fset{"b", "d"});
             BOOST_CHECK_EQUAL(ret.first, T(1));
             BOOST_CHECK(ret.second == k_type({T(1), T(2), T(3)}));
-            ret = k1.integrate(symbol("b"), vs);
+            ret = k1.integrate("b", symbol_fset{"b", "d"});
             BOOST_CHECK_EQUAL(ret.first, T(3));
             BOOST_CHECK(ret.second == k_type({T(3), T(3)}));
-            ret = k1.integrate(symbol("c"), vs);
+            ret = k1.integrate("c", symbol_fset{"b", "d"});
             BOOST_CHECK_EQUAL(ret.first, T(1));
             BOOST_CHECK(ret.second == k_type({T(2), T(1), T(3)}));
-            ret = k1.integrate(symbol("d"), vs);
+            ret = k1.integrate("d", symbol_fset{"b", "d"});
             BOOST_CHECK_EQUAL(ret.first, T(4));
             BOOST_CHECK(ret.second == k_type({T(2), T(4)}));
-            ret = k1.integrate(symbol("e"), vs);
+            ret = k1.integrate("e", symbol_fset{"b", "d"});
             BOOST_CHECK_EQUAL(ret.first, T(1));
             BOOST_CHECK(ret.second == k_type({T(2), T(3), T(1)}));
             k1 = k_type{T(-1), T(3)};
-            BOOST_CHECK_THROW(k1.integrate(symbol("b"), vs), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(
+                k1.integrate("b", symbol_fset{"b", "d"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(),
+                                           "unable to perform monomial integration: a negative "
+                                           "unitary exponent was encountered in correspondence of the variable 'b'");
+                });
             k1 = k_type{T(2), T(-1)};
-            BOOST_CHECK_THROW(k1.integrate(symbol("d"), vs), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(
+                k1.integrate("d", symbol_fset{"b", "d"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(),
+                                           "unable to perform monomial integration: a negative "
+                                           "unitary exponent was encountered in correspondence of the variable 'd'");
+                });
             // Overflow check.
             overflow_check(k1);
         }
@@ -1140,36 +1159,33 @@ struct integrate_tester {
     {
         using k_type = U;
         using T = typename k_type::value_type;
-        symbol_set vs;
-        vs.add("a");
-        vs.add("b");
         k_type k1{T(1), std::numeric_limits<T>::max()};
-        auto ret = k1.integrate(symbol("a"), vs);
+        auto ret = k1.integrate("a", symbol_fset{"a", "b"});
         BOOST_CHECK_EQUAL(ret.first, T(2));
         BOOST_CHECK((ret.second == k_type{T(2), std::numeric_limits<T>::max()}));
-        BOOST_CHECK_THROW(k1.integrate(symbol("b"), vs), std::invalid_argument);
+        BOOST_CHECK_THROW(k1.integrate("b", symbol_fset{"a", "b"}), std::overflow_error);
     }
     template <typename U, typename std::enable_if<!std::is_integral<typename U::value_type>::value, int>::type = 0>
     static void overflow_check(const U &)
     {
     }
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_integrate_test)
 {
-    boost::mpl::for_each<expo_types>(integrate_tester());
+    tuple_for_each(expo_types{}, integrate_tester{});
 }
 
 struct ipow_subs_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
             // Test the type trait.
@@ -1178,77 +1194,90 @@ struct ipow_subs_tester {
             BOOST_CHECK((key_has_ipow_subs<k_type, real>::value));
             BOOST_CHECK((key_has_ipow_subs<k_type, rational>::value));
             BOOST_CHECK((!key_has_ipow_subs<k_type, std::string>::value));
-            symbol_set vs;
+            BOOST_CHECK((!key_has_ipow_subs<k_type, void>::value));
             k_type k1;
-            auto ret = k1.ipow_subs("x", integer(45), integer(4), vs);
+            auto ret = k1.ipow_subs(0, 45_z, 4_z, symbol_fset{});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, 1);
             BOOST_CHECK((std::is_same<integer, decltype(ret[0u].first)>::value));
             BOOST_CHECK(ret[0u].second == k1);
-            vs.add("x");
-            BOOST_CHECK_THROW(k1.ipow_subs("x", integer(35), integer(4), vs), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(k1.ipow_subs(0, 35_z, 4_z, symbol_fset{"x"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "cannot perform integral power substitution in "
+                                                                       "a monomial: the size of the symbol set (1) "
+                                                                       "differs from the size of the monomial (0)");
+                                  });
             k1 = k_type({T(2)});
-            ret = k1.ipow_subs("y", integer(2), integer(4), vs);
+            ret = k1.ipow_subs(1u, integer(2), integer(4), symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, 1);
             BOOST_CHECK(ret[0u].second == k1);
-            ret = k1.ipow_subs("x", integer(1), integer(4), vs);
+            ret = k1.ipow_subs(0, integer(1), integer(4), symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(4), T(2)));
             BOOST_CHECK(ret[0u].second == k_type({T(0)}));
-            ret = k1.ipow_subs("x", integer(2), integer(4), vs);
+            ret = k1.ipow_subs(0, integer(2), integer(4), symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(4), T(1)));
             BOOST_CHECK(ret[0u].second == k_type({T(0)}));
-            ret = k1.ipow_subs("x", integer(-1), integer(4), vs);
+            ret = k1.ipow_subs(0, integer(-1), integer(4), symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, 1);
             BOOST_CHECK(ret[0u].second == k_type({T(2)}));
-            ret = k1.ipow_subs("x", integer(4), integer(4), vs);
+            ret = k1.ipow_subs(0, integer(4), integer(4), symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, 1);
             BOOST_CHECK(ret[0u].second == k_type({T(2)}));
             k1 = k_type({T(7), T(2)});
-            BOOST_CHECK_THROW(k1.ipow_subs("x", integer(4), integer(4), vs), std::invalid_argument);
-            vs.add("y");
-            ret = k1.ipow_subs("x", integer(3), integer(2), vs);
+            BOOST_CHECK_EXCEPTION(k1.ipow_subs(0, integer(4), integer(4), symbol_fset{"x"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "cannot perform integral power substitution in "
+                                                                       "a monomial: the size of the symbol set (1) "
+                                                                       "differs from the size of the monomial (2)");
+                                  });
+            ret = k1.ipow_subs(0, integer(3), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
             BOOST_CHECK((ret[0u].second == k_type{T(1), T(2)}));
-            ret = k1.ipow_subs("x", integer(4), integer(2), vs);
+            ret = k1.ipow_subs(0, integer(4), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(1)));
             BOOST_CHECK((ret[0u].second == k_type{T(3), T(2)}));
-            ret = k1.ipow_subs("x", integer(-4), integer(2), vs);
+            ret = k1.ipow_subs(0, integer(-4), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, 1);
             BOOST_CHECK((ret[0u].second == k_type{T(7), T(2)}));
             k1 = k_type({T(-7), T(2)});
-            ret = k1.ipow_subs("x", integer(4), integer(2), vs);
+            ret = k1.ipow_subs(0, integer(4), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, 1);
             BOOST_CHECK((ret[0u].second == k_type{T(-7), T(2)}));
-            ret = k1.ipow_subs("x", integer(-4), integer(2), vs);
+            ret = k1.ipow_subs(0, integer(-4), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(1)));
             BOOST_CHECK((ret[0u].second == k_type{T(-3), T(2)}));
-            ret = k1.ipow_subs("x", integer(-3), integer(2), vs);
+            ret = k1.ipow_subs(0, integer(-3), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
             BOOST_CHECK((ret[0u].second == k_type{T(-1), T(2)}));
             k1 = k_type({T(2), T(-7)});
-            ret = k1.ipow_subs("y", integer(-3), integer(2), vs);
+            ret = k1.ipow_subs(1, integer(-3), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
             BOOST_CHECK((ret[0u].second == k_type{T(2), T(-1)}));
-            BOOST_CHECK_THROW(k1.ipow_subs("y", integer(0), integer(2), vs), zero_division_error);
+            BOOST_CHECK_EXCEPTION(
+                k1.ipow_subs(1, integer(0), integer(2), symbol_fset{"x", "y"}), std::invalid_argument,
+                [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(), "invalid integral power for ipow_subs() in a monomial: the power must be nonzero");
+                });
             k1 = k_type({T(-7), T(2)});
-            auto ret2 = k1.ipow_subs("x", integer(-4), real(-2.345), vs);
+            auto ret2 = k1.ipow_subs(0, integer(-4), real(-2.345), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret2.size(), 1u);
             BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(1)));
             BOOST_CHECK((ret2[0u].second == k_type{T(-3), T(2)}));
             BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
-            auto ret3 = k1.ipow_subs("x", integer(-3), rational(-1, 2), vs);
+            auto ret3 = k1.ipow_subs(0, integer(-3), rational(-1, 2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret3.size(), 1u);
             BOOST_CHECK_EQUAL(ret3[0u].first, math::pow(rational(-1, 2), T(2)));
             BOOST_CHECK((ret3[0u].second == k_type{T(-1), T(2)}));
@@ -1256,22 +1285,22 @@ struct ipow_subs_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_ipow_subs_test)
 {
-    boost::mpl::for_each<expo_types>(ipow_subs_tester());
+    tuple_for_each(expo_types{}, ipow_subs_tester{});
 }
 
 struct tt_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef monomial<T, U> k_type;
             BOOST_CHECK((!key_has_t_subs<k_type, int, int>::value));
@@ -1289,15 +1318,15 @@ struct tt_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(expo_types{}, ipow_subs_tester{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(monomial_type_traits_test)
 {
-    boost::mpl::for_each<expo_types>(tt_tester());
+    tuple_for_each(expo_types{}, tt_tester{});
 }
 
 BOOST_AUTO_TEST_CASE(monomial_kic_test)
@@ -1333,4 +1362,3 @@ BOOST_AUTO_TEST_CASE(monomial_comparison_test)
     BOOST_CHECK_THROW((void)(k_type_00{} < k_type_00{1}), std::invalid_argument);
     BOOST_CHECK_THROW((void)(k_type_00{1} < k_type_00{}), std::invalid_argument);
 }
-#endif

@@ -1080,7 +1080,7 @@ struct ipow_subs_tester {
         BOOST_CHECK(ret[0u].second == k1);
         BOOST_CHECK_EXCEPTION(k1.ipow_subs(0, integer(0), integer(4), symbol_fset{}), std::invalid_argument,
                               [](const std::invalid_argument &e) {
-                                  return boost::contains(e.what(), "invalid integral power in for ipow_subs() in a "
+                                  return boost::contains(e.what(), "invalid integral power for ipow_subs() in a "
                                                                    "Kronecker monomial: the power must be nonzero");
                               });
         k1 = k_type({T(2)});
