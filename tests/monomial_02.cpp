@@ -50,8 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/mp_integer.hpp>
 #include <piranha/mp_rational.hpp>
 #include <piranha/s11n.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -108,7 +107,7 @@ struct negate_impl<fake_int_01> {
 }
 
 template <typename OArchive, typename IArchive, typename Monomial>
-static inline Monomial boost_round_trip_monomial(const Monomial &m, const symbol_set &s)
+static inline Monomial boost_round_trip_monomial(const Monomial &m, const symbol_fset &s)
 {
     using w_type = boost_s11n_key_wrapper<Monomial>;
     std::stringstream ss;
@@ -156,7 +155,7 @@ struct boost_s11n_tester {
             BOOST_CHECK((!has_boost_save<int, w_type>::value));
             BOOST_CHECK((!has_boost_load<int, w_type>::value));
             // Check exceptions.
-            symbol_set s{symbol{"a"}};
+            symbol_fset s{"a"};
             monomial_type m;
             std::stringstream ss;
             {
@@ -178,7 +177,7 @@ struct boost_s11n_tester {
             }
             {
                 boost::archive::text_iarchive ia(ss);
-                symbol_set s2;
+                symbol_fset s2;
                 w_type w{m, s2};
                 BOOST_CHECK_EXCEPTION(boost_load(ia, w), std::invalid_argument, [](const std::invalid_argument &iae) {
                     return boost::contains(
@@ -190,18 +189,18 @@ struct boost_s11n_tester {
             // A few simple tests.
             m = monomial_type{};
             auto n = boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
-                m, symbol_set{});
+                m, symbol_fset{});
             BOOST_CHECK(n == m);
             n = boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(m,
-                                                                                                        symbol_set{});
+                                                                                                        symbol_fset{});
             BOOST_CHECK(n == m);
             std::vector<T> vexpo = {T(1), T(2), T(3)};
             m = monomial_type(vexpo.begin(), vexpo.end());
             n = boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
-                m, symbol_set{symbol{"a"}, symbol{"b"}, symbol{"c"}});
+                m, symbol_fset{"a", "b", "c"});
             BOOST_CHECK(n == m);
             n = boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(
-                m, symbol_set{symbol{"a"}, symbol{"b"}, symbol{"c"}});
+                m, symbol_fset{"a", "b", "c"});
             BOOST_CHECK(n == m);
             // Random testing.
             random_test<U>();
@@ -221,13 +220,14 @@ struct boost_s11n_tester {
                     tmp.emplace_back(edist(rng));
                 }
                 monomial_type m(tmp.begin(), tmp.end());
-                symbol_set ss(vs.begin(), vs.begin() + size);
+                symbol_fset ss(vs.begin(), vs.begin() + size);
+                BOOST_CHECK((
+                    m
+                    == boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(m, ss)));
                 BOOST_CHECK(
-                    (m == boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(m,
-                                                                                                                  ss)));
-                BOOST_CHECK(
-                    (m == boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
-                              m, ss)));
+                    (m
+                     == boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
+                            m, ss)));
             }
         }
         template <typename U, typename V = T, typename std::enable_if<std::is_same<V, rational>::value, int>::type = 0>
@@ -249,13 +249,14 @@ struct boost_s11n_tester {
                     tmp.emplace_back(num, den);
                 }
                 monomial_type m(tmp.begin(), tmp.end());
-                symbol_set ss(vs.begin(), vs.begin() + size);
+                symbol_fset ss(vs.begin(), vs.begin() + size);
+                BOOST_CHECK((
+                    m
+                    == boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(m, ss)));
                 BOOST_CHECK(
-                    (m == boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(m,
-                                                                                                                  ss)));
-                BOOST_CHECK(
-                    (m == boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
-                              m, ss)));
+                    (m
+                     == boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
+                            m, ss)));
             }
         }
         template <typename U, typename V = T, typename std::enable_if<std::is_integral<V>::value, int>::type = 0>
@@ -273,13 +274,14 @@ struct boost_s11n_tester {
                     tmp.push_back(edist(rng));
                 }
                 monomial_type m(tmp.begin(), tmp.end());
-                symbol_set ss(vs.begin(), vs.begin() + size);
+                symbol_fset ss(vs.begin(), vs.begin() + size);
+                BOOST_CHECK((
+                    m
+                    == boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(m, ss)));
                 BOOST_CHECK(
-                    (m == boost_round_trip_monomial<boost::archive::text_oarchive, boost::archive::text_iarchive>(m,
-                                                                                                                  ss)));
-                BOOST_CHECK(
-                    (m == boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
-                              m, ss)));
+                    (m
+                     == boost_round_trip_monomial<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
+                            m, ss)));
             }
         }
     };
@@ -308,14 +310,14 @@ BOOST_AUTO_TEST_CASE(monomial_boost_s11n_test)
 #include <iterator>
 #include <thread>
 
-using msgpack::sbuffer;
 using msgpack::packer;
+using msgpack::sbuffer;
 
 template <typename T>
 using sw = msgpack_stream_wrapper<T>;
 
 template <typename Monomial>
-static inline Monomial msgpack_round_trip_monomial(const Monomial &m, const symbol_set &s, msgpack_format f)
+static inline Monomial msgpack_round_trip_monomial(const Monomial &m, const symbol_fset &s, msgpack_format f)
 {
     sbuffer sbuf;
     packer<sbuffer> p(sbuf);
@@ -327,7 +329,7 @@ static inline Monomial msgpack_round_trip_monomial(const Monomial &m, const symb
 }
 
 template <typename Monomial>
-static inline Monomial msgpack_round_trip_monomial_ss(const Monomial &m, const symbol_set &s, msgpack_format f)
+static inline Monomial msgpack_round_trip_monomial_ss(const Monomial &m, const symbol_fset &s, msgpack_format f)
 {
     sw<std::stringstream> ss;
     packer<sw<std::stringstream>> p(ss);
@@ -365,17 +367,17 @@ struct msgpack_tester {
             BOOST_CHECK((!key_has_msgpack_convert<const monomial_type>::value));
             // Some simple checks.
             for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
-                BOOST_CHECK((msgpack_round_trip_monomial(monomial_type{}, symbol_set{}, f) == monomial_type{}));
-                BOOST_CHECK((msgpack_round_trip_monomial_ss(monomial_type{}, symbol_set{}, f) == monomial_type{}));
+                BOOST_CHECK((msgpack_round_trip_monomial(monomial_type{}, symbol_fset{}, f) == monomial_type{}));
+                BOOST_CHECK((msgpack_round_trip_monomial_ss(monomial_type{}, symbol_fset{}, f) == monomial_type{}));
                 monomial_type m{T(1), T(2)};
-                symbol_set s{symbol{"a"}, symbol{"b"}};
+                symbol_fset s{"a", "b"};
                 BOOST_CHECK((msgpack_round_trip_monomial(m, s, f) == m));
                 BOOST_CHECK((msgpack_round_trip_monomial_ss(m, s, f) == m));
                 // Test exceptions.
                 sbuffer sbuf;
                 packer<sbuffer> p(sbuf);
                 BOOST_CHECK_EXCEPTION(
-                    m.msgpack_pack(p, f, symbol_set{}), std::invalid_argument, [](const std::invalid_argument &ia) {
+                    m.msgpack_pack(p, f, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &ia) {
                         return boost::contains(
                             ia.what(),
                             "incompatible symbol set in monomial serialization: the reference "
@@ -384,7 +386,7 @@ struct msgpack_tester {
                 m.msgpack_pack(p, f, s);
                 auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
                 BOOST_CHECK_EXCEPTION(
-                    m.msgpack_convert(oh.get(), f, symbol_set{}), std::invalid_argument,
+                    m.msgpack_convert(oh.get(), f, symbol_fset{}), std::invalid_argument,
                     [](const std::invalid_argument &ia) {
                         return boost::contains(
                             ia.what(),
@@ -414,7 +416,7 @@ struct msgpack_tester {
                             tmp.emplace_back(edist(eng));
                         }
                         monomial_type m(tmp.begin(), tmp.end());
-                        symbol_set ss(vs.begin(), vs.begin() + size);
+                        symbol_fset ss(vs.begin(), vs.begin() + size);
                         if (m != msgpack_round_trip_monomial(m, ss, f)) {
                             flag.store(false);
                         }
@@ -457,7 +459,7 @@ struct msgpack_tester {
                             tmp.emplace_back(num, den);
                         }
                         monomial_type m(tmp.begin(), tmp.end());
-                        symbol_set ss(vs.begin(), vs.begin() + size);
+                        symbol_fset ss(vs.begin(), vs.begin() + size);
                         if (m != msgpack_round_trip_monomial(m, ss, f)) {
                             flag.store(false);
                         }
@@ -496,7 +498,7 @@ struct msgpack_tester {
                             tmp.push_back(edist(eng));
                         }
                         monomial_type m(tmp.begin(), tmp.end());
-                        symbol_set ss(vs.begin(), vs.begin() + size);
+                        symbol_fset ss(vs.begin(), vs.begin() + size);
                         if (m != msgpack_round_trip_monomial(m, ss, f)) {
                             flag.store(false);
                         }
