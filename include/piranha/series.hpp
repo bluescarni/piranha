@@ -576,11 +576,11 @@ class series_operators
             const auto merge = merge_symbol_fsets(retval.m_symbol_set, y.m_symbol_set);
             if (std::get<0>(merge) != retval.m_symbol_set) {
                 // This is a move assignment, always possible.
-                retval = retval.merge_arguments(std::get<1>(merge));
+                retval = retval.merge_arguments(std::get<0>(merge), std::get<1>(merge));
             }
             // Fix the args of the second series.
             if (std::get<0>(merge) != y.m_symbol_set) {
-                retval.template merge_terms<Sign>(y.merge_arguments(std::get<2>(merge)));
+                retval.template merge_terms<Sign>(y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
             } else {
                 retval.template merge_terms<Sign>(std::forward<U>(y));
             }
@@ -755,15 +755,15 @@ class series_operators
                        need_copy_y = (std::get<0>(merge) != y.m_symbol_set);
             piranha_assert(need_copy_x || need_copy_y);
             if (need_copy_x) {
-                ret_type x_copy(x.merge_arguments(std::get<1>(merge)));
+                ret_type x_copy(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)));
                 if (need_copy_y) {
-                    ret_type y_copy(y.merge_arguments(std::get<2>(merge)));
+                    ret_type y_copy(y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
                     return binary_mul_impl(std::move(x_copy), std::move(y_copy));
                 }
                 return binary_mul_impl(std::move(x_copy), std::forward<U>(y));
             } else {
                 piranha_assert(need_copy_y);
-                ret_type y_copy(y.merge_arguments(std::get<2>(merge)));
+                ret_type y_copy(y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
                 return binary_mul_impl(std::forward<T>(x), std::move(y_copy));
             }
         }
@@ -1009,11 +1009,12 @@ class series_operators
                 case 0:
                     return equality_impl(x, y);
                 case 1:
-                    return equality_impl(x.merge_arguments(std::get<1>(merge)), y);
+                    return equality_impl(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)), y);
                 case 2:
-                    return equality_impl(x, y.merge_arguments(std::get<2>(merge)));
+                    return equality_impl(x, y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
                 case 3:
-                    return equality_impl(x.merge_arguments(std::get<1>(merge)), y.merge_arguments(std::get<2>(merge)));
+                    return equality_impl(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
+                                         y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
             }
             piranha_assert(false);
         }
@@ -1296,7 +1297,7 @@ class series : detail::series_tag, series_operators
 {
 public:
     /// Alias for term type.
-    typedef term<Cf, Key> term_type;
+    using term_type = term<Cf, Key>;
 
 private:
     // Make friend with all series.
@@ -1666,20 +1667,51 @@ private:
         os << str;
         return os;
     }
-    // Merge arguments using new_ss as new symbol set.
-    Derived merge_arguments(const symbol_fset &new_ss) const
+    // Merge arguments using a map m computed by merge_symbol_fsets(). new_s is the new
+    // merged symbol set.
+    Derived merge_arguments(const symbol_fset &new_s, const symbol_idx_fmap<symbol_fset> &m) const
     {
-        piranha_assert(new_ss.size() > m_symbol_set.size());
-        piranha_assert(std::includes(new_ss.begin(), new_ss.end(), m_symbol_set.begin(), m_symbol_set.end()));
-        using cf_type = typename term_type::cf_type;
-        using key_type = typename term_type::key_type;
+        // We should never invoke this with an empty insertion map.
+        piranha_assert(m.size());
+        // The last index of the insertion map must be at most the size
+        // of the current symbol set (which means that symbols need to be
+        // appended).
+        piranha_assert(m.rbegin()->first <= m_symbol_set.size());
+#if !defined(NDEBUG)
+        // In debug mode, verify that the concatenation of the values
+        // in m forms a strictly monotonic sequence.
+        auto verify_ins_map = [&m]() -> bool {
+            std::vector<std::string> v_str;
+            for (const auto &p : m) {
+                v_str.insert(v_str.end(), p.second.begin(), p.second.end());
+            }
+            return std::is_sorted(v_str.begin(), v_str.end())
+                   && std::adjacent_find(v_str.begin(), v_str.end()) == v_str.end();
+        };
+        // Verify also that new_s contains all the symbols in m.
+        auto verify_ss = [&m, &new_s] -> bool {
+            for (const auto &p : m) {
+                for (const auto &s : p.second) {
+                    if (new_s.find(s) == new_s.end()) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        };
+#endif
+        piranha_assert(verify_ins_map());
+        piranha_assert(verify_ss());
+        // Create the output.
         Derived retval;
-        retval.m_symbol_set = new_ss;
+        // Assign the new symbol set.
+        retval.m_symbol_set = new_s;
+        // Prepare a number of buckets equal to the current one.
+        retval.m_container.rehash(this->m_container.bucket_count());
+        // Do the symbol merge.
         const auto it_f = m_container.end();
         for (auto it = m_container.begin(); it != it_f; ++it) {
-            cf_type new_cf(it->m_cf);
-            key_type new_key(it->m_key.merge_args(m_symbol_set, new_ss));
-            retval.insert(term_type(std::move(new_cf), std::move(new_key)));
+            retval.insert(term_type{it->m_cf, it->m_key.merge_symbols(m, this->m_symbol_set)});
         }
         return retval;
     }
@@ -1719,9 +1751,7 @@ private:
     // http://thbecker.net/articles/auto_and_decltype/section_06.html
     template <typename Key2>
     using key_diff_type
-        = decltype(std::declval<const Key2 &>()
-                       .partial(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>())
-                       .first);
+        = decltype(std::declval<const Key2 &>().partial(symbol_idx{}, std::declval<const symbol_fset &>()).first);
     // Shortcuts to get cf/key from series.
     template <typename Series>
     using cf_t = typename Series::term_type::cf_type;
@@ -1778,41 +1808,37 @@ private:
         // This is the faster algorithm.
         Derived retval;
         retval.m_symbol_set = this->m_symbol_set;
+        // Prepare a number of buckets equal to the current one.
+        retval.m_container.rehash(this->m_container.bucket_count());
+        const auto pos = index_of(retval.symbol_set, name);
         const auto it_f = this->m_container.end();
-        const symbol_set::positions p(retval.m_symbol_set, symbol_set{symbol(name)});
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            // NOTE: here t0 cannot be incompatible as it->m_key is coming from a series
-            // with the same symbol set. Worst that can happen is something going awry
-            // in the derivative of the coefficient. If the derivative becomes zero,
-            // the insertion routine will not insert anything.
-            typename Derived::term_type t0(math::partial(it->m_cf, name), it->m_key);
-            retval.insert(std::move(t0));
-            // Here we are assuming that the partial of the key returns always a compatible key,
-            // otherwise an error will be raised.
-            auto p_key = it->m_key.partial(p, retval.m_symbol_set);
-            typename Derived::term_type t1(it->m_cf * p_key.first, p_key.second);
-            retval.insert(std::move(t1));
+            // NOTE: here the term being inserted cannot be incompatible as it->m_key is coming from
+            // a series with the same symbol set. The worst that can happen is something going awry in the derivative of
+            // the coefficient. If the derivative becomes zero, the insertion routine will not insert anything.
+            retval.insert(term_type{math::partial(it->m_cf, name), it->m_key});
+            // NOTE: if the partial of the key returns an incompatible key, an error will be raised.
+            auto p_key = it->m_key.partial(pos, retval.m_symbol_set);
+            retval.insert(term_type{it->m_cf * p_key.first, std::move(p_key.second)});
         }
         return retval;
     }
     template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 1, int>::type = 0>
     partial_type<Series> partial_impl(const std::string &name) const
     {
-        using term_type = typename Derived::term_type;
-        using cf_type = typename term_type::cf_type;
-        const auto it_f = this->m_container.end();
-        const symbol_set::positions p(this->m_symbol_set, symbol_set{symbol(name)});
+        const auto pos = index_of(this->symbol_set, name);
         partial_type<Series> retval(0);
+        const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // Construct the two pieces of the derivative relating to the key
             // in the original term.
             Derived tmp0;
             tmp0.m_symbol_set = this->m_symbol_set;
-            tmp0.insert(term_type(cf_type(1), it->m_key));
-            auto p_key = it->m_key.partial(p, this->m_symbol_set);
+            tmp0.insert(term_type{1, it->m_key});
+            auto p_key = it->m_key.partial(pos, this->m_symbol_set);
             Derived tmp1;
             tmp1.m_symbol_set = this->m_symbol_set;
-            tmp1.insert(term_type(cf_type(1), p_key.second));
+            tmp1.insert(term_type{1, std::move(p_key.second)});
             // Assemble everything into the return value.
             retval += math::partial(it->m_cf, name) * tmp0 + it->m_cf * p_key.first * tmp1;
         }
@@ -1845,7 +1871,7 @@ private:
         // Serialize the symbol set.
         boost_save(ar, get_symbol_set().size());
         for (const auto &sym : get_symbol_set()) {
-            boost_save(ar, sym.get_name());
+            boost_save(ar, sym);
         }
         // Serialize the series.
         boost_save(ar, size());
@@ -1866,7 +1892,8 @@ private:
         ss_size_t ss_size;
         boost_load(ar, ss_size);
         // NOTE: not sure if it's worth it to make this thread_local, as when resizing up new memory
-        // allocs for each string are necessary anyway.
+        // allocs for each string are necessary anyway. Still, with the small string optimisation
+        // it may be worth it.
         std::vector<std::string> vs;
         vs.resize(safe_cast<std::vector<std::string>::size_type>(ss_size));
         // Load the symbol names in a vector of strings.
@@ -1874,7 +1901,7 @@ private:
             boost_load(ar, str);
         }
         // Construct the symbol set and set it to the series.
-        symbol_set ss(vs.begin(), vs.end());
+        symbol_fset ss(vs.begin(), vs.end());
         set_symbol_set(ss);
         // Now recover the series.
         // Size first.
@@ -2025,8 +2052,8 @@ public:
      * @param x object to construct from.
      *
      * @throws unspecified any exception thrown by:
-     * - the copy assignment operator of piranha::symbol_set,
-     * - the construction of a coefficient from \p x or of a key from piranha::symbol_set,
+     * - the copy assignment operator of piranha::symbol_fset,
+     * - the construction of a coefficient from \p x or of a key from piranha::symbol_fset,
      * - the construction of a term from a coefficient-key pair,
      * - insert().
      */
@@ -2322,16 +2349,16 @@ public:
             ret_type retval;
             if (empty()) {
                 // An empty series is equal to zero.
-                retval.insert(r_term_type(math::pow(cf_type(0), x), key_type(symbol_set{})));
+                retval.insert(r_term_type(math::pow(cf_type(0), x), key_type(symbol_fset{})));
             } else {
-                retval.insert(r_term_type(math::pow(m_container.begin()->m_cf, x), key_type(symbol_set{})));
+                retval.insert(r_term_type(math::pow(m_container.begin()->m_cf, x), key_type(symbol_fset{})));
             }
             return retval;
         }
         // Handle the case of zero exponent.
         if (math::is_zero(x)) {
             ret_type retval;
-            retval.insert(r_term_type(r_cf_type(1), key_type(symbol_set{})));
+            retval.insert(r_term_type(r_cf_type(1), key_type(symbol_fset{})));
             return retval;
         }
         // Exponentiation by repeated multiplications.
@@ -2351,7 +2378,7 @@ public:
         // Init the vector, if needed.
         if (!v.size()) {
             m_type tmp;
-            tmp.insert(m_term_type(m_cf_type(1), m_key_type(symbol_set{})));
+            tmp.insert(m_term_type(m_cf_type(1), m_key_type(symbol_fset{})));
             v.push_back(std::move(tmp));
         }
         // Fill in the missing powers.
@@ -2394,7 +2421,7 @@ public:
      *
      * @param name name of the argument with respect to which the derivative will be calculated.
      *
-     * @return partial derivative of \p this with respect to the symbol named \p name.
+     * @return partial derivative of \p this with respect to the symbol \p name.
      *
      * @throws unspecified any exception thrown by:
      * - the differentiation methods of coefficient and key,
@@ -2414,7 +2441,7 @@ public:
      * is a type that can be used to construct <tt>std::function<partial_type(const Derived &)</tt>, where
      * \p partial_type is the type resulting from the partial derivative of \p Derived.
      *
-     * Register a copy of a callable \p func associated to the symbol called \p name for use by
+     * Register a copy of a callable \p func associated to the symbol \p name for use by
      * piranha::math::partial().
      * \p func will be used to compute the partial derivative of instances of type \p Derived with respect to
      * \p name in place of the default partial differentiation algorithm.
@@ -2442,7 +2469,7 @@ public:
      * \note
      * This method is enabled only if piranha::series::partial() is enabled for \p Derived.
      *
-     * Unregister the custom partial derivative function associated to the symbol called \p name. If no custom
+     * Unregister the custom partial derivative function associated to the symbol \p name. If no custom
      * partial derivative was previously registered using register_custom_derivative(), calling this function will be a
      * no-op.
      *
@@ -2498,7 +2525,7 @@ public:
      * @return an iterator to the first term of the series.
      *
      * @throws unspecified any exception thrown by:
-     * - construction and assignment of piranha::symbol_set,
+     * - construction and assignment of piranha::symbol_fset,
      * - insert(),
      * - construction of term, coefficient and key instances.
      */
@@ -2517,7 +2544,7 @@ public:
      * @return an iterator to the end of the series.
      *
      * @throws unspecified any exception thrown by:
-     * - construction and assignment of piranha::symbol_set,
+     * - construction and assignment of piranha::symbol_fset,
      * - insert(),
      * - construction of term, coefficient and key instances.
      */
@@ -2542,7 +2569,7 @@ public:
      * @throw unspecified any exception thrown by:
      * - the call operator of \p func,
      * - insert(),
-     * - the assignment operator of piranha::symbol_set,
+     * - the assignment operator of piranha::symbol_fset,
      * - term, coefficient, key construction.
      */
     Derived filter(std::function<bool(const std::pair<typename term_type::cf_type, Derived> &)> func) const
@@ -2578,7 +2605,7 @@ public:
      * @throw unspecified any exception thrown by:
      * - the call operator of \p func,
      * - insert(),
-     * - the assignment operator of piranha::symbol_set,
+     * - the assignment operator of piranha::symbol_fset,
      * - term, coefficient, key construction,
      * - series multiplication and addition.
      */
@@ -2611,24 +2638,26 @@ public:
      * @return trimmed version of \p this.
      *
      * @throws unspecified any exception thrown by:
-     * - operations on piranha::symbol_set,
+     * - piranha::safe_cast(),
+     * - operations on piranha::symbol_fset,
      * - the trimming methods of coefficient and/or key,
      * - insert(),
      * - term, coefficient and key type construction.
      */
     Derived trim() const
     {
-        // Build the set of symbols that can be removed.
+        // Init the trimming mask.
+        std::vector<char> trim_mask(safe_cast<std::vector<char>::size_type>(m_symbol_set.size()), char(1));
+        // Determine the symbols to be trimmed.
         const auto it_f = this->m_container.end();
-        symbol_set trim_ss(m_symbol_set);
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            it->m_key.trim_identify(trim_ss, m_symbol_set);
+            it->m_key.trim_identify(trim_mask, m_symbol_set);
         }
-        // Determine the new set.
+        // Build the retval.
         Derived retval;
-        retval.m_symbol_set = m_symbol_set.diff(trim_ss);
+        retval.m_symbol_set = trim_symbol_set(m_symbol_set, trim_mask);
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            retval.insert(term_type(trim_cf_impl(it->m_cf), it->m_key.trim(trim_ss, m_symbol_set)));
+            retval.insert(term_type{trim_cf_impl(it->m_cf), it->m_key.trim(trim_mask, m_symbol_set)});
         }
         return retval;
     }
@@ -2756,59 +2785,25 @@ public:
     }
     /// Symbol set getter.
     /**
-     * @return const reference to the piranha::symbol_set associated to the series.
+     * @return const reference to the piranha::symbol_fset associated to the series.
      */
-    const symbol_set &get_symbol_set() const
+    const symbol_fset &get_symbol_set() const
     {
         return m_symbol_set;
     }
     /// Symbol set setter.
     /**
-     * @param args piranha::symbol_set that will be associated to the series.
+     * @param args piranha::symbol_fset that will be associated to the series.
      *
      * @throws std::invalid_argument if the series is not empty.
-     * @throws unspecified any exception thrown by the copy assignment operator of piranha::symbol_set.
+     * @throws unspecified any exception thrown by the copy assignment operator of piranha::symbol_fset.
      */
-    void set_symbol_set(const symbol_set &args)
+    void set_symbol_set(const symbol_fset &args)
     {
         if (unlikely(!empty())) {
             piranha_throw(std::invalid_argument, "cannot set arguments on a non-empty series");
         }
         m_symbol_set = args;
-    }
-    /// Extend symbol set.
-    /**
-     * This method will return a series whose symbol set will be \p new_ss and whose terms
-     * will be the terms of \p this with new keys obtained from calling the existing keys'
-     * <tt>merge_args()</tt> method. That is, the new keys will be compatible with the
-     * new extended symbol set \p new_ss.
-     *
-     * \p new_ss must have a size equal to or greater than the size of the current symbol set of \p this,
-     * and all the symbols in the current symbol set must be present in \p new_ss.
-     *
-     * @param new_ss the new set of symbols.
-     *
-     * @return a copy of \p this with \p new_ss as symbol set.
-     *
-     * @throws std::invalid_argument if \p new_ss is smaller than the current symbol set or if
-     * it does not include all the symbols of the current symbol set.
-     * @throws unspecified any exception thrown by:
-     * - the construction of coefficients, terms and keys,
-     * - the key's <tt>merge_args()</tt> method,
-     * - piranha::series::insert().
-     */
-    Derived extend_symbol_set(const symbol_set &new_ss) const
-    {
-        // If the symbols are identical, just return a copy.
-        if (new_ss == m_symbol_set) {
-            return *static_cast<Derived const *>(this);
-        }
-        if (unlikely(!(new_ss.size() > m_symbol_set.size())
-                     || !std::includes(new_ss.begin(), new_ss.end(), m_symbol_set.begin(), m_symbol_set.end()))) {
-            piranha_throw(std::invalid_argument, "invalid symbol set passed to extend_symbol_set(): the new "
-                                                 "symbol set does not include all the symbols in the old symbol set");
-        }
-        return merge_arguments(new_ss);
     }
     /** @name Low-level interface
      * Low-level methods.
@@ -2833,7 +2828,7 @@ public:
     //@}
 protected:
     /// Symbol set.
-    symbol_set m_symbol_set;
+    symbol_fset m_symbol_set;
     /// Terms container.
     container_type m_container;
 
