@@ -181,6 +181,21 @@ merge_symbol_fsets(const symbol_fset &s1, const symbol_fset &s2)
     };
     return std::make_tuple(std::move(u_set), compute_map(s1), compute_map(s2));
 }
+
+/// Identify the index of a symbol in a set.
+/**
+ * This function will return the positional index of the symbol ``name``
+ * in the set ``s``. If ``name`` is not in ``s``, the size of ``s`` will be returned.
+ *
+ * @param s the input piranha::symbol_fset.
+ * @param name the symbol whose index in ``s`` will be returned.
+ *
+ * @return the positional index of ``name`` in ``s``.
+ */
+inline symbol_idx index_of(const symbol_fset &s, const std::string &name)
+{
+    return s.index_of(s.find(name));
+}
 }
 
 #endif

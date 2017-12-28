@@ -111,3 +111,12 @@ BOOST_AUTO_TEST_CASE(symbol_utils_merge_symbol_fsets_test)
                  == symbol_idx_fmap<symbol_fset>{{0, {"a"}}, {1, {"c", "d", "f", "g", "m"}}, {2, {"o"}}, {3, {"x"}}}));
     BOOST_CHECK((std::get<2>(ret) == symbol_idx_fmap<symbol_fset>{{1, {"b"}}, {6, {"n"}}, {7, {"t"}}}));
 }
+
+BOOST_AUTO_TEST_CASE(symbol_utils_index_of_test)
+{
+    BOOST_CHECK_EQUAL(index_of(symbol_fset{}, "x"), 0u);
+    BOOST_CHECK_EQUAL(index_of(symbol_fset{"x", "y"}, "x"), 0u);
+    BOOST_CHECK_EQUAL(index_of(symbol_fset{"x", "y", "z"}, "y"), 1u);
+    BOOST_CHECK_EQUAL(index_of(symbol_fset{"x", "y", "z"}, "z"), 2u);
+    BOOST_CHECK_EQUAL(index_of(symbol_fset{"x", "y", "z"}, "a"), 3u);
+}
