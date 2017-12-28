@@ -31,7 +31,11 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE symbol_utils_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
+#include <initializer_list>
+#include <stdexcept>
 #include <tuple>
+#include <vector>
 
 #include <piranha/init.hpp>
 
@@ -119,4 +123,23 @@ BOOST_AUTO_TEST_CASE(symbol_utils_index_of_test)
     BOOST_CHECK_EQUAL(index_of(symbol_fset{"x", "y", "z"}, "y"), 1u);
     BOOST_CHECK_EQUAL(index_of(symbol_fset{"x", "y", "z"}, "z"), 2u);
     BOOST_CHECK_EQUAL(index_of(symbol_fset{"x", "y", "z"}, "a"), 3u);
+}
+
+BOOST_AUTO_TEST_CASE(symbol_utils_trim_symbol_set_test)
+{
+    BOOST_CHECK(trim_symbol_set(symbol_fset{}, std::vector<char>{}) == symbol_fset{});
+    BOOST_CHECK((trim_symbol_set(symbol_fset{"x", "y", "z"}, {0, 0, 0}) == symbol_fset{"x", "y", "z"}));
+    BOOST_CHECK((trim_symbol_set(symbol_fset{"x", "y", "z"}, {0, 1, 0}) == symbol_fset{"x", "z"}));
+    BOOST_CHECK((trim_symbol_set(symbol_fset{"x", "y", "z"}, {1, 0, 0}) == symbol_fset{"y", "z"}));
+    BOOST_CHECK((trim_symbol_set(symbol_fset{"x", "y", "z"}, {0, 0, 1}) == symbol_fset{"x", "y"}));
+    BOOST_CHECK((trim_symbol_set(symbol_fset{"x", "y", "z"}, {1, 0, 1}) == symbol_fset{"y"}));
+    BOOST_CHECK((trim_symbol_set(symbol_fset{"x", "y", "z"}, {1, 1, 0}) == symbol_fset{"z"}));
+    BOOST_CHECK((trim_symbol_set(symbol_fset{"x", "y", "z"}, {0, 1, 1}) == symbol_fset{"x"}));
+    BOOST_CHECK((trim_symbol_set(symbol_fset{"x", "y", "z"}, {1, 1, 1}) == symbol_fset{}));
+    BOOST_CHECK_EXCEPTION(trim_symbol_set(symbol_fset{"x", "y", "z"}, {0, 0, 0, 0}), std::invalid_argument,
+                          [](const std::invalid_argument &e) {
+                              return boost::contains(e.what(), "invalid argument(s) for symbol set trimming: the size "
+                                                               "of the original symbol set (3) differs from the size "
+                                                               "of trimming mask (4)");
+                          });
 }

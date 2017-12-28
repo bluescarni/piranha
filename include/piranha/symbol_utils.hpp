@@ -32,6 +32,10 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+#include <boost/iterator/zip_iterator.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <iterator>
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
@@ -39,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <unordered_set>
+#include <vector>
 
 namespace piranha
 {
@@ -195,6 +200,76 @@ merge_symbol_fsets(const symbol_fset &s1, const symbol_fset &s2)
 inline symbol_idx index_of(const symbol_fset &s, const std::string &name)
 {
     return s.index_of(s.find(name));
+}
+
+inline namespace impl
+{
+
+// Functor for use in the filter iterator below.
+struct mask_ss_filter {
+    template <typename Tuple>
+    bool operator()(const Tuple &t) const
+    {
+        // NOTE: the filter iterator skips when this returns false.
+        // Since the mask is 1 for elements to be skipped, we need to return
+        // true if the mask is zero.
+        return t.template get<0>() == char(0);
+    }
+};
+
+// Functor for use in the transform iterator below.
+struct mask_ss_transform {
+    template <typename Tuple>
+    std::string operator()(const Tuple &t) const
+    {
+        // NOTE: we need to extract the symbol name, which is
+        // the second element of the tuple.
+        return t.template get<1>();
+    }
+};
+}
+
+/// Trim symbol set.
+/**
+ * This function will trim the input set ``s`` according to the values in ``mask``.
+ * That is, a copy of ``s`` is returned without the symbols whose corresponding
+ * values in ``mask`` are nonzero.
+ *
+ * For instance, if the input set ``s`` is ``["x", "y", "z"]`` and the input mask is
+ * ``[0, 1, 0]``, then the return value of this function is the set ``["x", "z"]`` (i.e., the
+ * ``"y"`` symbol was eliminated because its corresponding value in ``mask`` is 1).
+ *
+ * @param s the input piranha::symbol_fset.
+ * @param mask the trimming mask.
+ *
+ * @return a copy of ``s`` trimmed according to ``mask``.
+ *
+ * @throws std::invalid_argument if the sizes of ``s`` and ``mask`` differ.
+ * @throws unspecified any exception thrown by the construction of the return value.
+ */
+inline symbol_fset trim_symbol_set(const symbol_fset &s, const std::vector<char> &mask)
+{
+    if (unlikely(s.size() != mask.size())) {
+        // The usual sanity check.
+        piranha_throw(std::invalid_argument,
+                      "invalid argument(s) for symbol set trimming: the size of the original symbol set ("
+                          + std::to_string(s.size()) + ") differs from the size of trimming mask ("
+                          + std::to_string(mask.size()) + ")");
+    }
+    // First we zip together s and mask.
+    auto zip_begin = boost::make_zip_iterator(boost::make_tuple(mask.begin(), s.begin()));
+    auto zip_end = boost::make_zip_iterator(boost::make_tuple(mask.end(), s.end()));
+    // Then we create a filter on the zip: iterate only over those zipped values in which
+    // the first element (i.e., the mask) is 0.
+    auto filter_begin = boost::make_filter_iterator(mask_ss_filter{}, zip_begin, zip_end);
+    auto filter_end = boost::make_filter_iterator(mask_ss_filter{}, zip_end, zip_end);
+    // Finally, we need to take the skipping iterator and extract only the second element
+    // of each value (the actual symbol name).
+    auto trans_begin = boost::make_transform_iterator(filter_begin, mask_ss_transform{});
+    auto trans_end = boost::make_transform_iterator(filter_end, mask_ss_transform{});
+    // Now we can construct the return value. We know it is ordered because the original
+    // symbol set is ordered, and we just skip over some elements.
+    return symbol_fset(boost::container::ordered_unique_range_t{}, trans_begin, trans_end);
 }
 }
 
