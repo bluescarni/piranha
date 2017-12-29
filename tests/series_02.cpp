@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE series_02_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <boost/container/flat_map.hpp>
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -40,8 +41,8 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/debug_access.hpp>
@@ -57,8 +58,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series_multiplier.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 static const int ntries = 1000;
@@ -84,7 +84,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -107,7 +107,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -151,9 +151,8 @@ class series_multiplier<g_series_type<Cf, Key>, void> : public base_series_multi
 {
     using base = base_series_multiplier<g_series_type<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -169,9 +168,8 @@ class series_multiplier<g_series_type2<Cf, Key>, void> : public base_series_mult
 {
     using base = base_series_multiplier<g_series_type2<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -187,9 +185,8 @@ class series_multiplier<g_series_type3<Cf, Key>, void> : public base_series_mult
 {
     using base = base_series_multiplier<g_series_type3<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -367,17 +364,17 @@ struct mock_key {
     mock_key(mock_key &&) noexcept;
     mock_key &operator=(const mock_key &) = default;
     mock_key &operator=(mock_key &&) noexcept;
-    mock_key(const symbol_set &);
+    mock_key(const symbol_fset &);
     bool operator==(const mock_key &) const;
     bool operator!=(const mock_key &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    mock_key merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    mock_key trim(const symbol_set &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    mock_key merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    mock_key trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 namespace std
@@ -392,9 +389,9 @@ struct hash<mock_key> {
 BOOST_AUTO_TEST_CASE(series_evaluate_test)
 {
     typedef g_series_type<rational, int> p_type1;
-    typedef std::unordered_map<std::string, rational> dict_type;
-    typedef std::unordered_map<std::string, int> dict_type_int;
-    typedef std::unordered_map<std::string, long> dict_type_long;
+    typedef boost::container::flat_map<std::string, rational> dict_type;
+    typedef boost::container::flat_map<std::string, int> dict_type_int;
+    typedef boost::container::flat_map<std::string, long> dict_type_long;
     BOOST_CHECK((is_evaluable<p_type1, rational>::value));
     BOOST_CHECK((is_evaluable<p_type1, integer>::value));
     BOOST_CHECK((is_evaluable<p_type1, int>::value));
@@ -411,7 +408,7 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type{})), rational>::value));
-    typedef std::unordered_map<std::string, real> dict_type2;
+    typedef boost::container::flat_map<std::string, real> dict_type2;
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
     BOOST_CHECK_EQUAL(
         math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
@@ -420,7 +417,7 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
         math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
         math::evaluate(x + math::pow(2 * y, 3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type2{})), real>::value));
-    typedef std::unordered_map<std::string, double> dict_type3;
+    typedef boost::container::flat_map<std::string, double> dict_type3;
     BOOST_CHECK((is_evaluable<p_type1, double>::value));
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
                       1.234 + math::pow(2 * -5.678, 3));
@@ -566,10 +563,10 @@ BOOST_AUTO_TEST_CASE(series_binary_series_op_return_type_test)
     BOOST_CHECK((std::is_same<p_type2, binary_series_op_return_type<p_type2, p_type1>::type>::value));
     BOOST_CHECK((std::is_same<p_type2, binary_series_op_return_type<p_type1, p_type2>::type>::value));
     // mock_cf supports only multiplication vs mock_cf.
-    BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type<double, int>,
-                                                                g_series_type<mock_cf, int>>>::value));
-    BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type<mock_cf, int>,
-                                                                g_series_type<double, int>>>::value));
+    BOOST_CHECK((!has_typedef_type<
+                 binary_series_op_return_type<g_series_type<double, int>, g_series_type<mock_cf, int>>>::value));
+    BOOST_CHECK((!has_typedef_type<
+                 binary_series_op_return_type<g_series_type<mock_cf, int>, g_series_type<double, int>>>::value));
     // Case 3.
     typedef g_series_type<short, int> p_type3;
     BOOST_CHECK((std::is_same<g_series_type<int, int>, binary_series_op_return_type<p_type3, p_type3>::type>::value));
@@ -636,23 +633,23 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Try with moves on both sides.
             tmp = p_type1{x} + x;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             tmp = x + p_type1{x};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             tmp = p_type1{x} + p_type1{x};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Check that move erases.
             auto x_copy(x);
             tmp = std::move(x) + x_copy;
@@ -666,19 +663,19 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             x = p_type1{"x"};
             tmp = x + std::move(x);
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             x = p_type1{"x"};
             tmp = std::move(x) + x;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             x = p_type1{"x"};
             // Now with merging.
             tmp = x + y;
@@ -689,7 +686,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // With moves.
             tmp = p_type1{x} + y;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -699,7 +696,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x + p_type1{y};
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -708,7 +705,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Test the swapping of operands when one series is larger than the other.
             tmp = (x + y) + x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -718,7 +715,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(2));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x + (y + x);
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -727,7 +724,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(2));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Some tests for case 1/4.
             tmp = x + p_type3{"y"};
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -737,7 +734,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x + (p_type3{"y"} + p_type3{"x"});
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -746,7 +743,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == 2);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x + 1;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -755,7 +752,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Symmetric of the previous case.
             tmp = p_type3{"y"} + x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -765,7 +762,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = (p_type3{"y"} + p_type3{"x"}) + x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -774,7 +771,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == 2);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = 1 + x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -783,7 +780,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Case 3/5 and symmetric.
             using p_type4 = g_series_type<g_series_type<int, Expo>, Expo>;
             using p_type5 = g_series_type<double, Expo>;
@@ -796,7 +793,7 @@ public:
             ++it2;
             BOOST_CHECK((it2->m_cf == g_series_type<double, Expo>{"y"} || it2->m_cf == 1));
             BOOST_CHECK(it2->m_key.size() == 1u);
-            BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp2.m_symbol_set == symbol_fset{"x"}));
             tmp2 = p_type5{"y"} + p_type4{"x"};
             BOOST_CHECK_EQUAL(tmp2.size(), 2u);
             BOOST_CHECK((std::is_same<decltype(tmp2), g_series_type<g_series_type<double, Expo>, Expo>>::value));
@@ -806,7 +803,7 @@ public:
             ++it2;
             BOOST_CHECK((it2->m_cf == g_series_type<double, Expo>{"y"} || it2->m_cf == 1));
             BOOST_CHECK(it2->m_key.size() == 1u);
-            BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp2.m_symbol_set == symbol_fset{"x"}));
             // Now in-place.
             // Case 0.
             tmp = x;
@@ -814,14 +811,14 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Move.
             tmp = x;
             tmp += p_type1{x};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Check that a move really happens.
             tmp = x;
             tmp += std::move(x);
@@ -835,7 +832,7 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1) + Cf(1) + Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Now with merging.
             tmp = x;
             tmp += y;
@@ -846,7 +843,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // With moves.
             tmp = x;
             tmp += p_type1{y};
@@ -857,7 +854,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Test the swapping of operands when one series is larger than the other.
             tmp = x + y;
             tmp += x;
@@ -868,7 +865,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == 2);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x;
             tmp += y + x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -878,7 +875,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == 2);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Some tests for case 1/4.
             tmp = x;
             tmp += p_type3{"y"};
@@ -889,7 +886,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x;
             tmp += p_type3{"y"} + p_type3{"x"};
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -899,7 +896,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == 2);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x;
             tmp += 1;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -909,7 +906,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Symmetric of the previous case.
             p_type3 tmp3{"y"};
             tmp3 += x;
@@ -920,7 +917,7 @@ public:
             ++it3;
             BOOST_CHECK(it3->m_cf == 1);
             BOOST_CHECK(it3->m_key.size() == 2u);
-            BOOST_CHECK((tmp3.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp3.m_symbol_set == symbol_fset{"x", "y"}));
             tmp3 += p_type3{"y"} + p_type3{"x"};
             tmp3 += x;
             BOOST_CHECK_EQUAL(tmp3.size(), 2u);
@@ -930,7 +927,7 @@ public:
             ++it3;
             BOOST_CHECK(it3->m_cf == 2 || it3->m_cf == 3);
             BOOST_CHECK(it3->m_key.size() == 2u);
-            BOOST_CHECK((tmp3.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp3.m_symbol_set == symbol_fset{"x", "y"}));
             // Case 3/5.
             auto tmp4 = p_type4{"x"};
             tmp4 += p_type5{"y"};
@@ -942,7 +939,7 @@ public:
             ++it4;
             BOOST_CHECK((it4->m_cf == g_series_type<int, Expo>{"y"} || it4->m_cf == 1));
             BOOST_CHECK(it4->m_key.size() == 1u);
-            BOOST_CHECK((tmp4.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp4.m_symbol_set == symbol_fset{"x"}));
             // Check with scalar on the left.
             BOOST_CHECK((!is_addable_in_place<int, p_type1>::value));
             BOOST_CHECK((!is_addable_in_place<int, p_type2>::value));
@@ -1055,27 +1052,27 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Check going to zero.
             tmp = x - x;
             BOOST_CHECK(tmp.size() == 0u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Try with moves on both sides.
             tmp = p_type1{x} - x2;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(-1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             tmp = x2 - p_type1{x};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             tmp = p_type1{x2} - p_type1{x};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Check that move erases.
             auto x_copy(x);
             tmp = std::move(x) - x_copy;
@@ -1087,15 +1084,15 @@ public:
             // Self move tests.
             tmp = std::move(x) - std::move(x);
             BOOST_CHECK_EQUAL(tmp.size(), 0u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             x = p_type1{"x"};
             tmp = x - std::move(x);
             BOOST_CHECK_EQUAL(tmp.size(), 0u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             x = p_type1{"x"};
             tmp = std::move(x) - x;
             BOOST_CHECK_EQUAL(tmp.size(), 0u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             x = p_type1{"x"};
             // Now with merging.
             tmp = x - y;
@@ -1106,7 +1103,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // With moves.
             tmp = p_type1{x} - y;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1116,7 +1113,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x - p_type1{y};
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1125,7 +1122,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Test the swapping of operands when one series is larger than the other.
             tmp = (x2 - y) - x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1135,7 +1132,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == -1);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x2 - (y - x);
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1144,7 +1141,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 3 || it->m_cf == -1);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Some tests for case 1/4.
             tmp = x - p_type3{"y"};
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1154,7 +1151,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == -1);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x2 - (p_type3{"y"} - p_type3{"x"});
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1163,7 +1160,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 3 || it->m_cf == -1);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x - 1;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1172,7 +1169,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == -1);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Symmetric of the previous case.
             tmp = p_type3{"y"} - x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1182,7 +1179,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == -1);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = (p_type3{"y"} - p_type3{"x"}) - x2;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1191,7 +1188,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == -3);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = 1 - x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1200,7 +1197,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 1 || it->m_cf == -1);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Case 3/5 and symmetric.
             using p_type4 = g_series_type<g_series_type<int, Expo>, Expo>;
             using p_type5 = g_series_type<double, Expo>;
@@ -1213,7 +1210,7 @@ public:
             ++it2;
             BOOST_CHECK((it2->m_cf == -g_series_type<double, Expo>{"y"} || it2->m_cf == 1));
             BOOST_CHECK(it2->m_key.size() == 1u);
-            BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp2.m_symbol_set == symbol_fset{"x"}));
             tmp2 = p_type5{"y"} - p_type4{"x"};
             BOOST_CHECK_EQUAL(tmp2.size(), 2u);
             BOOST_CHECK((std::is_same<decltype(tmp2), g_series_type<g_series_type<double, Expo>, Expo>>::value));
@@ -1223,7 +1220,7 @@ public:
             ++it2;
             BOOST_CHECK((it2->m_cf == g_series_type<double, Expo>{"y"} || it2->m_cf == -1));
             BOOST_CHECK(it2->m_key.size() == 1u);
-            BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp2.m_symbol_set == symbol_fset{"x"}));
             // Now in-place.
             // Case 0.
             tmp = x2;
@@ -1231,7 +1228,7 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Check that a move really happens.
             tmp = x;
             tmp -= std::move(x);
@@ -1243,7 +1240,7 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Now with merging.
             tmp = x;
             tmp -= y;
@@ -1254,7 +1251,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // With moves.
             tmp = x;
             tmp -= p_type1{y};
@@ -1265,11 +1262,11 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Move self.
             tmp -= std::move(tmp);
             BOOST_CHECK_EQUAL(tmp.size(), 0u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Test the swapping of operands when one series is larger than the other.
             tmp = x2 - y;
             tmp -= x;
@@ -1280,7 +1277,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x;
             tmp -= y - x2;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1290,7 +1287,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(3) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Some tests for case 1/4.
             tmp = x;
             tmp -= p_type3{"y"};
@@ -1301,7 +1298,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x2;
             tmp -= p_type3{"y"} - p_type3{"x"};
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1311,7 +1308,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(3) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x;
             tmp -= 1;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1321,7 +1318,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Symmetric of the previous case.
             p_type3 tmp3{"y"};
             tmp3 -= x;
@@ -1332,7 +1329,7 @@ public:
             ++it3;
             BOOST_CHECK(it3->m_cf == Cf(1) || it3->m_cf == Cf(-1));
             BOOST_CHECK(it3->m_key.size() == 2u);
-            BOOST_CHECK((tmp3.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp3.m_symbol_set == symbol_fset{"x", "y"}));
             tmp3 = p_type3{"x"};
             tmp3 -= p_type3{"y"} - p_type3{"x"};
             tmp3 -= x;
@@ -1343,7 +1340,7 @@ public:
             ++it3;
             BOOST_CHECK(it3->m_cf == Cf(1) || it3->m_cf == Cf(-1));
             BOOST_CHECK(it3->m_key.size() == 2u);
-            BOOST_CHECK((tmp3.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp3.m_symbol_set == symbol_fset{"x", "y"}));
             // Case 3/5.
             auto tmp4 = p_type4{"x"};
             tmp4 -= p_type5{"y"};
@@ -1355,7 +1352,7 @@ public:
             ++it4;
             BOOST_CHECK((it4->m_cf == -g_series_type<int, Expo>{"y"} || it4->m_cf == 1));
             BOOST_CHECK(it4->m_key.size() == 1u);
-            BOOST_CHECK((tmp4.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp4.m_symbol_set == symbol_fset{"x"}));
             // Check with scalar on the left.
             BOOST_CHECK((!is_subtractable_in_place<int, p_type1>::value));
             BOOST_CHECK((!is_subtractable_in_place<int, p_type2>::value));
@@ -1468,38 +1465,38 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(2) * Cf(1));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Try with moves on both sides.
             tmp = 3 * p_type1{x} * 2 * x;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(3) * Cf(2));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             tmp = 2 * x * 3 * p_type1{x};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(2) * Cf(3));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Now with merging.
             tmp = x * y;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             auto it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == Cf(1) * Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // With moves.
             tmp = p_type1{x} * y;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == Cf(1) * Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x * p_type1{y};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == Cf(1) * Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Test the swapping of operands when one series is larger than the other.
             tmp = (x + y) * 2 * x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1509,7 +1506,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(2) * Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x * (2 * y + 2 * x);
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1518,14 +1515,14 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == Cf(2) * Cf(1));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Some tests for case 1/4.
             tmp = 3 * x * p_type3{"y"};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == 3);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = 3 * x * (p_type3{"y"} + p_type3{"x"});
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1534,20 +1531,20 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 3);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x * 2;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == 2);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Symmetric of the previous case.
             tmp = p_type3{"y"} * x * 3;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == 3);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = (p_type3{"y"} + p_type3{"x"}) * 4 * x;
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
             it = tmp.m_container.begin();
@@ -1556,13 +1553,13 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 4);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = -2 * x;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == -2);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Case 3/5 and symmetric.
             using p_type4 = g_series_type<g_series_type<int, Expo>, Expo>;
             using p_type5 = g_series_type<double, Expo>;
@@ -1572,14 +1569,14 @@ public:
             auto it2 = tmp2.m_container.begin();
             BOOST_CHECK((it2->m_cf == -g_series_type<double, Expo>{"y"}));
             BOOST_CHECK(it2->m_key.size() == 1u);
-            BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp2.m_symbol_set == symbol_fset{"x"}));
             tmp2 = p_type5{"y"} * p_type4{"x"} * 2;
             BOOST_CHECK_EQUAL(tmp2.size(), 1u);
             BOOST_CHECK((std::is_same<decltype(tmp2), g_series_type<g_series_type<double, Expo>, Expo>>::value));
             it2 = tmp2.m_container.begin();
             BOOST_CHECK((it2->m_cf == 2 * g_series_type<double, Expo>{"y"}));
             BOOST_CHECK(it2->m_key.size() == 1u);
-            BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp2.m_symbol_set == symbol_fset{"x"}));
             // Now in-place.
             // Case 0.
             tmp = 2 * x;
@@ -1587,14 +1584,14 @@ public:
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(2));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Move.
             tmp = 2 * x;
             tmp *= p_type1{x};
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(2));
             BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
-            BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+            BOOST_CHECK(tmp.m_symbol_set == symbol_fset{"x"});
             // Now with merging.
             tmp = -3 * x;
             tmp *= y;
@@ -1602,7 +1599,7 @@ public:
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == Cf(-3));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // With moves.
             tmp = 4 * x;
             tmp *= p_type1{y};
@@ -1610,7 +1607,7 @@ public:
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == Cf(4));
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Test the swapping of operands when one series is larger than the other.
             tmp = 4 * (x + y);
             tmp *= x;
@@ -1621,7 +1618,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 4);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x;
             tmp *= 3 * (y + x);
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1631,7 +1628,7 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == 3);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             // Some tests for case 1/4.
             tmp = 4 * x;
             tmp *= p_type3{"y"};
@@ -1639,7 +1636,7 @@ public:
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == 4);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x;
             tmp *= -4 * (p_type3{"y"} + p_type3{"x"});
             BOOST_CHECK_EQUAL(tmp.size(), 2u);
@@ -1649,14 +1646,14 @@ public:
             ++it;
             BOOST_CHECK(it->m_cf == -4);
             BOOST_CHECK(it->m_key.size() == 2u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x", "y"}));
             tmp = x;
             tmp *= 3;
             BOOST_CHECK_EQUAL(tmp.size(), 1u);
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == 3);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Symmetric of the previous case.
             p_type3 tmp3{"y"};
             tmp3 *= -4 * x;
@@ -1664,14 +1661,14 @@ public:
             auto it3 = tmp3.m_container.begin();
             BOOST_CHECK(it3->m_cf == -4);
             BOOST_CHECK(it3->m_key.size() == 2u);
-            BOOST_CHECK((tmp3.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp3.m_symbol_set == symbol_fset{"x", "y"}));
             tmp3 *= p_type3{"y"} + p_type3{"x"};
             tmp3 *= -x;
             BOOST_CHECK_EQUAL(tmp3.size(), 2u);
             it3 = tmp3.m_container.begin();
             BOOST_CHECK(it3->m_cf == 4);
             BOOST_CHECK(it3->m_key.size() == 2u);
-            BOOST_CHECK((tmp3.m_symbol_set == symbol_set{symbol{"x"}, symbol{"y"}}));
+            BOOST_CHECK((tmp3.m_symbol_set == symbol_fset{"x", "y"}));
             // Case 3/5.
             auto tmp4 = p_type4{"x"};
             tmp4 *= p_type5{"y"} * 3;
@@ -1680,7 +1677,7 @@ public:
             BOOST_CHECK((std::is_same<decltype(it4->m_cf), g_series_type<int, Expo>>::value));
             BOOST_CHECK((it4->m_cf == 3 * g_series_type<int, Expo>{"y"}));
             BOOST_CHECK(it4->m_key.size() == 1u);
-            BOOST_CHECK((tmp4.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp4.m_symbol_set == symbol_fset{"x"}));
             // Check with scalar on the left.
             BOOST_CHECK((!is_multipliable_in_place<int, p_type1>::value));
             BOOST_CHECK((!is_multipliable_in_place<int, p_type2>::value));
@@ -1784,13 +1781,13 @@ public:
             auto it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == Cf(3) / 2);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Case 5.
             auto tmp2 = 3 * x / 2.;
             auto it2 = tmp2.m_container.begin();
             BOOST_CHECK(it2->m_cf == Cf(3) / 2.);
             BOOST_CHECK(it2->m_key.size() == 1u);
-            BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp2.m_symbol_set == symbol_fset{"x"}));
             // In-place.
             // Case 4.
             tmp = 3 * x;
@@ -1798,14 +1795,14 @@ public:
             it = tmp.m_container.begin();
             BOOST_CHECK(it->m_cf == Cf(3) / 2);
             BOOST_CHECK(it->m_key.size() == 1u);
-            BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp.m_symbol_set == symbol_fset{"x"}));
             // Case 5.
             tmp2 = 3 * x;
             tmp2 /= 2.;
             it2 = tmp2.m_container.begin();
             BOOST_CHECK(it2->m_cf == Cf(3) / 2.);
             BOOST_CHECK(it2->m_key.size() == 1u);
-            BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+            BOOST_CHECK((tmp2.m_symbol_set == symbol_fset{"x"}));
             // Test division by zero of empty series.
             if (std::is_same<integer, Cf>::value) {
                 BOOST_CHECK_THROW(p_type1{} / 0, mppp::zero_division_error);

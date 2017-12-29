@@ -1013,11 +1013,10 @@ class series_operators
                     return equality_impl(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)), y);
                 case 2:
                     return equality_impl(x, y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
-                case 3:
-                    return equality_impl(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
-                                         y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
             }
-            piranha_assert(false);
+            // Put the last case outside the switch, so we avoid compile warnings.
+            return equality_impl(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
+                                 y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
         }
     }
     template <typename T, typename U,
@@ -1811,7 +1810,7 @@ private:
         retval.m_symbol_set = this->m_symbol_set;
         // Prepare a number of buckets equal to the current one.
         retval.m_container.rehash(this->m_container.bucket_count());
-        const auto pos = index_of(retval.symbol_set, name);
+        const auto pos = index_of(retval.m_symbol_set, name);
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // NOTE: here the term being inserted cannot be incompatible as it->m_key is coming from
@@ -1827,7 +1826,7 @@ private:
     template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 1, int>::type = 0>
     partial_type<Series> partial_impl(const std::string &name) const
     {
-        const auto pos = index_of(this->symbol_set, name);
+        const auto pos = index_of(this->m_symbol_set, name);
         partial_type<Series> retval(0);
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
@@ -3478,7 +3477,7 @@ public:
                 [](const std::pair<std::string, T> &p, const std::string &str) { return p.first < str; });
             // NOTE: if tmp != it_dict_f, we found a value in the dict range which is >= it_ss,
             // but we still need to check it is really the same.
-            if (likely(tmp != it_dict_f && *tmp == *it_ss)) {
+            if (likely(tmp != it_dict_f && tmp->first == *it_ss)) {
                 // The it_ss value was found, set it_dict to the
                 // iterator pointing to it in the dictionary.
                 it_dict = tmp;

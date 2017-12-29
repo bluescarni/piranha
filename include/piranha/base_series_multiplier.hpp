@@ -819,19 +819,16 @@ protected:
      * When using the low-level interface of piranha::hash_set for term insertion, invariants might be violated
      * both in piranha::hash_set and piranha::series. In particular:
      *
-     * - terms may not be checked for compatibility or ignorability upon insertion,
+     * - terms may not be checked for compatibility or for being zero upon insertion,
      * - the count of elements in piranha::hash_set might not be updated.
      *
-     * This method can be used to fix these invariants: each term of \p retval will be checked for ignorability and
-     * compatibility,
-     * and the total count of terms in the series will be set to the number of non-ignorable terms. Ignorable terms will
-     * be erased.
+     * This method can be used to fix these invariants: it will check whether each term of \p retval is incompatible
+     * and/or zero, and the total count of terms in the series will be set to the number of nonzero terms.
+     * Zero terms will be erased.
      *
      * Note that in case of exceptions \p retval will likely be left in an inconsistent state which violates internal
-     * invariants.
-     * Calls to this function should always be wrapped in a try/catch block that makes sure that \p retval is cleared
-     * before
-     * re-throwing.
+     * invariants. Calls to this function should always be wrapped in a try/catch block that makes sure that \p retval
+     * is cleared before re-throwing.
      *
      * @param retval the series to be sanitised.
      * @param n_threads the number of threads to be used.
@@ -868,7 +865,7 @@ protected:
                 }
                 // First update the size, it will be scaled back in the erase() method if necessary.
                 container._update_size(static_cast<bucket_size_type>(container.size() + 1u));
-                if (unlikely(it->is_ignorable(args))) {
+                if (unlikely(it->is_zero(args))) {
                     it = container.erase(it);
                 } else {
                     ++it;
@@ -897,7 +894,7 @@ protected:
                         piranha_throw(std::invalid_argument, "incompatible term");
                     }
                     // Check for ignorability.
-                    if (unlikely(it->is_ignorable(args))) {
+                    if (unlikely(it->is_zero(args))) {
                         term_list.push_back(*it);
                     }
                     // Update the count of terms.
