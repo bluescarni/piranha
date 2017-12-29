@@ -49,8 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/mp_integer.hpp>
 #include <piranha/mp_rational.hpp>
 #include <piranha/series_multiplier.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -72,7 +71,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -105,7 +104,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -132,9 +131,8 @@ class series_multiplier<g_series_type<Cf, Key>, void> : public base_series_multi
 {
     using base = base_series_multiplier<g_series_type<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -150,9 +148,8 @@ class series_multiplier<g_series_type2<Cf, Key>, void> : public base_series_mult
 {
     using base = base_series_multiplier<g_series_type2<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -180,15 +177,13 @@ struct debug_access<construction_tag> {
             typedef term<Cf, monomial<Expo>> term_type;
             typedef typename term_type::key_type key_type;
             typedef g_series_type<Cf, Expo> series_type;
-            symbol_set ed;
-            ed.add(symbol("x"));
             // Default constructor.
             BOOST_CHECK(series_type().empty());
             BOOST_CHECK_EQUAL(series_type().size(), (unsigned)0);
             BOOST_CHECK_EQUAL(series_type().get_symbol_set().size(), 0u);
             // Copy constructor.
             series_type s;
-            s.m_symbol_set = ed;
+            s.m_symbol_set = symbol_fset{"x"};
             s.insert(term_type(Cf(1), key_type{Expo(1)}));
             series_type t(s);
             BOOST_CHECK(*s.m_container.begin() == *t.m_container.begin());

@@ -54,7 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>
 #include <piranha/settings.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/thread_pool.hpp>
 #include <piranha/tuning.hpp>
 #include <piranha/type_traits.hpp>
@@ -149,8 +149,8 @@ struct base_series_multiplier_impl {
 };
 
 template <typename Series, typename Derived>
-struct base_series_multiplier_impl<Series, Derived, typename std::enable_if<is_mp_rational<
-                                                        typename Series::term_type::cf_type>::value>::type> {
+struct base_series_multiplier_impl<
+    Series, Derived, typename std::enable_if<is_mp_rational<typename Series::term_type::cf_type>::value>::type> {
     // Useful shortcuts.
     using term_type = typename Series::term_type;
     using rat_type = typename term_type::cf_type;
@@ -244,9 +244,7 @@ public:
 private:
     // The default limit functor: it will include all terms in the second series.
     struct default_limit_functor {
-        default_limit_functor(const base_series_multiplier &m) : m_size2(m.m_v2.size())
-        {
-        }
+        default_limit_functor(const base_series_multiplier &m) : m_size2(m.m_v2.size()) {}
         size_type operator()(const size_type &) const
         {
             return m_size2;
@@ -1134,7 +1132,7 @@ protected:
     /// Vector of const pointers to the terms in the smaller series.
     mutable v_ptr m_v2;
     /// The symbol set of the series used during construction.
-    const symbol_set m_ss;
+    const symbol_fset m_ss;
     /// Number of threads.
     /**
      * This value will be set by the constructor, and it represents the number of threads

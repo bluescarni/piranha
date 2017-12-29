@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <array>
+#include <boost/container/flat_map.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
@@ -1689,7 +1690,7 @@ private:
                    && std::adjacent_find(v_str.begin(), v_str.end()) == v_str.end();
         };
         // Verify also that new_s contains all the symbols in m.
-        auto verify_ss = [&m, &new_s] -> bool {
+        auto verify_ss = [&m, &new_s]() -> bool {
             for (const auto &p : m) {
                 for (const auto &s : p.second) {
                     if (new_s.find(s) == new_s.end()) {
@@ -3380,48 +3381,42 @@ struct integrate_impl<Series, detail::series_integrate_enabler<Series>> {
         return s.integrate(name);
     }
 };
-}
 
 inline namespace impl
 {
 
-// This is the candidate evaluation type: the product of the evaluation of the coefficient by the evaluation of
-// the key.
+// This is the candidate evaluation type: the product of the evaluation of the coefficient by
+// the evaluation of the key.
 template <typename Series, typename T>
-using series_eval_type
-    = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
-                              std::declval<std::unordered_map<std::string, T> const &>())
-               * std::declval<const typename Series::term_type::key_type &>().evaluate(
-                     std::declval<const symbol_set::positions_map<T> &>(), std::declval<const symbol_set &>()));
+using series_eval_type = decltype(math::evaluate(std::declval<const typename Series::term_type::cf_type &>(),
+                                                 std::declval<const boost::container::flat_map<std::string, T> &>())
+                                  * std::declval<const typename Series::term_type::key_type &>().evaluate(
+                                        std::declval<const std::vector<T> &>(), std::declval<const symbol_fset &>()));
 
 template <typename Series, typename T>
 using math_series_evaluate_enabler
-    = enable_if_t<conjunction<is_series<Series>, is_mappable<T>, is_addable_in_place<series_eval_type<Series, T>>,
-                              std::is_constructible<series_eval_type<Series, T>, int>,
-                              is_returnable<series_eval_type<Series, T>>>::value>;
+    = enable_if_t<conjunction<is_series<Series>, is_addable_in_place<series_eval_type<Series, T>>,
+                              std::is_constructible<series_eval_type<Series, T>, const int &>,
+                              is_returnable<series_eval_type<Series, T>>, std::is_destructible<T>,
+                              std::is_copy_constructible<T>>::value>;
 }
-
-namespace math
-{
 
 /// Specialisation of the implementation of piranha::math::evaluate() for series types.
 /**
  * This specialisation is activated when all the following conditions hold:
  * - \p Series is an instance of piranha::series,
- * - \p T satisfies piranha::is_mappable,
  * - the coefficient and key types of \p Series support evaluation,
  * - the types resulting from the evaluation of coefficients and keys can be multiplied,
  *   yielding a result of type \p E,
- * - \p E is addable in place, constructible from \p int and it satisfies piranha::is_returnable.
+ * - \p E is addable in place, constructible from \p int and it satisfies piranha::is_returnable,
+ * - \p T is destructible and copy-constructible.
  */
 template <typename Series, typename T>
 class evaluate_impl<Series, T, math_series_evaluate_enabler<Series, T>>
 {
     using eval_type = series_eval_type<Series, T>;
-    using cf_eval_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
-                                                 std::declval<std::unordered_map<std::string, T> const &>()));
-    using key_eval_type = decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(
-        std::declval<const symbol_set::positions_map<T> &>(), std::declval<const symbol_set &>()));
+    // Wrapper to do multadd either via math::multiply_accumulate(), if supported, or just
+    // plain math operators.
     template <typename E, enable_if_t<has_multiply_accumulate<E>::value, int> = 0>
     static void multadd(E &retval, const E &a, const E &b)
     {
@@ -3442,47 +3437,65 @@ public:
      * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
      *
      * @param s the series to be evaluated.
-     * @param dict dictionary of that will be used for evaluation.
+     * @param dict the dictionary that will be used for evaluation.
      *
-     * @return evaluation of the series according to the evaluation dictionary \p dict.
+     * @return the result of evaluating the series according to the evaluation dictionary \p dict.
      *
      * @throws std::invalid_argument if a symbol of \p s does not appear in \p dict.
      * @throws unspecified any exception thrown by:
      * - coefficient and key evaluation,
-     * - the public interface of piranha::symbol_set::position_map and \p std::unordered_map,
+     * - memory errors in standard containers,
+     * - the copy constructor of \p T,
      * - arithmetic operations on the evaluation type.
      */
-    eval_type operator()(const Series &s, const std::unordered_map<std::string, T> &dict) const
+    eval_type operator()(const Series &s, const boost::container::flat_map<std::string, T> &dict) const
     {
         // NOTE: possible improvement: if the evaluation type is less-than comparable,
         // build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
         // with fp types and maybe improve performance - e.g., for integers).
-        // Transform the string dict into symbol dict for use in keys.
-        std::unordered_map<symbol, T> s_dict;
-        for (const auto &p : dict) {
-            s_dict[symbol(p.first)] = p.second;
-        }
-        // Convert to positions map.
-        symbol_set::positions_map<T> pmap(s.get_symbol_set(), s_dict);
-        decltype(s.get_symbol_set().size()) i = 0;
-        piranha_assert(pmap.size() <= s.get_symbol_set().size());
-        // First we iterate over all elements of pmap (which could be fewer than the symbols).
-        for (const auto &p : pmap) {
-            if (unlikely(i != p.first)) {
-                piranha_throw(std::invalid_argument, "the symbol '" + s.get_symbol_set()[i].get_name()
+
+        // Cache a reference to the symbol set.
+        const auto &ss = s.get_symbol_set();
+
+        // Init the vector that will be used for key evaluation. Make it possibly
+        // thread local in order to avoid allocations each time we invoke this function.
+        PIRANHA_MAYBE_TLS std::vector<T> evec;
+        // Make sure the static cached vector is reset to empty.
+        evec.resize(0);
+
+        const auto it_ss_f = ss.end();
+        auto it_dict = dict.begin();
+        const auto it_dict_f = dict.end();
+        // NOTE: we increase it_dict at the end of the iteration because, if we
+        // get there, it means we identified a symbol of ss in dict. For the next
+        // iteration of the for loop we want to start looking for the next ss symbol
+        // right *after* the element in dict we just found.
+        for (auto it_ss = ss.begin(); it_ss != it_ss_f; ++it_ss, ++it_dict) {
+            // Try to locate the current value of it_ss in the
+            // [it_dict, it_dict_f) range.
+            const auto tmp = std::lower_bound(
+                it_dict, it_dict_f, *it_ss,
+                [](const std::pair<std::string, T> &p, const std::string &str) { return p.first < str; });
+            // NOTE: if tmp != it_dict_f, we found a value in the dict range which is >= it_ss,
+            // but we still need to check it is really the same.
+            if (likely(tmp != it_dict_f && *tmp == *it_ss)) {
+                // The it_ss value was found, set it_dict to the
+                // iterator pointing to it in the dictionary.
+                it_dict = tmp;
+            } else {
+                // The it_ss value was not found: we cannot evaluate.
+                piranha_throw(std::invalid_argument, "cannot evaluate series: the symbol '" + *it_ss
                                                          + "' is missing from the series evaluation dictionary'");
             }
-            ++i;
+            // Append the value mapped to the current ss symbol to the vector.
+            evec.push_back(it_dict->second);
         }
-        // It could still happen that pmap is missing symbols at the tail of the symbol set.
-        if (unlikely(i < s.get_symbol_set().size())) {
-            piranha_throw(std::invalid_argument, "the symbol '" + s.get_symbol_set()[i].get_name()
-                                                     + "' is missing from the series evaluation dictionary'");
-        }
-        // Init return value and accumulate it.
+        piranha_assert(evec.size() == ss.size());
+
+        // Init the return value and accumulate it.
         eval_type retval(0);
         for (const auto &t : s._container()) {
-            multadd(retval, math::evaluate(t.m_cf, dict), t.m_key.evaluate(pmap, s.get_symbol_set()));
+            multadd(retval, math::evaluate(t.m_cf, dict), t.m_key.evaluate(evec, ss));
         }
         return retval;
     }
@@ -3496,7 +3509,7 @@ inline namespace impl
 // checks (which might result in infinite recursion due to this enabler being re-instantiated).
 template <typename Archive, typename Series>
 using series_boost_save_enabler = enable_if_t<
-    conjunction<is_series<Series>, has_boost_save<Archive, decltype(symbol_set{}.size())>,
+    conjunction<is_series<Series>, has_boost_save<Archive, decltype(symbol_fset{}.size())>,
                 has_boost_save<Archive, const std::string &>,
                 has_boost_save<Archive, decltype(std::declval<const Series &>().size())>,
                 has_boost_save<Archive, typename Series::term_type::cf_type>,
@@ -3505,7 +3518,7 @@ using series_boost_save_enabler = enable_if_t<
 // NOTE: the requirement that Series must not be const is in the is_series check.
 template <typename Archive, typename Series>
 using series_boost_load_enabler = enable_if_t<conjunction<
-    is_series<Series>, has_boost_load<Archive, decltype(symbol_set{}.size())>, has_boost_load<Archive, std::string>,
+    is_series<Series>, has_boost_load<Archive, decltype(symbol_fset{}.size())>, has_boost_load<Archive, std::string>,
     has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
     has_boost_load<Archive, typename Series::term_type::cf_type>,
     has_boost_load<Archive, boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
@@ -3517,7 +3530,7 @@ using series_boost_load_enabler = enable_if_t<conjunction<
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
  * - the coefficient type, \p std::string and the integral types representing the size of the series
- *   and the size of piranha::symbol_set satisfy piranha::has_boost_save,
+ *   and the size of piranha::symbol_fset satisfy piranha::has_boost_save,
  * - the key type satisfies piranha::has_boost_save (via piranha::boost_s11n_key_wrapper).
  *
  * @throws unspecified any exception thrown by piranha::boost_save().
@@ -3533,7 +3546,7 @@ struct boost_save_impl<Archive, Series, series_boost_save_enabler<Archive, Serie
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
  * - the coefficient type, \p std::string and the integral types representing the size of the series and
- *   the size of piranha::symbol_set satisfy piranha::has_boost_load,
+ *   the size of piranha::symbol_fset satisfy piranha::has_boost_load,
  * - the key type satisfies piranha::has_boost_load (via piranha::boost_s11n_key_wrapper).
  *
  * The basic exception safety guarantee is provided.
@@ -3542,7 +3555,7 @@ struct boost_save_impl<Archive, Series, series_boost_save_enabler<Archive, Serie
  * - piranha::boost_load(),
  * - memory errors in standard containers,
  * - piranha::safe_cast(),
- * - the public interface of piranha::symbol_set and piranha::hash_set,
+ * - the public interface of piranha::symbol_fset and piranha::hash_set,
  * - <tt>boost::numeric_cast()</tt>,
  * - piranha::series::insert(), piranha::series::set_symbol_set().
  */
@@ -3560,7 +3573,7 @@ inline namespace impl
 template <typename Stream, typename Series>
 using series_msgpack_pack_enabler
     = enable_if_t<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
-                              has_safe_cast<std::uint32_t, decltype(symbol_set{}.size())>,
+                              has_safe_cast<std::uint32_t, decltype(symbol_fset{}.size())>,
                               has_safe_cast<std::uint32_t, typename Series::size_type>,
                               has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
                               key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>;
@@ -3580,7 +3593,7 @@ using series_msgpack_convert_enabler
  * - \p Stream satisfies piranha::is_msgpack_stream,
  * - the coefficient type and \p std::string satisfy piranha::has_msgpack_pack,
  * - the key type satisfies piranha::key_has_msgpack_pack,
- * - the size types of piranha::series and piranha::symbol_set are safely convertible to \p std::uint32_t.
+ * - the size types of piranha::series and piranha::symbol_fset are safely convertible to \p std::uint32_t.
  */
 template <typename Stream, typename Series>
 struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Series>> {
@@ -3650,7 +3663,7 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
      * - the public interface of <tt>msgpack::object</tt>,
      * - piranha::msgpack_convert(),
      * - the <tt>%msgpack_convert()</tt> method of the key,
-     * - the public interfaces of piranha::symbol_set, piranha::hash_set and piranha::series,
+     * - the public interfaces of piranha::symbol_fset, piranha::hash_set and piranha::series,
      * - the constructor of the term type of the series,
      * - <tt>boost::numeric_cast()</tt>.
      */
@@ -3673,7 +3686,7 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
                            msgpack_convert(tmp_str, obj, f);
                            return tmp_str;
                        });
-        s.set_symbol_set(symbol_set(v_str.begin(), v_str.end()));
+        s.set_symbol_set(symbol_fset(v_str.begin(), v_str.end()));
         // Preallocate buckets.
         s._container().rehash(boost::numeric_cast<s_size_t>(
             std::ceil(static_cast<double>(tmp_v[1].size()) / s._container().max_load_factor())));

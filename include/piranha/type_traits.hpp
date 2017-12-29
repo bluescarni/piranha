@@ -1131,33 +1131,6 @@ public:
 template <typename T>
 const bool is_returnable<T>::value;
 
-/// Detect types that can be used as mapped values in associative containers.
-/**
- * This type trait is intended to detect whether \p T supports typical operations that can be performed
- * on the mapped values in associative containers.
- * Specifically, this trait will be \p true if all the following conditions hold:
- * - \p T is default constructible,
- * - \p T is copy constructible and assignable,
- * - \p T is move constructible and assignable,
- * - \p T is destructible.
- *
- * Otherwise, the value of this trait will be \p false.
- */
-template <typename T>
-class is_mappable
-{
-    static const bool implementation_defined
-        = conjunction<std::is_default_constructible<T>, std::is_destructible<T>, std::is_copy_constructible<T>,
-                      std::is_copy_assignable<T>, std::is_move_constructible<T>, std::is_move_assignable<T>>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
-
-template <typename T>
-const bool is_mappable<T>::value;
-
 /// Detect if zero is a multiplicative absorber.
 /**
  * This type trait, defaulting to \p true, establishes if the zero element of the type \p T is a multiplicative

@@ -30,6 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_MATH_HPP
 
 #include <algorithm>
+#include <boost/container/flat_map.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <complex>
@@ -39,7 +40,6 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -745,39 +745,20 @@ inline detail::math_integrate_type<T> integrate(const T &x, const std::string &s
 {
     return integrate_impl<T>{}(x, str);
 }
-}
-
-inline namespace impl
-{
-
-// The default implementation of evaluate_impl inherits from this.
-struct default_math_evaluate_tag {
-};
-}
-
-namespace math
-{
 
 /// Default functor for the implementation of piranha::math::evaluate().
 /**
  * This functor can be specialised via the \p std::enable_if mechanism.
  */
 template <typename T, typename U, typename = void>
-class evaluate_impl : default_math_evaluate_tag
+class evaluate_impl
 {
-    template <typename T1, typename, typename = void>
-    struct ret_type_ {
-        using type = T1;
-    };
     template <typename T1, typename U1>
-    struct ret_type_<T1, U1, enable_if_t<is_detected<add_t, T1, U1>::value>> {
-        using type = add_t<T1, U1>;
-    };
+    using ret_t = typename std::conditional<is_detected<add_t, T1, U1>::value, detected_t<add_t, T1, U1>, T1>::type;
     template <typename T1, typename U1>
-    using ret_type
-        = enable_if_t<conjunction<is_returnable<typename ret_type_<T1, U1>::type>,
-                                  std::is_constructible<typename ret_type_<T1, U1>::type, const T1 &>>::value,
-                      typename ret_type_<T1, U1>::type>;
+    using ret_type = enable_if_t<
+        conjunction<is_returnable<ret_t<T1, U1>>, std::is_constructible<ret_t<T1, U1>, const T1 &>>::value,
+        ret_t<T1, U1>>;
 
 public:
     /// Call operator.
@@ -797,14 +778,14 @@ public:
      * The intent of this default-implementation of piranha::math::evaluate() is to either promote \p x to
      * the common type of \p T and \p U, if it exists, or just return \p x as-is if a common type does not exist.
      *
-     * @param x evaluation argument.
+     * @param x the evaluation argument.
      *
      * @return an instance of the return type constructed from \p x.
      *
      * @throws unspecified any exception thrown by the invoked constructors.
      */
     template <typename T1, typename U1>
-    ret_type<T1, U1> operator()(const T1 &x, const std::unordered_map<std::string, U1> &) const
+    ret_type<T1, U1> operator()(const T1 &x, const boost::container::flat_map<std::string, U1> &) const
     {
         return ret_type<T1, U1>(x);
     }
@@ -816,12 +797,11 @@ inline namespace impl
 
 // Return type for math::evaluate().
 template <typename T, typename U>
-using math_evaluate_t_ = decltype(
-    math::evaluate_impl<T, U>{}(std::declval<const T &>(), std::declval<const std::unordered_map<std::string, U> &>()));
+using math_evaluate_t_ = decltype(math::evaluate_impl<T, U>{}(
+    std::declval<const T &>(), std::declval<const boost::container::flat_map<std::string, U> &>()));
 
 template <typename T, typename U>
-using math_evaluate_t =
-    typename std::enable_if<is_returnable<math_evaluate_t_<T, U>>::value, math_evaluate_t_<T, U>>::type;
+using math_evaluate_t = enable_if_t<is_returnable<math_evaluate_t_<T, U>>::value, math_evaluate_t_<T, U>>;
 }
 
 namespace math
@@ -833,23 +813,23 @@ namespace math
  * This function is enabled only if <tt>evaluate_impl<T,U>{}(x,dict)</tt> is a valid expression, returning
  * a type which satisfies piranha::is_returnable.
  *
- * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary \p dict
- * specifies the quantity (value) that will be susbstituted for each argument (key), represented as a string.
+ * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input
+ * dictionary \p dict specifies the value that will be susbstituted for each symbol.
  * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
  * The body of this function is equivalent to:
  * @code
  * return evaluate_impl<T,U>{}(x,dict);
  * @endcode
  *
- * @param x quantity that will be evaluated.
- * @param dict dictionary that will be used to perform the substitution.
+ * @param x the quantity that will be evaluated.
+ * @param dict a dictionary that will be used to perform the substitution.
  *
  * @return \p x evaluated according to \p dict.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
 template <typename U, typename T>
-inline math_evaluate_t<T, U> evaluate(const T &x, const std::unordered_map<std::string, U> &dict)
+inline math_evaluate_t<T, U> evaluate(const T &x, const boost::container::flat_map<std::string, U> &dict)
 {
     return evaluate_impl<T, U>{}(x, dict);
 }
@@ -2447,8 +2427,8 @@ template <typename T, typename U>
 class is_evaluable
 {
     template <typename T1, typename U1>
-    using eval_t = decltype(
-        math::evaluate(std::declval<const T1 &>(), std::declval<const std::unordered_map<std::string, U1> &>()));
+    using eval_t = decltype(math::evaluate(std::declval<const T1 &>(),
+                                           std::declval<const boost::container::flat_map<std::string, U1> &>()));
     static const bool implementation_defined = is_detected<eval_t, T, U>::value;
 
 public:
