@@ -37,7 +37,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/memory.hpp>
 
 namespace piranha
 {
@@ -49,29 +48,33 @@ namespace detail
 struct atomic_flag_array {
     using value_type = std::atomic_flag;
     // This constructor will init all the flags in the array to false.
-    explicit atomic_flag_array(const std::size_t &size) : m_ptr(nullptr), m_size(size)
+    explicit atomic_flag_array(const std::size_t &size) : m_size(size)
     {
         if (unlikely(size > std::numeric_limits<std::size_t>::max() / sizeof(value_type))) {
             piranha_throw(std::bad_alloc, );
         }
-        // NOTE: this throws if allocation fails, after this line everything is noexcept.
-        m_ptr = static_cast<value_type *>(aligned_palloc(0u, size * sizeof(value_type)));
-        for (std::size_t i = 0u; i < m_size; ++i) {
+        // Dynamically create an array of unsigned char with enough storage.
+        // This will throw bad_alloc in case the memory cannot be allocated.
+        // NOTE: this is required to return memory sufficiently aligned for any type
+        // which does not have extended alignment requirements:
+        // https://stackoverflow.com/questions/10587879/does-new-char-actually-guarantee-aligned-memory-for-a-class-type
+        m_ptr.reset(::new unsigned char[size * sizeof(value_type)]);
+        // Now we use the unsigned char buffer to provide storage for the atomic flags. See:
+        // http://eel.is/c++draft/intro.object
+        // From now on, everything is noexcept.
+        for (auto ptr = m_ptr.get(); ptr != m_ptr.get() + size * sizeof(value_type); ptr += sizeof(value_type)) {
             // NOTE: atomic_flag should support aggregate init syntax:
             // http://en.cppreference.com/w/cpp/atomic/atomic
             // But it results in warnings, let's avoid initialisation
             // via ctor and just set the flag to false later.
-            ::new (static_cast<void *>(m_ptr + i)) value_type;
-            (m_ptr + i)->clear();
+            ::new (static_cast<void *>(ptr)) value_type;
+            reinterpret_cast<value_type *>(ptr)->clear();
         }
     }
-    ~atomic_flag_array()
-    {
-        // atomic_flag is guaranteed to have a trivial dtor,
-        // so we can just free the storage:
-        // http://en.cppreference.com/w/cpp/atomic/atomic
-        aligned_pfree(0u, static_cast<void *>(m_ptr));
-    }
+    // atomic_flag is guaranteed to have a trivial dtor,
+    // so we can just let unique_ptr free the storage. No need
+    // for custom dtor.
+    // http://en.cppreference.com/w/cpp/atomic/atomic
     // Delete explicitly all other ctors/assignment operators.
     atomic_flag_array() = delete;
     atomic_flag_array(const atomic_flag_array &) = delete;
@@ -80,14 +83,14 @@ struct atomic_flag_array {
     atomic_flag_array &operator=(atomic_flag_array &&) = delete;
     value_type &operator[](const std::size_t &i)
     {
-        return *(m_ptr + i);
+        return *reinterpret_cast<value_type *>(m_ptr.get() + sizeof(value_type) * i);
     }
     const value_type &operator[](const std::size_t &i) const
     {
-        return *(m_ptr + i);
+        return *reinterpret_cast<const value_type *>(m_ptr.get() + sizeof(value_type) * i);
     }
     // Data members.
-    value_type *m_ptr;
+    std::unique_ptr<unsigned char[]> m_ptr;
     const std::size_t m_size;
 };
 }
