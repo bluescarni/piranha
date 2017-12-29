@@ -214,7 +214,7 @@ struct debug_access<construction_tag> {
             typedef term<long, monomial<Expo>> term_type2;
             typedef g_series_type<long, Expo> series_type2;
             series_type2 other1;
-            other1.m_symbol_set.add("x");
+            other1.m_symbol_set = symbol_fset{"x"};
             other1.insert(term_type2(1, key_type{Expo(1)}));
             // Series, different term type, copy.
             series_type s1(other1);
@@ -230,7 +230,7 @@ struct debug_access<construction_tag> {
             BOOST_CHECK(s1a.m_container.begin()->m_key[0u] == Expo(1));
             // Series, same term type, copy.
             g_series_type2<Cf, Expo> other2;
-            other2.m_symbol_set.add("x");
+            other2.m_symbol_set = symbol_fset{"x"};
             other2.insert(term_type(1, key_type{Expo(1)}));
             series_type so2(other2);
             BOOST_CHECK(so2.size() == 1u);
@@ -262,7 +262,7 @@ struct debug_access<construction_tag> {
             // Series, different term type, copy.
             other1 = 0;
             series_type s1c;
-            other1.m_symbol_set.add("x");
+            other1.m_symbol_set = symbol_fset{"x"};
             other1.insert(term_type2(1, key_type{Expo(1)}));
             s1c = other1;
             BOOST_CHECK(s1c.size() == 1u);
@@ -277,7 +277,7 @@ struct debug_access<construction_tag> {
             BOOST_CHECK(s1c.m_container.begin()->m_key[0u] == Expo(1));
             // Series, same term type, copy.
             other2 = 0;
-            other2.m_symbol_set.add("x");
+            other2.m_symbol_set = symbol_fset{"x"};
             other2.insert(term_type(1, key_type{Expo(1)}));
             series_type sp2;
             sp2 = other2;
@@ -313,7 +313,7 @@ struct debug_access<construction_tag> {
             BOOST_CHECK((std::is_constructible<series_type3, series_type>::value));
             BOOST_CHECK((std::is_assignable<series_type, int>::value));
             BOOST_CHECK((std::is_assignable<series_type, series_type2>::value));
-            BOOST_CHECK((!std::is_assignable<series_type, symbol_set>::value));
+            BOOST_CHECK((!std::is_assignable<series_type, symbol_fset>::value));
         }
     };
     template <typename Cf>
@@ -349,8 +349,7 @@ public:
             typedef term<Cf, monomial<Expo>> term_type;
             typedef typename term_type::key_type key_type;
             typedef g_series_type<Cf, Expo> series_type;
-            symbol_set ed;
-            ed.add(symbol("x"));
+            symbol_fset ed{"x"};
             // Insert well-behaved term.
             series_type s;
             s.m_symbol_set = ed;
@@ -411,8 +410,7 @@ public:
             typedef Cf value_type;
             typedef typename term_type::key_type key_type;
             typedef g_series_type<Cf, Expo> series_type;
-            symbol_set ed;
-            ed.add(symbol("x"));
+            symbol_fset ed{"x"};
             series_type s1, s2;
             s1.m_symbol_set = ed;
             s2.m_symbol_set = ed;
@@ -531,10 +529,9 @@ public:
             typedef g_series_type<Cf, Expo> series_type;
             series_type s_derived;
             typename series_type::base &s = static_cast<typename series_type::base &>(s_derived);
-            symbol_set ed1, ed2;
+            symbol_fset ed1, ed2{"x"};
             s.insert(term_type(Cf(1), key_type()));
-            ed2.add(symbol("x"));
-            auto merge_out = s.merge_arguments(ed2);
+            auto merge_out = s.merge_arguments(ed2, symbol_idx_fmap<symbol_fset>{{0, symbol_fset{"x"}}});
             BOOST_CHECK_EQUAL(merge_out.size(), unsigned(1));
             BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1), key_type{Expo(0)})) != merge_out.m_container.end());
             auto compat_check = [](const typename series_type::base &series) {
@@ -547,8 +544,8 @@ public:
             s.insert(term_type(Cf(1), key_type{Expo(1)}));
             s.insert(term_type(Cf(2), key_type{Expo(2)}));
             ed1 = ed2;
-            ed2.add(symbol("y"));
-            merge_out = s.merge_arguments(ed2);
+            ed2 = symbol_fset{"x", "y"};
+            merge_out = s.merge_arguments(ed2, symbol_idx_fmap<symbol_fset>{{1, symbol_fset{"y"}}});
             BOOST_CHECK_EQUAL(merge_out.size(), unsigned(3));
             BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1), key_type{Expo(0), Expo(0)}))
                         != merge_out.m_container.end());

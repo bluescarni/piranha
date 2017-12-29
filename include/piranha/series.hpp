@@ -930,7 +930,7 @@ class series_operators
                 it->m_cf /= y;
                 // NOTE: no need to check for compatibility, as it depends only on the key type and here
                 // we are only acting on the coefficient.
-                if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
+                if (unlikely(it->is_zero(retval.m_symbol_set))) {
                     // Erase will return the next iterator.
                     it = retval.m_container.erase(it);
                 } else {
@@ -1334,7 +1334,7 @@ private:
             piranha_throw(std::invalid_argument, "cannot insert incompatible term");
         }
         // Discard ignorable term.
-        if (unlikely(term.is_ignorable(m_symbol_set))) {
+        if (unlikely(term.is_zero(m_symbol_set))) {
             return;
         }
         insertion_impl<Sign>(std::forward<T>(term));
@@ -1374,7 +1374,7 @@ private:
         // Cleanup function that checks ignorability of an element in the hash set,
         // and removes it if necessary.
         auto cleanup = [this](const typename container_type::const_iterator &it_c) {
-            if (unlikely(it_c->is_ignorable(this->m_symbol_set))) {
+            if (unlikely(it_c->is_zero(this->m_symbol_set))) {
                 this->m_container.erase(it_c);
             }
         };
@@ -1406,7 +1406,7 @@ private:
             }
         } else {
             // Assert the existing term is not ignorable and it is compatible.
-            piranha_assert(!it->is_ignorable(m_symbol_set) && it->is_compatible(m_symbol_set));
+            piranha_assert(!it->is_zero(m_symbol_set) && it->is_compatible(m_symbol_set));
             try {
                 // The term exists already, update it.
                 insertion_cf_arithmetics<Sign>(it, std::forward<T>(term));
@@ -1508,7 +1508,7 @@ private:
                 const auto it_f2 = m_container.end();
                 for (auto it = m_container.begin(); it != it_f2;) {
                     math::negate(it->m_cf);
-                    if (unlikely(it->is_ignorable(m_symbol_set))) {
+                    if (unlikely(it->is_zero(m_symbol_set))) {
                         // Erase the invalid term.
                         it = m_container.erase(it);
                     } else {
@@ -1728,7 +1728,7 @@ private:
                 std::cout << "Term not compatible.\n";
                 return false;
             }
-            if (it->is_ignorable(m_symbol_set)) {
+            if (it->is_zero(m_symbol_set)) {
                 std::cout << "Term not ignorable.\n";
                 return false;
             }
@@ -2246,7 +2246,7 @@ public:
             const auto it_f = m_container.end();
             for (auto it = m_container.begin(); it != it_f;) {
                 math::negate(it->m_cf);
-                if (unlikely(it->is_ignorable(m_symbol_set))) {
+                if (unlikely(it->is_zero(m_symbol_set))) {
                     it = m_container.erase(it);
                 } else {
                     ++it;
