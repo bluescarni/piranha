@@ -39,7 +39,6 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/init.hpp>
-#include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/mp_integer.hpp>
