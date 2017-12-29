@@ -33,13 +33,12 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <array>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <iterator>
 #include <limits>
 #include <set>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -52,8 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/settings.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/tuning.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -254,9 +252,7 @@ struct m_functor_0 {
 
 // A limit functor that will always return the construction parameter.
 struct l_functor_0 {
-    l_functor_0(unsigned n) : m_n(n)
-    {
-    }
+    l_functor_0(unsigned n) : m_n(n) {}
     template <typename T>
     T operator()(const T &) const
     {

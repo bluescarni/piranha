@@ -39,7 +39,9 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/config.hpp>
@@ -55,7 +57,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 
 using namespace piranha;
@@ -75,7 +77,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{typename Key::value_type(1)}));
     }
@@ -93,9 +95,8 @@ class series_multiplier<g_series_type<Cf, Key>, void> : public base_series_multi
 {
     using base = base_series_multiplier<g_series_type<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -115,23 +116,23 @@ class new_monomial : public monomial<T>
 
 public:
     using base::base;
-    new_monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
+    template <typename... Args>
+    new_monomial merge_symbols(Args &&... args) const
     {
-        auto tmp = static_cast<const base *>(this)->merge_args(orig_args, new_args);
-        new_monomial retval;
-        std::copy(tmp.begin(), tmp.end(), std::back_inserter(retval));
-        return retval;
+        auto ret = static_cast<const base *>(this)->merge_symbols(std::forward<Args>(args)...);
+        auto sbe = ret.size_begin_end();
+        return new_monomial(std::get<1>(sbe), std::get<2>(sbe));
     }
-    new_monomial trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+    template <typename... Args>
+    new_monomial trim(Args &&... args) const
     {
-        auto tmp = static_cast<const base *>(this)->trim(trim_args, orig_args);
-        new_monomial retval;
-        std::copy(tmp.begin(), tmp.end(), std::back_inserter(retval));
-        return retval;
+        auto ret = static_cast<const base *>(this)->trim(std::forward<Args>(args)...);
+        auto sbe = ret.size_begin_end();
+        return new_monomial(std::get<1>(sbe), std::get<2>(sbe));
     }
     template <typename Cf>
     static void multiply(std::array<term<Cf, new_monomial>, base::multiply_arity> &res,
-                         const term<Cf, new_monomial> &t1, const term<Cf, new_monomial> &t2, const symbol_set &args)
+                         const term<Cf, new_monomial> &t1, const term<Cf, new_monomial> &t2, const symbol_fset &args)
     {
         term<Cf, new_monomial> &t = res[0u];
         if (unlikely(t1.m_key.size() != args.size())) {
