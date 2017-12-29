@@ -62,7 +62,8 @@ struct atomic_flag_array {
         // Now we use the unsigned char buffer to provide storage for the atomic flags. See:
         // http://eel.is/c++draft/intro.object
         // From now on, everything is noexcept.
-        for (auto ptr = m_ptr.get(); ptr != m_ptr.get() + size * sizeof(value_type); ptr += sizeof(value_type)) {
+        const auto end_ptr = m_ptr.get() + size * sizeof(value_type);
+        for (auto ptr = m_ptr.get(); ptr != end_ptr; ptr += sizeof(value_type)) {
             // NOTE: atomic_flag should support aggregate init syntax:
             // http://en.cppreference.com/w/cpp/atomic/atomic
             // But it results in warnings, let's avoid initialisation
