@@ -83,9 +83,7 @@ public:
      *
      * @throws unspecified any exception thrown by the default constructors of \p Cf and \p Key.
      */
-    term() : m_cf(), m_key()
-    {
-    }
+    term() : m_cf(), m_key() {}
     /// Default copy constructor.
     /**
      * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
@@ -173,19 +171,19 @@ public:
     {
         return m_key.is_compatible(args);
     }
-    /// Ignorability test.
+    /// Zero test.
     /**
      * Note that this method is not allowed to throw, so any exception thrown by calling piranha::math::is_zero() on the
      * coefficient will result in the termination of the program.
      *
      * @param args reference piranha::symbol_fset.
      *
-     * @return \p true if either the key's <tt>is_ignorable()</tt> method or piranha::math::is_zero() on the coefficient
+     * @return \p true if either the key's <tt>is_zero()</tt> method or piranha::math::is_zero() on the coefficient
      * return \p true, \p false otherwise.
      */
-    bool is_ignorable(const symbol_fset &args) const noexcept
+    bool is_zero(const symbol_fset &args) const noexcept
     {
-        return math::is_zero(m_cf) || m_key.is_ignorable(args);
+        return math::is_zero(m_cf) || m_key.is_zero(args);
     }
     /// Coefficient member.
     mutable Cf m_cf;
