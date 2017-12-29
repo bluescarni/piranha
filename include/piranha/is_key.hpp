@@ -86,14 +86,12 @@ class is_key
     using trim_t = decltype(
         std::declval<const U &>().trim(std::declval<const std::vector<char> &>(), std::declval<symbol_fset const &>()));
     template <typename U>
-    using check_methods_t = std::integral_constant<bool, conjunction<std::is_same<detected_t<is_compatible_t, U>, bool>,
-                                                                     std::is_same<detected_t<is_zero_t, U>, bool>,
-                                                                     std::is_same<detected_t<merge_symbols_t, U>, U>,
-                                                                     std::is_same<detected_t<is_unitary_t, U>, bool>,
-                                                                     std::is_same<detected_t<print_t, U>, void>,
-                                                                     std::is_same<detected_t<print_tex_t, U>, void>,
-                                                                     std::is_same<detected_t<trim_identify_t, U>, void>,
-                                                                     std::is_same<detected_t<trim_t, U>, U>>::value>;
+    using check_methods_t = std::integral_constant<
+        bool,
+        conjunction<std::is_same<detected_t<is_compatible_t, U>, bool>, std::is_same<detected_t<is_zero_t, U>, bool>,
+                    std::is_same<detected_t<merge_symbols_t, U>, U>, std::is_same<detected_t<is_unitary_t, U>, bool>,
+                    std::is_same<detected_t<print_t, U>, void>, std::is_same<detected_t<print_tex_t, U>, void>,
+                    std::is_same<detected_t<trim_identify_t, U>, void>, std::is_same<detected_t<trim_t, U>, U>>::value>;
     template <typename U, typename = void>
     struct is_key_impl {
         static const bool value = false;
