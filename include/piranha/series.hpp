@@ -3462,32 +3462,28 @@ public:
         // Make sure the static cached vector is reset to empty.
         evec.resize(0);
 
-        const auto it_ss_f = ss.end();
         auto it_dict = dict.begin();
         const auto it_dict_f = dict.end();
-        // NOTE: we increase it_dict at the end of the iteration because, if we
-        // get there, it means we identified a symbol of ss in dict. For the next
-        // iteration of the for loop we want to start looking for the next ss symbol
-        // right *after* the element in dict we just found.
-        for (auto it_ss = ss.begin(); it_ss != it_ss_f; ++it_ss, ++it_dict) {
-            // Try to locate the current value of it_ss in the
-            // [it_dict, it_dict_f) range.
-            const auto tmp = std::lower_bound(
-                it_dict, it_dict_f, *it_ss,
+        for (const auto &sym : ss) {
+            // Try to locate the current sym in the
+            // [it_dict, it_dict_f) range. Store the result in it_dict.
+            it_dict = std::lower_bound(
+                it_dict, it_dict_f, sym,
                 [](const std::pair<std::string, T> &p, const std::string &str) { return p.first < str; });
-            // NOTE: if tmp != it_dict_f, we found a value in the dict range which is >= it_ss,
+            // NOTE: if it_dict != it_dict_f, we found a value in the dict range which is >= sym,
             // but we still need to check it is really the same.
-            if (likely(tmp != it_dict_f && tmp->first == *it_ss)) {
-                // The it_ss value was found, set it_dict to the
-                // iterator pointing to it in the dictionary.
-                it_dict = tmp;
-            } else {
+            if (unlikely(it_dict == it_dict_f || it_dict->first != sym)) {
                 // The it_ss value was not found: we cannot evaluate.
-                piranha_throw(std::invalid_argument, "cannot evaluate series: the symbol '" + *it_ss
+                piranha_throw(std::invalid_argument, "cannot evaluate series: the symbol '" + sym
                                                          + "' is missing from the series evaluation dictionary'");
             }
             // Append the value mapped to the current ss symbol to the vector.
             evec.push_back(it_dict->second);
+            // NOTE: we increase it_dict at the end of the iteration because, if we
+            // get there, it means we identified a symbol of ss in dict. For the next
+            // iteration of the for loop we want to start looking for the next ss symbol
+            // right *after* the element in dict we just found.
+            ++it_dict;
         }
         piranha_assert(evec.size() == ss.size());
 
