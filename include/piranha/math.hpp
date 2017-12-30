@@ -1684,7 +1684,7 @@ using truncate_degree_enabler = typename std::enable_if<
 template <typename T, typename U>
 using truncate_pdegree_enabler = typename std::enable_if<
     std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(), std::declval<const U &>(),
-                                                             std::declval<const std::vector<std::string> &>())),
+                                                             std::declval<const symbol_fset &>())),
                  T>::value,
     int>::type;
 }
@@ -1700,9 +1700,9 @@ namespace math
  * The actual implementation of this function is in the piranha::math::truncate_degree_impl functor.
  *
  * The body of this function is equivalent to:
-@code
-return truncate_degree_impl<T,U>()(x,max_degree);
-@endcode
+ * @code
+ * return truncate_degree_impl<T,U>()(x,max_degree);
+ * @endcode
  * The call operator of piranha::math::truncate_degree_impl is required to return type \p T, otherwise
  * this function will be disabled.
  *
@@ -1742,7 +1742,7 @@ inline T truncate_degree(const T &x, const U &max_degree)
  * @throws unspecified any exception thrown by the call operator of piranha::math::truncate_degree_impl.
  */
 template <typename T, typename U, detail::truncate_pdegree_enabler<T, U> = 0>
-inline T truncate_degree(const T &x, const U &max_degree, const std::vector<std::string> &names)
+inline T truncate_degree(const T &x, const U &max_degree, const symbol_fset &names)
 {
     return truncate_degree_impl<T, U>()(x, max_degree, names);
 }
@@ -1751,8 +1751,7 @@ inline T truncate_degree(const T &x, const U &max_degree, const std::vector<std:
 /// Type trait to detect if types can be used in piranha::math::truncate_degree().
 /**
  * The type trait will be true if instances of types \p T and \p U can be used as arguments of
- * piranha::math::truncate_degree()
- * (both in the binary and ternary version of the function).
+ * piranha::math::truncate_degree() (both in the binary and ternary version of the function).
  */
 template <typename T, typename U>
 class has_truncate_degree : detail::sfinae_types

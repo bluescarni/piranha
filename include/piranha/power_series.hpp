@@ -444,13 +444,14 @@ public:
     pdegree_type<T> degree(const symbol_fset &names) const
     {
         using term_type = typename T::term_type;
-        const symbol_set::positions p(this->m_symbol_set, symbol_set(names.begin(), names.end()));
+        const auto idx = ss_intersect_idx(this->m_symbol_set, names);
         auto it = std::max_element(this->m_container.begin(), this->m_container.end(),
-                                   [this, &p, &names](const term_type &t1, const term_type &t2) {
-                                       return ps_get_degree(t1, names, p, this->m_symbol_set)
-                                              < ps_get_degree(t2, names, p, this->m_symbol_set);
+                                   [this, &idx, &names](const term_type &t1, const term_type &t2) {
+                                       return ps_get_degree(t1, names, idx, this->m_symbol_set)
+                                              < ps_get_degree(t2, names, idx, this->m_symbol_set);
                                    });
-        return (it == this->m_container.end()) ? pdegree_type<T>(0) : ps_get_degree(*it, names, p, this->m_symbol_set);
+        return (it == this->m_container.end()) ? pdegree_type<T>(0)
+                                               : ps_get_degree(*it, names, idx, this->m_symbol_set);
     }
     /// Partial low degree.
     /**
@@ -474,14 +475,14 @@ public:
     pldegree_type<T> ldegree(const symbol_fset &names) const
     {
         using term_type = typename T::term_type;
-        const symbol_set::positions p(this->m_symbol_set, symbol_set(names.begin(), names.end()));
+        const auto idx = ss_intersect_idx(this->m_symbol_set, names);
         auto it = std::min_element(this->m_container.begin(), this->m_container.end(),
-                                   [this, &p, &names](const term_type &t1, const term_type &t2) {
-                                       return ps_get_ldegree(t1, names, p, this->m_symbol_set)
-                                              < ps_get_ldegree(t2, names, p, this->m_symbol_set);
+                                   [this, &idx, &names](const term_type &t1, const term_type &t2) {
+                                       return ps_get_ldegree(t1, names, idx, this->m_symbol_set)
+                                              < ps_get_ldegree(t2, names, idx, this->m_symbol_set);
                                    });
         return (it == this->m_container.end()) ? pldegree_type<T>(0)
-                                               : ps_get_ldegree(*it, names, p, this->m_symbol_set);
+                                               : ps_get_ldegree(*it, names, idx, this->m_symbol_set);
     }
     /// Total degree truncation.
     /**
@@ -543,10 +544,10 @@ public:
     {
         Derived retval;
         retval.m_symbol_set = this->m_symbol_set;
-        const symbol_set::positions p(this->m_symbol_set, symbol_set(names.begin(), names.end()));
+        const auto idx = ss_intersect_idx(this->m_symbol_set, names);
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            auto tmp = ps_truncate_term(*it, max_degree, names, p, retval.m_symbol_set);
+            auto tmp = ps_truncate_term(*it, max_degree, names, idx, retval.m_symbol_set);
             if (tmp.first) {
                 retval.insert(std::move(tmp.second));
             }
