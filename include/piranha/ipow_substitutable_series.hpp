@@ -93,7 +93,7 @@ class ipow_substitutable_series : public Series, ipow_substitutable_series_tag
     static ret_type_1<T, Term> subs_term_impl(const Term &t, const symbol_idx &idx, const std::string &name,
                                               const integer &n, const T &x, const symbol_fset &s_set)
     {
-        piranha_assert(index_of(s_set, name) == idx);
+        piranha_assert(ss_index_of(s_set, name) == idx);
         (void)idx;
         Derived tmp;
         tmp.set_symbol_set(s_set);
@@ -116,7 +116,7 @@ class ipow_substitutable_series : public Series, ipow_substitutable_series_tag
     static ret_type_2<T, Term> subs_term_impl(const Term &t, const symbol_idx &idx, const std::string &name,
                                               const integer &n, const T &x, const symbol_fset &s_set)
     {
-        piranha_assert(index_of(s_set, name) == idx);
+        piranha_assert(ss_index_of(s_set, name) == idx);
         (void)name;
         ret_type_2<T, Term> retval(0);
         auto ksubs = t.m_key.ipow_subs(idx, n, x, s_set);
@@ -138,7 +138,7 @@ class ipow_substitutable_series : public Series, ipow_substitutable_series_tag
     static ret_type_3<T, Term> subs_term_impl(const Term &t, const symbol_idx &idx, const std::string &name,
                                               const integer &n, const T &x, const symbol_fset &s_set)
     {
-        piranha_assert(index_of(s_set, name) == idx);
+        piranha_assert(ss_index_of(s_set, name) == idx);
         // Accumulator for the sum below. This is the same type resulting from case 2.
         ret_type_2<T, Term> acc(0);
         auto ksubs = t.m_key.ipow_subs(idx, n, x, s_set);
@@ -223,7 +223,7 @@ public:
     template <typename T>
     ipow_subs_type<T> ipow_subs(const std::string &name, const integer &n, const T &x) const
     {
-        const auto idx = index_of(this->m_symbol_set, name);
+        const auto idx = ss_index_of(this->m_symbol_set, name);
         ipow_subs_type<T> retval(0);
         for (const auto &t : this->m_container) {
             retval += subs_term_impl(t, idx, name, n, x, this->m_symbol_set);

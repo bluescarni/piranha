@@ -30,45 +30,49 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_SYMBOL_UTILS_HPP
 
 #include <algorithm>
+#include <iterator>
+#include <limits>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <vector>
+
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <iterator>
+
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
-#include <stdexcept>
-#include <string>
-#include <tuple>
-#include <unordered_set>
-#include <vector>
+#include <piranha/safe_cast.hpp>
 
 namespace piranha
 {
 
 /// Flat set of symbols.
 /**
- * This data structure represents an ordered set of unique symbols.
+ * This data structure represents an ordered set of symbols.
  */
 using symbol_fset = boost::container::flat_set<std::string>;
 
 /// Symbol index.
 /**
- * An unsigned integral type representing a position within a piranha::symbol_fset.
+ * An unsigned integral type representing a position within a \link piranha::symbol_fset symbol_fset\endlink.
  */
 using symbol_idx = symbol_fset::size_type;
 
 /// Flat set of symbol indices.
 /**
- * This data structure represents an ordered set of unique indices into a piranha::symbol_fset.
+ * This data structure represents an ordered set of indices into a \link piranha::symbol_fset symbol_fset\endlink.
  */
 using symbol_idx_fset = boost::container::flat_set<symbol_idx>;
 
 /// Flat map of symbol indices.
 /**
- * This sorted data structure maps piranha::symbol_idx instances to the generic type \p T.
+ * This sorted data structure maps \link piranha::symbol_idx symbol_idx\endlink instances to the generic type \p T.
  */
 template <typename T>
 using symbol_idx_fmap = boost::container::flat_map<symbol_idx, T>;
@@ -124,11 +128,11 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
 }
 }
 
-/// Merge symbol sets.
+/// Merge two \link piranha::symbol_fset symbol_fset\endlink.
 /**
- * This function will merge the input piranha::symbol_fset \p s1 and \p s2, returning a tuple
+ * This function will merge the input \link piranha::symbol_fset symbol_fset\endlink \p s1 and \p s2, returning a tuple
  * of three elements:
- * - a piranha::symbol_fset representing the union \p u of \p s1 and \p s2,
+ * - a \link piranha::symbol_fset symbol_fset\endlink representing the union \p u of \p s1 and \p s2,
  * - two <em>insertion maps</em> \p m1 and \p m2 representing the set differences <tt>u\\s1</tt>
  *   and <tt>u\\s2</tt> respectively.
  *
@@ -150,7 +154,7 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
  * @throws unspecified any exception thrown by memory allocation errors.
  */
 inline std::tuple<symbol_fset, symbol_idx_fmap<symbol_fset>, symbol_idx_fmap<symbol_fset>>
-merge_symbol_fsets(const symbol_fset &s1, const symbol_fset &s2)
+ss_merge(const symbol_fset &s1, const symbol_fset &s2)
 {
     symbol_fset u_set;
     // NOTE: the max size of the union is the sum of the two sizes.
@@ -187,19 +191,19 @@ merge_symbol_fsets(const symbol_fset &s1, const symbol_fset &s2)
     return std::make_tuple(std::move(u_set), compute_map(s1), compute_map(s2));
 }
 
-/// Identify the index of a symbol in a set.
+/// Identify the index of a symbol in a \link piranha::symbol_fset symbol_fset\endlink.
 /**
  * This function will return the positional index of the symbol ``name``
- * in the set ``s``. If ``name`` is not in ``s``, the size of ``s`` will be returned.
+ * in the set ``ref``. If ``name`` is not in ``ref``, the size of ``ref`` will be returned.
  *
- * @param s the input piranha::symbol_fset.
- * @param name the symbol whose index in ``s`` will be returned.
+ * @param ref the input \link piranha::symbol_fset symbol_fset\endlink.
+ * @param name the symbol whose index in ``ref`` will be returned.
  *
- * @return the positional index of ``name`` in ``s``.
+ * @return the positional index of ``name`` in ``ref``.
  */
-inline symbol_idx index_of(const symbol_fset &s, const std::string &name)
+inline symbol_idx ss_index_of(const symbol_fset &ref, const std::string &name)
 {
-    return s.index_of(s.find(name));
+    return ref.index_of(ref.find(name));
 }
 
 inline namespace impl
@@ -220,7 +224,7 @@ struct mask_ss_filter {
 // Functor for use in the transform iterator below.
 struct mask_ss_transform {
     template <typename Tuple>
-    std::string operator()(const Tuple &t) const
+    const std::string &operator()(const Tuple &t) const
     {
         // NOTE: we need to extract the symbol name, which is
         // the second element of the tuple.
@@ -229,7 +233,7 @@ struct mask_ss_transform {
 };
 }
 
-/// Trim symbol set.
+/// Trim a \link piranha::symbol_fset symbol_fset\endlink.
 /**
  * This function will trim the input set ``s`` according to the values in ``mask``.
  * That is, a copy of ``s`` is returned without the symbols whose corresponding
@@ -239,7 +243,7 @@ struct mask_ss_transform {
  * ``[0, 1, 0]``, then the return value of this function is the set ``["x", "z"]`` (i.e., the
  * ``"y"`` symbol was eliminated because its corresponding value in ``mask`` is 1).
  *
- * @param s the input piranha::symbol_fset.
+ * @param s the input \link piranha::symbol_fset symbol_fset\endlink.
  * @param mask the trimming mask.
  *
  * @return a copy of ``s`` trimmed according to ``mask``.
@@ -247,7 +251,7 @@ struct mask_ss_transform {
  * @throws std::invalid_argument if the sizes of ``s`` and ``mask`` differ.
  * @throws unspecified any exception thrown by the construction of the return value.
  */
-inline symbol_fset trim_symbol_set(const symbol_fset &s, const std::vector<char> &mask)
+inline symbol_fset ss_trim(const symbol_fset &s, const std::vector<char> &mask)
 {
     if (unlikely(s.size() != mask.size())) {
         // The usual sanity check.
@@ -269,7 +273,75 @@ inline symbol_fset trim_symbol_set(const symbol_fset &s, const std::vector<char>
     auto trans_end = boost::make_transform_iterator(filter_end, mask_ss_transform{});
     // Now we can construct the return value. We know it is ordered because the original
     // symbol set is ordered, and we just skip over some elements.
-    return symbol_fset(boost::container::ordered_unique_range_t{}, trans_begin, trans_end);
+    return symbol_fset{boost::container::ordered_unique_range_t{}, trans_begin, trans_end};
+}
+
+/// Find the indices of the intersection of two \link piranha::symbol_fset symbol_fset\endlink.
+/**
+ * This function first computes the intersection ``ix`` of the two sets ``s1`` and ``s2``, and then returns
+ * a set with the positional indices of ``ix`` in ``s1``.
+ *
+ * For instance, if ``s1`` is ``["b", "d", "e"]`` and ``s2`` is ``["a", "b", "c", "d", "g"]``,
+ * the intersection ``ix`` is ``["b", "d"]`` and the returned set is ``[0, 1]``.
+ *
+ * @param s1 the first operand.
+ * @param s2 the second operand.
+ *
+ * @return the indices in ``s1`` of the intersection of ``s1`` and ``s2``.
+ *
+ * @throws std::overflow_error if the size of ``s1`` is larger than an implementation-defined value.
+ * @throws unspecified any exception thrown by the public interface of \link piranha::symbol_fset symbol_fset\endlink,
+ * or by \link piranha::safe_cast() safe_cast()\endlink.
+ */
+inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset &s2)
+{
+    using it_diff_t = decltype(s1.end() - s1.begin());
+    using it_udiff_t = std::make_unsigned<it_diff_t>::type;
+    // NOTE: let's make sure all the indices in s1 can be represented by the iterator diff type.
+    // This makes the computation of s1_it - s1_it_b later safe.
+    if (unlikely(s1.size() > static_cast<it_udiff_t>(std::numeric_limits<it_diff_t>::max()))) {
+        piranha_throw(
+            std::overflow_error,
+            "overflow in the determination of the indices the intersection of two symbol_fset: the size of one of the "
+            "sets ("
+                + std::to_string(s1.size())
+                + ") is larger than the maximum value representable by the difference type of symbol_fset's iterators ("
+                + std::to_string(std::numeric_limits<it_diff_t>::max()) + ")");
+    }
+    const auto s1_it_b = s1.begin(), s1_it_f = s1.end();
+    auto s1_it = s1_it_b;
+    // Use a local vector cache to build the result.
+    PIRANHA_MAYBE_TLS std::vector<symbol_idx> vidx;
+    // Make sure it's empty before going into the loop.
+    vidx.resize(0);
+    for (const auto &sym : s2) {
+        // Try to locate sym into s1, using s1_it to store the result
+        // of the search.
+        s1_it = std::lower_bound(s1_it, s1_it_f, sym);
+        if (s1_it == s1_it_f) {
+            // No symbol >= sym was found in s1, we
+            // can break out as no more symbols from s can
+            // be found in s1.
+            break;
+        }
+        // Now s1_it points to a symbol which is >= sym.
+        if (*s1_it == sym) {
+            // We found sym in s1, record its index.
+            // NOTE: we know by construction that s1_it - s1_it_b is nonnegative, hence we can
+            // cast it safely to the unsigned counterpart. We also know we can compute it safely
+            // because we checked earlier. Finally, we need a safe cast in principle as symbol_idx
+            // and the unsigned counterpart of it_diff_t might be different (in reality, safe_cast
+            // will probably be optimised out).
+            vidx.push_back(safe_cast<symbol_idx>(static_cast<it_udiff_t>(s1_it - s1_it_b)));
+            // Bump up s1_it: we want to start searching from the next
+            // element in the next loop iteration.
+            ++s1_it;
+        }
+    }
+    // Build the return value. We know that, by construction, vidx has been built
+    // as a sorted vector.
+    assert(std::is_sorted(vidx.begin(), vidx.end()));
+    return symbol_idx_fset{boost::container::ordered_unique_range_t{}, vidx.begin(), vidx.end()};
 }
 }
 

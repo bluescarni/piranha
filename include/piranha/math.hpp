@@ -1318,7 +1318,7 @@ inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::ini
 
 /// Default functor for the implementation of piranha::math::degree().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
@@ -1349,26 +1349,28 @@ inline auto degree(const T &x) -> decltype(degree_impl<T>()(x))
 
 /// Partial degree.
 /**
- * Return the partial degree (as in polynomial degree, but only a set of variables is considered in the computation).
+ * This function returns the partial degree (i.e, the degree when only a subset of symbols is considered in the
+ * computation) of the input object ``x``.
  *
  * The actual implementation of this function is in the piranha::math::degree_impl functor.
  *
- * @param x object whose partial degree will be computed.
- * @param names names of the variables that will be considered in the computation.
+ * @param x the object whose partial degree will be computed.
+ * @param s the set of symbols that will be considered in the computation of the
+ * partial degree.
  *
- * @return partial degree.
+ * @return the partial degree of ``x``.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
  */
 template <typename T>
-inline auto degree(const T &x, const std::vector<std::string> &names) -> decltype(degree_impl<T>()(x, names))
+inline auto degree(const T &x, const symbol_fset &s) -> decltype(degree_impl<T>()(x, s))
 {
-    return degree_impl<T>()(x, names);
+    return degree_impl<T>()(x, s);
 }
 
 /// Default functor for the implementation of piranha::math::ldegree().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
@@ -1399,22 +1401,23 @@ inline auto ldegree(const T &x) -> decltype(ldegree_impl<T>()(x))
 
 /// Partial low degree.
 /**
- * Return the partial low degree (as in polynomial low degree, but only a set of variables is considered in the
- * computation).
+ * This function returns the partial low degree (i.e, the low degree when only a subset of symbols is considered in the
+ * computation) of the input object ``x``.
  *
- * The actual implementation of this function is in the piranha::math::ldegree_impl functor.
+ * The actual implementation of this function is in the piranha::math::degree_impl functor.
  *
- * @param x object whose partial low degree will be computed.
- * @param names names of the variables that will be considered in the computation.
+ * @param x the object whose partial low degree will be computed.
+ * @param s the set of symbols that will be considered in the computation of the
+ * partial low degree.
  *
- * @return partial low degree.
+ * @return the partial low degree of ``x``.
  *
- * @throws unspecified any exception thrown by the call operator of piranha::math::ldegree_impl.
+ * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
  */
 template <typename T>
-inline auto ldegree(const T &x, const std::vector<std::string> &names) -> decltype(ldegree_impl<T>()(x, names))
+inline auto ldegree(const T &x, const symbol_fset &s) -> decltype(ldegree_impl<T>()(x, s))
 {
-    return ldegree_impl<T>()(x, names);
+    return ldegree_impl<T>()(x, s);
 }
 
 /// Default functor for the implementation of piranha::math::t_degree().
@@ -1724,9 +1727,9 @@ inline T truncate_degree(const T &x, const U &max_degree)
  * The actual implementation of this function is in the piranha::math::truncate_degree_impl functor.
  *
  * The body of this function is equivalent to:
-@code
-return truncate_degree_impl<T,U>()(x,max_degree,names);
-@endcode
+ * @code
+ * return truncate_degree_impl<T,U>()(x,max_degree,names);
+ * @endcode
  * The call operator of piranha::math::truncate_degree_impl is required to return type \p T, otherwise
  * this function will be disabled.
  *

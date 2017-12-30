@@ -574,7 +574,7 @@ class series_operators
             retval.template merge_terms<Sign>(std::forward<U>(y));
         } else {
             // Let's fix the args of the first series, if needed.
-            const auto merge = merge_symbol_fsets(retval.m_symbol_set, y.m_symbol_set);
+            const auto merge = ss_merge(retval.m_symbol_set, y.m_symbol_set);
             if (std::get<0>(merge) != retval.m_symbol_set) {
                 // This is a move assignment, always possible.
                 retval = retval.merge_arguments(std::get<0>(merge), std::get<1>(merge));
@@ -751,7 +751,7 @@ class series_operators
         if (likely(x.m_symbol_set == y.m_symbol_set)) {
             return binary_mul_impl(std::forward<T>(x), std::forward<U>(y));
         } else {
-            const auto merge = merge_symbol_fsets(x.m_symbol_set, y.m_symbol_set);
+            const auto merge = ss_merge(x.m_symbol_set, y.m_symbol_set);
             const bool need_copy_x = (std::get<0>(merge) != x.m_symbol_set),
                        need_copy_y = (std::get<0>(merge) != y.m_symbol_set);
             piranha_assert(need_copy_x || need_copy_y);
@@ -1001,7 +1001,7 @@ class series_operators
         if (likely(x.m_symbol_set == y.m_symbol_set)) {
             return equality_impl(x, y);
         } else {
-            const auto merge = merge_symbol_fsets(x.m_symbol_set, y.m_symbol_set);
+            const auto merge = ss_merge(x.m_symbol_set, y.m_symbol_set);
             const bool x_needs_copy = (std::get<0>(merge) != x.m_symbol_set),
                        y_needs_copy = (std::get<0>(merge) != y.m_symbol_set);
             piranha_assert(x_needs_copy || y_needs_copy);
@@ -1667,7 +1667,7 @@ private:
         os << str;
         return os;
     }
-    // Merge arguments using a map m computed by merge_symbol_fsets(). new_s is the new
+    // Merge arguments using a map m computed by ss_merge(). new_s is the new
     // merged symbol set.
     Derived merge_arguments(const symbol_fset &new_s, const symbol_idx_fmap<symbol_fset> &m) const
     {
@@ -1810,7 +1810,7 @@ private:
         retval.m_symbol_set = this->m_symbol_set;
         // Prepare a number of buckets equal to the current one.
         retval.m_container.rehash(this->m_container.bucket_count());
-        const auto pos = index_of(retval.m_symbol_set, name);
+        const auto pos = ss_index_of(retval.m_symbol_set, name);
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // NOTE: here the term being inserted cannot be incompatible as it->m_key is coming from
@@ -1826,7 +1826,7 @@ private:
     template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 1, int>::type = 0>
     partial_type<Series> partial_impl(const std::string &name) const
     {
-        const auto pos = index_of(this->m_symbol_set, name);
+        const auto pos = ss_index_of(this->m_symbol_set, name);
         partial_type<Series> retval(0);
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
@@ -2655,7 +2655,7 @@ public:
         }
         // Build the retval.
         Derived retval;
-        retval.m_symbol_set = trim_symbol_set(m_symbol_set, trim_mask);
+        retval.m_symbol_set = ss_trim(m_symbol_set, trim_mask);
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             retval.insert(term_type{trim_cf_impl(it->m_cf), it->m_key.trim(trim_mask, m_symbol_set)});
         }
