@@ -198,7 +198,7 @@ ss_merge(const symbol_fset &s1, const symbol_fset &s2)
                 const auto new_it = retval.emplace_hint(retval.end(), i, symbol_fset{*u_it});
                 for (++u_it; *u_it < cur_sym; ++u_it) {
                     piranha_assert(u_it != u_set.end());
-                    new_it->second.emplace_hint(new_it->second.end(), *u_it);
+                    new_it->second.insert(new_it->second.end(), *u_it);
                 }
                 piranha_assert(*u_it == cur_sym);
             }
@@ -207,7 +207,7 @@ ss_merge(const symbol_fset &s1, const symbol_fset &s2)
         if (u_it != u_set.cend()) {
             const auto new_it = retval.emplace_hint(retval.end(), s.size(), symbol_fset{*u_it});
             for (++u_it; u_it != u_set.cend(); ++u_it) {
-                new_it->second.emplace_hint(new_it->second.end(), *u_it);
+                new_it->second.insert(new_it->second.end(), *u_it);
             }
         }
         return retval;
