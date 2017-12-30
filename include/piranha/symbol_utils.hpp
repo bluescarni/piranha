@@ -81,7 +81,7 @@ inline namespace impl
 {
 
 // This function will do symbol-merging for a vector-like key. Vector must support a minimal std::vector interface,
-// and the value type must be constructible from zero.
+// and the value type must be constructible from zero and copy ctible.
 template <typename Vector>
 inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symbol_idx_fmap<symbol_fset> &ins_map,
                                      const symbol_fset &orig_args)
@@ -115,6 +115,9 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
     const auto map_end = ins_map.end();
     for (decltype(v.size()) i = 0; i < v.size(); ++i) {
         if (map_it != map_end && map_it->first == i) {
+            // NOTE: here and below we should really have a better way to insert
+            // a block of zeroes rather than using a back inserter, especially
+            // for our custom vector classes. Revisit this eventually.
             std::fill_n(std::back_inserter(retval), map_it->second.size(), value_type(0));
             ++map_it;
         }
@@ -151,28 +154,49 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
  * @return a triple containing the union \p u of \p s1 and \p s2 and the set differences <tt>u\\s1</tt>
  * and <tt>u\\s2</tt>.
  *
+ * @throws std::overflow_error in case of internal overflows.
  * @throws unspecified any exception thrown by memory allocation errors.
  */
 inline std::tuple<symbol_fset, symbol_idx_fmap<symbol_fset>, symbol_idx_fmap<symbol_fset>>
 ss_merge(const symbol_fset &s1, const symbol_fset &s2)
 {
-    symbol_fset u_set;
-    // NOTE: the max size of the union is the sum of the two sizes.
-    u_set.reserve(static_cast<decltype(u_set.size())>(s1.size() + s2.size()));
-    std::set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), std::inserter(u_set, u_set.end()));
+    // Use a local cache for the accumulation of the union.
+    PIRANHA_MAYBE_TLS std::vector<std::string> v_cache;
+    using v_cache_size_t = decltype(v_cache.size());
+    // NOTE: the max size of the union is the sum of the two sizes, make sure
+    // we can compute that safely.
+    if (unlikely(s2.size() > std::numeric_limits<v_cache_size_t>::max()
+                 || s1.size() > std::numeric_limits<v_cache_size_t>::max() - s2.size())) {
+        piranha_throw(std::overflow_error,
+                      "overflow in the computation of the size of the union of two symbol sets of sizes "
+                          + std::to_string(s1.size()) + " and " + std::to_string(s2.size()));
+    }
+    const auto max_size = static_cast<v_cache_size_t>(static_cast<v_cache_size_t>(s1.size()) + s2.size());
+    if (v_cache.size() < max_size) {
+        // Enlarge if needed.
+        v_cache.resize(max_size);
+    }
+    // Do the union.
+    const auto u_end = std::set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), v_cache.begin());
+    // Create the output set out of the union, knowing that it is ordered by construction.
+    symbol_fset u_set{boost::container::ordered_unique_range_t{}, v_cache.begin(), u_end};
     auto compute_map = [&u_set](const symbol_fset &s) {
         symbol_idx_fmap<symbol_fset> retval;
         // NOTE: max size of retval is the original size + 1
         // (there could be an insertion before each and every element of s, plus an
         // insertion at the end).
+        // NOTE: here the static_cast is fine, even if the size type were
+        // a short unsigned integral. The conversion rules ensure that the addition
+        // is always done with unsigned arithmetic, thanks to the presence of 1u
+        // as operand.
         retval.reserve(static_cast<decltype(retval.size())>(s.size() + 1u));
         auto u_it = u_set.cbegin();
         for (decltype(s.size()) i = 0; i < s.size(); ++i, ++u_it) {
             piranha_assert(u_it != u_set.end());
             const auto &cur_sym = *s.nth(i);
             if (*u_it < cur_sym) {
-                const auto new_it = retval.emplace_hint(retval.end(), i, symbol_fset{*(u_it++)});
-                for (; *u_it < cur_sym; ++u_it) {
+                const auto new_it = retval.emplace_hint(retval.end(), i, symbol_fset{*u_it});
+                for (++u_it; *u_it < cur_sym; ++u_it) {
                     piranha_assert(u_it != u_set.end());
                     new_it->second.emplace_hint(new_it->second.end(), *u_it);
                 }
@@ -181,8 +205,8 @@ ss_merge(const symbol_fset &s1, const symbol_fset &s2)
         }
         // Insertions at the end.
         if (u_it != u_set.cend()) {
-            const auto new_it = retval.emplace_hint(retval.end(), s.size(), symbol_fset{*(u_it++)});
-            for (; u_it != u_set.cend(); ++u_it) {
+            const auto new_it = retval.emplace_hint(retval.end(), s.size(), symbol_fset{*u_it});
+            for (++u_it; u_it != u_set.cend(); ++u_it) {
                 new_it->second.emplace_hint(new_it->second.end(), *u_it);
             }
         }
@@ -308,12 +332,18 @@ inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset
                 + ") is larger than the maximum value representable by the difference type of symbol_fset's iterators ("
                 + std::to_string(std::numeric_limits<it_diff_t>::max()) + ")");
     }
-    const auto s1_it_b = s1.begin(), s1_it_f = s1.end();
-    auto s1_it = s1_it_b;
     // Use a local vector cache to build the result.
     PIRANHA_MAYBE_TLS std::vector<symbol_idx> vidx;
-    // Make sure it's empty before going into the loop.
-    vidx.resize(0);
+    // The max possible size of the intersection is the minimum size of the
+    // two input sets.
+    const auto max_size = std::min(s1.size(), s2.size());
+    // Enlarge vidx if needed.
+    if (vidx.size() < max_size) {
+        vidx.resize(safe_cast<decltype(vidx.size())>(max_size));
+    }
+    auto vidx_it = vidx.begin();
+    const auto s1_it_b = s1.begin(), s1_it_f = s1.end();
+    auto s1_it = s1_it_b;
     for (const auto &sym : s2) {
         // Try to locate sym into s1, using s1_it to store the result
         // of the search.
@@ -332,7 +362,8 @@ inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset
             // because we checked earlier. Finally, we need a safe cast in principle as symbol_idx
             // and the unsigned counterpart of it_diff_t might be different (in reality, safe_cast
             // will probably be optimised out).
-            vidx.push_back(safe_cast<symbol_idx>(static_cast<it_udiff_t>(s1_it - s1_it_b)));
+            piranha_assert(vidx_it != vidx.end());
+            *(vidx_it++) = safe_cast<symbol_idx>(static_cast<it_udiff_t>(s1_it - s1_it_b));
             // Bump up s1_it: we want to start searching from the next
             // element in the next loop iteration.
             ++s1_it;
@@ -340,8 +371,8 @@ inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset
     }
     // Build the return value. We know that, by construction, vidx has been built
     // as a sorted vector.
-    assert(std::is_sorted(vidx.begin(), vidx.end()));
-    return symbol_idx_fset{boost::container::ordered_unique_range_t{}, vidx.begin(), vidx.end()};
+    assert(std::is_sorted(vidx.begin(), vidx_it));
+    return symbol_idx_fset{boost::container::ordered_unique_range_t{}, vidx.begin(), vidx_it};
 }
 }
 
