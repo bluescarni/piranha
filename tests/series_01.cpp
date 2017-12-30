@@ -179,7 +179,7 @@ struct debug_access<construction_tag> {
             typedef g_series_type<Cf, Expo> series_type;
             // Default constructor.
             BOOST_CHECK(series_type().empty());
-            BOOST_CHECK_EQUAL(series_type().size(), (unsigned)0);
+            BOOST_CHECK_EQUAL(series_type().size(), 0u);
             BOOST_CHECK_EQUAL(series_type().get_symbol_set().size(), 0u);
             // Copy constructor.
             series_type s;
