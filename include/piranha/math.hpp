@@ -30,7 +30,6 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_MATH_HPP
 
 #include <algorithm>
-#include <boost/container/flat_map.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <complex>
@@ -785,7 +784,7 @@ public:
      * @throws unspecified any exception thrown by the invoked constructors.
      */
     template <typename T1, typename U1>
-    ret_type<T1, U1> operator()(const T1 &x, const boost::container::flat_map<std::string, U1> &) const
+    ret_type<T1, U1> operator()(const T1 &x, const symbol_fmap<U1> &) const
     {
         return ret_type<T1, U1>(x);
     }
@@ -797,8 +796,8 @@ inline namespace impl
 
 // Return type for math::evaluate().
 template <typename T, typename U>
-using math_evaluate_t_ = decltype(math::evaluate_impl<T, U>{}(
-    std::declval<const T &>(), std::declval<const boost::container::flat_map<std::string, U> &>()));
+using math_evaluate_t_
+    = decltype(math::evaluate_impl<T, U>{}(std::declval<const T &>(), std::declval<const symbol_fmap<U> &>()));
 
 template <typename T, typename U>
 using math_evaluate_t = enable_if_t<is_returnable<math_evaluate_t_<T, U>>::value, math_evaluate_t_<T, U>>;
@@ -810,7 +809,7 @@ namespace math
 /// Evaluation.
 /**
  * \note
- * This function is enabled only if <tt>evaluate_impl<T,U>{}(x,dict)</tt> is a valid expression, returning
+ * This function is enabled only if <tt>evaluate_impl<T,U>{}(x, dict)</tt> is a valid expression, returning
  * a type which satisfies piranha::is_returnable.
  *
  * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input
@@ -829,14 +828,14 @@ namespace math
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
 template <typename U, typename T>
-inline math_evaluate_t<T, U> evaluate(const T &x, const boost::container::flat_map<std::string, U> &dict)
+inline math_evaluate_t<T, U> evaluate(const T &x, const symbol_fmap<U> &dict)
 {
     return evaluate_impl<T, U>{}(x, dict);
 }
 
 /// Default functor for the implementation of piranha::math::subs().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  */
 template <typename T, typename U, typename Enable = void>
@@ -849,12 +848,11 @@ namespace detail
 
 // Return type for math::subs().
 template <typename T, typename U>
-using math_subs_type_ = decltype(
-    math::subs_impl<T, U>{}(std::declval<const T &>(), std::declval<const std::string &>(), std::declval<const U &>()));
+using math_subs_type_
+    = decltype(math::subs_impl<T, U>{}(std::declval<const T &>(), std::declval<const symbol_fmap<U> &>()));
 
 template <typename T, typename U>
-using math_subs_type =
-    typename std::enable_if<is_returnable<math_subs_type_<T, U>>::value, math_subs_type_<T, U>>::type;
+using math_subs_type = enable_if_t<is_returnable<math_subs_type_<T, U>>::value, math_subs_type_<T, U>>;
 }
 
 namespace math
@@ -863,28 +861,26 @@ namespace math
 /// Substitution.
 /**
  * \note
- * This function is enabled only if <tt>subs_impl<T,U>{}(x,name,y)</tt> is a valid expression, returning
+ * This function is enabled only if <tt>subs_impl<T,U>{}(x, dict)</tt> is a valid expression, returning
  * a type which satisfies piranha::is_returnable.
  *
- * Substitute a symbolic variable with a generic object.
- * The actual implementation of this function is in the piranha::math::subs_impl functor.
- * The body of this function is equivalent to:
+ * Substitute symbolic variables with generic objects. The actual implementation of this function is in the
+ * piranha::math::subs_impl functor. The body of this function is equivalent to:
  * @code
- * return subs_impl<T,U>{}(x,name,y);
+ * return subs_impl<T,U>{}(x, dict);
  * @endcode
  *
- * @param x quantity that will be subject to substitution.
- * @param name name of the symbolic variable that will be substituted.
- * @param y object that will substitute the variable.
+ * @param x the quantity that will be subject to substitution.
+ * @param dict a dictionary mapping a set of symbols to the values that will be substituted for them.
  *
- * @return \p x after substitution  of \p name with \p y.
+ * @return \p x after the substitution of the symbols in \p dict with the mapped values.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
  */
-template <typename T, typename U>
-inline detail::math_subs_type<T, U> subs(const T &x, const std::string &name, const U &y)
+template <typename U, typename T>
+inline detail::math_subs_type<T, U> subs(const T &x, const symbol_fmap<U> &dict)
 {
-    return subs_impl<T, U>{}(x, name, y);
+    return subs_impl<T, U>{}(x, dict);
 }
 
 /// Default functor for the implementation of piranha::math::t_subs().
@@ -2281,7 +2277,7 @@ class has_subs : detail::sfinae_types
     typedef typename std::decay<U>::type Ud;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u)
-        -> decltype(math::subs(t, std::declval<std::string const &>(), u), void(), yes());
+        -> decltype(math::subs(t, std::declval<const symbol_fmap<U1> &>()), void(), yes());
     static no test(...);
     static const bool implementation_defined
         = std::is_same<decltype(test(std::declval<Td>(), std::declval<Ud>())), yes>::value;
@@ -2429,8 +2425,7 @@ template <typename T, typename U>
 class is_evaluable
 {
     template <typename T1, typename U1>
-    using eval_t = decltype(math::evaluate(std::declval<const T1 &>(),
-                                           std::declval<const boost::container::flat_map<std::string, U1> &>()));
+    using eval_t = decltype(math::evaluate(std::declval<const T1 &>(), std::declval<const symbol_fmap<U1> &>()));
     static const bool implementation_defined = is_detected<eval_t, T, U>::value;
 
 public:

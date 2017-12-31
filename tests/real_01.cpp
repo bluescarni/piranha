@@ -34,7 +34,6 @@ see https://www.gnu.org/licenses/. */
 #define FUSION_MAX_VECTOR_SIZE 20
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/container/flat_map.hpp>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
@@ -1902,11 +1901,10 @@ BOOST_AUTO_TEST_CASE(real_partial_test)
 
 BOOST_AUTO_TEST_CASE(real_evaluate_test)
 {
-    BOOST_CHECK_EQUAL(math::evaluate(real(), boost::container::flat_map<std::string, integer>{}), real());
-    BOOST_CHECK_EQUAL(math::evaluate(real(2), boost::container::flat_map<std::string, int>{}), real(2));
-    BOOST_CHECK_EQUAL(math::evaluate(real(-3.5), boost::container::flat_map<std::string, double>{}), real(-3.5));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::evaluate(real(), boost::container::flat_map<std::string, real>{})), real>::value));
+    BOOST_CHECK_EQUAL(math::evaluate(real(), symbol_fmap<integer>{}), real());
+    BOOST_CHECK_EQUAL(math::evaluate(real(2), symbol_fmap<int>{}), real(2));
+    BOOST_CHECK_EQUAL(math::evaluate(real(-3.5), symbol_fmap<double>{}), real(-3.5));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(real(), symbol_fmap<real>{})), real>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_subs_test)

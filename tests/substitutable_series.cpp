@@ -52,11 +52,12 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/monomial.hpp>
 #include <piranha/mp_integer.hpp>
 #include <piranha/mp_rational.hpp>
+#include <piranha/pow.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 
 using namespace piranha;
@@ -76,7 +77,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{typename Key::value_type(1)}));
     }
@@ -94,9 +95,8 @@ class series_multiplier<g_series_type<Cf, Key>, void> : public base_series_multi
 {
     using base = base_series_multiplier<g_series_type<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -116,23 +116,23 @@ class new_monomial : public monomial<T>
 
 public:
     using base::base;
-    new_monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
+    template <typename... Args>
+    new_monomial merge_symbols(Args &&... args) const
     {
-        auto tmp = static_cast<const base *>(this)->merge_args(orig_args, new_args);
-        new_monomial retval;
-        std::copy(tmp.begin(), tmp.end(), std::back_inserter(retval));
-        return retval;
+        auto ret = static_cast<const base *>(this)->merge_symbols(std::forward<Args>(args)...);
+        auto sbe = ret.size_begin_end();
+        return new_monomial(std::get<1>(sbe), std::get<2>(sbe));
     }
-    new_monomial trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+    template <typename... Args>
+    new_monomial trim(Args &&... args) const
     {
-        auto tmp = static_cast<const base *>(this)->trim(trim_args, orig_args);
-        new_monomial retval;
-        std::copy(tmp.begin(), tmp.end(), std::back_inserter(retval));
-        return retval;
+        auto ret = static_cast<const base *>(this)->trim(std::forward<Args>(args)...);
+        auto sbe = ret.size_begin_end();
+        return new_monomial(std::get<1>(sbe), std::get<2>(sbe));
     }
     template <typename Cf>
     static void multiply(std::array<term<Cf, new_monomial>, base::multiply_arity> &res,
-                         const term<Cf, new_monomial> &t1, const term<Cf, new_monomial> &t2, const symbol_set &args)
+                         const term<Cf, new_monomial> &t1, const term<Cf, new_monomial> &t2, const symbol_fset &args)
     {
         term<Cf, new_monomial> &t = res[0u];
         if (unlikely(t1.m_key.size() != args.size())) {
@@ -169,32 +169,38 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
     BOOST_CHECK((!has_subs<stype0, std::string>::value));
     {
         stype0 x{"x"}, y{"y"}, z{"z"};
-        auto tmp = (x + y).subs("x", 2);
+        auto tmp = (x + y).subs<int>({{"x", 2}, {"y", 4}});
+        BOOST_CHECK_EQUAL(tmp, 6);
+        tmp = (x + y).subs<int>({{"x", 2}, {"y", 4}, {"z", 63}});
+        BOOST_CHECK_EQUAL(tmp, 6);
+        tmp = (x + y).subs<int>({{"x", 2}});
         BOOST_CHECK_EQUAL(tmp, y + 2);
-        BOOST_CHECK(tmp.is_identical(math::subs(x + y, "x", 2)));
+        BOOST_CHECK(tmp.is_identical(math::subs<int>(x + y, {{"x", 2}})));
         BOOST_CHECK(tmp.is_identical(y + 2 + x - x));
         BOOST_CHECK((std::is_same<decltype(tmp), stype0>::value));
-        tmp = (x + y).subs("z", 2);
+        tmp = (x + y).subs<int>({{"z", 2}});
         BOOST_CHECK_EQUAL(tmp, x + y);
-        auto tmp2 = (x + y).subs("x", 2.);
+        auto tmp2 = (math::pow(x, 2) + y).subs<double>({{"x", 2.}, {"y", 3.}});
+        BOOST_CHECK_EQUAL(tmp2, 7.);
+        tmp2 = (x + y).subs<double>({{"x", 2.}});
         BOOST_CHECK_EQUAL(tmp2, y + 2.);
-        BOOST_CHECK(tmp2.is_identical(math::subs(x + y, "x", 2.)));
+        BOOST_CHECK(tmp2.is_identical(math::subs<double>(x + y, {{"x", 2.}})));
         BOOST_CHECK((std::is_same<decltype(tmp2), g_series_type<double, monomial<int>>>::value));
-        auto tmp3 = (3 * x + y * y / 7).subs("y", 2 / 5_q);
-        BOOST_CHECK(tmp3.is_identical(math::subs(3 * x + y * y / 7, "y", 2 / 5_q)));
+        auto tmp3 = (3 * x + y * y / 7).subs<rational>({{"y", 2 / 5_q}});
+        BOOST_CHECK(tmp3.is_identical(math::subs<rational>(3 * x + y * y / 7, {{"y", 2 / 5_q}})));
         BOOST_CHECK((std::is_same<decltype(tmp3), stype0>::value));
         BOOST_CHECK_EQUAL(tmp3, 3 * x + 2 / 5_q * 2 / 5_q / 7);
-        auto tmp4 = (3 * x + y * y / 7).subs("y", 2.123_r);
-        BOOST_CHECK(tmp4.is_identical(math::subs(3 * x + y * y / 7, "y", 2.123_r)));
+        auto tmp4 = (3 * x + y * y / 7).subs<real>({{"y", 2.123_r}});
+        BOOST_CHECK(tmp4.is_identical(math::subs<real>(3 * x + y * y / 7, {{"y", 2.123_r}})));
         BOOST_CHECK((std::is_same<decltype(tmp4), g_series_type<real, monomial<int>>>::value));
         BOOST_CHECK_EQUAL(tmp4, 3 * x + math::pow(2.123_r, 2) / 7);
-        auto tmp5 = (3 * x + y * y / 7).subs("y", -2_z);
-        BOOST_CHECK(tmp5.is_identical(math::subs(3 * x + y * y / 7, "y", -2_z)));
+        auto tmp5 = (3 * x + y * y / 7).subs<integer>({{"y", -2_z}});
+        BOOST_CHECK(tmp5.is_identical(math::subs<integer>(3 * x + y * y / 7, {{"y", -2_z}})));
         BOOST_CHECK((std::is_same<decltype(tmp5), stype0>::value));
         BOOST_CHECK_EQUAL(tmp5, 3 * x + math::pow(-2_z, 2) / 7_q);
         // Substitution with series.
-        auto tmp6 = (3 * x + y * y / 7).subs("y", z * 2);
-        BOOST_CHECK(tmp6.is_identical(math::subs(3 * x + y * y / 7, "y", z * 2)));
+        auto tmp6 = (3 * x + y * y / 7).subs<stype0>({{"y", z * 2}});
+        BOOST_CHECK(tmp6.is_identical(math::subs<stype0>(3 * x + y * y / 7, {{"y", z * 2}})));
         BOOST_CHECK((std::is_same<decltype(tmp6), stype0>::value));
         BOOST_CHECK_EQUAL(tmp6, 3 * x + 4 * z * z / 7);
     }
@@ -211,33 +217,37 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
     BOOST_CHECK((!has_subs<stype1, std::string>::value));
     {
         stype1 x{stype0{"x"}}, y{stype0{"y"}}, z{stype0{"z"}};
-        auto tmp = (x + y).subs("x", 2);
+        auto tmp = (x + y).subs<int>({{"x", 2}, {"y", -3}});
+        BOOST_CHECK_EQUAL(tmp, -1);
+        tmp = (x + y).subs<int>({{"x", 2}});
         BOOST_CHECK_EQUAL(tmp, y + 2);
-        BOOST_CHECK(tmp.is_identical(math::subs(x + y, "x", 2)));
+        BOOST_CHECK(tmp.is_identical(math::subs<int>(x + y, {{"x", 2}})));
         BOOST_CHECK(tmp.is_identical(y + 2 + x - x));
         BOOST_CHECK((std::is_same<decltype(tmp), stype1>::value));
-        tmp = (x + y).subs("z", 2);
+        tmp = (x + y).subs<int>({{"z", 2}});
         BOOST_CHECK_EQUAL(tmp, x + y);
-        auto tmp2 = (x + y).subs("x", 2.);
+        auto tmp2 = (x + y).subs<double>({{"x", 2.}, {"y", 3.}});
+        BOOST_CHECK_EQUAL(tmp2, 5.);
+        tmp2 = (x + y).subs<double>({{"x", 2.}});
         BOOST_CHECK_EQUAL(tmp2, y + 2.);
-        BOOST_CHECK(tmp2.is_identical(math::subs(x + y, "x", 2.)));
+        BOOST_CHECK(tmp2.is_identical(math::subs<double>(x + y, {{"x", 2.}})));
         BOOST_CHECK((std::is_same<decltype(tmp2),
                                   g_series_type<g_series_type<double, monomial<int>>, new_monomial<int>>>::value));
-        auto tmp3 = (3 * x + y * y / 7).subs("y", 2 / 5_q);
-        BOOST_CHECK(tmp3.is_identical(math::subs(3 * x + y * y / 7, "y", 2 / 5_q)));
+        auto tmp3 = (3 * x + y * y / 7).subs<rational>({{"y", 2 / 5_q}});
+        BOOST_CHECK(tmp3.is_identical(math::subs<rational>(3 * x + y * y / 7, {{"y", 2 / 5_q}})));
         BOOST_CHECK((std::is_same<decltype(tmp3), stype1>::value));
         BOOST_CHECK_EQUAL(tmp3, 3 * x + 2 / 5_q * 2 / 5_q / 7);
-        auto tmp4 = (3 * x + y * y / 7).subs("y", 2.123_r);
-        BOOST_CHECK(tmp4.is_identical(math::subs(3 * x + y * y / 7, "y", 2.123_r)));
+        auto tmp4 = (3 * x + y * y / 7).subs<real>({{"y", 2.123_r}});
+        BOOST_CHECK(tmp4.is_identical(math::subs<real>(3 * x + y * y / 7, {{"y", 2.123_r}})));
         BOOST_CHECK((
             std::is_same<decltype(tmp4), g_series_type<g_series_type<real, monomial<int>>, new_monomial<int>>>::value));
         BOOST_CHECK_EQUAL(tmp4, 3 * x + math::pow(2.123_r, 2) / 7);
-        auto tmp5 = (3 * x + y * y / 7).subs("y", -2_z);
-        BOOST_CHECK(tmp5.is_identical(math::subs(3 * x + y * y / 7, "y", -2_z)));
+        auto tmp5 = (3 * x + y * y / 7).subs<integer>({{"y", -2_z}});
+        BOOST_CHECK(tmp5.is_identical(math::subs<integer>(3 * x + y * y / 7, {{"y", -2_z}})));
         BOOST_CHECK((std::is_same<decltype(tmp5), stype1>::value));
         BOOST_CHECK_EQUAL(tmp5, 3 * x + math::pow(-2_z, 2) / 7_q);
-        auto tmp6 = (3 * x + y * y / 7).subs("y", -2 * z);
-        BOOST_CHECK(tmp6.is_identical(math::subs(3 * x + y * y / 7, "y", -2 * z)));
+        auto tmp6 = (3 * x + y * y / 7).subs<stype1>({{"y", -2 * z}});
+        BOOST_CHECK(tmp6.is_identical(math::subs<stype1>(3 * x + y * y / 7, {{"y", -2 * z}})));
         BOOST_CHECK((std::is_same<decltype(tmp6), stype1>::value));
         BOOST_CHECK_EQUAL(tmp6, 3 * x + 4 * z * z / 7);
     }
@@ -255,39 +265,44 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
     {
         // Recursive poly with x and y at the first level, z in the second.
         stype2 x{stype0{"x"}}, y{stype0{"y"}}, z{"z"}, t{"t"};
-        auto tmp = ((x + y) * z).subs("x", 2);
+        auto tmp = ((x + y) * z).subs<int>({{"x", 2}, {"y", 3}, {"z", 4}});
+        BOOST_CHECK_EQUAL(tmp, 20);
+        tmp = ((x + y) * z).subs<int>({{"x", 2}});
         BOOST_CHECK_EQUAL(tmp, (2 + y) * z);
-        BOOST_CHECK(tmp.is_identical(math::subs((x + y) * z, "x", 2)));
+        BOOST_CHECK(tmp.is_identical(math::subs<int>((x + y) * z, {{"x", 2}})));
         BOOST_CHECK((std::is_same<decltype(tmp), stype2>::value));
-        tmp = ((x + y) * z).subs("t", 2);
+        tmp = ((x + y) * z).subs<int>({{"t", 2}});
         BOOST_CHECK_EQUAL(tmp, (x + y) * z);
-        auto tmp2 = ((x + y) * z).subs("x", 2.);
+        auto tmp2 = ((x + y) * z).subs<double>({{"x", 2.}, {"y", -4.}, {"z", 5.}});
+        BOOST_CHECK_EQUAL(tmp2, -10.);
+        tmp2 = ((x + y) * z).subs<double>({{"x", 2.}});
         BOOST_CHECK_EQUAL(tmp2, (2. + y) * z);
-        BOOST_CHECK(tmp2.is_identical(math::subs((x + y) * z, "x", 2.)));
+        BOOST_CHECK(tmp2.is_identical(math::subs<double>((x + y) * z, {{"x", 2.}})));
         BOOST_CHECK(
             (std::is_same<decltype(tmp2), g_series_type<g_series_type<double, monomial<int>>, monomial<int>>>::value));
-        auto tmp3 = ((3 * x + y * y / 7) * z).subs("z", 2 / 5_q);
-        BOOST_CHECK(tmp3.is_identical(math::subs((3 * x + y * y / 7) * z, "z", 2 / 5_q)));
+        auto tmp3 = ((3 * x + y * y / 7) * z).subs<rational>({{"z", 2 / 5_q}});
+        BOOST_CHECK(tmp3.is_identical(math::subs<rational>((3 * x + y * y / 7) * z, {{"z", 2 / 5_q}})));
         BOOST_CHECK((std::is_same<decltype(tmp3), stype2>::value));
         BOOST_CHECK_EQUAL(tmp3, (3 * x + y * y / 7) * 2 / 5_q);
-        auto tmp4 = ((3 * x + y * y / 7) * z).subs("y", 2 / 3_q).subs("z", 4_z);
-        BOOST_CHECK(tmp4.is_identical(math::subs(math::subs((3 * x + y * y / 7) * z, "y", 2 / 3_q), "z", 4_z)));
+        auto tmp4 = ((3 * x + y * y / 7) * z).subs<rational>({{"y", 2 / 3_q}, {"z", 4_q}});
+        BOOST_CHECK(tmp4.is_identical(math::subs<rational>((3 * x + y * y / 7) * z, {{"y", 2 / 3_q}, {"z", 4_q}})));
         BOOST_CHECK((std::is_same<decltype(tmp4), stype2>::value));
         BOOST_CHECK_EQUAL(tmp4, (3 * x + 2 / 3_q * 2 / 3_q / 7) * 4_z);
-        auto tmp5 = ((3 * x + y * y / 7) * z).subs("y", -2.123_r);
-        BOOST_CHECK(tmp5.is_identical(math::subs((3 * x + y * y / 7) * z, "y", -2.123_r)));
+        auto tmp5 = ((3 * x + y * y / 7) * z).subs<real>({{"y", -2.123_r}});
+        BOOST_CHECK(tmp5.is_identical(math::subs<real>((3 * x + y * y / 7) * z, {{"y", -2.123_r}})));
         BOOST_CHECK(
             (std::is_same<decltype(tmp5), g_series_type<g_series_type<real, monomial<int>>, monomial<int>>>::value));
         BOOST_CHECK_EQUAL(tmp5, (3 * x + math::pow(-2.123_r, 2) / 7) * z);
-        auto tmp6 = ((3 * x + y * y / 7) * z).subs("z", 2 * t);
-        BOOST_CHECK(tmp6.is_identical(math::subs((3 * x + y * y / 7) * z, "z", 2 * t)));
+        auto tmp6 = ((3 * x + y * y / 7) * z).subs<stype2>({{"z", 2 * t}});
+        BOOST_CHECK(tmp6.is_identical(math::subs<stype2>((3 * x + y * y / 7) * z, {{"z", 2 * t}})));
         BOOST_CHECK((std::is_same<decltype(tmp6), stype2>::value));
         BOOST_CHECK_EQUAL(tmp6, (3 * x + y * y / 7) * 2 * t);
     }
     {
         // Same variable in both levels.
         stype2 x1{stype0{"x"}}, x2{"x"}, y{stype0{"y"}};
-        BOOST_CHECK_EQUAL((x1 * x2 * y * 4 / 3_q + 2 * y).subs("x", 4), 16 * y * 4 / 3_q + 2 * y);
+        BOOST_CHECK_EQUAL((x1 * x2 * y * 4 / 3_q + 2 * y).subs<int>({{"x", 4}}), 16 * y * 4 / 3_q + 2 * y);
+        BOOST_CHECK_EQUAL((x1 * x2 * y * 4 / 3_q + 2 * y).subs<int>({{"x", 4}, {"y", 5}}), 16 * 5 * 4 / 3_q + 2 * 5);
     }
 }
 

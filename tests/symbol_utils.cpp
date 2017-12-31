@@ -171,3 +171,40 @@ BOOST_AUTO_TEST_CASE(symbol_utils_ss_intersect_idx_test)
     BOOST_CHECK((ss_intersect_idx(symbol_fset{"c", "e", "g"}, symbol_fset{"a", "b", "e"}) == symbol_idx_fset{1}));
     BOOST_CHECK((ss_intersect_idx(symbol_fset{"c", "e", "g"}, symbol_fset{"c", "e", "g"}) == symbol_idx_fset{0, 1, 2}));
 }
+
+BOOST_AUTO_TEST_CASE(symbol_utils_sm_intersect_idx_test)
+{
+    using map_t = symbol_fmap<int>;
+    BOOST_CHECK(sm_intersect_idx(symbol_fset{}, map_t{}).size() == 0u);
+    BOOST_CHECK(sm_intersect_idx(symbol_fset{}, map_t{{"a", 1}}).size() == 0u);
+    BOOST_CHECK(sm_intersect_idx(symbol_fset{}, map_t{{"a", 1}, {"b", 2}, {"c", 2}}).size() == 0u);
+    BOOST_CHECK(sm_intersect_idx(symbol_fset{"d"}, map_t{{"b", 2}, {"c", 2}}).size() == 0u);
+    BOOST_CHECK(sm_intersect_idx(symbol_fset{"a"}, map_t{{"b", 2}, {"c", 2}}).size() == 0u);
+    BOOST_CHECK(
+        (sm_intersect_idx(symbol_fset{"a"}, map_t{{"a", 1}, {"b", 2}, {"c", 2}}) == symbol_idx_fmap<int>{{0, 1}}));
+    BOOST_CHECK(
+        (sm_intersect_idx(symbol_fset{"b"}, map_t{{"a", 1}, {"b", 2}, {"c", 2}}) == symbol_idx_fmap<int>{{0, 2}}));
+    BOOST_CHECK(
+        (sm_intersect_idx(symbol_fset{"c"}, map_t{{"a", 1}, {"b", 2}, {"c", 2}}) == symbol_idx_fmap<int>{{0, 2}}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"a", "b", "c"}, map_t{{"a", 1}}) == symbol_idx_fmap<int>{{0, 1}}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"a", "b", "c"}, map_t{{"b", 2}}) == symbol_idx_fmap<int>{{1, 2}}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"a", "b", "c"}, map_t{{"c", 3}}) == symbol_idx_fmap<int>{{2, 3}}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"b", "d", "e"}, map_t{{"a", 1}, {"b", 2}, {"c", 3}, {"d", 4}, {"g", 5}})
+                 == symbol_idx_fmap<int>{{0, 2}, {1, 4}}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"a", "b", "c", "d", "g"}, map_t{{"b", 1}, {"d", 2}, {"e", 3}})
+                 == symbol_idx_fmap<int>{{1, 1}, {3, 2}}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"x", "y", "z"}, map_t{{"a", 1}, {"b", 2}, {"c", 3}, {"d", 4}, {"g", 5}})
+                 == symbol_idx_fmap<int>{}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"a", "b", "c", "d", "g"}, map_t{{"x", 1}, {"y", 2}, {"z", 3}})
+                 == symbol_idx_fmap<int>{}));
+    BOOST_CHECK(
+        (sm_intersect_idx(symbol_fset{"a", "b", "e"}, map_t{{"c", 1}, {"d", 2}, {"g", 3}}) == symbol_idx_fmap<int>{}));
+    BOOST_CHECK(
+        (sm_intersect_idx(symbol_fset{"c", "d", "g"}, map_t{{"a", 1}, {"b", 2}, {"e", 3}}) == symbol_idx_fmap<int>{}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"a", "b", "e"}, map_t{{"c", 1}, {"e", 2}, {"g", 3}})
+                 == symbol_idx_fmap<int>{{2, 2}}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"c", "e", "g"}, map_t{{"a", 1}, {"b", 2}, {"e", 3}})
+                 == symbol_idx_fmap<int>{{1, 3}}));
+    BOOST_CHECK((sm_intersect_idx(symbol_fset{"c", "e", "g"}, map_t{{"c", 1}, {"e", 2}, {"g", 3}})
+                 == symbol_idx_fmap<int>{{0, 1}, {1, 2}, {2, 3}}));
+}

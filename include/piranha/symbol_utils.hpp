@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <boost/container/flat_map.hpp>
@@ -57,6 +58,13 @@ namespace piranha
  * This data structure represents an ordered set of symbols.
  */
 using symbol_fset = boost::container::flat_set<std::string>;
+
+/// Flat map of symbols.
+/**
+ * This data structure maps an ordered set of symbols to objects of type ``T``.
+ */
+template <typename T>
+using symbol_fmap = boost::container::flat_map<std::string, T>;
 
 /// Symbol index.
 /**
@@ -326,8 +334,8 @@ inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset
     if (unlikely(s1.size() > static_cast<it_udiff_t>(std::numeric_limits<it_diff_t>::max()))) {
         piranha_throw(
             std::overflow_error,
-            "overflow in the determination of the indices the intersection of two symbol_fset: the size of one of the "
-            "sets ("
+            "overflow in the determination of the indices of the intersection of two symbol_fset: the size of one of "
+            "the sets ("
                 + std::to_string(s1.size())
                 + ") is larger than the maximum value representable by the difference type of symbol_fset's iterators ("
                 + std::to_string(std::numeric_limits<it_diff_t>::max()) + ")");
@@ -350,7 +358,7 @@ inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset
         s1_it = std::lower_bound(s1_it, s1_it_f, sym);
         if (s1_it == s1_it_f) {
             // No symbol >= sym was found in s1, we
-            // can break out as no more symbols from s can
+            // can break out as no more symbols from s2 can
             // be found in s1.
             break;
         }
@@ -373,6 +381,109 @@ inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset
     // as a sorted vector.
     assert(std::is_sorted(vidx.begin(), vidx_it));
     return symbol_idx_fset{boost::container::ordered_unique_range_t{}, vidx.begin(), vidx_it};
+}
+
+inline namespace impl
+{
+
+// Enabler for sm_intersect_idx.
+template <typename T>
+using has_sm_intersect_idx
+    = conjunction<std::is_default_constructible<T>, std::is_copy_assignable<T>, std::is_copy_constructible<T>>;
+
+template <typename T>
+using sm_intersect_idx_enabler = enable_if_t<has_sm_intersect_idx<T>::value, int>;
+}
+
+/*! \brief Find the indices of the intersection of a \link piranha::symbol_fset symbol_fset\endlink and a
+ *         \link piranha::symbol_fmap symbol_fmap\endlink.
+ *
+ * \note
+ * This function is enabled only if ``T`` is default-constructible, copy-assignable and copy-constructible.
+ *
+ * This function first computes the intersection ``ix`` of the set ``s`` and the keys of ``m``, and then returns
+ * a map in which the keys are the positional indices of ``ix`` in ``s`` and the values are the corresponding
+ * values of ``ix`` in ``m``.
+ *
+ * For instance, if ``T`` is ``int``, ``s`` is ``["b", "d", "e"]`` and ``m`` is ``[("a", 1), ("b", 2), ("c", 3), ("d",
+ * 4), ("g", 5)]``, the intersection ``ix`` is ``["b", "d"]`` and the returned map is ``[(0, 2), (1, 4)]``.
+ *
+ * @param s the set operand.
+ * @param m the map operand.
+ *
+ * @return a symbol_idx_fmap mapping the indices in ``s`` of the intersection of ``s`` and ``m`` to the values in ``m``.
+ *
+ * @throws std::overflow_error if the size of ``s`` is larger than an implementation-defined value.
+ * @throws unspecified any exception thrown by:
+ * - the public interfaces of \link piranha::symbol_fset symbol_fset\endlink and \link piranha::symbol_fmap
+ *   symbol_fmap\endlink,
+ * - \link piranha::safe_cast() safe_cast()\endlink,
+ * - the default constructor, copy constructor or copy assignment operator of ``T``.
+ */
+template <typename T, sm_intersect_idx_enabler<T> = 0>
+inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fmap<T> &m)
+{
+    // NOTE: the code here is quite similar to the other similar function above,
+    // just a few small differences. Perhaps we can refactor out some common
+    // code eventually.
+    using it_diff_t = decltype(s.end() - s.begin());
+    using it_udiff_t = std::make_unsigned<it_diff_t>::type;
+    // NOTE: let's make sure all the indices in s can be represented by the iterator diff type.
+    // This makes the computation of s_it - s_it_b later safe.
+    if (unlikely(s.size() > static_cast<it_udiff_t>(std::numeric_limits<it_diff_t>::max()))) {
+        piranha_throw(
+            std::overflow_error,
+            "overflow in the determination of the indices of the intersection of a symbol_fset and a symbol_fmap: the "
+            "size of the set ("
+                + std::to_string(s.size())
+                + ") is larger than the maximum value representable by the difference type of symbol_fset's iterators ("
+                + std::to_string(std::numeric_limits<it_diff_t>::max()) + ")");
+    }
+    // Use a local vector cache to build the result.
+    PIRANHA_MAYBE_TLS std::vector<std::pair<symbol_idx, T>> vidx;
+    // The max possible size of the intersection is the minimum size of the
+    // two input objects.
+    const auto max_size
+        = std::min<typename std::common_type<decltype(s.size()), decltype(m.size())>::type>(s.size(), m.size());
+    // Enlarge vidx if needed.
+    if (vidx.size() < max_size) {
+        vidx.resize(safe_cast<decltype(vidx.size())>(max_size));
+    }
+    auto vidx_it = vidx.begin();
+    const auto s_it_b = s.begin(), s_it_f = s.end();
+    auto s_it = s_it_b;
+    for (const auto &p : m) {
+        const auto &sym = p.first;
+        // Try to locate the current symbol in s, using s_it to store the result
+        // of the search.
+        s_it = std::lower_bound(s_it, s_it_f, sym);
+        if (s_it == s_it_f) {
+            // No symbol >= sym was found in s, we
+            // can break out as no more symbols from m can
+            // be found in s.
+            break;
+        }
+        // Now s_it points to a symbol which is >= sym.
+        if (*s_it == sym) {
+            // We found sym in s, record its index.
+            // NOTE: we know by construction that s_it - s_it_b is nonnegative, hence we can
+            // cast it safely to the unsigned counterpart. We also know we can compute it safely
+            // because we checked earlier. Finally, we need a safe cast in principle as symbol_idx
+            // and the unsigned counterpart of it_diff_t might be different (in reality, safe_cast
+            // will probably be optimised out).
+            piranha_assert(vidx_it != vidx.end());
+            // Store the index and the mapped value.
+            vidx_it->first = safe_cast<symbol_idx>(static_cast<it_udiff_t>(s_it - s_it_b));
+            vidx_it->second = p.second;
+            ++vidx_it;
+            // Bump up s_it: we want to start searching from the next
+            // element in the next loop iteration.
+            ++s_it;
+        }
+    }
+    // Build the return value. We know that, by construction, vidx has been built
+    // as a sorted vector.
+    return symbol_idx_fmap<T>{boost::container::ordered_unique_range_t{}, vidx.begin(), vidx_it};
 }
 }
 

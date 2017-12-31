@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE series_02_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/container/flat_map.hpp>
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -389,9 +388,9 @@ struct hash<mock_key> {
 BOOST_AUTO_TEST_CASE(series_evaluate_test)
 {
     typedef g_series_type<rational, int> p_type1;
-    typedef boost::container::flat_map<std::string, rational> dict_type;
-    typedef boost::container::flat_map<std::string, int> dict_type_int;
-    typedef boost::container::flat_map<std::string, long> dict_type_long;
+    typedef symbol_fmap<rational> dict_type;
+    typedef symbol_fmap<int> dict_type_int;
+    typedef symbol_fmap<long> dict_type_long;
     BOOST_CHECK((is_evaluable<p_type1, rational>::value));
     BOOST_CHECK((is_evaluable<p_type1, integer>::value));
     BOOST_CHECK((is_evaluable<p_type1, int>::value));
@@ -408,7 +407,7 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type{})), rational>::value));
-    typedef boost::container::flat_map<std::string, real> dict_type2;
+    typedef symbol_fmap<real> dict_type2;
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
     BOOST_CHECK_EQUAL(
         math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
@@ -417,7 +416,7 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
         math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
         math::evaluate(x + math::pow(2 * y, 3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type2{})), real>::value));
-    typedef boost::container::flat_map<std::string, double> dict_type3;
+    typedef symbol_fmap<double> dict_type3;
     BOOST_CHECK((is_evaluable<p_type1, double>::value));
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
                       1.234 + math::pow(2 * -5.678, 3));

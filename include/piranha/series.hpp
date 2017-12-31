@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <array>
-#include <boost/container/flat_map.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
@@ -3387,10 +3386,10 @@ inline namespace impl
 // This is the candidate evaluation type: the product of the evaluation of the coefficient by
 // the evaluation of the key.
 template <typename Series, typename T>
-using series_eval_type = decltype(math::evaluate(std::declval<const typename Series::term_type::cf_type &>(),
-                                                 std::declval<const boost::container::flat_map<std::string, T> &>())
-                                  * std::declval<const typename Series::term_type::key_type &>().evaluate(
-                                        std::declval<const std::vector<T> &>(), std::declval<const symbol_fset &>()));
+using series_eval_type = decltype(
+    math::evaluate(std::declval<const typename Series::term_type::cf_type &>(), std::declval<const symbol_fmap<T> &>())
+    * std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::vector<T> &>(),
+                                                                            std::declval<const symbol_fset &>()));
 
 template <typename Series, typename T>
 using math_series_evaluate_enabler
@@ -3447,7 +3446,7 @@ public:
      * - the copy constructor of \p T,
      * - arithmetic operations on the evaluation type.
      */
-    eval_type operator()(const Series &s, const boost::container::flat_map<std::string, T> &dict) const
+    eval_type operator()(const Series &s, const symbol_fmap<T> &dict) const
     {
         // NOTE: possible improvement: if the evaluation type is less-than comparable,
         // build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
