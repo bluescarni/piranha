@@ -75,11 +75,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
 #include <piranha/substitutable_series.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
-#include <piranha/t_substitutable_series.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/thread_pool.hpp>
-#include <piranha/trigonometric_series.hpp>
 #include <piranha/tuning.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -109,13 +106,12 @@ struct is_polynomial_key<monomial<T, U>> {
     static const bool value = true;
 };
 
-// Implementation detail to check if the monomial key supports the linear_argument() method.
+// Implementation detail to check if the monomial key supports the is_linear() method.
 template <typename Key>
-struct key_has_linarg : detail::sfinae_types {
+struct key_has_is_linear {
     template <typename U>
-    static auto test(const U &u) -> decltype(u.linear_argument(std::declval<const symbol_set &>()));
-    static no test(...);
-    static const bool value = std::is_same<std::string, decltype(test(std::declval<Key>()))>::value;
+    using is_linear_t = decltype(std::declval<const U &>().is_linear(std::declval<const symbol_fset &>()));
+    static const bool value = std::is_same<detected_t<is_linear_t, Key>, std::pair<bool, symbol_idx>>::value;
 };
 }
 
@@ -149,15 +145,10 @@ struct key_has_linarg : detail::sfinae_types {
  */
 template <typename Cf, typename Key>
 class polynomial
-    : public power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,
-                                                                                                                            Key,
-                                                                                                                            polynomial<Cf,
-                                                                                                                                       Key>>,
-                                                                                                                     polynomial<Cf,
-                                                                                                                                Key>>,
-                                                                                              polynomial<Cf, Key>>,
-                                                                         polynomial<Cf, Key>>>,
-                          polynomial<Cf, Key>>,
+    : public power_series<
+          ipow_substitutable_series<substitutable_series<series<Cf, Key, polynomial<Cf, Key>>, polynomial<Cf, Key>>,
+                                    polynomial<Cf, Key>>,
+          polynomial<Cf, Key>>,
       detail::polynomial_tag
 {
     // Check the key.
@@ -175,48 +166,38 @@ class polynomial
     template <typename, typename>
     friend class divisor_series;
     // The base class.
-    using base
-        = power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,
-                                                                                                                         Key,
-                                                                                                                         polynomial<Cf,
-                                                                                                                                    Key>>,
-                                                                                                                  polynomial<Cf,
-                                                                                                                             Key>>,
-                                                                                           polynomial<Cf, Key>>,
-                                                                      polynomial<Cf, Key>>>,
-                       polynomial<Cf, Key>>;
+    using base = power_series<
+        ipow_substitutable_series<substitutable_series<series<Cf, Key, polynomial<Cf, Key>>, polynomial<Cf, Key>>,
+                                  polynomial<Cf, Key>>,
+        polynomial<Cf, Key>>;
     // String constructor.
     template <typename Str>
     void construct_from_string(Str &&str)
     {
         using term_type = typename base::term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(symbol(std::forward<Str>(str)));
+        this->m_symbol_set.emplace_hint(this->m_symbol_set.end(), std::forward<Str>(str));
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{1}));
     }
     template <typename T = Key,
-              typename std::enable_if<detail::key_has_linarg<T>::value && has_safe_cast<integer, Cf>::value, int>::type
-              = 0>
+              enable_if_t<conjunction<detail::key_has_is_linear<T>, has_safe_cast<integer, Cf>>::value, int> = 0>
     std::map<std::string, integer> integral_combination() const
     {
-        try {
-            std::map<std::string, integer> retval;
-            for (auto it = this->m_container.begin(); it != this->m_container.end(); ++it) {
-                const std::string lin_arg = it->m_key.linear_argument(this->m_symbol_set);
-                piranha_assert(retval.find(lin_arg) == retval.end());
-                retval[lin_arg] = safe_cast<integer>(it->m_cf);
+        std::map<std::string, integer> retval;
+        for (auto it = this->m_container.begin(); it != this->m_container.end(); ++it) {
+            const auto p = it->m_key.is_linear(this->m_symbol_set);
+            if (unlikely(!p.first)) {
+                piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
             }
-            return retval;
-        } catch (const std::invalid_argument &) {
-            // NOTE: this currently catches failures both in lin_arg and safe_cast, as safe_cast_failure
-            // inherits from std::invalid_argument.
-            piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
+            retval[*(this->m_symbol_set.nth(p.second))] = safe_cast<integer>(it->m_cf);
         }
+        return retval;
     }
     template <
         typename T = Key,
-        typename std::enable_if<!detail::key_has_linarg<T>::value || !has_safe_cast<integer, Cf>::value, int>::type = 0>
+        enable_if_t<disjunction<negation<detail::key_has_is_linear<T>>, negation<has_safe_cast<integer, Cf>>>::value,
+                    int> = 0>
     std::map<std::string, integer> integral_combination() const
     {
         piranha_throw(std::invalid_argument,
@@ -231,7 +212,7 @@ class polynomial
     template <typename T>
     using key_integrate_type
         = decltype(std::declval<const typename T::term_type::key_type &>()
-                       .integrate(std::declval<const symbol &>(), std::declval<const symbol_set &>())
+                       .integrate(std::declval<const std::string &>(), std::declval<const symbol_fset &>())
                        .first);
     // Basic integration requirements for series T, to be satisfied both when the coefficient is integrable
     // and when it is not. ResT is the type of the result of the integration.
@@ -252,10 +233,9 @@ class polynomial
     using nic_res_type = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>())
                                   / std::declval<const key_integrate_type<T> &>());
     template <typename T>
-    struct integrate_type_<T, typename std::
-                                  enable_if<!is_integrable<typename T::term_type::cf_type>::value
-                                            && detail::true_tt<basic_integrate_requirements<T, nic_res_type<T>>>::
-                                                   value>::type> {
+    struct integrate_type_<
+        T, typename std::enable_if<!is_integrable<typename T::term_type::cf_type>::value
+                                   && detail::true_tt<basic_integrate_requirements<T, nic_res_type<T>>>::value>::type> {
         using type = nic_res_type<T>;
     };
     // Integrable coefficient.
@@ -263,7 +243,7 @@ class polynomial
     template <typename T>
     using key_partial_type
         = decltype(std::declval<const typename T::term_type::key_type &>()
-                       .partial(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>())
+                       .partial(std::declval<const symbol_idx &>(), std::declval<const symbol_fset &>())
                        .first);
     // Type resulting from the integration of the coefficient.
     template <typename T>
@@ -276,25 +256,23 @@ class polynomial
     template <typename T>
     using ic_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
     template <typename T>
-    struct integrate_type_<T,
-                           typename std::
-                               enable_if<is_integrable<typename T::term_type::cf_type>::value
-                                         && detail::true_tt<basic_integrate_requirements<T, ic_res_type<T>>>::value &&
-                                         // We need to be able to add the non-integrable type.
-                                         is_addable_in_place<ic_res_type<T>, nic_res_type<T>>::value &&
-                                         // We need to be able to compute the partial degree and cast it to integer.
-                                         has_safe_cast<integer,
-                                                       decltype(
-                                                           std::declval<const typename T::term_type::key_type &>()
-                                                               .degree(std::declval<const symbol_set::positions &>(),
-                                                                       std::declval<const symbol_set &>()))>::value
-                                         &&
-                                         // This is required in the initialisation of the return value.
-                                         std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
-                                         // We need to be able to assign the integrated coefficient times key partial.
-                                         std::is_assignable<i_cf_type_p<T> &, i_cf_type_p<T>>::value &&
-                                         // Needs math::negate().
-                                         has_negate<i_cf_type_p<T>>::value>::type> {
+    struct integrate_type_<
+        T, typename std::enable_if<
+               is_integrable<typename T::term_type::cf_type>::value
+               && detail::true_tt<basic_integrate_requirements<T, ic_res_type<T>>>::value &&
+               // We need to be able to add the non-integrable type.
+               is_addable_in_place<ic_res_type<T>, nic_res_type<T>>::value &&
+               // We need to be able to compute the partial degree and cast it to integer.
+               has_safe_cast<integer,
+                             decltype(std::declval<const typename T::term_type::key_type &>().degree(
+                                 std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()))>::value
+               &&
+               // This is required in the initialisation of the return value.
+               std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
+               // We need to be able to assign the integrated coefficient times key partial.
+               std::is_assignable<i_cf_type_p<T> &, i_cf_type_p<T>>::value &&
+               // Needs math::negate().
+               has_negate<i_cf_type_p<T>>::value>::type> {
         using type = ic_res_type<T>;
     };
     // Final typedef.
@@ -303,7 +281,7 @@ class polynomial
                                                    typename integrate_type_<T>::type>::type;
     // Integration with integrable coefficient.
     template <typename T = polynomial>
-    integrate_type<T> integrate_impl(const symbol &s, const typename base::term_type &term,
+    integrate_type<T> integrate_impl(const std::string &s, const typename base::term_type &term,
                                      const std::true_type &) const
     {
         typedef typename base::term_type term_type;
@@ -311,9 +289,9 @@ class polynomial
         typedef typename term_type::key_type key_type;
         // Get the partial degree of the monomial in integral form.
         integer degree;
-        const symbol_set::positions pos(this->m_symbol_set, symbol_set{s});
+        const auto idx = symbol_idx_fset{index_of(this->m_symbol_set, s)};
         try {
-            degree = safe_cast<integer>(term.m_key.degree(pos, this->m_symbol_set));
+            degree = safe_cast<integer>(term.m_key.degree(idx, this->m_symbol_set));
         } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument,
                           "unable to perform polynomial integration: cannot extract the integral form of an exponent");
@@ -327,12 +305,12 @@ class polynomial
         tmp.set_symbol_set(this->m_symbol_set);
         key_type tmp_key = term.m_key;
         tmp.insert(term_type(cf_type(1), tmp_key));
-        i_cf_type_p<T> i_cf(math::integrate(term.m_cf, s.get_name()));
+        i_cf_type_p<T> i_cf(math::integrate(term.m_cf, s));
         integrate_type<T> retval(i_cf * tmp);
         for (integer i(1); i <= degree; ++i) {
             // Update coefficient and key. These variables are persistent across loop iterations.
-            auto partial_key = tmp_key.partial(pos, this->m_symbol_set);
-            i_cf = math::integrate(i_cf, s.get_name()) * std::move(partial_key.first);
+            auto partial_key = tmp_key.partial(*idx.begin(), this->m_symbol_set);
+            i_cf = math::integrate(i_cf, s) * std::move(partial_key.first);
             // Account for (-1)**i.
             math::negate(i_cf);
             // Build the other factor from the derivative of the monomial.
@@ -348,7 +326,8 @@ class polynomial
     }
     // Integration with non-integrable coefficient.
     template <typename T = polynomial>
-    integrate_type<T> integrate_impl(const symbol &, const typename base::term_type &, const std::false_type &) const
+    integrate_type<T> integrate_impl(const std::string &, const typename base::term_type &,
+                                     const std::false_type &) const
     {
         piranha_throw(std::invalid_argument,
                       "unable to perform polynomial integration: coefficient type is not integrable");
@@ -357,7 +336,7 @@ class polynomial
     // argument T and that exponentiation of key type is legal.
     template <typename T>
     using key_pow_t
-        = decltype(std::declval<Key const &>().pow(std::declval<const T &>(), std::declval<const symbol_set &>()));
+        = decltype(std::declval<Key const &>().pow(std::declval<const T &>(), std::declval<const symbol_fset &>()));
     template <typename T>
     using pow_ret_type = enable_if_t<is_detected<key_pow_t, T>::value,
                                      decltype(std::declval<series<Cf, Key, polynomial<Cf, Key>> const &>().pow(
@@ -375,14 +354,12 @@ class polynomial
     // Enablers for auto-truncation: degree and partial degree must be the same, series must support
     // math::truncate_degree(), degree type must be subtractable and yield the same type.
     template <typename T>
-    using at_degree_enabler =
-        typename std::enable_if<std::is_same<degree_type<T>, pdegree_type<T>>::value
-                                    && has_truncate_degree<T, degree_type<T>>::value
-                                    && std::is_same<decltype(std::declval<const degree_type<T> &>()
-                                                             - std::declval<const degree_type<T> &>()),
-                                                    degree_type<T>>::value
-                                    && is_equality_comparable<degree_type<T>>::value,
-                                int>::type;
+    using at_degree_enabler = typename std::enable_if<
+        std::is_same<degree_type<T>, pdegree_type<T>>::value && has_truncate_degree<T, degree_type<T>>::value
+            && std::is_same<decltype(std::declval<const degree_type<T> &>() - std::declval<const degree_type<T> &>()),
+                            degree_type<T>>::value
+            && is_equality_comparable<degree_type<T>>::value,
+        int>::type;
     // For the setter, we need the above plus we need to be able to convert safely U to the degree type.
     template <typename T, typename U>
     using at_degree_set_enabler =
@@ -413,12 +390,11 @@ class polynomial
                                 int>::type;
     // Implementation of find_cf().
     template <typename T>
-    using find_cf_enabler =
-        typename std::enable_if<std::is_constructible<
-                                    typename base::term_type::key_type, decltype(std::begin(std::declval<const T &>())),
-                                    decltype(std::end(std::declval<const T &>())), const symbol_set &>::value
-                                    && has_input_begin_end<const T>::value,
-                                int>::type;
+    using find_cf_enabler = typename std::enable_if<
+        std::is_constructible<typename base::term_type::key_type, decltype(std::begin(std::declval<const T &>())),
+                              decltype(std::end(std::declval<const T &>())), const symbol_fset &>::value
+            && has_input_begin_end<const T>::value,
+        int>::type;
     template <typename T>
     using find_cf_init_list_enabler = find_cf_enabler<std::initializer_list<T>>;
     template <typename Iterator>
@@ -448,25 +424,7 @@ class polynomial
     template <typename Functor>
     static polynomial um_tm_implementation(const polynomial &p1, const polynomial &p2, const Functor &runner)
     {
-        const auto &ss1 = p1.get_symbol_set(), &ss2 = p2.get_symbol_set();
-        if (ss1 == ss2) {
-            return runner(p1, p2);
-        }
-        // If the symbol sets are not the same, we need to merge them and make
-        // copies of the original operands as needed.
-        auto merge = ss1.merge(ss2);
-        const bool need_copy_1 = (merge != ss1), need_copy_2 = (merge != ss2);
-        if (need_copy_1) {
-            polynomial copy_1(p1.extend_symbol_set(merge));
-            if (need_copy_2) {
-                polynomial copy_2(p2.extend_symbol_set(merge));
-                return runner(copy_1, copy_2);
-            }
-            return runner(copy_1, p2);
-        } else {
-            polynomial copy_2(p2.extend_symbol_set(merge));
-            return runner(p1, copy_2);
-        }
+        series_merge_f(p1, p2, runner);
     }
     // Helper function to clear the pow cache when a new auto truncation limit is set.
     template <typename T>
@@ -502,8 +460,7 @@ public:
      * @param name name of the symbolic variable that the polynomial will represent.
      *
      * @throws unspecified any exception thrown by:
-     * - piranha::symbol_set::add(),
-     * - the constructor of piranha::symbol from string,
+     * - the public interface of piranha::symbol_fset,
      * - the invoked constructor of the coefficient type,
      * - the invoked constructor of the key type,
      * - the constructor of the term type from coefficient and key,
@@ -557,8 +514,7 @@ public:
      * - the <tt>is_unitary()</tt> and exponentiation methods of the key type,
      * - piranha::math::pow(),
      * - construction of coefficient, key and term,
-     * - the copy assignment operator of piranha::symbol_set,
-     * - piranha::series::insert() and piranha::series::pow().
+     * - piranha::series::insert() , piranha::series::set_symbol_set() and piranha::series::pow().
      */
     template <typename T>
     pow_ret_type<T> pow(const T &x) const
@@ -612,10 +568,9 @@ public:
      *
      * @throws std::invalid_argument if the integration procedure fails.
      * @throws unspecified any exception thrown by:
-     * - piranha::symbol construction,
+     * - the public interface of piranha::symbol_fset,
      * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast()
      *   and piranha::math::negate(),
-     * - piranha::symbol_set::add(),
      * - term construction,
      * - coefficient construction, assignment and arithmetics,
      * - integration, construction, assignment, differentiation and degree querying methods of the key type,
@@ -627,24 +582,26 @@ public:
     {
         typedef typename base::term_type term_type;
         typedef typename term_type::cf_type cf_type;
-        // Turn name into symbol.
-        const symbol s(name);
         integrate_type<T> retval(0);
+        // A copy of the current symbol set plus name. If name is
+        // in the set already, it will be just a copy.
+        const auto aug_ss = [this, &name]() -> symbol_fset {
+            symbol_fset retval(this->m_symbol_set);
+            retval.insert(name);
+            return retval;
+        };
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // If the derivative of the coefficient is null, we just need to deal with
             // the integration of the key.
             if (math::is_zero(math::partial(it->m_cf, name))) {
                 polynomial tmp;
-                symbol_set sset = this->m_symbol_set;
-                // Try to add the variable (insertion will have no effect if the variable is already present).
-                sset.add(s);
-                tmp.set_symbol_set(sset);
-                auto key_int = it->m_key.integrate(s, this->m_symbol_set);
+                tmp.set_symbol_set(aug_ss);
+                auto key_int = it->m_key.integrate(name, this->m_symbol_set);
                 tmp.insert(term_type(cf_type(1), std::move(key_int.second)));
                 retval += (tmp * it->m_cf) / key_int.first;
             } else {
-                retval += integrate_impl(s, *it, std::integral_constant<bool, is_integrable<cf_type>::value>());
+                retval += integrate_impl(name, *it, std::integral_constant<bool, is_integrable<cf_type>::value>{});
             }
         }
         return retval;
@@ -767,7 +724,7 @@ public:
      * \note
      * This method is enabled only if:
      * - \p T satisfies piranha::has_input_begin_end,
-     * - \p Key can be constructed from the begin/end iterators of \p c and a piranha::symbol_set.
+     * - \p Key can be constructed from the begin/end iterators of \p c and a piranha::symbol_fset.
      *
      * This method will first construct a term with zero coefficient and key initialised from the begin/end iterators
      * of \p c and the symbol set of \p this, and it will then try to locate the term inside \p this.
@@ -792,7 +749,7 @@ public:
     /**
      * \note
      * This method is enabled only if \p Key can be constructed from the begin/end iterators of \p l and a
-     * piranha::symbol_set.
+     * piranha::symbol_fset.
      *
      * This method is identical to the other overload with the same name, and it is provided for convenience.
      *
@@ -826,7 +783,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - the public interface of the specialisation of piranha::series_multiplier for piranha::polynomial,
-     * - the public interface of piranha::symbol_set,
+     * - the public interface of piranha::symbol_fset,
      * - the public interface of piranha::series.
      */
     template <typename T = polynomial, um_enabler<T> = 0>
@@ -860,7 +817,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - the public interface of the specialisation of piranha::series_multiplier for piranha::polynomial,
-     * - the public interface of piranha::symbol_set,
+     * - the public interface of piranha::symbol_fset,
      * - the public interface of piranha::series,
      * - piranha::safe_cast().
      */
@@ -884,33 +841,32 @@ public:
      * - \p U can be safely cast to the degree type of the calling piranha::polynomial.
      *
      * This function will return the product of \p p1 and \p p2, truncated to the maximum partial degree
-     * of \p max_degree (regardless of the current automatic truncation settings).
-     * Note that this function is
+     * of \p max_degree (regardless of the current automatic truncation settings). Note that this function is
      * available only if the operands are of the same type and no type promotions affect the coefficient types
      * during multiplication.
      *
      * @param p1 the first operand.
      * @param p2 the second operand.
-     * @param max_degree the maximum total degree in the result.
-     * @param names names of the variables that will be considered in the computation of the degree.
+     * @param max_degree the maximum degree in the result.
+     * @param names the set of the symbols that will be considered in the computation of the degree.
      *
      * @return the truncated product of \p p1 and \p p2.
      *
      * @throws unspecified any exception thrown by:
      * - the public interface of the specialisation of piranha::series_multiplier for piranha::polynomial,
-     * - the public interface of piranha::symbol_set,
+     * - the public interface of piranha::symbol_fset,
      * - the public interface of piranha::series,
      * - piranha::safe_cast().
      */
     template <typename U, typename T = polynomial, tm_enabler<T, U> = 0>
     static polynomial truncated_multiplication(const polynomial &p1, const polynomial &p2, const U &max_degree,
-                                               const std::vector<std::string> &names)
+                                               const symbol_fset &names)
     {
         // NOTE: total and partial degree must be the same.
         auto runner = [&max_degree, &names](const polynomial &a, const polynomial &b) -> polynomial {
-            const symbol_set::positions pos(a.get_symbol_set(), symbol_set(names.begin(), names.end()));
+            const auto idx = ss_intersect_idx(a.get_symbol_set(), names);
             return series_multiplier<polynomial>(a, b)._truncated_multiplication(safe_cast<degree_type<T>>(max_degree),
-                                                                                 names, pos);
+                                                                                 names, idx);
         };
         return um_tm_implementation(p1, p2, runner);
     }
@@ -1029,20 +985,20 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
         }
     };
     // No bounds checking if key is a monomial with non-integral exponents.
-    template <typename T = Series,
-              typename std::enable_if<detail::is_monomial<key_t<T>>::value
-                                          && !std::is_integral<typename key_t<T>::value_type>::value,
-                                      int>::type
-              = 0>
+    template <
+        typename T = Series,
+        typename std::enable_if<
+            detail::is_monomial<key_t<T>>::value && !std::is_integral<typename key_t<T>::value_type>::value, int>::type
+        = 0>
     void check_bounds() const
     {
     }
     // Monomial with integral exponents.
-    template <typename T = Series,
-              typename std::enable_if<detail::is_monomial<key_t<T>>::value
-                                          && std::is_integral<typename key_t<T>::value_type>::value,
-                                      int>::type
-              = 0>
+    template <
+        typename T = Series,
+        typename std::enable_if<
+            detail::is_monomial<key_t<T>>::value && std::is_integral<typename key_t<T>::value_type>::value, int>::type
+        = 0>
     void check_bounds() const
     {
         using expo_type = typename key_t<T>::value_type;
@@ -1255,10 +1211,8 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
     }
     // Enabler for the call operator.
     template <typename T>
-    using call_enabler =
-        typename std::enable_if<key_is_multipliable<cf_t<T>, key_t<T>>::value && has_multiply_accumulate<cf_t<T>>::value
-                                    && detail::true_tt<detail::cf_mult_enabler<cf_t<T>>>::value,
-                                int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<cf_t<T>, key_t<T>>::value && has_multiply_accumulate<cf_t<T>>::value, int>::type;
     // Utility helpers for the subtraction of degree types in the truncation routines. The specialisation
     // for integral types will check the operation for overflow.
     template <typename T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0>
@@ -1407,7 +1361,7 @@ public:
      * In the latter case, the two arguments must be:
      * - an \p std::vector of \p std::string representing the names of the variables which will be taken
      *   into account when computing the partial degree,
-     * - a piranha::symbol_set::positions referring to the positions of the variables of the first argument
+     * - a piranha::symbol_idx_fset referring to the positions of the variables of the first argument
      *   in the merged symbol set of the two operands.
      *
      * @param max_degree the maximum degree of the result of the multiplication.
@@ -1589,8 +1543,8 @@ private:
         }
         piranha_assert(std::get<0u>(t) == 2);
         // Partial degree truncation.
-        const symbol_set::positions pos(this->m_ss, symbol_set(std::get<2u>(t).begin(), std::get<2u>(t).end()));
-        return _truncated_multiplication(std::get<1u>(t), std::get<2u>(t), pos);
+        const auto idx = ss_intersect_idx(this->m_ss, std::get<2u>(t));
+        return _truncated_multiplication(std::get<1u>(t), std::get<2u>(t), idx);
     }
     // NOTE: the existence of these functors is because GCC 4.8 has troubles capturing variadic arguments in lambdas
     // in _truncated_multiplication, and we need to use std::bind instead. Once we switch to 4.9, we can revert
@@ -1598,7 +1552,7 @@ private:
     struct term_degree_sorter {
         using term_type = typename Series::term_type;
         template <typename... Args>
-        bool operator()(term_type const *p1, term_type const *p2, const symbol_set &ss, const Args &... args) const
+        bool operator()(term_type const *p1, term_type const *p2, const symbol_fset &ss, const Args &... args) const
         {
             return ps_get_degree(*p1, args..., ss) < ps_get_degree(*p2, args..., ss);
         }
@@ -1606,7 +1560,7 @@ private:
     struct term_degree_getter {
         using term_type = typename Series::term_type;
         template <typename... Args>
-        auto operator()(term_type const *p, const symbol_set &ss, const Args &... args) const
+        auto operator()(term_type const *p, const symbol_fset &ss, const Args &... args) const
             -> decltype(ps_get_degree(*p, args..., ss))
         {
             return ps_get_degree(*p, args..., ss);
@@ -1765,7 +1719,7 @@ private:
                     // NOTE: for coefficient series, we might want to insert with move() below,
                     // as we are not going to re-use the allocated resources in tmp.m_cf.
                     // Take care of multiplying the coefficient.
-                    detail::cf_mult_impl(tmp_term.m_cf, cf1, cur.m_cf);
+                    cf_mult_impl(tmp_term.m_cf, cf1, cur.m_cf);
                     container._unique_insert(tmp_term, bucket_idx);
                 } else {
                     // NOTE: here we need to decide if we want to give the same treatment to fmp as we did with

@@ -1757,7 +1757,7 @@ class has_truncate_degree : detail::sfinae_types
     static no test1(...);
     template <typename T1, typename U1>
     static auto test2(const T1 &t, const U1 &u)
-        -> decltype(math::truncate_degree(t, u, std::declval<const std::vector<std::string> &>()), void(), yes());
+        -> decltype(math::truncate_degree(t, u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -1898,8 +1898,7 @@ class has_degree : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::degree(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::degree(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::degree(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -1924,8 +1923,7 @@ class has_ldegree : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::ldegree(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::ldegree(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::ldegree(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
