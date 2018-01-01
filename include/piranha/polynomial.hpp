@@ -354,8 +354,7 @@ class polynomial
     template <typename T>
     using degree_type = decltype(math::degree(std::declval<const T &>()));
     template <typename T>
-    using pdegree_type
-        = decltype(math::degree(std::declval<const T &>(), std::declval<const std::vector<std::string> &>()));
+    using pdegree_type = decltype(math::degree(std::declval<const T &>(), std::declval<const symbol_fset &>()));
     // Enablers for auto-truncation: degree and partial degree must be the same, series must support
     // math::truncate_degree(), degree type must be subtractable and yield the same type.
     template <typename T>
@@ -433,7 +432,7 @@ class polynomial
     }
     // Helper function to clear the pow cache when a new auto truncation limit is set.
     template <typename T>
-    static void truncation_clear_pow_cache(int mode, const T &max_degree, const std::vector<std::string> &names)
+    static void truncation_clear_pow_cache(int mode, const T &max_degree, const symbol_fset &names)
     {
         // The pow cache is cleared only if we are actually changing the truncation settings.
         if (s_at_degree_mode != mode || get_at_degree_max() != max_degree || names != s_at_degree_names) {
@@ -640,7 +639,7 @@ public:
         std::lock_guard<std::mutex> lock(s_at_degree_mutex);
         // NOTE: here in principle there could be an exception thrown as a consequence of the degree comparison.
         // This is not a problem as at this stage no setting has been modified.
-        truncation_clear_pow_cache(1, new_degree, {});
+        truncation_clear_pow_cache(1, new_degree, symbol_fset{});
         s_at_degree_mode = 1;
         // NOTE: the degree type of polys satisfies is_container_element, so move assignment is noexcept.
         at_dm = std::move(new_degree);
@@ -668,7 +667,7 @@ public:
      * - memory allocation errors in standard containers.
      */
     template <typename U, typename T = polynomial, at_degree_set_enabler<T, U> = 0>
-    static void set_auto_truncate_degree(const U &max_degree, const std::vector<std::string> &names)
+    static void set_auto_truncate_degree(const U &max_degree, const symbol_fset &names)
     {
         // Copy+move for exception safety.
         auto new_degree = safe_cast<degree_type<T>>(max_degree);
@@ -719,7 +718,7 @@ public:
      * @throws unspecified any exception thrown by threading primitives or by the involved constructors.
      */
     template <typename T = polynomial, at_degree_enabler<T> = 0>
-    static std::tuple<int, degree_type<T>, std::vector<std::string>> get_auto_truncate_degree()
+    static std::tuple<int, degree_type<T>, symbol_fset> get_auto_truncate_degree()
     {
         std::lock_guard<std::mutex> lock(s_at_degree_mutex);
         return std::make_tuple(s_at_degree_mode, get_at_degree_max(), s_at_degree_names);
@@ -880,7 +879,7 @@ private:
     // Static data for auto_truncate_degree.
     static std::mutex s_at_degree_mutex;
     static int s_at_degree_mode;
-    static std::vector<std::string> s_at_degree_names;
+    static symbol_fset s_at_degree_names;
 };
 
 // Static inits.
@@ -891,7 +890,7 @@ template <typename Cf, typename Key>
 int polynomial<Cf, Key>::s_at_degree_mode = 0;
 
 template <typename Cf, typename Key>
-std::vector<std::string> polynomial<Cf, Key>::s_at_degree_names;
+symbol_fset polynomial<Cf, Key>::s_at_degree_names;
 
 namespace detail
 {

@@ -3635,7 +3635,7 @@ struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Ser
         const auto &ss = s.get_symbol_set();
         packer.pack_array(safe_cast<std::uint32_t>(ss.size()));
         for (const auto &sym : ss) {
-            msgpack_pack(packer, sym.get_name(), f);
+            msgpack_pack(packer, sym, f);
         }
         // Pack the terms.
         packer.pack_array(safe_cast<std::uint32_t>(s.size()));
