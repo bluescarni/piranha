@@ -591,8 +591,7 @@ protected:
         // Sync mutex - actually used only in multithreading.
         std::mutex mut;
         // The estimation functor.
-        auto estimator = [&lf, size1, n_threads, multiplier, tpt, n_trials, this, &c_estimate, &mut,
-                          result_size](unsigned thread_idx) {
+        auto estimator = [&lf, size1, n_threads, tpt, this, &c_estimate, &mut](unsigned thread_idx) {
             piranha_assert(thread_idx < n_threads);
             // Vectors of indices into m_v1.
             std::vector<size_type> v_idx1(safe_cast<typename std::vector<size_type>::size_type>(size1));
