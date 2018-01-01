@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/init.hpp>
+#include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/mp_integer.hpp>
@@ -129,7 +130,10 @@ struct hash_tester {
             typedef term<Cf, Key> term_type;
             typedef typename Key::value_type value_type;
             BOOST_CHECK_EQUAL(term_type().hash(), std::hash<Key>()(Key()));
+            BOOST_CHECK_EQUAL(term_type().hash(), std::hash<term_type>()(term_type()));
             BOOST_CHECK_EQUAL(term_type(Cf(2), Key{value_type(1)}).hash(), std::hash<Key>()(Key{value_type(1)}));
+            BOOST_CHECK_EQUAL(term_type(Cf(2), Key{value_type(1)}).hash(),
+                              std::hash<term_type>()(term_type{Cf(), Key{value_type(1)}}));
         }
     };
     template <typename Cf>

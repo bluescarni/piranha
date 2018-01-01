@@ -211,4 +211,27 @@ template <typename Cf, typename Key>
 const bool enable_noexcept_checks<term<Cf, Key>>::value;
 }
 
+namespace std
+{
+
+/// Specialisation of \p std::hash for piranha::term.
+template <typename Cf, typename Key>
+struct hash<piranha::term<Cf, Key>> {
+    /// The result type.
+    using result_type = size_t;
+    /// The argument type.
+    using argument_type = piranha::term<Cf, Key>;
+    /// Hash operator.
+    /**
+     * @param a the argument whose hash value will be computed.
+     *
+     * @return a hash value for \p a computed via piranha::term::hash().
+     */
+    result_type operator()(const argument_type &a) const
+    {
+        return a.hash();
+    }
+};
+}
+
 #endif
