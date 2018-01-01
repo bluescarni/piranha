@@ -69,54 +69,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-// Fwd declaration.
-template <typename, typename>
-class monomial;
-}
-
-// Implementation of the Boost s11n api.
-namespace boost
-{
-namespace serialization
-{
-
-template <typename Archive, typename T, typename S>
-inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned)
-{
-    if (unlikely(k.key().size() != k.ss().size())) {
-        piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
-                                             "symbol set has a size of "
-                                                 + std::to_string(k.ss().size())
-                                                 + ", while the monomial being serialized has a size of "
-                                                 + std::to_string(k.key().size()));
-    }
-    piranha::boost_save(ar, k.key().m_container);
-}
-
-template <typename Archive, typename T, typename S>
-inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned)
-{
-    piranha::boost_load(ar, k.key().m_container);
-    if (unlikely(k.key().size() != k.ss().size())) {
-        piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
-                                             "symbol set has a size of "
-                                                 + std::to_string(k.ss().size())
-                                                 + ", while the monomial being deserialized has a size of "
-                                                 + std::to_string(k.key().size()));
-    }
-}
-
-template <typename Archive, typename T, typename S>
-inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned version)
-{
-    split_free(ar, k, version);
-}
-}
-}
-
-namespace piranha
-{
-
 /// Monomial class.
 /**
  * This class extends piranha::array_key to define a series key type representing monomials, that is, objects of the
@@ -1259,6 +1211,50 @@ public:
 
 template <typename T, typename S>
 const std::size_t monomial<T, S>::multiply_arity;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T, typename S>
+inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned)
+{
+    if (unlikely(k.key().size() != k.ss().size())) {
+        piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
+                                             "symbol set has a size of "
+                                                 + std::to_string(k.ss().size())
+                                                 + ", while the monomial being serialized has a size of "
+                                                 + std::to_string(k.key().size()));
+    }
+    piranha::boost_save(ar, k.key().m_container);
+}
+
+template <typename Archive, typename T, typename S>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned)
+{
+    piranha::boost_load(ar, k.key().m_container);
+    if (unlikely(k.key().size() != k.ss().size())) {
+        piranha_throw(std::invalid_argument, "incompatible symbol set in monomial serialization: the reference "
+                                             "symbol set has a size of "
+                                                 + std::to_string(k.ss().size())
+                                                 + ", while the monomial being deserialized has a size of "
+                                                 + std::to_string(k.key().size()));
+    }
+}
+
+template <typename Archive, typename T, typename S>
+inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::monomial<T, S>> &k, unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
+
+namespace piranha
+{
 
 inline namespace impl
 {
