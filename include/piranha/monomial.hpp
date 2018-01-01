@@ -1085,8 +1085,8 @@ public:
         std::vector<std::pair<ipow_subs_type<U>, monomial>> retval;
         auto mon(*this);
         if (p < args.size()) {
-            PIRANHA_MAYBE_TLS integer q, r, d;
             auto &expo = mon[static_cast<decltype(mon.size())>(p)];
+            PIRANHA_MAYBE_TLS integer q, r, d;
             // Assign expo to d, possibly safely converting it.
             ipow_subs_d_assign(d, expo, ipow_subs_d_assign_dispatcher<T>{});
             // NOTE: regarding the sign of r: tdiv_qr() sets the sign of r to the sign of q.

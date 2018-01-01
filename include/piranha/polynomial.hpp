@@ -289,9 +289,14 @@ class polynomial
         typedef typename term_type::key_type key_type;
         // Get the partial degree of the monomial in integral form.
         integer degree;
-        const auto idx = symbol_idx_fset{index_of(this->m_symbol_set, s)};
+        const auto idx = symbol_idx_fset{ss_index_of(this->m_symbol_set, s)};
         try {
-            degree = safe_cast<integer>(term.m_key.degree(idx, this->m_symbol_set));
+            // Check if s is actually in the symbol set or not.
+            if (*idx.begin() < this->m_symbol_set.size()) {
+                degree = safe_cast<integer>(term.m_key.degree(idx, this->m_symbol_set));
+            } else {
+                degree = 0;
+            }
         } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument,
                           "unable to perform polynomial integration: cannot extract the integral form of an exponent");
@@ -589,7 +594,7 @@ public:
             symbol_fset retval(this->m_symbol_set);
             retval.insert(name);
             return retval;
-        };
+        }();
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // If the derivative of the coefficient is null, we just need to deal with
@@ -1769,8 +1774,8 @@ private:
         // Given the [first,last[ index range in v2, find the first index idx in the v2 range such that the i-th
         // term in v1 multiplied by the idx-th term in v2 will be written into retval at a bucket index not less than
         // zb.
-        auto l_bound = [&v1, &v2, &r_bucket, &task_split](size_type first, size_type last, bucket_size_type zb,
-                                                          size_type i) -> size_type {
+        auto l_bound
+            = [&v1, &v2, &r_bucket](size_type first, size_type last, bucket_size_type zb, size_type i) -> size_type {
             piranha_assert(first <= last);
             bucket_size_type ib = r_bucket(v1[i]);
             // Avoid zb - ib below wrapping around.
@@ -1797,7 +1802,7 @@ private:
             return first;
         };
         // Fill the task table.
-        auto table_filler = [&task_table, bpz, zm, this, bucket_count, size1, size2, &l_bound, &task_split,
+        auto table_filler = [&task_table, bpz, this, bucket_count, size1, size2, &l_bound, &task_split,
                              &task_cmp](const unsigned &thread_idx) {
             for (unsigned n = 0u; n < zm; ++n) {
                 std::vector<task_type> cur_tasks;
@@ -1890,7 +1895,7 @@ private:
         // Init the vector of atomic flags.
         detail::atomic_flag_array af(safe_cast<std::size_t>(task_table.size()));
         // Thread functor.
-        auto thread_functor = [zm, &task_table, &af, &v1, &v2, &container, &task_consume](const unsigned &thread_idx) {
+        auto thread_functor = [&task_table, &af, &task_consume](const unsigned &thread_idx) {
             using t_size_type = decltype(task_table.size());
             // Temporary term_type for caching.
             term_type tmp_term;

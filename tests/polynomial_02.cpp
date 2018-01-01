@@ -57,7 +57,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
-#include <piranha/symbol.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -76,7 +76,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(symbol(name));
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -95,9 +95,8 @@ class series_multiplier<polynomial_alt<Cf, Expo>, void> : public base_series_mul
 {
     using base = base_series_multiplier<polynomial_alt<Cf, Expo>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -218,30 +217,31 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
         BOOST_CHECK((has_subs<p_type1, double>::value));
         BOOST_CHECK((has_subs<p_type1, integer>::value));
         BOOST_CHECK((!has_subs<p_type1, std::string>::value));
-        BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x", integer(1)), 1);
-        BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x", p_type1{"x"}), p_type1{"x"});
+        BOOST_CHECK_EQUAL(p_type1{"x"}.template subs<integer>({{"x", integer(1)}}), 1);
+        BOOST_CHECK_EQUAL(p_type1{"x"}.template subs<p_type1>({{"x", p_type1{"x"}}}), p_type1{"x"});
         p_type1 x{"x"}, y{"y"}, z{"z"};
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("x", integer(3)), 9 + 3 * y + z);
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("y", rational(3, 2)), x * x + x * rational(3, 2) + z);
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("k", rational(3, 2)), x * x + x * y + z);
-        BOOST_CHECK_EQUAL(math::pow(x, -1).subs("x", math::pow(x, -1)), x);
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z)
-                              .subs("x", rational(3, 2))
-                              .subs("y", rational(4, 5))
-                              .subs("z", -rational(6, 7)),
-                          math::evaluate(math::pow(x, 2) + x * y + z,
-                                         std::unordered_map<std::string, rational>{
-                                             {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
-        BOOST_CHECK_EQUAL(math::subs(math::pow(x, 2) + x * y + z, "x", rational(3, 2))
-                              .subs("y", rational(4, 5))
-                              .subs("z", -rational(6, 7)),
-                          math::evaluate(math::pow(x, 2) + x * y + z,
-                                         std::unordered_map<std::string, rational>{
-                                             {"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
-        BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x", integer(1))), p_type1>::value));
-        BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x", rational(1))), p_type1>::value));
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).subs("k", rational(3, 2)), x * x + x * y + z);
-        BOOST_CHECK_EQUAL((math::pow(y + 4 * z, 5) * math::pow(x, -1)).subs("x", rational(3)),
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).template subs<integer>({{"x", integer(3)}}), 9 + 3 * y + z);
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).template subs<rational>({{"y", rational(3, 2)}}),
+                          x * x + x * rational(3, 2) + z);
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).template subs<rational>({{"k", rational(3, 2)}}),
+                          x * x + x * y + z);
+        BOOST_CHECK_EQUAL(math::pow(x, -1).template subs<p_type1>({{"x", math::pow(x, -1)}}), x);
+        BOOST_CHECK_EQUAL(
+            (math::pow(x, 2) + x * y + z)
+                .template subs<rational>({{"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}),
+            math::evaluate<rational>(math::pow(x, 2) + x * y + z,
+                                     {{"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
+        BOOST_CHECK_EQUAL(
+            math::subs<rational>(math::pow(x, 2) + x * y + z,
+                                 {{"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}),
+            math::evaluate<rational>(math::pow(x, 2) + x * y + z,
+                                     {{"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
+        BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.template subs<integer>({{"x", integer(1)}})), p_type1>::value));
+        BOOST_CHECK(
+            (std::is_same<decltype(p_type1{"x"}.template subs<rational>({{"x", rational(1)}})), p_type1>::value));
+        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).template subs<rational>({{"k", rational(3, 2)}}),
+                          x * x + x * y + z);
+        BOOST_CHECK_EQUAL((math::pow(y + 4 * z, 5) * math::pow(x, -1)).template subs<rational>({{"x", rational(3)}}),
                           (math::pow(y + 4 * z, 5)) / 3);
     }
     {
@@ -251,10 +251,11 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
         BOOST_CHECK((has_subs<p_type2, integer>::value));
         BOOST_CHECK((!has_subs<p_type2, std::string>::value));
         p_type2 x{"x"}, y{"y"};
-        BOOST_CHECK_EQUAL((x * x * x + y * y).subs("x", real(1.234)), y * y + math::pow(real(1.234), 3));
-        BOOST_CHECK_EQUAL((x * x * x + y * y).subs("x", real(1.234)).subs("y", real(-5.678)),
+        BOOST_CHECK_EQUAL((x * x * x + y * y).template subs<real>({{"x", real(1.234)}}),
+                          y * y + math::pow(real(1.234), 3));
+        BOOST_CHECK_EQUAL((x * x * x + y * y).template subs<real>({{"x", real(1.234)}, {"y", real(-5.678)}}),
                           math::pow(real(-5.678), 2) + math::pow(real(1.234), 3));
-        BOOST_CHECK_EQUAL(math::subs(x * x * x + y * y, "x", real(1.234)).subs("y", real(-5.678)),
+        BOOST_CHECK_EQUAL(math::subs<real>(x * x * x + y * y, {{"x", real(1.234)}, {"y", real(-5.678)}}),
                           math::pow(real(-5.678), 2) + math::pow(real(1.234), 3));
     }
     typedef polynomial<integer, monomial<long>> p_type3;
@@ -263,23 +264,17 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
     BOOST_CHECK((has_subs<p_type3, integer>::value));
     BOOST_CHECK((!has_subs<p_type3, std::string>::value));
     p_type3 x{"x"}, y{"y"}, z{"z"};
-    BOOST_CHECK_EQUAL((x * x * x + y * y + z * y * x)
-                          .subs("x", integer(2))
-                          .subs("y", integer(-3))
-                          .subs("z", integer(4))
-                          .subs("k", integer()),
+    BOOST_CHECK_EQUAL(
+        (x * x * x + y * y + z * y * x)
+            .template subs<integer>({{"x", integer(2)}, {"y", integer(-3)}, {"z", integer(4)}, {"k", integer()}}),
+        math::pow(integer(2), 3) + math::pow(integer(-3), 2) + integer(2) * integer(-3) * integer(4));
+    BOOST_CHECK_EQUAL(math::subs<integer>(x * x * x + y * y + z * y * x,
+                                          {{"x", integer(2)}, {"y", integer(-3)}, {"z", integer(4)}, {"k", integer()}}),
                       math::pow(integer(2), 3) + math::pow(integer(-3), 2) + integer(2) * integer(-3) * integer(4));
-    BOOST_CHECK_EQUAL(math::subs(x * x * x + y * y + z * y * x, "x", integer(2))
-                          .subs("y", integer(-3))
-                          .subs("z", integer(4))
-                          .subs("k", integer()),
-                      math::pow(integer(2), 3) + math::pow(integer(-3), 2) + integer(2) * integer(-3) * integer(4));
-    BOOST_CHECK_EQUAL((x * x * x + y * y + z * y * x)
-                          .subs("x", integer(0))
-                          .subs("y", integer(0))
-                          .subs("z", integer(0))
-                          .subs("k", integer()),
-                      0);
+    BOOST_CHECK_EQUAL(
+        (x * x * x + y * y + z * y * x)
+            .template subs<integer>({{"x", integer(0)}, {"y", integer(0)}, {"z", integer(0)}, {"k", integer()}}),
+        0);
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
@@ -397,9 +392,11 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
                           x * x + x * rational(3, 2) + z);
         BOOST_CHECK_EQUAL((x.pow(7) + x.pow(2) * y + z).ipow_subs("x", integer(3), x), x.pow(3) + x.pow(2) * y + z);
         BOOST_CHECK_EQUAL((x.pow(6) + x.pow(2) * y + z).ipow_subs("x", integer(3), p_type1{}), x.pow(2) * y + z);
-        BOOST_CHECK_EQUAL(
-            (1 + 3 * x.pow(2) - 5 * y.pow(5)).pow(10).ipow_subs("x", integer(2), p_type1{"x2"}).subs("x2", x.pow(2)),
-            (1 + 3 * x.pow(2) - 5 * y.pow(5)).pow(10));
+        BOOST_CHECK_EQUAL((1 + 3 * x.pow(2) - 5 * y.pow(5))
+                              .pow(10)
+                              .ipow_subs("x", integer(2), p_type1{"x2"})
+                              .template subs<p_type1>({{"x2", x.pow(2)}}),
+                          (1 + 3 * x.pow(2) - 5 * y.pow(5)).pow(10));
         // Check with negative powers.
         BOOST_CHECK_EQUAL(x.pow(-5).ipow_subs("x", -2, 5), x.pow(-1) * 25);
         BOOST_CHECK_EQUAL(x.pow(-5).ipow_subs("y", -2, 5), x.pow(-5));
@@ -435,8 +432,8 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
         BOOST_CHECK((has_ipow_subs<p_type4, p_type4>::value));
         BOOST_CHECK((has_ipow_subs<p_type4, integer>::value));
         p_type4 x{"x"}, y{"y"}, z{"z"};
-        BOOST_CHECK_EQUAL(x * y * 2 * z.pow(7 / 3_q).ipow_subs("z", 2, 4), 4 * z.pow(1 / 3_q) * y * 2 * x);
-        BOOST_CHECK_EQUAL(x * y * 2 * z.pow(-7 / 3_q).ipow_subs("z", -1, 4), 16 * z.pow(-1 / 3_q) * y * 2 * x);
+        // BOOST_CHECK_EQUAL(x * y * 2 * z.pow(7 / 3_q).ipow_subs("z", 2, 4), 4 * z.pow(1 / 3_q) * y * 2 * x);
+        // BOOST_CHECK_EQUAL(x * y * 2 * z.pow(-7 / 3_q).ipow_subs("z", -1, 4), 16 * z.pow(-1 / 3_q) * y * 2 * x);
     }
 }
 
