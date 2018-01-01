@@ -60,76 +60,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/static_vector.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
-
-namespace piranha
-{
-
-// Fwd declaration.
-template <typename>
-class real_trigonometric_kronecker_monomial;
-}
-
-// Implementation of the Boost s11n api.
-namespace boost
-{
-namespace serialization
-{
-
-template <typename Archive, typename T>
-inline void save(Archive &ar,
-                 const piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k, unsigned)
-{
-    if (std::is_same<Archive, boost::archive::binary_oarchive>::value) {
-        piranha::boost_save(ar, k.key().get_int());
-    } else {
-        auto tmp = k.key().unpack(k.ss());
-        piranha::boost_save(ar, tmp);
-    }
-    piranha::boost_save(ar, k.key().get_flavour());
-}
-
-template <typename Archive, typename T>
-inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k,
-                 unsigned)
-{
-    if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
-        T value;
-        piranha::boost_load(ar, value);
-        k.key().set_int(value);
-    } else {
-        typename piranha::real_trigonometric_kronecker_monomial<T>::v_type tmp;
-        piranha::boost_load(ar, tmp);
-        if (unlikely(tmp.size() != k.ss().size())) {
-            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronercker "
-                                                 "trigonometric monomial: the deserialized size is "
-                                                     + std::to_string(tmp.size())
-                                                     + " but the reference symbol set has a size of "
-                                                     + std::to_string(k.ss().size()));
-        }
-        // NOTE: here the exception safety is basic, as the last boost_load() could fail in principle.
-        // It does not really matter much, as there's no real dependency between the multipliers and the flavour,
-        // any combination is valid.
-        k.key() = piranha::real_trigonometric_kronecker_monomial<T>(tmp.begin(), tmp.end());
-    }
-    // The flavour loading is common.
-    bool f;
-    piranha::boost_load(ar, f);
-    k.key().set_flavour(f);
-}
-
-template <typename Archive, typename T>
-inline void serialize(Archive &ar,
-                      piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k,
-                      unsigned version)
-{
-    split_free(ar, k, version);
-}
-}
-}
 
 namespace piranha
 {
@@ -150,10 +83,9 @@ namespace piranha
  * a cosine (<tt>true</tt>) or sine (<tt>false</tt>).
  *
  * Similarly to an ordinary monomial, this class provides methods to query the <em>trigonometric</em> (partial) (low)
- * degree, defined
- * as if the multipliers were exponents of a regular monomial (e.g., the total trigonometric degree is the sum of the
- * multipliers).
- * Closely related is the concept of trigonometric order, calculated by adding the absolute values of the multipliers.
+ * degree, defined as if the multipliers were exponents of a regular monomial (e.g., the total trigonometric degree is
+ * the sum of the multipliers). Closely related is the concept of trigonometric order, calculated by adding the absolute
+ * values of the multipliers.
  *
  * This class satisfies the piranha::is_key, piranha::key_has_t_degree, piranha::key_has_t_ldegree,
  * piranha::key_has_t_order, piranha::key_has_t_lorder and piranha::key_is_differentiable type traits.
@@ -215,14 +147,12 @@ private:
     template <typename U>
     using e_type = decltype(std::declval<U const &>() * std::declval<value_type const &>());
     template <typename U>
-    struct eval_type_<U,
-                      typename std::enable_if<is_addable_in_place<e_type<U>>::value
-                                              && std::is_constructible<e_type<U>, int>::value
-                                              && std::is_same<decltype(math::cos(std::declval<e_type<U>>())),
-                                                              decltype(math::sin(std::declval<e_type<U>>()))>::value
-                                              && std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())),
-                                                                       int>::value
-                                              && is_mappable<U>::value>::type> {
+    struct eval_type_<
+        U, typename std::enable_if<is_addable_in_place<e_type<U>>::value && std::is_constructible<e_type<U>, int>::value
+                                   && std::is_same<decltype(math::cos(std::declval<e_type<U>>())),
+                                                   decltype(math::sin(std::declval<e_type<U>>()))>::value
+                                   && std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())), int>::value
+                                   && is_mappable<U>::value>::type> {
         using type = decltype(math::cos(std::declval<e_type<U>>()));
     };
     // Final typedef for the eval type.
@@ -251,15 +181,14 @@ private:
               * math::binomial(std::declval<value_type const &>(), std::declval<value_type const &>()))                \
              * (std::declval<const U &>() * std::declval<const U &>()))
     template <typename U>
-    using t_subs_type = typename std::
-        enable_if<std::is_constructible<U, int>::value && std::is_default_constructible<U>::value
-                      && std::is_assignable<U &, U>::value
-                      && std::is_assignable<U &, decltype(std::declval<const U &>() * std::declval<const U &>())>::value
-                      && is_addable_in_place<PIRANHA_TMP_TYPE,
-                                             decltype(std::declval<const value_type &>()
-                                                      * std::declval<PIRANHA_TMP_TYPE const &>())>::value
-                      && has_negate<PIRANHA_TMP_TYPE>::value,
-                  PIRANHA_TMP_TYPE>::type;
+    using t_subs_type = typename std::enable_if<
+        std::is_constructible<U, int>::value && std::is_default_constructible<U>::value
+            && std::is_assignable<U &, U>::value
+            && std::is_assignable<U &, decltype(std::declval<const U &>() * std::declval<const U &>())>::value
+            && is_addable_in_place<PIRANHA_TMP_TYPE, decltype(std::declval<const value_type &>()
+                                                              * std::declval<PIRANHA_TMP_TYPE const &>())>::value
+            && has_negate<PIRANHA_TMP_TYPE>::value,
+        PIRANHA_TMP_TYPE>::type;
 #undef PIRANHA_TMP_TYPE
     // Implementation of canonicalisation.
     static bool canonicalise_impl(v_type &unpacked)
@@ -289,15 +218,6 @@ private:
         const value_type v[4] = {0, 1, 0, -1};
         return v[n % value_type(4)];
     }
-    // Enabler for ctor from init list.
-    template <typename U>
-    using init_list_enabler = typename std::enable_if<has_safe_cast<value_type, U>::value, int>::type;
-    // Enabler for ctor from iterator.
-    template <typename Iterator>
-    using it_ctor_enabler =
-        typename std::enable_if<is_input_iterator<Iterator>::value
-                                    && has_safe_cast<value_type, decltype(*std::declval<const Iterator &>())>::value,
-                                int>::type;
     // Enabler for multiplication.
     template <typename Cf>
     using multiply_enabler = typename std::enable_if<is_divisible_in_place<Cf, int>::value && has_negate<Cf>::value
@@ -314,13 +234,18 @@ public:
     /**
      * After construction all multipliers in the monomial will be zero, and the flavour will be set to \p true.
      */
-    real_trigonometric_kronecker_monomial() : m_value(0), m_flavour(true)
-    {
-    }
+    real_trigonometric_kronecker_monomial() : m_value(0), m_flavour(true) {}
     /// Defaulted copy constructor.
     real_trigonometric_kronecker_monomial(const real_trigonometric_kronecker_monomial &) = default;
     /// Defaulted move constructor.
     real_trigonometric_kronecker_monomial(real_trigonometric_kronecker_monomial &&) = default;
+
+private:
+    // Enabler for ctor from init list.
+    template <typename U>
+    using init_list_enabler = enable_if_t<has_safe_cast<value_type, U>::value, int>;
+
+public:
     /// Constructor from initalizer list.
     /**
      * \note
@@ -339,14 +264,20 @@ public:
      * - piranha::static_vector::push_back().
      */
     template <typename U, init_list_enabler<U> = 0>
-    explicit real_trigonometric_kronecker_monomial(std::initializer_list<U> list) : m_value(0), m_flavour(true)
+    explicit real_trigonometric_kronecker_monomial(std::initializer_list<U> list)
+        : real_trigonometric_kronecker_monomial(std::begin(list), std::end(list))
     {
-        v_type tmp;
-        for (const auto &x : list) {
-            tmp.push_back(safe_cast<value_type>(x));
-        }
-        m_value = ka::encode(tmp);
     }
+
+private:
+    // Enabler for ctor from iterator.
+    template <typename Iterator>
+    using it_ctor_enabler
+        = enable_if_t<conjunction<is_input_iterator<Iterator>,
+                                  has_safe_cast<value_type, decltype(*std::declval<const Iterator &>())>>::value,
+                      int>;
+
+public:
     /// Constructor from range.
     /**
      * \note
@@ -369,30 +300,17 @@ public:
     explicit real_trigonometric_kronecker_monomial(const Iterator &start, const Iterator &end)
         : m_value(0), m_flavour(true)
     {
-        typedef typename std::iterator_traits<Iterator>::value_type it_v_type;
         v_type tmp;
-        std::transform(start, end, std::back_inserter(tmp),
-                       [](const it_v_type &v) { return safe_cast<value_type>(v); });
+        std::transform(
+            start, end, std::back_inserter(tmp),
+            [](const typename std::iterator_traits<Iterator>::value_type &v) { return safe_cast<value_type>(v); });
         m_value = ka::encode(tmp);
     }
     /// Constructor from set of symbols.
     /**
      * After construction all multipliers will be zero and the flavour will be set to \p true.
-     *
-     * @param args reference set of piranha::symbol.
-     *
-     * @throws unspecified any exception thrown by:
-     * - piranha::kronecker_array::encode(),
-     * - piranha::static_vector::push_back().
      */
-    explicit real_trigonometric_kronecker_monomial(const symbol_set &args) : m_flavour(true)
-    {
-        v_type tmp;
-        for (auto it = args.begin(); it != args.end(); ++it) {
-            tmp.push_back(value_type(0));
-        }
-        m_value = ka::encode(tmp);
-    }
+    explicit real_trigonometric_kronecker_monomial(const symbol_fset &) : real_trigonometric_kronecker_monomial() {}
     /// Constructor from \p value_type and flavour.
     /**
      * This constructor will initialise the internal integer instance
@@ -401,27 +319,18 @@ public:
      * @param n initializer for the internal integer instance.
      * @param f desired flavour.
      */
-    explicit real_trigonometric_kronecker_monomial(const value_type &n, bool f) : m_value(n), m_flavour(f)
-    {
-    }
+    explicit real_trigonometric_kronecker_monomial(const value_type &n, bool f) : m_value(n), m_flavour(f) {}
     /// Converting constructor.
     /**
      * This constructor is for use when converting from one term type to another in piranha::series. It will
-     * set the internal integer instance and flavour to the same value of \p other, after having checked that
-     * \p other is compatible with \p args.
+     * set the internal integer instance and flavour to the same value of \p other.
      *
-     * @param other construction argument.
-     * @param args reference set of piranha::symbol.
-     *
-     * @throws std::invalid_argument if \p other is not compatible with \p args.
+     * @param other the construction argument.
      */
     explicit real_trigonometric_kronecker_monomial(const real_trigonometric_kronecker_monomial &other,
-                                                   const symbol_set &args)
-        : m_value(other.m_value), m_flavour(other.m_flavour)
+                                                   const symbol_set &)
+        : real_trigonometric_kronecker_monomial(other)
     {
-        if (unlikely(!other.is_compatible(args))) {
-            piranha_throw(std::invalid_argument, "incompatible arguments");
-        }
     }
     /// Trivial destructor.
     ~real_trigonometric_kronecker_monomial()
@@ -486,7 +395,7 @@ public:
      * the signs of all multipliers and return \p true.
      * Otherwise, \p this will not be modified and \p false will be returned.
      *
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return \p true if the monomial was canonicalised, \p false otherwise.
      *
@@ -494,7 +403,7 @@ public:
      * - unpack(),
      * - piranha::kronecker_array::encode().
      */
-    bool canonicalise(const symbol_set &args)
+    bool canonicalise(const symbol_fset &args)
     {
         auto unpacked = unpack(args);
         const bool retval = canonicalise_impl(unpacked);
@@ -509,13 +418,13 @@ public:
      *
      * - the size of \p args is zero and the internal integer is not zero,
      * - the size of \p args is equal to or larger than the size of the output of
-     * piranha::kronecker_array::get_limits(),
+     *   piranha::kronecker_array::get_limits(),
      * - the internal integer is not within the limits reported by piranha::kronecker_array::get_limits(),
      * - the first nonzero element of the vector of multipliers represented by the internal integer is negative.
      *
      * Otherwise, the monomial is considered to be compatible for insertion.
      *
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return compatibility flag for the monomial.
      */
@@ -551,18 +460,15 @@ public:
         }
         return true;
     }
-    /// Ignorability check.
+    /// Zero check.
     /**
-     * A monomial is considered ignorable if all multipliers are zero and the flavour is \p false.
+     * A trigonometric monomial is zero if all multipliers are zero and the flavour is \p false.
      *
      * @return ignorability flag.
      */
-    bool is_ignorable(const symbol_set &) const noexcept
+    bool is_zero(const symbol_set &) const noexcept
     {
-        if (m_value == value_type(0) && !m_flavour) {
-            return true;
-        }
-        return false;
+        return m_value == value_type(0) && !m_flavour;
     }
     /// Merge arguments.
     /**
@@ -1471,21 +1377,81 @@ const std::size_t real_trigonometric_kronecker_monomial<T>::multiply_arity;
 
 /// Alias for piranha::real_trigonometric_kronecker_monomial with default type.
 using rtk_monomial = real_trigonometric_kronecker_monomial<>;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T>
+inline void save(Archive &ar,
+                 const piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k, unsigned)
+{
+    if (std::is_same<Archive, boost::archive::binary_oarchive>::value) {
+        piranha::boost_save(ar, k.key().get_int());
+    } else {
+        auto tmp = k.key().unpack(k.ss());
+        piranha::boost_save(ar, tmp);
+    }
+    piranha::boost_save(ar, k.key().get_flavour());
+}
+
+template <typename Archive, typename T>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k,
+                 unsigned)
+{
+    if (std::is_same<Archive, boost::archive::binary_iarchive>::value) {
+        T value;
+        piranha::boost_load(ar, value);
+        k.key().set_int(value);
+    } else {
+        typename piranha::real_trigonometric_kronecker_monomial<T>::v_type tmp;
+        piranha::boost_load(ar, tmp);
+        if (unlikely(tmp.size() != k.ss().size())) {
+            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronercker "
+                                                 "trigonometric monomial: the deserialized size is "
+                                                     + std::to_string(tmp.size())
+                                                     + " but the reference symbol set has a size of "
+                                                     + std::to_string(k.ss().size()));
+        }
+        // NOTE: here the exception safety is basic, as the last boost_load() could fail in principle.
+        // It does not really matter much, as there's no real dependency between the multipliers and the flavour,
+        // any combination is valid.
+        k.key() = piranha::real_trigonometric_kronecker_monomial<T>(tmp.begin(), tmp.end());
+    }
+    // The flavour loading is common.
+    bool f;
+    piranha::boost_load(ar, f);
+    k.key().set_flavour(f);
+}
+
+template <typename Archive, typename T>
+inline void serialize(Archive &ar,
+                      piranha::boost_s11n_key_wrapper<piranha::real_trigonometric_kronecker_monomial<T>> &k,
+                      unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
+
+namespace piranha
+{
 
 inline namespace impl
 {
 
 template <typename Archive, typename T>
-using rtk_monomial_boost_save_enabler
-    = enable_if_t<conjunction<has_boost_save<Archive, T>, has_boost_save<Archive, bool>,
-                              has_boost_save<Archive,
-                                             typename real_trigonometric_kronecker_monomial<T>::v_type>>::value>;
+using rtk_monomial_boost_save_enabler = enable_if_t<
+    conjunction<has_boost_save<Archive, T>, has_boost_save<Archive, bool>,
+                has_boost_save<Archive, typename real_trigonometric_kronecker_monomial<T>::v_type>>::value>;
 
 template <typename Archive, typename T>
-using rtk_monomial_boost_load_enabler
-    = enable_if_t<conjunction<has_boost_load<Archive, T>, has_boost_load<Archive, bool>,
-                              has_boost_load<Archive,
-                                             typename real_trigonometric_kronecker_monomial<T>::v_type>>::value>;
+using rtk_monomial_boost_load_enabler = enable_if_t<
+    conjunction<has_boost_load<Archive, T>, has_boost_load<Archive, bool>,
+                has_boost_load<Archive, typename real_trigonometric_kronecker_monomial<T>::v_type>>::value>;
 }
 
 /// Specialisation of piranha::boost_save() for piranha::real_trigonometric_kronecker_monomial.

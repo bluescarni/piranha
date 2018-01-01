@@ -281,7 +281,7 @@ public:
      *
      * @param other the construction argument.
      */
-    explicit kronecker_monomial(const kronecker_monomial &other, const symbol_fset &) : m_value(other.m_value) {}
+    explicit kronecker_monomial(const kronecker_monomial &other, const symbol_fset &) : kronecker_monomial(other) {}
     /// Constructor from \p T.
     /**
      * This constructor will initialise the internal integer instance
