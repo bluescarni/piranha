@@ -84,17 +84,16 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
-// Hash functor for term type in series.
-template <typename Term>
-struct term_hasher {
-    std::size_t operator()(const Term &term) const
-    {
-        return term.hash();
-    }
-};
+// Fwd declaration.
+template <typename S1, typename S2, typename F>
+auto series_merge_f(S1 &&s1, S2 &&s2, const F &f) -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)));
+}
+
+namespace detail
+{
 
 // NOTE: this needs to go here, instead of in the series class as private method,
 // because of a bug in GCC 4.7/4.8:
@@ -736,37 +735,20 @@ class series_operators
     template <typename T, typename... U>
     using in_place_sub_enabler = typename std::enable_if<detail::true_tt<in_place_sub_type<T, U...>>::value, int>::type;
     // Multiplication.
-    template <typename T, typename U>
-    static series_common_type<T, U, 2> binary_mul_impl(T &&x, U &&y)
-    {
-        return series_multiplier<series_common_type<T, U, 2>>(std::forward<T>(x), std::forward<U>(y))();
-    }
+    struct binary_mul_impl {
+        template <typename T, typename U>
+        series_common_type<T, U, 2> operator()(T &&x, U &&y) const
+        {
+            return series_multiplier<series_common_type<T, U, 2>>(std::forward<T>(x), std::forward<U>(y))();
+        }
+    };
     template <typename T, typename U, typename std::enable_if<bso_type<T, U, 2>::value == 0u, int>::type = 0>
     static series_common_type<T, U, 2> dispatch_binary_mul(T &&x, U &&y)
     {
         using ret_type = series_common_type<T, U, 2>;
         static_assert(std::is_same<typename std::decay<T>::type, ret_type>::value, "Invalid type.");
         static_assert(std::is_same<typename std::decay<U>::type, ret_type>::value, "Invalid type.");
-        if (likely(x.m_symbol_set == y.m_symbol_set)) {
-            return binary_mul_impl(std::forward<T>(x), std::forward<U>(y));
-        } else {
-            const auto merge = ss_merge(x.m_symbol_set, y.m_symbol_set);
-            const bool need_copy_x = (std::get<0>(merge) != x.m_symbol_set),
-                       need_copy_y = (std::get<0>(merge) != y.m_symbol_set);
-            piranha_assert(need_copy_x || need_copy_y);
-            if (need_copy_x) {
-                ret_type x_copy(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)));
-                if (need_copy_y) {
-                    ret_type y_copy(y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
-                    return binary_mul_impl(std::move(x_copy), std::move(y_copy));
-                }
-                return binary_mul_impl(std::move(x_copy), std::forward<U>(y));
-            } else {
-                piranha_assert(need_copy_y);
-                ret_type y_copy(y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
-                return binary_mul_impl(std::forward<T>(x), std::move(y_copy));
-            }
-        }
+        return series_merge_f(std::forward<T>(x), std::forward<U>(y), binary_mul_impl{});
     }
     template <typename T, typename U,
               typename std::enable_if<(bso_type<T, U, 2>::value == 1u || bso_type<T, U, 2>::value == 4u)
@@ -981,6 +963,11 @@ class series_operators
         if (x.size() != y.size()) {
             return false;
         }
+        // NOTE: maybe it's possible to write an optimised algorithm
+        // in case the sizes coincide: compare bucket by bucket (e.g.,
+        // if the buckets at a certain index in the two operands have
+        // different sizes, then the series are different). Maybe this could
+        // even be moved into hash_set to be its equality operator.
         piranha_assert(x.m_symbol_set == y.m_symbol_set);
         const auto it_f_x = x.m_container.end(), it_f_y = y.m_container.end();
         for (auto it = x.m_container.begin(); it != it_f_x; ++it) {
@@ -996,27 +983,7 @@ class series_operators
     static bool dispatch_equality(const T &x, const U &y)
     {
         static_assert(std::is_same<T, U>::value, "Invalid types for the equality operator.");
-        // Arguments merging.
-        if (likely(x.m_symbol_set == y.m_symbol_set)) {
-            return equality_impl(x, y);
-        } else {
-            const auto merge = ss_merge(x.m_symbol_set, y.m_symbol_set);
-            const bool x_needs_copy = (std::get<0>(merge) != x.m_symbol_set),
-                       y_needs_copy = (std::get<0>(merge) != y.m_symbol_set);
-            piranha_assert(x_needs_copy || y_needs_copy);
-            const unsigned mask = unsigned(x_needs_copy) + (unsigned(y_needs_copy) << 1u);
-            switch (mask) {
-                case 0:
-                    return equality_impl(x, y);
-                case 1:
-                    return equality_impl(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)), y);
-                case 2:
-                    return equality_impl(x, y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
-            }
-            // Put the last case outside the switch, so we avoid compile warnings.
-            return equality_impl(x.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
-                                 y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
-        }
+        return series_merge_f(x, y, [](const T &a, const T &b) { return series_operators::equality_impl(a, b); });
     }
     template <typename T, typename U,
               typename std::enable_if<(bso_type<T, U, 0>::value == 1u || bso_type<T, U, 0>::value == 4u)
@@ -1310,10 +1277,14 @@ private:
     // Partial need access to the custom derivatives.
     template <typename, typename>
     friend struct math::partial_impl;
+    // Friendship with the series_merge_f helper.
+    template <typename S1, typename S2, typename F>
+    friend auto impl::series_merge_f(S1 &&s1, S2 &&s2, const F &f)
+        -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)));
 
 protected:
     /// Container type for terms.
-    using container_type = hash_set<term_type, detail::term_hasher<term_type>>;
+    using container_type = hash_set<term_type>;
 
 private:
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
@@ -2843,6 +2814,53 @@ std::mutex series<Cf, Key, Derived>::s_cp_mutex;
 
 template <typename Cf, typename Key, typename Derived>
 std::mutex series<Cf, Key, Derived>::s_pow_mutex;
+
+inline namespace impl
+{
+
+// Implementation of the series merge helper.
+// This function will call f(s1,s2), after having possibly merged the symbol sets
+// of s1 and s2 if necessary (in which case, f will be called on copies of s1/s2).
+template <typename S1, typename S2, typename F>
+inline auto series_merge_f(S1 &&s1, S2 &&s2, const F &f) -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)))
+{
+    if (s1.get_symbol_set() == s2.get_symbol_set()) {
+        // If the symbol sets are identical, just call f(s1,s2) directly.
+        return f(std::forward<S1>(s1), std::forward<S2>(s2));
+    }
+    // Otherwise, we need to merge the symbol sets.
+    const auto merge = ss_merge(s1.get_symbol_set(), s2.get_symbol_set());
+    // Check that all possible return types are the same. This is necessary
+    // as potentially we end up calling different overloads of f.
+    static_assert(std::is_same<decltype(f(std::forward<S1>(s1), std::forward<S2>(s2))),
+                               decltype(f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
+                                          std::forward<S2>(s2)))>::value,
+                  "Inconsistent return type.");
+    static_assert(std::is_same<decltype(f(std::forward<S1>(s1), std::forward<S2>(s2))),
+                               decltype(f(std::forward<S1>(s1),
+                                          s2.merge_arguments(std::get<0>(merge), std::get<2>(merge))))>::value,
+                  "Inconsistent return type.");
+    static_assert(std::is_same<decltype(f(std::forward<S1>(s1), std::forward<S2>(s2))),
+                               decltype(f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
+                                          s2.merge_arguments(std::get<0>(merge), std::get<2>(merge))))>::value,
+                  "Inconsistent return type.");
+    // Check who needs a copy.
+    const bool s1_needs_copy = (std::get<0>(merge) != s1.get_symbol_set()),
+               s2_needs_copy = (std::get<0>(merge) != s2.get_symbol_set());
+    const unsigned mask = unsigned(s1_needs_copy) + (unsigned(s2_needs_copy) << 1u);
+    piranha_assert(mask != 0u);
+    // Handle the 3 possible cases.
+    switch (mask) {
+        case 1u:
+            return f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)), std::forward<S2>(s2));
+        case 2u:
+            return f(std::forward<S1>(s1), s2.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
+    }
+    // Put the last case outside the switch, so we avoid compiler warnings.
+    return f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
+             s2.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
+}
+}
 
 /// Specialisation of piranha::print_coefficient_impl for series.
 /**
