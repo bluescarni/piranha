@@ -414,7 +414,7 @@ public:
 
 private:
     // Degree utils.
-    using degree_type = decltype(std::declval<const T &>() + std::declval<const T &>());
+    using degree_type = add_t<T, T>;
 
 public:
     /// Degree.

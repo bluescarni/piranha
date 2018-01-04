@@ -190,21 +190,6 @@ private:
             && has_negate<PIRANHA_TMP_TYPE>::value,
         PIRANHA_TMP_TYPE>::type;
 #undef PIRANHA_TMP_TYPE
-    // Implementation of canonicalisation.
-    static bool canonicalise_impl(v_type &unpacked)
-    {
-        const auto size = unpacked.size();
-        bool sign_change = false;
-        for (decltype(unpacked.size()) i = 0u; i < size; ++i) {
-            if (sign_change || unpacked[i] < value_type(0)) {
-                unpacked[i] = static_cast<value_type>(-unpacked[i]);
-                sign_change = true;
-            } else if (unpacked[i] > value_type(0)) {
-                break;
-            }
-        }
-        return sign_change;
-    }
     // Couple of helper functions for Vieta's formulae.
     static value_type cos_phase(const value_type &n)
     {
@@ -218,16 +203,6 @@ private:
         const value_type v[4] = {0, 1, 0, -1};
         return v[n % value_type(4)];
     }
-    // Enabler for multiplication.
-    template <typename Cf>
-    using multiply_enabler = typename std::enable_if<is_divisible_in_place<Cf, int>::value && has_negate<Cf>::value
-                                                         && detail::true_tt<detail::cf_mult_enabler<Cf>>::value
-                                                         && std::is_copy_assignable<Cf>::value,
-                                                     int>::type;
-    // Degree utils.
-    using degree_type = decltype(std::declval<const T &>() + std::declval<const T &>());
-    // Order utils.
-    using order_type = decltype(math::abs(std::declval<const T &>()) + math::abs(std::declval<const T &>()));
 #endif
 public:
     /// Default constructor.
@@ -328,7 +303,7 @@ public:
      * @param other the construction argument.
      */
     explicit real_trigonometric_kronecker_monomial(const real_trigonometric_kronecker_monomial &other,
-                                                   const symbol_set &)
+                                                   const symbol_fset &)
         : real_trigonometric_kronecker_monomial(other)
     {
     }
@@ -388,6 +363,25 @@ public:
     {
         m_flavour = f;
     }
+
+private:
+    // Implementation of canonicalisation.
+    static bool canonicalise_impl(v_type &unpacked)
+    {
+        const auto size = unpacked.size();
+        bool sign_change = false;
+        for (decltype(unpacked.size()) i = 0u; i < size; ++i) {
+            if (sign_change || unpacked[i] < value_type(0)) {
+                unpacked[i] = static_cast<value_type>(-unpacked[i]);
+                sign_change = true;
+            } else if (unpacked[i] > value_type(0)) {
+                break;
+            }
+        }
+        return sign_change;
+    }
+
+public:
     /// Canonicalise.
     /**
      * A monomial is considered to be in canonical form when the first nonzero multiplier is positive.
@@ -428,7 +422,7 @@ public:
      *
      * @return compatibility flag for the monomial.
      */
-    bool is_compatible(const symbol_set &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const noexcept
     {
         const auto s = args.size();
         // No args means the value must also be zero.
@@ -466,61 +460,72 @@ public:
      *
      * @return ignorability flag.
      */
-    bool is_zero(const symbol_set &) const noexcept
+    bool is_zero(const symbol_fset &) const noexcept
     {
         return m_value == value_type(0) && !m_flavour;
     }
-    /// Merge arguments.
+    /// Merge symbols.
     /**
-     * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
-     * \p orig_args.
+     * This method will return a copy of \p this in which the value 0 has been inserted
+     * at the positions specified by \p ins_map. Specifically, before each index appearing in \p ins_map
+     * a number of zeroes equal to the size of the mapped piranha::symbol_fset will be inserted.
      *
-     * @param orig_args original arguments set.
-     * @param new_args new arguments set.
+     * For instance, given a piranha::real_trigonometric_kronecker_monomial containing the values <tt>[1,2,3,4]</tt>, a
+     * symbol set \p args containing <tt>["c","e","g","h"]</tt> and an insertion map \p ins_map containing the pairs
+     * <tt>[(0,["a","b"]),(1,["d"]),(2,["f"]),(4,["i"])]</tt>, the output of this method will be
+     * <tt>[0,0,1,0,2,0,3,4,0]</tt>. That is, the symbols appearing in \p ins_map are merged into \p this
+     * with a value of zero at the specified positions. The original flavour of ``this`` will be preserved
+     * in the return value.
      *
-     * @return monomial with merged arguments.
+     * @param ins_map the insertion map.
+     * @param args the reference symbol set for \p this.
      *
-     * @throws std::invalid_argument if at least one of these conditions is true:
-     * - the size of \p new_args is not greater than the size of \p orig_args,
-     * - not all elements of \p orig_args are included in \p new_args.
+     * @return a piranha::real_trigonometric_kronecker_monomial resulting from inserting into \p this zeroes at the
+     * positions specified by \p ins_map.
+     *
+     * @throws std::invalid_argument in the following cases:
+     * - the size of \p ins_map is zero,
+     * - the last index in \p ins_map is greater than the size of \p args.
      * @throws unspecified any exception thrown by:
-     * - piranha::kronecker_array::encode(),
+     * - unpack(),
      * - piranha::static_vector::push_back(),
-     * - unpack().
+     * - piranha::kronecker_array::encode().
      */
-    real_trigonometric_kronecker_monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
+    real_trigonometric_kronecker_monomial merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map,
+                                                        const symbol_fset &args) const
     {
-        return real_trigonometric_kronecker_monomial(detail::km_merge_args<v_type, ka>(orig_args, new_args, m_value),
+        return real_trigonometric_kronecker_monomial(detail::km_merge_symbols<v_type, ka>(ins_map, args, m_value),
                                                      m_flavour);
     }
     /// Check if monomial is unitary.
     /**
-     * @param args reference set of piranha::symbol.
+     * @param args the reference symbol set for \p this.
      *
      * @return \p true if all the multipliers are zero and the flavour is \p true, \p false otherwise.
-     *
-     * @throws std::invalid_argument if \p this is not compatible with \p args.
      */
-    bool is_unitary(const symbol_set &args) const
+    bool is_unitary(const symbol_fset &args) const
     {
-        if (unlikely(!is_compatible(args))) {
-            piranha_throw(std::invalid_argument, "invalid symbol set");
-        }
         return (!m_value && m_flavour);
     }
+
+private:
+    // Degree utils.
+    using degree_type = add_t<T, T>;
+
+public:
     /// Trigonometric degree.
     /**
      * The type returned by this method is the type resulting from the addition of two instances
      * of \p T.
      *
-     * @param args reference set of piranha::symbol.
+     * @param args the reference symbol set for \p this.
      *
-     * @return trigonometric degree of the monomial.
+     * @return the trigonometric degree of the monomial.
      *
      * @throws std::overflow_error if the computation of the degree overflows.
      * @throws unspecified any exception thrown by unpack().
      */
-    degree_type t_degree(const symbol_set &args) const
+    degree_type t_degree(const symbol_fset &args) const
     {
         const auto tmp = unpack(args);
         // NOTE: this should be guaranteed by the unpack function.
@@ -533,76 +538,81 @@ public:
     }
     /// Low trigonometric degree (equivalent to the trigonometric degree).
     /**
-     * @param args reference set of piranha::symbol.
+     * @param args the reference symbol set for \p this.
      *
-     * @return the output of t_degree(const symbol_set &) const.
+     * @return the output of t_degree(const symbol_fset &) const.
      *
-     * @throws unspecified any exception thrown by t_degree(const symbol_set &) const.
+     * @throws unspecified any exception thrown by t_degree(const symbol_fset &) const.
      */
-    degree_type t_ldegree(const symbol_set &args) const
+    degree_type t_ldegree(const symbol_fset &args) const
     {
         return t_degree(args);
     }
     /// Partial trigonometric degree.
     /**
-     * Partial trigonometric degree of the monomial. The \p p argument is used to indicate which multipliers are to be
-     * taken into account when
-     * computing the partial degree. Multipliers not in \p p will be discarded during the computation of the partial
-     * degree.
-     *
+     * Partial trigonometric degree of the monomial: only the symbols at the positions specified by \p p are considered.
      * The type returned by this method is the type resulting from the addition of two instances
      * of \p T.
      *
-     * @param p positions of the symbols to be considered.
-     * @param args reference set of piranha::symbol.
+     * @param p the positions of the symbols to be considered in the calculation of the degree.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the summation of all the multipliers of the monomial corresponding to the symbols at the positions in
-     * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
+     * @return the summation of the exponents of the monomial at the positions specified by \p p.
      *
-     * @throws std::invalid_argument if \p p is not compatible with \p args.
+     * @throws std::invalid_argument if the last element of \p p, if existing, is not less than the size
+     * of \p args.
      * @throws std::overflow_error if the computation of the degree overflows.
      * @throws unspecified any exception thrown by unpack().
      */
-    degree_type t_degree(const symbol_set::positions &p, const symbol_set &args) const
+    degree_type t_degree(const symbol_idx_fset &p, const symbol_fset &args) const
     {
         const auto tmp = unpack(args);
         piranha_assert(tmp.size() == args.size());
-        if (unlikely(p.size() && p.back() >= tmp.size())) {
-            piranha_throw(std::invalid_argument, "invalid positions");
+        if (unlikely(p.size() && *p.rbegin() >= tmp.size())) {
+            piranha_throw(std::invalid_argument,
+                          "the largest value in the positions set for the computation of the "
+                          "partial trigonometric degree of a real trigonometric Kronecker monomial is "
+                              + std::to_string(*p.rbegin()) + ", but the monomial has a size of only "
+                              + std::to_string(tmp.size()));
         }
-        auto cit = tmp.begin();
         degree_type retval(0);
-        for (const auto &i : p) {
-            detail::safe_integral_adder(retval, static_cast<degree_type>(cit[i]));
+        for (auto idx : p) {
+            detail::safe_integral_adder(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
         }
         return retval;
     }
     /// Partial low trigonometric degree (equivalent to the partial trigonometric degree).
     /**
-     * @param p positions of the symbols to be considered.
-     * @param args reference set of piranha::symbol.
+     * @param p the positions of the symbols to be considered in the calculation of the degree.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the output of t_degree(const symbol_set::positions &, const symbol_set &) const.
+     * @return the output of t_degree(const symbol_idx_fset &, const symbol_fset &) const.
      *
-     * @throws unspecified any exception thrown by t_degree(const symbol_set::positions &, const symbol_set &) const.
+     * @throws unspecified any exception thrown by t_degree(const symbol_idx_fset &, const symbol_fset &) const.
      */
-    degree_type t_ldegree(const symbol_set::positions &p, const symbol_set &args) const
+    degree_type t_ldegree(const symbol_idx_fset &p, const symbol_fset &args) const
     {
         return t_degree(p, args);
     }
+
+private:
+    // Order utils.
+    using order_type = decltype(math::abs(std::declval<const T &>()) + math::abs(std::declval<const T &>()));
+
+public:
     /// Trigonometric order.
     /**
      * The type returned by this method is the type resulting from the addition of the absolute
      * values of two instances of \p T.
      *
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return trigonometric order of the monomial.
+     * @return the trigonometric order of the monomial.
      *
-     * @throws std::overflow_error if the computation of the degree overflows.
+     * @throws std::overflow_error if the computation of the order overflows.
      * @throws unspecified any exception thrown by unpack().
      */
-    order_type t_order(const symbol_set &args) const
+    order_type t_order(const symbol_fset &args) const
     {
         const auto tmp = unpack(args);
         piranha_assert(tmp.size() == args.size());
@@ -616,79 +626,84 @@ public:
     }
     /// Low trigonometric order (equivalent to the trigonometric order).
     /**
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the output of t_order(const symbol_set &) const.
+     * @return the output of t_order(const symbol_fset &) const.
      *
-     * @throws unspecified any exception thrown by t_order(const symbol_set &) const.
+     * @throws unspecified any exception thrown by t_order(const symbol_fset &) const.
      */
-    order_type t_lorder(const symbol_set &args) const
+    order_type t_lorder(const symbol_fset &args) const
     {
         return t_order(args);
     }
     /// Partial trigonometric order.
     /**
-     * Partial trigonometric order of the monomial. The \p p argument is used to indicate which multipliers are to be
-     * taken into account when
-     * computing the partial order. Multipliers not in \p p will be discarded during the computation of the partial
-     * order.
+     * Partial trigonometric order of the monomial: only the symbols at the positions specified by \p p are considered.
+     * The type returned by this method is the type resulting from the addition of the absolute values of two instances
+     * of \p T.
      *
-     * The type returned by this method is the type resulting from the addition of the absolute
-     * values of two instances of \p T.
+     * @param p the positions of the symbols to be considered in the calculation of the order.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @param p positions of the symbols to be considered.
-     * @param args reference set of piranha::symbol.
+     * @return the partial trigonometric order of the monomial.
      *
-     * @return the summation of the absolute values of all the multipliers of the monomial corresponding to the symbols
-     * at the positions in
-     * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
-     *
-     * @throws std::invalid_argument if \p p is not compatible with \p args.
+     * @throws std::invalid_argument if the last element of \p p, if existing, is not less than the size
+     * of \p args.
      * @throws std::overflow_error if the computation of the degree overflows.
      * @throws unspecified any exception thrown by unpack().
      */
-    order_type t_order(const symbol_set::positions &p, const symbol_set &args) const
+    order_type t_order(const symbol_idx_fset &p, const symbol_fset &args) const
     {
         const auto tmp = unpack(args);
         piranha_assert(tmp.size() == args.size());
-        if (unlikely(p.size() && p.back() >= tmp.size())) {
-            piranha_throw(std::invalid_argument, "invalid positions");
+        if (unlikely(p.size() && *p.rbegin() >= tmp.size())) {
+            piranha_throw(std::invalid_argument,
+                          "the largest value in the positions set for the computation of the "
+                          "partial trigonometric order of a real trigonometric Kronecker monomial is "
+                              + std::to_string(*p.rbegin()) + ", but the monomial has a size of only "
+                              + std::to_string(tmp.size()));
         }
-        auto cit = tmp.begin();
         order_type retval(0);
-        for (const auto &i : p) {
-            detail::safe_integral_adder(retval, static_cast<order_type>(math::abs(cit[i])));
+        for (auto idx : p) {
+            detail::safe_integral_adder(
+                retval, static_cast<degree_type>(math::abs(tmp[static_cast<decltype(tmp.size())>(idx)])));
         }
         return retval;
     }
     /// Partial low trigonometric order (equivalent to the partial trigonometric order).
     /**
      * @param p positions of the symbols to be considered.
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the output of t_order(const symbol_set::positions &, const symbol_set &) const.
+     * @return the output of t_order(const symbol_idx_fset &, const symbol_fset &) const.
      *
-     * @throws unspecified any exception thrown by t_order(const symbol_set::positions &, const symbol_set &) const.
+     * @throws unspecified any exception thrown by t_order(const symbol_idx_fset &, const symbol_fset &) const.
      */
-    order_type t_lorder(const symbol_set::positions &p, const symbol_set &args) const
+    order_type t_lorder(const symbol_idx_fset &p, const symbol_fset &args) const
     {
         return t_order(p, args);
     }
+
+private:
+    // Enabler for multiplication.
+    template <typename Cf>
+    using multiply_enabler = enable_if_t<
+        conjunction<is_divisible_in_place<Cf, int>, has_negate<Cf>, std::is_copy_assignable<Cf>, has_mul3<Cf>>::value,
+        int>;
+
+public:
     /// Multiply terms with a trigonometric monomial.
     /**
      * \note
      * This method is enabled only if the following conditions hold:
-     * - \p Cf satisfies piranha::is_cf,
      * - \p Cf satisfies piranha::has_mul3,
      * - \p Cf is divisible in-place by \p int,
      * - \p Cf is copy-assignable and it satisfies piranha::has_negate.
      *
      * This method will compute the result of the multiplication of the two terms \p t1 and \p t2 with trigonometric
-     * key.
-     * The result is stored in the two terms of \p res and it is computed using basic trigonometric formulae.
+     * key. The result is stored in the two terms of \p res and it is computed using basic trigonometric formulae.
      * Note however that this method will **not** perform the division by two implied by Werner's formulae. Also, in
-     * case
-     * \p Cf is an instance of piranha::mp_rational, only the numerators of the coefficients will be multiplied.
+     * case \p Cf is an instance of piranha::mp_rational, only the numerators of the coefficients will be multiplied.
      *
      * @param res result of the multiplication.
      * @param t1 first argument.
