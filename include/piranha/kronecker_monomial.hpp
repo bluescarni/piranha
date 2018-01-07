@@ -741,12 +741,12 @@ public:
     {
         auto v = unpack(args);
         if (p >= args.size() || v[static_cast<decltype(v.size())>(p)] == T(0)) {
-            // Derivative wrt a variable not in the monomial: position is outside the bounds, or it refers to a
+            // Derivative wrt a variable not in the monomial: the position is outside the bounds, or it refers to a
             // variable with zero exponent.
             return std::make_pair(T(0), kronecker_monomial{args});
         }
         auto v_b = v.begin();
-        // Original exponent.
+        // The original exponent.
         const T n(v_b[p]);
         // Decrement the exponent in the monomial.
         // NOTE: maybe replace with the safe integral subber, eventually.
@@ -940,7 +940,7 @@ public:
             auto ret(math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]));
             // Zero out the corresponding exponent.
             v[static_cast<decltype(v.size())>(it->first)] = T(0);
-            //  NOTE: move to the next element in the init statement of the for loop.
+            // NOTE: move to the next element in the init statement of the for loop.
             for (++it; it != smap.end(); ++it) {
                 ret *= math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]);
                 v[static_cast<decltype(v.size())>(it->first)] = T(0);

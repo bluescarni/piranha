@@ -1277,10 +1277,12 @@ private:
     // Partial need access to the custom derivatives.
     template <typename, typename>
     friend struct math::partial_impl;
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
     // Friendship with the series_merge_f helper.
     template <typename S1, typename S2, typename F>
     friend auto impl::series_merge_f(S1 &&s1, S2 &&s2, const F &f)
         -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)));
+#endif
 
 protected:
     /// Container type for terms.

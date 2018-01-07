@@ -31,8 +31,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <array>
+#include <cinttypes>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -137,73 +140,8 @@ public:
     typedef static_vector<value_type, max_size> v_type;
 
 private:
-// Doxygen gets terribly confused by the following.
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
     static_assert(max_size <= std::numeric_limits<static_vector<int, 1u>::size_type>::max(), "Invalid max size.");
-    // Eval and subs type definition.
-    template <typename U, typename = void>
-    struct eval_type_ {
-    };
-    template <typename U>
-    using e_type = decltype(std::declval<U const &>() * std::declval<value_type const &>());
-    template <typename U>
-    struct eval_type_<
-        U, typename std::enable_if<is_addable_in_place<e_type<U>>::value && std::is_constructible<e_type<U>, int>::value
-                                   && std::is_same<decltype(math::cos(std::declval<e_type<U>>())),
-                                                   decltype(math::sin(std::declval<e_type<U>>()))>::value
-                                   && std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())), int>::value
-                                   && is_mappable<U>::value>::type> {
-        using type = decltype(math::cos(std::declval<e_type<U>>()));
-    };
-    // Final typedef for the eval type.
-    template <typename U>
-    using eval_type = typename eval_type_<U>::type;
-    // Substitution utils.
-    template <typename U>
-    using subs_cos_type = decltype(math::cos(std::declval<const value_type &>() * std::declval<const U &>()));
-    template <typename U>
-    using subs_sin_type = decltype(math::sin(std::declval<const value_type &>() * std::declval<const U &>()));
-    template <typename U, typename = void>
-    struct subs_type_ {
-    };
-    template <typename U>
-    struct subs_type_<U, typename std::enable_if<std::is_same<subs_cos_type<U>, subs_sin_type<U>>::value
-                                                 && std::is_constructible<subs_cos_type<U>, int>::value
-                                                 && std::is_assignable<subs_cos_type<U> &, subs_cos_type<U>>::value
-                                                 && has_negate<subs_cos_type<U>>::value>::type> {
-        using type = subs_cos_type<U>;
-    };
-    template <typename U>
-    using subs_type = typename subs_type_<U>::type;
-// Trig subs utils.
-#define PIRANHA_TMP_TYPE                                                                                               \
-    decltype((std::declval<value_type const &>()                                                                       \
-              * math::binomial(std::declval<value_type const &>(), std::declval<value_type const &>()))                \
-             * (std::declval<const U &>() * std::declval<const U &>()))
-    template <typename U>
-    using t_subs_type = typename std::enable_if<
-        std::is_constructible<U, int>::value && std::is_default_constructible<U>::value
-            && std::is_assignable<U &, U>::value
-            && std::is_assignable<U &, decltype(std::declval<const U &>() * std::declval<const U &>())>::value
-            && is_addable_in_place<PIRANHA_TMP_TYPE, decltype(std::declval<const value_type &>()
-                                                              * std::declval<PIRANHA_TMP_TYPE const &>())>::value
-            && has_negate<PIRANHA_TMP_TYPE>::value,
-        PIRANHA_TMP_TYPE>::type;
-#undef PIRANHA_TMP_TYPE
-    // Couple of helper functions for Vieta's formulae.
-    static value_type cos_phase(const value_type &n)
-    {
-        piranha_assert(n >= value_type(0));
-        const value_type v[4] = {1, 0, -1, 0};
-        return v[n % value_type(4)];
-    }
-    static value_type sin_phase(const value_type &n)
-    {
-        piranha_assert(n >= value_type(0));
-        const value_type v[4] = {0, 1, 0, -1};
-        return v[n % value_type(4)];
-    }
-#endif
+
 public:
     /// Default constructor.
     /**
@@ -229,9 +167,10 @@ public:
      * The values in the initializer list are intended to represent the multipliers of the monomial:
      * they will be safely converted to type \p T (if \p T and \p U are not the same type),
      * encoded using piranha::kronecker_array::encode() and the result assigned to the internal integer instance.
-     * The flavour will be set to \p true.
+     * The flavour will be set to ``flavour``.
      *
-     * @param list initializer list representing the multipliers.
+     * @param list an initializer list representing the multipliers.
+     * @param flavour the flavour that will be assigned to the monomial.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::kronecker_array::encode(),
@@ -239,8 +178,8 @@ public:
      * - piranha::static_vector::push_back().
      */
     template <typename U, init_list_enabler<U> = 0>
-    explicit real_trigonometric_kronecker_monomial(std::initializer_list<U> list)
-        : real_trigonometric_kronecker_monomial(std::begin(list), std::end(list))
+    explicit real_trigonometric_kronecker_monomial(std::initializer_list<U> list, bool flavour = true)
+        : real_trigonometric_kronecker_monomial(std::begin(list), std::end(list), flavour)
     {
     }
 
@@ -261,10 +200,11 @@ public:
      *
      * Will build internally a vector of values from the input iterators, encode it and assign the result
      * to the internal integer instance. The value type of the iterator is converted to \p T using
-     * piranha::safe_cast(). The flavour will be set to \p true.
+     * piranha::safe_cast(). The flavour will be set to ``flavour``.
      *
      * @param start beginning of the range.
      * @param end end of the range.
+     * @param flavour the flavour that will be assigned to the monomial.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::kronecker_array::encode(),
@@ -272,8 +212,8 @@ public:
      * - piranha::static_vector::push_back().
      */
     template <typename Iterator, it_ctor_enabler<Iterator> = 0>
-    explicit real_trigonometric_kronecker_monomial(const Iterator &start, const Iterator &end)
-        : m_value(0), m_flavour(true)
+    explicit real_trigonometric_kronecker_monomial(const Iterator &start, const Iterator &end, bool flavour = true)
+        : m_value(0), m_flavour(flavour)
     {
         v_type tmp;
         std::transform(
@@ -499,11 +439,9 @@ public:
     }
     /// Check if monomial is unitary.
     /**
-     * @param args the reference symbol set for \p this.
-     *
      * @return \p true if all the multipliers are zero and the flavour is \p true, \p false otherwise.
      */
-    bool is_unitary(const symbol_fset &args) const
+    bool is_unitary(const symbol_fset &) const
     {
         return (!m_value && m_flavour);
     }
@@ -557,7 +495,7 @@ public:
      * @param p the positions of the symbols to be considered in the calculation of the degree.
      * @param args the reference piranha::symbol_fset.
      *
-     * @return the summation of the exponents of the monomial at the positions specified by \p p.
+     * @return the summation of the multipliers of the monomial at the positions specified by \p p.
      *
      * @throws std::invalid_argument if the last element of \p p, if existing, is not less than the size
      * of \p args.
@@ -708,7 +646,7 @@ public:
      * @param res result of the multiplication.
      * @param t1 first argument.
      * @param t2 second argument.
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::overflow_error if the computation of the result overflows type \p value_type.
      * @throws unspecified any exception thrown by:
@@ -722,10 +660,10 @@ public:
     template <typename Cf, multiply_enabler<Cf> = 0>
     static void multiply(std::array<term<Cf, real_trigonometric_kronecker_monomial>, multiply_arity> &res,
                          const term<Cf, real_trigonometric_kronecker_monomial> &t1,
-                         const term<Cf, real_trigonometric_kronecker_monomial> &t2, const symbol_set &args)
+                         const term<Cf, real_trigonometric_kronecker_monomial> &t2, const symbol_fset &args)
     {
         // Coefficients first.
-        detail::cf_mult_impl(res[0u].m_cf, t1.m_cf, t2.m_cf);
+        cf_mult_impl(res[0u].m_cf, t1.m_cf, t2.m_cf);
         res[1u].m_cf = res[0u].m_cf;
         const bool f1 = t1.m_key.get_flavour(), f2 = t2.m_key.get_flavour();
         if (f1 && f2) {
@@ -785,7 +723,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param other comparison argument.
+     * @param other the comparison argument.
      *
      * @return \p true if the internal integral instance and the flavour of \p this are the same of \p other,
      * \p false otherwise.
@@ -796,7 +734,7 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param other comparison argument.
+     * @param other the comparison argument.
      *
      * @return the opposite of operator==().
      */
@@ -806,30 +744,31 @@ public:
     }
     /// Unpack internal integer instance.
     /**
-     * Will decode the internal integral instance into a piranha::static_vector of size equal to the size of \p args.
+     * This method will decode the internal integral instance into a piranha::static_vector of size equal to the size of
+     * \p args.
      *
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return piranha::static_vector containing the result of decoding the internal integral instance via
+     * @return a piranha::static_vector containing the result of decoding the internal integral instance via
      * piranha::kronecker_array.
      *
      * @throws std::invalid_argument if the size of \p args is larger than the maximum size of piranha::static_vector.
      * @throws unspecified any exception thrown by piranha::kronecker_array::decode().
      */
-    v_type unpack(const symbol_set &args) const
+    v_type unpack(const symbol_fset &args) const
     {
         return detail::km_unpack<v_type, ka>(args, m_value);
     }
     /// Print.
     /**
-     * Will print to stream a human-readable representation of the monomial.
+     * Thie method will print to stream a human-readable representation of the monomial.
      *
      * @param os target stream.
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
      */
-    void print(std::ostream &os, const symbol_set &args) const
+    void print(std::ostream &os, const symbol_fset &args) const
     {
         // Don't print anything in case all multipliers are zero.
         if (m_value == value_type(0)) {
@@ -866,14 +805,14 @@ public:
     }
     /// Print in TeX mode.
     /**
-     * Will print to stream a TeX representation of the monomial.
+     * This method will print to stream a TeX representation of the monomial.
      *
      * @param os target stream.
-     * @param args reference set of piranha::symbol.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
      */
-    void print_tex(std::ostream &os, const symbol_set &args) const
+    void print_tex(std::ostream &os, const symbol_fset &args) const
     {
         // Don't print anything in case all multipliers are zero.
         if (m_value == value_type(0)) {
@@ -911,325 +850,387 @@ public:
     /// Partial derivative.
     /**
      * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by
-     * \p p.
-     * The result is a pair consisting of the multiplier associated to \p p and a copy of the monomial.
+     * \p p. The result is a pair consisting of the multiplier at the position \p p and a copy of the monomial.
      * The sign of the multiplier and the flavour of the resulting monomial are set according to the standard
      * differentiation formulas for elementary trigonometric functions.
-     * If \p p is empty or if the multiplier associated to it is zero,
-     * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{args})</tt>.
+     * If \p p is not smaller than the size of \p args or if its corresponding multiplier is
+     * zero, the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{args})</tt>.
      *
-     * @param p position of the symbol with respect to which the differentiation will be calculated.
-     * @param args reference set of piranha::symbol.
+     * @param p the position of the symbol with respect to which the differentiation will be calculated.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return result of the differentiation.
+     * @return the result of the differentiation.
      *
-     * @throws std::invalid_argument if \p p is incompatible with \p args or it has a size greater than one.
-     * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - piranha::math::is_zero().
+     * @throws unspecified any exception thrown by unpack().
      */
-    std::pair<T, real_trigonometric_kronecker_monomial> partial(const symbol_set::positions &p,
-                                                                const symbol_set &args) const
+    std::pair<T, real_trigonometric_kronecker_monomial> partial(const symbol_idx &p, const symbol_fset &args) const
     {
         auto v = unpack(args);
-        // Cannot take derivative wrt more than one variable, and the position of that variable
-        // must be compatible with the monomial.
-        if (p.size() > 1u || (p.size() == 1u && p.back() >= args.size())) {
-            piranha_throw(std::invalid_argument, "invalid size of symbol_set::positions");
+        if (p >= args.size() || v[static_cast<decltype(v.size())>(p)] == T(0)) {
+            // Derivative wrt a variable not in the monomial: the position is outside the bounds, or it refers to a
+            // variable with zero multiplier.
+            return std::make_pair(T(0), real_trigonometric_kronecker_monomial{args});
         }
-        // Derivative wrt a variable not in the monomial: position is empty, or refers to a
-        // variable with zero multiplier.
-        // NOTE: safe to take v.begin() here, as the checks on the positions above ensure
-        // there is a valid position and hence the size must be not zero.
-        if (!p.size() || math::is_zero(v.begin()[*p.begin()])) {
-            return std::make_pair(T(0), real_trigonometric_kronecker_monomial(args));
-        }
-        auto v_b = v.begin();
-        // Original multiplier.
-        T n(v_b[*p.begin()]);
-        // Create a copy of this.
-        real_trigonometric_kronecker_monomial tmp_m(*this);
-        // Flip the flavour.
-        tmp_m.set_flavour(!get_flavour());
-        // Flip the sign of the multiplier as needed.
+        const auto v_b = v.begin();
         if (get_flavour()) {
-            // NOTE: this is safe, as it is coming out of a k codification which
-            // is symmetric.
-            math::negate(n);
+            // cos(nx + b) -> -n*sin(nx + b)
+            return std::make_pair(static_cast<T>(-v_b[p]), real_trigonometric_kronecker_monomial(m_value, false));
         }
-        return std::make_pair(std::move(n), std::move(tmp_m));
+        // sin(nx + b) -> n*cos(nx + b)
+        return std::make_pair(v_b[p], real_trigonometric_kronecker_monomial(m_value, true));
     }
     /// Integration.
     /**
-     * Will return the antiderivative of \p this with respect to symbol \p s. The result is a pair
+     * This method will return the antiderivative of \p this with respect to the symbol \p s. The result is a pair
      * consisting of the multiplier associated to \p s and a copy of the monomial.
      * The sign of the multiplier and the flavour of the resulting monomial are set according to the standard
      * integration formulas for elementary trigonometric functions.
      * If \p s is not in \p args or if the multiplier associated to it is zero,
-     * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{})</tt>.
+     * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{args})</tt>.
      *
-     * @param s symbol with respect to which the integration will be calculated.
-     * @param args reference set of piranha::symbol.
+     * @param s the symbol with respect to which the integration will be calculated.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return result of the integration.
+     * @return the result of the integration.
      *
-     * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - piranha::math::is_zero(),
-     * - monomial construction,
-     * - the cast operator of piranha::integer.
+     * @throws unspecified any exception thrown by unpack().
      */
-    std::pair<T, real_trigonometric_kronecker_monomial> integrate(const symbol &s, const symbol_set &args) const
+    std::pair<T, real_trigonometric_kronecker_monomial> integrate(const std::string &s, const symbol_fset &args) const
     {
         auto v = unpack(args);
-        for (min_int<decltype(args.size()), typename v_type::size_type> i = 0u; i < args.size(); ++i) {
-            if (args[i] == s && !math::is_zero(v[i])) {
-                integer tmp_n(v[i]);
-                real_trigonometric_kronecker_monomial tmp_m(*this);
-                // Flip the flavour.
-                tmp_m.set_flavour(!get_flavour());
-                // Flip the sign of the multiplier as needed.
-                if (!get_flavour()) {
-                    tmp_n.neg();
+        auto it_args = args.begin();
+        for (min_int<decltype(args.size()), typename v_type::size_type> i = 0u; i < args.size(); ++i, ++it_args) {
+            if (*it_args == s && v[i] != value_type(0)) {
+                if (get_flavour()) {
+                    // cos(nx + b) -> sin(nx + b)
+                    return std::make_pair(v[i], real_trigonometric_kronecker_monomial(m_value, false));
                 }
-                return std::make_pair(static_cast<value_type>(tmp_n), std::move(tmp_m));
+                // sin(nx + b) -> -cos(nx + b)
+                return std::make_pair(static_cast<value_type>(-v[i]),
+                                      real_trigonometric_kronecker_monomial(m_value, true));
+            }
+            if (*it_args > s) {
+                // The current symbol in args is lexicographically larger than s,
+                // we won't find s any more in args.
+                break;
             }
         }
-        return std::make_pair(value_type(0), real_trigonometric_kronecker_monomial());
+        return std::make_pair(value_type(0), real_trigonometric_kronecker_monomial{args});
     }
+
+private:
+    // The candidate type, resulting from math::cos()/math::sin() on T * U.
+    template <typename U>
+    using eval_t_cos = decltype(math::cos(std::declval<const mul_t<T, U> &>()));
+    template <typename U>
+    using eval_t_sin = decltype(math::sin(std::declval<const mul_t<T, U> &>()));
+    // Definition of the evaluation type.
+    template <typename U>
+    using eval_type
+        = enable_if_t<conjunction<
+                          // sin/cos eval types must be the same.
+                          std::is_same<eval_t_cos<U>, eval_t_sin<U>>,
+                          // Eval type must be ctible form int.
+                          std::is_constructible<eval_t_cos<U>, const int &>,
+                          // Eval type must be returnable.
+                          is_returnable<eval_t_cos<U>>,
+                          // T * U must be addable in-place.
+                          is_addable_in_place<mul_t<T, U>>,
+                          // T * U must be ctible from int.
+                          std::is_constructible<mul_t<T, U>, const int &>,
+                          // T * U must be move ctible and dtible
+                          std::is_move_constructible<mul_t<T, U>>, std::is_destructible<mul_t<T, U>>>::value,
+                      eval_t_cos<U>>;
+
+public:
     /// Evaluation.
     /**
      * \note
      * This template method is activated only if \p U supports the mathematical operations needed to compute
-     * the return type, and if it satisfies piranha::is_mappable.
+     * the return type.
      *
      * The return value will be built by applying piranha::math::cos() or piranha::math:sin()
-     * to the linear combination of the values in \p pmap with the multipliers.
-     * If the size of the monomial is zero, 1 will be returned if the monomial is a cosine, 0 otherwise.
-     * If the positions in \p pmap do not reference
-     * only and all the multipliers in the monomial, an error will be thrown.
+     * to the linear combination of the values in ``values`` with the multipliers.
      *
-     * @param pmap piranha::symbol_set::positions_map that will be used for substitution.
-     * @param args reference set of piranha::symbol.
+     * @param values the values will be used for the evaluation.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the result of evaluating \p this with the values provided in \p pmap.
+     * @return the result of evaluating \p this with the values provided in \p values.
      *
-     * @throws std::invalid_argument if \p pmap is not compatible with \p args.
-     * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - construction of the return type,
-     * - piranha::math::cos(), piranha::math::sin(), or the in-place addition and binary multiplication operators of the
-     * types
-     *   involved in the computation.
+     * @throws std::invalid_argument if the sizes of \p values and \p args differ.
+     * @throws unspecified any exception thrown by unpack() or by the computation of the return type.
      */
     template <typename U>
-    eval_type<U> evaluate(const symbol_set::positions_map<U> &pmap, const symbol_set &args) const
+    eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
     {
-        using return_type = eval_type<U>;
-        if (unlikely(pmap.size() != args.size() || (pmap.size() && pmap.back().first != pmap.size() - 1u))) {
-            piranha_throw(std::invalid_argument, "invalid positions map for evaluation");
+        // NOTE: here we can check the values size only against args.
+        if (unlikely(values.size() != args.size())) {
+            piranha_throw(std::invalid_argument, "invalid vector of values for real trigonometric Kronecker monomial "
+                                                 "evaluation: the size of the vector of values ("
+                                                     + std::to_string(values.size())
+                                                     + ") differs from the size of the reference set of symbols ("
+                                                     + std::to_string(args.size()) + ")");
         }
         // Run the unpack before the checks below in order to check the suitability of args.
-        auto v = unpack(args);
-        if (args.size() == 0u) {
+        const auto v = unpack(args);
+        // Special casing if the monomial is empty, just return 0 or 1.
+        if (!args.size()) {
             if (get_flavour()) {
-                return return_type(1);
-            } else {
-                return return_type(0);
+                return eval_type<U>(1);
             }
+            return eval_type<U>(0);
         }
-        using tmp_type = decltype(std::declval<U const &>() * std::declval<value_type const &>());
-        tmp_type tmp(0);
-        auto it = pmap.begin();
-        for (min_int<decltype(args.size()), typename v_type::size_type> i = 0u; i < args.size(); ++i, ++it) {
-            piranha_assert(it != pmap.end() && it->first == i);
-            // NOTE: here it might make sense to use multiply_accumulate. There might be a perf gain
-            // for things like real. Maybe fast FMA on Haswell too. Remember to adapt the type requirements
-            // in case we implement this.
-            tmp += it->second * v[i];
+        // Init the accumulator with the first element of the linear
+        // combination.
+        auto tmp(v[0] * values[0]);
+        // Accumulate the sin/cos argument.
+        for (decltype(values.size()) i = 1; i < values.size(); ++i) {
+            // NOTE: this could be optimised with an FMA eventually.
+            tmp += v[static_cast<decltype(v.size())>(i)] * values[i];
         }
-        piranha_assert(it == pmap.end());
         if (get_flavour()) {
-            return math::cos(tmp);
+            // NOTE: move it, in the future math::cos() may exploit this.
+            return math::cos(std::move(tmp));
         }
-        return math::sin(tmp);
+        return math::sin(std::move(tmp));
     }
+
+private:
+    // Substitution utils.
+    // NOTE: the only additional requirement here is to be able to negate.
+    template <typename U>
+    using subs_type = enable_if_t<has_negate<eval_type<U>>::value, eval_type<U>>;
+
+public:
     /// Substitution.
     /**
      * \note
-     * This method is enabled only if:
-     * - the value type can be multiplied by \p U, and the result can be passed to piranha::math::cos()
-     *   or piranha::math::sin(), yielding a type \p subs_type,
-     * - \p subs_type is constructible from \p int, assignable and it supports piranha::math::negate().
+     * This template method is activated only if \p U supports the mathematical operations needed to compute
+     * the return type.
      *
-     * Substitute the symbol called \p s in the monomial with quantity \p x. The return value is a vector of two pairs
-     * computed according to the standard angle sum identities. That is, given a monomial of the form
+     * This method will substitute the symbols at the positions specified in the keys of ``smap`` with the mapped
+     * values. The return value is a vector of two pairs computed according to the standard angle sum identities. That
+     * is, given a monomial of the form
      * \f[
      * \begin{array}{c}
      * \sin \\
      * \cos
      * \end{array}
-     * \left(na + b\right)
+     * \left(na + mb + c\right)
      * \f]
-     * in which the symbol \f$ a \f$ is to be substituted with \f$ x \f$, the result of the substitution will be
-     * one of
+     * in which the symbols \f$ a \f$ and \f$ b \f$ are to be substituted with \f$ x \f$ and \f$ y \f$, the result of
+     * the substitution will be one of
      * \f[
-     * \begin{array}{c}
-     * \left[\left(\sin nx,\cos b \right),\left(\cos nx,\sin b \right)\right], \\
-     * \left[\left(\cos nx,\cos b \right),\left(-\sin nx,\sin b \right)\right],
-     * \end{array}
+     * \left\{\left[\sin \left(nx+my\right),\cos c \right],\left[\cos \left(nx+my\right),\sin c \right]\right\}
      * \f]
-     * where \f$ \cos b \f$ and \f$ \sin b \f$ are returned as monomials, and \f$ \cos nx \f$ and \f$ \sin nx \f$
-     * as the return values of piranha::math::cos() and piranha::math::sin(). If \p s is not in \p args,
-     * \f$ \cos nx \f$ will be initialised to 1 and \f$ \sin nx \f$ to 0. If, after the substitution, the first nonzero
-     * multiplier
-     * in \f$ b \f$ is negative, \f$ b \f$ will be negated and the other signs changed accordingly.
+     * or
+     * \f[
+     * \left\{\left[\cos \left(nx+my\right),\cos c \right],\left[-\sin \left(nx+my\right),\sin c \right]\right\}
+     * \f]
+     * where \f$ \cos c \f$ and \f$ \sin c \f$ are returned as monomials, and \f$ \cos \left(nx+my\right) \f$ and \f$
+     * \sin \left(nx+my\right) \f$ are computed via piranha::math::cos() and piranha::math::sin(). If \p s is not
+     * in \p args, \f$ \cos \left(nx+my\right) \f$ will be initialised to 1 and \f$ \sin \left(nx+my\right) \f$ to 0.
+     * If, after the substitution, the first nonzero multiplier in \f$ c \f$ is negative, \f$ c \f$ will be negated and
+     * the other signs changed accordingly.
      *
-     * @param s name of the symbol that will be substituted.
-     * @param x quantity that will be substituted in place of \p s.
-     * @param args reference set of piranha::symbol.
+     * @param smap the map relating the positions of the symbols to be substituted to the values
+     * they will be substituted with.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the result of substituting \p x for \p s.
+     * @return the result of the substitution.
      *
-     * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - construction and assignment of the return value,
-     * - piranha::math::cos(), piranha::math::sin() and piranha::math::negate(),
-     * - piranha::static_vector::push_back(),
-     * - piranha::kronecker_array::encode().
+     * @throws std::invalid_argument if the last element of the substitution map is not smaller
+     * than the size of ``args``.
+     * @throws unspecified any exception thrown by unpack(), the computation of the return value or
+     * memory errors in standard containers.
      */
     template <typename U>
-    std::vector<std::pair<subs_type<U>, real_trigonometric_kronecker_monomial>> subs(const std::string &s, const U &x,
-                                                                                     const symbol_set &args) const
+    std::vector<std::pair<subs_type<U>, real_trigonometric_kronecker_monomial>> subs(const symbol_idx_fmap<U> &smap,
+                                                                                     const symbol_fset &args) const
     {
-        using s_type = subs_type<U>;
-        using ret_type = std::vector<std::pair<subs_type<U>, real_trigonometric_kronecker_monomial>>;
-        ret_type retval;
-        const auto v = unpack(args);
-        v_type new_v;
-        s_type retval_s_cos(1), retval_s_sin(0);
-        for (min_int<decltype(args.size()), typename v_type::size_type> i = 0u; i < args.size(); ++i) {
-            if (args[i].get_name() == s) {
-                retval_s_cos = math::cos(v[i] * x);
-                retval_s_sin = math::sin(v[i] * x);
-                new_v.push_back(value_type(0));
-            } else {
-                new_v.push_back(v[i]);
-            }
+        if (unlikely(smap.size() && smap.rbegin()->first >= args.size())) {
+            // The last element of the substitution map must be a valid index into args.
+            piranha_throw(std::invalid_argument, "invalid argument(s) for substitution in a real trigonometric "
+                                                 "Kronecker monomial: the last index of the substitution map ("
+                                                     + std::to_string(smap.rbegin()->first)
+                                                     + ") must be smaller than the monomial's size ("
+                                                     + std::to_string(args.size()) + ")");
         }
-        const bool sign_changed = canonicalise_impl(new_v);
-        piranha_assert(new_v.size() == v.size());
-        const auto new_int = ka::encode(new_v);
-        real_trigonometric_kronecker_monomial cos_key(new_int, true), sin_key(new_int, false);
-        if (get_flavour()) {
-            retval.emplace_back(std::move(retval_s_cos), std::move(cos_key));
-            retval.emplace_back(std::move(retval_s_sin), std::move(sin_key));
-            // Need to flip the sign on the sin * sin product if sign was not changed.
-            if (!sign_changed) {
-                math::negate(retval[1u].first);
+        std::vector<std::pair<subs_type<U>, real_trigonometric_kronecker_monomial>> retval;
+        retval.reserve(2u);
+        const auto f = get_flavour();
+        if (smap.size()) {
+            // The substitution map contains something, proceed to the substitution.
+            auto v = unpack(args);
+            // Init a tmp value from the linear combination of the first value
+            // of the map with the first multiplier.
+            auto it = smap.begin();
+            auto tmp(v[static_cast<decltype(v.size())>(it->first)] * it->second);
+            // Zero out the corresponding multiplier.
+            v[static_cast<decltype(v.size())>(it->first)] = T(0);
+            // Finish computing the linear combination of the values with
+            // the corresponding multipliers.
+            // NOTE: move to the next element in the init statement of the for loop.
+            for (++it; it != smap.end(); ++it) {
+                // NOTE: FMA in the future, maybe.
+                tmp += v[static_cast<decltype(v.size())>(it->first)] * it->second;
+                v[static_cast<decltype(v.size())>(it->first)] = T(0);
+            }
+            // Check if we need to canonicalise the vector, after zeroing out
+            // one or more multipliers.
+            const bool sign_changed = canonicalise_impl(v);
+            // Encode the modified vector of multipliers.
+            const auto new_value = ka::encode(v);
+            // Pre-compute the sin/cos of tmp.
+            auto s_tmp(math::sin(tmp)), c_tmp(math::cos(tmp));
+            if (f) {
+                // cos(tmp+x) -> cos(tmp)*cos(x) - sin(tmp)*sin(x)
+                retval.emplace_back(std::move(c_tmp), real_trigonometric_kronecker_monomial(new_value, true));
+                if (!sign_changed) {
+                    // NOTE: we need to negate because of trig formulas, but if
+                    // we switched the sign of x we have a double negation.
+                    math::negate(s_tmp);
+                }
+                retval.emplace_back(std::move(s_tmp), real_trigonometric_kronecker_monomial(new_value, false));
+            } else {
+                // sin(tmp+x) -> sin(tmp)*cos(x) + cos(tmp)*sin(x)
+                retval.emplace_back(std::move(s_tmp), real_trigonometric_kronecker_monomial(new_value, true));
+                if (sign_changed) {
+                    // NOTE: opposite of the above, if we switched the signs in x we need to negate
+                    // cos(tmp) to restore the signs.
+                    math::negate(c_tmp);
+                }
+                retval.emplace_back(std::move(c_tmp), real_trigonometric_kronecker_monomial(new_value, false));
             }
         } else {
-            retval.emplace_back(std::move(retval_s_sin), std::move(cos_key));
-            retval.emplace_back(std::move(retval_s_cos), std::move(sin_key));
-            // Need to flip the sign on the cos * sin product if sign was changed.
-            if (sign_changed) {
-                math::negate(retval[1u].first);
+            // The subs map is empty, return the original values.
+            // NOTE: can we just return a 1-element vector here?
+            if (f) {
+                // cos(a) -> 1*cos(a) + 0*sin(a)
+                retval.emplace_back(subs_type<U>(1), *this);
+                retval.emplace_back(subs_type<U>(0), real_trigonometric_kronecker_monomial(m_value, false));
+            } else {
+                // sin(a) -> 0*cos(a) + 1*sin(a)
+                retval.emplace_back(subs_type<U>(0), real_trigonometric_kronecker_monomial(m_value, true));
+                retval.emplace_back(subs_type<U>(1), *this);
             }
         }
         return retval;
     }
+
+private:
+    // Trig subs bits.
+    template <typename U>
+    using t_subs_t = decltype(std::declval<const integer &>() * std::declval<const mul_t<U, U> &>());
+    template <typename U>
+    using t_subs_type = enable_if_t<
+        conjunction<std::is_default_constructible<U>, std::is_constructible<U, const int &>, std::is_move_assignable<U>,
+                    std::is_destructible<U>, std::is_assignable<U &, mul_t<U, U> &&>, std::is_destructible<mul_t<U, U>>,
+                    std::is_move_constructible<t_subs_t<U>>, std::is_destructible<t_subs_t<U>>,
+                    is_addable_in_place<t_subs_t<U>>, has_negate<t_subs_t<U>>, std::is_copy_constructible<t_subs_t<U>>,
+                    std::is_move_constructible<mul_t<U, U>>>::value,
+        t_subs_t<U>>;
+    // Couple of helper functions for Vieta's formulae.
+    static value_type cos_phase(const value_type &n)
+    {
+        piranha_assert(n >= value_type(0));
+        constexpr value_type v[4] = {1, 0, -1, 0};
+        return v[n % value_type(4)];
+    }
+    static value_type sin_phase(const value_type &n)
+    {
+        piranha_assert(n >= value_type(0));
+        constexpr value_type v[4] = {0, 1, 0, -1};
+        return v[n % value_type(4)];
+    }
+
+public:
     /// Trigonometric substitution.
     /**
      * \note
-     * This method is enabled only if \p U supports the mathematical operations needed to compute the result. In
-     * particular,
-     * the implementation uses piranha::math::binomial() internally (thus, \p U must be interoperable with
-     * piranha::integer).
+     * This method is enabled only if \p U supports the operations needed to compute the result.
      *
-     * This method works in the same way as the subs() method, but the cosine \p c and sine \p s of \p name will be
-     * substituted (instead of a direct
-     * substitution of \p name).
-     * The substitution is performed using standard trigonometric formulae, and it will result in a list of two
-     * (substitution result,new monomial) pairs.
+     * This method will substitute the cosine and sine of the symbol at the position ``idx`` with,
+     * respectively, ``c`` and ``s``. The substitution is performed using standard trigonometric formulae, and it will
+     * result in a list of two ``(substitution result, new monomial)`` pairs. If ``idx`` is not smaller
+     * than the size of ``this``, the result of the substitution will be the original monomial unchanged.
      *
-     * @param name symbol whose cosine and sine will be substituted.
-     * @param c cosine of \p name.
-     * @param s sine of \p name.
-     * @param args reference set of piranha::symbol.
+     * @param idx the index of the symbol whose cosine and sine will be substituted.
+     * @param c the quantity that will replace the cosine of the symbol at the position ``idx``.
+     * @param s the quantity that will replace the sine of the symbol at the position ``idx``.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the result of substituting \p c and \p s for the cosine and sine of \p name.
+     * @return the result of the substitution.
      *
      * @throws unspecified any exception thrown by:
      * - unpack(),
-     * - construction, assignment and arithmetics on the return value and on the intermediary values invovled in the
-     * computation,
-     * - piranha::math::negate() and piranha::math::binomial(),
-     * - piranha::static_vector::push_back(),
+     * - construction, assignment and arithmetics on the return value and on the intermediary
+     *   values invovled in the computation,
      * - piranha::kronecker_array::encode().
      */
     template <typename U>
     std::vector<std::pair<t_subs_type<U>, real_trigonometric_kronecker_monomial>>
-    t_subs(const std::string &name, const U &c, const U &s, const symbol_set &args) const
+    t_subs(const symbol_idx &idx, const U &c, const U &s, const symbol_fset &args) const
     {
-        typedef decltype(this->t_subs(name, c, s, args)) ret_type;
-        typedef typename ret_type::value_type::first_type res_type;
-        const auto v = unpack(args);
-        v_type new_v;
-        value_type n(0);
-        // Build the new vector key.
-        for (min_int<decltype(args.size()), typename v_type::size_type> i = 0u; i < args.size(); ++i) {
-            if (args[i].get_name() == name) {
-                new_v.push_back(value_type(0));
-                n = v[i];
-            } else {
-                new_v.push_back(v[i]);
-            }
+        auto v = unpack(args);
+        T n(0);
+        if (idx < args.size()) {
+            // NOTE: this will extract the affected multiplier
+            // into n and zero out the multiplier in v.
+            std::swap(n, v[static_cast<decltype(v.size())>(idx)]);
         }
-        // Absolute value of the multiplier.
-        const value_type abs_n = (n >= 0) ? n : static_cast<value_type>(-n);
+        const auto abs_n = static_cast<T>(std::abs(n));
         // Prepare the powers of c and s to be used in the multiple angles formulae.
-        std::unordered_map<value_type, U> c_map, s_map;
+        // NOTE: probably a vector would be better here.
+        std::unordered_map<T, U> c_map, s_map;
+        // TREQ: U def ctible, ctible from int, move-assignable and dtible.
         c_map[0] = U(1);
         s_map[0] = U(1);
-        for (value_type k(0); k < abs_n; ++k) {
-            c_map[k + value_type(1)] = c_map[k] * c;
-            s_map[k + value_type(1)] = s_map[k] * s;
+        for (T k = 0; k < abs_n; ++k) {
+            // TREQ: U assignable from mult_t<U,U> &&, mult_t<U,U> dtible.
+            c_map[static_cast<T>(k + 1)] = c_map[k] * c;
+            s_map[static_cast<T>(k + 1)] = s_map[k] * s;
         }
         // Init with the first element in the summation.
-        res_type cos_nx((cos_phase(abs_n) * math::binomial(abs_n, value_type(0)))
-                        * (c_map[value_type(0)] * s_map[abs_n])),
-            sin_nx((sin_phase(abs_n) * math::binomial(abs_n, value_type(0))) * (c_map[value_type(0)] * s_map[abs_n]));
-        for (value_type k(0); k < abs_n; ++k) {
-            const value_type p = abs_n - (k + value_type(1));
-            piranha_assert(p >= value_type(0));
-            // NOTE: here the type is slightly different from the decltype() that determines the return type, but as
-            // long
-            // as binomial(value_type,value_type) returns integer there will be no difference because of the
-            // left-to-right associativity of multiplication.
-            res_type tmp(math::binomial(abs_n, k + value_type(1)) * (c_map[k + value_type(1)] * s_map[p]));
-            cos_nx += cos_phase(p) * tmp;
-            sin_nx += sin_phase(p) * tmp;
+        // NOTE: we promote abs_n to integer in these formulae in order to force
+        // the use of the binomial() overload for integer. In the future we might want
+        // to disable the binomial() overload for integral C++ types.
+        // TREQ: t_subs_type<U> move-ctible, dtible.
+        t_subs_type<U> cos_nx(cos_phase(abs_n) * math::binomial(integer(abs_n), T(0)) * (c_map[T(0)] * s_map[abs_n])),
+            sin_nx(sin_phase(abs_n) * math::binomial(integer(abs_n), T(0)) * (c_map[T(0)] * s_map[abs_n]));
+        // Run the main iteration.
+        for (T k = 0; k < abs_n; ++k) {
+            const auto p = static_cast<T>(abs_n - (k + 1));
+            piranha_assert(p >= T(0));
+            // TREQ: mult_t<U,U> move ctible.
+            const auto tmp = c_map[static_cast<T>(k + 1)] * s_map[p];
+            const auto tmp_bin = math::binomial(integer(abs_n), k + T(1));
+            // TREQ: t_subs_type<U> addable in-place.
+            cos_nx += cos_phase(p) * tmp_bin * tmp;
+            sin_nx += sin_phase(p) * tmp_bin * tmp;
         }
         // Change sign as necessary.
         if (abs_n != n) {
+            // TREQ: t_subs_type<U> has_negate.
             math::negate(sin_nx);
         }
         // Buld the new keys and canonicalise as needed.
-        const bool sign_changed = canonicalise_impl(new_v);
-        piranha_assert(new_v.size() == v.size());
-        const auto new_int = ka::encode(new_v);
-        real_trigonometric_kronecker_monomial cos_key(new_int, true), sin_key(new_int, false);
-        ret_type retval;
+        const bool sign_changed = canonicalise_impl(v);
+        // Encode the modified vector.
+        const auto new_value = ka::encode(v);
+        // Init the retval.
+        std::vector<std::pair<t_subs_type<U>, real_trigonometric_kronecker_monomial>> retval;
+        retval.reserve(2);
         if (get_flavour()) {
-            retval.emplace_back(std::move(cos_nx), std::move(cos_key));
-            retval.emplace_back(std::move(sin_nx), std::move(sin_key));
+            retval.emplace_back(std::move(cos_nx), real_trigonometric_kronecker_monomial(new_value, true));
+            retval.emplace_back(std::move(sin_nx), real_trigonometric_kronecker_monomial(new_value, false));
             // Need to flip the sign on the sin * sin product if sign was not changed.
             if (!sign_changed) {
                 math::negate(retval[1u].first);
             }
         } else {
-            retval.emplace_back(std::move(sin_nx), std::move(cos_key));
-            retval.emplace_back(std::move(cos_nx), std::move(sin_key));
+            retval.emplace_back(std::move(sin_nx), real_trigonometric_kronecker_monomial(new_value, true));
+            retval.emplace_back(std::move(cos_nx), real_trigonometric_kronecker_monomial(new_value, false));
             // Need to flip the sign on the cos * sin product if sign was changed.
             if (sign_changed) {
                 math::negate(retval[1u].first);
@@ -1239,40 +1240,51 @@ public:
     }
     /// Identify symbols that can be trimmed.
     /**
-     * This method is used in piranha::series::trim(). The input parameter \p candidates
-     * contains a set of symbols that are candidates for elimination. The method will remove
-     * from \p candidates those symbols whose multiplier in \p this is not zero.
+     * This method is used in piranha::series::trim(). The input parameter \p trim_mask
+     * is a vector of boolean flags (i.e., a mask) which signals which elements in \p args are candidates
+     * for trimming (i.e., a zero value means that the symbol at the corresponding position
+     * in \p args is *not* a candidate for trimming, while a nonzero value means that the symbol is
+     * a candidate for trimming). This method will set to zero those values in \p trim_mask
+     * for which the corresponding element in \p this is nonzero.
      *
-     * @param candidates set of candidates for elimination.
-     * @param args reference arguments set.
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask originally contains
+     * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p trim_mask will contain
+     * <tt>[1,0,0,1,0]</tt> (that is, the second element was set from 1 to 0 as the corresponding element
+     * in \p this has a value of 5 and thus must not be trimmed).
      *
-     * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - piranha::math::is_zero(),
-     * - piranha::symbol_set::remove().
+     * @param trim_mask a mask signalling candidate elements for trimming.
+     * @param args the reference piranha::symbol_fset.
+     *
+     * @throws std::invalid_argument if the size of \p trim_mask differs from the size of \p args.
+     * @throws unspecified any exception thrown by unpack().
      */
-    void trim_identify(symbol_set &candidates, const symbol_set &args) const
+    void trim_identify(std::vector<char> &trim_mask, const symbol_fset &args) const
     {
-        return detail::km_trim_identify<v_type, ka>(candidates, args, m_value);
+        detail::km_trim_identify<v_type, ka>(trim_mask, args, m_value);
     }
     /// Trim.
     /**
-     * This method will return a copy of \p this with the multipliers associated to the symbols
-     * in \p trim_args removed.
+     * This method is used in piranha::series::trim(). The input mask \p trim_mask
+     * is a vector of boolean flags signalling (with nonzero values) elements
+     * of \p this to be removed. The method will return a copy of \p this in which
+     * the specified elements have been removed.
      *
-     * @param trim_args arguments whose multipliers will be removed.
-     * @param orig_args original arguments set.
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask contains
+     * the values <tt>[false,false,false,true,false]</tt>, then the output of this method will be
+     * the array of values <tt>[0,5,3,4]</tt> (that is, the fourth element has been removed as indicated
+     * by a \p true value in <tt>trim_mask</tt>'s fourth element).
      *
-     * @return trimmed copy of \p this.
+     * @param trim_mask a mask indicating which element will be removed.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - piranha::static_vector::push_back().
+     * @return a trimmed copy of \p this.
+     *
+     * @throws std::invalid_argument if the size of \p trim_mask differs from the size of \p args.
+     * @throws unspecified any exception thrown by unpack() or piranha::static_vector::push_back().
      */
-    real_trigonometric_kronecker_monomial trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+    real_trigonometric_kronecker_monomial trim(const std::vector<char> &trim_mask, const symbol_fset &args) const
     {
-        return real_trigonometric_kronecker_monomial(detail::km_trim<v_type, ka>(trim_args, orig_args, m_value),
-                                                     m_flavour);
+        return real_trigonometric_kronecker_monomial(detail::km_trim<v_type, ka>(trim_mask, args, m_value), m_flavour);
     }
     /// Comparison operator.
     /**
@@ -1285,13 +1297,10 @@ public:
      */
     bool operator<(const real_trigonometric_kronecker_monomial &other) const
     {
-        if (m_value < other.m_value) {
-            return true;
+        if (m_value == other.m_value) {
+            return m_flavour < other.m_flavour;
         }
-        if (other.m_value < m_value) {
-            return false;
-        }
-        return m_flavour < other.m_flavour;
+        return m_value < other.m_value;
     }
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -1318,14 +1327,14 @@ public:
      *
      * @param packer the target packer.
      * @param f the serialization format.
-     * @param s reference arguments set.
+     * @param s the reference piranha::symbol_fset.
      *
      * @throws unspecified any exception thrown by:
      * - the public interface of <tt>msgpack::packer</tt>,
      * - piranha::msgpack_pack().
      */
     template <typename Stream, msgpack_pack_enabler<Stream> = 0>
-    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_set &s) const
+    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format f, const symbol_fset &s) const
     {
         packer.pack_array(2);
         if (f == msgpack_format::binary) {
@@ -1349,7 +1358,7 @@ public:
      *
      * @param o msgpack object that will be deserialized.
      * @param f serialization format.
-     * @param s reference arguments set.
+     * @param s the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
      * @throws unspecified any exception thrown by:
@@ -1358,7 +1367,7 @@ public:
      * - piranha::msgpack_convert().
      */
     template <typename U = real_trigonometric_kronecker_monomial, msgpack_convert_enabler<U> = 0>
-    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &s)
+    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_fset &s)
     {
         std::array<msgpack::object, 2> tmp;
         o.convert(tmp);
@@ -1476,7 +1485,7 @@ using rtk_monomial_boost_load_enabler = enable_if_t<
  * satisfy piranha::has_boost_save.
  *
  * If \p Archive is \p boost::archive::binary_oarchive, the internal integral instance is saved.
- * Otherwise, the monomial is unpacked and the vector of exponents is saved.
+ * Otherwise, the monomial is unpacked and the vector of multipliers is saved.
  *
  * @throws unspecified any exception thrown by piranha::boost_save() or
  * piranha::real_trigonometric_kronecker_monomial::unpack().
