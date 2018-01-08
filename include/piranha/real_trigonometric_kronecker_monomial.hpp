@@ -783,7 +783,8 @@ public:
         piranha_assert(tmp.size() == args.size());
         const value_type zero(0), one(1), m_one(-1);
         bool empty_output = true;
-        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+        auto it_args = args.begin();
+        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i, ++it_args) {
             if (tmp[i] != zero) {
                 // A positive multiplier, in case previous output exists, must be preceded
                 // by a "+" sign.
@@ -797,7 +798,7 @@ public:
                     os << detail::prepare_for_print(tmp[i]) << '*';
                 }
                 // Finally, print name of variable.
-                os << args[i].get_name();
+                os << *it_args;
                 empty_output = false;
             }
         }
@@ -827,7 +828,8 @@ public:
         piranha_assert(tmp.size() == args.size());
         const value_type zero(0), one(1), m_one(-1);
         bool empty_output = true;
-        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+        auto it_args = args.begin();
+        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i, ++it_args) {
             if (tmp[i] != zero) {
                 // A positive multiplier, in case previous output exists, must be preceded
                 // by a "+" sign.
@@ -841,7 +843,7 @@ public:
                     os << static_cast<long long>(tmp[i]);
                 }
                 // Finally, print name of variable.
-                os << '{' << args[i].get_name() << '}';
+                os << '{' << *it_args << '}';
                 empty_output = false;
             }
         }
