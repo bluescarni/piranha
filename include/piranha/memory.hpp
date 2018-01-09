@@ -361,9 +361,13 @@ inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_
         return;
     }
     // Destroy functor.
-    auto destroy_function = [](T * start, T * end) noexcept(noexcept(start->~T()))
+    // NOTE: GCC suggests adding noexcept for some reason, which is fair as we are
+    // forcing T to have a non-throwing dtor. Let's double check with a static
+    // assert in any case.
+    auto destroy_function = [](T * start, T * end) noexcept
     {
         for (; start != end; ++start) {
+            static_assert(noexcept(start->~T()), "This destructor cannot throw.");
             start->~T();
         }
     };

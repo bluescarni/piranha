@@ -697,6 +697,26 @@ public:
         }
         return std::make_pair(std::move(expo), std::move(retval));
     }
+
+private:
+    // Let's hard code the custom behaviour for rational exponents for the moment.
+    // We can offer a customization point in the future.
+    template <typename U, enable_if_t<is_mp_rational<U>::value, int> = 0>
+    static void print_exponent(std::ostream &os, const U &e)
+    {
+        if (math::is_unitary(e.den())) {
+            os << e;
+        } else {
+            os << '(' << e << ')';
+        }
+    }
+    template <typename U, enable_if_t<!is_mp_rational<U>::value, int> = 0>
+    static void print_exponent(std::ostream &os, const U &e)
+    {
+        os << detail::prepare_for_print(e);
+    }
+
+public:
     /// Print.
     /**
      * This method will print to stream a human-readable representation of the monomial.
@@ -729,7 +749,8 @@ public:
                 os << *it_args;
                 empty_output = false;
                 if (!math::is_unitary(*std::get<1>(sbe))) {
-                    os << "**" << detail::prepare_for_print(*std::get<1>(sbe));
+                    os << "**";
+                    print_exponent(os, *std::get<1>(sbe));
                 }
             }
         }
