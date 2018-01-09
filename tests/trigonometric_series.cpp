@@ -34,7 +34,6 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <iostream>
 #include <sstream>
-#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -48,14 +47,15 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 {
     init();
-    using math::sin;
     using math::cos;
+    using math::sin;
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     p_type1 x{"x"}, y{"y"};
     BOOST_CHECK_EQUAL(x.t_degree(), 0);
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
     BOOST_CHECK_EQUAL(math::t_degree(y * cos(x - y) + x, {"y", "x", "y"}), 0);
     BOOST_CHECK_EQUAL(math::t_degree(y * cos(x - y) + cos(x + y), {"y", "x", "y", "z"}), 2);
     BOOST_CHECK_EQUAL(math::t_degree(y * cos(x - y) + cos(x + y), {"x"}), 1);
-    BOOST_CHECK_EQUAL(math::t_degree(y * sin(x - y) + cos(x + y), std::vector<std::string>{}), 0);
-    BOOST_CHECK_EQUAL(math::t_degree(p_type1{}, std::vector<std::string>{}), 0);
+    BOOST_CHECK_EQUAL(math::t_degree(y * sin(x - y) + cos(x + y), symbol_fset{}), 0);
+    BOOST_CHECK_EQUAL(math::t_degree(p_type1{}, symbol_fset{}), 0);
     BOOST_CHECK_EQUAL(math::t_degree(p_type1{}, {"x"}), 0);
     BOOST_CHECK_EQUAL(math::t_degree(p_type1{}), 0);
     BOOST_CHECK_EQUAL(math::t_degree(p_type1{2}), 0);
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
     BOOST_CHECK_EQUAL(math::t_ldegree((y * cos(x - y) + x), {"y", "x", "y"}), 0);
     BOOST_CHECK_EQUAL(math::t_ldegree((y * cos(x - y) + cos(x + y)), {"y", "x", "y", "z"}), 0);
     BOOST_CHECK_EQUAL(math::t_ldegree((y * cos(x - y) + cos(x + y)), {"x"}), 1);
-    BOOST_CHECK_EQUAL(math::t_ldegree((y * sin(x - y) + cos(x + y)), std::vector<std::string>{}), 0);
-    BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{}, std::vector<std::string>{}), 0);
+    BOOST_CHECK_EQUAL(math::t_ldegree((y * sin(x - y) + cos(x + y)), symbol_fset{}), 0);
+    BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{}, symbol_fset{}), 0);
     BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{}, {"x"}), 0);
     BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{}), 0);
     BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{2}), 0);
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
     BOOST_CHECK_EQUAL(math::t_order((y * cos(x - y) + x), {"y", "x", "y"}), 2);
     BOOST_CHECK_EQUAL(math::t_order((y * cos(x - y) + cos(x + y)), {"y", "x", "y", "z"}), 2);
     BOOST_CHECK_EQUAL(math::t_order((y * cos(x - y) + cos(x + y)), {"x"}), 1);
-    BOOST_CHECK_EQUAL(math::t_order((y * sin(x - y) + cos(x + y)), std::vector<std::string>{}), 0);
-    BOOST_CHECK_EQUAL(math::t_order(p_type1{}, std::vector<std::string>{}), 0);
+    BOOST_CHECK_EQUAL(math::t_order((y * sin(x - y) + cos(x + y)), symbol_fset{}), 0);
+    BOOST_CHECK_EQUAL(math::t_order(p_type1{}, symbol_fset{}), 0);
     BOOST_CHECK_EQUAL(math::t_order(p_type1{}, {"x"}), 0);
     BOOST_CHECK_EQUAL(math::t_order(p_type1{}), 0);
     BOOST_CHECK_EQUAL(math::t_order(p_type1{2}), 0);
@@ -141,8 +141,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
     BOOST_CHECK_EQUAL(math::t_lorder((y * cos(x - y) + x), {"y", "x", "y"}), 0);
     BOOST_CHECK_EQUAL(math::t_lorder((y * cos(x - y) + cos(x + y)), {"y", "x", "y", "z"}), 2);
     BOOST_CHECK_EQUAL(math::t_lorder((y * cos(x - y) + cos(x + y)), {"x"}), 1);
-    BOOST_CHECK_EQUAL(math::t_lorder((y * sin(x - y) + cos(x + y)), std::vector<std::string>{}), 0);
-    BOOST_CHECK_EQUAL(math::t_lorder(p_type1{}, std::vector<std::string>{}), 0);
+    BOOST_CHECK_EQUAL(math::t_lorder((y * sin(x - y) + cos(x + y)), symbol_fset{}), 0);
+    BOOST_CHECK_EQUAL(math::t_lorder(p_type1{}, symbol_fset{}), 0);
     BOOST_CHECK_EQUAL(math::t_lorder(p_type1{}, {"x"}), 0);
     BOOST_CHECK_EQUAL(math::t_lorder(p_type1{}), 0);
     BOOST_CHECK_EQUAL(math::t_lorder(p_type1{2}), 0);
@@ -185,13 +185,13 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
     // Type traits checks.
     using t_deg_type = decltype(std::make_signed<std::size_t>::type(0) + std::make_signed<std::size_t>::type(0));
     BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_degree(p_type1{}))>::value));
-    BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_degree(p_type1{}, std::vector<std::string>{}))>::value));
+    BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_degree(p_type1{}, symbol_fset{}))>::value));
     BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_ldegree(p_type1{}))>::value));
-    BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_ldegree(p_type1{}, std::vector<std::string>{}))>::value));
+    BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_ldegree(p_type1{}, symbol_fset{}))>::value));
     BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_order(p_type1{}))>::value));
-    BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_order(p_type1{}, std::vector<std::string>{}))>::value));
+    BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_order(p_type1{}, symbol_fset{}))>::value));
     BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_lorder(p_type1{}))>::value));
-    BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_lorder(p_type1{}, std::vector<std::string>{}))>::value));
+    BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_lorder(p_type1{}, symbol_fset{}))>::value));
 }
 
 struct key02 {
@@ -200,15 +200,14 @@ struct key02 {
     key02(key02 &&) noexcept;
     key02 &operator=(const key02 &) = default;
     key02 &operator=(key02 &&) noexcept;
-    key02(const symbol_set &);
+    key02(const symbol_fset &);
     bool operator==(const key02 &) const;
     bool operator!=(const key02 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key02 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename... Args>
     int t_degree(const Args &...) const;
     template <typename... Args>
@@ -217,8 +216,9 @@ struct key02 {
     int t_order(const Args &...) const;
     template <typename... Args>
     int t_lorder(const Args &...) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    key02 trim(const symbol_set &, const symbol_set &) const;
+    key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    key02 trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 struct key03 : key02 {
@@ -227,13 +227,13 @@ struct key03 : key02 {
     key03(key03 &&) noexcept;
     key03 &operator=(const key03 &) = default;
     key03 &operator=(key03 &&) noexcept;
-    key03(const symbol_set &);
-    key03 merge_args(const symbol_set &, const symbol_set &) const;
+    key03(const symbol_fset &);
+    key03 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool operator==(const key03 &) const;
     bool operator!=(const key03 &) const;
     template <typename... Args>
     int t_lorder(const Args &...);
-    key03 trim(const symbol_set &, const symbol_set &) const;
+    key03 trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 struct fake_int_01 {
@@ -278,13 +278,13 @@ struct key04 : key02 {
     key04(key04 &&) noexcept;
     key04 &operator=(const key04 &) = default;
     key04 &operator=(key04 &&) noexcept;
-    key04(const symbol_set &);
-    key04 merge_args(const symbol_set &, const symbol_set &) const;
+    key04(const symbol_fset &);
+    key04 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool operator==(const key04 &) const;
     bool operator!=(const key04 &) const;
     template <typename... Args>
     fake_int_01 t_lorder(const Args &...) const;
-    key04 trim(const symbol_set &, const symbol_set &) const;
+    key04 trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 struct key05 : key02 {
@@ -293,13 +293,13 @@ struct key05 : key02 {
     key05(key05 &&) noexcept;
     key05 &operator=(const key05 &) = default;
     key05 &operator=(key05 &&) noexcept;
-    key05(const symbol_set &);
-    key05 merge_args(const symbol_set &, const symbol_set &) const;
+    key05(const symbol_fset &);
+    key05 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool operator==(const key05 &) const;
     bool operator!=(const key05 &) const;
     template <typename... Args>
     fake_int_02 t_lorder(const Args &...) const;
-    key05 trim(const symbol_set &, const symbol_set &) const;
+    key05 trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 namespace std

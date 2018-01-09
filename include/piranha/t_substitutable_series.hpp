@@ -104,7 +104,7 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
                                         return_type_<T1, U1, Term1>>;
         template <typename T1, typename U1, typename Term1>
         static return_type<T1, U1, Term1> subs(const Term1 &t, const std::string &name, const symbol_idx &, const T1 &c,
-                                               const U1 &s, const symbol_set &s_set)
+                                               const U1 &s, const symbol_fset &s_set)
         {
             Derived tmp;
             tmp.m_symbol_set = s_set;
@@ -118,7 +118,7 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
         template <typename T1, typename U1, typename Term1>
         using return_type_ = decltype(std::declval<typename Term1::key_type const &>()
                                           .t_subs(std::declval<const symbol_idx &>(), std::declval<T1 const &>(),
-                                                  std::declval<U1 const &>(), std::declval<symbol_set const &>())[0u]
+                                                  std::declval<U1 const &>(), std::declval<symbol_fset const &>())[0u]
                                           .first
                                       * std::declval<Derived const &>());
         template <typename T1, typename U1, typename Term1>
@@ -127,7 +127,7 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
                                                     return_type_<T1, U1, Term1>>::type;
         template <typename T1, typename U1, typename Term1>
         static return_type<T1, U1, Term1> subs(const Term1 &t, const std::string &, const symbol_idx &idx, const T1 &c,
-                                               const U1 &s, const symbol_set &s_set)
+                                               const U1 &s, const symbol_fset &s_set)
         {
             return_type<T1, U1, Term1> retval(0);
             const auto key_subs = t.m_key.t_subs(idx, c, s, s_set);
@@ -160,7 +160,7 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
         = decltype(t_subs_utils<T, U>::subs(std::declval<typename Series::term_type const &>(),
                                             std::declval<const std::string &>(), std::declval<const symbol_idx &>(),
                                             std::declval<const T &>(), std::declval<const U &>(),
-                                            std::declval<symbol_set const &>()));
+                                            std::declval<symbol_fset const &>()));
 
 public:
     /// Defaulted default constructor.
@@ -209,7 +209,7 @@ public:
      *
      * @throws unspecified any exception resulting from:
      * - construction of the return type,
-     * - the assignment operator of piranha::symbol_set,
+     * - the assignment operator of piranha::symbol_fset,
      * - term construction,
      * - arithmetics on the intermediary values needed to compute the return value,
      * - piranha::series::insert(),
@@ -219,7 +219,7 @@ public:
     t_subs_type<T, U> t_subs(const std::string &name, const T &c, const U &s) const
     {
         t_subs_type<T, U> retval(0);
-        const auto idx = ss_index_of(name, this->m_symbol_set);
+        const auto idx = ss_index_of(this->m_symbol_set, name);
         for (const auto &t : this->m_container) {
             retval += t_subs_utils<T, U>::subs(t, name, idx, c, s, this->m_symbol_set);
         }

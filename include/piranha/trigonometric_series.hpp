@@ -154,7 +154,7 @@ class trigonometric_series : public Series, detail::trigonometric_series_tag
                                     std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()));    \
     template <typename T>                                                                                              \
     using pt_##property##_type                                                                                         \
-        = enable_if<common_type_checks<pt_##property##_type_<T>>::value, pt_##property##_type_<T>>;
+        = enable_if_t<common_type_checks<pt_##property##_type_<T>>::value, pt_##property##_type_<T>>;
     PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(degree)
     PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(ldegree)
     PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(order)

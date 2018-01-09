@@ -31,6 +31,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <atomic>
+#include <boost/container/container_fwd.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -190,8 +192,15 @@ class poisson_series
         RetT retval;
         // Build vector of integral multipliers and the symbol set.
         // NOTE: integral_combination returns a string map, which is guaranteed to be ordered.
-        retval.set_symbol_set(symbol_set(lc.begin(), lc.end(),
-                                         [](const typename decltype(lc)::value_type &p) { return symbol(p.first); }));
+        struct t_iter {
+            const std::string &operator()(const typename decltype(lc)::value_type &p) const
+            {
+                return p.first;
+            }
+        };
+        retval.set_symbol_set(symbol_fset(boost::container::ordered_unique_range_t{},
+                                          boost::make_transform_iterator(lc.begin(), t_iter{}),
+                                          boost::make_transform_iterator(lc.end(), t_iter{})));
         piranha_assert(retval.get_symbol_set().size() == lc.size());
         std::vector<value_type> v;
         std::transform(lc.begin(), lc.end(), std::back_inserter(v), [](const typename decltype(lc)::value_type &p) {
@@ -249,7 +258,7 @@ class poisson_series
     template <typename T>
     using key_integrate_type
         = decltype(std::declval<const typename T::term_type::key_type &>()
-                       .integrate(std::declval<const symbol &>(), std::declval<const symbol_set &>())
+                       .integrate(std::declval<const std::string &>(), std::declval<const symbol_fset &>())
                        .first);
     // Basic integration requirements for series T, to be satisfied both when the coefficient is a polynomial
     // and when it is not. ResT is the type of the result of the integration.
@@ -357,14 +366,14 @@ class poisson_series
     using integrate_type = typename std::enable_if<is_returnable<typename integrate_type_<T>::type>::value,
                                                    typename integrate_type_<T>::type>::type;
     template <typename T = poisson_series>
-    integrate_type<T> integrate_impl(const symbol &s, const typename base::term_type &term,
+    integrate_type<T> integrate_impl(const std::string &s, const typename base::term_type &term,
                                      const std::true_type &) const
     {
         typedef typename base::term_type term_type;
         typedef typename term_type::cf_type cf_type;
         integer degree;
         try {
-            degree = safe_cast<integer>(math::degree(term.m_cf, {s.get_name()}));
+            degree = safe_cast<integer>(math::degree(term.m_cf, {s}));
         } catch (const safe_cast_failure &) {
             piranha_throw(
                 std::invalid_argument,
@@ -389,7 +398,7 @@ class poisson_series
         for (integer i(1); i <= degree; ++i) {
             key_int = key_int.second.integrate(s, this->m_symbol_set);
             piranha_assert(key_int.first != 0);
-            p_cf = math::partial(p_cf / std::move(key_int.first), s.get_name());
+            p_cf = math::partial(p_cf / std::move(key_int.first), s);
             // Sign change due to the second portion of integration by part.
             math::negate(p_cf);
             tmp = poisson_series{};
@@ -401,7 +410,8 @@ class poisson_series
         return retval;
     }
     template <typename T = poisson_series>
-    integrate_type<T> integrate_impl(const symbol &, const typename base::term_type &, const std::false_type &) const
+    integrate_type<T> integrate_impl(const std::string &, const typename base::term_type &,
+                                     const std::false_type &) const
     {
         piranha_throw(std::invalid_argument,
                       "unable to perform Poisson series integration: coefficient type is not a polynomial");
@@ -434,7 +444,7 @@ class poisson_series
         return_type retval(0);
         // Setup of the symbol set.
         piranha_assert(names.size() == this->m_symbol_set.size());
-        const symbol_set div_symbols(names.begin(), names.end());
+        const symbol_fset div_symbols(names.begin(), names.end());
         piranha_assert(div_symbols.size() == names.size());
         // A temp vector of integers used to normalise the divisors coming
         // out of the integration operation from the trig keys.
@@ -569,7 +579,6 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - piranha::series::is_single_coefficient(), piranha::series::insert(),
-     * - piranha::symbol_set::add(),
      * - memory allocation errors in standard containers,
      * - the constructors of coefficient, key and term types,
      * - the cast operator of piranha::integer,
@@ -619,10 +628,9 @@ public:
      *
      * @throws std::invalid_argument if the integration procedure fails.
      * @throws unspecified any exception thrown by:
-     * - piranha::symbol construction,
      * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast() and
      *   piranha::math::negate(),
-     * - the assignment operator of piranha::symbol_set,
+     * - the assignment operator of piranha::symbol_fset,
      * - term construction,
      * - coefficient construction, assignment and arithmetics,
      * - integration, construction and assignment of the key type,
@@ -635,14 +643,12 @@ public:
     {
         typedef typename base::term_type term_type;
         typedef typename term_type::cf_type cf_type;
-        // Turn name into symbol.
-        const symbol s(name);
         // Init the return value.
         integrate_type<T> retval(0);
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // Integrate the key first.
-            auto key_int = it->m_key.integrate(s, this->m_symbol_set);
+            auto key_int = it->m_key.integrate(name, this->m_symbol_set);
             // If the variable does not appear in the monomial, try deferring the integration
             // to the coefficient.
             if (key_int.first == 0) {
@@ -659,7 +665,7 @@ public:
             } else {
                 // With the variable both in the coefficient and the key, we only know how to proceed with polynomials.
                 retval += integrate_impl(
-                    s, *it, std::integral_constant<bool, std::is_base_of<detail::polynomial_tag, Cf>::value>());
+                    name, *it, std::integral_constant<bool, std::is_base_of<detail::polynomial_tag, Cf>::value>());
             }
         }
         return retval;
@@ -694,7 +700,7 @@ public:
      * @throws std::invalid_argument if the calling series has a unitary key.
      * @throws unspecified any exception thrown by:
      * - memory errors in standard containers,
-     * - the public interfaces of piranha::symbol_set, piranha::mp_integer and piranha::series,
+     * - the public interfaces of piranha::symbol_fset, piranha::mp_integer and piranha::series,
      * - piranha::math::is_zero(), piranha::math::negate(),
      * - the mathematical operations needed to compute the result,
      * - piranha::divisor::insert(),
@@ -705,7 +711,7 @@ public:
     {
         std::vector<std::string> names;
         std::transform(this->m_symbol_set.begin(), this->m_symbol_set.end(), std::back_inserter(names),
-                       [](const symbol &s) { return "\\nu_{" + s.get_name() + "}"; });
+                       [](const std::string &s) { return "\\nu_{" + s + "}"; });
         return t_integrate_impl(names);
     }
     /// Time integration (alternative overload).
@@ -784,7 +790,7 @@ class series_multiplier<Series, detail::ps_series_multiplier_enabler<Series>> : 
                           const auto &list = container._get_bucket_list(start_idx);
                           for (const auto &t : list) {
                               t.m_cf /= 2;
-                              if (unlikely(t.is_ignorable(this->m_ss))) {
+                              if (unlikely(t.is_zero(this->m_ss))) {
                                   term_list.push_back(t);
                               }
                           }

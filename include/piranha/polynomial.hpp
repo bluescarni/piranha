@@ -76,7 +76,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/settings.hpp>
 #include <piranha/substitutable_series.hpp>
 #include <piranha/symbol_utils.hpp>
+#include <piranha/t_substitutable_series.hpp>
 #include <piranha/thread_pool.hpp>
+#include <piranha/trigonometric_series.hpp>
 #include <piranha/tuning.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -146,8 +148,10 @@ struct key_has_is_linear {
 template <typename Cf, typename Key>
 class polynomial
     : public power_series<
-          ipow_substitutable_series<substitutable_series<series<Cf, Key, polynomial<Cf, Key>>, polynomial<Cf, Key>>,
-                                    polynomial<Cf, Key>>,
+          trigonometric_series<ipow_substitutable_series<
+              substitutable_series<t_substitutable_series<series<Cf, Key, polynomial<Cf, Key>>, polynomial<Cf, Key>>,
+                                   polynomial<Cf, Key>>,
+              polynomial<Cf, Key>>>,
           polynomial<Cf, Key>>,
       detail::polynomial_tag
 {
@@ -167,8 +171,10 @@ class polynomial
     friend class divisor_series;
     // The base class.
     using base = power_series<
-        ipow_substitutable_series<substitutable_series<series<Cf, Key, polynomial<Cf, Key>>, polynomial<Cf, Key>>,
-                                  polynomial<Cf, Key>>,
+        trigonometric_series<ipow_substitutable_series<
+            substitutable_series<t_substitutable_series<series<Cf, Key, polynomial<Cf, Key>>, polynomial<Cf, Key>>,
+                                 polynomial<Cf, Key>>,
+            polynomial<Cf, Key>>>,
         polynomial<Cf, Key>>;
     // String constructor.
     template <typename Str>
