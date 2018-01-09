@@ -57,8 +57,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/substitutable_series.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/t_substitutable_series.hpp>
 #include <piranha/term.hpp>
 #include <piranha/thread_pool.hpp>
@@ -104,23 +103,24 @@ struct poisson_series_tag {
 //   become math::is_zero() etc.). Will also need the is_integrable check on the key type.
 template <typename Cf>
 class poisson_series
-    : public power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,
-                                                                                                                            rtk_monomial,
-                                                                                                                            poisson_series<Cf>>>,
-                                                                                                poisson_series<Cf>>,
-                                                                         poisson_series<Cf>>,
-                                                    poisson_series<Cf>>,
-                          poisson_series<Cf>>,
+    : public power_series<
+          ipow_substitutable_series<
+              substitutable_series<
+                  t_substitutable_series<trigonometric_series<series<Cf, rtk_monomial, poisson_series<Cf>>>,
+                                         poisson_series<Cf>>,
+                  poisson_series<Cf>>,
+              poisson_series<Cf>>,
+          poisson_series<Cf>>,
       detail::poisson_series_tag
 {
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
     using base
-        = power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,
-                                                                                                                         rtk_monomial,
-                                                                                                                         poisson_series<Cf>>>,
-                                                                                             poisson_series<Cf>>,
-                                                                      poisson_series<Cf>>,
-                                                 poisson_series<Cf>>,
+        = power_series<ipow_substitutable_series<
+                           substitutable_series<t_substitutable_series<
+                                                    trigonometric_series<series<Cf, rtk_monomial, poisson_series<Cf>>>,
+                                                    poisson_series<Cf>>,
+                                                poisson_series<Cf>>,
+                           poisson_series<Cf>>,
                        poisson_series<Cf>>;
     // Sin/cos utils.
     // Types coming out of sin()/cos() for the base type. These will also be the final types.
@@ -189,6 +189,7 @@ class poisson_series
         // Return value.
         RetT retval;
         // Build vector of integral multipliers and the symbol set.
+        // NOTE: integral_combination returns a string map, which is guaranteed to be ordered.
         retval.set_symbol_set(symbol_set(lc.begin(), lc.end(),
                                          [](const typename decltype(lc)::value_type &p) { return symbol(p.first); }));
         piranha_assert(retval.get_symbol_set().size() == lc.size());
@@ -259,16 +260,17 @@ class poisson_series
         static const bool value = false;
     };
     template <typename T, typename ResT>
-    struct basic_integrate_requirements<T, ResT, typename std::enable_if<
-                                                     // Coefficient differentiable, and can call is_zero on the result.
-                                                     has_is_zero<decltype(math::partial(
-                                                         std::declval<const typename T::term_type::cf_type &>(),
-                                                         std::declval<const std::string &>()))>::value
-                                                     &&
-                                                     // The result needs to be addable in-place.
-                                                     is_addable_in_place<ResT>::value &&
-                                                     // It also needs to be ctible from zero.
-                                                     std::is_constructible<ResT, int>::value>::type> {
+    struct basic_integrate_requirements<
+        T, ResT,
+        typename std::enable_if<
+            // Coefficient differentiable, and can call is_zero on the result.
+            has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
+                                               std::declval<const std::string &>()))>::value
+            &&
+            // The result needs to be addable in-place.
+            is_addable_in_place<ResT>::value &&
+            // It also needs to be ctible from zero.
+            std::is_constructible<ResT, int>::value>::type> {
         static const bool value = true;
     };
     // Machinery for the integration of the coefficient only.
@@ -315,10 +317,9 @@ class poisson_series
     using npc_res_type = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>())
                                   / std::declval<const key_integrate_type<T> &>());
     template <typename T>
-    struct integrate_type_<T,
-                           typename std::enable_if<!std::is_base_of<detail::polynomial_tag,
-                                                                    typename T::term_type::cf_type>::value
-                                                   && basic_integrate_requirements<T, npc_res_type<T>>::value>::type> {
+    struct integrate_type_<
+        T, typename std::enable_if<!std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value
+                                   && basic_integrate_requirements<T, npc_res_type<T>>::value>::type> {
         using type = npc_res_type<T>;
     };
     // Polynomial coefficient.
@@ -334,23 +335,21 @@ class poisson_series
     template <typename T>
     using pc_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
     template <typename T>
-    struct integrate_type_<T,
-                           typename std::
-                               enable_if<std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value
-                                         && basic_integrate_requirements<T, pc_res_type<T>>::value &&
-                                         // We need to be able to add in the npc type.
-                                         is_addable_in_place<pc_res_type<T>, npc_res_type<T>>::value &&
-                                         // We need to be able to compute the degree of the polynomials and
-                                         // convert it safely to integer.
-                                         has_safe_cast<integer,
-                                                       decltype(math::degree(
-                                                           std::declval<const typename T::term_type::cf_type &>(),
-                                                           std::vector<std::string>{}))>::value
-                                         &&
-                                         // We need this conversion in the algorithm below.
-                                         std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
-                                         // This type needs also to be negated.
-                                         has_negate<i_cf_type_p<T>>::value>::type> {
+    struct integrate_type_<
+        T, typename std::enable_if<
+               std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value
+               && basic_integrate_requirements<T, pc_res_type<T>>::value &&
+               // We need to be able to add in the npc type.
+               is_addable_in_place<pc_res_type<T>, npc_res_type<T>>::value &&
+               // We need to be able to compute the degree of the polynomials and
+               // convert it safely to integer.
+               has_safe_cast<integer, decltype(math::degree(std::declval<const typename T::term_type::cf_type &>(),
+                                                            std::vector<std::string>{}))>::value
+               &&
+               // We need this conversion in the algorithm below.
+               std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
+               // This type needs also to be negated.
+               has_negate<i_cf_type_p<T>>::value>::type> {
         using type = pc_res_type<T>;
     };
     // The final typedef.
@@ -414,11 +413,10 @@ class poisson_series
         = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>())
                    / std::declval<const integer &>());
     template <typename T>
-    using ti_type_divisor = typename std::enable_if<std::is_constructible<ti_type_divisor_<T>, int>::value
-                                                        && is_addable_in_place<ti_type_divisor_<T>>::value
-                                                        && std::is_base_of<detail::divisor_series_tag,
-                                                                           typename T::term_type::cf_type>::value,
-                                                    ti_type_divisor_<T>>::type;
+    using ti_type_divisor = typename std::enable_if<
+        std::is_constructible<ti_type_divisor_<T>, int>::value && is_addable_in_place<ti_type_divisor_<T>>::value
+            && std::is_base_of<detail::divisor_series_tag, typename T::term_type::cf_type>::value,
+        ti_type_divisor_<T>>::type;
     template <typename T = poisson_series>
     ti_type_divisor<T> t_integrate_impl(const std::vector<std::string> &names) const
     {
@@ -758,9 +756,8 @@ class series_multiplier<Series, detail::ps_series_multiplier_enabler<Series>> : 
 {
     using base = base_series_multiplier<Series>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
     void divide_by_two(Series &s) const
     {
         // NOTE: if we ever implement multi-threaded series division we most likely need

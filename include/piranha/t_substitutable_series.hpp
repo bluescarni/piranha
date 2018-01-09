@@ -36,7 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/forwarding.hpp>
 #include <piranha/math.hpp>
 #include <piranha/series.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -65,7 +65,7 @@ struct t_substitutable_series_tag {
  *
  * - \p Series must be an instance of piranha::series,
  * - \p Derived must satisfy the piranha::is_series type trait, and derive
- *    from t_substitutable_series of \p Series and \p Derived.
+ *   from t_substitutable_series of \p Series and \p Derived.
  *
  * ## Exception safety guarantee ##
  *
@@ -92,19 +92,19 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
     };
     // Case 1: t_subs on cf only.
     template <typename T, typename U, typename Term>
-    struct t_subs_utils<T, U, Term, typename std::enable_if<t_subs_term_score<Term, T, U>::value == 1u>::type> {
+    struct t_subs_utils<T, U, Term, enable_if_t<t_subs_term_score<Term, T, U>::value == 1u>> {
         template <typename T1, typename U1, typename Term1>
         using return_type_ = decltype(math::t_subs(std::declval<typename Term1::cf_type const &>(),
                                                    std::declval<std::string const &>(), std::declval<T1 const &>(),
                                                    std::declval<U1 const &>())
                                       * std::declval<Derived const &>());
         template <typename T1, typename U1, typename Term1>
-        using return_type = typename std::enable_if<std::is_constructible<return_type_<T1, U1, Term1>, int>::value
-                                                        && is_addable_in_place<return_type_<T1, U1, Term1>>::value,
-                                                    return_type_<T1, U1, Term1>>::type;
+        using return_type = enable_if_t<std::is_constructible<return_type_<T1, U1, Term1>, int>::value
+                                            && is_addable_in_place<return_type_<T1, U1, Term1>>::value,
+                                        return_type_<T1, U1, Term1>>;
         template <typename T1, typename U1, typename Term1>
-        static return_type<T1, U1, Term1> subs(const Term1 &t, const std::string &name, const T1 &c, const U1 &s,
-                                               const symbol_set &s_set)
+        static return_type<T1, U1, Term1> subs(const Term1 &t, const std::string &name, const symbol_idx &, const T1 &c,
+                                               const U1 &s, const symbol_set &s_set)
         {
             Derived tmp;
             tmp.m_symbol_set = s_set;
@@ -117,7 +117,7 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
     struct t_subs_utils<T, U, Term, typename std::enable_if<t_subs_term_score<Term, T, U>::value == 2u>::type> {
         template <typename T1, typename U1, typename Term1>
         using return_type_ = decltype(std::declval<typename Term1::key_type const &>()
-                                          .t_subs(std::declval<std::string const &>(), std::declval<T1 const &>(),
+                                          .t_subs(std::declval<const symbol_idx &>(), std::declval<T1 const &>(),
                                                   std::declval<U1 const &>(), std::declval<symbol_set const &>())[0u]
                                           .first
                                       * std::declval<Derived const &>());
@@ -126,11 +126,11 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
                                                         && is_addable_in_place<return_type_<T1, U1, Term1>>::value,
                                                     return_type_<T1, U1, Term1>>::type;
         template <typename T1, typename U1, typename Term1>
-        static return_type<T1, U1, Term1> subs(const Term1 &t, const std::string &name, const T1 &c, const U1 &s,
-                                               const symbol_set &s_set)
+        static return_type<T1, U1, Term1> subs(const Term1 &t, const std::string &, const symbol_idx &idx, const T1 &c,
+                                               const U1 &s, const symbol_set &s_set)
         {
             return_type<T1, U1, Term1> retval(0);
-            const auto key_subs = t.m_key.t_subs(name, c, s, s_set);
+            const auto key_subs = t.m_key.t_subs(idx, c, s, s_set);
             for (const auto &x : key_subs) {
                 Derived tmp;
                 tmp.m_symbol_set = s_set;
@@ -158,8 +158,9 @@ class t_substitutable_series : public Series, detail::t_substitutable_series_tag
     template <typename T, typename U>
     using t_subs_type
         = decltype(t_subs_utils<T, U>::subs(std::declval<typename Series::term_type const &>(),
-                                            std::declval<const std::string &>(), std::declval<const T &>(),
-                                            std::declval<const U &>(), std::declval<symbol_set const &>()));
+                                            std::declval<const std::string &>(), std::declval<const symbol_idx &>(),
+                                            std::declval<const T &>(), std::declval<const U &>(),
+                                            std::declval<symbol_set const &>()));
 
 public:
     /// Defaulted default constructor.
@@ -218,8 +219,9 @@ public:
     t_subs_type<T, U> t_subs(const std::string &name, const T &c, const U &s) const
     {
         t_subs_type<T, U> retval(0);
+        const auto idx = ss_index_of(name, this->m_symbol_set);
         for (const auto &t : this->m_container) {
-            retval += t_subs_utils<T, U>::subs(t, name, c, s, this->m_symbol_set);
+            retval += t_subs_utils<T, U>::subs(t, name, idx, c, s, this->m_symbol_set);
         }
         return retval;
     }
@@ -230,11 +232,10 @@ namespace detail
 
 // Enabler for the t_subs_impl specialisation for t_subs_series.
 template <typename Series, typename U, typename V>
-using t_subs_impl_t_subs_series_enabler =
-    typename std::enable_if<std::is_base_of<t_substitutable_series_tag, Series>::value
-                            && is_returnable<decltype(std::declval<const Series &>().t_subs(
-                                   std::declval<const std::string &>(), std::declval<const U &>(),
-                                   std::declval<const V &>()))>::value>::type;
+using t_subs_impl_t_subs_series_enabler = typename std::enable_if<
+    std::is_base_of<t_substitutable_series_tag, Series>::value
+    && is_returnable<decltype(std::declval<const Series &>().t_subs(
+           std::declval<const std::string &>(), std::declval<const U &>(), std::declval<const V &>()))>::value>::type;
 }
 
 namespace math
