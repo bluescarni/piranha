@@ -1112,17 +1112,16 @@ struct subs_tester {
         BOOST_CHECK_EQUAL(ret2[1u].first, math::cos(real(5) * T(2)));
         BOOST_CHECK((ret2[0u].second == k_type({T(0), T(3)})));
         BOOST_CHECK((ret2[1u].second == tmp));
-#if 0
         // Subs with no actual sub.
         k1.set_flavour(true);
-        ret2 = k1.subs("z", real(5), vs);
+        ret2 = k1.template subs<real>({}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, real(1));
         BOOST_CHECK_EQUAL(ret2[1u].first, real(0));
         BOOST_CHECK((ret2[0u].second == k1));
         k1.set_flavour(false);
         BOOST_CHECK((ret2[1u].second == k1));
-        ret2 = k1.subs("z", real(5), vs);
+        ret2 = k1.template subs<real>({}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, real(0));
         BOOST_CHECK_EQUAL(ret2[1u].first, real(1));
@@ -1132,14 +1131,14 @@ struct subs_tester {
         BOOST_CHECK((ret2[1u].second == k1));
         // Subs with sign change.
         k1 = k_type({T(2), T(-3)});
-        ret2 = k1.subs("x", real(6), vs);
+        ret2 = k1.template subs<real>({{0, real(6)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(6) * T(2)));
         BOOST_CHECK_EQUAL(ret2[1u].first, math::sin(real(6) * T(2)));
         BOOST_CHECK((ret2[0u].second == k_type({T(0), T(3)})));
         BOOST_CHECK((ret2[1u].second == tmp));
         k1.set_flavour(false);
-        ret2 = k1.subs("x", real(6), vs);
+        ret2 = k1.template subs<real>({{0, real(6)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(6) * T(2)));
         BOOST_CHECK_EQUAL(ret2[1u].first, -math::cos(real(6) * T(2)));
@@ -1150,8 +1149,7 @@ struct subs_tester {
         }
         // Another with sign change.
         k1 = k_type({T(2), T(-2), T(1)});
-        vs.add("z");
-        ret2 = k1.subs("x", real(7), vs);
+        ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(7) * T(2)));
         BOOST_CHECK_EQUAL(ret2[1u].first, math::sin(real(7) * T(2)));
@@ -1160,7 +1158,7 @@ struct subs_tester {
         tmp.set_flavour(false);
         BOOST_CHECK((ret2[1u].second == tmp));
         k1.set_flavour(false);
-        ret2 = k1.subs("x", real(7), vs);
+        ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(7) * T(2)));
         BOOST_CHECK_EQUAL(ret2[1u].first, -math::cos(real(7) * T(2)));
@@ -1169,7 +1167,7 @@ struct subs_tester {
         BOOST_CHECK((ret2[0u].second == tmp));
         // Sign change with leading zero multiplier after substitution.
         k1 = k_type({T(2), T(0), T(-1)});
-        ret2 = k1.subs("x", real(7), vs);
+        ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(7) * T(2)));
         BOOST_CHECK_EQUAL(ret2[1u].first, math::sin(real(7) * T(2)));
@@ -1178,7 +1176,7 @@ struct subs_tester {
         tmp.set_flavour(false);
         BOOST_CHECK((ret2[1u].second == tmp));
         k1.set_flavour(false);
-        ret2 = k1.subs("x", real(7), vs);
+        ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(7) * T(2)));
         BOOST_CHECK_EQUAL(ret2[1u].first, -math::cos(real(7) * T(2)));
@@ -1187,7 +1185,7 @@ struct subs_tester {
         BOOST_CHECK((ret2[0u].second == tmp));
         // Leading zero and subsequent canonicalisation.
         k1 = k_type({T(0), T(-1), T(1)});
-        ret2 = k1.subs("x", real(7), vs);
+        ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(7) * T(0)));
         BOOST_CHECK_EQUAL(ret2[1u].first, math::sin(real(7) * T(0)));
@@ -1196,14 +1194,21 @@ struct subs_tester {
         tmp.set_flavour(false);
         BOOST_CHECK((ret2[1u].second == tmp));
         k1.set_flavour(false);
-        ret2 = k1.subs("x", real(7), vs);
+        ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(7) * T(0)));
         BOOST_CHECK_EQUAL(ret2[1u].first, -math::cos(real(7) * T(0)));
         BOOST_CHECK((ret2[1u].second == tmp));
         tmp.set_flavour(true);
         BOOST_CHECK((ret2[0u].second == tmp));
-#endif
+        // Failure modes.
+        BOOST_CHECK_EXCEPTION(k1.template subs<real>({{0, real(7)}, {6, real(1)}}, symbol_fset{"x", "y", "z"}),
+                              std::invalid_argument, [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(),
+                                                         "invalid argument(s) for substitution in a real trigonometric "
+                                                         "Kronecker monomial: the last index of the substitution map "
+                                                         "(6) must be smaller than the monomial's size (3)");
+                              });
     }
 };
 
@@ -1211,110 +1216,103 @@ BOOST_AUTO_TEST_CASE(rtkm_subs_test)
 {
     tuple_for_each(int_types{}, subs_tester{});
 }
-#if 0
+
 struct print_tex_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
-        symbol_fset vs;
         k_type k1;
         std::ostringstream oss;
-        k1.print_tex(oss, vs);
+        k1.print_tex(oss, symbol_fset{});
         BOOST_CHECK(oss.str().empty());
-        vs.add("x");
-        k_type k2(vs);
-        k2.print_tex(oss, vs);
+        k_type k2(symbol_fset{"x"});
+        k2.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK(oss.str().empty());
         k_type k3({T(1)});
-        k3.print_tex(oss, vs);
+        k3.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "\\cos{\\left({x}\\right)}");
         k3.set_flavour(false);
         oss.str("");
-        k3.print_tex(oss, vs);
+        k3.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "\\sin{\\left({x}\\right)}");
         k_type k5({T(1), T(-1)});
-        vs.add("y");
         oss.str("");
-        k5.print_tex(oss, vs);
+        k5.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\cos{\\left({x}-{y}\\right)}");
         oss.str("");
         k5 = k_type{T(1), T(1)};
-        k5.print_tex(oss, vs);
+        k5.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK(oss.str() == "\\cos{\\left({x}+{y}\\right)}");
         oss.str("");
         k5 = k_type{T(1), T(2)};
         k5.set_flavour(false);
-        k5.print_tex(oss, vs);
+        k5.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK(oss.str() == "\\sin{\\left({x}+2{y}\\right)}");
         oss.str("");
         k5 = k_type{T(1), T(-2)};
-        k5.print_tex(oss, vs);
+        k5.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\cos{\\left({x}-2{y}\\right)}");
         oss.str("");
         k5 = k_type{T(-1), T(-2)};
-        k5.print_tex(oss, vs);
+        k5.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\cos{\\left(-{x}-2{y}\\right)}");
         oss.str("");
         k5 = k_type{T(-2), T(1)};
-        k5.print_tex(oss, vs);
+        k5.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\cos{\\left(-2{x}+{y}\\right)}");
         // Representation bug: would display cos(+y).
         oss.str("");
         k5 = k_type{T(0), T(1)};
-        k5.print_tex(oss, vs);
+        k5.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\cos{\\left({y}\\right)}");
         oss.str("");
         k5 = k_type{T(0), T(-1)};
-        k5.print_tex(oss, vs);
+        k5.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(oss.str(), "\\cos{\\left(-{y}\\right)}");
     }
 };
 
 BOOST_AUTO_TEST_CASE(rtkm_print_tex_test)
 {
-    boost::mpl::for_each<int_types>(print_tex_tester());
+    tuple_for_each(int_types{}, print_tex_tester{});
 }
-
 struct integrate_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
         BOOST_CHECK(key_is_integrable<k_type>::value);
         typedef kronecker_array<T> ka;
         const auto &limits = ka::get_limits();
-        symbol_fset vs;
         k_type k1{T(1)};
-        BOOST_CHECK_THROW(k1.integrate("x", vs), std::invalid_argument);
+        BOOST_CHECK_THROW(k1.integrate("x", symbol_fset{}), std::invalid_argument);
         if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
             k1.set_int(std::numeric_limits<T>::max());
-            BOOST_CHECK_THROW(k1.integrate("x", vs), std::invalid_argument);
+            BOOST_CHECK_THROW(k1.integrate("x", symbol_fset{}), std::invalid_argument);
         }
-        vs.add("x");
-        vs.add("y");
         k1 = k_type{T(1), T(2)};
-        auto ret = k1.integrate("x", vs);
+        auto ret = k1.integrate("x", symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.first, 1);
         BOOST_CHECK_EQUAL(ret.second.get_flavour(), false);
         BOOST_CHECK_EQUAL(ret.second.get_int(), k1.get_int());
         k1.set_flavour(false);
-        ret = k1.integrate("y", vs);
+        ret = k1.integrate("y", symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.first, -2);
         BOOST_CHECK_EQUAL(ret.second.get_flavour(), true);
         BOOST_CHECK_EQUAL(ret.second.get_int(), k1.get_int());
         k1 = k_type{T(0), T(2)};
-        ret = k1.integrate("x", vs);
+        ret = k1.integrate("x", symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.first, 0);
         BOOST_CHECK_EQUAL(ret.second.get_flavour(), true);
         BOOST_CHECK_EQUAL(ret.second.get_int(), 0);
         k1 = k_type{T(1), T(2)};
-        ret = k1.integrate("z", vs);
+        ret = k1.integrate("z", symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.first, 0);
         BOOST_CHECK_EQUAL(ret.second.get_flavour(), true);
         BOOST_CHECK_EQUAL(ret.second.get_int(), 0);
         k1 = k_type{T(1), T(2)};
-        ret = k1.integrate("y", vs);
+        ret = k1.integrate("y", symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret.first, 2);
         BOOST_CHECK_EQUAL(ret.second.get_flavour(), false);
         BOOST_CHECK_EQUAL(ret.second.get_int(), k1.get_int());
@@ -1323,137 +1321,169 @@ struct integrate_tester {
 
 BOOST_AUTO_TEST_CASE(rtkm_integrate_test)
 {
-    boost::mpl::for_each<int_types>(integrate_tester());
+    tuple_for_each(int_types{}, integrate_tester{});
 }
 
 struct canonicalise_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
-        symbol_fset vs;
         k_type k1;
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{}));
         k1 = k_type{T(1)};
-        BOOST_CHECK_THROW(k1.canonicalise(vs), std::invalid_argument);
-        vs.add("x");
+        BOOST_CHECK_THROW(k1.canonicalise(symbol_fset{}), std::invalid_argument);
         k1 = k_type{T(0)};
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{"x"}));
         k1 = k_type{T(1)};
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{"x"}));
         k1 = k_type{T(-1)};
-        BOOST_CHECK(k1.canonicalise(vs));
+        BOOST_CHECK(k1.canonicalise(symbol_fset{"x"}));
         BOOST_CHECK(k1 == k_type{T(1)});
-        vs.add("y");
         k1 = k_type{T(0), T(0)};
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{"x", "y"}));
         BOOST_CHECK((k1 == k_type{T(0), T(0)}));
         k1 = k_type{T(1), T(0)};
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{"x", "y"}));
         BOOST_CHECK((k1 == k_type{T(1), T(0)}));
         k1 = k_type{T(-1), T(0)};
-        BOOST_CHECK(k1.canonicalise(vs));
+        BOOST_CHECK(k1.canonicalise(symbol_fset{"x", "y"}));
         BOOST_CHECK((k1 == k_type{T(1), T(0)}));
         k1 = k_type{T(1), T(-1)};
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{"x", "y"}));
         BOOST_CHECK((k1 == k_type{T(1), T(-1)}));
         k1 = k_type{T(0), T(-1)};
-        BOOST_CHECK(k1.canonicalise(vs));
+        BOOST_CHECK(k1.canonicalise(symbol_fset{"x", "y"}));
         BOOST_CHECK((k1 == k_type{T(0), T(1)}));
         k1 = k_type{T(0), T(1)};
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{"x", "y"}));
         BOOST_CHECK((k1 == k_type{T(0), T(1)}));
-        vs.add("z");
         k1 = k_type{T(0), T(1), T(-1)};
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{"x", "y", "z"}));
         BOOST_CHECK((k1 == k_type{T(0), T(1), T(-1)}));
         k1 = k_type{T(0), T(-1), T(-1)};
-        BOOST_CHECK(k1.canonicalise(vs));
+        BOOST_CHECK(k1.canonicalise(symbol_fset{"x", "y", "z"}));
         BOOST_CHECK((k1 == k_type{T(0), T(1), T(1)}));
         k1 = k_type{T(0), T(0), T(-1)};
-        BOOST_CHECK(k1.canonicalise(vs));
+        BOOST_CHECK(k1.canonicalise(symbol_fset{"x", "y", "z"}));
         BOOST_CHECK((k1 == k_type{T(0), T(0), T(1)}));
         k1 = k_type{T(1), T(-1), T(-1)};
-        BOOST_CHECK(!k1.canonicalise(vs));
+        BOOST_CHECK(!k1.canonicalise(symbol_fset{"x", "y", "z"}));
         BOOST_CHECK((k1 == k_type{T(1), T(-1), T(-1)}));
     }
 };
 
 BOOST_AUTO_TEST_CASE(rtkm_canonicalise_test)
 {
-    boost::mpl::for_each<int_types>(canonicalise_tester());
+    tuple_for_each(int_types{}, canonicalise_tester{});
 }
 
 struct trim_identify_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef real_trigonometric_kronecker_monomial<T> k_type;
+        using k_type = real_trigonometric_kronecker_monomial<T>;
         k_type k0;
-        symbol_fset v1, v2;
+        std::vector<char> mask;
+        BOOST_CHECK_NO_THROW(k0.trim_identify(mask, symbol_fset{}));
+        BOOST_CHECK(mask.size() == 0u);
         k0.set_int(1);
-        BOOST_CHECK_THROW(k0.trim_identify(v2, v2), std::invalid_argument);
-        v1.add("x");
-        v2.add("y");
-        v2.add("x");
+        BOOST_CHECK_EXCEPTION(
+            k0.trim_identify(mask, symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "invalid mask for trim_identify(): the size of the mask (0) differs "
+                                                 "from the size of the reference symbol set (1)");
+            });
+        mask = {1};
+        BOOST_CHECK_EXCEPTION(
+            k0.trim_identify(mask, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "invalid mask for trim_identify(): the size of the mask (1) differs "
+                                                 "from the size of the reference symbol set (0)");
+            });
+        k0.trim_identify(mask, symbol_fset{"x"});
+        BOOST_CHECK(!mask[0]);
+        mask = {1};
+        k0 = k_type{0};
+        k0.trim_identify(mask, symbol_fset{"x"});
+        BOOST_CHECK(mask[0]);
         k0 = k_type({T(1), T(2)});
-        k0.trim_identify(v1, v2);
-        BOOST_CHECK(v1 == symbol_fset());
+        mask = {1, 1};
+        k0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{0, 0}));
         k0 = k_type({T(0), T(2)});
-        v1.add("x");
-        v1.add("y");
-        k0.trim_identify(v1, v2);
-        BOOST_CHECK(v1 == symbol_fset({"x"}));
+        mask = {1, 1};
+        k0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{1, 0}));
         k0 = k_type({T(0), T(0)});
-        v1.add("y");
-        k0.trim_identify(v1, v2);
-        BOOST_CHECK(v1 == symbol_fset({"x", "y"}));
+        mask = {1, 1};
+        k0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{1, 1}));
         k0 = k_type({T(1), T(0)});
-        k0.trim_identify(v1, v2);
-        BOOST_CHECK(v1 == symbol_fset({"y"}));
+        mask = {1, 1};
+        k0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{0, 1}));
     }
 };
 
 BOOST_AUTO_TEST_CASE(rtkm_trim_identify_test)
 {
-    boost::mpl::for_each<int_types>(trim_identify_tester());
+    tuple_for_each(int_types{}, trim_identify_tester{});
 }
 
 struct trim_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        typedef real_trigonometric_kronecker_monomial<T> k_type;
+        using k_type = real_trigonometric_kronecker_monomial<T>;
         k_type k0;
-        symbol_fset v1, v2;
-        k0.set_int(1);
-        BOOST_CHECK_THROW(k0.trim(v1, v2), std::invalid_argument);
-        v1.add("x");
-        v1.add("y");
-        v1.add("z");
-        k0 = k_type{T(1), T(0), T(-1)};
-        v2.add("x");
-        BOOST_CHECK((k0.trim(v2, v1) == k_type{T(0), T(-1)}));
-        v2.add("z");
-        v2.add("a");
-        BOOST_CHECK((k0.trim(v2, v1) == k_type{T(0)}));
-        v2.add("y");
-        BOOST_CHECK((k0.trim(v2, v1) == k_type()));
-        v2 = symbol_fset();
-        BOOST_CHECK((k0.trim(v2, v1) == k0));
+        BOOST_CHECK(k0.trim({}, symbol_fset{}) == k0);
         k0.set_flavour(false);
-        v2.add("x");
-        v2.add("z");
-        v2.add("a");
-        BOOST_CHECK((k0.trim(v2, v1) == k_type(T(0), false)));
+        BOOST_CHECK(k0.trim({}, symbol_fset{}) == k_type(0, false));
+        k0.set_int(1);
+        BOOST_CHECK_EXCEPTION(k0.trim({}, symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "invalid mask for trim(): the size of the mask (0) differs from the size "
+                                             "of the reference symbol set (1)");
+        });
+        BOOST_CHECK_EXCEPTION(k0.trim({1}, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "invalid mask for trim(): the size of the mask (1) differs from the size "
+                                             "of the reference symbol set (0)");
+        });
+        k0 = k_type{T(1), T(0), T(-1)};
+        BOOST_CHECK((k0.trim({0, 1, 0}, symbol_fset{"x", "y", "z"}) == k_type{1, -1}));
+        k0.set_flavour(false);
+        BOOST_CHECK((k0.trim({0, 1, 0}, symbol_fset{"x", "y", "z"}) == k_type({1, -1}, false)));
+        k0.set_flavour(true);
+        BOOST_CHECK((k0.trim({1, 0, 0}, symbol_fset{"x", "y", "z"}) == k_type{0, -1}));
+        k0.set_flavour(false);
+        BOOST_CHECK((k0.trim({1, 0, 0}, symbol_fset{"x", "y", "z"}) == k_type{{0, -1}, false}));
+        k0.set_flavour(true);
+        BOOST_CHECK((k0.trim({0, 0, 0}, symbol_fset{"x", "y", "z"}) == k0));
+        k0.set_flavour(false);
+        BOOST_CHECK((k0.trim({0, 0, 0}, symbol_fset{"x", "y", "z"}) == k_type{{T(1), T(0), T(-1)}, false}));
+        k0.set_flavour(true);
+        BOOST_CHECK((k0.trim({1, 0, 1}, symbol_fset{"x", "y", "z"}) == k_type{0}));
+        k0.set_flavour(false);
+        BOOST_CHECK((k0.trim({1, 0, 1}, symbol_fset{"x", "y", "z"}) == k_type{std::initializer_list<T>{0}, false}));
+        k0.set_flavour(true);
+        BOOST_CHECK((k0.trim({1, 1, 0}, symbol_fset{"x", "y", "z"}) == k_type{-1}));
+        k0.set_flavour(false);
+        BOOST_CHECK((k0.trim({1, 1, 0}, symbol_fset{"x", "y", "z"}) == k_type{std::initializer_list<T>{-1}, false}));
+        k0.set_flavour(true);
+        BOOST_CHECK((k0.trim({0, 1, 1}, symbol_fset{"x", "y", "z"}) == k_type{1}));
+        k0.set_flavour(false);
+        BOOST_CHECK((k0.trim({0, 1, 1}, symbol_fset{"x", "y", "z"}) == k_type{std::initializer_list<T>{1}, false}));
+        k0.set_flavour(true);
+        BOOST_CHECK((k0.trim({1, 1, 1}, symbol_fset{"x", "y", "z"}) == k_type{}));
+        k0.set_flavour(false);
+        BOOST_CHECK((k0.trim({1, 1, 1}, symbol_fset{"x", "y", "z"}) == k_type{std::initializer_list<T>{}, false}));
     }
 };
 
 BOOST_AUTO_TEST_CASE(rtkm_trim_test)
 {
-    boost::mpl::for_each<int_types>(trim_tester());
+    tuple_for_each(int_types{}, trim_tester{});
 }
 
+#if 0
 struct tt_tester {
     template <typename T>
     void operator()(const T &)
