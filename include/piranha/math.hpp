@@ -1418,13 +1418,12 @@ inline auto ldegree(const T &x, const symbol_fset &s) -> decltype(ldegree_impl<T
 
 /// Default functor for the implementation of piranha::math::t_degree().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_degree() (the total trigonometric degree), the other for the binary form of
- * piranha::math::t_degree()
- * (the partial trigonometric degree).
+ * piranha::math::t_degree() (the partial trigonometric degree).
  */
 template <typename T, typename Enable = void>
 struct t_degree_impl {
@@ -1441,16 +1440,16 @@ struct t_degree_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
  *
- * @param x object whose trigonometric degree will be computed.
+ * @param x the object whose trigonometric degree will be computed.
  *
- * @return total trigonometric degree.
+ * @return the total trigonometric degree.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_degree_impl.
  */
 template <typename T>
-inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>()(x))
+inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>{}(x))
 {
-    return t_degree_impl<T>()(x);
+    return t_degree_impl<T>{}(x);
 }
 
 /// Partial trigonometric degree.
@@ -1460,30 +1459,27 @@ inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
  *
- * @param x object whose trigonometric degree will be computed.
- * @param names names of the variables that will be considered in the computation of the degree.
+ * @param x the object whose trigonometric degree will be computed.
+ * @param names the names of the variables that will be considered in the computation of the degree.
  *
- * @return partial trigonometric degree.
+ * @return the partial trigonometric degree.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_degree_impl.
- *
- * @see piranha::math::t_degree().
  */
 template <typename T>
-inline auto t_degree(const T &x, const std::vector<std::string> &names) -> decltype(t_degree_impl<T>()(x, names))
+inline auto t_degree(const T &x, const symbol_fset &names) -> decltype(t_degree_impl<T>{}(x, names))
 {
-    return t_degree_impl<T>()(x, names);
+    return t_degree_impl<T>{}(x, names);
 }
 
 /// Default functor for the implementation of piranha::math::t_ldegree().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_ldegree() (the total trigonometric low degree), the other for the binary form of
- * piranha::math::t_ldegree()
- * (the partial trigonometric low degree).
+ * piranha::math::t_ldegree() (the partial trigonometric low degree).
  */
 template <typename T, typename Enable = void>
 struct t_ldegree_impl {
@@ -1500,16 +1496,16 @@ struct t_ldegree_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
  *
- * @param x object whose trigonometric low degree will be computed.
+ * @param x thee object whose trigonometric low degree will be computed.
  *
  * @return total trigonometric low degree.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_ldegree_impl.
  */
 template <typename T>
-inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>()(x))
+inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>{}(x))
 {
-    return t_ldegree_impl<T>()(x);
+    return t_ldegree_impl<T>{}(x);
 }
 
 /// Partial trigonometric low degree.
@@ -1519,30 +1515,27 @@ inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
  *
- * @param x object whose trigonometric low degree will be computed.
- * @param names names of the variables that will be considered in the computation of the degree.
+ * @param x the object whose trigonometric low degree will be computed.
+ * @param names the names of the variables that will be considered in the computation of the degree.
  *
- * @return partial trigonometric low degree.
+ * @return the partial trigonometric low degree.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_ldegree_impl.
- *
- * @see piranha::math::t_ldegree().
  */
 template <typename T>
-inline auto t_ldegree(const T &x, const std::vector<std::string> &names) -> decltype(t_ldegree_impl<T>()(x, names))
+inline auto t_ldegree(const T &x, const symbol_fset &names) -> decltype(t_ldegree_impl<T>{}(x, names))
 {
-    return t_ldegree_impl<T>()(x, names);
+    return t_ldegree_impl<T>{}(x, names);
 }
 
 /// Default functor for the implementation of piranha::math::t_order().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_order() (the total trigonometric order), the other for the binary form of
- * piranha::math::t_order()
- * (the partial trigonometric order).
+ * piranha::math::t_order() (the partial trigonometric order).
  */
 template <typename T, typename Enable = void>
 struct t_order_impl {
@@ -1551,27 +1544,26 @@ struct t_order_impl {
 /// Total trigonometric order.
 /**
  * A type exposing a trigonometric order property should be a linear combination of real or complex trigonometric
- * functions.
- * The order is computed in a way similar to the trigonometric degree, with the key difference that the absolute values
- * of
- * the trigonometric degrees of each variable are considered in the computation. For instance, the Poisson series
- * \f[
+ * functions. The order is computed in a way similar to the trigonometric degree, with the key difference that the
+ * absolute values of the trigonometric degrees of each variable are considered in the computation. For instance, the
+ * Poisson series
+ *\f[
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
- * has a trigonometric order of abs(3)+abs(1)=4.
+ * has a trigonometric order of ``abs(3)+abs(1)==4``.
  *
  * The actual implementation of this function is in the piranha::math::t_order_impl functor.
  *
- * @param x object whose trigonometric order will be computed.
+ * @param x the object whose trigonometric order will be computed.
  *
- * @return total trigonometric order.
+ * @return the total trigonometric order.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_order_impl.
  */
 template <typename T>
-inline auto t_order(const T &x) -> decltype(t_order_impl<T>()(x))
+inline auto t_order(const T &x) -> decltype(t_order_impl<T>{}(x))
 {
-    return t_order_impl<T>()(x);
+    return t_order_impl<T>{}(x);
 }
 
 /// Partial trigonometric order.
@@ -1581,30 +1573,27 @@ inline auto t_order(const T &x) -> decltype(t_order_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_order_impl functor.
  *
- * @param x object whose trigonometric order will be computed.
- * @param names names of the variables that will be considered in the computation of the order.
+ * @param x the object whose trigonometric order will be computed.
+ * @param names the names of the variables that will be considered in the computation of the order.
  *
- * @return partial trigonometric order.
+ * @return the partial trigonometric order.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_order_impl.
- *
- * @see piranha::math::t_order().
  */
 template <typename T>
-inline auto t_order(const T &x, const std::vector<std::string> &names) -> decltype(t_order_impl<T>()(x, names))
+inline auto t_order(const T &x, const symbol_fset &names) -> decltype(t_order_impl<T>{}(x, names))
 {
-    return t_order_impl<T>()(x, names);
+    return t_order_impl<T>{}(x, names);
 }
 
 /// Default functor for the implementation of piranha::math::t_lorder().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_lorder() (the total trigonometric low order), the other for the binary form of
- * piranha::math::t_lorder()
- * (the partial trigonometric low order).
+ * piranha::math::t_lorder() (the partial trigonometric low order).
  */
 template <typename T, typename Enable = void>
 struct t_lorder_impl {
@@ -1613,10 +1602,9 @@ struct t_lorder_impl {
 /// Total trigonometric low order.
 /**
  * A type exposing a trigonometric low order property should be a linear combination of real or complex trigonometric
- * functions.
- * The low order is computed in a way similar to the trigonometric low degree, with the key difference that the absolute
- * values of
- * the trigonometric degrees of each variable are considered in the computation. For instance, the Poisson series
+ * functions. The low order is computed in a way similar to the trigonometric low degree, with the key difference that
+ * the absolute values of the trigonometric degrees of each variable are considered in the computation. For instance,
+ * the Poisson series
  * \f[
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
@@ -1624,16 +1612,16 @@ struct t_lorder_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
  *
- * @param x object whose trigonometric low order will be computed.
+ * @param x the object whose trigonometric low order will be computed.
  *
- * @return total trigonometric low order.
+ * @return the total trigonometric low order.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_lorder_impl.
  */
 template <typename T>
-inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>()(x))
+inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>{}(x))
 {
-    return t_lorder_impl<T>()(x);
+    return t_lorder_impl<T>{}(x);
 }
 
 /// Partial trigonometric low order.
@@ -1643,19 +1631,17 @@ inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
  *
- * @param x object whose trigonometric low order will be computed.
- * @param names names of the variables that will be considered in the computation of the order.
+ * @param x the object whose trigonometric low order will be computed.
+ * @param names the names of the variables that will be considered in the computation of the order.
  *
- * @return partial trigonometric low order.
+ * @return the partial trigonometric low order.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_lorder_impl.
- *
- * @see piranha::math::t_lorder().
  */
 template <typename T>
-inline auto t_lorder(const T &x, const std::vector<std::string> &names) -> decltype(t_lorder_impl<T>()(x, names))
+inline auto t_lorder(const T &x, const symbol_fset &names) -> decltype(t_lorder_impl<T>{}(x, names))
 {
-    return t_lorder_impl<T>()(x, names);
+    return t_lorder_impl<T>{}(x, names);
 }
 
 /// Implementation of the piranha::math::truncate_degree() functor.
@@ -1948,8 +1934,7 @@ class has_t_degree : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::t_degree(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::t_degree(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::t_degree(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -1974,8 +1959,7 @@ class has_t_ldegree : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::t_ldegree(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::t_ldegree(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::t_ldegree(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -2000,8 +1984,7 @@ class has_t_order : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::t_order(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::t_order(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::t_order(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -2026,8 +2009,7 @@ class has_t_lorder : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::t_lorder(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::t_lorder(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::t_lorder(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
