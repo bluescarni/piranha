@@ -1483,10 +1483,9 @@ BOOST_AUTO_TEST_CASE(rtkm_trim_test)
     tuple_for_each(int_types{}, trim_tester{});
 }
 
-#if 0
 struct tt_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
         BOOST_CHECK(key_has_t_degree<k_type>::value);
@@ -1499,7 +1498,7 @@ struct tt_tester {
 
 BOOST_AUTO_TEST_CASE(rtkm_tt_test)
 {
-    boost::mpl::for_each<int_types>(tt_tester());
+    tuple_for_each(int_types{}, tt_tester{});
 }
 
 struct fake_int_01 {
@@ -1550,6 +1549,9 @@ BOOST_AUTO_TEST_CASE(rtkm_key_has_t_subs_test)
     BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<long> &, long, const long &>::value));
     BOOST_CHECK((key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &, char, const char &>::value));
     BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<long long> &, char, int>::value));
+    BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &, char, void>::value));
+    BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &, void, char>::value));
+    BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &, void, void>::value));
     BOOST_CHECK(!key_has_degree<real_trigonometric_kronecker_monomial<int>>::value);
     BOOST_CHECK(!key_has_ldegree<real_trigonometric_kronecker_monomial<int>>::value);
     BOOST_CHECK(key_has_t_degree<real_trigonometric_kronecker_monomial<int>>::value);
@@ -1559,35 +1561,33 @@ BOOST_AUTO_TEST_CASE(rtkm_key_has_t_subs_test)
 }
 
 struct t_subs_tester {
-    template <typename T>
-    void operator()(const T &, typename std::enable_if<!std::is_same<T, signed char>::value>::type * = nullptr)
+    template <typename T, enable_if_t<!std::is_same<T, signed char>::value, int> = 0>
+    void operator()(const T &) const
     {
         // Test with no substitution.
         typedef real_trigonometric_kronecker_monomial<T> k_type;
-        symbol_fset v;
         k_type k;
-        auto res = k.t_subs("x", real(.5), real(.0), v);
+        auto res = k.t_subs(0, real(.5), real(.0), symbol_fset{});
         typedef decltype(res) res_type1;
         BOOST_CHECK((std::is_same<typename res_type1::value_type::first_type, real>::value));
         BOOST_CHECK_EQUAL(res.size(), 2u);
         BOOST_CHECK_EQUAL(res[0u].first, real(1));
         BOOST_CHECK_EQUAL(res[1u].first, real(0));
         k.set_flavour(false);
-        res = k.t_subs("x", real(.5), real(.0), v);
+        res = k.t_subs(0, real(.5), real(.0), symbol_fset{});
         BOOST_CHECK_EQUAL(res.size(), 2u);
         BOOST_CHECK_EQUAL(res[0u].first, real(0));
         BOOST_CHECK_EQUAL(res[1u].first, real(1));
         k = k_type{T(3)};
         k.set_flavour(true);
-        v.add("x");
-        res = k.t_subs("y", real(.5), real(.0), v);
+        res = k.t_subs(1, real(.5), real(.0), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(res.size(), 2u);
         BOOST_CHECK_EQUAL(res[0u].first, real(1));
         BOOST_CHECK_EQUAL(res[1u].first, real(0));
         BOOST_CHECK(res[0u].second == k);
         k.set_flavour(false);
         BOOST_CHECK(res[1u].second == k);
-        res = k.t_subs("y", real(.5), real(.0), v);
+        res = k.t_subs(1, real(.5), real(.0), symbol_fset{"x"});
         BOOST_CHECK_EQUAL(res.size(), 2u);
         BOOST_CHECK_EQUAL(res[0u].first, real(0));
         BOOST_CHECK_EQUAL(res[1u].first, real(1));
@@ -1595,10 +1595,9 @@ struct t_subs_tester {
         k.set_flavour(true);
         BOOST_CHECK(res[0u].second == k);
         // Test substitution with no canonicalisation.
-        v.add("y");
         k = k_type{T(2), T(3)};
         auto c = rational(1, 2), s = rational(4, 5);
-        auto res2 = k.t_subs("y", c, s, v);
+        auto res2 = k.t_subs(1, c, s, symbol_fset{"x", "y"});
         typedef decltype(res2) res_type2;
         BOOST_CHECK((std::is_same<typename res_type2::value_type::first_type, rational>::value));
         BOOST_CHECK_EQUAL(res2.size(), 2u);
@@ -1610,7 +1609,7 @@ struct t_subs_tester {
         BOOST_CHECK(res2[1u].second == k);
         k = k_type{T(2), T(3)};
         k.set_flavour(false);
-        res2 = k.t_subs("y", c, s, v);
+        res2 = k.t_subs(1, c, s, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res2.size(), 2u);
         BOOST_CHECK_EQUAL(res2[0u].first, 3 * c * c * s - s * s * s);
         BOOST_CHECK_EQUAL(res2[1u].first, c * c * c - 3 * s * s * c);
@@ -1620,7 +1619,7 @@ struct t_subs_tester {
         BOOST_CHECK(res2[1u].second == k);
         // Negative multiplier
         k = k_type{T(-3), T(3)};
-        res2 = k.t_subs("x", c, s, v);
+        res2 = k.t_subs(0, c, s, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res2.size(), 2u);
         BOOST_CHECK_EQUAL(res2[0u].first, c * c * c - 3 * s * s * c);
         BOOST_CHECK_EQUAL(res2[1u].first, 3 * c * c * s - s * s * s);
@@ -1630,7 +1629,7 @@ struct t_subs_tester {
         BOOST_CHECK(res2[1u].second == k);
         k = k_type{T(-3), T(3)};
         k.set_flavour(false);
-        res2 = k.t_subs("x", c, s, v);
+        res2 = k.t_subs(0, c, s, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res2.size(), 2u);
         BOOST_CHECK_EQUAL(res2[0u].first, -3 * c * c * s + s * s * s);
         BOOST_CHECK_EQUAL(res2[1u].first, c * c * c - 3 * s * s * c);
@@ -1640,7 +1639,7 @@ struct t_subs_tester {
         BOOST_CHECK(res2[1u].second == k);
         // Test substitution with canonicalisation.
         k = k_type{T(-2), T(3)};
-        res2 = k.t_subs("y", c, s, v);
+        res2 = k.t_subs(1, c, s, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res2.size(), 2u);
         BOOST_CHECK_EQUAL(res2[0u].first, c * c * c - 3 * s * s * c);
         BOOST_CHECK_EQUAL(res2[1u].first, 3 * c * c * s - s * s * s);
@@ -1650,7 +1649,7 @@ struct t_subs_tester {
         BOOST_CHECK(res2[1u].second == k);
         k = k_type{T(-2), T(3)};
         k.set_flavour(false);
-        res2 = k.t_subs("y", c, s, v);
+        res2 = k.t_subs(1, c, s, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res2.size(), 2u);
         BOOST_CHECK_EQUAL(res2[0u].first, 3 * c * c * s - s * s * s);
         BOOST_CHECK_EQUAL(res2[1u].first, -c * c * c + 3 * s * s * c);
@@ -1660,7 +1659,7 @@ struct t_subs_tester {
         BOOST_CHECK(res2[1u].second == k);
         // Negative multiplier
         k = k_type{T(-3), T(-3)};
-        res2 = k.t_subs("x", c, s, v);
+        res2 = k.t_subs(0, c, s, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res2.size(), 2u);
         BOOST_CHECK_EQUAL(res2[0u].first, c * c * c - 3 * s * s * c);
         BOOST_CHECK_EQUAL(res2[1u].first, -3 * c * c * s + s * s * s);
@@ -1670,7 +1669,7 @@ struct t_subs_tester {
         BOOST_CHECK(res2[1u].second == k);
         k = k_type{T(-3), T(-3)};
         k.set_flavour(false);
-        res2 = k.t_subs("x", c, s, v);
+        res2 = k.t_subs(0, c, s, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res2.size(), 2u);
         BOOST_CHECK_EQUAL(res2[0u].first, -3 * c * c * s + s * s * s);
         BOOST_CHECK_EQUAL(res2[1u].first, -c * c * c + 3 * s * s * c);
@@ -1679,20 +1678,20 @@ struct t_subs_tester {
         k.set_flavour(false);
         BOOST_CHECK(res2[1u].second == k);
     }
-    template <typename T>
-    void operator()(const T &, typename std::enable_if<std::is_same<T, signed char>::value>::type * = nullptr)
+    template <typename T, enable_if_t<std::is_same<T, signed char>::value, int> = 0>
+    void operator()(const T &) const
     {
     }
 };
 
 BOOST_AUTO_TEST_CASE(rtkm_t_subs_test)
 {
-    boost::mpl::for_each<int_types>(t_subs_tester());
+    tuple_for_each(int_types{}, t_subs_tester{});
 }
 
 struct is_evaluable_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
         BOOST_CHECK((key_is_evaluable<k_type, float>::value));
@@ -1705,12 +1704,13 @@ struct is_evaluable_tester {
         BOOST_CHECK((key_is_evaluable<k_type, long long>::value));
         BOOST_CHECK((!key_is_evaluable<k_type, std::string>::value));
         BOOST_CHECK((!key_is_evaluable<k_type, void *>::value));
+        BOOST_CHECK((!key_is_evaluable<k_type, void>::value));
     }
 };
 
 BOOST_AUTO_TEST_CASE(rtkm_key_is_evaluable_test)
 {
-    boost::mpl::for_each<int_types>(is_evaluable_tester());
+    tuple_for_each(int_types{}, is_evaluable_tester{});
 }
 
 BOOST_AUTO_TEST_CASE(rtkm_kic_test)
@@ -1722,7 +1722,7 @@ BOOST_AUTO_TEST_CASE(rtkm_kic_test)
 
 struct comparison_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using k_type = real_trigonometric_kronecker_monomial<T>;
         BOOST_CHECK(is_less_than_comparable<k_type>::value);
@@ -1740,6 +1740,5 @@ struct comparison_tester {
 
 BOOST_AUTO_TEST_CASE(rtkm_comparison_test)
 {
-    boost::mpl::for_each<int_types>(comparison_tester());
+    tuple_for_each(int_types{}, comparison_tester{});
 }
-#endif

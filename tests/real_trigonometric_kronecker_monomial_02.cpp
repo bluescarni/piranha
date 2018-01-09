@@ -47,7 +47,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/init.hpp>
 #include <piranha/s11n.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -59,7 +59,7 @@ static const int ntries = 1000;
 static std::mutex mut;
 
 template <typename OArchive, typename IArchive, typename T>
-static inline void boost_roundtrip(const T &x, const symbol_set &args, bool mt = false)
+static inline void boost_roundtrip(const T &x, const symbol_fset &args, bool mt = false)
 {
     using w_type = boost_s11n_key_wrapper<T>;
     {
@@ -140,9 +140,9 @@ struct boost_s11n_tester {
                 }
                 k.set_flavour(static_cast<bool>(fdist(rng)));
                 boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(
-                    k, symbol_set(names.begin(), names.begin() + s), true);
+                    k, symbol_fset(names.begin(), names.begin() + s), true);
                 boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
-                    k, symbol_set(names.begin(), names.begin() + s), true);
+                    k, symbol_fset(names.begin(), names.begin() + s), true);
             }
         };
         std::thread t0(t_func, 0);
@@ -158,12 +158,12 @@ struct boost_s11n_tester {
             std::stringstream ss;
             {
                 boost::archive::text_oarchive oa(ss);
-                boost_save(oa, w_type{k_type{}, symbol_set{}});
+                boost_save(oa, w_type{k_type{}, symbol_fset{}});
             }
             k_type retval{T(1), T(2)};
             {
                 boost::archive::text_iarchive ia(ss);
-                symbol_set new_ss{symbol{"x"}};
+                symbol_fset new_ss{"x"};
                 w_type w{retval, new_ss};
                 BOOST_CHECK_EXCEPTION(boost_load(ia, w), std::invalid_argument, [](const std::invalid_argument &iae) {
                     return boost::contains(
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
 #if defined(PIRANHA_WITH_MSGPACK)
 
 template <typename T>
-static inline void msgpack_roundtrip(const T &x, const symbol_set &args, msgpack_format f, bool mt = false)
+static inline void msgpack_roundtrip(const T &x, const symbol_fset &args, msgpack_format f, bool mt = false)
 {
     msgpack::sbuffer sbuf;
     msgpack::packer<msgpack::sbuffer> p(sbuf);
@@ -233,7 +233,7 @@ struct msgpack_s11n_tester {
                         continue;
                     }
                     k.set_flavour(fdist(rng));
-                    msgpack_roundtrip(k, symbol_set(names.begin(), names.begin() + s), f, true);
+                    msgpack_roundtrip(k, symbol_fset(names.begin(), names.begin() + s), f, true);
                 }
             }
         };
@@ -256,7 +256,7 @@ struct msgpack_s11n_tester {
             k_type retval{T(2)};
             auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
             BOOST_CHECK_EXCEPTION(
-                retval.msgpack_convert(oh.get(), msgpack_format::portable, symbol_set{}), std::invalid_argument,
+                retval.msgpack_convert(oh.get(), msgpack_format::portable, symbol_fset{}), std::invalid_argument,
                 [](const std::invalid_argument &ia) {
                     return boost::contains(
                         ia.what(),
