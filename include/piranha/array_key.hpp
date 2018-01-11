@@ -398,7 +398,7 @@ public:
      * the array of values <tt>[0,5,3,4]</tt> (that is, the fourth element has been removed as indicated
      * by a \p true value in <tt>trim_mask</tt>'s fourth element).
      *
-     * @param trim_mask a mask indicating which element will be removed.
+     * @param trim_mask a mask indicating which elements will be removed.
      * @param args the reference piranha::symbol_fset.
      *
      * @return a trimmed copy of \p this.
