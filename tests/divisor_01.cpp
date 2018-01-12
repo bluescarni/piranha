@@ -555,13 +555,6 @@ struct evaluate_tester {
     void operator()(const T &) const
     {
         using d_type = divisor<T>;
-        // using pmap_type1 = symbol_set::positions_map<rational>;
-        // using dict_type1 = std::unordered_map<symbol, rational>;
-        // using pmap_type2 = symbol_set::positions_map<double>;
-        // using dict_type2 = std::unordered_map<symbol, double>;
-        // using pmap_type3 = symbol_set::positions_map<real>;
-        // using dict_type3 = std::unordered_map<symbol, real>;
-        // symbol_set v;
         d_type d;
         // Test the type trait first.
         BOOST_CHECK((key_is_evaluable<d_type, rational>::value));
