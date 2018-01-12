@@ -596,9 +596,9 @@ public:
         // A copy of the current symbol set plus name. If name is
         // in the set already, it will be just a copy.
         const auto aug_ss = [this, &name]() -> symbol_fset {
-            symbol_fset retval(this->m_symbol_set);
-            retval.insert(name);
-            return retval;
+            symbol_fset tmp_ss(this->m_symbol_set);
+            tmp_ss.insert(name);
+            return tmp_ss;
         }();
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {

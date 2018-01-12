@@ -313,8 +313,7 @@ inline namespace literals
 #include <piranha/small_vector.hpp>
 #include <piranha/static_vector.hpp>
 #include <piranha/substitutable_series.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/t_substitutable_series.hpp>
 #include <piranha/term.hpp>
 #include <piranha/thread_barrier.hpp>
