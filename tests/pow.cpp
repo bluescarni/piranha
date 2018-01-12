@@ -141,7 +141,7 @@ struct int_pow_tester {
             BOOST_CHECK((is_exponentiable<int_type, unsigned long>::value));
             BOOST_CHECK((std::is_same<int_type, decltype(math::pow(int_type(1), 1))>::value));
             BOOST_CHECK((std::is_same<int_type, decltype(math::pow(int_type(1), 1ul))>::value));
-            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(int_type(1), (signed char)1))>::value));
+            BOOST_CHECK((std::is_same<int_type, decltype(math::pow(int_type(1), static_cast<signed char>(1)))>::value));
             BOOST_CHECK_EQUAL(math::pow(int_type(2), 3), 8);
             // Integer -- floating-point.
             BOOST_CHECK((is_exponentiable<int_type, double>::value));
@@ -221,8 +221,8 @@ BOOST_AUTO_TEST_CASE(pow_mp_integer_test)
     tuple_for_each(size_types{}, mp_integer_pow_tester{});
     // Integral--integral pow.
     BOOST_CHECK_EQUAL(math::pow(4, 2), 16);
-    BOOST_CHECK_EQUAL(math::pow(-3ll, (unsigned short)3), -27);
-    BOOST_CHECK((std::is_same<integer, decltype(math::pow(-3ll, (unsigned short)3))>::value));
+    BOOST_CHECK_EQUAL(math::pow(-3ll, static_cast<unsigned short>(3)), -27);
+    BOOST_CHECK((std::is_same<integer, decltype(math::pow(-3ll, static_cast<unsigned short>(3)))>::value));
     BOOST_CHECK((is_exponentiable<int, int>::value));
     BOOST_CHECK((is_exponentiable<int, char>::value));
     BOOST_CHECK((is_exponentiable<unsigned, long long>::value));

@@ -434,7 +434,7 @@ class polynomial
     template <typename Functor>
     static polynomial um_tm_implementation(const polynomial &p1, const polynomial &p2, const Functor &runner)
     {
-        series_merge_f(p1, p2, runner);
+        return series_merge_f(p1, p2, runner);
     }
     // Helper function to clear the pow cache when a new auto truncation limit is set.
     template <typename T>

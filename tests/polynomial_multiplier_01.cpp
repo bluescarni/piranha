@@ -47,8 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/settings.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -61,17 +60,17 @@ using k_types = boost::mpl::vector<monomial<int>, monomial<rational>,
 struct bounds_tester {
     template <typename Cf>
     struct runner {
-        template <typename Key, typename std::enable_if<detail::is_monomial<Key>::value
-                                                            && !std::is_integral<typename Key::value_type>::value,
-                                                        int>::type
-                                = 0>
+        template <typename Key,
+                  typename std::enable_if<
+                      detail::is_monomial<Key>::value && !std::is_integral<typename Key::value_type>::value, int>::type
+                  = 0>
         void operator()(const Key &)
         {
         }
-        template <typename Key, typename std::enable_if<detail::is_monomial<Key>::value
-                                                            && std::is_integral<typename Key::value_type>::value,
-                                                        int>::type
-                                = 0>
+        template <typename Key,
+                  typename std::enable_if<
+                      detail::is_monomial<Key>::value && std::is_integral<typename Key::value_type>::value, int>::type
+                  = 0>
         void operator()(const Key &)
         {
             settings::set_min_work_per_thread(1u);
@@ -200,8 +199,8 @@ struct multiplication_tester {
             pt x{"x"};
             BOOST_CHECK_EQUAL(e1 * x, 0);
             BOOST_CHECK_EQUAL(x * e1, 0);
-            BOOST_CHECK((x * e1).get_symbol_set() == symbol_set{symbol{"x"}});
-            BOOST_CHECK((e1 * x).get_symbol_set() == symbol_set{symbol{"x"}});
+            BOOST_CHECK((x * e1).get_symbol_set() == symbol_fset{"x"});
+            BOOST_CHECK((e1 * x).get_symbol_set() == symbol_fset{"x"});
             // A reduced fateman benchmark.
             pt y{"y"}, z{"z"}, t{"t"};
             auto f = 1 + x + y + z + t;

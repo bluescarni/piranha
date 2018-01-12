@@ -62,15 +62,15 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/real.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
 const boost::fusion::vector<char, short, int, long, long long, unsigned char, unsigned short, unsigned, unsigned long,
                             unsigned long long, float, double, long double>
-arithmetic_values((char)-42, (short)42, -42, 42L, -42LL, (unsigned char)42, (unsigned short)42, 42U, 42UL, 42ULL,
-                  23.456f, -23.456, 23.456L);
+arithmetic_values(static_cast<char>(-42), static_cast<short>(42), -42, 42L, -42LL, static_cast<unsigned char>(42),
+                  static_cast<unsigned short>(42), 42U, 42UL, 42ULL, 23.456f, -23.456, 23.456L);
 
 static std::mt19937 rng;
 static const int ntries = 1000;
@@ -118,7 +118,8 @@ BOOST_AUTO_TEST_CASE(math_negate_test)
 
 const boost::fusion::vector<char, short, int, long, long long, unsigned char, unsigned short, unsigned, unsigned long,
                             unsigned long long, float, double, long double>
-zeroes((char)0, (short)0, 0, 0L, 0LL, (unsigned char)0, (unsigned short)0, 0U, 0UL, 0ULL, 0.f, -0., 0.L);
+zeroes(static_cast<char>(0), static_cast<short>(0), 0, 0L, 0LL, static_cast<unsigned char>(0),
+       static_cast<unsigned short>(0), 0U, 0UL, 0ULL, 0.f, -0., 0.L);
 
 struct check_is_zero_01 {
     template <typename T>
@@ -306,8 +307,8 @@ BOOST_AUTO_TEST_CASE(math_sin_cos_test)
     BOOST_CHECK_EQUAL(math::cos(0), 1);
     BOOST_CHECK_THROW(math::sin(1), std::invalid_argument);
     BOOST_CHECK_THROW(math::cos(1), std::invalid_argument);
-    BOOST_CHECK((std::is_same<unsigned short, decltype(math::sin((unsigned short)0))>::value));
-    BOOST_CHECK((std::is_same<unsigned short, decltype(math::cos((unsigned short)0))>::value));
+    BOOST_CHECK((std::is_same<unsigned short, decltype(math::sin(static_cast<unsigned short>(0)))>::value));
+    BOOST_CHECK((std::is_same<unsigned short, decltype(math::cos(static_cast<unsigned short>(0)))>::value));
     BOOST_CHECK(has_cosine<cos_00>::value);
     BOOST_CHECK(!has_cosine<cos_01>::value);
     BOOST_CHECK(has_sine<sin_00>::value);
@@ -332,22 +333,19 @@ BOOST_AUTO_TEST_CASE(math_partial_test)
 
 BOOST_AUTO_TEST_CASE(math_evaluate_test)
 {
-    BOOST_CHECK_EQUAL(math::evaluate(5, std::unordered_map<std::string, double>{}), 5);
-    BOOST_CHECK_EQUAL(math::evaluate(std::complex<float>(5., 4.), std::unordered_map<std::string, double>{}),
-                      std::complex<float>(5., 4.));
-    BOOST_CHECK_EQUAL(math::evaluate(std::complex<double>(5., 4.), std::unordered_map<std::string, double>{}),
+    BOOST_CHECK_EQUAL(math::evaluate(5, symbol_fmap<double>{}), 5);
+    BOOST_CHECK_EQUAL(math::evaluate(std::complex<float>(5., 4.), symbol_fmap<double>{}), std::complex<float>(5., 4.));
+    BOOST_CHECK_EQUAL(math::evaluate(std::complex<double>(5., 4.), symbol_fmap<double>{}),
                       std::complex<double>(5., 4.));
-    BOOST_CHECK_EQUAL(math::evaluate(std::complex<long double>(5., 4.), std::unordered_map<std::string, double>{}),
+    BOOST_CHECK_EQUAL(math::evaluate(std::complex<long double>(5., 4.), symbol_fmap<double>{}),
                       std::complex<long double>(5., 4.));
-    BOOST_CHECK((std::is_same<decltype(math::evaluate(5, std::unordered_map<std::string, double>{})), double>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::evaluate(std::complex<double>(3, 5), std::unordered_map<std::string, int>{})),
-                      std::complex<double>>::value));
-    BOOST_CHECK_EQUAL(math::evaluate(5., std::unordered_map<std::string, int>{}), 5.);
-    BOOST_CHECK((std::is_same<decltype(math::evaluate(5., std::unordered_map<std::string, short>{})), double>::value));
-    BOOST_CHECK_EQUAL(math::evaluate(5ul, std::unordered_map<std::string, double>{}), 5.);
-    BOOST_CHECK(
-        (std::is_same<decltype(math::evaluate(5ul, std::unordered_map<std::string, short>{})), unsigned long>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(5, symbol_fmap<double>{})), double>::value));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(std::complex<double>(3, 5), symbol_fmap<int>{})),
+                              std::complex<double>>::value));
+    BOOST_CHECK_EQUAL(math::evaluate(5., symbol_fmap<int>{}), 5.);
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(5., symbol_fmap<short>{})), double>::value));
+    BOOST_CHECK_EQUAL(math::evaluate(5ul, symbol_fmap<double>{}), 5.);
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(5ul, symbol_fmap<short>{})), unsigned long>::value));
     // Test the syntax with explicit template parameter.
     BOOST_CHECK_EQUAL(math::evaluate<double>(5, {{"foo", 5}}), 5);
 }
@@ -431,8 +429,8 @@ BOOST_AUTO_TEST_CASE(math_abs_test)
     BOOST_CHECK(has_abs<double &&>::value);
     BOOST_CHECK(!has_abs<void>::value);
     BOOST_CHECK(!has_abs<std::string>::value);
-    BOOST_CHECK_EQUAL(math::abs((signed char)(4)), (signed char)(4));
-    BOOST_CHECK_EQUAL(math::abs((signed char)(-4)), (signed char)(4));
+    BOOST_CHECK_EQUAL(math::abs(static_cast<signed char>(4)), static_cast<signed char>(4));
+    BOOST_CHECK_EQUAL(math::abs(static_cast<signed char>(-4)), static_cast<signed char>(4));
     BOOST_CHECK_EQUAL(math::abs(short(4)), short(4));
     BOOST_CHECK_EQUAL(math::abs(short(-4)), short(4));
     BOOST_CHECK_EQUAL(math::abs(4), 4);
@@ -441,8 +439,8 @@ BOOST_AUTO_TEST_CASE(math_abs_test)
     BOOST_CHECK_EQUAL(math::abs(-4l), 4l);
     BOOST_CHECK_EQUAL(math::abs(4ll), 4ll);
     BOOST_CHECK_EQUAL(math::abs(-4ll), 4ll);
-    BOOST_CHECK_EQUAL(math::abs((unsigned char)(4)), (unsigned char)(4));
-    BOOST_CHECK_EQUAL(math::abs((unsigned short)(4)), (unsigned short)(4));
+    BOOST_CHECK_EQUAL(math::abs(static_cast<unsigned char>(4)), static_cast<unsigned char>(4));
+    BOOST_CHECK_EQUAL(math::abs(static_cast<unsigned short>(4)), static_cast<unsigned short>(4));
     BOOST_CHECK_EQUAL(math::abs(4u), 4u);
     BOOST_CHECK_EQUAL(math::abs(4lu), 4lu);
     ;
@@ -669,7 +667,7 @@ namespace math
 template <>
 struct truncate_degree_impl<double, double, void> {
     double operator()(const double &, const double &) const;
-    double operator()(const double &, const double &, const std::vector<std::string> &) const;
+    double operator()(const double &, const double &, const symbol_fset &) const;
 };
 
 // double-float, missing one of the two overloads.
@@ -682,7 +680,7 @@ struct truncate_degree_impl<double, float, void> {
 template <>
 struct truncate_degree_impl<float, double, void> {
     double operator()(const float &, const double &) const;
-    double operator()(const float &, const double &, const std::vector<std::string> &) const;
+    double operator()(const float &, const double &, const symbol_fset &) const;
 };
 }
 }
@@ -740,18 +738,18 @@ struct mock_key {
     mock_key(mock_key &&) noexcept;
     mock_key &operator=(const mock_key &) = default;
     mock_key &operator=(mock_key &&) noexcept;
-    mock_key(const symbol_set &);
+    mock_key(const symbol_fset &);
     bool operator==(const mock_key &) const;
     bool operator!=(const mock_key &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    mock_key merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    mock_key trim(const symbol_set &, const symbol_set &) const;
-    std::vector<std::pair<int, mock_key>> subs(const std::string &, int, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    mock_key merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    mock_key trim(const std::vector<char> &, const symbol_fset &) const;
+    std::vector<std::pair<int, mock_key>> subs(const symbol_idx_fmap<int> &smap, const symbol_fset &args) const;
 };
 
 namespace std

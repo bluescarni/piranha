@@ -54,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -141,27 +142,22 @@ BOOST_AUTO_TEST_CASE(power_series_test_02)
     BOOST_CHECK((has_ldegree<stype0>::value));
     BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype0>())), rational>::value));
     BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype0>())), rational>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::degree(std::declval<stype0>(), std::vector<std::string>{})), rational>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::ldegree(std::declval<stype0>(), std::vector<std::string>{})), rational>::value));
+    BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype0>(), symbol_fset{})), rational>::value));
+    BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype0>(), symbol_fset{})), rational>::value));
     typedef g_series_type<double, int> stype1;
     BOOST_CHECK((has_degree<stype1>::value));
     BOOST_CHECK((has_ldegree<stype1>::value));
     BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype1>())), int>::value));
     BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype1>())), int>::value));
-    BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype1>(), std::vector<std::string>{})), int>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::ldegree(std::declval<stype1>(), std::vector<std::string>{})), int>::value));
+    BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype1>(), symbol_fset{})), int>::value));
+    BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype1>(), symbol_fset{})), int>::value));
     typedef g_series_type<stype1, long> stype2;
     BOOST_CHECK((has_degree<stype2>::value));
     BOOST_CHECK((has_ldegree<stype2>::value));
     BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype2>())), long>::value));
     BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype2>())), long>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::degree(std::declval<stype2>(), std::vector<std::string>{})), long>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::ldegree(std::declval<stype2>(), std::vector<std::string>{})), long>::value));
+    BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype2>(), symbol_fset{})), long>::value));
+    BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype2>(), symbol_fset{})), long>::value));
     typedef g_series_type2<double> stype3;
     BOOST_CHECK((!has_degree<stype3>::value));
     BOOST_CHECK((!has_ldegree<stype3>::value));
@@ -170,12 +166,10 @@ BOOST_AUTO_TEST_CASE(power_series_test_02)
     BOOST_CHECK((has_ldegree<stype4>::value));
     BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype4>())), integer>::value));
     BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype4>())), integer>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::degree(std::declval<stype4>(), std::vector<std::string>{})), integer>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::ldegree(std::declval<stype4>(), std::vector<std::string>{})), integer>::value));
+    BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype4>(), symbol_fset{})), integer>::value));
+    BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype4>(), symbol_fset{})), integer>::value));
     // Check actual instantiations as well.
-    std::vector<std::string> ss;
+    symbol_fset ss;
     BOOST_CHECK_EQUAL(math::degree(stype1{}), 0);
     BOOST_CHECK_EQUAL(math::ldegree(stype1{}), 0);
     BOOST_CHECK_EQUAL(math::degree(stype1{}, ss), 0);
@@ -194,10 +188,8 @@ BOOST_AUTO_TEST_CASE(power_series_test_02)
     BOOST_CHECK((has_ldegree<stype5>::value));
     BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype5>())), fake_int>::value));
     BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype5>())), fake_int>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::degree(std::declval<stype5>(), std::vector<std::string>{})), fake_int>::value));
-    BOOST_CHECK(
-        (std::is_same<decltype(math::ldegree(std::declval<stype5>(), std::vector<std::string>{})), fake_int>::value));
+    BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype5>(), symbol_fset{})), fake_int>::value));
+    BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype5>(), symbol_fset{})), fake_int>::value));
     typedef g_series_type<stype5, int> stype6;
     // This does not have a degree type because fake_int cannot be added to integer.
     BOOST_CHECK((!has_degree<stype6>::value));

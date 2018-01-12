@@ -64,57 +64,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-// Fwd declaration.
-template <typename>
-class divisor;
-}
-
-// Implementation of the Boost s11n api.
-namespace boost
-{
-namespace serialization
-{
-
-template <typename Archive, typename T>
-inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
-{
-    if (unlikely(!k.key().is_compatible(k.ss()))) {
-        piranha_throw(std::invalid_argument, "an invalid symbol_set was passed as an argument during the "
-                                             "Boost serialization of a divisor");
-    }
-    piranha::boost_save(ar, k.key().m_container);
-}
-
-template <typename Archive, typename T>
-inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
-{
-    try {
-        piranha::boost_load(ar, k.key().m_container);
-        if (unlikely(!k.key().destruction_checks())) {
-            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive failed internal "
-                                                 "consistency checks");
-        }
-        if (unlikely(!k.key().is_compatible(k.ss()))) {
-            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive is not compatible "
-                                                 "with the supplied symbol set");
-        }
-    } catch (...) {
-        k.key().m_container = typename piranha::divisor<T>::container_type{};
-        throw;
-    }
-}
-
-template <typename Archive, typename T>
-inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned version)
-{
-    split_free(ar, k, version);
-}
-}
-}
-
-namespace piranha
-{
-
 inline namespace impl
 {
 
@@ -1098,6 +1047,53 @@ private:
 
 template <typename T>
 const std::size_t divisor<T>::multiply_arity;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T>
+inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
+{
+    if (unlikely(!k.key().is_compatible(k.ss()))) {
+        piranha_throw(std::invalid_argument, "an invalid symbol_set was passed as an argument during the "
+                                             "Boost serialization of a divisor");
+    }
+    piranha::boost_save(ar, k.key().m_container);
+}
+
+template <typename Archive, typename T>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
+{
+    try {
+        piranha::boost_load(ar, k.key().m_container);
+        if (unlikely(!k.key().destruction_checks())) {
+            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive failed internal "
+                                                 "consistency checks");
+        }
+        if (unlikely(!k.key().is_compatible(k.ss()))) {
+            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive is not compatible "
+                                                 "with the supplied symbol set");
+        }
+    } catch (...) {
+        k.key().m_container = typename piranha::divisor<T>::container_type{};
+        throw;
+    }
+}
+
+template <typename Archive, typename T>
+inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
+
+namespace piranha
+{
 
 inline namespace impl
 {

@@ -33,9 +33,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
-#include <string>
 #include <type_traits>
-#include <vector>
 
 #include <piranha/init.hpp>
 #include <piranha/math.hpp>
@@ -47,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/real.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/series.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -93,14 +92,13 @@ struct degree_tester {
             typedef polynomial<polynomial<Cf, monomial<Expo>>, monomial<Expo>> p_type11;
             using deg_type = typename std::conditional<std::is_same<Expo, int>::value, int, integer>::type;
             BOOST_CHECK((std::is_same<deg_type, decltype(math::degree(p_type1{}))>::value));
-            BOOST_CHECK((std::is_same<deg_type, decltype(math::degree(p_type1{}, std::vector<std::string>{}))>::value));
+            BOOST_CHECK((std::is_same<deg_type, decltype(math::degree(p_type1{}, symbol_fset{}))>::value));
             BOOST_CHECK((std::is_same<deg_type, decltype(math::ldegree(p_type1{}))>::value));
-            BOOST_CHECK(
-                (std::is_same<deg_type, decltype(math::ldegree(p_type1{}, std::vector<std::string>{}))>::value));
+            BOOST_CHECK((std::is_same<deg_type, decltype(math::ldegree(p_type1{}, symbol_fset{}))>::value));
             BOOST_CHECK(math::degree(p_type1{}) == 0);
-            BOOST_CHECK(math::degree(p_type1{}, std::vector<std::string>{}) == 0);
+            BOOST_CHECK(math::degree(p_type1{}, symbol_fset{}) == 0);
             BOOST_CHECK(math::ldegree(p_type1{}) == 0);
-            BOOST_CHECK(math::ldegree(p_type1{}, std::vector<std::string>{}) == 0);
+            BOOST_CHECK(math::ldegree(p_type1{}, symbol_fset{}) == 0);
             BOOST_CHECK(math::degree(p_type1{"x"}) == 1);
             BOOST_CHECK(math::degree(p_type1{"x"}, {"x"}) == 1);
             BOOST_CHECK(math::degree(p_type1{"x"}, {"y"}) == 0);
@@ -133,7 +131,7 @@ struct degree_tester {
             BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"x"} + 2 * p_type1{"x"}, {"x"}) == 1);
             BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + 2 * p_type1{"x"}, {"x"}) == 1);
             BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + 2 * p_type1{"x"}, {"y"}) == 0);
-            std::vector<std::string> empty_set;
+            symbol_fset empty_set;
             BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<const p_type11 &>())), deg_type>::value));
             BOOST_CHECK(
                 (std::is_same<decltype(math::degree(std::declval<const p_type11 &>(), empty_set)), deg_type>::value));
@@ -173,19 +171,18 @@ struct degree_tester {
             BOOST_CHECK(!has_degree<pstype2>::value);
             BOOST_CHECK(!has_ldegree<pstype2>::value);
             BOOST_CHECK((std::is_same<deg_type, decltype(math::degree(pstype1{}))>::value));
-            BOOST_CHECK((std::is_same<deg_type, decltype(math::degree(pstype1{}, std::vector<std::string>{}))>::value));
+            BOOST_CHECK((std::is_same<deg_type, decltype(math::degree(pstype1{}, symbol_fset{}))>::value));
             BOOST_CHECK((std::is_same<deg_type, decltype(math::ldegree(pstype1{}))>::value));
-            BOOST_CHECK(
-                (std::is_same<deg_type, decltype(math::ldegree(pstype1{}, std::vector<std::string>{}))>::value));
+            BOOST_CHECK((std::is_same<deg_type, decltype(math::ldegree(pstype1{}, symbol_fset{}))>::value));
             // As usual, operations on Poisson series with (polynomial) integer coefficients are not gonna give
             // meaningful mathematical results.
             if (std::is_same<Cf, integer>::value) {
                 return;
             }
             BOOST_CHECK(math::degree(pstype1{}) == 0);
-            BOOST_CHECK(math::degree(pstype1{}, std::vector<std::string>{}) == 0);
+            BOOST_CHECK(math::degree(pstype1{}, symbol_fset{}) == 0);
             BOOST_CHECK(math::ldegree(pstype1{}) == 0);
-            BOOST_CHECK(math::ldegree(pstype1{}, std::vector<std::string>{}) == 0);
+            BOOST_CHECK(math::ldegree(pstype1{}, symbol_fset{}) == 0);
             BOOST_CHECK(math::degree(pstype1{"x"}) == 1);
             BOOST_CHECK(math::degree(pstype1{"x"}, {"x"}) == 1);
             BOOST_CHECK(math::degree(pstype1{"x"}, {"y"}) == 0);

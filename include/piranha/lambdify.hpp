@@ -44,6 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -54,9 +55,8 @@ namespace detail
 
 // Requirements for the lambdified template parameters (after decay).
 template <typename T, typename U>
-using math_lambdified_reqs
-    = std::integral_constant<bool, conjunction<is_evaluable<T, U>, is_mappable<U>, std::is_copy_constructible<T>,
-                                               std::is_move_constructible<T>>::value>;
+using math_lambdified_reqs = std::integral_constant<
+    bool, conjunction<is_evaluable<T, U>, std::is_copy_constructible<T>, std::is_move_constructible<T>>::value>;
 }
 
 namespace math
@@ -74,8 +74,7 @@ namespace math
  *
  * - \p T and \p U must be the same as their decay types,
  * - \p T must be evaluable with objects of type \p U,
- * - \p T must be copy and move constructible,
- * - \p U must satisfy piranha::is_mappable.
+ * - \p T must be copy and move constructible.
  *
  * ## Exception safety guarantee ##
  *
@@ -148,8 +147,7 @@ public:
      * This is the type resulting from evaluating objects of type \p T with objects of type \p U
      * via piranha::math::evaluate().
      */
-    using eval_type = decltype(
-        math::evaluate(std::declval<const T &>(), std::declval<const std::unordered_map<std::string, U> &>()));
+    using eval_type = decltype(math::evaluate(std::declval<const T &>(), std::declval<const symbol_fmap<U> &>()));
     /// The map type for the custom evaluation of symbols.
     /**
      * See the constructor documentation for an explanation of how this type is used.
@@ -295,7 +293,8 @@ public:
             *ptr = p.second(values);
             ++i;
         }
-        return math::evaluate(m_x, m_eval_dict);
+        // NOTE: of course, this will have to be fixed in the rewrite.
+        return math::evaluate(m_x, symbol_fmap<U>{m_eval_dict.begin(), m_eval_dict.end()});
     }
     /// Get evaluation object.
     /**

@@ -57,6 +57,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 static std::mt19937 rng;
@@ -199,7 +200,7 @@ struct constructor_tester {
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q8), "-8");
         q_type q9{100ull};
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q9), "100");
-        q_type q10{(signed char)(-3)};
+        q_type q10{static_cast<signed char>(-3)};
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q10), "-3");
         for (int i = 0; i < ntries; ++i) {
             const int tmp = dist(rng);
@@ -1526,7 +1527,7 @@ struct less_than_tester {
         BOOST_CHECK(int_type(4) < q_type(41, 10));
         BOOST_CHECK(q_type(39, -10) < int_type(8));
         BOOST_CHECK(0 < q_type(1, 3));
-        BOOST_CHECK((unsigned short)4 < q_type(41, 10));
+        BOOST_CHECK(static_cast<unsigned short>(4) < q_type(41, 10));
         BOOST_CHECK(q_type(39, -10) < 8ll);
         const auto radix = std::numeric_limits<double>::radix;
         BOOST_CHECK(q_type(1, radix) < 1.);
@@ -1598,7 +1599,7 @@ struct geq_tester {
         BOOST_CHECK(q_type(41, 10) >= int_type(4));
         BOOST_CHECK(int_type(8) >= q_type(39, -10));
         BOOST_CHECK(q_type(1, 3) >= 0);
-        BOOST_CHECK(q_type(41, 10) >= (unsigned short)4);
+        BOOST_CHECK(q_type(41, 10) >= static_cast<unsigned short>(4));
         BOOST_CHECK(8ll >= q_type(39, -10));
         const auto radix = std::numeric_limits<double>::radix;
         BOOST_CHECK(1. >= q_type(1, radix));
@@ -1670,7 +1671,7 @@ struct greater_than_tester {
         BOOST_CHECK(q_type(41, 10) > int_type(4));
         BOOST_CHECK(int_type(8) > q_type(39, -10));
         BOOST_CHECK(q_type(1, 3) > 0);
-        BOOST_CHECK(q_type(41, 10) > (unsigned short)4);
+        BOOST_CHECK(q_type(41, 10) > static_cast<unsigned short>(4));
         BOOST_CHECK(8ll > q_type(39, -10));
         const auto radix = std::numeric_limits<double>::radix;
         BOOST_CHECK(1. > q_type(1, radix));
@@ -1742,7 +1743,7 @@ struct leq_tester {
         BOOST_CHECK(int_type(4) <= q_type(41, 10));
         BOOST_CHECK(q_type(39, -10) <= int_type(8));
         BOOST_CHECK(0 <= q_type(1, 3));
-        BOOST_CHECK((unsigned short)4 <= q_type(41, 10));
+        BOOST_CHECK(static_cast<unsigned short>(4) <= q_type(41, 10));
         BOOST_CHECK(q_type(39, -10) <= 8ll);
         const auto radix = std::numeric_limits<double>::radix;
         BOOST_CHECK(q_type(1, radix) <= 1.);
@@ -1820,7 +1821,7 @@ struct pow_tester {
         BOOST_CHECK_EQUAL(q_type().pow(3), 0);
         BOOST_CHECK_EQUAL(q_type().pow(4ull), 0);
         BOOST_CHECK_EQUAL(q_type().pow(int_type(5)), 0);
-        BOOST_CHECK_EQUAL(q_type().pow((unsigned char)5), 0);
+        BOOST_CHECK_EQUAL(q_type().pow(static_cast<unsigned char>(5)), 0);
         BOOST_CHECK_THROW(q_type().pow(-1), zero_division_error);
         BOOST_CHECK_THROW(q_type().pow(char(-2)), zero_division_error);
         BOOST_CHECK_THROW(q_type().pow(-3ll), zero_division_error);
@@ -2018,7 +2019,7 @@ BOOST_AUTO_TEST_CASE(mp_rational_sin_cos_test)
 
 struct sep_tester {
     template <typename T>
-    using edict = std::unordered_map<std::string, T>;
+    using edict = symbol_fmap<T>;
     template <typename T>
     void operator()(const T &) const
     {
@@ -2078,7 +2079,7 @@ struct binomial_tester {
         BOOST_CHECK((has_binomial<long, q_type>::value));
         BOOST_CHECK((std::is_same<double, decltype(math::binomial(4, q_type{}))>::value));
         BOOST_CHECK((std::is_same<double, decltype(math::binomial(int_type(4), q_type{}))>::value));
-        BOOST_CHECK((std::is_same<double, decltype(math::binomial((long long)4, q_type{}))>::value));
+        BOOST_CHECK((std::is_same<double, decltype(math::binomial(4ll, q_type{}))>::value));
         // Some simple checks.
         BOOST_CHECK_EQUAL(q_type(3, 4).binomial(2), -q_type(3, 32));
         BOOST_CHECK_EQUAL(q_type(3, 4).binomial(10), -q_type(1057485, 268435456ll));

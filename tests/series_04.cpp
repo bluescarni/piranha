@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -76,7 +77,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -109,7 +110,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -142,7 +143,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -166,7 +167,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -186,9 +187,8 @@ class series_multiplier<g_series_type<Cf, Key>, void> : public base_series_multi
 {
     using base = base_series_multiplier<g_series_type<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -204,9 +204,8 @@ class series_multiplier<g_series_type2<Cf, Key>, void> : public base_series_mult
 {
     using base = base_series_multiplier<g_series_type2<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -222,9 +221,8 @@ class series_multiplier<g_series_type3<Cf, Key>, void> : public base_series_mult
 {
     using base = base_series_multiplier<g_series_type3<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -240,9 +238,8 @@ class series_multiplier<g_series_type4<Cf, Key>, void> : public base_series_mult
 {
     using base = base_series_multiplier<g_series_type4<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -737,24 +734,24 @@ struct type_traits_tester {
             BOOST_CHECK(has_print_coefficient<p_type11>::value);
             BOOST_CHECK(has_print_tex_coefficient<p_type1>::value);
             BOOST_CHECK(has_print_tex_coefficient<p_type11>::value);
-            BOOST_CHECK((std::is_same<void, decltype(print_coefficient(*(std::ostream *)nullptr,
+            BOOST_CHECK((std::is_same<void, decltype(print_coefficient(*static_cast<std::ostream *>(nullptr),
                                                                        std::declval<p_type1>()))>::value));
-            BOOST_CHECK((std::is_same<void, decltype(print_coefficient(*(std::ostream *)nullptr,
+            BOOST_CHECK((std::is_same<void, decltype(print_coefficient(*static_cast<std::ostream *>(nullptr),
                                                                        std::declval<p_type11>()))>::value));
-            BOOST_CHECK((std::is_same<void, decltype(print_tex_coefficient(*(std::ostream *)nullptr,
+            BOOST_CHECK((std::is_same<void, decltype(print_tex_coefficient(*static_cast<std::ostream *>(nullptr),
                                                                            std::declval<p_type1>()))>::value));
-            BOOST_CHECK((std::is_same<void, decltype(print_tex_coefficient(*(std::ostream *)nullptr,
+            BOOST_CHECK((std::is_same<void, decltype(print_tex_coefficient(*static_cast<std::ostream *>(nullptr),
                                                                            std::declval<p_type11>()))>::value));
             BOOST_CHECK(has_negate<p_type1>::value);
             BOOST_CHECK(has_negate<p_type1 &>::value);
             BOOST_CHECK(!has_negate<const p_type1 &>::value);
             BOOST_CHECK(!has_negate<const p_type1>::value);
-            BOOST_CHECK((std::is_same<decltype(math::negate(*(p_type1 *)nullptr)), void>::value));
+            BOOST_CHECK((std::is_same<decltype(math::negate(*static_cast<p_type1 *>(nullptr))), void>::value));
             BOOST_CHECK(has_negate<p_type11>::value);
             BOOST_CHECK(has_negate<p_type11 &>::value);
             BOOST_CHECK(!has_negate<const p_type11 &>::value);
             BOOST_CHECK(!has_negate<const p_type11>::value);
-            BOOST_CHECK((std::is_same<decltype(math::negate(*(p_type11 *)nullptr)), void>::value));
+            BOOST_CHECK((std::is_same<decltype(math::negate(*static_cast<p_type11 *>(nullptr))), void>::value));
         }
     };
     template <typename Cf>

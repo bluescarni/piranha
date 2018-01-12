@@ -353,7 +353,7 @@ class poisson_series
                // We need to be able to compute the degree of the polynomials and
                // convert it safely to integer.
                has_safe_cast<integer, decltype(math::degree(std::declval<const typename T::term_type::cf_type &>(),
-                                                            std::vector<std::string>{}))>::value
+                                                            std::declval<const symbol_fset &>()))>::value
                &&
                // We need this conversion in the algorithm below.
                std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&

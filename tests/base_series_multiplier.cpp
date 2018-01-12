@@ -622,8 +622,8 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
         pt1 p1{"x"}, p2{"x"};
         // Check that the merged symbol set is returned when one of the series is empty.
         BOOST_CHECK(e1 * p1 == 0);
-        BOOST_CHECK((e1 * p1).get_symbol_set() == symbol_set{symbol{"x"}});
-        BOOST_CHECK((p1 * e1).get_symbol_set() == symbol_set{symbol{"x"}});
+        BOOST_CHECK((e1 * p1).get_symbol_set() == symbol_fset{"x"});
+        BOOST_CHECK((p1 * e1).get_symbol_set() == symbol_fset{"x"});
         p1._container().begin()->m_cf *= 2;
         p2._container().begin()->m_cf *= 3;
         auto retval = p1 * p2;
@@ -680,7 +680,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
             mt m0{tmp1, tmp2};
             // First let's try with an empty retval.
             pt r;
-            r.set_symbol_set(symbol_set({symbol{"x"}, symbol{"y"}}));
+            r.set_symbol_set(symbol_fset{"x", "y"});
             BOOST_CHECK_NO_THROW(m0.finalise_series(r));
             BOOST_CHECK_EQUAL(r, 0);
             // Put in one term.
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
             mt m0{tmp1, tmp2};
             // First let's try with an empty retval.
             pt r;
-            r.set_symbol_set(symbol_set({symbol{"x"}, symbol{"y"}}));
+            r.set_symbol_set(symbol_fset{"x", "y"});
             BOOST_CHECK_NO_THROW(m0.finalise_series(r));
             BOOST_CHECK_EQUAL(r, 0);
             // Put in one term.
