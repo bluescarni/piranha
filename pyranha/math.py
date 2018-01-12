@@ -30,7 +30,7 @@
 # Use absolute imports to avoid issues with the main math module.
 from __future__ import absolute_import as _ai
 
-from ._common import _cpp_type_catcher
+from ._common import _cpp_type_catcher, __check_eval_subs_dict
 
 
 def __check_names_argument(names):
@@ -38,22 +38,6 @@ def __check_names_argument(names):
     if not names is None and (not isinstance(names, list) or not all([isinstance(_, str) for _ in names])):
         raise TypeError(
             'the optional \'names\' argument must be a list of strings')
-
-
-def __check_eval_dict(d):
-    # Helper to check that d is a dictionary suitable for use in evaluation.
-    # Type checks.
-    if not isinstance(d, dict):
-        raise TypeError('evaluation dictionary must be a dict object')
-    if len(d) == 0:
-        raise ValueError('evaluation dictionary cannot be empty')
-    if not all([isinstance(k, str) for k in d]):
-        raise TypeError(
-            'all keys in the evaluation dictionary must be string objects')
-    t_set = set([type(d[k]) for k in d])
-    if not len(t_set) == 1:
-        raise TypeError(
-            'all values in the evaluation dictionary must be of the same type')
 
 
 def cos(arg):
@@ -463,7 +447,7 @@ def evaluate(arg, eval_dict):
     This function will evaluate *arg* according to the evaluation dictionary *eval_dict*. Evaluation
     is the replacement of all symbolic quantities with numerical values.
 
-    *eval_dict* must be a dictionary of ``(name,value)`` pairs, where the ``name`` is a string referring to the symbol
+    *eval_dict* must be a dictionary of ``(name,value)`` pairs, where ``name`` is a string referring to the symbol
     to be replaced and ``value`` is the value with which ``name`` will be replaced. All values must be of the same type,
     and this type needs to support the operations needed to compute the evaluation.
 
@@ -511,42 +495,63 @@ def evaluate(arg, eval_dict):
     """
     from ._core import _evaluate
     # Check input dict.
-    __check_eval_dict(eval_dict)
+    __check_eval_subs_dict(eval_dict)
     return _cpp_type_catcher(_evaluate, arg, eval_dict, eval_dict[list(eval_dict.keys())[0]])
 
 
-def subs(arg, name, x):
+def subs(arg, subs_dict):
     """Substitution.
 
-    This function will replace, in *arg*, the symbol called *name* with the generic object *x*.
-    Internally, the functionality is implemented via a call to a lower-level C++ routine that
-    supports various combinations for the types of *arg* and *x*.
+    This function will replace, in *arg*, the symbols listed in the dictionary *subs_dict*
+    with their mapped values. Internally, the functionality is implemented via a call to a
+    lower-level C++ routine that supports various combinations of input argument types.
 
-    :param arg: argument for the substitution
+    *subs_dict* must be a dictionary of ``(name,value)`` pairs, where ``name`` is a string referring to the symbol
+    to be substituted and ``value`` is the value with which ``name`` will be replaced. All values must be
+    of the same type, and this type needs to support the operations needed to compute the
+    substitution.
+
+    :param arg: the argument for the substitution
     :type arg: a symbolic type
-    :param name: name of the symbol to be substituted
-    :type name: a string
-    :param x: the quantity that will be substituted for *name*
-    :type x: any type supported by the low-level C++ routine
-    :returns: *arg* after the substitution of the symbol called *name* with *x*
-    :raises: :exc:`TypeError` in case the input types are not supported or invalid
+    :param subs_dict: the substitution dictionary
+    :type subs_dict: a dictionary mapping strings to values, with all values of the same type
+    :returns: *arg* after the substitution of the symbols in *subs_dict* with the mapped values
+    :raises: :exc:`TypeError` if *subs_dict* does not satisfy the requirements outlined above
+    :raises: :exc:`ValueError` if *subs_dict* is empty
     :raises: any exception raised by the invoked low-level function
 
     >>> from pyranha.types import polynomial, rational, k_monomial
     >>> pt = polynomial[rational,k_monomial]()
-    >>> x,y = pt('x'), pt('y')
-    >>> subs(x/2+1,'x',3)
-    5/2
-    >>> subs(x/2+1,'x',y*2) == y + 1
-    True
-    >>> subs(x/2+1,3,y*2)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> x,y,z = pt('x'), pt('y'), pt('z')
+    >>> subs(x*y+4*(y/4)**2*z,{'x':3,'y':-3,'z':2})
+    -9/2
+    >>> subs(x*y+4*(y/4)**2*z,{'x':3.01,'y':-3.32,'z':5.34}) # doctest: +ELLIPSIS
+    4.7217...
+    >>> subs(x*y+4*(y/4)**2*z,{'x':3.1,'y':-3.2,'z':5}) # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+       ...
+    TypeError: all values in an evaluation/substitution dictionary must be of the same type
+    >>> subs(x*y+4*(y/4)**2*z,{}) # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+       ...
+    ValueError: an evaluation/substitution dictionary cannot be empty
+    >>> subs(x*y+4*(y/4)**2*z,{'x':3,'y':-3,5:5}) # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+       ...
+    TypeError: all keys in an evaluation/substitution dictionary must be string objects
+    >>> subs(x*y+4*(y/4)**2*z,[1,2,3]) # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+       ...
+    TypeError: an evaluation/substitution dictionary must be a dict object
+    >>> subs(x*y+4*(y/4)**2*z,{'x':'a','y':'b', 'z':'c'}) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
        ...
     TypeError: invalid argument type(s)
 
     """
     from ._core import _subs
-    return _cpp_type_catcher(_subs, arg, name, x)
+    __check_eval_subs_dict(subs_dict)
+    return _cpp_type_catcher(_subs, arg, subs_dict, subs_dict[list(subs_dict.keys())[0]])
 
 
 def t_subs(arg, name, x, y):

@@ -480,12 +480,12 @@ class math_test_case(_ut.TestCase):
         pt = poisson_series[polynomial[rational, k_monomial]]()
         x, y, z = pt('x'), pt('y'), pt('z')
         # Normal subs().
-        self.assertEqual(subs(z * cos(x + y), 'x', 0), z * cos(y))
+        self.assertEqual(subs(z * cos(x + y), {'x': 0}), z * cos(y))
         # Make sure that substitution with int does not trigger any conversion
         # to floating point.
-        self.assertEqual(type(subs(z * cos(x + y), 'x', 0)), pt)
+        self.assertEqual(type(subs(z * cos(x + y), {'x': 0})), pt)
         # Trigger a floating-point conversion.
-        self.assertEqual(type(subs(z * cos(x + y), 'x', 0.)),
+        self.assertEqual(type(subs(z * cos(x + y), {'x': 0.})),
                          poisson_series[polynomial[double, k_monomial]]())
         # Trig subs.
         self.assertEqual(t_subs(z * sin(x + y), 'y', 0, 1), z * cos(x))

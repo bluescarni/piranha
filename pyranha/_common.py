@@ -49,6 +49,25 @@ def _cpp_type_catcher(func, *args):
                         .format(func.__name__, [type(_).__name__ for _ in args]))
 
 
+def __check_eval_subs_dict(d):
+    # Helper to check that d is a dictionary suitable for use in evaluation
+    # and substitution.
+    # Type checks.
+    if not isinstance(d, dict):
+        raise TypeError(
+            'an evaluation/substitution dictionary must be a dict object')
+    if len(d) == 0:
+        raise ValueError(
+            'an evaluation/substitution dictionary cannot be empty')
+    if not all([isinstance(k, str) for k in d]):
+        raise TypeError(
+            'all keys in an evaluation/substitution dictionary must be string objects')
+    t_set = set([type(d[k]) for k in d])
+    if not len(t_set) == 1:
+        raise TypeError(
+            'all values in an evaluation/substitution dictionary must be of the same type')
+
+
 def _repr_png_(self):
     # Render a series in png format using latex + dvipng.
     # Code adapted from and inspired by:
@@ -145,6 +164,17 @@ def _remove_hash():
         setattr(s_type, '__hash__', None)
 
 
+def _fix_subs():
+    # Fix the subs() method.
+    from ._core import _get_exposed_types_list as getl
+
+    def subs_impl(self, d):
+        __check_eval_subs_dict(d)
+        return self._subs(d, d[list(d.keys())[0]])
+    for s_type in getl():
+        setattr(s_type, 'subs', subs_impl)
+
+
 def _monkey_patching():
     # NOTE: here it is not clear to me if we should protect this with a global flag against multiple reloads.
     # Keep this in mind in case problem arises.
@@ -152,3 +182,4 @@ def _monkey_patching():
     # http://stackoverflow.com/questions/12389526/import-inside-of-a-python-thread
     _register_wrappers()
     _remove_hash()
+    _fix_subs()

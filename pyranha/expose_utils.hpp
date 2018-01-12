@@ -615,7 +615,7 @@ class series_exposer
         template <typename T, typename std::enable_if<piranha::has_subs<S, T>::value, int>::type = 0>
         void impl_subs(const T &) const
         {
-            m_series_class.def("subs", subs_wrapper<T>);
+            m_series_class.def("_subs", subs_wrapper<T>);
             bp::def("_subs", subs_wrapper<T>);
         }
         template <typename T, typename std::enable_if<!piranha::has_subs<S, T>::value, int>::type = 0>
@@ -644,7 +644,7 @@ class series_exposer
         }
         // The actual wrappers.
         template <typename T>
-        static auto subs_wrapper(const S &s, bp::dict dict)
+        static auto subs_wrapper(const S &s, bp::dict dict, const T &)
             -> decltype(s.subs(std::declval<const piranha::symbol_fmap<T> &>()))
         {
             PIRANHA_MAYBE_TLS std::vector<std::pair<std::string, T>> tmp;
