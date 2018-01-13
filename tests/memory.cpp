@@ -145,13 +145,9 @@ BOOST_AUTO_TEST_CASE(memory_alignment_check_test)
 class custom_string : public std::string
 {
 public:
-    custom_string() : std::string("hello")
-    {
-    }
+    custom_string() : std::string("hello") {}
     custom_string(const custom_string &) = default;
-    custom_string(custom_string &&other) noexcept : std::string(std::move(other))
-    {
-    }
+    custom_string(custom_string &&other) noexcept : std::string(std::move(other)) {}
     template <typename... Args>
     custom_string(Args &&... params) : std::string(std::forward<Args>(params)...)
     {
@@ -162,9 +158,7 @@ public:
         std::string::operator=(std::move(other));
         return *this;
     }
-    ~custom_string() noexcept
-    {
-    }
+    ~custom_string() noexcept {}
 };
 
 struct faulty_string : public custom_string {
@@ -185,8 +179,8 @@ static const std::size_t small_alloc_size = 100000u;
 BOOST_AUTO_TEST_CASE(memory_parallel_init_destroy_test)
 {
     for (unsigned i = 0u; i <= settings::get_n_threads(); ++i) {
-        BOOST_CHECK_NO_THROW(parallel_value_init((int *)nullptr, 0u, i));
-        BOOST_CHECK_NO_THROW(parallel_destroy((int *)nullptr, 0u, i));
+        BOOST_CHECK_NO_THROW(parallel_value_init(static_cast<int *>(nullptr), 0u, i));
+        BOOST_CHECK_NO_THROW(parallel_destroy(static_cast<int *>(nullptr), 0u, i));
         auto ptr1 = make_parallel_array<int>(small_alloc_size, i);
         BOOST_CHECK(std::all_of(ptr1.get(), ptr1.get() + small_alloc_size, [](int n) { return n == 0; }));
         auto ptr2 = make_parallel_array<custom_string>(small_alloc_size, i);

@@ -39,7 +39,6 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -47,7 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -104,9 +103,8 @@ namespace detail
 
 // Enabler for math::is_zero().
 template <typename T>
-using math_is_zero_enabler = typename std::
-    enable_if<std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())), bool>::value,
-              int>::type;
+using math_is_zero_enabler = typename std::enable_if<
+    std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())), bool>::value, int>::type;
 }
 
 namespace math
@@ -213,9 +211,8 @@ namespace detail
 
 // Enabler for piranha::math::is_unitary().
 template <typename T>
-using math_is_unitary_enabler = typename std::
-    enable_if<std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())), bool>::value,
-              int>::type;
+using math_is_unitary_enabler = typename std::enable_if<
+    std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())), bool>::value, int>::type;
 }
 
 namespace math
@@ -305,10 +302,8 @@ namespace detail
 
 // Enabler for math::negate().
 template <typename T>
-using math_negate_enabler =
-    typename std::enable_if<!std::is_const<T>::value
-                                && true_tt<decltype(math::negate_impl<T>{}(std::declval<T &>()))>::value,
-                            int>::type;
+using math_negate_enabler = typename std::enable_if<
+    !std::is_const<T>::value && true_tt<decltype(math::negate_impl<T>{}(std::declval<T &>()))>::value, int>::type;
 }
 
 namespace math
@@ -726,9 +721,9 @@ namespace math
 
 /// Integration.
 /**
-* \note
-* This function is enabled only if the expression <tt>integrate_impl<T>{}(x,str)</tt> is valid, returning a type that
-* satisfies piranha::is_returnable.
+ * \note
+ * This function is enabled only if the expression <tt>integrate_impl<T>{}(x,str)</tt> is valid, returning a type that
+ * satisfies piranha::is_returnable.
  *
  * Return the antiderivative of \p x with respect to the symbolic quantity named \p str. The actual
  * implementation of this function is in the piranha::math::integrate_impl functor. The body of this function
@@ -749,41 +744,20 @@ inline detail::math_integrate_type<T> integrate(const T &x, const std::string &s
 {
     return integrate_impl<T>{}(x, str);
 }
-}
-
-inline namespace impl
-{
-
-// The default implementation of evaluate_impl inherits from this.
-struct default_math_evaluate_tag {
-};
-}
-
-namespace math
-{
 
 /// Default functor for the implementation of piranha::math::evaluate().
 /**
  * This functor can be specialised via the \p std::enable_if mechanism.
  */
 template <typename T, typename U, typename = void>
-class evaluate_impl : default_math_evaluate_tag
+class evaluate_impl
 {
-    template <typename T1, typename, typename = void>
-    struct ret_type_ {
-        using type = T1;
-    };
     template <typename T1, typename U1>
-    using add_t = decltype(std::declval<const T1 &>() + std::declval<const U1 &>());
+    using ret_t = typename std::conditional<is_detected<add_t, T1, U1>::value, detected_t<add_t, T1, U1>, T1>::type;
     template <typename T1, typename U1>
-    struct ret_type_<T1, U1, enable_if_t<is_detected<add_t, T1, U1>::value>> {
-        using type = add_t<T1, U1>;
-    };
-    template <typename T1, typename U1>
-    using ret_type
-        = enable_if_t<conjunction<is_returnable<typename ret_type_<T1, U1>::type>,
-                                  std::is_constructible<typename ret_type_<T1, U1>::type, const T1 &>>::value,
-                      typename ret_type_<T1, U1>::type>;
+    using ret_type = enable_if_t<
+        conjunction<is_returnable<ret_t<T1, U1>>, std::is_constructible<ret_t<T1, U1>, const T1 &>>::value,
+        ret_t<T1, U1>>;
 
 public:
     /// Call operator.
@@ -803,14 +777,14 @@ public:
      * The intent of this default-implementation of piranha::math::evaluate() is to either promote \p x to
      * the common type of \p T and \p U, if it exists, or just return \p x as-is if a common type does not exist.
      *
-     * @param x evaluation argument.
+     * @param x the evaluation argument.
      *
      * @return an instance of the return type constructed from \p x.
      *
      * @throws unspecified any exception thrown by the invoked constructors.
      */
     template <typename T1, typename U1>
-    ret_type<T1, U1> operator()(const T1 &x, const std::unordered_map<std::string, U1> &) const
+    ret_type<T1, U1> operator()(const T1 &x, const symbol_fmap<U1> &) const
     {
         return ret_type<T1, U1>(x);
     }
@@ -822,12 +796,11 @@ inline namespace impl
 
 // Return type for math::evaluate().
 template <typename T, typename U>
-using math_evaluate_t_ = decltype(
-    math::evaluate_impl<T, U>{}(std::declval<const T &>(), std::declval<const std::unordered_map<std::string, U> &>()));
+using math_evaluate_t_
+    = decltype(math::evaluate_impl<T, U>{}(std::declval<const T &>(), std::declval<const symbol_fmap<U> &>()));
 
 template <typename T, typename U>
-using math_evaluate_t =
-    typename std::enable_if<is_returnable<math_evaluate_t_<T, U>>::value, math_evaluate_t_<T, U>>::type;
+using math_evaluate_t = enable_if_t<is_returnable<math_evaluate_t_<T, U>>::value, math_evaluate_t_<T, U>>;
 }
 
 namespace math
@@ -836,33 +809,33 @@ namespace math
 /// Evaluation.
 /**
  * \note
- * This function is enabled only if <tt>evaluate_impl<T,U>{}(x,dict)</tt> is a valid expression, returning
+ * This function is enabled only if <tt>evaluate_impl<T,U>{}(x, dict)</tt> is a valid expression, returning
  * a type which satisfies piranha::is_returnable.
  *
- * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary \p dict
- * specifies the quantity (value) that will be susbstituted for each argument (key), represented as a string.
+ * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input
+ * dictionary \p dict specifies the value that will be susbstituted for each symbol.
  * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
  * The body of this function is equivalent to:
  * @code
  * return evaluate_impl<T,U>{}(x,dict);
  * @endcode
  *
- * @param x quantity that will be evaluated.
- * @param dict dictionary that will be used to perform the substitution.
+ * @param x the quantity that will be evaluated.
+ * @param dict a dictionary that will be used to perform the substitution.
  *
  * @return \p x evaluated according to \p dict.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
 template <typename U, typename T>
-inline math_evaluate_t<T, U> evaluate(const T &x, const std::unordered_map<std::string, U> &dict)
+inline math_evaluate_t<T, U> evaluate(const T &x, const symbol_fmap<U> &dict)
 {
     return evaluate_impl<T, U>{}(x, dict);
 }
 
 /// Default functor for the implementation of piranha::math::subs().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  */
 template <typename T, typename U, typename Enable = void>
@@ -875,12 +848,11 @@ namespace detail
 
 // Return type for math::subs().
 template <typename T, typename U>
-using math_subs_type_ = decltype(
-    math::subs_impl<T, U>{}(std::declval<const T &>(), std::declval<const std::string &>(), std::declval<const U &>()));
+using math_subs_type_
+    = decltype(math::subs_impl<T, U>{}(std::declval<const T &>(), std::declval<const symbol_fmap<U> &>()));
 
 template <typename T, typename U>
-using math_subs_type =
-    typename std::enable_if<is_returnable<math_subs_type_<T, U>>::value, math_subs_type_<T, U>>::type;
+using math_subs_type = enable_if_t<is_returnable<math_subs_type_<T, U>>::value, math_subs_type_<T, U>>;
 }
 
 namespace math
@@ -889,28 +861,26 @@ namespace math
 /// Substitution.
 /**
  * \note
- * This function is enabled only if <tt>subs_impl<T,U>{}(x,name,y)</tt> is a valid expression, returning
+ * This function is enabled only if <tt>subs_impl<T,U>{}(x, dict)</tt> is a valid expression, returning
  * a type which satisfies piranha::is_returnable.
  *
- * Substitute a symbolic variable with a generic object.
- * The actual implementation of this function is in the piranha::math::subs_impl functor.
- * The body of this function is equivalent to:
+ * Substitute symbolic variables with generic objects. The actual implementation of this function is in the
+ * piranha::math::subs_impl functor. The body of this function is equivalent to:
  * @code
- * return subs_impl<T,U>{}(x,name,y);
+ * return subs_impl<T,U>{}(x, dict);
  * @endcode
  *
- * @param x quantity that will be subject to substitution.
- * @param name name of the symbolic variable that will be substituted.
- * @param y object that will substitute the variable.
+ * @param x the quantity that will be subject to substitution.
+ * @param dict a dictionary mapping a set of symbols to the values that will be substituted for them.
  *
- * @return \p x after substitution  of \p name with \p y.
+ * @return \p x after the substitution of the symbols in \p dict with the mapped values.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
  */
-template <typename T, typename U>
-inline detail::math_subs_type<T, U> subs(const T &x, const std::string &name, const U &y)
+template <typename U, typename T>
+inline detail::math_subs_type<T, U> subs(const T &x, const symbol_fmap<U> &dict)
 {
-    return subs_impl<T, U>{}(x, name, y);
+    return subs_impl<T, U>{}(x, dict);
 }
 
 /// Default functor for the implementation of piranha::math::t_subs().
@@ -1076,13 +1046,11 @@ const bool has_abs<T>::value;
  * The type trait will be \p true if piranha::math::is_zero() can be successfully called on instances of \p T.
  */
 template <typename T>
-class has_is_zero : detail::sfinae_types
+class has_is_zero
 {
-    typedef typename std::decay<T>::type Td;
-    template <typename T1>
-    static auto test(const T1 &t) -> decltype(math::is_zero(t), void(), yes());
-    static no test(...);
-    static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
+    template <typename U>
+    using is_zero_t = decltype(math::is_zero(std::declval<const U &>()));
+    static const bool implementation_defined = is_detected<is_zero_t, T>::value;
 
 public:
     /// Value of the type trait.
@@ -1095,16 +1063,15 @@ const bool has_is_zero<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::negate function.
 /**
- * The type trait will be \p true if piranha::math::negate can be successfully called on instances of \p T
- * stripped of reference qualifiers, \p false otherwise.
+ * The type trait will be \p true if piranha::math::negate can be successfully called on instances of \p T,
+ * \p false otherwise.
  */
 template <typename T>
-class has_negate : detail::sfinae_types
+class has_negate
 {
-    template <typename T1>
-    static auto test(T1 &t) -> decltype(math::negate(t), void(), yes());
-    static no test(...);
-    static const bool implementation_defined = std::is_same<decltype(test(std::declval<T &>())), yes>::value;
+    template <typename U>
+    using negate_t = decltype(math::negate(std::declval<U &>()));
+    static const bool implementation_defined = is_detected<negate_t, T>::value;
 
 public:
     /// Value of the type trait.
@@ -1129,16 +1096,15 @@ struct pbracket_type_ {
 };
 
 template <typename T>
-struct pbracket_type_<T,
-                      typename std::enable_if<std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
-                                                                    + std::declval<const pbracket_type_tmp<T> &>()),
-                                                           pbracket_type_tmp<T>>::value
-                                              && std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
-                                                                       - std::declval<const pbracket_type_tmp<T> &>()),
-                                                              pbracket_type_tmp<T>>::value
-                                              && std::is_constructible<pbracket_type_tmp<T>, int>::value
-                                              && std::is_assignable<pbracket_type_tmp<T> &,
-                                                                    pbracket_type_tmp<T>>::value>::type> {
+struct pbracket_type_<
+    T, typename std::enable_if<std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
+                                                     + std::declval<const pbracket_type_tmp<T> &>()),
+                                            pbracket_type_tmp<T>>::value
+                               && std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
+                                                        - std::declval<const pbracket_type_tmp<T> &>()),
+                                               pbracket_type_tmp<T>>::value
+                               && std::is_constructible<pbracket_type_tmp<T>, int>::value
+                               && std::is_assignable<pbracket_type_tmp<T> &, pbracket_type_tmp<T>>::value>::type> {
     using type = pbracket_type_tmp<T>;
 };
 
@@ -1348,7 +1314,7 @@ inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::ini
 
 /// Default functor for the implementation of piranha::math::degree().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
@@ -1379,26 +1345,28 @@ inline auto degree(const T &x) -> decltype(degree_impl<T>()(x))
 
 /// Partial degree.
 /**
- * Return the partial degree (as in polynomial degree, but only a set of variables is considered in the computation).
+ * This function returns the partial degree (i.e, the degree when only a subset of symbols is considered in the
+ * computation) of the input object ``x``.
  *
  * The actual implementation of this function is in the piranha::math::degree_impl functor.
  *
- * @param x object whose partial degree will be computed.
- * @param names names of the variables that will be considered in the computation.
+ * @param x the object whose partial degree will be computed.
+ * @param s the set of symbols that will be considered in the computation of the
+ * partial degree.
  *
- * @return partial degree.
+ * @return the partial degree of ``x``.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
  */
 template <typename T>
-inline auto degree(const T &x, const std::vector<std::string> &names) -> decltype(degree_impl<T>()(x, names))
+inline auto degree(const T &x, const symbol_fset &s) -> decltype(degree_impl<T>()(x, s))
 {
-    return degree_impl<T>()(x, names);
+    return degree_impl<T>()(x, s);
 }
 
 /// Default functor for the implementation of piranha::math::ldegree().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
@@ -1429,33 +1397,33 @@ inline auto ldegree(const T &x) -> decltype(ldegree_impl<T>()(x))
 
 /// Partial low degree.
 /**
- * Return the partial low degree (as in polynomial low degree, but only a set of variables is considered in the
- * computation).
+ * This function returns the partial low degree (i.e, the low degree when only a subset of symbols is considered in the
+ * computation) of the input object ``x``.
  *
- * The actual implementation of this function is in the piranha::math::ldegree_impl functor.
+ * The actual implementation of this function is in the piranha::math::degree_impl functor.
  *
- * @param x object whose partial low degree will be computed.
- * @param names names of the variables that will be considered in the computation.
+ * @param x the object whose partial low degree will be computed.
+ * @param s the set of symbols that will be considered in the computation of the
+ * partial low degree.
  *
- * @return partial low degree.
+ * @return the partial low degree of ``x``.
  *
- * @throws unspecified any exception thrown by the call operator of piranha::math::ldegree_impl.
+ * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
  */
 template <typename T>
-inline auto ldegree(const T &x, const std::vector<std::string> &names) -> decltype(ldegree_impl<T>()(x, names))
+inline auto ldegree(const T &x, const symbol_fset &s) -> decltype(ldegree_impl<T>()(x, s))
 {
-    return ldegree_impl<T>()(x, names);
+    return ldegree_impl<T>()(x, s);
 }
 
 /// Default functor for the implementation of piranha::math::t_degree().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_degree() (the total trigonometric degree), the other for the binary form of
- * piranha::math::t_degree()
- * (the partial trigonometric degree).
+ * piranha::math::t_degree() (the partial trigonometric degree).
  */
 template <typename T, typename Enable = void>
 struct t_degree_impl {
@@ -1472,16 +1440,16 @@ struct t_degree_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
  *
- * @param x object whose trigonometric degree will be computed.
+ * @param x the object whose trigonometric degree will be computed.
  *
- * @return total trigonometric degree.
+ * @return the total trigonometric degree.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_degree_impl.
  */
 template <typename T>
-inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>()(x))
+inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>{}(x))
 {
-    return t_degree_impl<T>()(x);
+    return t_degree_impl<T>{}(x);
 }
 
 /// Partial trigonometric degree.
@@ -1491,30 +1459,27 @@ inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
  *
- * @param x object whose trigonometric degree will be computed.
- * @param names names of the variables that will be considered in the computation of the degree.
+ * @param x the object whose trigonometric degree will be computed.
+ * @param names the names of the variables that will be considered in the computation of the degree.
  *
- * @return partial trigonometric degree.
+ * @return the partial trigonometric degree.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_degree_impl.
- *
- * @see piranha::math::t_degree().
  */
 template <typename T>
-inline auto t_degree(const T &x, const std::vector<std::string> &names) -> decltype(t_degree_impl<T>()(x, names))
+inline auto t_degree(const T &x, const symbol_fset &names) -> decltype(t_degree_impl<T>{}(x, names))
 {
-    return t_degree_impl<T>()(x, names);
+    return t_degree_impl<T>{}(x, names);
 }
 
 /// Default functor for the implementation of piranha::math::t_ldegree().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_ldegree() (the total trigonometric low degree), the other for the binary form of
- * piranha::math::t_ldegree()
- * (the partial trigonometric low degree).
+ * piranha::math::t_ldegree() (the partial trigonometric low degree).
  */
 template <typename T, typename Enable = void>
 struct t_ldegree_impl {
@@ -1531,16 +1496,16 @@ struct t_ldegree_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
  *
- * @param x object whose trigonometric low degree will be computed.
+ * @param x thee object whose trigonometric low degree will be computed.
  *
  * @return total trigonometric low degree.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_ldegree_impl.
  */
 template <typename T>
-inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>()(x))
+inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>{}(x))
 {
-    return t_ldegree_impl<T>()(x);
+    return t_ldegree_impl<T>{}(x);
 }
 
 /// Partial trigonometric low degree.
@@ -1550,30 +1515,27 @@ inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
  *
- * @param x object whose trigonometric low degree will be computed.
- * @param names names of the variables that will be considered in the computation of the degree.
+ * @param x the object whose trigonometric low degree will be computed.
+ * @param names the names of the variables that will be considered in the computation of the degree.
  *
- * @return partial trigonometric low degree.
+ * @return the partial trigonometric low degree.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_ldegree_impl.
- *
- * @see piranha::math::t_ldegree().
  */
 template <typename T>
-inline auto t_ldegree(const T &x, const std::vector<std::string> &names) -> decltype(t_ldegree_impl<T>()(x, names))
+inline auto t_ldegree(const T &x, const symbol_fset &names) -> decltype(t_ldegree_impl<T>{}(x, names))
 {
-    return t_ldegree_impl<T>()(x, names);
+    return t_ldegree_impl<T>{}(x, names);
 }
 
 /// Default functor for the implementation of piranha::math::t_order().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_order() (the total trigonometric order), the other for the binary form of
- * piranha::math::t_order()
- * (the partial trigonometric order).
+ * piranha::math::t_order() (the partial trigonometric order).
  */
 template <typename T, typename Enable = void>
 struct t_order_impl {
@@ -1582,27 +1544,26 @@ struct t_order_impl {
 /// Total trigonometric order.
 /**
  * A type exposing a trigonometric order property should be a linear combination of real or complex trigonometric
- * functions.
- * The order is computed in a way similar to the trigonometric degree, with the key difference that the absolute values
- * of
- * the trigonometric degrees of each variable are considered in the computation. For instance, the Poisson series
- * \f[
+ * functions. The order is computed in a way similar to the trigonometric degree, with the key difference that the
+ * absolute values of the trigonometric degrees of each variable are considered in the computation. For instance, the
+ * Poisson series
+ *\f[
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
- * has a trigonometric order of abs(3)+abs(1)=4.
+ * has a trigonometric order of ``abs(3)+abs(1)==4``.
  *
  * The actual implementation of this function is in the piranha::math::t_order_impl functor.
  *
- * @param x object whose trigonometric order will be computed.
+ * @param x the object whose trigonometric order will be computed.
  *
- * @return total trigonometric order.
+ * @return the total trigonometric order.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_order_impl.
  */
 template <typename T>
-inline auto t_order(const T &x) -> decltype(t_order_impl<T>()(x))
+inline auto t_order(const T &x) -> decltype(t_order_impl<T>{}(x))
 {
-    return t_order_impl<T>()(x);
+    return t_order_impl<T>{}(x);
 }
 
 /// Partial trigonometric order.
@@ -1612,30 +1573,27 @@ inline auto t_order(const T &x) -> decltype(t_order_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_order_impl functor.
  *
- * @param x object whose trigonometric order will be computed.
- * @param names names of the variables that will be considered in the computation of the order.
+ * @param x the object whose trigonometric order will be computed.
+ * @param names the names of the variables that will be considered in the computation of the order.
  *
- * @return partial trigonometric order.
+ * @return the partial trigonometric order.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_order_impl.
- *
- * @see piranha::math::t_order().
  */
 template <typename T>
-inline auto t_order(const T &x, const std::vector<std::string> &names) -> decltype(t_order_impl<T>()(x, names))
+inline auto t_order(const T &x, const symbol_fset &names) -> decltype(t_order_impl<T>{}(x, names))
 {
-    return t_order_impl<T>()(x, names);
+    return t_order_impl<T>{}(x, names);
 }
 
 /// Default functor for the implementation of piranha::math::t_lorder().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  *
  * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
  * of piranha::math::t_lorder() (the total trigonometric low order), the other for the binary form of
- * piranha::math::t_lorder()
- * (the partial trigonometric low order).
+ * piranha::math::t_lorder() (the partial trigonometric low order).
  */
 template <typename T, typename Enable = void>
 struct t_lorder_impl {
@@ -1644,10 +1602,9 @@ struct t_lorder_impl {
 /// Total trigonometric low order.
 /**
  * A type exposing a trigonometric low order property should be a linear combination of real or complex trigonometric
- * functions.
- * The low order is computed in a way similar to the trigonometric low degree, with the key difference that the absolute
- * values of
- * the trigonometric degrees of each variable are considered in the computation. For instance, the Poisson series
+ * functions. The low order is computed in a way similar to the trigonometric low degree, with the key difference that
+ * the absolute values of the trigonometric degrees of each variable are considered in the computation. For instance,
+ * the Poisson series
  * \f[
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
@@ -1655,16 +1612,16 @@ struct t_lorder_impl {
  *
  * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
  *
- * @param x object whose trigonometric low order will be computed.
+ * @param x the object whose trigonometric low order will be computed.
  *
- * @return total trigonometric low order.
+ * @return the total trigonometric low order.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_lorder_impl.
  */
 template <typename T>
-inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>()(x))
+inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>{}(x))
 {
-    return t_lorder_impl<T>()(x);
+    return t_lorder_impl<T>{}(x);
 }
 
 /// Partial trigonometric low order.
@@ -1674,19 +1631,17 @@ inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>()(x))
  *
  * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
  *
- * @param x object whose trigonometric low order will be computed.
- * @param names names of the variables that will be considered in the computation of the order.
+ * @param x the object whose trigonometric low order will be computed.
+ * @param names the names of the variables that will be considered in the computation of the order.
  *
- * @return partial trigonometric low order.
+ * @return the partial trigonometric low order.
  *
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_lorder_impl.
- *
- * @see piranha::math::t_lorder().
  */
 template <typename T>
-inline auto t_lorder(const T &x, const std::vector<std::string> &names) -> decltype(t_lorder_impl<T>()(x, names))
+inline auto t_lorder(const T &x, const symbol_fset &names) -> decltype(t_lorder_impl<T>{}(x, names))
 {
-    return t_lorder_impl<T>()(x, names);
+    return t_lorder_impl<T>{}(x, names);
 }
 
 /// Implementation of the piranha::math::truncate_degree() functor.
@@ -1703,19 +1658,17 @@ namespace detail
 
 // Enablers for the degree truncation methods.
 template <typename T, typename U>
-using truncate_degree_enabler =
-    typename std::enable_if<std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(),
-                                                                                     std::declval<const U &>())),
-                                         T>::value,
-                            int>::type;
+using truncate_degree_enabler = typename std::enable_if<
+    std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(), std::declval<const U &>())),
+                 T>::value,
+    int>::type;
 
 template <typename T, typename U>
-using truncate_pdegree_enabler =
-    typename std::enable_if<std::is_same<decltype(math::truncate_degree_impl<T, U>()(
-                                             std::declval<const T &>(), std::declval<const U &>(),
-                                             std::declval<const std::vector<std::string> &>())),
-                                         T>::value,
-                            int>::type;
+using truncate_pdegree_enabler = typename std::enable_if<
+    std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(), std::declval<const U &>(),
+                                                             std::declval<const symbol_fset &>())),
+                 T>::value,
+    int>::type;
 }
 
 namespace math
@@ -1729,9 +1682,9 @@ namespace math
  * The actual implementation of this function is in the piranha::math::truncate_degree_impl functor.
  *
  * The body of this function is equivalent to:
-@code
-return truncate_degree_impl<T,U>()(x,max_degree);
-@endcode
+ * @code
+ * return truncate_degree_impl<T,U>()(x,max_degree);
+ * @endcode
  * The call operator of piranha::math::truncate_degree_impl is required to return type \p T, otherwise
  * this function will be disabled.
  *
@@ -1756,9 +1709,9 @@ inline T truncate_degree(const T &x, const U &max_degree)
  * The actual implementation of this function is in the piranha::math::truncate_degree_impl functor.
  *
  * The body of this function is equivalent to:
-@code
-return truncate_degree_impl<T,U>()(x,max_degree,names);
-@endcode
+ * @code
+ * return truncate_degree_impl<T,U>()(x,max_degree,names);
+ * @endcode
  * The call operator of piranha::math::truncate_degree_impl is required to return type \p T, otherwise
  * this function will be disabled.
  *
@@ -1771,7 +1724,7 @@ return truncate_degree_impl<T,U>()(x,max_degree,names);
  * @throws unspecified any exception thrown by the call operator of piranha::math::truncate_degree_impl.
  */
 template <typename T, typename U, detail::truncate_pdegree_enabler<T, U> = 0>
-inline T truncate_degree(const T &x, const U &max_degree, const std::vector<std::string> &names)
+inline T truncate_degree(const T &x, const U &max_degree, const symbol_fset &names)
 {
     return truncate_degree_impl<T, U>()(x, max_degree, names);
 }
@@ -1780,8 +1733,7 @@ inline T truncate_degree(const T &x, const U &max_degree, const std::vector<std:
 /// Type trait to detect if types can be used in piranha::math::truncate_degree().
 /**
  * The type trait will be true if instances of types \p T and \p U can be used as arguments of
- * piranha::math::truncate_degree()
- * (both in the binary and ternary version of the function).
+ * piranha::math::truncate_degree() (both in the binary and ternary version of the function).
  */
 template <typename T, typename U>
 class has_truncate_degree : detail::sfinae_types
@@ -1791,7 +1743,7 @@ class has_truncate_degree : detail::sfinae_types
     static no test1(...);
     template <typename T1, typename U1>
     static auto test2(const T1 &t, const U1 &u)
-        -> decltype(math::truncate_degree(t, u, std::declval<const std::vector<std::string> &>()), void(), yes());
+        -> decltype(math::truncate_degree(t, u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -1825,46 +1777,45 @@ public:
 template <typename T>
 const bool is_differentiable<T>::value;
 
-namespace detail
+inline namespace impl
 {
 
-// A key is differentiable if the type returned by the partial method
+// A key is differentiable/integrable if the type returned by the partial/integrate method
 // is a pair (sometype,key).
-template <typename Key, typename Pair>
-struct is_differential_key_pair {
-    static const bool value = false;
+template <typename, typename>
+struct is_differential_key_pair : std::false_type {
 };
 
-template <typename Key, typename PairFirst>
-struct is_differential_key_pair<Key, std::pair<PairFirst, Key>> {
-    static const bool value = true;
+template <typename Key, typename T>
+struct is_differential_key_pair<Key, std::pair<T, Key>> : std::true_type {
 };
 }
 
 /// Type trait to detect differentiable keys.
 /**
- * This type trait will be \p true if \p Key is a key type providing a const method <tt>partial()</tt> taking a const
- * instance of
- * piranha::symbol_set::positions and a const instance of piranha::symbol_set as input, and returning an
- * <tt>std::pair</tt> of
- * any type and \p Key. Otherwise, the type trait will be \p false.
- * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * std::pair<T,uncvref_t<Key>> partial(const symbol_idx &, const symbol_fset &) const;
+ * @endcode
+ * where \p T is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. Otherwise, the type
+ * trait will be \p false.
  *
- * The decay type of \p Key is considered in this type trait.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_is_differentiable : detail::sfinae_types
+class key_is_differentiable
 {
-    using Keyd = typename std::decay<Key>::type;
-    PIRANHA_TT_CHECK(is_key, Keyd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename U>
-    static auto test(const U &u)
-        -> decltype(u.partial(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()));
-    static no test(...);
+    using key_partial_t = decltype(
+        std::declval<const U &>().partial(std::declval<const symbol_idx &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = is_differential_key_pair<uncvref_t<Key>, detected_t<key_partial_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::is_differential_key_pair<Keyd, decltype(test(std::declval<Keyd>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename Key>
@@ -1893,27 +1844,29 @@ const bool is_integrable<T>::value;
 
 /// Type trait to detect integrable keys.
 /**
- * This type trait will be \p true if \p Key is a key type providing a const method <tt>integrate()</tt> taking a const
- * instance of
- * piranha::symbol and a const instance of piranha::symbol_set as input, and returning an <tt>std::pair</tt> of
- * any type and \p Key. Otherwise, the type trait will be \p false.
- * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * std::pair<T,uncvref_t<Key>> integrate(const std::string &, const symbol_fset &) const;
+ * @endcode
+ * where \p T is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. Otherwise, the type
+ * trait will be \p false.
  *
- * The decay type of \p Key is considered in this type trait.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
-template <typename T>
-class key_is_integrable : detail::sfinae_types
+template <typename Key>
+class key_is_integrable
 {
-    using Td = typename std::decay<T>::type;
-    PIRANHA_TT_CHECK(is_key, Td);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename U>
-    static auto test(const U &u)
-        -> decltype(u.integrate(std::declval<const symbol &>(), std::declval<const symbol_set &>()));
-    static no test(...);
+    using key_integrate_t = decltype(
+        std::declval<const U &>().integrate(std::declval<const std::string &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = is_differential_key_pair<uncvref_t<Key>, detected_t<key_integrate_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = detail::is_differential_key_pair<Td, decltype(test(std::declval<Td>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>
@@ -1931,8 +1884,7 @@ class has_degree : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::degree(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::degree(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::degree(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -1957,8 +1909,7 @@ class has_ldegree : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::ldegree(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::ldegree(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::ldegree(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -1983,8 +1934,7 @@ class has_t_degree : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::t_degree(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::t_degree(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::t_degree(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -2009,8 +1959,7 @@ class has_t_ldegree : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::t_ldegree(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::t_ldegree(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::t_ldegree(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -2035,8 +1984,7 @@ class has_t_order : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::t_order(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::t_order(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::t_order(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -2061,8 +2009,7 @@ class has_t_lorder : detail::sfinae_types
     static auto test1(const U &u) -> decltype(math::t_lorder(u), void(), yes());
     static no test1(...);
     template <typename U>
-    static auto test2(const U &u)
-        -> decltype(math::t_lorder(u, std::declval<const std::vector<std::string> &>()), void(), yes());
+    static auto test2(const U &u) -> decltype(math::t_lorder(u, std::declval<const symbol_fset &>()), void(), yes());
     static no test2(...);
 
 public:
@@ -2078,33 +2025,31 @@ const bool has_t_lorder<T>::value;
 /// Type trait to detect if a key type has a degree property.
 /**
  * The type trait has the same meaning as piranha::has_degree, but it's meant for use with key types.
- * It will test the presence of two <tt>degree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T degree(const symbol_fset &) const;
+ * U degree(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_degree : detail::sfinae_types
+class key_has_degree
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    // NOTE: here it works (despite the difference in constness with the use below) because none of the two versions
-    // of test1() is an exact match, and the conversion in constness has a higher priority than the ellipsis conversion.
-    // For more info:
-    // http://cpp0x.centaur.ath.cx/over.ics.rank.html
-    template <typename T>
-    static auto test1(const T *t) -> decltype(t->degree(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(const T *t)
-        -> decltype(t->degree(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_degree_t = decltype(std::declval<const U &>().degree(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_degree_t = decltype(
+        std::declval<const U &>().degree(std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_degree_t, Key>, is_detected<partial_degree_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename Key>
@@ -2113,29 +2058,31 @@ const bool key_has_degree<Key>::value;
 /// Type trait to detect if a key type has a low degree property.
 /**
  * The type trait has the same meaning as piranha::has_ldegree, but it's meant for use with key types.
- * It will test the presence of two <tt>ldegree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T ldegree(const symbol_fset &) const;
+ * U ldegree(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_ldegree : detail::sfinae_types
+class key_has_ldegree
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(const T *t) -> decltype(t->ldegree(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(const T *t)
-        -> decltype(t->ldegree(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_ldegree_t = decltype(std::declval<const U &>().ldegree(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_ldegree_t = decltype(std::declval<const U &>().ldegree(std::declval<const symbol_idx_fset &>(),
+                                                                         std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_ldegree_t, Key>, is_detected<partial_ldegree_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename Key>
@@ -2144,29 +2091,31 @@ const bool key_has_ldegree<Key>::value;
 /// Type trait to detect if a key type has a trigonometric degree property.
 /**
  * The type trait has the same meaning as piranha::has_t_degree, but it's meant for use with key types.
- * It will test the presence of two <tt>t_degree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T t_degree(const symbol_fset &) const;
+ * U t_degree(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_t_degree : detail::sfinae_types
+class key_has_t_degree
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(T const *t)
-        -> decltype(t->t_degree(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_t_degree_t = decltype(std::declval<const U &>().t_degree(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_t_degree_t = decltype(std::declval<const U &>().t_degree(std::declval<const symbol_idx_fset &>(),
+                                                                           std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_t_degree_t, Key>, is_detected<partial_t_degree_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key const *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key const *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2176,29 +2125,31 @@ const bool key_has_t_degree<T>::value;
 /// Type trait to detect if a key type has a trigonometric low degree property.
 /**
  * The type trait has the same meaning as piranha::has_t_ldegree, but it's meant for use with key types.
- * It will test the presence of two <tt>t_ldegree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T t_ldegree(const symbol_fset &) const;
+ * U t_ldegree(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_t_ldegree : detail::sfinae_types
+class key_has_t_ldegree
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(T const *t)
-        -> decltype(t->t_ldegree(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_t_ldegree_t = decltype(std::declval<const U &>().t_ldegree(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_t_ldegree_t = decltype(std::declval<const U &>().t_ldegree(std::declval<const symbol_idx_fset &>(),
+                                                                             std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_t_ldegree_t, Key>, is_detected<partial_t_ldegree_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key const *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key const *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2208,29 +2159,31 @@ const bool key_has_t_ldegree<T>::value;
 /// Type trait to detect if a key type has a trigonometric order property.
 /**
  * The type trait has the same meaning as piranha::has_t_order, but it's meant for use with key types.
- * It will test the presence of two <tt>t_order()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T t_order(const symbol_fset &) const;
+ * U t_order(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_t_order : detail::sfinae_types
+class key_has_t_order
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(T const *t) -> decltype(t->t_order(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(T const *t)
-        -> decltype(t->t_order(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_t_order_t = decltype(std::declval<const U &>().t_order(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_t_order_t = decltype(std::declval<const U &>().t_order(std::declval<const symbol_idx_fset &>(),
+                                                                         std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_t_order_t, Key>, is_detected<partial_t_order_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key const *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key const *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2240,29 +2193,31 @@ const bool key_has_t_order<T>::value;
 /// Type trait to detect if a key type has a trigonometric low order property.
 /**
  * The type trait has the same meaning as piranha::has_t_lorder, but it's meant for use with key types.
- * It will test the presence of two <tt>t_lorder()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of
- * piranha::symbol_set.
+ * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
+ * @code{.unparsed}
+ * T t_lorder(const symbol_fset &) const;
+ * U t_lorder(const symbol_idx_fset &, const symbol_fset &) const;
+ * @endcode
+ * where \p T and \p U can be any types.
  *
- * \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key>
-class key_has_t_lorder : detail::sfinae_types
+class key_has_t_lorder
 {
-    PIRANHA_TT_CHECK(is_key, Key);
-    template <typename T>
-    static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set &>()), void(), yes());
-    static no test1(...);
-    template <typename T>
-    static auto test2(T const *t)
-        -> decltype(t->t_lorder(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>()),
-                    void(), yes());
-    static no test2(...);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
+    template <typename U>
+    using total_t_lorder_t = decltype(std::declval<const U &>().t_lorder(std::declval<const symbol_fset &>()));
+    template <typename U>
+    using partial_t_lorder_t = decltype(std::declval<const U &>().t_lorder(std::declval<const symbol_idx_fset &>(),
+                                                                           std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = conjunction<is_detected<total_t_lorder_t, Key>, is_detected<partial_t_lorder_t, Key>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test1((Key const *)nullptr)), yes>::value
-                              && std::is_same<decltype(test2((Key const *)nullptr)), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2302,7 +2257,7 @@ class has_subs : detail::sfinae_types
     typedef typename std::decay<U>::type Ud;
     template <typename T1, typename U1>
     static auto test(const T1 &t, const U1 &u)
-        -> decltype(math::subs(t, std::declval<std::string const &>(), u), void(), yes());
+        -> decltype(math::subs(t, std::declval<const symbol_fmap<U1> &>()), void(), yes());
     static no test(...);
     static const bool implementation_defined
         = std::is_same<decltype(test(std::declval<Td>(), std::declval<Ud>())), yes>::value;
@@ -2343,42 +2298,46 @@ public:
 template <typename T, typename U, typename V>
 const bool has_t_subs<T, U, V>::value;
 
+inline namespace impl
+{
+
+// Check the result of key subs methods.
+template <typename, typename>
+struct key_subs_check_type : std::false_type {
+};
+
+template <typename Key, typename T>
+struct key_subs_check_type<Key, std::vector<std::pair<T, Key>>> : std::true_type {
+};
+}
+
 /// Type trait to detect the presence of the trigonometric substitution method in keys.
 /**
- * This type trait will be \p true if the decay type of \p Key provides a const method <tt>t_subs()</tt> accepting as
- * const parameters a string,
- * an instance of \p T, an instance of \p U and an instance of piranha::symbol_set. The return value of the method must
- * be an <tt>std::vector</tt>
- * of pairs in which the second type must be \p Key itself. The <tt>t_subs()</tt> represents the substitution of a
- * symbol with its cosine
- * and sine passed as instances of \p T and \p U respectively.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * std::vector<std::pair<R,uncvref_t<Key>>> t_subs(const symbol_idx &, const T &, const U &, const symbol_fset &) const;
+ * @endcode
+ * where \p R is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. The <tt>t_subs()</tt>
+ * methods represents the substitution of a symbol with its cosine and sine passed as instances of \p T and \p U
+ * respectively.
  *
- * The decay type of \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key, typename T, typename U>
-class key_has_t_subs : detail::sfinae_types
+class key_has_t_subs
 {
-    typedef typename std::decay<Key>::type Keyd;
-    typedef typename std::decay<T>::type Td;
-    typedef typename std::decay<U>::type Ud;
-    PIRANHA_TT_CHECK(is_key, Keyd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1, typename T1, typename U1>
-    static auto test(const Key1 &k, const T1 &t, const U1 &u)
-        -> decltype(k.t_subs(std::declval<const std::string &>(), t, u, std::declval<const symbol_set &>()));
-    static no test(...);
-    template <typename T1>
-    struct check_result_type {
-        static const bool value = false;
-    };
-    template <typename Res>
-    struct check_result_type<std::vector<std::pair<Res, Keyd>>> {
-        static const bool value = true;
-    };
+    using t_subs_t = decltype(
+        std::declval<const Key1 &>().t_subs(std::declval<const symbol_idx &>(), std::declval<const T1 &>(),
+                                            std::declval<const U1 &>(), std::declval<const symbol_fset &>()));
+    static const bool implementation_defined
+        = key_subs_check_type<uncvref_t<Key>, detected_t<t_subs_t, Key, T, U>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = check_result_type<decltype(test(std::declval<Keyd>(), std::declval<Td>(), std::declval<Ud>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2387,38 +2346,28 @@ const bool key_has_t_subs<Key, T, U>::value;
 
 /// Type trait to detect the presence of the substitution method in keys.
 /**
- * This type trait will be \p true if the decay type of \p Key provides a const method <tt>subs()</tt> accepting as
- * const parameters a string,
- * an instance of \p T and an instance of piranha::symbol_set. The return value of the method must be an
- * <tt>std::vector</tt>
- * of pairs in which the second type must be \p Key itself. The <tt>subs()</tt> method represents the substitution of a
- * symbol with
- * an instance of type \p T.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * std::vector<std::pair<R,uncvref_t<Key>>> subs(const symbol_idx_fmap<T> &, const symbol_fset &) const;
+ * @endcode
+ * where \p R is any type and <tt>uncvref_t<Key></tt> is \p Key without cv/reference qualifiers. The <tt>subs()</tt>
+ * methods implements the substitution of a group of symbols with instances of \p T.
  *
- * The decay type of \p Key must satisfy piranha::is_key.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key, typename T>
-class key_has_subs : detail::sfinae_types
+class key_has_subs
 {
-    typedef typename std::decay<Key>::type Keyd;
-    typedef typename std::decay<T>::type Td;
-    PIRANHA_TT_CHECK(is_key, Keyd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1, typename T1>
-    static auto test(const Key1 &k, const T1 &t)
-        -> decltype(k.subs(std::declval<const std::string &>(), t, std::declval<const symbol_set &>()));
-    static no test(...);
-    template <typename T1>
-    struct check_result_type {
-        static const bool value = false;
-    };
-    template <typename Res>
-    struct check_result_type<std::vector<std::pair<Res, Keyd>>> {
-        static const bool value = true;
-    };
+    using subs_t = decltype(std::declval<const Key1 &>().subs(std::declval<const symbol_idx_fmap<T1> &>(),
+                                                              std::declval<const symbol_fset &>()));
+    static const bool implementation_defined = key_subs_check_type<uncvref_t<Key>, detected_t<subs_t, Key, T>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = check_result_type<decltype(test(std::declval<Keyd>(), std::declval<Td>()))>::value;
+    static const bool value = implementation_defined;
 };
 
 // Static init.
@@ -2456,8 +2405,7 @@ template <typename T, typename U>
 class is_evaluable
 {
     template <typename T1, typename U1>
-    using eval_t = decltype(
-        math::evaluate(std::declval<const T1 &>(), std::declval<const std::unordered_map<std::string, U1> &>()));
+    using eval_t = decltype(math::evaluate(std::declval<const T1 &>(), std::declval<const symbol_fmap<U1> &>()));
     static const bool implementation_defined = is_detected<eval_t, T, U>::value;
 
 public:
@@ -2470,26 +2418,27 @@ const bool is_evaluable<T, U>::value;
 
 /// Type trait to detect evaluable keys.
 /**
- * This type trait will be \p true if \p Key is a key type providing a const method <tt>evaluate()</tt> taking a const
- * instance of piranha::symbol_set::positions_map of \p T and a const instance of piranha::symbol_set as input, \p false
- * otherwise. If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ * This type trait will be \p true if \p Key is a key type providing a method with the following signature:
+ * @code{.unparsed}
+ * R evaluate(const std::vector<T> &, const symbol_fset &) const;
+ * @endcode
+ * where \p R is any type.
  *
- * The decay type of \p Key is considered in this type trait.
+ * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
+ * produced.
  */
 template <typename Key, typename T>
-class key_is_evaluable : detail::sfinae_types
+class key_is_evaluable
 {
-    typedef typename std::decay<Key>::type Keyd;
-    PIRANHA_TT_CHECK(is_key, Keyd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1, typename T1>
-    static auto test(const Key1 &k, const symbol_set::positions_map<T1> &pmap)
-        -> decltype(k.evaluate(pmap, std::declval<const symbol_set &>()), void(), yes());
-    static no test(...);
+    using evaluate_t = decltype(std::declval<const Key1 &>().evaluate(std::declval<const std::vector<T1> &>(),
+                                                                      std::declval<const symbol_fset &>()));
+    static const bool implementation_defined = is_detected<evaluate_t, Key, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value
-        = std::is_same<decltype(test(std::declval<Keyd>(), std::declval<symbol_set::positions_map<T>>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename Key, typename T>

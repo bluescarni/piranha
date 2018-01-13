@@ -109,6 +109,8 @@ struct ex_thrower {
  * piranha_throw(std::bad_alloc,);
  * @endcode
  * is correct.
+ *
+ * @param exception_type the type of the exception to be thrown.
  */
 // NOTE: we need the struct here because we need to split off the __VA_ARGS__ into a separate function call, otherwise
 // there could be situations in which the throwing function would be called with a set of arguments (a,b,c,), which

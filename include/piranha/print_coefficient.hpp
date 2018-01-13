@@ -30,10 +30,9 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_PRINT_COEFFICIENT_HPP
 
 #include <iostream>
-#include <type_traits>
 #include <utility>
 
-#include <piranha/detail/sfinae_types.hpp>
+#include <piranha/type_traits.hpp>
 
 namespace piranha
 {
@@ -92,15 +91,16 @@ inline auto print_coefficient(std::ostream &os, const T &cf) -> decltype(print_c
  * \p false otherwise.
  */
 template <typename T>
-class has_print_coefficient : detail::sfinae_types
+class has_print_coefficient
 {
     template <typename T1>
-    static auto test(std::ostream &os, const T1 &t) -> decltype(piranha::print_coefficient(os, t), void(), yes());
-    static no test(...);
+    using print_coefficient_t
+        = decltype(piranha::print_coefficient(std::declval<std::ostream &>(), std::declval<const T1 &>()));
+    static const bool implementation_defined = is_detected<print_coefficient_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(*(std::ostream *)nullptr, std::declval<T>())), yes>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename T>

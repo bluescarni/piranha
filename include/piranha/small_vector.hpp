@@ -184,12 +184,10 @@ public:
     }
     value_type &operator[](const size_type &n)
     {
-        piranha_assert(n < m_size);
         return m_ptr[n];
     }
     const value_type &operator[](const size_type &n) const
     {
-        piranha_assert(n < m_size);
         return m_ptr[n];
     }
     size_type size() const

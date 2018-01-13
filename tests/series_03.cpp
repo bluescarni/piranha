@@ -40,17 +40,14 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/invert.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
 // Mock coefficient.
 struct mock_cf {
     mock_cf() = default;
-    mock_cf(const int &)
-    {
-    }
+    mock_cf(const int &) {}
     mock_cf(const mock_cf &) = default;
     mock_cf(mock_cf &&) = default;
     mock_cf &operator=(const mock_cf &) = default;
@@ -94,7 +91,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -109,9 +106,7 @@ class g_series_type2 : public series<Cf, monomial<Expo>, g_series_type2<Cf, Expo
 
 public:
     g_series_type2() = default;
-    g_series_type2(const g_series_type2 &other) : base(other)
-    {
-    }
+    g_series_type2(const g_series_type2 &other) : base(other) {}
     g_series_type2(g_series_type2 &&) = default;
     g_series_type2 &operator=(const g_series_type2 &) = default;
     g_series_type2 &operator=(g_series_type2 &&) = default;
@@ -125,9 +120,7 @@ class null_toolbox : public T
 {
 public:
     null_toolbox() = default;
-    null_toolbox(const null_toolbox &other) : T(other)
-    {
-    }
+    null_toolbox(const null_toolbox &other) : T(other) {}
     null_toolbox(null_toolbox &&) = default;
     null_toolbox &operator=(const null_toolbox &) = default;
     null_toolbox &operator=(null_toolbox &&) = default;
@@ -171,9 +164,7 @@ class g_series_type4 : public null_toolbox2<series<Cf, monomial<Expo>, g_series_
 
 public:
     g_series_type4() = default;
-    g_series_type4(const g_series_type4 &other) : base(other)
-    {
-    }
+    g_series_type4(const g_series_type4 &other) : base(other) {}
     g_series_type4(g_series_type4 &&) = default;
     g_series_type4 &operator=(const g_series_type4 &) = default;
     g_series_type4 &operator=(g_series_type4 &&) = default;
@@ -206,9 +197,7 @@ BOOST_AUTO_TEST_CASE(series_generic_ctor_forwarding_test)
 BOOST_AUTO_TEST_CASE(series_symbol_set_test)
 {
     using st0 = g_series_type<double, int>;
-    symbol_set ss;
-    ss.add("x");
-    ss.add("y");
+    symbol_fset ss{"x", "y"};
     st0 s;
     s.set_symbol_set(ss);
     BOOST_CHECK(ss == s.get_symbol_set());
@@ -268,38 +257,4 @@ BOOST_AUTO_TEST_CASE(series_invert_test)
     BOOST_CHECK(is_invertible<st2>::value);
     BOOST_CHECK((std::is_same<decltype(math::invert(st2{1})), st2>::value));
     BOOST_CHECK_EQUAL(math::invert(st2{1.23}), math::invert(1.23));
-}
-
-BOOST_AUTO_TEST_CASE(series_extend_symbol_set_test)
-{
-    using st0 = g_series_type<double, int>;
-    st0 x{"x"}, y{"y"};
-    // Check with identical symbol first.
-    BOOST_CHECK(x.extend_symbol_set(symbol_set{symbol{"x"}}).is_identical(x));
-    BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"y"}}), std::invalid_argument);
-    BOOST_CHECK_THROW(x.extend_symbol_set(symbol_set{symbol{"y"}, symbol{"z"}}), std::invalid_argument);
-    try {
-        x.extend_symbol_set(symbol_set{symbol{"y"}});
-    } catch (const std::invalid_argument &ia) {
-        BOOST_CHECK(std::string(ia.what()).find("invalid symbol set passed to extend_symbol_set(): the new "
-                                                "symbol set does not include all the symbols in the old symbol set")
-                    != std::string::npos);
-    }
-    BOOST_CHECK((x.extend_symbol_set(symbol_set{symbol{"y"}, symbol{"x"}}).get_symbol_set()
-                 == symbol_set{symbol{"y"}, symbol{"x"}}));
-    BOOST_CHECK((x.extend_symbol_set(symbol_set{symbol{"y"}, symbol{"x"}, symbol{"z"}}).get_symbol_set()
-                 == symbol_set{symbol{"y"}, symbol{"x"}, symbol{"z"}}));
-    auto foo = x.extend_symbol_set(symbol_set{symbol{"y"}, symbol{"x"}, symbol{"z"}});
-    BOOST_CHECK_EQUAL(foo._container().begin()->m_key.size(), 3u);
-    auto bar = x + y;
-    foo = bar.extend_symbol_set(symbol_set{symbol{"y"}, symbol{"x"}, symbol{"z"}});
-    BOOST_CHECK(foo.size() == 2u);
-    auto it = foo._container().begin();
-    BOOST_CHECK_EQUAL(it->m_key.size(), 3u);
-    ++it;
-    BOOST_CHECK_EQUAL(it->m_key.size(), 3u);
-    st0 null;
-    foo = null.extend_symbol_set(symbol_set{symbol{"y"}, symbol{"x"}, symbol{"z"}});
-    BOOST_CHECK(foo.size() == 0u);
-    BOOST_CHECK((symbol_set{symbol{"y"}, symbol{"x"}, symbol{"z"}} == foo.get_symbol_set()));
 }

@@ -52,7 +52,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/s11n.hpp>
-#include <piranha/symbol_set.hpp>
 
 using namespace piranha;
 

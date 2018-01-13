@@ -52,7 +52,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/init.hpp>
 #include <piranha/is_cf.hpp>
-#include <piranha/symbol_set.hpp>
 
 using namespace piranha;
 
@@ -117,16 +116,12 @@ struct trivial {
 };
 
 struct nontrivial_copy {
-    nontrivial_copy(nontrivial_copy &&) noexcept(false)
-    {
-    }
+    nontrivial_copy(nontrivial_copy &&) noexcept(false) {}
     nontrivial_copy &operator=(nontrivial_copy &&) noexcept(false)
     {
         return *this;
     }
-    nontrivial_copy(const nontrivial_copy &other) : n(other.n)
-    {
-    }
+    nontrivial_copy(const nontrivial_copy &other) : n(other.n) {}
     int n;
 };
 
@@ -138,9 +133,7 @@ struct trivial_copy {
 
 struct nontrivial_dtor {
     nontrivial_dtor(const nontrivial_dtor &) = default;
-    nontrivial_dtor(nontrivial_dtor &&) noexcept(false)
-    {
-    }
+    nontrivial_dtor(nontrivial_dtor &&) noexcept(false) {}
     nontrivial_dtor &operator=(nontrivial_dtor &&) noexcept(false)
     {
         return *this;
@@ -716,9 +709,7 @@ template <>
 struct hash<unhashable10> {
     hash(const hash &) = default;
     std::size_t operator()(const unhashable10 &) const;
-    ~hash() noexcept(false)
-    {
-    }
+    ~hash() noexcept(false) {}
 };
 
 template <>
@@ -1079,193 +1070,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_function_object_test)
     BOOST_CHECK((!is_equality_function_object<efo9, int>::value));
 #endif
     BOOST_CHECK((!is_equality_function_object<efo10, int>::value));
-}
-
-struct key01 {
-};
-
-struct key02 {
-    key02() = default;
-    key02(const key02 &) = default;
-    key02(key02 &&) noexcept;
-    key02 &operator=(const key02 &) = default;
-    key02 &operator=(key02 &&) noexcept;
-    key02(const symbol_set &);
-    bool operator==(const key02 &) const;
-    bool operator!=(const key02 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key02 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    key02 trim(const symbol_set &, const symbol_set &) const;
-};
-
-struct key03 {
-    key03() = default;
-    key03(const key03 &) = default;
-    key03(key03 &&) noexcept;
-    key03 &operator=(const key03 &) = default;
-    key03 &operator=(key03 &&) noexcept;
-    key03(const symbol_set &);
-    bool operator==(const key03 &) const;
-    bool operator!=(const key03 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key03 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-};
-
-struct key04 {
-    key04() = default;
-    key04(const key04 &) = default;
-    key04(key04 &&) noexcept(false);
-    key04 &operator=(const key04 &) = default;
-    key04 &operator=(key04 &&) noexcept;
-    key04(const symbol_set &);
-    bool operator==(const key04 &) const;
-    bool operator!=(const key04 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key04 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-};
-
-struct key05 {
-    key05() = default;
-    key05(const key05 &) = default;
-    key05(key05 &&) noexcept;
-    key05 &operator=(const key05 &) = default;
-    key05 &operator=(key05 &&) noexcept;
-    key05(const symbol_set &);
-    bool operator==(const key05 &) const;
-    bool operator!=(const key05 &) const;
-    bool is_compatible(const symbol_set &) const;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key05 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-};
-
-struct key06 {
-    key06() = default;
-    key06(const key06 &) = default;
-    key06(key06 &&) noexcept;
-    key06 &operator=(const key06 &) = default;
-    key06 &operator=(key06 &&) noexcept;
-    key06(const symbol_set &);
-    bool operator==(const key06 &) const;
-    bool operator!=(const key06 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const;
-    key06 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-};
-
-struct key07 {
-    key07() = default;
-    key07(const key07 &) = default;
-    key07(key07 &&) noexcept;
-    key07 &operator=(const key07 &) = default;
-    key07 &operator=(key07 &&) noexcept;
-    key07(const symbol_set &);
-    bool operator==(const key07 &) const;
-    bool operator!=(const key07 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key07 merge_args(const symbol_set &, const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-};
-
-struct key08 {
-    key08() = default;
-    key08(const key08 &) = default;
-    key08(key08 &&) noexcept;
-    key08 &operator=(const key08 &) = default;
-    key08 &operator=(key08 &&) noexcept;
-    key08(const symbol_set &);
-    bool operator==(const key08 &) const;
-    bool operator!=(const key08 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key08 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-};
-
-namespace std
-{
-
-template <>
-struct hash<key02> {
-    std::size_t operator()(const key02 &) const;
-};
-
-template <>
-struct hash<key03> {
-};
-
-template <>
-struct hash<key04> {
-    std::size_t operator()(const key04 &) const;
-};
-
-template <>
-struct hash<key05> {
-    std::size_t operator()(const key05 &) const;
-};
-
-template <>
-struct hash<key06> {
-    std::size_t operator()(const key06 &) const;
-};
-
-template <>
-struct hash<key07> {
-    std::size_t operator()(const key07 &) const;
-};
-
-template <>
-struct hash<key08> {
-    std::size_t operator()(const key08 &) const;
-};
-}
-
-BOOST_AUTO_TEST_CASE(type_traits_is_key_test)
-{
-    BOOST_CHECK(!is_key<int>::value);
-    BOOST_CHECK(!is_key<double>::value);
-    BOOST_CHECK(!is_key<long *>::value);
-    BOOST_CHECK(!is_key<long &>::value);
-    BOOST_CHECK(!is_key<long const &>::value);
-    BOOST_CHECK(!is_key<key01>::value);
-    BOOST_CHECK(!is_key<const key01 &>::value);
-    BOOST_CHECK(is_key<key02>::value);
-    BOOST_CHECK(!is_key<key02 &>::value);
-    BOOST_CHECK(!is_key<key02 &&>::value);
-    BOOST_CHECK(!is_key<const key02>::value);
-    BOOST_CHECK(!is_key<const key02 &>::value);
-    BOOST_CHECK(!is_key<const key02 &&>::value);
-    BOOST_CHECK(!is_key<key03>::value);
-// Missing noexcept.
-#if !defined(PIRANHA_COMPILER_IS_INTEL)
-    BOOST_CHECK(!is_key<key04>::value);
-#endif
-    BOOST_CHECK(!is_key<key05>::value);
-    BOOST_CHECK(!is_key<key06>::value);
-    BOOST_CHECK(!is_key<key07>::value);
-    BOOST_CHECK(!is_key<key08>::value);
 }
 
 struct cf01 {
@@ -1993,44 +1797,44 @@ struct bad_begin_end_03 {
     double *end();
 };
 
-BOOST_AUTO_TEST_CASE(type_traits_has_begin_end_test)
+BOOST_AUTO_TEST_CASE(type_traits_has_input_begin_end_test)
 {
-    BOOST_CHECK(has_begin_end<std::vector<int>>::value);
-    BOOST_CHECK(has_begin_end<std::vector<double>>::value);
-    BOOST_CHECK(has_begin_end<std::initializer_list<int>>::value);
-    BOOST_CHECK(has_begin_end<std::initializer_list<long>>::value);
-    BOOST_CHECK(has_begin_end<std::vector<int> &>::value);
-    BOOST_CHECK(has_begin_end<std::vector<double> &>::value);
-    BOOST_CHECK(has_begin_end<std::initializer_list<int> &>::value);
-    BOOST_CHECK(has_begin_end<std::initializer_list<long> &>::value);
-    BOOST_CHECK(has_begin_end<const std::vector<int>>::value);
-    BOOST_CHECK(has_begin_end<const std::vector<double>>::value);
-    BOOST_CHECK(has_begin_end<const std::initializer_list<int>>::value);
-    BOOST_CHECK(has_begin_end<const std::initializer_list<long>>::value);
-    BOOST_CHECK(has_begin_end<const std::vector<int> &>::value);
-    BOOST_CHECK(has_begin_end<const std::vector<double> &>::value);
-    BOOST_CHECK(has_begin_end<const std::initializer_list<int> &>::value);
-    BOOST_CHECK(has_begin_end<const std::initializer_list<long> &>::value);
-    BOOST_CHECK(has_begin_end<good_begin_end_mut>::value);
+    BOOST_CHECK(has_input_begin_end<std::vector<int>>::value);
+    BOOST_CHECK(has_input_begin_end<std::vector<double>>::value);
+    BOOST_CHECK(has_input_begin_end<std::initializer_list<int>>::value);
+    BOOST_CHECK(has_input_begin_end<std::initializer_list<long>>::value);
+    BOOST_CHECK(has_input_begin_end<std::vector<int> &>::value);
+    BOOST_CHECK(has_input_begin_end<std::vector<double> &>::value);
+    BOOST_CHECK(has_input_begin_end<std::initializer_list<int> &>::value);
+    BOOST_CHECK(has_input_begin_end<std::initializer_list<long> &>::value);
+    BOOST_CHECK(has_input_begin_end<const std::vector<int>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::vector<double>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::initializer_list<int>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::initializer_list<long>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::vector<int> &>::value);
+    BOOST_CHECK(has_input_begin_end<const std::vector<double> &>::value);
+    BOOST_CHECK(has_input_begin_end<const std::initializer_list<int> &>::value);
+    BOOST_CHECK(has_input_begin_end<const std::initializer_list<long> &>::value);
+    BOOST_CHECK(has_input_begin_end<good_begin_end_mut>::value);
     // No const version.
-    BOOST_CHECK(!has_begin_end<const good_begin_end_mut>::value);
-    BOOST_CHECK(has_begin_end<good_begin_end_const>::value);
-    BOOST_CHECK(has_begin_end<const good_begin_end_const>::value);
-    BOOST_CHECK(!has_begin_end<bad_begin_end_00>::value);
-    BOOST_CHECK(!has_begin_end<const bad_begin_end_00>::value);
-    BOOST_CHECK(!has_begin_end<bad_begin_end_01>::value);
-    BOOST_CHECK(!has_begin_end<const bad_begin_end_01>::value);
-    BOOST_CHECK(!has_begin_end<bad_begin_end_02>::value);
-    BOOST_CHECK(!has_begin_end<const bad_begin_end_02>::value);
-    BOOST_CHECK(!has_begin_end<bad_begin_end_03>::value);
-    BOOST_CHECK(!has_begin_end<const bad_begin_end_03>::value);
+    BOOST_CHECK(!has_input_begin_end<const good_begin_end_mut>::value);
+    BOOST_CHECK(has_input_begin_end<good_begin_end_const>::value);
+    BOOST_CHECK(has_input_begin_end<const good_begin_end_const>::value);
+    BOOST_CHECK(!has_input_begin_end<bad_begin_end_00>::value);
+    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_00>::value);
+    BOOST_CHECK(!has_input_begin_end<bad_begin_end_01>::value);
+    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_01>::value);
+    BOOST_CHECK(!has_input_begin_end<bad_begin_end_02>::value);
+    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_02>::value);
+    BOOST_CHECK(!has_input_begin_end<bad_begin_end_03>::value);
+    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_03>::value);
     // Some tests with other containers.
-    BOOST_CHECK(has_begin_end<std::list<int>>::value);
-    BOOST_CHECK(has_begin_end<const std::list<double>>::value);
-    BOOST_CHECK(has_begin_end<std::set<int>>::value);
-    BOOST_CHECK(has_begin_end<const std::set<long>>::value);
+    BOOST_CHECK(has_input_begin_end<std::list<int>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::list<double>>::value);
+    BOOST_CHECK(has_input_begin_end<std::set<int>>::value);
+    BOOST_CHECK(has_input_begin_end<const std::set<long>>::value);
     // C array.
-    BOOST_CHECK(has_begin_end<int[3]>::value);
+    BOOST_CHECK(has_input_begin_end<int[3]>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_shift_test)
@@ -2113,54 +1917,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_returnable_test)
     BOOST_CHECK(is_returnable<unreturnable_01 &>::value);
 }
 
-struct map_00 {
-};
-
-struct map_01 {
-    map_01 &operator=(const map_01 &) = default;
-    ~map_01() = delete;
-};
-
-struct map_02 {
-    map_02(const map_02 &) = default;
-    map_02 &operator=(const map_02 &) = delete;
-};
-
-struct map_03 {
-    map_03() = delete;
-};
-
-struct map_04 {
-    map_04() = default;
-    map_04(const map_04 &) = default;
-    map_04(map_04 &&) = delete;
-};
-
-struct map_05 {
-    map_05() = default;
-    map_05(const map_05 &) = default;
-    map_05(map_05 &&) = default;
-    map_05 &operator=(const map_05 &) = default;
-    map_05 &operator=(map_05 &&) = delete;
-};
-
-BOOST_AUTO_TEST_CASE(type_traits_is_mappable_test)
-{
-    BOOST_CHECK(is_mappable<int>::value);
-    BOOST_CHECK(!is_mappable<const int>::value);
-    BOOST_CHECK(!is_mappable<const int &>::value);
-    BOOST_CHECK(!is_mappable<int &>::value);
-    BOOST_CHECK(is_mappable<std::string>::value);
-    BOOST_CHECK(is_mappable<std::string const *>::value);
-    BOOST_CHECK(!is_mappable<std::thread>::value);
-    BOOST_CHECK(is_mappable<map_00>::value);
-    BOOST_CHECK(!is_mappable<map_01>::value);
-    BOOST_CHECK(!is_mappable<map_02>::value);
-    BOOST_CHECK(!is_mappable<map_03>::value);
-    BOOST_CHECK(!is_mappable<map_04>::value);
-    BOOST_CHECK(!is_mappable<map_05>::value);
-}
-
 BOOST_AUTO_TEST_CASE(type_traits_ref_mod_t)
 {
     BOOST_CHECK((std::is_same<int, uncvref_t<int>>::value));
@@ -2195,9 +1951,6 @@ BOOST_AUTO_TEST_CASE(type_traits_void_t)
     BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
     BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
 }
-
-template <typename T, typename U>
-using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
 
 BOOST_AUTO_TEST_CASE(type_traits_is_detected)
 {
@@ -2280,4 +2033,25 @@ BOOST_AUTO_TEST_CASE(type_traits_zero_is_absorbing)
         BOOST_CHECK((!zero_is_absorbing<const float &>::value));
         BOOST_CHECK((!zero_is_absorbing<float &&>::value));
     }
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_disj_idx)
+{
+    BOOST_CHECK(disjunction_idx<>::value == 0u);
+    BOOST_CHECK((disjunction_idx<std::is_same<int, int>>::value == 0u));
+    BOOST_CHECK((disjunction_idx<std::is_same<int, long>>::value == 1u));
+    BOOST_CHECK((disjunction_idx<std::is_same<int, long>, std::is_same<int, int>>::value == 1u));
+    BOOST_CHECK((disjunction_idx<std::is_same<int, long>, std::is_same<int, double>>::value == 2u));
+    BOOST_CHECK((disjunction_idx<std::is_same<int, int>, std::is_same<int, double>>::value == 0u));
+    BOOST_CHECK(
+        (disjunction_idx<std::is_same<int, int>, std::is_same<int, double>, std::is_same<int, std::string>>::value
+         == 0u));
+    BOOST_CHECK(
+        (disjunction_idx<std::is_same<int, float>, std::is_same<int, int>, std::is_same<int, std::string>>::value
+         == 1u));
+    BOOST_CHECK(
+        (disjunction_idx<std::is_same<int, float>, std::is_same<int, float>, std::is_same<int, int>>::value == 2u));
+    BOOST_CHECK(
+        (disjunction_idx<std::is_same<int, float>, std::is_same<int, float>, std::is_same<int, std::string>>::value
+         == 3u));
 }

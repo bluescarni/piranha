@@ -59,6 +59,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/pow.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 static_assert(MPFR_PREC_MIN <= 4 && MPFR_PREC_MAX >= 4,
@@ -74,8 +75,8 @@ using namespace piranha;
 
 const boost::fusion::vector<char, signed char, short, int, long, long long, unsigned char, unsigned short, unsigned,
                             unsigned long, unsigned long long>
-integral_values((char)42, (signed char)42, (short)42, -42, 42L, -42LL, (unsigned char)42, (unsigned short)42, 42U, 42UL,
-                42ULL);
+integral_values(char(42), static_cast<signed char>(42), short(42), -42, 42L, -42LL, static_cast<unsigned char>(42),
+                static_cast<unsigned short>(42), 42U, 42UL, 42ULL);
 
 struct check_integral_construction {
     template <typename T>
@@ -1900,10 +1901,10 @@ BOOST_AUTO_TEST_CASE(real_partial_test)
 
 BOOST_AUTO_TEST_CASE(real_evaluate_test)
 {
-    BOOST_CHECK_EQUAL(math::evaluate(real(), std::unordered_map<std::string, integer>{}), real());
-    BOOST_CHECK_EQUAL(math::evaluate(real(2), std::unordered_map<std::string, int>{}), real(2));
-    BOOST_CHECK_EQUAL(math::evaluate(real(-3.5), std::unordered_map<std::string, double>{}), real(-3.5));
-    BOOST_CHECK((std::is_same<decltype(math::evaluate(real(), std::unordered_map<std::string, real>{})), real>::value));
+    BOOST_CHECK_EQUAL(math::evaluate(real(), symbol_fmap<integer>{}), real());
+    BOOST_CHECK_EQUAL(math::evaluate(real(2), symbol_fmap<int>{}), real(2));
+    BOOST_CHECK_EQUAL(math::evaluate(real(-3.5), symbol_fmap<double>{}), real(-3.5));
+    BOOST_CHECK((std::is_same<decltype(math::evaluate(real(), symbol_fmap<real>{})), real>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_subs_test)
@@ -2082,7 +2083,7 @@ BOOST_AUTO_TEST_CASE(real_type_traits_test)
     BOOST_CHECK(has_negate<real &>::value);
     BOOST_CHECK(!has_negate<const real &>::value);
     BOOST_CHECK(!has_negate<const real>::value);
-    BOOST_CHECK((std::is_same<decltype(math::negate(*(real *)nullptr)), void>::value));
+    BOOST_CHECK((std::is_same<decltype(math::negate(*static_cast<real *>(nullptr))), void>::value));
     BOOST_CHECK((is_evaluable<real, int>::value));
     BOOST_CHECK((is_evaluable<real, double>::value));
     BOOST_CHECK((is_evaluable<real &, double>::value));

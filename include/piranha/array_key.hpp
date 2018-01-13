@@ -35,17 +35,18 @@ see https://www.gnu.org/licenses/. */
 #include <initializer_list>
 #include <iterator>
 #include <stdexcept>
+#include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include <piranha/config.hpp>
-#include <piranha/debug_access.hpp>
-#include <piranha/detail/vector_merge_args.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/small_vector.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -53,10 +54,13 @@ namespace piranha
 
 /// Array key.
 /**
- * Key type represented by an array-like sequence of instances of type \p T. Interface and semantics
+ * This class represents an array-like dense sequence of instances of type \p T. Interface and semantics
  * mimic those of \p std::vector. The underlying container used to store the elements is piranha::small_vector.
- * The template argument \p S is passed down as second argument to piranha::small_vector in the definition
+ * The template argument \p S is passed as second argument to piranha::small_vector in the definition
  * of the internal container.
+ *
+ * This class is intended as a base class for the implementation of a key type, but it does *not* satisfy
+ * all the requirements specified in piranha::is_key.
  *
  * ## Type requirements ##
  *
@@ -89,32 +93,12 @@ class array_key
     PIRANHA_TT_CHECK(is_equality_comparable, T);
     PIRANHA_TT_CHECK(is_hashable, T);
     PIRANHA_TT_CHECK(has_is_zero, T);
-    template <typename U>
-    friend class debug_access;
 
 public:
     /// The internal container type.
     using container_type = small_vector<T, S>;
     /// Value type.
     using value_type = typename container_type::value_type;
-
-private:
-    // Enabler for constructor from init list.
-    template <typename U>
-    using init_list_enabler =
-        typename std::enable_if<std::is_constructible<container_type, std::initializer_list<U>>::value, int>::type;
-    // Enabler for generic ctor.
-    template <typename U>
-    using generic_ctor_enabler = typename std::enable_if<has_safe_cast<value_type, U>::value, int>::type;
-    // Enabler for addition and subtraction.
-    // NOTE: here it is not difficult to make this an int enabler, like we usually do elsewhere,
-    // but alas the intel compiler chokes on this :/.
-    template <typename U>
-    using add_enabler = decltype(std::declval<U const &>().add(std::declval<U &>(), std::declval<U const &>()));
-    template <typename U>
-    using sub_enabler = decltype(std::declval<U const &>().sub(std::declval<U &>(), std::declval<U const &>()));
-
-public:
     /// Iterator type.
     using iterator = typename container_type::iterator;
     /// Const iterator type.
@@ -122,6 +106,9 @@ public:
     /// Size type.
     using size_type = typename container_type::size_type;
     /// Defaulted default constructor.
+    /**
+     * The constructed object will be empty.
+     */
     array_key() = default;
     /// Defaulted copy constructor.
     /**
@@ -130,6 +117,13 @@ public:
     array_key(const array_key &) = default;
     /// Defaulted move constructor.
     array_key(array_key &&) = default;
+
+private:
+    // Enabler for constructor from init list.
+    template <typename U>
+    using init_list_enabler = enable_if_t<std::is_constructible<container_type, std::initializer_list<U>>::value, int>;
+
+public:
     /// Constructor from initializer list.
     /**
      * \note
@@ -137,7 +131,7 @@ public:
      *
      * \p list will be forwarded to construct the internal piranha::small_vector.
      *
-     * @param list initializer list.
+     * @param list the initializer list.
      *
      * @throws unspecified any exception thrown by the corresponding constructor of piranha::small_vector.
      */
@@ -145,38 +139,42 @@ public:
     explicit array_key(std::initializer_list<U> list) : m_container(list)
     {
     }
-    /// Constructor from symbol set.
+    /// Constructor from piranha::symbol_fset.
     /**
      * The key will be created with a number of variables equal to <tt>args.size()</tt>
      * and filled with elements constructed from the integral constant 0.
      *
-     * @param args piranha::symbol_set used for construction.
+     * @param args the piranha::symbol_fset used for construction.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::small_vector::push_back(),
      * - the construction of instances of type \p value_type from the integral constant 0.
      */
-    explicit array_key(const symbol_set &args)
+    explicit array_key(const symbol_fset &args)
     {
-        for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
-            m_container.push_back(value_type(0));
-        }
+        // NOTE: the back inserter transforms the assignment into a push_back() operation.
+        std::fill_n(std::back_inserter(m_container), args.size(), value_type(0));
     }
+
+private:
+    // Enabler for generic ctor.
+    template <typename U>
+    using generic_ctor_enabler = enable_if_t<has_safe_cast<value_type, U>::value, int>;
+
+public:
     /// Constructor from piranha::array_key parametrized on a generic type.
     /**
      * \note
      * This constructor is enabled only if \p U can be cast safely to the value type.
      *
-     * Generic constructor for use in series, when inserting a term of different type.
-     * The internal container will be initialised with the
-     * contents of the internal container of \p x (possibly converting the individual contained values through
-     * piranha::safe_cast(),
+     * Generic constructor for use in piranha::series, when inserting a term of different type.
+     * The internal container will be initialised with the contents of the internal container of \p x (possibly
+     * converting the individual contained values through piranha::safe_cast(),
      * if the values are of different type). If the size of \p x is different from the size of \p args, a runtime error
-     * will
-     * be produced.
+     * will be produced.
      *
-     * @param other construction argument.
-     * @param args reference piranha::symbol_set.
+     * @param other the construction argument.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the sizes of \p x and \p args differ.
      * @throws unspecified any exception thrown by:
@@ -184,13 +182,14 @@ public:
      * - piranha::safe_cast().
      */
     template <typename U, typename Derived2, typename S2, generic_ctor_enabler<U> = 0>
-    explicit array_key(const array_key<U, Derived2, S2> &other, const symbol_set &args)
+    explicit array_key(const array_key<U, Derived2, S2> &other, const symbol_fset &args)
     {
         if (unlikely(other.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "inconsistent sizes in generic array_key constructor");
+            piranha_throw(std::invalid_argument,
+                          "inconsistent sizes in the generic array_key constructor: the size of the array ("
+                              + std::to_string(other.size()) + ") differs from the size of the symbol set ("
+                              + std::to_string(args.size()) + ")");
         }
-        // NOTE: here the requirement is that value_type is move-assignable, which is already
-        // fulfilled by is_container_element.
         std::transform(other.begin(), other.end(), std::back_inserter(m_container),
                        [](const U &x) { return safe_cast<value_type>(x); });
     }
@@ -206,7 +205,7 @@ public:
      *
      * @return a reference to \p this.
      *
-     * @throws unspecified any exception thrown by the assignment operator of the base class.
+     * @throws unspecified any exception thrown by the assignment operator of piranha::small_vector.
      */
     array_key &operator=(const array_key &other) = default;
     /// Move assignment operator.
@@ -260,7 +259,7 @@ public:
     /**
      * Equivalent to piranha::small_vector::resize().
      *
-     * @param new_size desired new size for the internal container.
+     * @param new_size the desired new size for the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::resize().
      */
@@ -270,29 +269,29 @@ public:
     }
     /// Element access.
     /**
-     * @param i index of the element to be accessed.
+     * @param i the index of the element to be accessed.
      *
      * @return reference to the element of the container at index \p i.
      */
     value_type &operator[](const size_type &i)
     {
-        piranha_assert(i < size());
         return m_container[i];
     }
     /// Const element access.
     /**
-     * @param i index of the element to be accessed.
+     * @param i the index of the element to be accessed.
      *
      * @return const reference to the element of the container at index \p i.
      */
     const value_type &operator[](const size_type &i) const
     {
-        piranha_assert(i < size());
         return m_container[i];
     }
     /// Hash value.
     /**
      * @return hash value of the key, computed via piranha::small_vector::hash().
+     *
+     * @throws unspecified any exception thrown by piranha::small_vector::hash().
      */
     std::size_t hash() const
     {
@@ -302,7 +301,7 @@ public:
     /**
      * Move-add \p x at the end of the internal container.
      *
-     * @param x element to be added to the internal container.
+     * @param x the element to be added to the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::push_back().
      */
@@ -314,7 +313,7 @@ public:
     /**
      * Copy-add \p x at the end of the internal container.
      *
-     * @param x element to be added to the internal container.
+     * @param x the element to be added to the internal container.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::push_back().
      */
@@ -324,7 +323,7 @@ public:
     }
     /// Equality operator.
     /**
-     * @param other comparison argument.
+     * @param other the comparison argument.
      *
      * @return the result of piranha::small_vector::operator==().
      *
@@ -336,9 +335,9 @@ public:
     }
     /// Inequality operator.
     /**
-     * @param other comparison argument.
+     * @param other the comparison argument.
      *
-     * @return negation of operator==().
+     * @return the negation of operator==().
      *
      * @throws unspecified any exception thrown by the equality operator.
      */
@@ -348,55 +347,100 @@ public:
     }
     /// Identify symbols that can be trimmed.
     /**
-     * This method is used in piranha::series::trim(). The input parameter \p candidates
-     * contains a set of symbols that are candidates for elimination. The method will remove
-     * from \p candidates those symbols whose element in \p this is not zero.
+     * This method is used in piranha::series::trim(). The input parameter \p trim_mask
+     * is a vector of boolean flags (i.e., a mask) which signals which elements in \p args are candidates
+     * for trimming: a nonzero value means that the symbol at the corresponding position is a candidate for trimming,
+     * while a zero value means that the symbol is not a candidate for trimming. This method will set to zero those
+     * values in \p trim_mask for which the corresponding element in \p this is nonzero.
      *
-     * @param candidates set of candidates for elimination.
-     * @param args reference arguments set.
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask originally contains
+     * the values <tt>[1,1,0,1,0]</tt>, after a call to this method \p trim_mask will contain
+     * <tt>[1,0,0,1,0]</tt> (that is, the second element was set from 1 to 0 as the corresponding element
+     * in \p this has a value of 5 and thus it must not be trimmed).
      *
-     * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
-     * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::symbol_set::remove().
+     * @param trim_mask a mask signalling candidate elements for trimming.
+     * @param args the reference piranha::symbol_fset.
+     *
+     * @throws std::invalid_argument if the sizes of \p this or \p trim_mask differ from the size of \p args.
+     * @throws unspecified any exception thrown by piranha::math::is_zero().
      */
-    void trim_identify(symbol_set &candidates, const symbol_set &args) const
+    void trim_identify(std::vector<char> &trim_mask, const symbol_fset &args) const
     {
-        if (unlikely(m_container.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "invalid arguments set for trim_identify()");
+        auto sbe = size_begin_end();
+        if (unlikely(std::get<0>(sbe) != args.size())) {
+            piranha_throw(std::invalid_argument, "invalid symbol set for trim_identify(): the size of the array ("
+                                                     + std::to_string(std::get<0>(sbe))
+                                                     + ") differs from the size of the reference symbol set ("
+                                                     + std::to_string(args.size()) + ")");
         }
-        for (size_type i = 0u; i < m_container.size(); ++i) {
-            if (!math::is_zero(m_container[i]) && std::binary_search(candidates.begin(), candidates.end(),
-                                                                     args[static_cast<symbol_set::size_type>(i)])) {
-                candidates.remove(args[static_cast<symbol_set::size_type>(i)]);
+        if (unlikely(std::get<0>(sbe) != trim_mask.size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid mask for trim_identify(): the size of the array (" + std::to_string(std::get<0>(sbe))
+                              + ") differs from the size of the mask (" + std::to_string(trim_mask.size()) + ")");
+        }
+        for (decltype(trim_mask.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+            if (!math::is_zero(*std::get<1>(sbe))) {
+                // The current element of the array is nonzero, set the
+                // corresponding element in the mask to zero.
+                trim_mask[i] = 0;
             }
         }
     }
     /// Trim.
     /**
-     * This method will return a copy of \p this with the elements associated to the symbols
-     * in \p trim_args removed.
+     * This method is used in piranha::series::trim(). The input mask \p trim_mask
+     * is a vector of boolean flags signalling (with nonzero values) elements
+     * of \p this to be removed. The method will return a copy of \p this in which
+     * the specified elements have been removed.
      *
-     * @param trim_args arguments whose elements will be removed.
-     * @param orig_args original arguments set.
+     * For instance, if \p this contains the values <tt>[0,5,3,0,4]</tt> and \p trim_mask contains
+     * the values <tt>[false,false,false,true,false]</tt>, then the output of this method will be
+     * the array of values <tt>[0,5,3,4]</tt> (that is, the fourth element has been removed as indicated
+     * by a \p true value in <tt>trim_mask</tt>'s fourth element).
      *
-     * @return trimmed copy of \p this.
+     * @param trim_mask a mask indicating which elements will be removed.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @throws std::invalid_argument if the size of \p this differs from the size of \p orig_args.
+     * @return a trimmed copy of \p this.
+     *
+     * @throws std::invalid_argument if the sizes of \p this or \p trim_mask differ from the size of \p args.
      * @throws unspecified any exception thrown by push_back().
      */
-    Derived trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+    Derived trim(const std::vector<char> &trim_mask, const symbol_fset &args) const
     {
-        if (unlikely(m_container.size() != orig_args.size())) {
-            piranha_throw(std::invalid_argument, "invalid arguments set for trim()");
+        auto sbe = size_begin_end();
+        if (unlikely(std::get<0>(sbe) != args.size())) {
+            piranha_throw(std::invalid_argument, "invalid arguments set for trim(): the size of the array ("
+                                                     + std::to_string(std::get<0>(sbe))
+                                                     + ") differs from the size of the reference symbol set ("
+                                                     + std::to_string(args.size()) + ")");
+        }
+        if (unlikely(std::get<0>(sbe) != trim_mask.size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid mask for trim(): the size of the array (" + std::to_string(std::get<0>(sbe))
+                              + ") differs from the size of the mask (" + std::to_string(trim_mask.size()) + ")");
         }
         Derived retval;
-        for (size_type i = 0u; i < m_container.size(); ++i) {
-            if (!std::binary_search(trim_args.begin(), trim_args.end(),
-                                    orig_args[static_cast<symbol_set::size_type>(i)])) {
-                retval.push_back(m_container[i]);
+        for (decltype(trim_mask.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
+            if (!trim_mask[i]) {
+                retval.push_back(*std::get<1>(sbe));
             }
         }
         return retval;
     }
+
+private:
+    // Enabler for addition and subtraction.
+    template <typename U>
+    using add_t = decltype(std::declval<U const &>().add(std::declval<U &>(), std::declval<U const &>()));
+    template <typename U>
+    using sub_t = decltype(std::declval<U const &>().sub(std::declval<U &>(), std::declval<U const &>()));
+    template <typename U>
+    using add_enabler = enable_if_t<is_detected<add_t, U>::value, int>;
+    template <typename U>
+    using sub_enabler = enable_if_t<is_detected<sub_t, U>::value, int>;
+
+public:
     /// Vector add.
     /**
      * \note
@@ -406,12 +450,12 @@ public:
      * Equivalent to calling piranha::small_vector::add() on the internal containers of \p this
      * and of the arguments.
      *
-     * @param retval piranha::array_key that will hold the result of the addition.
-     * @param other piranha::array_key that will be added to \p this.
+     * @param retval the piranha::array_key that will hold the result of the addition.
+     * @param other the piranha::array_key that will be added to \p this.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::add().
      */
-    template <typename U = container_type, typename = add_enabler<U>>
+    template <typename U = container_type, add_enabler<U> = 0>
     void vector_add(array_key &retval, const array_key &other) const
     {
         m_container.add(retval.m_container, other.m_container);
@@ -425,39 +469,46 @@ public:
      * Equivalent to calling piranha::small_vector::sub() on the internal containers of \p this
      * and of the arguments.
      *
-     * @param retval piranha::array_key that will hold the result of the subtraction.
-     * @param other piranha::array_key that will be subtracted from \p this.
+     * @param retval the piranha::array_key that will hold the result of the subtraction.
+     * @param other the piranha::array_key that will be subtracted from \p this.
      *
      * @throws unspecified any exception thrown by piranha::small_vector::sub().
      */
-    template <typename U = container_type, typename = sub_enabler<U>>
+    template <typename U = container_type, sub_enabler<U> = 0>
     void vector_sub(array_key &retval, const array_key &other) const
     {
         m_container.sub(retval.m_container, other.m_container);
     }
-    /// Merge arguments.
+    /// Merge symbols.
     /**
-     * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
-     * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the internal container,
-     * with the corresponding values constructed from the integral constant 0.
+     * This method will return a copy of \p this in which the value 0 has been inserted
+     * at the positions specified by \p ins_map. Specifically, before each index appearing in \p ins_map
+     * a number of zeroes equal to the size of the mapped piranha::symbol_fset will be inserted.
      *
-     * @param orig_args current reference arguments set for \p this.
-     * @param new_args new arguments set.
+     * For instance, given a piranha::array_key containing the values <tt>[1,2,3,4]</tt>, a symbol set
+     * \p args containing <tt>["c","e","g","h"]</tt> and an insertion map \p ins_map containing the pairs
+     * <tt>[(0,["a","b"]),(1,["d"]),(2,["f"]),(4,["i"])]</tt>, the output of this method will be
+     * <tt>[0,0,1,0,2,0,3,4,0]</tt>. That is, the symbols appearing in \p ins_map are merged into \p this
+     * with a value of zero at the specified positions.
      *
-     * @return a \p Derived instance resulting from merging \p new_args into \p this.
+     * @param ins_map the insertion map.
+     * @param args the reference symbol set for \p this.
+     *
+     * @return a \p Derived instance resulting from inserting into \p this zeroes at the positions specified by \p
+     * ins_map.
      *
      * @throws std::invalid_argument in the following cases:
-     * - the size of \p this is different from the size of \p orig_args,
-     * - the size of \p new_args is not greater than the size of \p orig_args,
-     * - not all elements of \p orig_args are included in \p new_args.
+     * - the size of \p this is different from the size of \p args,
+     * - the size of \p ins_map is zero,
+     * - the last index in \p ins_map is greater than the size of \p this.
      * @throws unspecified any exception thrown by:
      * - piranha::small_vector::push_back(),
-     * - the construction of instances of type \p value_type from the integral constant 0.
+     * - the construction of instances of type array_key::value_type from the integral constant 0.
      */
-    Derived merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
+    Derived merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map, const symbol_fset &args) const
     {
         Derived retval;
-        retval.m_container = detail::vector_merge_args(m_container, orig_args, new_args);
+        vector_key_merge_symbols(retval.m_container, m_container, ins_map, args);
         return retval;
     }
 
@@ -469,7 +520,7 @@ public:
     /// Get size, begin and end iterator (const version).
     /**
      * @return the output of the piranha::small_vector::size_begin_end() method called
-     * by the internal piranha::small_vector container.
+     * on the internal piranha::small_vector container.
      */
     auto size_begin_end() const -> decltype(m_container.size_begin_end())
     {
@@ -478,7 +529,7 @@ public:
     /// Get size, begin and end iterator.
     /**
      * @return the output of the piranha::small_vector::size_begin_end() method called
-     * by the internal piranha::small_vector container.
+     * on the internal piranha::small_vector container.
      */
     auto size_begin_end() -> decltype(m_container.size_begin_end())
     {
@@ -499,7 +550,7 @@ struct hash<piranha::array_key<T, Derived, S>> {
     typedef piranha::array_key<T, Derived, S> argument_type;
     /// Hash operator.
     /**
-     * @param a piranha::array_key whose hash value will be returned.
+     * @param a the piranha::array_key whose hash value will be returned.
      *
      * @return piranha::array_key::hash().
      */

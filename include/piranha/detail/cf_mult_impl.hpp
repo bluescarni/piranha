@@ -40,7 +40,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
 // Overload if the coefficient is a rational.
@@ -56,10 +56,6 @@ inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
 {
     math::mul3(out_cf, cf1, cf2);
 }
-
-// Enabler for the functions above.
-template <typename Cf>
-using cf_mult_enabler = enable_if_t<conjunction<is_cf<Cf>, has_mul3<Cf>>::value>;
 }
 }
 

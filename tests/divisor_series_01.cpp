@@ -32,11 +32,10 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 
 #include <piranha/divisor.hpp>
@@ -52,16 +51,17 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/real.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
-using cf_types = boost::mpl::vector<double, integer, real, rational, polynomial<rational, monomial<int>>>;
-using expo_types = boost::mpl::vector<short, int, long, integer>;
+using cf_types = std::tuple<double, integer, real, rational, polynomial<rational, monomial<int>>>;
+using expo_types = std::tuple<short, int, long, integer>;
 
 struct test_00_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using s_type = divisor_series<T, divisor<short>>;
         s_type s0{3};
@@ -94,12 +94,11 @@ struct test_00_tester {
 BOOST_AUTO_TEST_CASE(divisor_series_test_00)
 {
     init();
-    boost::mpl::for_each<cf_types>(test_00_tester());
+    tuple_for_each(cf_types{}, test_00_tester());
 }
-
 struct partial_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using p_type = polynomial<rational, monomial<int>>;
         using s_type = divisor_series<p_type, divisor<T>>;
@@ -183,9 +182,7 @@ struct partial_tester {
         using p_type = polynomial<rational, monomial<int>>;
         using s_type = divisor_series<p_type, divisor<T>>;
         s_type s14;
-        symbol_set ss;
-        ss.add("x");
-        s14.set_symbol_set(ss);
+        s14.set_symbol_set(symbol_fset{"x"});
         typename s_type::term_type::key_type k0;
         std::vector<T> vs;
         vs.push_back(T(1));
@@ -199,8 +196,7 @@ struct partial_tester {
             return;
         }
         s_type s15;
-        ss.add("y");
-        s15.set_symbol_set(ss);
+        s15.set_symbol_set(symbol_fset{"x", "y"});
         vs[0] = static_cast<T>(std::numeric_limits<T>::max() / T(4));
         vs.push_back(T(1));
         expo = static_cast<T>(std::numeric_limits<T>::max() - 1);
@@ -240,7 +236,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
                           "-a*b*1/[(\\nu_{c})**2]*sin(3*c)");
     }
     // Test with various exponent types.
-    boost::mpl::for_each<expo_types>(partial_tester());
+    tuple_for_each(expo_types{}, partial_tester{});
     // Test custom derivatives.
     s_type x{"x"}, y{"y"};
     s_type::register_custom_derivative(

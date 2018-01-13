@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/polynomial.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 #include "type_system.hpp"
@@ -84,9 +85,7 @@ struct poly_custom_hook {
     }
     template <typename S>
     struct auto_truncate_set_exposer {
-        auto_truncate_set_exposer(bp::class_<S> &series_class) : m_series_class(series_class)
-        {
-        }
+        auto_truncate_set_exposer(bp::class_<S> &series_class) : m_series_class(series_class) {}
         bp::class_<S> &m_series_class;
         template <typename T>
         static void set_auto_truncate_degree_wrapper(const T &max_degree)
@@ -97,7 +96,7 @@ struct poly_custom_hook {
         static void set_auto_truncate_pdegree_wrapper(const T &max_degree, bp::list l)
         {
             bp::stl_input_iterator<std::string> begin(l), end;
-            S::set_auto_truncate_degree(max_degree, std::vector<std::string>(begin, end));
+            S::set_auto_truncate_degree(max_degree, piranha::symbol_fset(begin, end));
         }
         template <typename T>
         void expose_set_auto_truncate_degree(
@@ -114,7 +113,7 @@ struct poly_custom_hook {
             m_series_class.def(
                 "truncated_multiplication", +[](const S &p1, const S &p2, const T &max_degree, bp::list l) -> S {
                     bp::stl_input_iterator<std::string> begin(l), end;
-                    return S::truncated_multiplication(p1, p2, max_degree, std::vector<std::string>(begin, end));
+                    return S::truncated_multiplication(p1, p2, max_degree, piranha::symbol_fset(begin, end));
                 });
             set_auto_truncate_degree_exposed() = true;
         }

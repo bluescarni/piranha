@@ -629,10 +629,9 @@ private:
     };
     // Pow enabler.
     template <typename T>
-    using pow_enabler
-        = enable_if_t<std::is_same<decltype(math::pow(std::declval<const int_type &>(), std::declval<const T &>())),
-                                   int_type>::value,
-                      int>;
+    using pow_enabler = enable_if_t<
+        std::is_same<decltype(math::pow(std::declval<const int_type &>(), std::declval<const T &>())), int_type>::value,
+        int>;
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
@@ -668,9 +667,7 @@ public:
      * This constructor will initialise the rational to zero (that is, the numerator is set to zero, the denominator
      * to 1).
      */
-    mp_rational() : m_num(), m_den(1)
-    {
-    }
+    mp_rational() : m_num(), m_den(1) {}
     /// Copy constructor.
     /**
      * @param other the construction argument.
@@ -760,9 +757,7 @@ public:
      *
      * @throws unspecified any exception thrown by the constructor from C string.
      */
-    explicit mp_rational(const std::string &str) : mp_rational(str.c_str())
-    {
-    }
+    explicit mp_rational(const std::string &str) : mp_rational(str.c_str()) {}
     /// Destructor.
     ~mp_rational()
     {
@@ -1983,17 +1978,17 @@ private:
               enable_if_t<disjunction<std::is_integral<T2>, is_mp_integer<T2>>::value, int> = 0>
     static auto impl(const T2 &b, const mp_rational<SSize> &e) -> decltype(math::pow(b, e.num()))
     {
-        using ret_type = decltype(math::pow(b, e.num()));
+        using ret_t = decltype(math::pow(b, e.num()));
         if (is_unitary(b)) {
-            return ret_type(b);
+            return ret_t(b);
         }
         if (is_zero(b)) {
             const auto sign = e.num().sgn();
             if (sign > 0) {
-                return ret_type(0);
+                return ret_t(0);
             }
             if (sign == 0) {
-                return ret_type(1);
+                return ret_t(1);
             }
             piranha_throw(zero_division_error, "unable to raise zero to a negative power");
         }
@@ -2174,11 +2169,9 @@ inline namespace impl
 {
 
 template <typename To, typename From>
-using sc_rat_enabler
-    = enable_if_t<disjunction<conjunction<is_mp_rational<To>,
-                                          disjunction<std::is_arithmetic<From>, is_mp_integer<From>>>,
-                              conjunction<is_mp_rational<From>,
-                                          disjunction<std::is_integral<To>, is_mp_integer<To>>>>::value>;
+using sc_rat_enabler = enable_if_t<
+    disjunction<conjunction<is_mp_rational<To>, disjunction<std::is_arithmetic<From>, is_mp_integer<From>>>,
+                conjunction<is_mp_rational<From>, disjunction<std::is_integral<To>, is_mp_integer<To>>>>::value>;
 }
 
 /// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_rational.

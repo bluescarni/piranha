@@ -54,7 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>
 #include <piranha/settings.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/thread_pool.hpp>
 #include <piranha/tuning.hpp>
 #include <piranha/type_traits.hpp>
@@ -149,8 +149,8 @@ struct base_series_multiplier_impl {
 };
 
 template <typename Series, typename Derived>
-struct base_series_multiplier_impl<Series, Derived, typename std::enable_if<is_mp_rational<
-                                                        typename Series::term_type::cf_type>::value>::type> {
+struct base_series_multiplier_impl<
+    Series, Derived, typename std::enable_if<is_mp_rational<typename Series::term_type::cf_type>::value>::type> {
     // Useful shortcuts.
     using term_type = typename Series::term_type;
     using rat_type = typename term_type::cf_type;
@@ -244,9 +244,7 @@ public:
 private:
     // The default limit functor: it will include all terms in the second series.
     struct default_limit_functor {
-        default_limit_functor(const base_series_multiplier &m) : m_size2(m.m_v2.size())
-        {
-        }
+        default_limit_functor(const base_series_multiplier &m) : m_size2(m.m_v2.size()) {}
         size_type operator()(const size_type &) const
         {
             return m_size2;
@@ -593,8 +591,7 @@ protected:
         // Sync mutex - actually used only in multithreading.
         std::mutex mut;
         // The estimation functor.
-        auto estimator = [&lf, size1, n_threads, multiplier, tpt, n_trials, this, &c_estimate, &mut,
-                          result_size](unsigned thread_idx) {
+        auto estimator = [&lf, size1, n_threads, tpt, this, &c_estimate, &mut](unsigned thread_idx) {
             piranha_assert(thread_idx < n_threads);
             // Vectors of indices into m_v1.
             std::vector<size_type> v_idx1(safe_cast<typename std::vector<size_type>::size_type>(size1));
@@ -821,19 +818,16 @@ protected:
      * When using the low-level interface of piranha::hash_set for term insertion, invariants might be violated
      * both in piranha::hash_set and piranha::series. In particular:
      *
-     * - terms may not be checked for compatibility or ignorability upon insertion,
+     * - terms may not be checked for compatibility or for being zero upon insertion,
      * - the count of elements in piranha::hash_set might not be updated.
      *
-     * This method can be used to fix these invariants: each term of \p retval will be checked for ignorability and
-     * compatibility,
-     * and the total count of terms in the series will be set to the number of non-ignorable terms. Ignorable terms will
-     * be erased.
+     * This method can be used to fix these invariants: it will check whether each term of \p retval is incompatible
+     * and/or zero, and the total count of terms in the series will be set to the number of nonzero terms.
+     * Zero terms will be erased.
      *
      * Note that in case of exceptions \p retval will likely be left in an inconsistent state which violates internal
-     * invariants.
-     * Calls to this function should always be wrapped in a try/catch block that makes sure that \p retval is cleared
-     * before
-     * re-throwing.
+     * invariants. Calls to this function should always be wrapped in a try/catch block that makes sure that \p retval
+     * is cleared before re-throwing.
      *
      * @param retval the series to be sanitised.
      * @param n_threads the number of threads to be used.
@@ -870,7 +864,7 @@ protected:
                 }
                 // First update the size, it will be scaled back in the erase() method if necessary.
                 container._update_size(static_cast<bucket_size_type>(container.size() + 1u));
-                if (unlikely(it->is_ignorable(args))) {
+                if (unlikely(it->is_zero(args))) {
                     it = container.erase(it);
                 } else {
                     ++it;
@@ -899,7 +893,7 @@ protected:
                         piranha_throw(std::invalid_argument, "incompatible term");
                     }
                     // Check for ignorability.
-                    if (unlikely(it->is_ignorable(args))) {
+                    if (unlikely(it->is_zero(args))) {
                         term_list.push_back(*it);
                     }
                     // Update the count of terms.
@@ -1134,7 +1128,7 @@ protected:
     /// Vector of const pointers to the terms in the smaller series.
     mutable v_ptr m_v2;
     /// The symbol set of the series used during construction.
-    const symbol_set m_ss;
+    const symbol_fset m_ss;
     /// Number of threads.
     /**
      * This value will be set by the constructor, and it represents the number of threads

@@ -51,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -76,31 +77,29 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/safe_cast.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
-// Hash functor for term type in series.
-template <typename Term>
-struct term_hasher {
-    std::size_t operator()(const Term &term) const
-    {
-        return term.hash();
-    }
-};
+// Fwd declaration.
+template <typename S1, typename S2, typename F>
+auto series_merge_f(S1 &&s1, S2 &&s2, const F &f) -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)));
+}
+
+namespace detail
+{
 
 // NOTE: this needs to go here, instead of in the series class as private method,
 // because of a bug in GCC 4.7/4.8:
 // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53137
 template <typename Term, typename Derived>
-inline std::pair<typename Term::cf_type, Derived> pair_from_term(const symbol_set &s, const Term &t)
+inline std::pair<typename Term::cf_type, Derived> pair_from_term(const symbol_fset &s, const Term &t)
 {
     typedef typename Term::cf_type cf_type;
     Derived retval;
@@ -124,9 +123,9 @@ inline RetT apply_cf_functor(const T &s)
     RetT retval;
     Functor f;
     if (s.empty()) {
-        retval.insert(term_type(f(cf_type(0)), key_type(symbol_set{})));
+        retval.insert(term_type(f(cf_type(0)), key_type(symbol_fset{})));
     } else {
-        retval.insert(term_type(f(s._container().begin()->m_cf), key_type(symbol_set{})));
+        retval.insert(term_type(f(s._container().begin()->m_cf), key_type(symbol_fset{})));
     }
     return retval;
 }
@@ -170,8 +169,8 @@ struct series_is_rebindable_impl {
 };
 
 template <typename T, typename Cf>
-struct series_is_rebindable_impl<T, Cf, enable_if_t<disjunction<negation<is_cf<uncvref_t<Cf>>>,
-                                                                negation<is_series<uncvref_t<T>>>>::value>> {
+struct series_is_rebindable_impl<
+    T, Cf, enable_if_t<disjunction<negation<is_cf<uncvref_t<Cf>>>, negation<is_series<uncvref_t<T>>>>::value>> {
     static const bool value = false;
 };
 }
@@ -250,8 +249,8 @@ const std::size_t series_recursion_index<T, Enable>::value;
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
 
 template <typename T>
-class series_recursion_index<T, typename std::enable_if<std::is_base_of<detail::series_tag,
-                                                                        typename std::decay<T>::type>::value>::type>
+class series_recursion_index<
+    T, typename std::enable_if<std::is_base_of<detail::series_tag, typename std::decay<T>::type>::value>::type>
 {
     using cf_type = typename std::decay<T>::type::term_type::cf_type;
     static_assert(series_recursion_index<cf_type>::value < std::numeric_limits<std::size_t>::max(), "Overflow error.");
@@ -261,10 +260,8 @@ public:
 };
 
 template <typename T>
-const std::size_t
-    series_recursion_index<T,
-                           typename std::enable_if<std::is_base_of<detail::series_tag,
-                                                                   typename std::decay<T>::type>::value>::type>::value;
+const std::size_t series_recursion_index<
+    T, typename std::enable_if<std::is_base_of<detail::series_tag, typename std::decay<T>::type>::value>::type>::value;
 
 #endif
 
@@ -417,7 +414,8 @@ struct binary_series_op_return_type<S1, S2, N,
                                         /*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value
                                         && series_recursion_index<S1>::value != 0u &&
                                         /*b*/ !std::is_same<bso_cf_op_t<S1, S2, N>, bso_cf_t<S1>>::value
-                                        && !std::is_same<bso_cf_op_t<S1, S2, N>, bso_cf_t<S2>>::value &&
+                                        && !std::is_same<bso_cf_op_t<S1, S2, N>, bso_cf_t<S2>>::value
+                                        &&
                                         /*c*/ std::is_same<series_rebind<S1, bso_cf_op_t<S1, S2, N>>,
                                                            series_rebind<S2, bso_cf_op_t<S1, S2, N>>>::value>::type> {
     using type = series_rebind<S1, bso_cf_op_t<S1, S2, N>>;
@@ -564,7 +562,7 @@ class series_operators
         // NOTE: here we cover the corner case in which x and y are the same object.
         // This could be problematic in the algorithm below if retval was move-cted from
         // x, since in such a case y will also be erased. This will happen if one does
-        // std::move(a) + std::move(a)
+        // std::move(a) + std::move(a).
         if (unlikely(&x == &y)) {
             retval.template merge_terms<Sign>(retval);
             return retval;
@@ -574,14 +572,14 @@ class series_operators
             retval.template merge_terms<Sign>(std::forward<U>(y));
         } else {
             // Let's fix the args of the first series, if needed.
-            auto merge = retval.m_symbol_set.merge(y.m_symbol_set);
-            if (merge != retval.m_symbol_set) {
+            const auto merge = ss_merge(retval.m_symbol_set, y.m_symbol_set);
+            if (std::get<0>(merge) != retval.m_symbol_set) {
                 // This is a move assignment, always possible.
-                retval = retval.merge_arguments(merge);
+                retval = retval.merge_arguments(std::get<0>(merge), std::get<1>(merge));
             }
             // Fix the args of the second series.
-            if (merge != y.m_symbol_set) {
-                retval.template merge_terms<Sign>(y.merge_arguments(merge));
+            if (std::get<0>(merge) != y.m_symbol_set) {
+                retval.template merge_terms<Sign>(y.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
             } else {
                 retval.template merge_terms<Sign>(std::forward<U>(y));
             }
@@ -599,14 +597,13 @@ class series_operators
     // - equal recursion, first series wins,
     // - first higher recursion, coefficient of first series wins,
     // In both cases we need to construct a T from y.
-    template <
-        typename T, typename U,
-        typename std::enable_if<(bso_type<T, U, 0>::value == 1u || bso_type<T, U, 0>::value == 4u) &&
-                                    // In order for the implementation to work, we need to be able to build T from U.
-                                    std::is_constructible<typename std::decay<T>::type,
-                                                          const typename std::decay<U>::type &>::value,
-                                int>::type
-        = 0>
+    template <typename T, typename U,
+              typename std::enable_if<
+                  (bso_type<T, U, 0>::value == 1u || bso_type<T, U, 0>::value == 4u) &&
+                      // In order for the implementation to work, we need to be able to build T from U.
+                      std::is_constructible<typename std::decay<T>::type, const typename std::decay<U>::type &>::value,
+                  int>::type
+              = 0>
     static series_common_type<T, U, 0> dispatch_binary_add(T &&x, U &&y)
     {
         typename std::decay<T>::type y1(std::forward<U>(y));
@@ -623,16 +620,16 @@ class series_operators
     // - equal series recursion, 3rd coefficient type generated,
     // - first higher recursion, coefficient result is different from first series.
     // In both cases we need to promote both operands to a 3rd type.
-    template <typename T, typename U,
-              typename std::enable_if<(bso_type<T, U, 0>::value == 3u || bso_type<T, U, 0>::value == 5u) &&
-                                          // In order for the implementation to work, we need to be able to build the
-                                          // common type from T and U.
-                                          std::is_constructible<series_common_type<T, U, 0>,
-                                                                const typename std::decay<T>::type &>::value
-                                          && std::is_constructible<series_common_type<T, U, 0>,
-                                                                   const typename std::decay<U>::type &>::value,
-                                      int>::type
-              = 0>
+    template <
+        typename T, typename U,
+        typename std::enable_if<
+            (bso_type<T, U, 0>::value == 3u || bso_type<T, U, 0>::value == 5u) &&
+                // In order for the implementation to work, we need to be able to build the
+                // common type from T and U.
+                std::is_constructible<series_common_type<T, U, 0>, const typename std::decay<T>::type &>::value
+                && std::is_constructible<series_common_type<T, U, 0>, const typename std::decay<U>::type &>::value,
+            int>::type
+        = 0>
     static series_common_type<T, U, 0> dispatch_binary_add(T &&x, U &&y)
     {
         series_common_type<T, U, 0> x1(std::forward<T>(x));
@@ -699,14 +696,14 @@ class series_operators
         retval.negate();
         return retval;
     }
-    template <typename T, typename U,
-              typename std::enable_if<(bso_type<T, U, 1>::value == 3u || bso_type<T, U, 1>::value == 5u)
-                                          && std::is_constructible<series_common_type<T, U, 1>,
-                                                                   const typename std::decay<T>::type &>::value
-                                          && std::is_constructible<series_common_type<T, U, 1>,
-                                                                   const typename std::decay<U>::type &>::value,
-                                      int>::type
-              = 0>
+    template <
+        typename T, typename U,
+        typename std::enable_if<
+            (bso_type<T, U, 1>::value == 3u || bso_type<T, U, 1>::value == 5u)
+                && std::is_constructible<series_common_type<T, U, 1>, const typename std::decay<T>::type &>::value
+                && std::is_constructible<series_common_type<T, U, 1>, const typename std::decay<U>::type &>::value,
+            int>::type
+        = 0>
     static series_common_type<T, U, 1> dispatch_binary_sub(T &&x, U &&y)
     {
         series_common_type<T, U, 1> x1(std::forward<T>(x));
@@ -738,39 +735,20 @@ class series_operators
     template <typename T, typename... U>
     using in_place_sub_enabler = typename std::enable_if<detail::true_tt<in_place_sub_type<T, U...>>::value, int>::type;
     // Multiplication.
-    template <typename T, typename U>
-    static series_common_type<T, U, 2> binary_mul_impl(T &&x, U &&y)
-    {
-        return series_multiplier<series_common_type<T, U, 2>>(std::forward<T>(x), std::forward<U>(y))();
-    }
+    struct binary_mul_impl {
+        template <typename T, typename U>
+        series_common_type<T, U, 2> operator()(T &&x, U &&y) const
+        {
+            return series_multiplier<series_common_type<T, U, 2>>(std::forward<T>(x), std::forward<U>(y))();
+        }
+    };
     template <typename T, typename U, typename std::enable_if<bso_type<T, U, 2>::value == 0u, int>::type = 0>
     static series_common_type<T, U, 2> dispatch_binary_mul(T &&x, U &&y)
     {
         using ret_type = series_common_type<T, U, 2>;
         static_assert(std::is_same<typename std::decay<T>::type, ret_type>::value, "Invalid type.");
         static_assert(std::is_same<typename std::decay<U>::type, ret_type>::value, "Invalid type.");
-        if (likely(x.m_symbol_set == y.m_symbol_set)) {
-            return binary_mul_impl(std::forward<T>(x), std::forward<U>(y));
-        } else {
-            auto merge = x.m_symbol_set.merge(y.m_symbol_set);
-            // Couple of paranoia checks.
-            piranha_assert(merge == y.m_symbol_set.merge(x.m_symbol_set));
-            piranha_assert(merge == y.m_symbol_set.merge(merge));
-            const bool need_copy_x = (merge != x.m_symbol_set), need_copy_y = (merge != y.m_symbol_set);
-            piranha_assert(need_copy_x || need_copy_y);
-            if (need_copy_x) {
-                ret_type x_copy(x.merge_arguments(merge));
-                if (need_copy_y) {
-                    ret_type y_copy(y.merge_arguments(merge));
-                    return binary_mul_impl(std::move(x_copy), std::move(y_copy));
-                }
-                return binary_mul_impl(std::move(x_copy), std::forward<U>(y));
-            } else {
-                piranha_assert(need_copy_y);
-                ret_type y_copy(y.merge_arguments(merge));
-                return binary_mul_impl(std::forward<T>(x), std::move(y_copy));
-            }
-        }
+        return series_merge_f(std::forward<T>(x), std::forward<U>(y), binary_mul_impl{});
     }
     template <typename T, typename U,
               typename std::enable_if<(bso_type<T, U, 2>::value == 1u || bso_type<T, U, 2>::value == 4u)
@@ -789,14 +767,14 @@ class series_operators
     {
         return dispatch_binary_mul(std::forward<U>(y), std::forward<T>(x));
     }
-    template <typename T, typename U,
-              typename std::enable_if<(bso_type<T, U, 2>::value == 3u || bso_type<T, U, 2>::value == 5u)
-                                          && std::is_constructible<series_common_type<T, U, 2>,
-                                                                   const typename std::decay<T>::type &>::value
-                                          && std::is_constructible<series_common_type<T, U, 2>,
-                                                                   const typename std::decay<U>::type &>::value,
-                                      int>::type
-              = 0>
+    template <
+        typename T, typename U,
+        typename std::enable_if<
+            (bso_type<T, U, 2>::value == 3u || bso_type<T, U, 2>::value == 5u)
+                && std::is_constructible<series_common_type<T, U, 2>, const typename std::decay<T>::type &>::value
+                && std::is_constructible<series_common_type<T, U, 2>, const typename std::decay<U>::type &>::value,
+            int>::type
+        = 0>
     static series_common_type<T, U, 2> dispatch_binary_mul(T &&x, U &&y)
     {
         series_common_type<T, U, 2> x1(std::forward<T>(x));
@@ -880,14 +858,14 @@ class series_operators
     // Two cases:
     // - same recursion, need promoted coefficient,
     // - second operand has higher recursion, both promote to a third type.
-    template <typename T, typename U,
-              typename std::enable_if<(bso_type<T, U, 3>::value == 3u || bso_type<T, U, 3>::value == 7u)
-                                          && std::is_constructible<series_common_type<T, U, 3>,
-                                                                   const typename std::decay<T>::type &>::value
-                                          && std::is_constructible<series_common_type<T, U, 3>,
-                                                                   const typename std::decay<U>::type &>::value,
-                                      int>::type
-              = 0>
+    template <
+        typename T, typename U,
+        typename std::enable_if<
+            (bso_type<T, U, 3>::value == 3u || bso_type<T, U, 3>::value == 7u)
+                && std::is_constructible<series_common_type<T, U, 3>, const typename std::decay<T>::type &>::value
+                && std::is_constructible<series_common_type<T, U, 3>, const typename std::decay<U>::type &>::value,
+            int>::type
+        = 0>
     static series_common_type<T, U, 3> dispatch_binary_div(T &&x, U &&y)
     {
         series_common_type<T, U, 0> x1(std::forward<T>(x));
@@ -933,7 +911,7 @@ class series_operators
                 it->m_cf /= y;
                 // NOTE: no need to check for compatibility, as it depends only on the key type and here
                 // we are only acting on the coefficient.
-                if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
+                if (unlikely(it->is_zero(retval.m_symbol_set))) {
                     // Erase will return the next iterator.
                     it = retval.m_container.erase(it);
                 } else {
@@ -985,6 +963,11 @@ class series_operators
         if (x.size() != y.size()) {
             return false;
         }
+        // NOTE: maybe it's possible to write an optimised algorithm
+        // in case the sizes coincide: compare bucket by bucket (e.g.,
+        // if the buckets at a certain index in the two operands have
+        // different sizes, then the series are different). Maybe this could
+        // even be moved into hash_set to be its equality operator.
         piranha_assert(x.m_symbol_set == y.m_symbol_set);
         const auto it_f_x = x.m_container.end(), it_f_y = y.m_container.end();
         for (auto it = x.m_container.begin(); it != it_f_x; ++it) {
@@ -1000,17 +983,7 @@ class series_operators
     static bool dispatch_equality(const T &x, const U &y)
     {
         static_assert(std::is_same<T, U>::value, "Invalid types for the equality operator.");
-        // Arguments merging.
-        if (likely(x.m_symbol_set == y.m_symbol_set)) {
-            return equality_impl(x, y);
-        } else {
-            auto merge = x.m_symbol_set.merge(y.m_symbol_set);
-            const bool x_needs_copy = (merge != x.m_symbol_set);
-            const bool y_needs_copy = (merge != y.m_symbol_set);
-            piranha_assert(x_needs_copy || y_needs_copy);
-            return equality_impl(x_needs_copy ? x.merge_arguments(merge) : x,
-                                 y_needs_copy ? y.merge_arguments(merge) : y);
-        }
+        return series_merge_f(x, y, [](const T &a, const T &b) { return series_operators::equality_impl(a, b); });
     }
     template <typename T, typename U,
               typename std::enable_if<(bso_type<T, U, 0>::value == 1u || bso_type<T, U, 0>::value == 4u)
@@ -1064,7 +1037,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - any invoked series, coefficient or key constructor,
-     * - construction, assignment and other operations on piranha::symbol_set,
+     * - construction, assignment and other operations on piranha::symbol_fset,
      * - piranha::series::insert().
      */
     template <typename T, typename... U>
@@ -1103,7 +1076,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - any invoked series, coefficient or key constructor,
-     * - construction, assignment and other operations on piranha::symbol_set,
+     * - construction, assignment and other operations on piranha::symbol_fset,
      * - piranha::series::insert(),
      * - piranha::series::negate().
      */
@@ -1143,7 +1116,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - any invoked series, coefficient or key constructor,
-     * - construction, assignment and other operations on piranha::symbol_set,
+     * - construction, assignment and other operations on piranha::symbol_fset,
      * - piranha::series::insert(),
      * - the call operator of piranha::series_multiplier.
      */
@@ -1228,7 +1201,7 @@ public:
      * - piranha::hash_set::find(),
      * - the comparison operator of the coefficient type,
      * - any invoked series, coefficient or key constructor,
-     * - construction, assignment and other operations on piranha::symbol_set.
+     * - construction, assignment and other operations on piranha::symbol_fset.
      */
     template <typename T, typename... U, eq_enabler<T, U...> = 0>
     friend bool operator==(const T &x, const U &... y)
@@ -1276,21 +1249,21 @@ public:
  * Moved-from series are left in a state equivalent to an empty series.
  */
 /* TODO:
-* \todo cast operator, to series and non-series types.
-* \todo cast operator would allow to define in-place operators with fundamental types as first operand.
-* \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the
-* function object's signature.
-* \todo transform needs sfinaeing.
-* TODO new operators:
-* - test with mock_cfs that are not addable to scalars.
-* - the unary + and - operators should probably follow the type promotion rules for consistency.
-*/
+ * \todo cast operator, to series and non-series types.
+ * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
+ * \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the
+ * function object's signature.
+ * \todo transform needs sfinaeing.
+ * TODO new operators:
+ * - test with mock_cfs that are not addable to scalars.
+ * - the unary + and - operators should probably follow the type promotion rules for consistency.
+ */
 template <typename Cf, typename Key, typename Derived>
 class series : detail::series_tag, series_operators
 {
 public:
     /// Alias for term type.
-    typedef term<Cf, Key> term_type;
+    using term_type = term<Cf, Key>;
 
 private:
     // Make friend with all series.
@@ -1304,10 +1277,16 @@ private:
     // Partial need access to the custom derivatives.
     template <typename, typename>
     friend struct math::partial_impl;
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+    // Friendship with the series_merge_f helper.
+    template <typename S1, typename S2, typename F>
+    friend auto impl::series_merge_f(S1 &&s1, S2 &&s2, const F &f)
+        -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)));
+#endif
 
 protected:
     /// Container type for terms.
-    using container_type = hash_set<term_type, detail::term_hasher<term_type>>;
+    using container_type = hash_set<term_type>;
 
 private:
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
@@ -1326,7 +1305,7 @@ private:
             piranha_throw(std::invalid_argument, "cannot insert incompatible term");
         }
         // Discard ignorable term.
-        if (unlikely(term.is_ignorable(m_symbol_set))) {
+        if (unlikely(term.is_zero(m_symbol_set))) {
             return;
         }
         insertion_impl<Sign>(std::forward<T>(term));
@@ -1366,7 +1345,7 @@ private:
         // Cleanup function that checks ignorability of an element in the hash set,
         // and removes it if necessary.
         auto cleanup = [this](const typename container_type::const_iterator &it_c) {
-            if (unlikely(it_c->is_ignorable(this->m_symbol_set))) {
+            if (unlikely(it_c->is_zero(this->m_symbol_set))) {
                 this->m_container.erase(it_c);
             }
         };
@@ -1398,7 +1377,7 @@ private:
             }
         } else {
             // Assert the existing term is not ignorable and it is compatible.
-            piranha_assert(!it->is_ignorable(m_symbol_set) && it->is_compatible(m_symbol_set));
+            piranha_assert(!it->is_zero(m_symbol_set) && it->is_compatible(m_symbol_set));
             try {
                 // The term exists already, update it.
                 insertion_cf_arithmetics<Sign>(it, std::forward<T>(term));
@@ -1500,7 +1479,7 @@ private:
                 const auto it_f2 = m_container.end();
                 for (auto it = m_container.begin(); it != it_f2;) {
                     math::negate(it->m_cf);
-                    if (unlikely(it->is_ignorable(m_symbol_set))) {
+                    if (unlikely(it->is_zero(m_symbol_set))) {
                         // Erase the invalid term.
                         it = m_container.erase(it);
                     } else {
@@ -1549,13 +1528,12 @@ private:
     // sfinae-friendly
     // in a similar way (i.e., don't define the ::value member if the input types are not keys).
     template <typename T, typename U = series,
-              typename std::enable_if<series_recursion_index<T>::value != 0u
-                                          && (series_recursion_index<T>::value == series_recursion_index<U>::value)
-                                          && has_convert_to<typename U::term_type::cf_type,
-                                                            typename T::term_type::cf_type>::value
-                                          && key_is_convertible<typename U::term_type::key_type,
-                                                                typename T::term_type::key_type>::value,
-                                      int>::type
+              typename std::enable_if<
+                  series_recursion_index<T>::value != 0u
+                      && (series_recursion_index<T>::value == series_recursion_index<U>::value)
+                      && has_convert_to<typename U::term_type::cf_type, typename T::term_type::cf_type>::value
+                      && key_is_convertible<typename U::term_type::key_type, typename T::term_type::key_type>::value,
+                  int>::type
               = 0>
     void dispatch_generic_constructor(const T &s)
     {
@@ -1586,11 +1564,10 @@ private:
     // - if T comes from lower in the hierarchy, then clearly std::is_base_of<U,T>::value is true again.
     // These aspects are tested in series_03.
     template <typename T, typename U>
-    using generic_ctor_enabler =
-        typename std::enable_if<detail::true_tt<decltype(
-                                    std::declval<U &>().dispatch_generic_constructor(std::declval<const T &>()))>::value
-                                    && !std::is_base_of<U, T>::value,
-                                int>::type;
+    using generic_ctor_enabler = typename std::enable_if<
+        detail::true_tt<decltype(std::declval<U &>().dispatch_generic_constructor(std::declval<const T &>()))>::value
+            && !std::is_base_of<U, T>::value,
+        int>::type;
     // Enabler for is_identical.
     template <typename T>
     using is_identical_enabler = typename std::enable_if<is_equality_comparable<T>::value, int>::type;
@@ -1600,7 +1577,7 @@ private:
         const_iterator_impl;
     // Print utilities.
     template <bool TexMode, typename Iterator>
-    static std::ostream &print_helper(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
+    static std::ostream &print_helper(std::ostream &os, Iterator start, Iterator end, const symbol_fset &args)
     {
         piranha_assert(start != end);
         const auto limit = settings::get_max_term_output();
@@ -1662,20 +1639,51 @@ private:
         os << str;
         return os;
     }
-    // Merge arguments using new_ss as new symbol set.
-    Derived merge_arguments(const symbol_set &new_ss) const
+    // Merge arguments using a map m computed by ss_merge(). new_s is the new
+    // merged symbol set.
+    Derived merge_arguments(const symbol_fset &new_s, const symbol_idx_fmap<symbol_fset> &m) const
     {
-        piranha_assert(new_ss.size() > m_symbol_set.size());
-        piranha_assert(std::includes(new_ss.begin(), new_ss.end(), m_symbol_set.begin(), m_symbol_set.end()));
-        using cf_type = typename term_type::cf_type;
-        using key_type = typename term_type::key_type;
+        // We should never invoke this with an empty insertion map.
+        piranha_assert(m.size());
+        // The last index of the insertion map must be at most the size
+        // of the current symbol set (which means that symbols need to be
+        // appended).
+        piranha_assert(m.rbegin()->first <= m_symbol_set.size());
+#if !defined(NDEBUG)
+        // In debug mode, verify that the concatenation of the values
+        // in m forms a strictly monotonic sequence.
+        auto verify_ins_map = [&m]() -> bool {
+            std::vector<std::string> v_str;
+            for (const auto &p : m) {
+                v_str.insert(v_str.end(), p.second.begin(), p.second.end());
+            }
+            return std::is_sorted(v_str.begin(), v_str.end())
+                   && std::adjacent_find(v_str.begin(), v_str.end()) == v_str.end();
+        };
+        // Verify also that new_s contains all the symbols in m.
+        auto verify_ss = [&m, &new_s]() -> bool {
+            for (const auto &p : m) {
+                for (const auto &s : p.second) {
+                    if (new_s.find(s) == new_s.end()) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        };
+#endif
+        piranha_assert(verify_ins_map());
+        piranha_assert(verify_ss());
+        // Create the output.
         Derived retval;
-        retval.m_symbol_set = new_ss;
+        // Assign the new symbol set.
+        retval.m_symbol_set = new_s;
+        // Prepare a number of buckets equal to the current one.
+        retval.m_container.rehash(this->m_container.bucket_count());
+        // Do the symbol merge.
         const auto it_f = m_container.end();
         for (auto it = m_container.begin(); it != it_f; ++it) {
-            cf_type new_cf(it->m_cf);
-            key_type new_key(it->m_key.merge_args(m_symbol_set, new_ss));
-            retval.insert(term_type(std::move(new_cf), std::move(new_key)));
+            retval.insert(term_type{it->m_cf, it->m_key.merge_symbols(m, this->m_symbol_set)});
         }
         return retval;
     }
@@ -1691,7 +1699,7 @@ private:
                 std::cout << "Term not compatible.\n";
                 return false;
             }
-            if (it->is_ignorable(m_symbol_set)) {
+            if (it->is_zero(m_symbol_set)) {
                 std::cout << "Term not ignorable.\n";
                 return false;
             }
@@ -1715,9 +1723,7 @@ private:
     // http://thbecker.net/articles/auto_and_decltype/section_06.html
     template <typename Key2>
     using key_diff_type
-        = decltype(std::declval<const Key2 &>()
-                       .partial(std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>())
-                       .first);
+        = decltype(std::declval<const Key2 &>().partial(symbol_idx{}, std::declval<const symbol_fset &>()).first);
     // Shortcuts to get cf/key from series.
     template <typename Series>
     using cf_t = typename Series::term_type::cf_type;
@@ -1753,12 +1759,11 @@ private:
     // NOTE: in addition to check that we cannot use the optimised algorithm, we must also check that the resulting type
     // is constructible from int (for the accumulation of retval) and that it is addable in-place.
     template <typename Series>
-    struct partial_type_<Series, typename std::enable_if<!PIRANHA_SERIES_PARTIAL_ENABLER
-                                                         && std::is_constructible<partial_type_1<Series>, int>::value
-                                                         && is_addable_in_place<decltype(
-                                                                std::declval<const partial_type_1<Series> &>()
-                                                                + std::declval<const partial_type_1<Series> &>())>::
-                                                                value>::type> {
+    struct partial_type_<
+        Series, typename std::enable_if<
+                    !PIRANHA_SERIES_PARTIAL_ENABLER && std::is_constructible<partial_type_1<Series>, int>::value
+                    && is_addable_in_place<decltype(std::declval<const partial_type_1<Series> &>()
+                                                    + std::declval<const partial_type_1<Series> &>())>::value>::type> {
         using type = partial_type_1<Series>;
         static const int algo = 1;
     };
@@ -1775,41 +1780,37 @@ private:
         // This is the faster algorithm.
         Derived retval;
         retval.m_symbol_set = this->m_symbol_set;
+        // Prepare a number of buckets equal to the current one.
+        retval.m_container.rehash(this->m_container.bucket_count());
+        const auto pos = ss_index_of(retval.m_symbol_set, name);
         const auto it_f = this->m_container.end();
-        const symbol_set::positions p(retval.m_symbol_set, symbol_set{symbol(name)});
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            // NOTE: here t0 cannot be incompatible as it->m_key is coming from a series
-            // with the same symbol set. Worst that can happen is something going awry
-            // in the derivative of the coefficient. If the derivative becomes zero,
-            // the insertion routine will not insert anything.
-            typename Derived::term_type t0(math::partial(it->m_cf, name), it->m_key);
-            retval.insert(std::move(t0));
-            // Here we are assuming that the partial of the key returns always a compatible key,
-            // otherwise an error will be raised.
-            auto p_key = it->m_key.partial(p, retval.m_symbol_set);
-            typename Derived::term_type t1(it->m_cf * p_key.first, p_key.second);
-            retval.insert(std::move(t1));
+            // NOTE: here the term being inserted cannot be incompatible as it->m_key is coming from
+            // a series with the same symbol set. The worst that can happen is something going awry in the derivative of
+            // the coefficient. If the derivative becomes zero, the insertion routine will not insert anything.
+            retval.insert(term_type{math::partial(it->m_cf, name), it->m_key});
+            // NOTE: if the partial of the key returns an incompatible key, an error will be raised.
+            auto p_key = it->m_key.partial(pos, retval.m_symbol_set);
+            retval.insert(term_type{it->m_cf * p_key.first, std::move(p_key.second)});
         }
         return retval;
     }
     template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 1, int>::type = 0>
     partial_type<Series> partial_impl(const std::string &name) const
     {
-        using term_type = typename Derived::term_type;
-        using cf_type = typename term_type::cf_type;
-        const auto it_f = this->m_container.end();
-        const symbol_set::positions p(this->m_symbol_set, symbol_set{symbol(name)});
+        const auto pos = ss_index_of(this->m_symbol_set, name);
         partial_type<Series> retval(0);
+        const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // Construct the two pieces of the derivative relating to the key
             // in the original term.
             Derived tmp0;
             tmp0.m_symbol_set = this->m_symbol_set;
-            tmp0.insert(term_type(cf_type(1), it->m_key));
-            auto p_key = it->m_key.partial(p, this->m_symbol_set);
+            tmp0.insert(term_type{1, it->m_key});
+            auto p_key = it->m_key.partial(pos, this->m_symbol_set);
             Derived tmp1;
             tmp1.m_symbol_set = this->m_symbol_set;
-            tmp1.insert(term_type(cf_type(1), p_key.second));
+            tmp1.insert(term_type{1, std::move(p_key.second)});
             // Assemble everything into the return value.
             retval += math::partial(it->m_cf, name) * tmp0 + it->m_cf * p_key.first * tmp1;
         }
@@ -1842,7 +1843,7 @@ private:
         // Serialize the symbol set.
         boost_save(ar, get_symbol_set().size());
         for (const auto &sym : get_symbol_set()) {
-            boost_save(ar, sym.get_name());
+            boost_save(ar, sym);
         }
         // Serialize the series.
         boost_save(ar, size());
@@ -1863,7 +1864,8 @@ private:
         ss_size_t ss_size;
         boost_load(ar, ss_size);
         // NOTE: not sure if it's worth it to make this thread_local, as when resizing up new memory
-        // allocs for each string are necessary anyway.
+        // allocs for each string are necessary anyway. Still, with the small string optimisation
+        // it may be worth it.
         std::vector<std::string> vs;
         vs.resize(safe_cast<std::vector<std::string>::size_type>(ss_size));
         // Load the symbol names in a vector of strings.
@@ -1871,7 +1873,7 @@ private:
             boost_load(ar, str);
         }
         // Construct the symbol set and set it to the series.
-        symbol_set ss(vs.begin(), vs.end());
+        symbol_fset ss(vs.begin(), vs.end());
         set_symbol_set(ss);
         // Now recover the series.
         // Size first.
@@ -1937,36 +1939,34 @@ private:
     };
     // Case 0: the exponentiation of the coefficient does not change its type.
     template <typename T, typename U>
-    struct pow_ret_type_<T, U, enable_if_t<conjunction<std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>,
-                                                       pow_expo_checks<T>,
-                                                       // Check we can construct the return value from the type stored
-                                                       // in the cache.
-                                                       std::is_constructible<U, pow_m_type<U>>,
-                                                       // Check that when we multiply the type stored in the cache by
-                                                       // *this, we get again the type stored in the cache.
-                                                       std::is_same<pow_m_type<U>,
-                                                                    decltype(std::declval<const pow_m_type<U> &>()
-                                                                             * std::declval<const U &>())>,
-                                                       // Check we can use is_identical.
-                                                       std::is_same<is_identical_enabler<U>, int>>::value>> {
+    struct pow_ret_type_<
+        T, U,
+        enable_if_t<conjunction<
+            std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>, pow_expo_checks<T>,
+            // Check we can construct the return value from the type stored
+            // in the cache.
+            std::is_constructible<U, pow_m_type<U>>,
+            // Check that when we multiply the type stored in the cache by
+            // *this, we get again the type stored in the cache.
+            std::is_same<pow_m_type<U>, decltype(std::declval<const pow_m_type<U> &>() * std::declval<const U &>())>,
+            // Check we can use is_identical.
+            std::is_same<is_identical_enabler<U>, int>>::value>> {
         using type = U;
     };
     // Case 1: the exponentiation of the coefficient does change its type.
     template <typename T, typename U>
-    struct pow_ret_type_<T, U, enable_if_t<conjunction<negation<std::is_same<pow_cf_type<T, U>,
-                                                                             typename U::term_type::cf_type>>,
-                                                       pow_expo_checks<T>,
-                                                       // Check we can construct the return value from the type stored
-                                                       // in the cache.
-                                                       std::is_constructible<series_rebind<U, pow_cf_type<T, U>>,
-                                                                             pow_m_type<U>>,
-                                                       // Check that when we multiply the type stored in the cache by
-                                                       // *this, we get again the type stored in the cache.
-                                                       std::is_same<pow_m_type<U>,
-                                                                    decltype(std::declval<const pow_m_type<U> &>()
-                                                                             * std::declval<const U &>())>,
-                                                       // Check we can use is_identical.
-                                                       std::is_same<is_identical_enabler<U>, int>>::value>> {
+    struct pow_ret_type_<
+        T, U,
+        enable_if_t<conjunction<
+            negation<std::is_same<pow_cf_type<T, U>, typename U::term_type::cf_type>>, pow_expo_checks<T>,
+            // Check we can construct the return value from the type stored
+            // in the cache.
+            std::is_constructible<series_rebind<U, pow_cf_type<T, U>>, pow_m_type<U>>,
+            // Check that when we multiply the type stored in the cache by
+            // *this, we get again the type stored in the cache.
+            std::is_same<pow_m_type<U>, decltype(std::declval<const pow_m_type<U> &>() * std::declval<const U &>())>,
+            // Check we can use is_identical.
+            std::is_same<is_identical_enabler<U>, int>>::value>> {
         using type = series_rebind<U, pow_cf_type<T, U>>;
     };
     // Final typedef.
@@ -2024,8 +2024,8 @@ public:
      * @param x object to construct from.
      *
      * @throws unspecified any exception thrown by:
-     * - the copy assignment operator of piranha::symbol_set,
-     * - the construction of a coefficient from \p x or of a key from piranha::symbol_set,
+     * - the copy assignment operator of piranha::symbol_fset,
+     * - the construction of a coefficient from \p x or of a key from piranha::symbol_fset,
      * - the construction of a term from a coefficient-key pair,
      * - insert().
      */
@@ -2217,7 +2217,7 @@ public:
             const auto it_f = m_container.end();
             for (auto it = m_container.begin(); it != it_f;) {
                 math::negate(it->m_cf);
-                if (unlikely(it->is_ignorable(m_symbol_set))) {
+                if (unlikely(it->is_zero(m_symbol_set))) {
                     it = m_container.erase(it);
                 } else {
                     ++it;
@@ -2321,16 +2321,16 @@ public:
             ret_type retval;
             if (empty()) {
                 // An empty series is equal to zero.
-                retval.insert(r_term_type(math::pow(cf_type(0), x), key_type(symbol_set{})));
+                retval.insert(r_term_type(math::pow(cf_type(0), x), key_type(symbol_fset{})));
             } else {
-                retval.insert(r_term_type(math::pow(m_container.begin()->m_cf, x), key_type(symbol_set{})));
+                retval.insert(r_term_type(math::pow(m_container.begin()->m_cf, x), key_type(symbol_fset{})));
             }
             return retval;
         }
         // Handle the case of zero exponent.
         if (math::is_zero(x)) {
             ret_type retval;
-            retval.insert(r_term_type(r_cf_type(1), key_type(symbol_set{})));
+            retval.insert(r_term_type(r_cf_type(1), key_type(symbol_fset{})));
             return retval;
         }
         // Exponentiation by repeated multiplications.
@@ -2350,7 +2350,7 @@ public:
         // Init the vector, if needed.
         if (!v.size()) {
             m_type tmp;
-            tmp.insert(m_term_type(m_cf_type(1), m_key_type(symbol_set{})));
+            tmp.insert(m_term_type(m_cf_type(1), m_key_type(symbol_fset{})));
             v.push_back(std::move(tmp));
         }
         // Fill in the missing powers.
@@ -2393,7 +2393,7 @@ public:
      *
      * @param name name of the argument with respect to which the derivative will be calculated.
      *
-     * @return partial derivative of \p this with respect to the symbol named \p name.
+     * @return partial derivative of \p this with respect to the symbol \p name.
      *
      * @throws unspecified any exception thrown by:
      * - the differentiation methods of coefficient and key,
@@ -2413,7 +2413,7 @@ public:
      * is a type that can be used to construct <tt>std::function<partial_type(const Derived &)</tt>, where
      * \p partial_type is the type resulting from the partial derivative of \p Derived.
      *
-     * Register a copy of a callable \p func associated to the symbol called \p name for use by
+     * Register a copy of a callable \p func associated to the symbol \p name for use by
      * piranha::math::partial().
      * \p func will be used to compute the partial derivative of instances of type \p Derived with respect to
      * \p name in place of the default partial differentiation algorithm.
@@ -2441,7 +2441,7 @@ public:
      * \note
      * This method is enabled only if piranha::series::partial() is enabled for \p Derived.
      *
-     * Unregister the custom partial derivative function associated to the symbol called \p name. If no custom
+     * Unregister the custom partial derivative function associated to the symbol \p name. If no custom
      * partial derivative was previously registered using register_custom_derivative(), calling this function will be a
      * no-op.
      *
@@ -2497,7 +2497,7 @@ public:
      * @return an iterator to the first term of the series.
      *
      * @throws unspecified any exception thrown by:
-     * - construction and assignment of piranha::symbol_set,
+     * - construction and assignment of piranha::symbol_fset,
      * - insert(),
      * - construction of term, coefficient and key instances.
      */
@@ -2516,7 +2516,7 @@ public:
      * @return an iterator to the end of the series.
      *
      * @throws unspecified any exception thrown by:
-     * - construction and assignment of piranha::symbol_set,
+     * - construction and assignment of piranha::symbol_fset,
      * - insert(),
      * - construction of term, coefficient and key instances.
      */
@@ -2541,7 +2541,7 @@ public:
      * @throw unspecified any exception thrown by:
      * - the call operator of \p func,
      * - insert(),
-     * - the assignment operator of piranha::symbol_set,
+     * - the assignment operator of piranha::symbol_fset,
      * - term, coefficient, key construction.
      */
     Derived filter(std::function<bool(const std::pair<typename term_type::cf_type, Derived> &)> func) const
@@ -2577,7 +2577,7 @@ public:
      * @throw unspecified any exception thrown by:
      * - the call operator of \p func,
      * - insert(),
-     * - the assignment operator of piranha::symbol_set,
+     * - the assignment operator of piranha::symbol_fset,
      * - term, coefficient, key construction,
      * - series multiplication and addition.
      */
@@ -2610,24 +2610,26 @@ public:
      * @return trimmed version of \p this.
      *
      * @throws unspecified any exception thrown by:
-     * - operations on piranha::symbol_set,
+     * - piranha::safe_cast(),
+     * - operations on piranha::symbol_fset,
      * - the trimming methods of coefficient and/or key,
      * - insert(),
      * - term, coefficient and key type construction.
      */
     Derived trim() const
     {
-        // Build the set of symbols that can be removed.
+        // Init the trimming mask.
+        std::vector<char> trim_mask(safe_cast<std::vector<char>::size_type>(m_symbol_set.size()), char(1));
+        // Determine the symbols to be trimmed.
         const auto it_f = this->m_container.end();
-        symbol_set trim_ss(m_symbol_set);
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            it->m_key.trim_identify(trim_ss, m_symbol_set);
+            it->m_key.trim_identify(trim_mask, m_symbol_set);
         }
-        // Determine the new set.
+        // Build the retval.
         Derived retval;
-        retval.m_symbol_set = m_symbol_set.diff(trim_ss);
+        retval.m_symbol_set = ss_trim(m_symbol_set, trim_mask);
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            retval.insert(term_type(trim_cf_impl(it->m_cf), it->m_key.trim(trim_ss, m_symbol_set)));
+            retval.insert(term_type{trim_cf_impl(it->m_cf), it->m_key.trim(trim_mask, m_symbol_set)});
         }
         return retval;
     }
@@ -2755,59 +2757,25 @@ public:
     }
     /// Symbol set getter.
     /**
-     * @return const reference to the piranha::symbol_set associated to the series.
+     * @return const reference to the piranha::symbol_fset associated to the series.
      */
-    const symbol_set &get_symbol_set() const
+    const symbol_fset &get_symbol_set() const
     {
         return m_symbol_set;
     }
     /// Symbol set setter.
     /**
-     * @param args piranha::symbol_set that will be associated to the series.
+     * @param args piranha::symbol_fset that will be associated to the series.
      *
      * @throws std::invalid_argument if the series is not empty.
-     * @throws unspecified any exception thrown by the copy assignment operator of piranha::symbol_set.
+     * @throws unspecified any exception thrown by the copy assignment operator of piranha::symbol_fset.
      */
-    void set_symbol_set(const symbol_set &args)
+    void set_symbol_set(const symbol_fset &args)
     {
         if (unlikely(!empty())) {
             piranha_throw(std::invalid_argument, "cannot set arguments on a non-empty series");
         }
         m_symbol_set = args;
-    }
-    /// Extend symbol set.
-    /**
-     * This method will return a series whose symbol set will be \p new_ss and whose terms
-     * will be the terms of \p this with new keys obtained from calling the existing keys'
-     * <tt>merge_args()</tt> method. That is, the new keys will be compatible with the
-     * new extended symbol set \p new_ss.
-     *
-     * \p new_ss must have a size equal to or greater than the size of the current symbol set of \p this,
-     * and all the symbols in the current symbol set must be present in \p new_ss.
-     *
-     * @param new_ss the new set of symbols.
-     *
-     * @return a copy of \p this with \p new_ss as symbol set.
-     *
-     * @throws std::invalid_argument if \p new_ss is smaller than the current symbol set or if
-     * it does not include all the symbols of the current symbol set.
-     * @throws unspecified any exception thrown by:
-     * - the construction of coefficients, terms and keys,
-     * - the key's <tt>merge_args()</tt> method,
-     * - piranha::series::insert().
-     */
-    Derived extend_symbol_set(const symbol_set &new_ss) const
-    {
-        // If the symbols are identical, just return a copy.
-        if (new_ss == m_symbol_set) {
-            return *static_cast<Derived const *>(this);
-        }
-        if (unlikely(!(new_ss.size() > m_symbol_set.size())
-                     || !std::includes(new_ss.begin(), new_ss.end(), m_symbol_set.begin(), m_symbol_set.end()))) {
-            piranha_throw(std::invalid_argument, "invalid symbol set passed to extend_symbol_set(): the new "
-                                                 "symbol set does not include all the symbols in the old symbol set");
-        }
-        return merge_arguments(new_ss);
     }
     /** @name Low-level interface
      * Low-level methods.
@@ -2832,7 +2800,7 @@ public:
     //@}
 protected:
     /// Symbol set.
-    symbol_set m_symbol_set;
+    symbol_fset m_symbol_set;
     /// Terms container.
     container_type m_container;
 
@@ -2848,6 +2816,53 @@ std::mutex series<Cf, Key, Derived>::s_cp_mutex;
 
 template <typename Cf, typename Key, typename Derived>
 std::mutex series<Cf, Key, Derived>::s_pow_mutex;
+
+inline namespace impl
+{
+
+// Implementation of the series merge helper.
+// This function will call f(s1,s2), after having possibly merged the symbol sets
+// of s1 and s2 if necessary (in which case, f will be called on copies of s1/s2).
+template <typename S1, typename S2, typename F>
+inline auto series_merge_f(S1 &&s1, S2 &&s2, const F &f) -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)))
+{
+    if (s1.get_symbol_set() == s2.get_symbol_set()) {
+        // If the symbol sets are identical, just call f(s1,s2) directly.
+        return f(std::forward<S1>(s1), std::forward<S2>(s2));
+    }
+    // Otherwise, we need to merge the symbol sets.
+    const auto merge = ss_merge(s1.get_symbol_set(), s2.get_symbol_set());
+    // Check that all possible return types are the same. This is necessary
+    // as potentially we end up calling different overloads of f.
+    static_assert(std::is_same<decltype(f(std::forward<S1>(s1), std::forward<S2>(s2))),
+                               decltype(f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
+                                          std::forward<S2>(s2)))>::value,
+                  "Inconsistent return type.");
+    static_assert(std::is_same<decltype(f(std::forward<S1>(s1), std::forward<S2>(s2))),
+                               decltype(f(std::forward<S1>(s1),
+                                          s2.merge_arguments(std::get<0>(merge), std::get<2>(merge))))>::value,
+                  "Inconsistent return type.");
+    static_assert(std::is_same<decltype(f(std::forward<S1>(s1), std::forward<S2>(s2))),
+                               decltype(f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
+                                          s2.merge_arguments(std::get<0>(merge), std::get<2>(merge))))>::value,
+                  "Inconsistent return type.");
+    // Check who needs a copy.
+    const bool s1_needs_copy = (std::get<0>(merge) != s1.get_symbol_set()),
+               s2_needs_copy = (std::get<0>(merge) != s2.get_symbol_set());
+    const unsigned mask = unsigned(s1_needs_copy) + (unsigned(s2_needs_copy) << 1u);
+    piranha_assert(mask != 0u);
+    // Handle the 3 possible cases.
+    switch (mask) {
+        case 1u:
+            return f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)), std::forward<S2>(s2));
+        case 2u:
+            return f(std::forward<S1>(s1), s2.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
+    }
+    // Put the last case outside the switch, so we avoid compiler warnings.
+    return f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
+             s2.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
+}
+}
 
 /// Specialisation of piranha::print_coefficient_impl for series.
 /**
@@ -3036,12 +3051,12 @@ struct series_cf_invert_functor {
 // This is used, e.g., in the sin/cos overrides for poisson_series, and it is similar to what it is done for the pow()
 // overrides.
 template <typename Cf, typename Key, typename Derived,
-          typename std::
-              enable_if<is_series<Derived>::value
-                            && std::is_same<typename Derived::term_type::cf_type,
-                                            decltype(math::invert(
-                                                std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-                        int>::type
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(math::invert(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
           = 0>
 inline Derived series_invert_impl(const series<Cf, Key, Derived> &s)
 {
@@ -3051,12 +3066,12 @@ inline Derived series_invert_impl(const series<Cf, Key, Derived> &s)
 // 3. coefficient type supports math::invert() with a result different from the original coefficient type and the series
 // can be rebound to this new type.
 template <typename Cf, typename Key, typename Derived,
-          typename std::
-              enable_if<is_series<Derived>::value
-                            && !std::is_same<typename Derived::term_type::cf_type,
-                                             decltype(math::invert(
-                                                 std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-                        int>::type
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && !std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(math::invert(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
           = 0>
 inline series_rebind<Derived, decltype(math::invert(std::declval<const typename Derived::term_type::cf_type &>()))>
 series_invert_impl(const series<Cf, Key, Derived> &s)
@@ -3139,14 +3154,14 @@ struct series_cf_sin_functor {
 // NOTE: this overload and the one below do not conflict with the one above because it takes a series
 // as input argument: when used on a concrete series type, it will have to go through a to-base
 // conversion in order to be selected.
-template <typename Cf, typename Key, typename Derived,
-          typename std::
-              enable_if<is_series<Derived>::value
-                            && std::is_same<typename Derived::term_type::cf_type,
-                                            decltype(math::sin(
-                                                std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-                        int>::type
-          = 0>
+template <
+    typename Cf, typename Key, typename Derived,
+    typename std::enable_if<
+        is_series<Derived>::value
+            && std::is_same<typename Derived::term_type::cf_type,
+                            decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+        int>::type
+    = 0>
 inline Derived series_sin_impl(const series<Cf, Key, Derived> &s)
 {
     return apply_cf_functor<series_cf_sin_functor, Derived>(s);
@@ -3154,14 +3169,14 @@ inline Derived series_sin_impl(const series<Cf, Key, Derived> &s)
 
 // 3. coefficient type supports math::sin() with a result different from the original coefficient type and the series
 // can be rebound to this new type.
-template <typename Cf, typename Key, typename Derived,
-          typename std::
-              enable_if<is_series<Derived>::value
-                            && !std::is_same<typename Derived::term_type::cf_type,
-                                             decltype(math::sin(
-                                                 std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-                        int>::type
-          = 0>
+template <
+    typename Cf, typename Key, typename Derived,
+    typename std::enable_if<
+        is_series<Derived>::value
+            && !std::is_same<typename Derived::term_type::cf_type,
+                             decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+        int>::type
+    = 0>
 inline series_rebind<Derived, decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>
 series_sin_impl(const series<Cf, Key, Derived> &s)
 {
@@ -3202,27 +3217,27 @@ struct series_cf_cos_functor {
     static constexpr const char *name = "cosine";
 };
 
-template <typename Cf, typename Key, typename Derived,
-          typename std::
-              enable_if<is_series<Derived>::value
-                            && std::is_same<typename Derived::term_type::cf_type,
-                                            decltype(math::cos(
-                                                std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-                        int>::type
-          = 0>
+template <
+    typename Cf, typename Key, typename Derived,
+    typename std::enable_if<
+        is_series<Derived>::value
+            && std::is_same<typename Derived::term_type::cf_type,
+                            decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+        int>::type
+    = 0>
 inline Derived series_cos_impl(const series<Cf, Key, Derived> &s)
 {
     return apply_cf_functor<series_cf_cos_functor, Derived>(s);
 }
 
-template <typename Cf, typename Key, typename Derived,
-          typename std::
-              enable_if<is_series<Derived>::value
-                            && !std::is_same<typename Derived::term_type::cf_type,
-                                             decltype(math::cos(
-                                                 std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-                        int>::type
-          = 0>
+template <
+    typename Cf, typename Key, typename Derived,
+    typename std::enable_if<
+        is_series<Derived>::value
+            && !std::is_same<typename Derived::term_type::cf_type,
+                             decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+        int>::type
+    = 0>
 inline series_rebind<Derived, decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>
 series_cos_impl(const series<Cf, Key, Derived> &s)
 {
@@ -3301,15 +3316,16 @@ namespace detail
 
 // Enabler for the partial() specialisation for series.
 template <typename Series>
-using series_partial_enabler =
-    typename std::enable_if<is_series<Series>::value && is_returnable<decltype(std::declval<const Series &>().partial(
-                                                            std::declval<const std::string &>()))>::value>::type;
+using series_partial_enabler = typename std::enable_if<is_series<Series>::value
+                                                       && is_returnable<decltype(std::declval<const Series &>().partial(
+                                                              std::declval<const std::string &>()))>::value>::type;
 
 // Enabler for the integrate() specialisation: type needs to be a series which supports the integration method.
 template <typename Series>
 using series_integrate_enabler =
-    typename std::enable_if<is_series<Series>::value && is_returnable<decltype(std::declval<const Series &>().integrate(
-                                                            std::declval<const std::string &>()))>::value>::type;
+    typename std::enable_if<is_series<Series>::value
+                            && is_returnable<decltype(std::declval<const Series &>().integrate(
+                                   std::declval<const std::string &>()))>::value>::type;
 }
 
 namespace math
@@ -3383,48 +3399,42 @@ struct integrate_impl<Series, detail::series_integrate_enabler<Series>> {
         return s.integrate(name);
     }
 };
-}
 
 inline namespace impl
 {
 
-// This is the candidate evaluation type: the product of the evaluation of the coefficient by the evaluation of
-// the key.
+// This is the candidate evaluation type: the product of the evaluation of the coefficient by
+// the evaluation of the key.
 template <typename Series, typename T>
-using series_eval_type
-    = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
-                              std::declval<std::unordered_map<std::string, T> const &>())
-               * std::declval<const typename Series::term_type::key_type &>().evaluate(
-                     std::declval<const symbol_set::positions_map<T> &>(), std::declval<const symbol_set &>()));
+using series_eval_type = decltype(
+    math::evaluate(std::declval<const typename Series::term_type::cf_type &>(), std::declval<const symbol_fmap<T> &>())
+    * std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::vector<T> &>(),
+                                                                            std::declval<const symbol_fset &>()));
 
 template <typename Series, typename T>
 using math_series_evaluate_enabler
-    = enable_if_t<conjunction<is_series<Series>, is_mappable<T>, is_addable_in_place<series_eval_type<Series, T>>,
-                              std::is_constructible<series_eval_type<Series, T>, int>,
-                              is_returnable<series_eval_type<Series, T>>>::value>;
+    = enable_if_t<conjunction<is_series<Series>, is_addable_in_place<series_eval_type<Series, T>>,
+                              std::is_constructible<series_eval_type<Series, T>, const int &>,
+                              is_returnable<series_eval_type<Series, T>>, std::is_destructible<T>,
+                              std::is_copy_constructible<T>>::value>;
 }
-
-namespace math
-{
 
 /// Specialisation of the implementation of piranha::math::evaluate() for series types.
 /**
  * This specialisation is activated when all the following conditions hold:
  * - \p Series is an instance of piranha::series,
- * - \p T satisfies piranha::is_mappable,
  * - the coefficient and key types of \p Series support evaluation,
  * - the types resulting from the evaluation of coefficients and keys can be multiplied,
  *   yielding a result of type \p E,
- * - \p E is addable in place, constructible from \p int and it satisfies piranha::is_returnable.
+ * - \p E is addable in place, constructible from \p int and it satisfies piranha::is_returnable,
+ * - \p T is destructible and copy-constructible.
  */
 template <typename Series, typename T>
 class evaluate_impl<Series, T, math_series_evaluate_enabler<Series, T>>
 {
     using eval_type = series_eval_type<Series, T>;
-    using cf_eval_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),
-                                                 std::declval<std::unordered_map<std::string, T> const &>()));
-    using key_eval_type = decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(
-        std::declval<const symbol_set::positions_map<T> &>(), std::declval<const symbol_set &>()));
+    // Wrapper to do multadd either via math::multiply_accumulate(), if supported, or just
+    // plain math operators.
     template <typename E, enable_if_t<has_multiply_accumulate<E>::value, int> = 0>
     static void multadd(E &retval, const E &a, const E &b)
     {
@@ -3445,47 +3455,61 @@ public:
      * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
      *
      * @param s the series to be evaluated.
-     * @param dict dictionary of that will be used for evaluation.
+     * @param dict the dictionary that will be used for evaluation.
      *
-     * @return evaluation of the series according to the evaluation dictionary \p dict.
+     * @return the result of evaluating the series according to the evaluation dictionary \p dict.
      *
      * @throws std::invalid_argument if a symbol of \p s does not appear in \p dict.
      * @throws unspecified any exception thrown by:
      * - coefficient and key evaluation,
-     * - the public interface of piranha::symbol_set::position_map and \p std::unordered_map,
+     * - memory errors in standard containers,
+     * - the copy constructor of \p T,
      * - arithmetic operations on the evaluation type.
      */
-    eval_type operator()(const Series &s, const std::unordered_map<std::string, T> &dict) const
+    eval_type operator()(const Series &s, const symbol_fmap<T> &dict) const
     {
         // NOTE: possible improvement: if the evaluation type is less-than comparable,
         // build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
         // with fp types and maybe improve performance - e.g., for integers).
-        // Transform the string dict into symbol dict for use in keys.
-        std::unordered_map<symbol, T> s_dict;
-        for (const auto &p : dict) {
-            s_dict[symbol(p.first)] = p.second;
-        }
-        // Convert to positions map.
-        symbol_set::positions_map<T> pmap(s.get_symbol_set(), s_dict);
-        decltype(s.get_symbol_set().size()) i = 0;
-        piranha_assert(pmap.size() <= s.get_symbol_set().size());
-        // First we iterate over all elements of pmap (which could be fewer than the symbols).
-        for (const auto &p : pmap) {
-            if (unlikely(i != p.first)) {
-                piranha_throw(std::invalid_argument, "the symbol '" + s.get_symbol_set()[i].get_name()
+
+        // Cache a reference to the symbol set.
+        const auto &ss = s.get_symbol_set();
+
+        // Init the vector that will be used for key evaluation. Make it possibly
+        // thread local in order to avoid allocations each time we invoke this function.
+        PIRANHA_MAYBE_TLS std::vector<T> evec;
+        // Make sure the static cached vector is reset to empty.
+        evec.resize(0);
+
+        auto it_dict = dict.begin();
+        const auto it_dict_f = dict.end();
+        for (const auto &sym : ss) {
+            // Try to locate the current sym in the
+            // [it_dict, it_dict_f) range. Store the result in it_dict.
+            it_dict = std::lower_bound(
+                it_dict, it_dict_f, sym,
+                [](const std::pair<std::string, T> &p, const std::string &str) { return p.first < str; });
+            // NOTE: if it_dict != it_dict_f, we found a value in the dict range which is >= sym,
+            // but we still need to check it is really the same.
+            if (unlikely(it_dict == it_dict_f || it_dict->first != sym)) {
+                // The it_ss value was not found: we cannot evaluate.
+                piranha_throw(std::invalid_argument, "cannot evaluate series: the symbol '" + sym
                                                          + "' is missing from the series evaluation dictionary'");
             }
-            ++i;
+            // Append the value mapped to the current ss symbol to the vector.
+            evec.push_back(it_dict->second);
+            // NOTE: we increase it_dict at the end of the iteration because, if we
+            // get there, it means we identified a symbol of ss in dict. For the next
+            // iteration of the for loop we want to start looking for the next ss symbol
+            // right *after* the element in dict we just found.
+            ++it_dict;
         }
-        // It could still happen that pmap is missing symbols at the tail of the symbol set.
-        if (unlikely(i < s.get_symbol_set().size())) {
-            piranha_throw(std::invalid_argument, "the symbol '" + s.get_symbol_set()[i].get_name()
-                                                     + "' is missing from the series evaluation dictionary'");
-        }
-        // Init return value and accumulate it.
+        piranha_assert(evec.size() == ss.size());
+
+        // Init the return value and accumulate it.
         eval_type retval(0);
         for (const auto &t : s._container()) {
-            multadd(retval, math::evaluate(t.m_cf, dict), t.m_key.evaluate(pmap, s.get_symbol_set()));
+            multadd(retval, math::evaluate(t.m_cf, dict), t.m_key.evaluate(evec, ss));
         }
         return retval;
     }
@@ -3498,23 +3522,20 @@ inline namespace impl
 // NOTE: we check first here if Series is a series, so that, if it is not, we do not instantiate other has_boost_save
 // checks (which might result in infinite recursion due to this enabler being re-instantiated).
 template <typename Archive, typename Series>
-using series_boost_save_enabler
-    = enable_if_t<conjunction<is_series<Series>, has_boost_save<Archive, decltype(symbol_set{}.size())>,
-                              has_boost_save<Archive, const std::string &>,
-                              has_boost_save<Archive, decltype(std::declval<const Series &>().size())>,
-                              has_boost_save<Archive, typename Series::term_type::cf_type>,
-                              has_boost_save<Archive,
-                                             boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
+using series_boost_save_enabler = enable_if_t<
+    conjunction<is_series<Series>, has_boost_save<Archive, decltype(symbol_fset{}.size())>,
+                has_boost_save<Archive, const std::string &>,
+                has_boost_save<Archive, decltype(std::declval<const Series &>().size())>,
+                has_boost_save<Archive, typename Series::term_type::cf_type>,
+                has_boost_save<Archive, boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
 
 // NOTE: the requirement that Series must not be const is in the is_series check.
 template <typename Archive, typename Series>
-using series_boost_load_enabler
-    = enable_if_t<conjunction<is_series<Series>, has_boost_load<Archive, decltype(symbol_set{}.size())>,
-                              has_boost_load<Archive, std::string>,
-                              has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
-                              has_boost_load<Archive, typename Series::term_type::cf_type>,
-                              has_boost_load<Archive,
-                                             boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
+using series_boost_load_enabler = enable_if_t<conjunction<
+    is_series<Series>, has_boost_load<Archive, decltype(symbol_fset{}.size())>, has_boost_load<Archive, std::string>,
+    has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
+    has_boost_load<Archive, typename Series::term_type::cf_type>,
+    has_boost_load<Archive, boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
 }
 
 /// Specialisation of piranha::boost_save() for piranha::series.
@@ -3523,7 +3544,7 @@ using series_boost_load_enabler
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
  * - the coefficient type, \p std::string and the integral types representing the size of the series
- *   and the size of piranha::symbol_set satisfy piranha::has_boost_save,
+ *   and the size of piranha::symbol_fset satisfy piranha::has_boost_save,
  * - the key type satisfies piranha::has_boost_save (via piranha::boost_s11n_key_wrapper).
  *
  * @throws unspecified any exception thrown by piranha::boost_save().
@@ -3539,7 +3560,7 @@ struct boost_save_impl<Archive, Series, series_boost_save_enabler<Archive, Serie
  * This specialisation is enabled only if:
  * - \p Series satisfies piranha::is_series,
  * - the coefficient type, \p std::string and the integral types representing the size of the series and
- *   the size of piranha::symbol_set satisfy piranha::has_boost_load,
+ *   the size of piranha::symbol_fset satisfy piranha::has_boost_load,
  * - the key type satisfies piranha::has_boost_load (via piranha::boost_s11n_key_wrapper).
  *
  * The basic exception safety guarantee is provided.
@@ -3548,7 +3569,7 @@ struct boost_save_impl<Archive, Series, series_boost_save_enabler<Archive, Serie
  * - piranha::boost_load(),
  * - memory errors in standard containers,
  * - piranha::safe_cast(),
- * - the public interface of piranha::symbol_set and piranha::hash_set,
+ * - the public interface of piranha::symbol_fset and piranha::hash_set,
  * - <tt>boost::numeric_cast()</tt>,
  * - piranha::series::insert(), piranha::series::set_symbol_set().
  */
@@ -3566,7 +3587,7 @@ inline namespace impl
 template <typename Stream, typename Series>
 using series_msgpack_pack_enabler
     = enable_if_t<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
-                              has_safe_cast<std::uint32_t, decltype(symbol_set{}.size())>,
+                              has_safe_cast<std::uint32_t, decltype(symbol_fset{}.size())>,
                               has_safe_cast<std::uint32_t, typename Series::size_type>,
                               has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
                               key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>;
@@ -3586,7 +3607,7 @@ using series_msgpack_convert_enabler
  * - \p Stream satisfies piranha::is_msgpack_stream,
  * - the coefficient type and \p std::string satisfy piranha::has_msgpack_pack,
  * - the key type satisfies piranha::key_has_msgpack_pack,
- * - the size types of piranha::series and piranha::symbol_set are safely convertible to \p std::uint32_t.
+ * - the size types of piranha::series and piranha::symbol_fset are safely convertible to \p std::uint32_t.
  */
 template <typename Stream, typename Series>
 struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Series>> {
@@ -3616,7 +3637,7 @@ struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Ser
         const auto &ss = s.get_symbol_set();
         packer.pack_array(safe_cast<std::uint32_t>(ss.size()));
         for (const auto &sym : ss) {
-            msgpack_pack(packer, sym.get_name(), f);
+            msgpack_pack(packer, sym, f);
         }
         // Pack the terms.
         packer.pack_array(safe_cast<std::uint32_t>(s.size()));
@@ -3656,7 +3677,7 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
      * - the public interface of <tt>msgpack::object</tt>,
      * - piranha::msgpack_convert(),
      * - the <tt>%msgpack_convert()</tt> method of the key,
-     * - the public interfaces of piranha::symbol_set, piranha::hash_set and piranha::series,
+     * - the public interfaces of piranha::symbol_fset, piranha::hash_set and piranha::series,
      * - the constructor of the term type of the series,
      * - <tt>boost::numeric_cast()</tt>.
      */
@@ -3679,7 +3700,7 @@ struct msgpack_convert_impl<Series, series_msgpack_convert_enabler<Series>> {
                            msgpack_convert(tmp_str, obj, f);
                            return tmp_str;
                        });
-        s.set_symbol_set(symbol_set(v_str.begin(), v_str.end()));
+        s.set_symbol_set(symbol_fset(v_str.begin(), v_str.end()));
         // Preallocate buckets.
         s._container().rehash(boost::numeric_cast<s_size_t>(
             std::ceil(static_cast<double>(tmp_v[1].size()) / s._container().max_load_factor())));

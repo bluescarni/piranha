@@ -37,19 +37,11 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
 {
-
-namespace detail
-{
-
-// Tag for piranha::term.
-struct term_tag {
-};
-}
 
 /// Term class.
 /**
@@ -64,37 +56,34 @@ struct term_tag {
  *
  * ## Exception safety guarantee ##
  *
- * This class provides the strong exception safety guarantee for all operations.
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  *
  * ## Move semantics ##
  *
- * Move semantics is equivalent to its data members' move semantics.
+ * Move semantics is equivalent to the data members' move semantics.
  */
 template <typename Cf, typename Key>
-class term : detail::term_tag
+class term
 {
     PIRANHA_TT_CHECK(is_cf, Cf);
     PIRANHA_TT_CHECK(is_key, Key);
     // Enabler for the generic binary ctor.
     template <typename T, typename U>
-    using binary_ctor_enabler =
-        typename std::enable_if<std::is_constructible<Cf, T &&>::value && std::is_constructible<Key, U &&>::value,
-                                int>::type;
+    using binary_ctor_enabler
+        = enable_if_t<conjunction<std::is_constructible<Cf, T &&>, std::is_constructible<Key, U &&>>::value, int>;
 
 public:
-    /// Alias for coefficient type.
-    typedef Cf cf_type;
-    /// Alias for key type.
-    typedef Key key_type;
+    /// Alias for the coefficient type.
+    using cf_type = Cf;
+    /// Alias for the key type.
+    using key_type = Key;
     /// Default constructor.
     /**
-     * Will explicitly call the default constructors of <tt>Cf</tt> and <tt>Key</tt>.
+     * The default constructor will explicitly call the default constructors of <tt>Cf</tt> and <tt>Key</tt>.
      *
      * @throws unspecified any exception thrown by the default constructors of \p Cf and \p Key.
      */
-    term() : m_cf(), m_key()
-    {
-    }
+    term() : m_cf(), m_key() {}
     /// Default copy constructor.
     /**
      * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
@@ -105,7 +94,7 @@ public:
     /// Constructor from generic coefficient and key.
     /**
      * \note
-     * This constructor is activated only if coefficient and key are constructible from \p T and \p U.
+     * This constructor is activated only if \p Cf and \p Key are constructible from \p T and \p U respectively.
      *
      * This constructor will forward perfectly \p cf and \p key to construct coefficient and key.
      *
@@ -118,28 +107,23 @@ public:
     explicit term(T &&cf, U &&key) : m_cf(std::forward<T>(cf)), m_key(std::forward<U>(key))
     {
     }
-    /// Trivial destructor.
+    /// Destructor.
     ~term()
     {
         PIRANHA_TT_CHECK(is_container_element, term);
     }
     /// Copy assignment operator.
     /**
+     * The copy assignment operator offers the basic exception safety guarantee.
+     *
      * @param other assignment argument.
      *
      * @return reference to \p this.
      *
-     * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
+     * @throws unspecified any exception thrown by the assignment operators of \p Cf and \p Key.
      */
-    term &operator=(const term &other)
-    {
-        if (likely(this != &other)) {
-            term tmp(other);
-            *this = std::move(tmp);
-        }
-        return *this;
-    }
-    /// Trivial move-assignment operator.
+    term &operator=(const term &other) = default;
+    /// Move assignment operator.
     /**
      * @param other assignment argument.
      *
@@ -147,10 +131,8 @@ public:
      */
     term &operator=(term &&other) noexcept
     {
-        if (likely(this != &other)) {
-            m_cf = std::move(other.m_cf);
-            m_key = std::move(other.m_key);
-        }
+        m_cf = std::move(other.m_cf);
+        m_key = std::move(other.m_key);
         return *this;
     }
     /// Equality operator.
@@ -161,7 +143,7 @@ public:
      *
      * @return <tt>m_key == other.m_key</tt>.
      *
-     * @throws unspecified any exception thrown by the equality operators of \p Key.
+     * @throws unspecified any exception thrown by the equality operator of \p Key.
      */
     bool operator==(const term &other) const
     {
@@ -173,39 +155,35 @@ public:
      *
      * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
      *
-     * @throws unspecified any exception thrown by the hash functor of \p Key.
+     * @throws unspecified any exception thrown by the <tt>std::hash</tt> specialisation of \p Key.
      */
     std::size_t hash() const
     {
-        return std::hash<key_type>()(m_key);
+        return std::hash<key_type>{}(m_key);
     }
     /// Compatibility test.
     /**
-     * @param args reference arguments set.
+     * @param args reference piranha::symbol_fset.
      *
-     * @return the key's <tt>is_compatible()</tt> method's return value.
+     * @return the output of the key's <tt>is_compatible()</tt> method.
      */
-    bool is_compatible(const symbol_set &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const noexcept
     {
-        // NOTE: if this (and is_ignorable) are made re-implementable at a certain point in derived term classes,
-        // we must take care of asserting noexcept on the corresponding methods in the derived class.
         return m_key.is_compatible(args);
     }
-    /// Ignorability test.
+    /// Zero test.
     /**
      * Note that this method is not allowed to throw, so any exception thrown by calling piranha::math::is_zero() on the
-     * coefficient
-     * will result in the termination of the program.
+     * coefficient will result in the termination of the program.
      *
-     * @param args reference arguments set.
+     * @param args reference piranha::symbol_fset.
      *
-     * @return \p true if either the key's <tt>is_ignorable()</tt> method or piranha::math::is_zero() on the coefficient
-     * return \p true,
-     * \p false otherwise.
+     * @return \p true if either the key's <tt>is_zero()</tt> method or piranha::math::is_zero() on the coefficient
+     * return \p true, \p false otherwise.
      */
-    bool is_ignorable(const symbol_set &args) const noexcept
+    bool is_zero(const symbol_fset &args) const noexcept
     {
-        return (math::is_zero(m_cf) || m_key.is_ignorable(args));
+        return math::is_zero(m_cf) || m_key.is_zero(args);
     }
     /// Coefficient member.
     mutable Cf m_cf;
@@ -213,33 +191,47 @@ public:
     Key m_key;
 };
 
-namespace detail
-{
-
-// Enabler for the enable_noexcept_checks specialisation for terms.
-template <typename T>
-using term_enc_enabler = typename std::enable_if<std::is_base_of<detail::term_tag, T>::value>::type;
-}
-
 /// Specialisation of piranha::enable_noexcept_checks for piranha::term.
 /**
- * This specialisation is activated when \p T is an instance of piranha::term. The value of the type trait
- * is set to \p true if both the coefficient and key types satisfy piranha::enable_noexcept_checks. Otherwise,
- * the value of the type trait is set to \p false.
+ * The value of the type trait is set to \p true if both the coefficient and key types satisfy
+ * piranha::enable_noexcept_checks. Otherwise, the value of the type trait is set to \p false.
  */
-template <typename T>
-struct enable_noexcept_checks<T, detail::term_enc_enabler<T>> {
+template <typename Cf, typename Key>
+struct enable_noexcept_checks<term<Cf, Key>> {
 private:
     static const bool implementation_defined
-        = enable_noexcept_checks<typename T::cf_type>::value && enable_noexcept_checks<typename T::key_type>::value;
+        = conjunction<enable_noexcept_checks<Cf>, enable_noexcept_checks<Key>>::value;
 
 public:
     /// Value of the type trait.
     static const bool value = implementation_defined;
 };
 
-template <typename T>
-const bool enable_noexcept_checks<T, typename std::enable_if<std::is_base_of<detail::term_tag, T>::value>::type>::value;
+template <typename Cf, typename Key>
+const bool enable_noexcept_checks<term<Cf, Key>>::value;
+}
+
+namespace std
+{
+
+/// Specialisation of \p std::hash for piranha::term.
+template <typename Cf, typename Key>
+struct hash<piranha::term<Cf, Key>> {
+    /// The result type.
+    using result_type = size_t;
+    /// The argument type.
+    using argument_type = piranha::term<Cf, Key>;
+    /// Hash operator.
+    /**
+     * @param a the argument whose hash value will be computed.
+     *
+     * @return a hash value for \p a computed via piranha::term::hash().
+     */
+    result_type operator()(const argument_type &a) const
+    {
+        return a.hash();
+    }
+};
 }
 
 #endif

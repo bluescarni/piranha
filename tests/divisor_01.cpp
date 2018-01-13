@@ -32,15 +32,16 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <array>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <exception>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -57,18 +58,17 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/real.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
-typedef boost::mpl::vector<signed char, short, int, long, long long, integer> value_types;
+using value_types = std::tuple<signed char, short, int, long, long long, integer>;
 
 struct ctor_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         // Default constructor.
@@ -105,21 +105,17 @@ struct ctor_tester {
         d4.clear();
         BOOST_CHECK_EQUAL(d4.size(), 0u);
         // Constructor from arguments set.
-        symbol_set s;
-        d_type d5(s);
+        d_type d5(symbol_fset{});
         BOOST_CHECK_EQUAL(d5.size(), 0u);
-        s.add("foo");
-        d_type d6(s);
+        d_type d6(symbol_fset{"foo"});
         BOOST_CHECK_EQUAL(d6.size(), 0u);
         // Converting constructor.
-        d_type d7(d6, s);
+        d_type d7(d6, symbol_fset{"foo"});
         BOOST_CHECK_EQUAL(d7.size(), 0u);
         d7.insert(tmp.begin(), tmp.end(), e);
-        s.add("bar");
-        d_type d8(d7, s);
+        d_type d8(d7, symbol_fset{"foo", "bar"});
         BOOST_CHECK_EQUAL(d8.size(), 1u);
-        s.add("frob");
-        BOOST_CHECK_THROW((d_type{d7, s}), std::invalid_argument);
+        BOOST_CHECK_THROW((d_type{d7, symbol_fset{"foo", "bar", "frob"}}), std::invalid_argument);
         // Check the type trait.
         BOOST_CHECK((key_is_convertible<d_type, d_type>::value));
         BOOST_CHECK((!key_is_convertible<d_type, monomial<int>>::value));
@@ -130,12 +126,12 @@ struct ctor_tester {
 BOOST_AUTO_TEST_CASE(divisor_ctor_test)
 {
     init();
-    boost::mpl::for_each<value_types>(ctor_tester());
+    tuple_for_each(value_types{}, ctor_tester{});
 }
 
 struct insert_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         d_type d0;
@@ -246,12 +242,12 @@ struct insert_tester {
 
 BOOST_AUTO_TEST_CASE(divisor_insert_test)
 {
-    boost::mpl::for_each<value_types>(insert_tester());
+    tuple_for_each(value_types{}, insert_tester{});
 }
 
 struct equality_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         std::vector<T> tmp;
@@ -282,12 +278,12 @@ struct equality_tester {
 
 BOOST_AUTO_TEST_CASE(divisor_equality_test)
 {
-    boost::mpl::for_each<value_types>(equality_tester());
+    tuple_for_each(value_types{}, equality_tester{});
 }
 
 struct hash_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         std::vector<T> tmp;
@@ -318,12 +314,12 @@ struct hash_tester {
 
 BOOST_AUTO_TEST_CASE(divisor_hash_test)
 {
-    boost::mpl::for_each<value_types>(hash_tester());
+    tuple_for_each(value_types{}, hash_tester{});
 }
 
 struct tt_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         BOOST_CHECK(is_container_element<d_type>::value);
@@ -332,144 +328,128 @@ struct tt_tester {
 
 BOOST_AUTO_TEST_CASE(divisor_tt_test)
 {
-    boost::mpl::for_each<value_types>(tt_tester());
+    tuple_for_each(value_types{}, tt_tester{});
 }
 
 struct ci_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         d_type d0;
-        symbol_set s;
-        BOOST_CHECK(d0.is_compatible(s));
-        BOOST_CHECK(!d0.is_ignorable(s));
-        s.add("foo");
-        s.add("bar");
-        BOOST_CHECK(d0.is_compatible(s));
-        BOOST_CHECK(!d0.is_ignorable(s));
+        BOOST_CHECK(d0.is_compatible(symbol_fset{}));
+        BOOST_CHECK(!d0.is_zero(symbol_fset{}));
+        BOOST_CHECK(d0.is_compatible(symbol_fset{"foo", "bar"}));
+        BOOST_CHECK(!d0.is_zero(symbol_fset{"foo", "bar"}));
         std::vector<T> tmp;
         T exponent(1);
         tmp = {T(1)};
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        BOOST_CHECK(!d0.is_compatible(s));
-        BOOST_CHECK(!d0.is_ignorable(s));
-        symbol_set s2;
-        BOOST_CHECK(!d0.is_compatible(s2));
-        BOOST_CHECK(!d0.is_ignorable(s2));
+        BOOST_CHECK(!d0.is_compatible(symbol_fset{"foo", "bar"}));
+        BOOST_CHECK(!d0.is_zero(symbol_fset{"foo", "bar"}));
+        BOOST_CHECK(!d0.is_compatible(symbol_fset{}));
+        BOOST_CHECK(!d0.is_zero(symbol_fset{}));
     }
 };
 
 BOOST_AUTO_TEST_CASE(divisor_ci_test)
 {
-    boost::mpl::for_each<value_types>(ci_tester());
+    tuple_for_each(value_types{}, ci_tester{});
 }
 
 struct is_unitary_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         d_type d0;
-        symbol_set s;
-        BOOST_CHECK(d0.is_unitary(s));
-        s.add("foo");
-        BOOST_CHECK(d0.is_unitary(s));
+        BOOST_CHECK(d0.is_unitary(symbol_fset{}));
+        BOOST_CHECK(d0.is_unitary(symbol_fset{"foo"}));
         std::vector<T> tmp;
         T exponent(1);
         tmp = {T(1)};
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        BOOST_CHECK(!d0.is_unitary(s));
-        s.add("bar");
-        BOOST_CHECK_THROW(d0.is_unitary(s), std::invalid_argument);
-        symbol_set s2;
-        BOOST_CHECK_THROW(d0.is_unitary(s2), std::invalid_argument);
+        BOOST_CHECK(!d0.is_unitary(symbol_fset{"foo"}));
     }
 };
 
 BOOST_AUTO_TEST_CASE(divisor_is_unitary_test)
 {
-    boost::mpl::for_each<value_types>(is_unitary_tester());
+    tuple_for_each(value_types{}, is_unitary_tester{});
 }
 
-struct merge_args_tester {
+struct merge_symbols_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
-        symbol_set v1, v2;
-        v2.add(symbol("a"));
         d_type d;
         T exponent(1);
         std::vector<T> tmp;
-        d_type out = d.merge_args(v1, v2);
-        BOOST_CHECK_EQUAL(out.size(), 0u);
-        v2.add(symbol("b"));
-        v2.add(symbol("c"));
-        v2.add(symbol("d"));
-        v1.add(symbol("b"));
-        v1.add(symbol("d"));
         tmp = {T(1), T(2)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        out = d.merge_args(v1, v2);
+        auto out = d.merge_symbols({{0, {"a"}}, {1, {"c"}}}, symbol_fset{"b", "d"});
         BOOST_CHECK_EQUAL(out.size(), 1u);
+        BOOST_CHECK_EQUAL(out._container().begin()->v.size(), 4u);
+        BOOST_CHECK((out._container().begin()->v == small_vector<T>{T(0), T(1), T(0), T(2)}));
         tmp = {T(3), T(-2)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        out = d.merge_args(v1, v2);
+        out = d.merge_symbols({{0, {"a"}}, {1, {"c"}}}, symbol_fset{"b", "d"});
         BOOST_CHECK_EQUAL(out.size(), 2u);
+        auto it = out._container().begin();
+        BOOST_CHECK((it->v == small_vector<T>{T(0), T(1), T(0), T(2)})
+                    || (it->v == small_vector<T>{T(0), T(3), T(0), T(-2)}));
+        ++it;
+        BOOST_CHECK((it->v == small_vector<T>{T(0), T(1), T(0), T(2)})
+                    || (it->v == small_vector<T>{T(0), T(3), T(0), T(-2)}));
         d.clear();
-        v2.add(symbol("e"));
-        v2.add(symbol("f"));
-        v2.add(symbol("g"));
-        v2.add(symbol("h"));
-        v1.add(symbol("e"));
-        v1.add(symbol("g"));
         tmp = {T(3), T(-2), T(0), T(1)};
         d.insert(tmp.begin(), tmp.end(), exponent);
         tmp = {T(1), T(-2), T(0), T(7)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        out = d.merge_args(v1, v2);
+        out = d.merge_symbols({{0, {"a"}}, {1, {"c"}}, {3, {"f"}}, {4, {"h"}}}, symbol_fset{"b", "d", "e", "g"});
         BOOST_CHECK_EQUAL(out.size(), 2u);
+        it = out._container().begin();
+        BOOST_CHECK((it->v == small_vector<T>{T(0), T(3), T(0), T(-2), T(0), T(0), T(1), T(0)})
+                    || (it->v == small_vector<T>{T(0), T(1), T(0), T(-2), T(0), T(0), T(7), T(0)}));
+        ++it;
+        BOOST_CHECK((it->v == small_vector<T>{T(0), T(3), T(0), T(-2), T(0), T(0), T(1), T(0)})
+                    || (it->v == small_vector<T>{T(0), T(1), T(0), T(-2), T(0), T(0), T(7), T(0)}));
         // Check the throwing conditions.
-        BOOST_CHECK_THROW(d.merge_args(v2, v1), std::invalid_argument);
-        BOOST_CHECK_THROW(d.merge_args(v1, symbol_set{}), std::invalid_argument);
-        v1.add(symbol("z"));
-        BOOST_CHECK_THROW(d.merge_args(v1, v2), std::invalid_argument);
-        // Won't throw if the divisor is empty.
-        d.clear();
-        BOOST_CHECK_NO_THROW(d.merge_args(v1, v2));
+        BOOST_CHECK_THROW(d.merge_symbols({{0, {"a"}}, {1, {"c"}}, {3, {"f"}}, {4, {"h"}}}, symbol_fset{"b", "d"}),
+                          std::invalid_argument);
+        BOOST_CHECK_THROW(d.merge_symbols({}, symbol_fset{"b", "d", "e", "g"}), std::invalid_argument);
+        BOOST_CHECK_THROW(
+            d.merge_symbols({{0, {"a"}}, {1, {"c"}}, {3, {"f"}}, {40, {"h"}}}, symbol_fset{"b", "d", "e", "g"}),
+            std::invalid_argument);
     }
 };
 
-BOOST_AUTO_TEST_CASE(divisor_merge_args_test)
+BOOST_AUTO_TEST_CASE(divisor_merge_symbols_test)
 {
-    boost::mpl::for_each<value_types>(merge_args_tester());
+    tuple_for_each(value_types{}, merge_symbols_tester{});
 }
-
 struct print_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
-        symbol_set v;
         d_type d;
         std::ostringstream oss;
-        d.print(oss, v);
+        d.print(oss, symbol_fset{});
         BOOST_CHECK(oss.str().empty());
         T exponent(1);
         std::vector<T> tmp;
         tmp = {T(1)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        v.add("x");
-        d.print(oss, v);
+        d.print(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "1/[(x)]");
         exponent = 2;
         d.clear();
         oss.str("");
         d.insert(tmp.begin(), tmp.end(), exponent);
-        d.print(oss, v);
+        d.print(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "1/[(x)**2]");
-        v.add("y");
         tmp = {T(1), T(-2)};
         d.clear();
         oss.str("");
@@ -477,9 +457,8 @@ struct print_tester {
         exponent = 1;
         tmp = {T(3), T(4)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        d.print(oss, v);
+        d.print(oss, symbol_fset{"x", "y"});
         BOOST_CHECK(oss.str() == "1/[(x-2*y)**2*(3*x+4*y)]" || oss.str() == "1/[(3*x+4*y)*(x-2*y)**2]");
-        v.add("z");
         tmp = {T(1), T(0), T(-1)};
         d.clear();
         oss.str("");
@@ -487,7 +466,7 @@ struct print_tester {
         exponent = 3;
         tmp = {T(0), T(4), T(-1)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        d.print(oss, v);
+        d.print(oss, symbol_fset{"x", "y", "z"});
         BOOST_CHECK(oss.str() == "1/[(x-z)*(4*y-z)**3]" || oss.str() == "1/[(4*y-z)**3*(x-z)]");
         tmp = {T(1), T(0), T(0)};
         exponent = 1;
@@ -497,43 +476,39 @@ struct print_tester {
         exponent = 3;
         tmp = {T(0), T(4), T(-1)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        d.print(oss, v);
+        d.print(oss, symbol_fset{"x", "y", "z"});
         BOOST_CHECK(oss.str() == "1/[(x)*(4*y-z)**3]" || oss.str() == "1/[(4*y-z)**3*(x)]");
         // Check throwing.
-        v.add("t");
-        BOOST_CHECK_THROW(d.print(oss, v), std::invalid_argument);
+        BOOST_CHECK_THROW(d.print(oss, symbol_fset{"x", "y", "z", "t"}), std::invalid_argument);
     }
 };
 
 BOOST_AUTO_TEST_CASE(divisor_print_test)
 {
-    boost::mpl::for_each<value_types>(print_tester());
+    tuple_for_each(value_types{}, print_tester{});
 }
 
 struct print_tex_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
-        symbol_set v;
         d_type d;
         std::ostringstream oss;
-        d.print_tex(oss, v);
+        d.print_tex(oss, symbol_fset{});
         BOOST_CHECK(oss.str().empty());
         T exponent(1);
         std::vector<T> tmp;
         tmp = {T(1)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        v.add("x");
-        d.print_tex(oss, v);
+        d.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{\\left(x\\right)}");
         exponent = 2;
         d.clear();
         oss.str("");
         d.insert(tmp.begin(), tmp.end(), exponent);
-        d.print_tex(oss, v);
+        d.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "\\frac{1}{\\left(x\\right)^{2}}");
-        v.add("y");
         tmp = {T(1), T(-2)};
         d.clear();
         oss.str("");
@@ -541,10 +516,9 @@ struct print_tex_tester {
         exponent = 1;
         tmp = {T(3), T(4)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        d.print_tex(oss, v);
+        d.print_tex(oss, symbol_fset{"x", "y"});
         BOOST_CHECK(oss.str() == "\\frac{1}{\\left(x-2y\\right)^{2}\\left(3x+4y\\right)}"
                     || oss.str() == "\\frac{1}{\\left(3x+4y\\right)\\left(x-2y\\right)^{2}}");
-        v.add("z");
         tmp = {T(1), T(0), T(-1)};
         d.clear();
         oss.str("");
@@ -552,7 +526,7 @@ struct print_tex_tester {
         exponent = 3;
         tmp = {T(0), T(4), T(-1)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        d.print_tex(oss, v);
+        d.print_tex(oss, symbol_fset{"x", "y", "z"});
         BOOST_CHECK(oss.str() == "\\frac{1}{\\left(x-z\\right)\\left(4y-z\\right)^{3}}"
                     || oss.str() == "\\frac{1}{\\left(4y-z\\right)^{3}\\left(x-z\\right)}");
         tmp = {T(1), T(0), T(0)};
@@ -563,32 +537,24 @@ struct print_tex_tester {
         exponent = 3;
         tmp = {T(0), T(4), T(-1)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        d.print_tex(oss, v);
+        d.print_tex(oss, symbol_fset{"x", "y", "z"});
         BOOST_CHECK(oss.str() == "\\frac{1}{\\left(x\\right)\\left(4y-z\\right)^{3}}"
                     || oss.str() == "\\frac{1}{\\left(4y-z\\right)^{3}\\left(x\\right)}");
         // Check throwing.
-        v.add("t");
-        BOOST_CHECK_THROW(d.print_tex(oss, v), std::invalid_argument);
+        BOOST_CHECK_THROW(d.print_tex(oss, symbol_fset{"x", "y", "z", "t"}), std::invalid_argument);
     }
 };
 
 BOOST_AUTO_TEST_CASE(divisor_print_tex_test)
 {
-    boost::mpl::for_each<value_types>(print_tex_tester());
+    tuple_for_each(value_types{}, print_tex_tester{});
 }
 
 struct evaluate_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
-        using pmap_type1 = symbol_set::positions_map<rational>;
-        using dict_type1 = std::unordered_map<symbol, rational>;
-        using pmap_type2 = symbol_set::positions_map<double>;
-        using dict_type2 = std::unordered_map<symbol, double>;
-        using pmap_type3 = symbol_set::positions_map<real>;
-        using dict_type3 = std::unordered_map<symbol, real>;
-        symbol_set v;
         d_type d;
         // Test the type trait first.
         BOOST_CHECK((key_is_evaluable<d_type, rational>::value));
@@ -596,11 +562,12 @@ struct evaluate_tester {
         BOOST_CHECK((key_is_evaluable<d_type, long double>::value));
         BOOST_CHECK((key_is_evaluable<d_type, real>::value));
         BOOST_CHECK((!key_is_evaluable<d_type, std::string>::value));
+        BOOST_CHECK((!key_is_evaluable<d_type, void>::value));
         // Empty divisor.
-        BOOST_CHECK_EQUAL(d.evaluate(pmap_type1(v, dict_type1{}), v), 1_q);
-        BOOST_CHECK((std::is_same<rational, decltype(d.evaluate(pmap_type1(v, dict_type1{}), v))>::value));
-        BOOST_CHECK((std::is_same<double, decltype(d.evaluate(pmap_type2(v, dict_type2{}), v))>::value));
-        BOOST_CHECK((std::is_same<real, decltype(d.evaluate(pmap_type3(v, dict_type3{}), v))>::value));
+        BOOST_CHECK_EQUAL(d.template evaluate<rational>({}, symbol_fset{}), 1_q);
+        BOOST_CHECK((std::is_same<rational, decltype(d.template evaluate<rational>({}, symbol_fset{}))>::value));
+        BOOST_CHECK((std::is_same<double, decltype(d.template evaluate<double>({}, symbol_fset{}))>::value));
+        BOOST_CHECK((std::is_same<real, decltype(d.template evaluate<real>({}, symbol_fset{}))>::value));
         T exponent(2);
         std::vector<T> tmp;
         tmp = {T(1), T(-2)};
@@ -608,38 +575,34 @@ struct evaluate_tester {
         exponent = 3;
         tmp = {T(2), T(7)};
         d.insert(tmp.begin(), tmp.end(), exponent);
-        // Mismatch between map size and number of variables in the divisor.
-        BOOST_CHECK_THROW(d.evaluate(pmap_type1(v, dict_type1{}), v), std::invalid_argument);
-        v.add("x");
-        // Same as above.
-        BOOST_CHECK_THROW(d.evaluate(pmap_type1(v, dict_type1{{symbol("x"), 1_q}}), v), std::invalid_argument);
-        v.add("y");
+        // Error checking.
+        BOOST_CHECK_EXCEPTION(d.template evaluate<rational>({}, symbol_fset{"x"}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "cannot evaluate divisor: the size of the symbol "
+                                                                   "set (1) differs from the size of the vector of "
+                                                                   "values (0)");
+                              });
+        BOOST_CHECK_EXCEPTION(d.template evaluate<rational>({1_q}, symbol_fset{"x"}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "cannot evaluate divisor: the size of the symbol "
+                                                                   "set (1) differs from the number of symbols in the "
+                                                                   "divisor (2)");
+                              });
         // Some numerical checks.
-        BOOST_CHECK_EQUAL(d.evaluate(pmap_type1(v, dict_type1{{symbol("x"), -1_q}, {symbol("y"), 2_q}}), v),
-                          1 / 43200_q);
-        BOOST_CHECK_EQUAL(d.evaluate(pmap_type1(v, dict_type1{{symbol("x"), 2 / 3_q}, {symbol("y"), -4 / 5_q}}), v),
+        BOOST_CHECK_EQUAL(d.template evaluate<rational>({-1_q, 2_q}, symbol_fset{"x", "y"}), 1 / 43200_q);
+        BOOST_CHECK_EQUAL(d.template evaluate<rational>({2 / 3_q, -4 / 5_q}, symbol_fset{"x", "y"}),
                           -759375_z / 303038464_q);
-        BOOST_CHECK_THROW(d.evaluate(pmap_type1(v, dict_type1{{symbol("x"), 2_q}, {symbol("y"), 1_q}}), v),
-                          zero_division_error);
-        // Difference between args and number of variables.
-        BOOST_CHECK_THROW(d.evaluate(pmap_type1(v, dict_type1{{symbol("x"), 2_q}, {symbol("y"), 1_q}}), symbol_set{}),
-                          std::invalid_argument);
-        // A map with invalid values.
-        BOOST_CHECK_THROW(d.evaluate(pmap_type1(symbol_set{symbol{"x"}, symbol{"y"}, symbol{"z"}},
-                                                dict_type1{{symbol("x"), 2_q}, {symbol("z"), 1_q}}),
-                                     v),
-                          std::invalid_argument);
+        BOOST_CHECK_THROW(d.template evaluate<rational>({2_q, 1_q}, symbol_fset{"x", "y"}), zero_division_error);
         // A simple test with real.
-        BOOST_CHECK_EQUAL(d.evaluate(pmap_type3(v, dict_type3{{symbol("x"), -1.5_r}, {symbol("y"), 2.5_r}}), v),
+        BOOST_CHECK_EQUAL(d.template evaluate<real>({-1.5_r, 2.5_r}, symbol_fset{"x", "y"}),
                           1 / (math::pow(-1.5_r - 2.5_r * 2, 2) * math::pow(-1.5_r * 2 + 7 * 2.5_r, 3)));
     }
 };
 
 BOOST_AUTO_TEST_CASE(divisor_evaluate_test)
 {
-    boost::mpl::for_each<value_types>(evaluate_tester());
+    tuple_for_each(value_types{}, evaluate_tester{});
 }
-
 // Mock cf with wrong specialisation of mul3.
 struct mock_cf3 {
     mock_cf3();
@@ -673,7 +636,7 @@ struct mul3_impl<T, typename std::enable_if<std::is_same<T, mock_cf3>::value>::t
 
 struct multiply_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         // Test the type trait first.
@@ -686,9 +649,8 @@ struct multiply_tester {
         term<integer, d_type> t1, t2;
         t1.m_cf = 2;
         t2.m_cf = -3;
-        symbol_set v;
         // Try with empty divisors first.
-        d_type::multiply(res, t1, t2, v);
+        d_type::multiply(res, t1, t2, symbol_fset{});
         BOOST_CHECK_EQUAL(res[0u].m_cf, -6);
         BOOST_CHECK_EQUAL(res[0u].m_key.size(), 0u);
         // 1 - 0.
@@ -696,42 +658,40 @@ struct multiply_tester {
         T exponent(2);
         std::vector<T> tmp;
         tmp = {T(1), T(-2)};
-        v.add("x");
-        v.add("y");
         t1.m_key.insert(tmp.begin(), tmp.end(), exponent);
-        d_type::multiply(res, t1, t2, v);
+        d_type::multiply(res, t1, t2, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res[0u].m_cf, -6);
         BOOST_CHECK_EQUAL(res[0u].m_key.size(), 1u);
-        res[0u].m_key.print(ss, v);
+        res[0u].m_key.print(ss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ss.str(), "1/[(x-2*y)**2]");
         // 0 - 1.
         ss.str("");
         t1.m_key.clear();
         t2.m_key.insert(tmp.begin(), tmp.end(), exponent);
-        d_type::multiply(res, t1, t2, v);
+        d_type::multiply(res, t1, t2, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res[0u].m_cf, -6);
         BOOST_CHECK_EQUAL(res[0u].m_key.size(), 1u);
-        res[0u].m_key.print(ss, v);
+        res[0u].m_key.print(ss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ss.str(), "1/[(x-2*y)**2]");
         // 1 - 1.
         ss.str("");
         tmp = {T(4), T(-3)};
         exponent = 3;
         t1.m_key.insert(tmp.begin(), tmp.end(), exponent);
-        d_type::multiply(res, t1, t2, v);
+        d_type::multiply(res, t1, t2, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res[0u].m_cf, -6);
         BOOST_CHECK_EQUAL(res[0u].m_key.size(), 2u);
-        res[0u].m_key.print(ss, v);
+        res[0u].m_key.print(ss, symbol_fset{"x", "y"});
         BOOST_CHECK(ss.str() == "1/[(x-2*y)**2*(4*x-3*y)**3]" || ss.str() == "1/[(4*x-3*y)**3*(x-2*y)**2]");
         // 1 - 1 with simplification.
         ss.str("");
         tmp = {T(1), T(-2)};
         t1.m_key.clear();
         t1.m_key.insert(tmp.begin(), tmp.end(), exponent);
-        d_type::multiply(res, t1, t2, v);
+        d_type::multiply(res, t1, t2, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res[0u].m_cf, -6);
         BOOST_CHECK_EQUAL(res[0u].m_key.size(), 1u);
-        res[0u].m_key.print(ss, v);
+        res[0u].m_key.print(ss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ss.str(), "1/[(x-2*y)**5]");
         // A 2 - 3 test with simplification.
         t1.m_key.clear();
@@ -756,7 +716,7 @@ struct multiply_tester {
         tmp = {T(1), T(-1)};
         exponent = 4;
         t2.m_key.insert(tmp.begin(), tmp.end(), exponent);
-        d_type::multiply(res, t1, t2, v);
+        d_type::multiply(res, t1, t2, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res[0u].m_cf, -6);
         BOOST_CHECK_EQUAL(res[0u].m_key.size(), 4u);
         // Check correct handling of rationals.
@@ -768,7 +728,7 @@ struct multiply_tester {
         exponent = 4;
         ta.m_key.insert(tmp.begin(), tmp.end(), exponent);
         tb.m_key.insert(tmp.begin(), tmp.end(), exponent);
-        d_type::multiply(resq, ta, tb, v);
+        d_type::multiply(resq, ta, tb, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(resq[0u].m_cf, -6);
         BOOST_CHECK_EQUAL(resq[0u].m_key.size(), 1u);
         // Coefficient series test.
@@ -782,16 +742,15 @@ struct multiply_tester {
         t1a.m_key.insert(tmp.begin(), tmp.end(), exponent);
         exponent = 1;
         t2a.m_key.insert(tmp.begin(), tmp.end(), exponent);
-        d_type::multiply(res2, t1a, t2a, v);
+        d_type::multiply(res2, t1a, t2a, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(res2[0u].m_cf, -6);
         BOOST_CHECK_EQUAL(res2[0u].m_key.size(), 1u);
-        res2[0u].m_key.print(ss, v);
+        res2[0u].m_key.print(ss, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ss.str(), "1/[(x-2*y)**4]");
         // Test incompatible symbol set.
-        v.add("z");
-        BOOST_CHECK_THROW(d_type::multiply(res, t1, t2, v), std::invalid_argument);
+        BOOST_CHECK_THROW(d_type::multiply(res, t1, t2, symbol_fset{"x", "y", "z"}), std::invalid_argument);
         t1.m_key.clear();
-        BOOST_CHECK_THROW(d_type::multiply(res, t1, t2, v), std::invalid_argument);
+        BOOST_CHECK_THROW(d_type::multiply(res, t1, t2, symbol_fset{"x", "y", "z"}), std::invalid_argument);
         // Exponent range overflow check.
         range_checks<T>();
     }
@@ -804,16 +763,13 @@ struct multiply_tester {
         term<integer, d_type> t1, t2;
         t1.m_cf = 2;
         t2.m_cf = -3;
-        symbol_set v;
         T exponent(1);
         std::vector<T> tmp;
         tmp = {T(1), T(-2)};
-        v.add("x");
-        v.add("y");
         t1.m_key.insert(tmp.begin(), tmp.end(), exponent);
         exponent = std::numeric_limits<T>::max();
         t2.m_key.insert(tmp.begin(), tmp.end(), exponent);
-        BOOST_CHECK_THROW(d_type::multiply(res, t1, t2, v), std::invalid_argument);
+        BOOST_CHECK_THROW(d_type::multiply(res, t1, t2, symbol_fset{"x", "y"}), std::invalid_argument);
         // Basic exception safety.
         BOOST_CHECK_EQUAL(res[0u].m_cf, -6);
     }
@@ -825,12 +781,12 @@ struct multiply_tester {
 
 BOOST_AUTO_TEST_CASE(divisor_multiply_test)
 {
-    boost::mpl::for_each<value_types>(multiply_tester());
+    tuple_for_each(value_types{}, multiply_tester{});
 }
 
 struct trim_identify_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         d_type d0;
@@ -840,55 +796,60 @@ struct trim_identify_tester {
         d0.insert(tmp.begin(), tmp.end(), exponent);
         tmp = {T(3), T(-4)};
         exponent = 1;
+        std::vector<char> mask{1, 1};
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        symbol_set v;
-        v.add("x");
-        v.add("y");
-        auto v2 = v;
-        d0.trim_identify(v2, v);
-        BOOST_CHECK_EQUAL(v2.size(), 0u);
+        d0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{0, 0}));
         d0.clear();
+        mask = std::vector<char>{1, 1};
         tmp = {T(1), T(0)};
         d0.insert(tmp.begin(), tmp.end(), exponent);
         tmp = {T(3), T(-4)};
         exponent = 3;
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        v2 = v;
-        d0.trim_identify(v2, v);
-        BOOST_CHECK_EQUAL(v2.size(), 0u);
+        d0.trim_identify(mask, symbol_fset{"x", "y"});
+        BOOST_CHECK((mask == std::vector<char>{0, 0}));
         d0.clear();
+        mask = std::vector<char>{1, 1, 1};
         tmp = {T(1), T(0), T(3)};
         d0.insert(tmp.begin(), tmp.end(), exponent);
         tmp = {T(0), T(3), T(-4)};
         exponent = 2;
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        v.add("z");
-        v2 = v;
-        d0.trim_identify(v2, v);
-        BOOST_CHECK_EQUAL(v2.size(), 0u);
+        d0.trim_identify(mask, symbol_fset{"x", "y", "z"});
+        BOOST_CHECK((mask == std::vector<char>{0, 0, 0}));
         d0.clear();
+        mask = std::vector<char>{1, 1, 1};
         tmp = {T(1), T(0), T(3)};
         d0.insert(tmp.begin(), tmp.end(), exponent);
         tmp = {T(1), T(0), T(-4)};
         exponent = 1;
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        v2 = v;
-        d0.trim_identify(v2, v);
-        BOOST_CHECK((v2 == symbol_set{symbol{"y"}}));
-        // Check throwing condition.
-        v.add("t");
-        BOOST_CHECK_THROW(d0.trim_identify(v2, v), std::invalid_argument);
+        d0.trim_identify(mask, symbol_fset{"x", "y", "z"});
+        BOOST_CHECK((mask == std::vector<char>{0, 1, 0}));
+        // Error handling.
+        BOOST_CHECK_EXCEPTION(d0.trim_identify(mask, symbol_fset{"x", "y"}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "invalid arguments set for trim_identify()");
+                              });
+        mask = std::vector<char>{1, 1, 1, 1};
+        BOOST_CHECK_EXCEPTION(d0.trim_identify(mask, symbol_fset{"x", "y", "z"}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "invalid symbol_set for trim_identify() in a "
+                                                                   "divisor: the size of the symbol set (3) differs "
+                                                                   "from the size of the trim mask (4)");
+                              });
     }
 };
 
 BOOST_AUTO_TEST_CASE(divisor_trim_identify_test)
 {
-    boost::mpl::for_each<value_types>(trim_identify_tester());
+    tuple_for_each(value_types{}, trim_identify_tester{});
 }
 
 struct trim_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
         std::ostringstream ss;
@@ -900,14 +861,9 @@ struct trim_tester {
         tmp = {T(3), T(0), T(-5)};
         exponent = 1;
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        symbol_set v;
-        v.add("x");
-        v.add("y");
-        v.add("z");
-        symbol_set v2;
-        v2.add("y");
-        auto d1 = d0.trim(v2, v);
-        d1.print(ss, symbol_set{symbol{"x"}, symbol{"z"}});
+        std::vector<char> mask{0, 1, 0};
+        auto d1 = d0.trim(mask, symbol_fset{"x", "y", "z"});
+        d1.print(ss, symbol_fset{"x", "z"});
         BOOST_CHECK_EQUAL(d1.size(), 2u);
         BOOST_CHECK(ss.str() == "1/[(x-z)**2*(3*x-5*z)]" || ss.str() == "1/[(3*x-5*z)*(x-z)**2]");
         // Check a case that does not trim anything.
@@ -918,70 +874,59 @@ struct trim_tester {
         tmp = {T(3), T(0), T(-5)};
         exponent = 4;
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        v2 = symbol_set{symbol{"t"}};
-        d1 = d0.trim(v2, v);
-        d1.print(ss, v);
+        mask = {0, 0, 0};
+        d1 = d0.trim(mask, symbol_fset{"x", "y", "z"});
+        d1.print(ss, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(d1.size(), 2u);
         BOOST_CHECK(ss.str() == "1/[(x-z)*(3*x-5*z)**4]" || ss.str() == "1/[(3*x-5*z)**4*(x-z)]");
-        // Check first throwing condition.
-        BOOST_CHECK_THROW(d0.trim(v2, symbol_set{symbol{"x"}, symbol{"z"}}), std::invalid_argument);
-        // Check throwing on insert: after trim, the first term is not coprime.
-        v2 = symbol_set{symbol{"y"}};
-        d0.clear();
-        tmp = {T(2), T(1), T(-2)};
-        d0.insert(tmp.begin(), tmp.end(), exponent);
-        tmp = {T(3), T(0), T(-5)};
-        d0.insert(tmp.begin(), tmp.end(), exponent);
-        BOOST_CHECK_THROW(d0.trim(v2, v), std::invalid_argument);
-        // Check throwing on insert: after trim, first nonzero element is negative.
-        v2 = symbol_set{symbol{"x"}};
-        d0.clear();
-        tmp = {T(2), T(-1), T(-2)};
-        d0.insert(tmp.begin(), tmp.end(), exponent);
-        tmp = {T(3), T(2), T(-5)};
-        d0.insert(tmp.begin(), tmp.end(), exponent);
-        BOOST_CHECK_THROW(d0.trim(v2, v), std::invalid_argument);
+        // Failure modes.
+        BOOST_CHECK_EXCEPTION(d0.trim(mask, symbol_fset{"x", "y"}), std::invalid_argument,
+                              [](const std::invalid_argument &e) {
+                                  return boost::contains(e.what(), "invalid arguments set for trim()");
+                              });
+        mask = {0, 0};
+        BOOST_CHECK_EXCEPTION(
+            d0.trim(mask, symbol_fset{"x", "y", "z"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(), "invalid symbol_set for trim() in a divisor: the size of the symbol "
+                                                 "set (3) differs from the size of the trim mask (2)");
+            });
     }
 };
 
 BOOST_AUTO_TEST_CASE(divisor_trim_test)
 {
-    boost::mpl::for_each<value_types>(trim_tester());
+    tuple_for_each(value_types{}, trim_tester{});
 }
 
 struct split_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         using d_type = divisor<T>;
-        using positions = symbol_set::positions;
-        auto s_to_pos = [](const symbol_set &v, const symbol &s) {
-            symbol_set tmp{s};
-            return positions(v, tmp);
-        };
-        symbol_set vs;
         d_type k1;
-        vs.add("x");
-        auto s1 = k1.split(s_to_pos(vs, symbol("x")), vs);
+        auto s1 = k1.split(0, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(s1.first.size(), 0u);
         BOOST_CHECK_EQUAL(s1.second.size(), 0u);
-        BOOST_CHECK_THROW(k1.split(s_to_pos(vs, symbol("y")), vs), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(k1.split(1, symbol_fset{"x"}), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "invalid index for the splitting of a divisor: the value of the index (1) "
+                                             "is not less than the number of symbols in the divisor (1)");
+        });
         T exponent(1);
         std::vector<T> tmp{T(1)};
         k1.insert(tmp.begin(), tmp.end(), exponent);
-        s1 = k1.split(s_to_pos(vs, symbol("x")), vs);
+        s1 = k1.split(0, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(s1.first.size(), 1u);
         BOOST_CHECK_EQUAL(s1.second.size(), 0u);
         BOOST_CHECK(s1.first == k1);
+        BOOST_CHECK_EXCEPTION(k1.split(0, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "invalid size of arguments set");
+        });
         k1 = d_type{};
         tmp = std::vector<T>{T(1), T(0)};
         k1.insert(tmp.begin(), tmp.end(), exponent);
         tmp = std::vector<T>{T(0), T(1)};
         k1.insert(tmp.begin(), tmp.end(), exponent);
-        BOOST_CHECK_THROW(k1.split(s_to_pos(vs, symbol("y")), vs), std::invalid_argument);
-        vs.add("y");
-        BOOST_CHECK_THROW(k1.split(s_to_pos(vs, symbol("z")), vs), std::invalid_argument);
-        s1 = k1.split(s_to_pos(vs, symbol("x")), vs);
+        s1 = k1.split(0, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(s1.first.size(), 1u);
         BOOST_CHECK_EQUAL(s1.second.size(), 1u);
         auto k2 = d_type{};
@@ -992,7 +937,7 @@ struct split_tester {
         tmp = std::vector<T>{T(0), T(1)};
         k2.insert(tmp.begin(), tmp.end(), exponent);
         BOOST_CHECK(s1.second == k2);
-        s1 = k1.split(s_to_pos(vs, symbol("y")), vs);
+        s1 = k1.split(1, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(s1.first.size(), 1u);
         BOOST_CHECK_EQUAL(s1.second.size(), 1u);
         k2 = d_type{};
@@ -1003,17 +948,10 @@ struct split_tester {
         tmp = std::vector<T>{T(1), T(0)};
         k2.insert(tmp.begin(), tmp.end(), exponent);
         BOOST_CHECK(s1.second == k2);
-        // Try bogus position referring to another set.
-        symbol_set vs2;
-        vs2.add("x");
-        vs2.add("y");
-        vs2.add("z");
-        positions pos2(vs2, symbol_set{symbol("z")});
-        BOOST_CHECK_THROW(k1.split(pos2, vs), std::invalid_argument);
     }
 };
 
 BOOST_AUTO_TEST_CASE(divisor_split_test)
 {
-    boost::mpl::for_each<value_types>(split_tester());
+    tuple_for_each(value_types{}, split_tester{});
 }

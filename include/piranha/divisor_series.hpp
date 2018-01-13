@@ -29,6 +29,11 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_DIVISOR_SERIES_HPP
 #define PIRANHA_DIVISOR_SERIES_HPP
 
+#include <algorithm>
+#include <boost/container/container_fwd.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+#include <initializer_list>
+#include <iterator>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -54,7 +59,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/substitutable_series.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -104,24 +109,24 @@ struct base_getter {
  */
 template <typename Cf, typename Key>
 class divisor_series
-    : public power_series<ipow_substitutable_series<substitutable_series<series<Cf, Key, divisor_series<Cf, Key>>,
-                                                                         divisor_series<Cf, Key>>,
-                                                    divisor_series<Cf, Key>>,
+    : public power_series<ipow_substitutable_series<
+                              substitutable_series<series<Cf, Key, divisor_series<Cf, Key>>, divisor_series<Cf, Key>>,
+                              divisor_series<Cf, Key>>,
                           divisor_series<Cf, Key>>,
       detail::divisor_series_tag
 {
     // NOTE: this is a workaround for GCC < 5. The enabler condition for the special invert() method is a struct defined
     // within this class, and it needs to access the "base" private typedef via the inverse_type<> alias. The enabler
-    // condition
-    // is not granted access to the private base typedef (erroneously, since it is defined in the scope of this class),
-    // so we use this friend helper in order to reach the base typedef.
+    // condition is not granted access to the private base typedef (erroneously, since it is defined in the scope of
+    // this class), so we use this friend helper in order to reach the base typedef.
     template <typename>
     friend struct detail::base_getter;
     PIRANHA_TT_CHECK(detail::is_divisor_series_key, Key);
-    using base = power_series<ipow_substitutable_series<substitutable_series<series<Cf, Key, divisor_series<Cf, Key>>,
-                                                                             divisor_series<Cf, Key>>,
-                                                        divisor_series<Cf, Key>>,
-                              divisor_series<Cf, Key>>;
+    using base
+        = power_series<ipow_substitutable_series<
+                           substitutable_series<series<Cf, Key, divisor_series<Cf, Key>>, divisor_series<Cf, Key>>,
+                           divisor_series<Cf, Key>>,
+                       divisor_series<Cf, Key>>;
     // Value type of the divisor.
     using dv_type = typename Key::value_type;
     // Partial utils.
@@ -161,12 +166,12 @@ class divisor_series
     using d_partial_type_1 = decltype(std::declval<const T &>() * std::declval<const d_partial_type_0<T> &>());
     // Requirements on the final type for the first stage.
     template <typename T>
-    using d_partial_type = enable_if_t<conjunction<std::is_constructible<d_partial_type_1<T>, d_partial_type_0<T>>,
-                                                   std::is_constructible<d_partial_type_1<T>, int>,
-                                                   is_addable_in_place<d_partial_type_1<T>>>::value,
-                                       d_partial_type_1<T>>;
+    using d_partial_type = enable_if_t<
+        conjunction<std::is_constructible<d_partial_type_1<T>, d_partial_type_0<T>>,
+                    std::is_constructible<d_partial_type_1<T>, int>, is_addable_in_place<d_partial_type_1<T>>>::value,
+        d_partial_type_1<T>>;
     template <typename T = divisor_series>
-    d_partial_type<T> d_partial_impl(typename T::term_type::key_type &key, const symbol_set::positions &pos) const
+    d_partial_type<T> d_partial_impl(typename T::term_type::key_type &key, const symbol_idx &p) const
     {
         using term_type = typename base::term_type;
         using cf_type = typename term_type::cf_type;
@@ -188,7 +193,7 @@ class divisor_series
         // Remove the first term from the original key.
         key.m_container.erase(it_b);
         // Extract from the first dependent term the aij and the exponent, and multiply+negate them.
-        const auto mult = safe_mult(first.e, first.v[static_cast<vs_type>(pos.back())]);
+        const auto mult = safe_mult(first.e, first.v[static_cast<vs_type>(p)]);
         // Increase by one the exponent of the first dep. term.
         expo_increase(first.e);
         // Insert the modified first term. Don't move, as we need first below.
@@ -208,20 +213,20 @@ class divisor_series
             tmp_ds_01.set_symbol_set(this->m_symbol_set);
             tmp_ds_01.insert(term_type(cf_type(1), std::move(tmp_div_01)));
             // Recurse.
-            retval += tmp_ds_01 * d_partial_impl(key, pos);
+            retval += tmp_ds_01 * d_partial_impl(key, p);
         }
         return retval;
     }
     template <typename T = divisor_series>
-    d_partial_type<T> divisor_partial(const typename T::term_type &term, const symbol_set::positions &pos) const
+    d_partial_type<T> divisor_partial(const typename T::term_type &term, const symbol_idx &p) const
     {
         using term_type = typename base::term_type;
         // Return zero if the variable is not in the series.
-        if (pos.size() == 0u) {
+        if (p >= this->m_symbol_set.size()) {
             return d_partial_type<T>(0);
         }
         // Initial split of the divisor.
-        auto sd = term.m_key.split(pos, this->m_symbol_set);
+        auto sd = term.m_key.split(p, this->m_symbol_set);
         // If the variable is not in the divisor, just return zero.
         if (sd.first.size() == 0u) {
             return d_partial_type<T>(0);
@@ -232,7 +237,7 @@ class divisor_series
         tmp_ds.set_symbol_set(this->m_symbol_set);
         tmp_ds.insert(term_type(term.m_cf, std::move(sd.second)));
         // Construct and return the result.
-        return tmp_ds * d_partial_impl(sd.first, pos);
+        return tmp_ds * d_partial_impl(sd.first, p);
     }
     // The final type.
     template <typename T>
@@ -241,18 +246,18 @@ class divisor_series
             * std::declval<const T &>()
         + std::declval<const d_partial_type<T> &>());
     template <typename T>
-    using partial_type = enable_if_t<conjunction<std::is_constructible<partial_type_<T>, int>,
-                                                 is_addable_in_place<partial_type_<T>>>::value,
-                                     partial_type_<T>>;
+    using partial_type = enable_if_t<
+        conjunction<std::is_constructible<partial_type_<T>, int>, is_addable_in_place<partial_type_<T>>>::value,
+        partial_type_<T>>;
     // Integrate utils.
     template <typename T>
     using integrate_type_ = decltype(
         math::integrate(std::declval<const typename T::term_type::cf_type &>(), std::declval<const std::string &>())
         * std::declval<const T &>());
     template <typename T>
-    using integrate_type = enable_if_t<conjunction<std::is_constructible<integrate_type_<T>, int>,
-                                                   is_addable_in_place<integrate_type_<T>>>::value,
-                                       integrate_type_<T>>;
+    using integrate_type = enable_if_t<
+        conjunction<std::is_constructible<integrate_type_<T>, int>, is_addable_in_place<integrate_type_<T>>>::value,
+        integrate_type_<T>>;
     // Invert utils.
     // Type coming out of invert() for the base type. This will also be the final type.
     template <typename T>
@@ -264,13 +269,11 @@ class divisor_series
         static constexpr bool value = false;
     };
     template <typename T>
-    struct has_special_invert<T,
-                              enable_if_t<conjunction<detail::poly_in_cf<T>,
-                                                      std::is_constructible<inverse_type<T>,
-                                                                            decltype(
-                                                                                std::declval<const inverse_type<T> &>()
-                                                                                / std::declval<const integer &>())>>::
-                                              value>> {
+    struct has_special_invert<
+        T, enable_if_t<conjunction<
+               detail::poly_in_cf<T>,
+               std::is_constructible<inverse_type<T>, decltype(std::declval<const inverse_type<T> &>()
+                                                               / std::declval<const integer &>())>>::value>> {
         static constexpr bool value = true;
     };
     // Case 0: Series is not suitable for special invert() implementation. Just forward to the base one, via casting.
@@ -300,12 +303,21 @@ class divisor_series
                 auto lc = s._container().begin()->m_cf.integral_combination();
                 // NOTE: lc cannot be empty as we are coming in with a non-zero polynomial.
                 piranha_assert(!lc.empty());
+                // NOTE: integral_combination returns a string map, which is guaranteed to be ordered.
+                struct t_iter {
+                    const std::string &operator()(const typename decltype(lc)::value_type &p) const
+                    {
+                        return p.first;
+                    }
+                };
+                symbol_fset ss(boost::container::ordered_unique_range_t{},
+                               boost::make_transform_iterator(lc.begin(), t_iter{}),
+                               boost::make_transform_iterator(lc.end(), t_iter{}));
+                // NOTE: lc contains unique strings, so the symbol_fset should not contain any duplicate.
+                piranha_assert(ss.size() == lc.size());
                 std::vector<integer> v_int;
-                symbol_set ss;
-                for (const auto &p : lc) {
-                    ss.add(symbol(p.first));
-                    v_int.push_back(p.second);
-                }
+                std::transform(lc.begin(), lc.end(), std::back_inserter(v_int),
+                               [](const typename decltype(lc)::value_type &p) { return p.second; });
                 // We need to canonicalise the term: switch the sign if the first
                 // nonzero element is negative, and divide by the common denom.
                 bool first_nonzero_found = false, need_negate = false;
@@ -320,7 +332,7 @@ class divisor_series
                     if (need_negate) {
                         math::negate(n);
                     }
-                    // NOTE: gcd(0,n) == n (or +-n, in our case) for all n, zero included.
+                    // NOTE: gcd(0,n) == n for all n, zero included.
                     // NOTE: the gcd computation here is safe as we are operating on integers.
                     math::gcd3(cd, cd, n);
                 }
@@ -438,7 +450,7 @@ public:
      * - piranha::series::is_single_coefficient(),
      * - the extraction of an integral linear combination of symbols from \p p,
      * - memory errors in standard containers,
-     * - the public interface of piranha::symbol_set,
+     * - the public interface of piranha::symbol_fset,
      * - piranha::math::is_zero(), piranha::math::negate(),
      * - the construction of terms, coefficients and keys,
      * - piranha::divisor::insert(),
@@ -469,7 +481,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - the construction of the return type,
      * - the arithmetics operations needed to compute the result,
-     * - the public interface of piranha::symbol_set,
+     * - the public interface of piranha::symbol_fset,
      * - piranha::math::partial(), piranha::math::negate(),
      * - construction and insertion of series terms,
      * - piranha::series::set_symbol_set(),
@@ -483,12 +495,12 @@ public:
         using cf_type = typename term_type::cf_type;
         partial_type<T> retval(0);
         const auto it_f = this->m_container.end();
-        const symbol_set::positions pos(this->m_symbol_set, symbol_set{symbol(name)});
+        const auto idx = ss_index_of(this->m_symbol_set, name);
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             divisor_series tmp;
             tmp.set_symbol_set(this->m_symbol_set);
             tmp.insert(term_type(cf_type(1), it->m_key));
-            retval += math::partial(it->m_cf, name) * tmp + divisor_partial(*it, pos);
+            retval += math::partial(it->m_cf, name) * tmp + divisor_partial(*it, idx);
         }
         return retval;
     }
@@ -508,7 +520,7 @@ public:
      * @throws std::invalid_argument if at least one divisor depends on the integration variable.
      * @throws unspecified any exception thrown by:
      * - construction of and arithmetics on the return type,
-     * - the public interface of piranha::symbol and piranha::symbol_set,
+     * - the public interface of piranha::symbol_fset,
      * - piranha::series::set_symbol_set(), piranha::series::insert(),
      * - construction of the coefficients, keys and terms.
      */
@@ -520,17 +532,17 @@ public:
         integrate_type<T> retval(0);
         const auto it_f = this->m_container.end();
         // Turn name into symbol position.
-        const symbol_set::positions pos(this->m_symbol_set, symbol_set{symbol(name)});
+        const auto idx = ss_index_of(this->m_symbol_set, name);
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
-            if (pos.size() == 1u) {
+            if (idx < this->m_symbol_set.size()) {
                 // If the variable is in the symbol set, then we need to make sure
                 // that each multiplier associated to it is zero. Otherwise, the divisor
                 // depends on the variable and we cannot perform the integration.
                 const auto it2_f = it->m_key.m_container.end();
                 for (auto it2 = it->m_key.m_container.begin(); it2 != it2_f; ++it2) {
                     using size_type = decltype(it2->v.size());
-                    piranha_assert(pos.back() < it2->v.size());
-                    if (unlikely(it2->v[static_cast<size_type>(pos.back())] != 0)) {
+                    piranha_assert(idx < it2->v.size());
+                    if (unlikely(it2->v[static_cast<size_type>(idx)] != 0)) {
                         piranha_throw(std::invalid_argument, "unable to integrate with respect to divisor variables");
                     }
                 }

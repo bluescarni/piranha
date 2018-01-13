@@ -55,7 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
-#include <piranha/symbol.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -75,7 +75,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(symbol(name));
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -94,9 +94,8 @@ class series_multiplier<polynomial_alt<Cf, Expo>, void> : public base_series_mul
 {
     using base = base_series_multiplier<polynomial_alt<Cf, Expo>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -172,9 +171,9 @@ struct constructor_tester {
             BOOST_CHECK((std::is_constructible<p_type, Cf>::value));
             BOOST_CHECK((std::is_constructible<p_type, std::string>::value));
             BOOST_CHECK((std::is_constructible<p_type2, p_type1>::value));
-            BOOST_CHECK((!std::is_constructible<p_type, symbol>::value));
+            BOOST_CHECK((!std::is_constructible<p_type, std::vector<int>>::value));
             // A check on the linarg detector.
-            BOOST_CHECK(detail::key_has_linarg<monomial<Expo>>::value);
+            BOOST_CHECK(detail::key_has_is_linear<monomial<Expo>>::value);
         }
     };
     template <typename Cf>
@@ -230,7 +229,7 @@ struct assignment_tester {
             BOOST_CHECK(p1 == integer(10));
             BOOST_CHECK((std::is_assignable<p_type, Cf>::value));
             BOOST_CHECK((std::is_assignable<p_type, p_type>::value));
-            BOOST_CHECK((!std::is_assignable<p_type, symbol>::value));
+            BOOST_CHECK((!std::is_assignable<p_type, std::vector<int>>::value));
         }
     };
     template <typename Cf>

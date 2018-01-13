@@ -49,7 +49,7 @@ see https://www.gnu.org/licenses/. */
 #undef MPPP_WITH_LONG_DOUBLE
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -545,11 +545,10 @@ const bool has_ipow_subs<T, U>::value;
 /// Type trait to detect the presence of the integral power substitution method in keys.
 /**
  * This type trait will be \p true if \p Key provides a const method <tt>ipow_subs()</tt> accepting as
- * const parameters a string, an instance of piranha::integer, an instance of \p T and an instance of
- * piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
- * of pairs in which the second type must be \p Key itself (after the removal of cv/reference qualifiers).
- * The <tt>ipow_subs()</tt> method represents the substitution
- * of the integral power of a symbol with an instance of type \p T.
+ * const parameters a const reference to a piranha::symbol_idx, an instance of piranha::integer, an instance of \p T and
+ * an instance of piranha::symbol_fset. The return value of the method must be an <tt>std::vector</tt> of pairs in which
+ * the second type must be \p Key itself (after the removal of cv/reference qualifiers). The <tt>ipow_subs()</tt> method
+ * represents the substitution of the integral power of a symbol with an instance of type \p T.
  *
  * \p Key must satisfy piranha::is_key after the removal of cv/reference qualifiers, otherwise
  * a compile-time error will be emitted.
@@ -560,8 +559,8 @@ class key_has_ipow_subs
     PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
     template <typename Key1, typename T1>
     using key_ipow_subs_t = decltype(
-        std::declval<const Key1 &>().ipow_subs(std::declval<const std::string &>(), std::declval<const integer &>(),
-                                               std::declval<const T1 &>(), std::declval<const symbol_set &>()));
+        std::declval<const Key1 &>().ipow_subs(std::declval<const symbol_idx &>(), std::declval<const integer &>(),
+                                               std::declval<const T1 &>(), std::declval<const symbol_fset &>()));
     template <typename T1>
     struct check_result_type : std::false_type {
     };
@@ -799,10 +798,9 @@ inline namespace impl
 
 // Enablers for msgpack serialization.
 template <typename Stream>
-using mp_integer_msgpack_pack_enabler
-    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, bool>,
-                              has_msgpack_pack<Stream, ::mp_limb_t>, has_safe_cast<std::uint32_t, mpz_size_t>,
-                              has_msgpack_pack<Stream, std::string>>::value>;
+using mp_integer_msgpack_pack_enabler = enable_if_t<
+    conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, bool>, has_msgpack_pack<Stream, ::mp_limb_t>,
+                has_safe_cast<std::uint32_t, mpz_size_t>, has_msgpack_pack<Stream, std::string>>::value>;
 
 template <typename T>
 using mp_integer_msgpack_convert_enabler
@@ -1013,12 +1011,10 @@ inline namespace impl
 
 // Enabler for safe_cast specialisation.
 template <typename To, typename From>
-using mp_integer_safe_cast_enabler
-    = enable_if_t<disjunction<conjunction<is_mp_integer<To>, std::is_floating_point<From>,
-                                          std::is_constructible<To, From>>,
-                              conjunction<is_mp_integer<To>, std::is_integral<From>, std::is_constructible<To, From>>,
-                              conjunction<is_mp_integer<From>, std::is_integral<To>,
-                                          std::is_constructible<To, From>>>::value>;
+using mp_integer_safe_cast_enabler = enable_if_t<
+    disjunction<conjunction<is_mp_integer<To>, std::is_floating_point<From>, std::is_constructible<To, From>>,
+                conjunction<is_mp_integer<To>, std::is_integral<From>, std::is_constructible<To, From>>,
+                conjunction<is_mp_integer<From>, std::is_integral<To>, std::is_constructible<To, From>>>::value>;
 }
 
 /// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_integer.

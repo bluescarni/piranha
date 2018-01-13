@@ -29,8 +29,6 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SFINAE_TYPES_HPP
 #define PIRANHA_SFINAE_TYPES_HPP
 
-#include <array>
-
 namespace piranha
 {
 

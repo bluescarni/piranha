@@ -47,7 +47,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/divisor_series_fwd.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/detail/series_fwd.hpp>
-#include <piranha/detail/vector_merge_args.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/hash_set.hpp>
 #include <piranha/is_cf.hpp>
@@ -58,60 +57,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/small_vector.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
-
-namespace piranha
-{
-
-// Fwd declaration.
-template <typename>
-class divisor;
-}
-
-// Implementation of the Boost s11n api.
-namespace boost
-{
-namespace serialization
-{
-
-template <typename Archive, typename T>
-inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
-{
-    if (unlikely(!k.key().is_compatible(k.ss()))) {
-        piranha_throw(std::invalid_argument, "an invalid symbol_set was passed as an argument during the "
-                                             "Boost serialization of a divisor");
-    }
-    piranha::boost_save(ar, k.key().m_container);
-}
-
-template <typename Archive, typename T>
-inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
-{
-    try {
-        piranha::boost_load(ar, k.key().m_container);
-        if (unlikely(!k.key().destruction_checks())) {
-            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive failed internal "
-                                                 "consistency checks");
-        }
-        if (unlikely(!k.key().is_compatible(k.ss()))) {
-            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive is not compatible "
-                                                 "with the supplied symbol set");
-        }
-    } catch (...) {
-        k.key().m_container = typename piranha::divisor<T>::container_type{};
-        throw;
-    }
-}
-
-template <typename Archive, typename T>
-inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned version)
-{
-    split_free(ar, k, version);
-}
-}
-}
 
 namespace piranha
 {
@@ -126,12 +74,8 @@ struct divisor_p_type {
     divisor_p_type() = default;
     divisor_p_type(const divisor_p_type &) = default;
     divisor_p_type(divisor_p_type &&) = default;
-    explicit divisor_p_type(const v_type &v_, const T &e_) : v(v_), e(e_)
-    {
-    }
-    explicit divisor_p_type(v_type &&v_, T &&e_) : v(std::move(v_)), e(std::move(e_))
-    {
-    }
+    explicit divisor_p_type(const v_type &v_, const T &e_) : v(v_), e(e_) {}
+    explicit divisor_p_type(v_type &&v_, T &&e_) : v(std::move(v_)), e(std::move(e_)) {}
     ~divisor_p_type() = default;
     divisor_p_type &operator=(const divisor_p_type &) = default;
     divisor_p_type &operator=(divisor_p_type &&) = default;
@@ -177,10 +121,10 @@ struct boost_load_impl<Archive, divisor_p_type<T>,
 #if defined(PIRANHA_WITH_MSGPACK)
 
 template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, divisor_p_type<T>,
-                         enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
-                                                 has_msgpack_pack<Stream,
-                                                                  typename divisor_p_type<T>::v_type>>::value>> {
+struct msgpack_pack_impl<
+    Stream, divisor_p_type<T>,
+    enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, T>,
+                            has_msgpack_pack<Stream, typename divisor_p_type<T>::v_type>>::value>> {
     void operator()(msgpack::packer<Stream> &pk, const divisor_p_type<T> &p, msgpack_format f) const
     {
         pk.pack_array(2);
@@ -190,9 +134,9 @@ struct msgpack_pack_impl<Stream, divisor_p_type<T>,
 };
 
 template <typename T>
-struct msgpack_convert_impl<divisor_p_type<T>,
-                            enable_if_t<conjunction<has_msgpack_convert<T>,
-                                                    has_msgpack_convert<typename divisor_p_type<T>::v_type>>::value>> {
+struct msgpack_convert_impl<
+    divisor_p_type<T>,
+    enable_if_t<conjunction<has_msgpack_convert<T>, has_msgpack_convert<typename divisor_p_type<T>::v_type>>::value>> {
     void operator()(divisor_p_type<T> &p, const msgpack::object &o, msgpack_format f) const
     {
         std::array<msgpack::object, 2> tmp;
@@ -379,24 +323,6 @@ private:
                                     && has_safe_cast<value_type, typename std::iterator_traits<It>::value_type>::value
                                     && has_safe_cast<value_type, Exponent>::value,
                                 int>::type;
-    // Evaluation utilities.
-    // NOTE: here we are not actually requiring that the eval_type has to be destructible, copyable/movable, etc.
-    // We just assume it is a sane type of some kind.
-    template <typename U>
-    using eval_sum_type = decltype(std::declval<const value_type &>() * std::declval<const U &>());
-    template <typename U>
-    using eval_type_
-        = decltype(math::pow(std::declval<const eval_sum_type<U> &>(), std::declval<const value_type &>()));
-    template <typename U>
-    using eval_type =
-        typename std::enable_if<std::is_constructible<eval_type_<U>, int>::value
-                                    && is_divisible_in_place<eval_type_<U>>::value
-                                    && std::is_constructible<eval_sum_type<U>, int>::value
-                                    && is_addable_in_place<eval_sum_type<U>>::value && is_mappable<U>::value,
-                                eval_type_<U>>::type;
-    // Multiplication utilities.
-    template <typename Cf>
-    using multiply_enabler = typename std::enable_if<detail::true_tt<detail::cf_mult_enabler<Cf>>::value, int>::type;
 
 public:
     /// Arity of the multiply() method.
@@ -420,26 +346,24 @@ public:
      * This constructor is used in the generic constructor of piranha::series. It is equivalent
      * to a copy constructor with extra checking.
      *
-     * @param other construction argument.
-     * @param args reference symbol set.
+     * @param other the construction argument.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if \p other is not compatible with \p args.
      * @throws unspecified any exception thrown by the copy constructor.
      */
-    explicit divisor(const divisor &other, const symbol_set &args) : m_container(other.m_container)
+    explicit divisor(const divisor &other, const symbol_fset &args) : m_container(other.m_container)
     {
         if (unlikely(!is_compatible(args))) {
             piranha_throw(std::invalid_argument, "the constructed divisor is incompatible with the "
                                                  "input symbol set");
         }
     }
-    /// Constructor from piranha::symbol_set.
+    /// Constructor from piranha::symbol_fset.
     /**
      * Equivalent to the default constructor.
      */
-    explicit divisor(const symbol_set &)
-    {
-    }
+    explicit divisor(const symbol_fset &) {}
     /// Trivial destructor.
     ~divisor()
     {
@@ -524,6 +448,22 @@ public:
     {
         return m_container.size();
     }
+    /// Const access to the internal container.
+    /**
+     * @return a const reference to the internal container.
+     */
+    const container_type &_container() const
+    {
+        return m_container;
+    }
+    /// Mutable access to the internal container.
+    /**
+     * @return a reference to the internal container.
+     */
+    container_type &_container()
+    {
+        return m_container;
+    }
     /// Clear.
     /**
      * This method will remove all terms from the divisor.
@@ -599,21 +539,21 @@ public:
      * divisor is compatible if the number of variables in the terms is the same as the number
      * of symbols in \p args.
      *
-     * @param args reference symbol set.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return \p true if \p this is compatible with \p args, \p false otherwise.
      */
-    bool is_compatible(const symbol_set &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const noexcept
     {
-        return m_container.empty() ? true : (m_container.begin()->v.size() == args.size());
+        return m_container.empty() || (m_container.begin()->v.size() == args.size());
     }
-    /// Ignorability check.
+    /// Zero check.
     /**
-     * A divisor is never considered ignorable (an empty divisor is equal to 1).
+     * A divisor can never be zero.
      *
      * @return \p false.
      */
-    bool is_ignorable(const symbol_set &) const noexcept
+    bool is_zero(const symbol_fset &) const noexcept
     {
         return false;
     }
@@ -621,50 +561,41 @@ public:
     /**
      * Only an empty divisor is considered unitary.
      *
-     * @param args reference symbol set.
-     *
      * @return \p true if \p this is empty, \p false otherwise.
-     *
-     * @throws std::invalid_argument if the number of variables in the divisor is different
-     * from the size of \p args.
      */
-    bool is_unitary(const symbol_set &args) const
+    bool is_unitary(const symbol_fset &) const
     {
-        if (m_container.empty()) {
-            return true;
-        }
-        if (unlikely(m_container.begin()->v.size() != args.size())) {
-            piranha_throw(std::invalid_argument, "invalid arguments set");
-        }
-        return false;
+        return m_container.empty();
     }
-    /// Merge arguments.
+    /// Merge symbols.
     /**
-     * This method will merge the new arguments set \p new_args into \p this, given the current reference arguments set
-     * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the terms,
-     * with the corresponding \f$ a_{i,j} \f$ values constructed from the integral constant 0.
+     * This method will return a copy of \p this in which, for every factor of the divisor, the value 0 has been
+     * inserted at the positions specified by \p ins_map. Specifically, before each index appearing in \p ins_map a
+     * number of zeroes equal to the size of the mapped piranha::symbol_fset will be inserted.
      *
-     * @param orig_args current reference arguments set for \p this.
-     * @param new_args new arguments set.
+     * @param ins_map the insertion map.
+     * @param args the reference symbol set for \p this.
      *
-     * @return a divisor resulting from merging \p new_args into \p this.
+     * @return a piranha::divisor resulting from inserting into \p this zeroes at the positions specified by \p
+     * ins_map.
      *
      * @throws std::invalid_argument in the following cases:
-     * - the number of variables in the terms of \p this is different from the size of \p orig_args,
-     * - the size of \p new_args is not greater than the size of \p orig_args,
-     * - not all elements of \p orig_args are included in \p new_args.
+     * - the size of the factors of ``this`` is different from the size of \p args,
+     * - the size of \p ins_map is zero,
+     * - the last index in \p ins_map is greater than the size of the factors of ``this``.
      * @throws unspecified any exception thrown by:
      * - piranha::small_vector::push_back(),
+     * - the construction of instances of type piranha::divisor::value_type from the integral constant 0,
      * - the copy assignment of piranha::divisor::value_type,
      * - piranha::hash_set::insert().
      */
-    divisor merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
+    divisor merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map, const symbol_fset &args) const
     {
         divisor retval;
         const auto it_f = m_container.end();
         p_type tmp;
         for (auto it = m_container.begin(); it != it_f; ++it) {
-            tmp.v = detail::vector_merge_args(it->v, orig_args, new_args);
+            vector_key_merge_symbols(tmp.v, it->v, ins_map, args);
             tmp.e = it->e;
             auto ret = retval.m_container.insert(std::move(tmp));
             (void)ret;
@@ -677,15 +608,15 @@ public:
     /**
      * This method will print to the stream \p os a text representation of \p this.
      *
-     * @param os target stream.
-     * @param args reference symbol set.
+     * @param os the target stream.
+     * @param args the reference symbol set for \p this.
      *
      * @throws std::invalid_argument if the number of variables in the terms of \p this is different from the
      * size of \p args.
      * @throws unspecified any exception thrown by printing to \p os piranha::divisor::value_type, strings or
      * characters.
      */
-    void print(std::ostream &os, const symbol_set &args) const
+    void print(std::ostream &os, const symbol_fset &args) const
     {
         // Don't print anything if there are no terms.
         if (m_container.empty()) {
@@ -706,7 +637,8 @@ public:
             }
             bool printed_something = false;
             os << '(';
-            for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
+            auto it_args = args.begin();
+            for (typename v_type::size_type i = 0u; i < it->v.size(); ++i, ++it_args) {
                 // If the aij is zero, don't print anything.
                 if (math::is_zero(it->v[i])) {
                     continue;
@@ -723,7 +655,7 @@ public:
                     os << detail::prepare_for_print(it->v[i]) << '*';
                 }
                 // Finally, print name of variable.
-                os << args[i].get_name();
+                os << *it_args;
                 printed_something = true;
             }
             os << ')';
@@ -738,15 +670,15 @@ public:
     /**
      * This method will print to the stream \p os a TeX representation of \p this.
      *
-     * @param os target stream.
-     * @param args reference symbol set.
+     * @param os the target stream.
+     * @param args the reference symbol set for \p this.
      *
      * @throws std::invalid_argument if the number of variables in the terms of \p this is different from the size
      * of \p args.
      * @throws unspecified any exception thrown by printing to \p os piranha::divisor::value_type, strings or
      * characters.
      */
-    void print_tex(std::ostream &os, const symbol_set &args) const
+    void print_tex(std::ostream &os, const symbol_fset &args) const
     {
         // Don't print anything if there are no terms.
         if (m_container.empty()) {
@@ -760,7 +692,8 @@ public:
         for (auto it = m_container.begin(); it != it_f; ++it) {
             bool printed_something = false;
             os << "\\left(";
-            for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
+            auto it_args = args.begin();
+            for (typename v_type::size_type i = 0u; i < it->v.size(); ++i, ++it_args) {
                 // If the aij is zero, don't print anything.
                 if (math::is_zero(it->v[i])) {
                     continue;
@@ -777,7 +710,7 @@ public:
                     os << detail::prepare_for_print(it->v[i]);
                 }
                 // Finally, print name of variable.
-                os << args[i].get_name();
+                os << *it_args;
                 printed_something = true;
             }
             os << "\\right)";
@@ -788,83 +721,102 @@ public:
         }
         os << '}';
     }
+
+private:
+    // Evaluation utilities.
+    // NOTE: here we are not actually requiring that the eval_type has to be destructible, copyable/movable, etc.
+    // We just assume it is a sane type of some kind.
+    // NOTE: this will have to be fixed in the rework.
+    template <typename U>
+    using eval_sum_type = decltype(std::declval<const value_type &>() * std::declval<const U &>());
+    template <typename U>
+    using eval_type_
+        = decltype(math::pow(std::declval<const eval_sum_type<U> &>(), std::declval<const value_type &>()));
+    template <typename U>
+    using eval_type = enable_if_t<
+        conjunction<std::is_constructible<eval_type_<U>, const int &>, is_divisible_in_place<eval_type_<U>>,
+                    std::is_constructible<eval_sum_type<U>, const int &>, is_addable_in_place<eval_sum_type<U>>>::value,
+        eval_type_<U>>;
+
+public:
     /// Evaluation.
     /**
      * \note
-     * This method is available only if \p U satisfies the following requirements:
-     * - it satisfies piranha::is_mappable,
-     * - it supports the arithmetic operations necessary to construct the return type.
+     * This method is available only if \p U supports the arithmetic operations necessary to construct the return type.
      *
-     * The return value will be built via multiplications of the \f$ a_{i,j} \f$ by the values
-     * in the input map, additions, divisions and exponentiations via piranha::math::pow().
-     * If the divisor has no terms, 1 will be returned. If \p args is not compatible with \p this and \p pmap,
-     * or the positions in \p pmap do not reference only and all the variables in the divisor, an error will be thrown.
+     * The return value will be built via multiplications of the \f$ a_{i,j} \f$ by the input values,
+     * additions, divisions and exponentiations via piranha::math::pow().
+     * If the divisor has no terms, 1 will be returned.
      *
-     * @param pmap piranha::symbol_set::positions_map that will be used for substitution.
-     * @param args reference set of piranha::symbol.
+     * @param values the values will be used for the evaluation.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return the result of evaluating \p this with the values provided in \p pmap.
+     * @return the result of evaluating \p this with the values provided in \p values.
      *
      * @throws std::invalid_argument if there exist an incompatibility between \p this,
      * \p args or \p pmap.
      * @throws unspecified any exception thrown by the construction of the return type.
      */
     template <typename U>
-    eval_type<U> evaluate(const symbol_set::positions_map<U> &pmap, const symbol_set &args) const
+    eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
     {
+        if (unlikely(args.size() != values.size())) {
+            piranha_throw(std::invalid_argument, "cannot evaluate divisor: the size of the symbol set ("
+                                                     + std::to_string(args.size())
+                                                     + ") differs from the size of the vector of values ("
+                                                     + std::to_string(values.size()) + ")");
+        }
+        const auto em = m_container.empty();
+        if (unlikely(!em && m_container.begin()->v.size() != args.size())) {
+            piranha_throw(std::invalid_argument, "cannot evaluate divisor: the size of the symbol set ("
+                                                     + std::to_string(args.size())
+                                                     + ") differs from the number of symbols in the divisor ("
+                                                     + std::to_string(m_container.begin()->v.size()) + ")");
+        }
         // Just return 1 if the container is empty.
         eval_type<U> retval(1);
-        if (m_container.empty()) {
+        if (em) {
             return retval;
-        }
-        // NOTE: the positions map must have the same number of elements as this, and it must
-        // be made of consecutive positions [0,size - 1].
-        if (unlikely(pmap.size() != m_container.begin()->v.size()
-                     || (pmap.size() && pmap.back().first != pmap.size() - 1u))) {
-            piranha_throw(std::invalid_argument, "invalid positions map for evaluation");
-        }
-        // Args must be compatible with this.
-        if (unlikely(args.size() != m_container.begin()->v.size())) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
         }
         const auto it_f = m_container.end();
         for (auto it = m_container.begin(); it != it_f; ++it) {
             eval_sum_type<U> tmp(0);
-            auto map_it = pmap.begin();
-            for (typename v_type::size_type i = 0u; i < it->v.size(); ++i, ++map_it) {
-                piranha_assert(map_it != pmap.end() && map_it->first == i);
+            for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
                 // NOTE: might use multadd here eventually for performance.
-                tmp += it->v[i] * map_it->second;
+                tmp += it->v[i] * values[static_cast<decltype(values.size())>(i)];
             }
-            piranha_assert(map_it == pmap.end());
             // NOTE: consider rewriting this in terms of multiplications as a performance
             // improvement - the eval_type deduction should be changed accordingly.
             retval /= math::pow(tmp, it->e);
         }
         return retval;
     }
+
+private:
+    // Multiplication utilities.
+    template <typename Cf>
+    using multiply_enabler = enable_if_t<has_mul3<Cf>::value, int>;
+
+public:
     /// Multiply terms with a divisor key.
     /**
      * \note
-     * This method is enabled only if \p Cf satisfies piranha::is_cf and piranha::has_mul3.
+     * This method is enabled only if \p Cf satisfies piranha::has_mul3.
      *
      * Multiply \p t1 by \p t2, storing the result in the only element of \p res.  If \p Cf is an instance of
-     * piranha::mp_rational, then
-     * only the numerators of the coefficients will be multiplied.
+     * piranha::mp_rational, then only the numerators of the coefficients will be multiplied.
      *
      * This method offers the basic exception safety guarantee.
      *
-     * @param res return value.
-     * @param t1 first argument.
-     * @param t2 second argument.
-     * @param args reference set of arguments.
+     * @param res the return value.
+     * @param t1 the first argument.
+     * @param t2 the second argument.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the key of \p t1 and/or the key of \p t2 are incompatible with \p args, or if
-     * the multiplication
-     * of the keys results in an exponent exceeding the allowed range.
+     * the multiplication of the keys results in an exponent exceeding the allowed range.
      * @throws std::overflow_error if the multiplication of the keys results in the container of the result key to be
-     * resized over
-     * an implementation-defined limit.
+     * resized over an implementation-defined limit.
      * @throws unspecified any exception thrown by:
      * - piranha::math::mul3(),
      * - the public interface of piranha::hash_set,
@@ -872,14 +824,15 @@ public:
      */
     template <typename Cf, multiply_enabler<Cf> = 0>
     static void multiply(std::array<term<Cf, divisor>, multiply_arity> &res, const term<Cf, divisor> &t1,
-                         const term<Cf, divisor> &t2, const symbol_set &args)
+                         const term<Cf, divisor> &t2, const symbol_fset &args)
     {
         term<Cf, divisor> &t = res[0u];
         if (unlikely(!t1.m_key.is_compatible(args) || !t2.m_key.is_compatible(args))) {
-            piranha_throw(std::invalid_argument, "invalid size of arguments set");
+            piranha_throw(std::invalid_argument, "cannot multiply terms with divisor keys: at least one of the terms "
+                                                 "is not compatible with the input symbol set");
         }
         // Coefficient.
-        detail::cf_mult_impl(t.m_cf, t1.m_cf, t2.m_cf);
+        cf_mult_impl(t.m_cf, t1.m_cf, t2.m_cf);
         // Now deal with the key.
         // Establish the largest and smallest divisor.
         const divisor &large = (t1.m_key.size() >= t2.m_key.size()) ? t1.m_key : t2.m_key;
@@ -894,57 +847,73 @@ public:
     }
     /// Identify symbols that can be trimmed.
     /**
-     * This method is used in piranha::series::trim(). The input parameter \p candidates
-     * contains a set of symbols that are candidates for elimination. The method will remove
-     * from \p candidates those symbols whose \f$ a_{i,j} \f$ in \p this are not all zeroes.
+     * This method is used in piranha::series::trim(). The input parameter \p trim_mask
+     * is a vector of boolean flags (i.e., a mask) which signals which elements in \p args are candidates
+     * for trimming: a nonzero value means that the symbol at the corresponding position is a candidate for trimming,
+     * while a zero value means that the symbol is not a candidate for trimming. The method will set to zero in
+     * ``trim_mask`` those symbols whose \f$ a_{i,j} \f$ in \p this are not all zeroes.
      *
-     * @param candidates set of candidates for elimination.
-     * @param args reference arguments set.
+     * @param trim_mask a mask signalling candidate elements for trimming.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @throws std::invalid_argument if \p this is not compatible with \p args.
-     * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::symbol_set::remove().
+     * @throws std::invalid_argument if \p this is not compatible with \p args, or if the sizes of ``trim_mask``
+     * and ``args`` differ.
+     * @throws unspecified any exception thrown by piranha::math::is_zero().
      */
-    void trim_identify(symbol_set &candidates, const symbol_set &args) const
+    void trim_identify(std::vector<char> &trim_mask, const symbol_fset &args) const
     {
         if (unlikely(!is_compatible(args))) {
             piranha_throw(std::invalid_argument, "invalid arguments set for trim_identify()");
         }
+        if (unlikely(trim_mask.size() != args.size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid symbol_set for trim_identify() in a divisor: the size of the symbol set ("
+                              + std::to_string(args.size()) + ") differs from the size of the trim mask ("
+                              + std::to_string(trim_mask.size()) + ")");
+        }
         const auto it_f = m_container.end();
         for (auto it = m_container.begin(); it != it_f; ++it) {
             for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
-                if (!math::is_zero(it->v[i]) && std::binary_search(candidates.begin(), candidates.end(),
-                                                                   args[static_cast<symbol_set::size_type>(i)])) {
-                    candidates.remove(args[static_cast<symbol_set::size_type>(i)]);
+                if (!math::is_zero(it->v[i])) {
+                    trim_mask[static_cast<decltype(trim_mask.size())>(i)] = 0;
                 }
             }
         }
     }
     /// Trim.
     /**
-     * This method will return a copy of \p this with the \f$ a_{i,j} \f$ associated to the symbols
-     * in \p trim_args removed.
+     * This method is used in piranha::series::trim(). The input mask \p trim_mask
+     * is a vector of boolean flags signalling (with nonzero values) symbols
+     * to be removed. The method will return a copy of \p this in which
+     * the specified elements have been removed from each term of the divisor.
      *
-     * @param trim_args arguments whose \f$ a_{i,j} \f$ will be removed.
-     * @param orig_args original arguments set.
+     * @param trim_mask a mask indicating which elements will be removed.
+     * @param args the reference piranha::symbol_fset.
      *
-     * @return trimmed copy of \p this.
+     * @return a trimmed copy of \p this.
      *
-     * @throws std::invalid_argument if \p this is not compatible with \p orig_args.
+     * @throws std::invalid_argument if ``this`` is not compatible with ``args`` or if
+     * the sizes of ``args`` and ``trim_mask`` differ.
      * @throws unspecified any exception thrown by piranha::small_vector::push_back()
      * or piranha::divisor::insert().
      */
-    divisor trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+    divisor trim(const std::vector<char> &trim_mask, const symbol_fset &args) const
     {
-        if (unlikely(!is_compatible(orig_args))) {
+        if (unlikely(!is_compatible(args))) {
             piranha_throw(std::invalid_argument, "invalid arguments set for trim()");
+        }
+        if (unlikely(trim_mask.size() != args.size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid symbol_set for trim() in a divisor: the size of the symbol set ("
+                              + std::to_string(args.size()) + ") differs from the size of the trim mask ("
+                              + std::to_string(trim_mask.size()) + ")");
         }
         divisor retval;
         const auto it_f = m_container.end();
         for (auto it = m_container.begin(); it != it_f; ++it) {
             v_type tmp;
             for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
-                if (!std::binary_search(trim_args.begin(), trim_args.end(),
-                                        orig_args[static_cast<symbol_set::size_type>(i)])) {
+                if (!trim_mask[static_cast<decltype(trim_mask.size())>(i)]) {
                     tmp.push_back(it->v[i]);
                 }
             }
@@ -955,34 +924,36 @@ public:
     /// Split divisor.
     /**
      * This method will split \p this into two parts: the first one will contain the terms of the divisor
-     * whose \f$ a_{i,j} \f$ values for the only symbol in \p p are not zero, the second one the terms whose
-     * \f$ a_{i,j} \f$  values for the only symbol in \p p are zero.
+     * whose \f$ a_{i,j} \f$ values at the position \p p are not zero, the second one the remaining terms.
      *
-     * @param p a piranha::symbol_set::positions containing exactly one element.
-     * @param args reference set of piranha::symbol.
+     * @param p the position of the splitting symbol.
+     * @param args the reference piranha::symbol_fset.
      *
      * @return the original divisor split into two parts.
      *
      * @throws std::invalid_argument if \p args is not compatible with \p this or \p p, or \p p
-     * does not contain exactly one element.
+     * is not less than the size of \p args.
      * @throws unspecified any exception thrown by:
      * - piranha::math::is_zero(),
      * - piranha::hash_set::insert().
      */
-    std::pair<divisor, divisor> split(const symbol_set::positions &p, const symbol_set &args) const
+    std::pair<divisor, divisor> split(const symbol_idx &p, const symbol_fset &args) const
     {
         if (unlikely(!is_compatible(args))) {
             piranha_throw(std::invalid_argument, "invalid size of arguments set");
         }
-        if (unlikely(p.size() != 1u || p.back() >= args.size())) {
-            piranha_throw(std::invalid_argument, "invalid size of symbol_set::positions");
+        if (unlikely(p >= args.size())) {
+            piranha_throw(std::invalid_argument,
+                          "invalid index for the splitting of a divisor: the value of the index (" + std::to_string(p)
+                              + ") is not less than the number of symbols in the divisor ("
+                              + std::to_string(args.size()) + ")");
         }
         using s_type = typename v_type::size_type;
         std::pair<divisor, divisor> retval;
         const auto it_f = m_container.end();
         for (auto it = m_container.begin(); it != it_f; ++it) {
             // NOTE: static cast is safe here, as we checked for compatibility.
-            if (math::is_zero(it->v[static_cast<s_type>(p.back())])) {
+            if (math::is_zero(it->v[static_cast<s_type>(p)])) {
                 retval.second.m_container.insert(*it);
             } else {
                 retval.first.m_container.insert(*it);
@@ -1020,13 +991,13 @@ public:
      *
      * @param p the target <tt>msgpack::packer</tt>.
      * @param f the desired piranha::msgpack_format.
-     * @param args reference symbol set.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if \p args is not compatible with \p this.
      * @throws unspecified any exception thrown by piranha::msgpack_pack().
      */
     template <typename Stream, msgpack_pack_enabler<Stream> = 0>
-    void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f, const symbol_set &args) const
+    void msgpack_pack(msgpack::packer<Stream> &p, msgpack_format f, const symbol_fset &args) const
     {
         if (unlikely(!is_compatible(args))) {
             piranha_throw(std::invalid_argument, "an invalid symbol_set was passed as an argument for the "
@@ -1044,14 +1015,14 @@ public:
      *
      * @param o the input <tt>msgpack::object</tt>.
      * @param f the desired piranha::msgpack_format.
-     * @param args reference symbol set.
+     * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the deserialized divisor fails internal consistency checks, or if it is not
      * compatible with \p args.
      * @throws unspecified any exception thrown by piranha::msgpack_convert().
      */
     template <typename U = divisor, msgpack_convert_enabler<U> = 0>
-    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_set &args)
+    void msgpack_convert(const msgpack::object &o, msgpack_format f, const symbol_fset &args)
     {
         try {
             piranha::msgpack_convert(m_container, o, f);
@@ -1076,6 +1047,53 @@ private:
 
 template <typename T>
 const std::size_t divisor<T>::multiply_arity;
+}
+
+// Implementation of the Boost s11n api.
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, typename T>
+inline void save(Archive &ar, const piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
+{
+    if (unlikely(!k.key().is_compatible(k.ss()))) {
+        piranha_throw(std::invalid_argument, "an invalid symbol_set was passed as an argument during the "
+                                             "Boost serialization of a divisor");
+    }
+    piranha::boost_save(ar, k.key().m_container);
+}
+
+template <typename Archive, typename T>
+inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned)
+{
+    try {
+        piranha::boost_load(ar, k.key().m_container);
+        if (unlikely(!k.key().destruction_checks())) {
+            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive failed internal "
+                                                 "consistency checks");
+        }
+        if (unlikely(!k.key().is_compatible(k.ss()))) {
+            piranha_throw(std::invalid_argument, "the divisor loaded from a Boost archive is not compatible "
+                                                 "with the supplied symbol set");
+        }
+    } catch (...) {
+        k.key().m_container = typename piranha::divisor<T>::container_type{};
+        throw;
+    }
+}
+
+template <typename Archive, typename T>
+inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::divisor<T>> &k, unsigned version)
+{
+    split_free(ar, k, version);
+}
+}
+}
+
+namespace piranha
+{
 
 inline namespace impl
 {

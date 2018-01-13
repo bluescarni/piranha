@@ -203,6 +203,14 @@ public:
 };
 }
 
+inline namespace impl
+{
+
+// Type resulting from the application of math::pow().
+template <typename Base, typename Expo>
+using pow_t = decltype(math::pow(std::declval<const Base &>(), std::declval<const Expo &>()));
+}
+
 /// Type trait for exponentiable types.
 /**
  * The type trait will be \p true if piranha::math::pow() can be successfully called with base \p T and
@@ -211,8 +219,6 @@ public:
 template <typename T, typename U>
 class is_exponentiable
 {
-    template <typename Base, typename Expo>
-    using pow_t = decltype(math::pow(std::declval<const Base &>(), std::declval<const Expo &>()));
     static const bool implementation_defined = is_detected<pow_t, T, U>::value;
 
 public:

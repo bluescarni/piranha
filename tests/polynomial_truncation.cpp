@@ -46,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/mp_rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/settings.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -134,25 +135,25 @@ struct main_tester {
                 tup = pt::get_auto_truncate_degree();
                 BOOST_CHECK_EQUAL(std::get<0u>(tup), 2);
                 BOOST_CHECK_EQUAL(std::get<1u>(tup), 1);
-                BOOST_CHECK(std::get<2u>(tup) == std::vector<std::string>{"x"});
+                BOOST_CHECK(std::get<2u>(tup) == symbol_fset{"x"});
                 BOOST_CHECK_EQUAL((x + y + 1) * (x + y + 1), 2 * x * y + 2 * x + y * y + 2 * y + 1);
                 pt::set_auto_truncate_degree(1, {"z"});
                 tup = pt::get_auto_truncate_degree();
                 BOOST_CHECK_EQUAL(std::get<0u>(tup), 2);
                 BOOST_CHECK_EQUAL(std::get<1u>(tup), 1);
-                BOOST_CHECK(std::get<2u>(tup) == std::vector<std::string>{"z"});
+                BOOST_CHECK(std::get<2u>(tup) == symbol_fset{"z"});
                 BOOST_CHECK_EQUAL((x + y + 1) * (x + y + 1), x * x + 2 * x * y + 2 * x + y * y + 2 * y + 1);
                 pt::set_auto_truncate_degree(1, {"x", "y"});
                 tup = pt::get_auto_truncate_degree();
                 BOOST_CHECK_EQUAL(std::get<0u>(tup), 2);
                 BOOST_CHECK_EQUAL(std::get<1u>(tup), 1);
-                BOOST_CHECK((std::get<2u>(tup) == std::vector<std::string>{"x", "y"}));
+                BOOST_CHECK((std::get<2u>(tup) == symbol_fset{"x", "y"}));
                 BOOST_CHECK_EQUAL((x + y + 1) * (x + y + 1), 2 * x + 2 * y + 1);
                 pt::set_auto_truncate_degree(1, {"x"});
                 tup = pt::get_auto_truncate_degree();
                 BOOST_CHECK_EQUAL(std::get<0u>(tup), 2);
                 BOOST_CHECK_EQUAL(std::get<1u>(tup), 1);
-                BOOST_CHECK((std::get<2u>(tup) == std::vector<std::string>{"x"}));
+                BOOST_CHECK((std::get<2u>(tup) == symbol_fset{"x"}));
                 BOOST_CHECK_EQUAL((x + y + z + t) * (x + y + z + t), t * t + 2 * t * x + 2 * t * y + 2 * t * z
                                                                          + 2 * x * y + 2 * x * z + y * y + 2 * y * z
                                                                          + z * z);

@@ -52,12 +52,10 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/invert.hpp>
@@ -70,6 +68,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 #include "type_system.hpp"
@@ -312,10 +311,10 @@ inline auto generic_degree_wrapper(const S &s) -> decltype(piranha::math::degree
 
 template <typename S>
 inline auto generic_partial_degree_wrapper(const S &s, bp::list l)
-    -> decltype(piranha::math::degree(s, std::vector<std::string>{}))
+    -> decltype(piranha::math::degree(s, piranha::symbol_fset{}))
 {
     bp::stl_input_iterator<std::string> begin(l), end;
-    return piranha::math::degree(s, std::vector<std::string>(begin, end));
+    return piranha::math::degree(s, piranha::symbol_fset(begin, end));
 }
 
 template <typename S>
@@ -326,10 +325,10 @@ inline auto generic_ldegree_wrapper(const S &s) -> decltype(piranha::math::ldegr
 
 template <typename S>
 inline auto generic_partial_ldegree_wrapper(const S &s, bp::list l)
-    -> decltype(piranha::math::ldegree(s, std::vector<std::string>{}))
+    -> decltype(piranha::math::ldegree(s, piranha::symbol_fset{}))
 {
     bp::stl_input_iterator<std::string> begin(l), end;
-    return piranha::math::ldegree(s, std::vector<std::string>(begin, end));
+    return piranha::math::ldegree(s, piranha::symbol_fset(begin, end));
 }
 
 // Generic latex representation wrapper.
@@ -470,14 +469,13 @@ class series_exposer
     }
     // Expose arithmetics operations with another type, if supported.
     template <typename S, typename T>
-    using common_ops_ic = std::
-        integral_constant<bool,
-                          piranha::is_addable_in_place<S, T>::value && piranha::is_addable<S, T>::value
-                              && piranha::is_addable<T, S>::value && piranha::is_subtractable_in_place<S, T>::value
-                              && piranha::is_subtractable<S, T>::value && piranha::is_subtractable<T, S>::value
-                              && piranha::is_multipliable_in_place<S, T>::value && piranha::is_multipliable<S, T>::value
-                              && piranha::is_multipliable<T, S>::value && piranha::is_equality_comparable<T, S>::value
-                              && piranha::is_equality_comparable<S, T>::value>;
+    using common_ops_ic = std::integral_constant<
+        bool, piranha::is_addable_in_place<S, T>::value && piranha::is_addable<S, T>::value
+                  && piranha::is_addable<T, S>::value && piranha::is_subtractable_in_place<S, T>::value
+                  && piranha::is_subtractable<S, T>::value && piranha::is_subtractable<T, S>::value
+                  && piranha::is_multipliable_in_place<S, T>::value && piranha::is_multipliable<S, T>::value
+                  && piranha::is_multipliable<T, S>::value && piranha::is_equality_comparable<T, S>::value
+                  && piranha::is_equality_comparable<S, T>::value>;
     template <typename S, typename T, typename std::enable_if<common_ops_ic<S, T>::value, int>::type = 0>
     static void expose_common_ops(bp::class_<S> &series_class, const T &in)
     {
@@ -532,9 +530,7 @@ class series_exposer
     // Exponentiation support.
     template <typename S>
     struct pow_exposer {
-        pow_exposer(bp::class_<S> &series_class) : m_series_class(series_class)
-        {
-        }
+        pow_exposer(bp::class_<S> &series_class) : m_series_class(series_class) {}
         bp::class_<S> &m_series_class;
         template <typename T, typename U>
         static auto pow_wrapper(const T &s, const U &x) -> decltype(piranha::math::pow(s, x))
@@ -568,22 +564,21 @@ class series_exposer
     // Evaluation.
     template <typename S>
     struct eval_exposer {
-        eval_exposer(bp::class_<S> &series_class) : m_series_class(series_class)
-        {
-        }
+        eval_exposer(bp::class_<S> &series_class) : m_series_class(series_class) {}
         bp::class_<S> &m_series_class;
         template <typename T>
         void operator()(const T &, typename std::enable_if<piranha::is_evaluable<S, T>::value>::type * = nullptr) const
         {
-            bp::def("_evaluate", +[](const S &s, bp::dict dict, const T &) -> decltype(
-                                     piranha::math::evaluate(s, std::declval<std::unordered_map<std::string, T>>())) {
-                std::unordered_map<std::string, T> cpp_dict;
-                bp::stl_input_iterator<std::string> it(dict), end;
-                for (; it != end; ++it) {
-                    cpp_dict[*it] = bp::extract<T>(dict[*it])();
-                }
-                return piranha::math::evaluate(s, cpp_dict);
-            });
+            bp::def("_evaluate",
+                    +[](const S &s, bp::dict dict,
+                        const T &) -> decltype(piranha::math::evaluate(s, std::declval<piranha::symbol_fmap<T>>())) {
+                        piranha::symbol_fmap<T> cpp_dict;
+                        bp::stl_input_iterator<std::string> it(dict), end;
+                        for (; it != end; ++it) {
+                            cpp_dict[*it] = bp::extract<T>(dict[*it])();
+                        }
+                        return piranha::math::evaluate(s, cpp_dict);
+                    });
             bp::def("_lambdify", generic_lambdify_wrapper<S, T>);
             generic_expose_lambdified<S, T>();
         }
@@ -608,9 +603,7 @@ class series_exposer
     // Substitution.
     template <typename S>
     struct subs_exposer {
-        subs_exposer(bp::class_<S> &series_class) : m_series_class(series_class)
-        {
-        }
+        subs_exposer(bp::class_<S> &series_class) : m_series_class(series_class) {}
         bp::class_<S> &m_series_class;
         template <typename T>
         void operator()(const T &x) const
@@ -622,7 +615,7 @@ class series_exposer
         template <typename T, typename std::enable_if<piranha::has_subs<S, T>::value, int>::type = 0>
         void impl_subs(const T &) const
         {
-            m_series_class.def("subs", subs_wrapper<T>);
+            m_series_class.def("_subs", subs_wrapper<T>);
             bp::def("_subs", subs_wrapper<T>);
         }
         template <typename T, typename std::enable_if<!piranha::has_subs<S, T>::value, int>::type = 0>
@@ -651,9 +644,16 @@ class series_exposer
         }
         // The actual wrappers.
         template <typename T>
-        static auto subs_wrapper(const S &s, const std::string &name, const T &x) -> decltype(s.subs(name, x))
+        static auto subs_wrapper(const S &s, bp::dict dict, const T &)
+            -> decltype(s.subs(std::declval<const piranha::symbol_fmap<T> &>()))
         {
-            return s.subs(name, x);
+            PIRANHA_MAYBE_TLS std::vector<std::pair<std::string, T>> tmp;
+            tmp.resize(0);
+            bp::stl_input_iterator<std::string> it(dict), end;
+            for (; it != end; ++it) {
+                tmp.emplace_back(*it, bp::extract<T>(dict[*it])());
+            }
+            return s.subs(piranha::symbol_fmap<T>(tmp.begin(), tmp.end()));
         }
         template <typename T>
         static auto ipow_subs_wrapper(const S &s, const std::string &name, const piranha::integer &n, const T &x)
@@ -688,9 +688,7 @@ class series_exposer
     // Interaction with interoperable types.
     template <typename S>
     struct interop_exposer {
-        interop_exposer(bp::class_<S> &series_class) : m_series_class(series_class)
-        {
-        }
+        interop_exposer(bp::class_<S> &series_class) : m_series_class(series_class) {}
         bp::class_<S> &m_series_class;
         template <typename T>
         void operator()(const T &) const
@@ -833,7 +831,7 @@ class series_exposer
 #else
             "builtins"
 #endif
-            );
+        );
         bp::object isinstance = builtin_module.attr("isinstance");
         bp::object tuple_type = builtin_module.attr("tuple");
         if (!isinstance(obj, tuple_type)) {
@@ -911,9 +909,7 @@ class series_exposer
     // Truncation.
     template <typename S>
     struct truncate_degree_exposer {
-        truncate_degree_exposer(bp::class_<S> &series_class) : m_series_class(series_class)
-        {
-        }
+        truncate_degree_exposer(bp::class_<S> &series_class) : m_series_class(series_class) {}
         bp::class_<S> &m_series_class;
         template <typename T>
         static S truncate_degree_wrapper(const S &s, const T &x)
@@ -924,7 +920,7 @@ class series_exposer
         static S truncate_pdegree_wrapper(const S &s, const T &x, bp::list l)
         {
             bp::stl_input_iterator<std::string> begin(l), end;
-            return s.truncate_degree(x, std::vector<std::string>(begin, end));
+            return s.truncate_degree(x, piranha::symbol_fset(begin, end));
         }
         template <typename T>
         void expose_truncate_degree(
@@ -990,10 +986,10 @@ class series_exposer
         return s.t_degree();
     }
     template <typename S>
-    static auto wrap_partial_t_degree(const S &s, bp::list l) -> decltype(s.t_degree(std::vector<std::string>{}))
+    static auto wrap_partial_t_degree(const S &s, bp::list l) -> decltype(s.t_degree(piranha::symbol_fset{}))
     {
         bp::stl_input_iterator<std::string> begin(l), end;
-        return s.t_degree(std::vector<std::string>(begin, end));
+        return s.t_degree(piranha::symbol_fset(begin, end));
     }
     template <typename S>
     static auto wrap_t_ldegree(const S &s) -> decltype(s.t_ldegree())
@@ -1001,10 +997,10 @@ class series_exposer
         return s.t_ldegree();
     }
     template <typename S>
-    static auto wrap_partial_t_ldegree(const S &s, bp::list l) -> decltype(s.t_ldegree(std::vector<std::string>{}))
+    static auto wrap_partial_t_ldegree(const S &s, bp::list l) -> decltype(s.t_ldegree(piranha::symbol_fset{}))
     {
         bp::stl_input_iterator<std::string> begin(l), end;
-        return s.t_ldegree(std::vector<std::string>(begin, end));
+        return s.t_ldegree(piranha::symbol_fset(begin, end));
     }
     template <typename S>
     static auto wrap_t_order(const S &s) -> decltype(s.t_order())
@@ -1012,10 +1008,10 @@ class series_exposer
         return s.t_order();
     }
     template <typename S>
-    static auto wrap_partial_t_order(const S &s, bp::list l) -> decltype(s.t_order(std::vector<std::string>{}))
+    static auto wrap_partial_t_order(const S &s, bp::list l) -> decltype(s.t_order(piranha::symbol_fset{}))
     {
         bp::stl_input_iterator<std::string> begin(l), end;
-        return s.t_order(std::vector<std::string>(begin, end));
+        return s.t_order(piranha::symbol_fset(begin, end));
     }
     template <typename S>
     static auto wrap_t_lorder(const S &s) -> decltype(s.t_lorder())
@@ -1023,10 +1019,10 @@ class series_exposer
         return s.t_lorder();
     }
     template <typename S>
-    static auto wrap_partial_t_lorder(const S &s, bp::list l) -> decltype(s.t_lorder(std::vector<std::string>{}))
+    static auto wrap_partial_t_lorder(const S &s, bp::list l) -> decltype(s.t_lorder(piranha::symbol_fset{}))
     {
         bp::stl_input_iterator<std::string> begin(l), end;
-        return s.t_lorder(std::vector<std::string>(begin, end));
+        return s.t_lorder(piranha::symbol_fset(begin, end));
     }
     // Symbol set wrapper.
     template <typename S>
@@ -1034,7 +1030,7 @@ class series_exposer
     {
         bp::list retval;
         for (auto it = s.get_symbol_set().begin(); it != s.get_symbol_set().end(); ++it) {
-            retval.append(it->get_name());
+            retval.append(*it);
         }
         return retval;
     }

@@ -31,8 +31,7 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE array_key_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -40,20 +39,19 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
-#include <piranha/debug_access.hpp>
+#include <piranha/exceptions.hpp>
 #include <piranha/init.hpp>
 #include <piranha/mp_integer.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
-typedef boost::mpl::vector<char, unsigned, integer> value_types;
-typedef boost::mpl::vector<std::integral_constant<std::size_t, 0u>, std::integral_constant<std::size_t, 1u>,
-                           std::integral_constant<std::size_t, 5u>, std::integral_constant<std::size_t, 10u>>
-    size_types;
+using value_types = std::tuple<char, unsigned, integer>;
+using size_types = std::tuple<std::integral_constant<std::size_t, 0u>, std::integral_constant<std::size_t, 1u>,
+                              std::integral_constant<std::size_t, 5u>, std::integral_constant<std::size_t, 10u>>;
 
 template <typename T, typename... Args>
 class g_key_type : public array_key<T, g_key_type<T, Args...>, Args...>
@@ -89,7 +87,7 @@ struct constructor_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             key_type k0;
@@ -114,14 +112,25 @@ struct constructor_tester {
             BOOST_CHECK_NO_THROW(k0 = k1);
             BOOST_CHECK_NO_THROW(k0 = std::move(k1));
             // Constructor from vector of symbols.
-            symbol_set vs({symbol("a"), symbol("b"), symbol("c")});
+            symbol_fset vs{"a", "b", "c"};
             key_type k2(vs);
             BOOST_CHECK_EQUAL(k2.size(), vs.size());
             BOOST_CHECK_EQUAL(k2[0], T(0));
             BOOST_CHECK_EQUAL(k2[1], T(0));
             BOOST_CHECK_EQUAL(k2[2], T(0));
             // Generic constructor for use in series.
-            BOOST_CHECK_THROW(key_type tmp(k2, symbol_set{}), std::invalid_argument);
+            BOOST_CHECK_EXCEPTION(key_type tmp(k2, symbol_fset{}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "inconsistent sizes in the generic array_key "
+                                                                       "constructor: the size of the array (3) differs "
+                                                                       "from the size of the symbol set (0)");
+                                  });
+            BOOST_CHECK_EXCEPTION(key_type tmp(k2, symbol_fset{"a", "b"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "inconsistent sizes in the generic array_key "
+                                                                       "constructor: the size of the array (3) differs "
+                                                                       "from the size of the symbol set (2)");
+                                  });
             key_type k3(k2, vs);
             BOOST_CHECK_EQUAL(k3.size(), vs.size());
             BOOST_CHECK_EQUAL(k3[0], T(0));
@@ -134,7 +143,7 @@ struct constructor_tester {
             BOOST_CHECK_EQUAL(k4[2], T(0));
             typedef g_key_type<int, U> key_type2;
             key_type2 k5(vs);
-            BOOST_CHECK_THROW(key_type tmp(k5, symbol_set{}), std::invalid_argument);
+            BOOST_CHECK_THROW(key_type tmp(k5, symbol_fset{}), std::invalid_argument);
             key_type k6(k5, vs);
             BOOST_CHECK_EQUAL(k6.size(), vs.size());
             BOOST_CHECK_EQUAL(k6[0], T(0));
@@ -148,23 +157,23 @@ struct constructor_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_constructor_test)
 {
     init();
-    boost::mpl::for_each<value_types>(constructor_tester());
+    tuple_for_each(value_types{}, constructor_tester{});
 }
 
 struct hash_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             key_type k0;
@@ -175,22 +184,22 @@ struct hash_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_hash_test)
 {
-    boost::mpl::for_each<value_types>(hash_tester());
+    tuple_for_each(value_types{}, hash_tester{});
 }
 
 struct push_back_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             using size_type = typename key_type::size_type;
@@ -208,22 +217,22 @@ struct push_back_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_push_back_test)
 {
-    boost::mpl::for_each<value_types>(push_back_tester());
+    tuple_for_each(value_types{}, push_back_tester{});
 }
 
 struct equality_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             key_type k0;
@@ -246,64 +255,42 @@ struct equality_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_equality_test)
 {
-    boost::mpl::for_each<value_types>(equality_tester());
+    tuple_for_each(value_types{}, equality_tester{});
 }
 
-struct merge_args_tag;
-
-namespace piranha
-{
-
-// NOTE: the debug access is not really necessary after moving merge_args from protected
-// to public.
-template <>
-class debug_access<merge_args_tag>
-{
-public:
+struct merge_symbols_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
-            typedef g_key_type<T, U> key_type;
-            symbol_set v1, v2;
-            v2.add(symbol("a"));
+            using key_type = g_key_type<T, U>;
             key_type k;
-            auto out = k.merge_args(v1, v2);
+            auto out = k.merge_symbols({{0, {"a"}}}, symbol_fset{});
             BOOST_CHECK((std::is_same<decltype(out), key_type>::value));
-            BOOST_CHECK_EQUAL(out.size(), unsigned(1));
+            BOOST_CHECK_EQUAL(out.size(), 1u);
             BOOST_CHECK_EQUAL(out[0], T(0));
-            v2.add(symbol("b"));
-            v2.add(symbol("c"));
-            v2.add(symbol("d"));
-            v1.add(symbol("b"));
-            v1.add(symbol("d"));
             k.push_back(T(2));
             k.push_back(T(4));
-            out = k.merge_args(v1, v2);
-            BOOST_CHECK_EQUAL(out.size(), unsigned(4));
+            out = k.merge_symbols({{0, {"a"}}, {1, {"c"}}}, {"b", "d"});
+            BOOST_CHECK_EQUAL(out.size(), 4u);
             BOOST_CHECK_EQUAL(out[0], T(0));
             BOOST_CHECK_EQUAL(out[1], T(2));
             BOOST_CHECK_EQUAL(out[2], T(0));
             BOOST_CHECK_EQUAL(out[3], T(4));
-            v2.add(symbol("e"));
-            v2.add(symbol("f"));
-            v2.add(symbol("g"));
-            v2.add(symbol("h"));
-            v1.add(symbol("e"));
-            v1.add(symbol("g"));
+            out = k.merge_symbols({{0, {"a"}}, {1, {"c"}}}, {"b", "d"});
             k.push_back(T(5));
             k.push_back(T(7));
-            out = k.merge_args(v1, v2);
-            BOOST_CHECK_EQUAL(out.size(), unsigned(8));
+            out = k.merge_symbols({{0, {"a"}}, {4, {"h"}}, {3, {"f"}}, {1, {"c"}}}, {"b", "d", "g", "e"});
+            BOOST_CHECK_EQUAL(out.size(), 8u);
             BOOST_CHECK_EQUAL(out[0], T(0));
             BOOST_CHECK_EQUAL(out[1], T(2));
             BOOST_CHECK_EQUAL(out[2], T(0));
@@ -312,32 +299,114 @@ public:
             BOOST_CHECK_EQUAL(out[5], T(0));
             BOOST_CHECK_EQUAL(out[6], T(7));
             BOOST_CHECK_EQUAL(out[7], T(0));
-            BOOST_CHECK_THROW(k.merge_args(v2, v1), std::invalid_argument);
-            BOOST_CHECK_THROW(k.merge_args(v1, symbol_set{}), std::invalid_argument);
-            v1.add(symbol("z"));
-            BOOST_CHECK_THROW(k.merge_args(v1, v2), std::invalid_argument);
+            k = key_type{T(2), T(4)};
+            out = k.merge_symbols({{0, {"a", "b", "c", "d"}}, {1, {"f"}}, {2, {"h"}}}, {"g", "e"});
+            BOOST_CHECK_EQUAL(out.size(), 8u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(2));
+            BOOST_CHECK_EQUAL(out[5], T(0));
+            BOOST_CHECK_EQUAL(out[6], T(4));
+            BOOST_CHECK_EQUAL(out[7], T(0));
+            out = k.merge_symbols({{0, {"a"}}, {1, {"f", "e", "c", "d"}}, {2, {"h"}}}, {"b", "g"});
+            BOOST_CHECK_EQUAL(out.size(), 8u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(2));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(0));
+            BOOST_CHECK_EQUAL(out[5], T(0));
+            BOOST_CHECK_EQUAL(out[6], T(4));
+            BOOST_CHECK_EQUAL(out[7], T(0));
+            k = key_type{T(2)};
+            out = k.merge_symbols({{1, {"f", "g", "h"}}, {0, {"a", "b", "c", "d"}}}, {"e"});
+            BOOST_CHECK_EQUAL(out.size(), 8u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(2));
+            BOOST_CHECK_EQUAL(out[5], T(0));
+            BOOST_CHECK_EQUAL(out[6], T(0));
+            BOOST_CHECK_EQUAL(out[7], T(0));
+            k = key_type{};
+            out = k.merge_symbols({{0, {"a", "b", "c", "d"}}}, symbol_fset{});
+            BOOST_CHECK_EQUAL(out.size(), 4u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            k = key_type{T(2)};
+            out = k.merge_symbols({{1, {"c", "d", "e", "f"}}}, {"b"});
+            BOOST_CHECK_EQUAL(out.size(), 5u);
+            BOOST_CHECK_EQUAL(out[0], T(2));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(0));
+            k = key_type{T(2)};
+            out = k.merge_symbols({{0, {"c", "d", "e", "f"}}}, {"g"});
+            BOOST_CHECK_EQUAL(out.size(), 5u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(0));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(2));
+            // Test from the documentation.
+            k = key_type{T(1), T(2), T(3), T(4)};
+            out = k.merge_symbols({{0, {"a", "b"}}, {1, {"d"}}, {2, {"f"}}, {4, {"i"}}}, {"c", "e", "g", "h"});
+            BOOST_CHECK_EQUAL(out.size(), 9u);
+            BOOST_CHECK_EQUAL(out[0], T(0));
+            BOOST_CHECK_EQUAL(out[1], T(0));
+            BOOST_CHECK_EQUAL(out[2], T(1));
+            BOOST_CHECK_EQUAL(out[3], T(0));
+            BOOST_CHECK_EQUAL(out[4], T(2));
+            BOOST_CHECK_EQUAL(out[5], T(0));
+            BOOST_CHECK_EQUAL(out[6], T(3));
+            BOOST_CHECK_EQUAL(out[7], T(4));
+            BOOST_CHECK_EQUAL(out[8], T(0));
+            // Check errors.
+            k = key_type{T(2)};
+            BOOST_CHECK_EXCEPTION(k.merge_symbols({{0, {"c", "d", "e", "f"}}}, {"g", "h"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(
+                                          e.what(),
+                                          "invalid argument(s) for symbol set merging: the size of the original "
+                                          "symbol set (2) must be equal to the key's size (1)");
+                                  });
+            BOOST_CHECK_EXCEPTION(
+                k.merge_symbols(symbol_idx_fmap<symbol_fset>{}, {"g"}), std::invalid_argument,
+                [](const std::invalid_argument &e) {
+                    return boost::contains(
+                        e.what(), "invalid argument(s) for symbol set merging: the insertion map cannot be empty");
+                });
+            BOOST_CHECK_EXCEPTION(k.merge_symbols({{2, {"f", "g", "h"}}, {0, {"a", "b", "c", "d"}}}, {"g"}),
+                                  std::invalid_argument, [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(), "invalid argument(s) for symbol set merging: "
+                                                                       "the last index of the insertion map (2) must "
+                                                                       "not be greater than the key's size (1)");
+                                  });
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
-}
 
-typedef piranha::debug_access<merge_args_tag> merge_args_tester;
-
-BOOST_AUTO_TEST_CASE(array_key_merge_args_test)
+BOOST_AUTO_TEST_CASE(array_key_merge_symbols_test)
 {
-    boost::mpl::for_each<value_types>(merge_args_tester());
+    tuple_for_each(value_types{}, merge_symbols_tester{});
 }
 
 struct iterators_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             key_type k0;
@@ -352,22 +421,22 @@ struct iterators_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_iterators_test)
 {
-    boost::mpl::for_each<value_types>(iterators_tester());
+    tuple_for_each(value_types{}, iterators_tester{});
 }
 
 struct resize_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             key_type k0;
@@ -379,31 +448,22 @@ struct resize_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_resize_test)
 {
-    boost::mpl::for_each<value_types>(resize_tester());
+    tuple_for_each(value_types{}, resize_tester{});
 }
 
-struct add_tag;
-
-namespace piranha
-{
-
-// NOTE: the debug access is not actually needed any more.
-template <>
-class debug_access<add_tag>
-{
-public:
+struct add_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             key_type k1, k2, retval;
@@ -419,34 +479,22 @@ public:
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
-}
-
-typedef piranha::debug_access<add_tag> add_tester;
 
 BOOST_AUTO_TEST_CASE(array_key_add_test)
 {
-    boost::mpl::for_each<value_types>(add_tester());
+    tuple_for_each(value_types{}, add_tester{});
 }
 
-struct sub_tag;
-
-namespace piranha
-{
-
-// NOTE: the debug access is not actually needed any more.
-template <>
-class debug_access<sub_tag>
-{
-public:
+struct sub_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             key_type k1, k2, retval;
@@ -462,108 +510,123 @@ public:
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
-}
-
-typedef piranha::debug_access<sub_tag> sub_tester;
 
 BOOST_AUTO_TEST_CASE(array_key_sub_test)
 {
-    boost::mpl::for_each<value_types>(sub_tester());
+    tuple_for_each(value_types{}, sub_tester{});
 }
 
 struct trim_identify_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
-            typedef g_key_type<T, U> key_type;
+            using key_type = g_key_type<T, U>;
             key_type k0;
-            symbol_set v1, v2;
-            v1.add("x");
+            std::vector<char> us;
             k0.resize(1u);
-            BOOST_CHECK_THROW(k0.trim_identify(v2, v2), std::invalid_argument);
-            v2.add("y");
-            k0.resize(2u);
-            k0[0u] = T(1);
-            k0[1u] = T(2);
-            v2.add("x");
-            k0.trim_identify(v1, v2);
-            BOOST_CHECK(v1 == symbol_set());
-            k0[0u] = T(0);
-            v1.add("x");
-            v1.add("y");
-            k0.trim_identify(v1, v2);
-            BOOST_CHECK(v1 == symbol_set({symbol("x")}));
-            k0[0u] = T(0);
-            k0[1u] = T(0);
-            v1.add("y");
-            k0.trim_identify(v1, v2);
-            BOOST_CHECK(v1 == symbol_set({symbol("x"), symbol("y")}));
-            k0[0u] = T(1);
-            k0.trim_identify(v1, v2);
-            BOOST_CHECK(v1 == symbol_set({symbol("y")}));
+            BOOST_CHECK_EXCEPTION(
+                k0.trim_identify(us, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "invalid symbol set for trim_identify(): the size of the array "
+                                                     "(1) differs from the size of the reference symbol set (0)");
+                });
+            BOOST_CHECK_EXCEPTION(
+                k0.trim_identify(us, {"a"}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "invalid mask for trim_identify(): the size of the "
+                                                     "array (1) differs from the size of the mask (0)");
+                });
+            k0 = key_type{};
+            k0.trim_identify(us, symbol_fset{});
+            BOOST_CHECK(us.empty());
+            us.resize(3, 1);
+            k0 = key_type{T(1), T(0), T(2)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == std::vector<char>{0, 1, 0}));
+            k0 = key_type{T(1), T(3), T(2)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == std::vector<char>{0, 0, 0}));
+            us.assign(3, 1);
+            k0 = key_type{T(0), T(0), T(0)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == std::vector<char>{1, 1, 1}));
+            k0 = key_type{T(0), T(0), T(1)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == std::vector<char>{1, 1, 0}));
+            k0 = key_type{T(0), T(0), T(0)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == std::vector<char>{1, 1, 0}));
+            k0 = key_type{T(1), T(0), T(0)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == std::vector<char>{0, 1, 0}));
+            k0 = key_type{T(0), T(1), T(0)};
+            k0.trim_identify(us, {"a", "b", "c"});
+            BOOST_CHECK((us == std::vector<char>{0, 0, 0}));
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_trim_identify_test)
 {
-    boost::mpl::for_each<value_types>(trim_identify_tester());
+    tuple_for_each(value_types{}, trim_identify_tester{});
 }
 
 struct trim_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             key_type k0;
-            symbol_set v1, v2;
-            v1.add("x");
-            v1.add("y");
-            v1.add("z");
-            BOOST_CHECK_THROW(k0.trim(v2, v1), std::invalid_argument);
+            BOOST_CHECK((k0.trim(std::vector<char>{}, symbol_fset{}) == key_type{}));
+            BOOST_CHECK_EXCEPTION(k0.trim(std::vector<char>{}, symbol_fset{"x", "y", "z"}), std::invalid_argument,
+                                  [](const std::invalid_argument &e) {
+                                      return boost::contains(
+                                          e.what(), "invalid arguments set for trim(): the size of the array (0) "
+                                                    "differs from the size of the reference symbol set (3)");
+                                  });
             k0 = key_type{T(1), T(2), T(3)};
-            v2.add("x");
-            BOOST_CHECK((k0.trim(v2, v1) == key_type{T(2), T(3)}));
-            v2.add("z");
-            v2.add("a");
-            BOOST_CHECK((k0.trim(v2, v1) == key_type{T(2)}));
-            v2.add("y");
-            BOOST_CHECK((k0.trim(v2, v1) == key_type()));
-            v2 = symbol_set();
-            BOOST_CHECK((k0.trim(v2, v1) == k0));
+            BOOST_CHECK_EXCEPTION(k0.trim(std::vector<char>{true, false}, symbol_fset{"x", "y", "z"}),
+                                  std::invalid_argument, [](const std::invalid_argument &e) {
+                                      return boost::contains(e.what(),
+                                                             "invalid mask for trim(): the size of the "
+                                                             "array (3) differs from the size of the mask (2)");
+                                  });
+            BOOST_CHECK(
+                (k0.trim(std::vector<char>{true, false, false}, symbol_fset{"x", "y", "z"}) == key_type{T(2), T(3)}));
+            BOOST_CHECK((k0.trim(std::vector<char>{2, 0, -1}, symbol_fset{"x", "y", "z"}) == key_type{T(2)}));
+            BOOST_CHECK((k0.trim(std::vector<char>{true, true, true}, symbol_fset{"x", "y", "z"}) == key_type{}));
+            BOOST_CHECK((k0.trim(std::vector<char>{false, false, false}, symbol_fset{"x", "y", "z"}) == k0));
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_trim_test)
 {
-    boost::mpl::for_each<value_types>(trim_tester());
+    tuple_for_each(value_types{}, trim_tester{});
 }
 
 struct tt_tester {
     template <typename T>
     struct runner {
         template <typename U>
-        void operator()(const U &)
+        void operator()(const U &) const
         {
             typedef g_key_type<T, U> key_type;
             BOOST_CHECK(is_hashable<key_type>::value);
@@ -571,16 +634,16 @@ struct tt_tester {
         }
     };
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
-        boost::mpl::for_each<size_types>(runner<T>());
+        tuple_for_each(size_types{}, runner<T>{});
     }
 };
 
 BOOST_AUTO_TEST_CASE(array_key_type_traits_test)
 {
 
-    boost::mpl::for_each<value_types>(tt_tester());
+    tuple_for_each(value_types{}, tt_tester{});
 }
 
 // Fake value type
@@ -667,7 +730,7 @@ struct has_add<T, typename std::enable_if<std::is_same<add_type<T>, add_type<T>>
 
 struct ae_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef g_key_type<fvt, T> key_type;
         BOOST_CHECK(!has_add<key_type>::value);
@@ -681,12 +744,12 @@ struct ae_tester {
 BOOST_AUTO_TEST_CASE(array_key_add_enabler_test)
 {
 
-    boost::mpl::for_each<size_types>(ae_tester());
+    tuple_for_each(size_types{}, ae_tester{});
 }
 
 struct sbe_tester {
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T &) const
     {
         typedef g_key_type<int, T> key_type;
         key_type tmp;
@@ -712,5 +775,23 @@ struct sbe_tester {
 BOOST_AUTO_TEST_CASE(array_key_sbe_test)
 {
 
-    boost::mpl::for_each<size_types>(sbe_tester());
+    tuple_for_each(size_types{}, sbe_tester{});
+}
+
+struct subscript_tester {
+    template <typename T>
+    void operator()(const T &) const
+    {
+        typedef g_key_type<int, T> key_type;
+        key_type k0;
+        k0.push_back(0);
+        BOOST_CHECK_EQUAL(k0[0], 0);
+        BOOST_CHECK_EQUAL(static_cast<key_type const &>(k0)[0], 0);
+    }
+};
+
+BOOST_AUTO_TEST_CASE(array_key_subscript_test)
+{
+
+    tuple_for_each(size_types{}, subscript_tester{});
 }

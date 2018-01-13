@@ -70,7 +70,7 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
 fi
 
 if [[ "${BUILD_TYPE}" == "Python2" || "${BUILD_TYPE}" == "Python3" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG="-g0 -Os" -DCMAKE_INSTALL_PREFIX=$deps_dir  ../;
+    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_INSTALL_HEADERS=no -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG="-g0 -Os" -DCMAKE_INSTALL_PREFIX=$deps_dir  ../;
     make install VERBOSE=1;
     python -c "import pyranha.test; pyranha.test.run_test_suite()";
 fi

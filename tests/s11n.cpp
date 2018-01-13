@@ -61,7 +61,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/init.hpp>
 #include <piranha/is_key.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -336,20 +336,20 @@ struct keya {
     keya(keya &&) noexcept;
     keya &operator=(const keya &) = default;
     keya &operator=(keya &&) noexcept;
-    keya(const symbol_set &);
+    keya(const symbol_fset &);
     bool operator==(const keya &) const;
     bool operator!=(const keya &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    keya merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    keya merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
     std::vector<std::pair<std::string, keya>> t_subs(const std::string &, const T &, const U &,
-                                                     const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    keya trim(const symbol_set &, const symbol_set &) const;
+                                                     const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    keya trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 // A key without Boost ser support.
@@ -359,20 +359,20 @@ struct keyb {
     keyb(keyb &&) noexcept;
     keyb &operator=(const keyb &) = default;
     keyb &operator=(keyb &&) noexcept;
-    keyb(const symbol_set &);
+    keyb(const symbol_fset &);
     bool operator==(const keyb &) const;
     bool operator!=(const keyb &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    keyb merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    keyb merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
     std::vector<std::pair<std::string, keyb>> t_subs(const std::string &, const T &, const U &,
-                                                     const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    keyb trim(const symbol_set &, const symbol_set &) const;
+                                                     const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    keyb trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 namespace piranha
@@ -648,23 +648,23 @@ struct key01 {
     key01(key01 &&) noexcept;
     key01 &operator=(const key01 &) = default;
     key01 &operator=(key01 &&) noexcept;
-    key01(const symbol_set &);
+    key01(const symbol_fset &);
     bool operator==(const key01 &) const;
     bool operator!=(const key01 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key01 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    key01 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
     std::vector<std::pair<std::string, key01>> t_subs(const std::string &, const T &, const U &,
-                                                      const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    key01 trim(const symbol_set &, const symbol_set &) const;
+                                                      const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    key01 trim(const std::vector<char> &, const symbol_fset &) const;
     template <typename Stream>
-    int msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format, const symbol_set &) const;
-    int msgpack_convert(const msgpack::object &, msgpack_format, const symbol_set &);
+    int msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format, const symbol_fset &) const;
+    int msgpack_convert(const msgpack::object &, msgpack_format, const symbol_fset &);
 };
 
 // A key without msgpack support.
@@ -674,25 +674,25 @@ struct key02 {
     key02(key02 &&) noexcept;
     key02 &operator=(const key02 &) = default;
     key02 &operator=(key02 &&) noexcept;
-    key02(const symbol_set &);
+    key02(const symbol_fset &);
     bool operator==(const key02 &) const;
     bool operator!=(const key02 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key02 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
     std::vector<std::pair<std::string, key02>> t_subs(const std::string &, const T &, const U &,
-                                                      const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    key02 trim(const symbol_set &, const symbol_set &) const;
+                                                      const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    key02 trim(const std::vector<char> &, const symbol_fset &) const;
     template <typename Stream>
-    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format, const symbol_set &);
+    void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format, const symbol_fset &);
     template <typename Stream>
     void msgpack_pack(msgpack::packer<Stream> &packer, msgpack_format) const;
-    int msgpack_convert(msgpack::object &, msgpack_format, const symbol_set &);
+    int msgpack_convert(msgpack::object &, msgpack_format, const symbol_fset &);
     int msgpack_convert(const msgpack::object &, msgpack_format);
 };
 
@@ -1084,18 +1084,14 @@ template <typename Archive>
 class boost_save_impl<Archive, only_boost>
 {
 public:
-    void operator()(Archive &, const only_boost &) const
-    {
-    }
+    void operator()(Archive &, const only_boost &) const {}
 };
 
 template <typename Archive>
 class boost_load_impl<Archive, only_boost>
 {
 public:
-    void operator()(Archive &, only_boost &) const
-    {
-    }
+    void operator()(Archive &, only_boost &) const {}
 };
 }
 
@@ -1253,7 +1249,7 @@ BOOST_AUTO_TEST_CASE(s11n_test_save_load)
 BOOST_AUTO_TEST_CASE(s11n_boost_s11n_key_wrapper_test)
 {
     keya ka;
-    symbol_set ss;
+    symbol_fset ss;
     using w_type = boost_s11n_key_wrapper<keya>;
     w_type w1{ka, ss};
     BOOST_CHECK_EQUAL(&ka, &w1.key());

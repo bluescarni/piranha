@@ -35,10 +35,11 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <vector>
 
 #include <piranha/init.hpp>
 #include <piranha/is_key.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -49,17 +50,17 @@ struct mock_key {
     mock_key(mock_key &&) noexcept;
     mock_key &operator=(const mock_key &) = default;
     mock_key &operator=(mock_key &&) noexcept;
-    mock_key(const symbol_set &);
+    mock_key(const symbol_fset &);
     bool operator==(const mock_key &) const;
     bool operator!=(const mock_key &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    mock_key merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    mock_key trim(const symbol_set &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    mock_key merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    mock_key trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 // Mock key with wrong method.
@@ -70,20 +71,20 @@ struct mock_key_00 {
     mock_key_00(mock_key_00 &&) noexcept;
     mock_key_00 &operator=(const mock_key_00 &) = default;
     mock_key_00 &operator=(mock_key_00 &&) noexcept;
-    mock_key_00(const symbol_set &);
+    mock_key_00(const symbol_fset &);
     bool operator==(const mock_key_00 &) const;
     bool operator!=(const mock_key_00 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    mock_key_00 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    mock_key_00 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename Cf>
     static void multiply(std::array<term<Cf, mock_key_00>, 1u> &, term<Cf, mock_key_00> &,
-                         const term<Cf, mock_key_00> &, const symbol_set &);
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    mock_key_00 trim(const symbol_set &, const symbol_set &) const;
+                         const term<Cf, mock_key_00> &, const symbol_fset &);
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    mock_key_00 trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 // Good one, depending on coefficient.
@@ -94,19 +95,19 @@ struct mock_key_01 {
     mock_key_01(mock_key_01 &&) noexcept;
     mock_key_01 &operator=(const mock_key_01 &) = default;
     mock_key_01 &operator=(mock_key_01 &&) noexcept;
-    mock_key_01(const symbol_set &);
+    mock_key_01(const symbol_fset &);
     bool operator==(const mock_key_01 &) const;
     bool operator!=(const mock_key_01 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    mock_key_01 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    mock_key_01 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
     static void multiply(std::array<term<double, mock_key_01>, 4u> &, const term<double, mock_key_01> &,
-                         const term<double, mock_key_01> &, const symbol_set &);
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    mock_key_01 trim(const symbol_set &, const symbol_set &) const;
+                         const term<double, mock_key_01> &, const symbol_fset &);
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    mock_key_01 trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 namespace std

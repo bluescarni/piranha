@@ -341,7 +341,7 @@ public:
         }
         return *this;
     }
-    /// Const index operator.
+    /// Const subscript operator.
     /**
      * @param n index of the desired element.
      *
@@ -349,10 +349,9 @@ public:
      */
     const value_type &operator[](const size_type &n) const
     {
-        piranha_assert(n < m_size);
         return ptr()[n];
     }
-    /// Index operator.
+    /// Subscript operator.
     /**
      * @param n index of the desired element.
      *
@@ -360,7 +359,6 @@ public:
      */
     value_type &operator[](const size_type &n)
     {
-        piranha_assert(n < m_size);
         return ptr()[n];
     }
     /// Begin iterator.

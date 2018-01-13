@@ -56,6 +56,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/safe_cast.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -77,7 +78,7 @@ public:
     {
         typedef typename base::term_type term_type;
         // Insert the symbol.
-        this->m_symbol_set.add(name);
+        this->m_symbol_set = symbol_fset{name};
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{Expo(1)}));
     }
@@ -104,9 +105,8 @@ class series_multiplier<g_series_type<Cf, Key>, void> : public base_series_multi
 {
     using base = base_series_multiplier<g_series_type<Cf, Key>>;
     template <typename T>
-    using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
-                                                                     typename T::term_type::key_type>::value,
-                                                 int>::type;
+    using call_enabler = typename std::enable_if<
+        key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value, int>::type;
 
 public:
     using base::base;
@@ -367,8 +367,8 @@ namespace math
 {
 
 template <typename T, typename U>
-struct pow_impl<T, U, typename std::enable_if<std::is_floating_point<T>::value
-                                              && std::is_same<U, fake_int_01>::value>::type> {
+struct pow_impl<
+    T, U, typename std::enable_if<std::is_floating_point<T>::value && std::is_same<U, fake_int_01>::value>::type> {
     T operator()(const T &, const U &) const;
 };
 

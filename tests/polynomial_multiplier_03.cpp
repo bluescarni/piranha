@@ -41,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/mp_integer.hpp>
 #include <piranha/mp_rational.hpp>
 #include <piranha/series_multiplier.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -60,7 +61,7 @@ constexpr bool has_untruncated_multiplication(Args &&...)
 }
 
 template <typename T, typename = decltype(T::truncated_multiplication(T{}, T{}, 4)),
-          typename = decltype(T::truncated_multiplication(T{}, T{}, 4, std::vector<std::string>{}))>
+          typename = decltype(T::truncated_multiplication(T{}, T{}, 4, symbol_fset{}))>
 constexpr bool has_truncated_multiplication()
 {
     return true;

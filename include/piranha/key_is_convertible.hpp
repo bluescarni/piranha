@@ -32,7 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/is_key.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -42,22 +42,22 @@ namespace piranha
 /**
  * This type trait will be \p true if the key type \p To can be constructed
  * from a const reference to the key type \p From and a const reference to
- * piranha::symbol_set, \p false otherwise.
+ * piranha::symbol_fset, \p false otherwise.
  *
- * The decay types of \p To and \p From are considered by this type trait. \p To and \p From must satisfy
- * piranha::is_key, otherwise a compile-time error will be generated.
+ * \p To is considered after the removal of cv/reference qualifiers. \p To and \p From must satisfy
+ * piranha::is_key (after the removal of cv/reference qualifiers), otherwise a compile-time error will be generated.
  */
 template <typename To, typename From>
 class key_is_convertible
 {
-    using Tod = typename std::decay<To>::type;
-    using Fromd = typename std::decay<From>::type;
-    PIRANHA_TT_CHECK(is_key, Tod);
-    PIRANHA_TT_CHECK(is_key, Fromd);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<To>);
+    PIRANHA_TT_CHECK(is_key, uncvref_t<From>);
+    static const bool implementation_defined
+        = std::is_constructible<uncvref_t<To>, const From &, const symbol_fset &>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_constructible<Tod, const Fromd &, const symbol_set &>::value;
+    static const bool value = implementation_defined;
 };
 
 template <typename To, typename From>

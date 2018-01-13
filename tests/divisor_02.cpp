@@ -46,8 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/mp_integer.hpp>
 #include <piranha/s11n.hpp>
-#include <piranha/symbol.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -59,7 +58,7 @@ static std::mt19937 rng;
 static const int ntries = 1000;
 
 template <typename OArchive, typename IArchive, typename T>
-static inline void boost_round_trip(const T &d, const symbol_set &s)
+static inline void boost_round_trip(const T &d, const symbol_fset &s)
 {
     using w_type = boost_s11n_key_wrapper<T>;
     {
@@ -119,7 +118,7 @@ struct boost_s11n_tester {
             d_type d;
             auto ssize = sdist(rng);
             auto dsize = sdist(rng);
-            symbol_set ss(vs.data(), vs.data() + ssize);
+            symbol_fset ss(vs.data(), vs.data() + ssize);
             std::vector<T> divs;
             divs.resize(unsigned(ssize));
             for (int j = 0; j < dsize; ++j) {
@@ -157,7 +156,7 @@ struct boost_s11n_tester {
                 std::stringstream sst;
                 {
                     boost::archive::binary_oarchive oa(sst);
-                    BOOST_CHECK_EXCEPTION(boost_save(oa, w_type{d, symbol_set{}}), std::invalid_argument,
+                    BOOST_CHECK_EXCEPTION(boost_save(oa, w_type{d, symbol_fset{}}), std::invalid_argument,
                                           [](const std::invalid_argument &iae) {
                                               return boost::contains(
                                                   iae.what(),
@@ -171,7 +170,7 @@ struct boost_s11n_tester {
                     boost::archive::binary_oarchive oa(sst);
                     boost_save(oa, w_type{d, ss});
                 }
-                ss.add("z");
+                ss.emplace_hint(ss.end(), "z");
                 {
                     boost::archive::binary_iarchive ia(sst);
                     w_type w{d, ss};
@@ -197,7 +196,7 @@ BOOST_AUTO_TEST_CASE(divisor_boost_s11n_test)
 #if defined(PIRANHA_WITH_MSGPACK)
 
 template <typename T>
-static inline void msgpack_round_trip(const T &d, const symbol_set &s, msgpack_format f)
+static inline void msgpack_round_trip(const T &d, const symbol_fset &s, msgpack_format f)
 {
     msgpack::sbuffer sbuf;
     msgpack::packer<msgpack::sbuffer> p(sbuf);
@@ -228,7 +227,7 @@ struct msgpack_s11n_tester {
                 d_type d;
                 auto ssize = sdist(rng);
                 auto dsize = sdist(rng);
-                symbol_set ss(vs.data(), vs.data() + ssize);
+                symbol_fset ss(vs.data(), vs.data() + ssize);
                 std::vector<T> divs;
                 divs.resize(unsigned(ssize));
                 for (int j = 0; j < dsize; ++j) {
@@ -265,7 +264,7 @@ struct msgpack_s11n_tester {
                         // Error handling with invalid symbol sets.
                         msgpack::sbuffer sbuf;
                         msgpack::packer<msgpack::sbuffer> p(sbuf);
-                        BOOST_CHECK_EXCEPTION(d.msgpack_pack(p, f, symbol_set{}), std::invalid_argument,
+                        BOOST_CHECK_EXCEPTION(d.msgpack_pack(p, f, symbol_fset{}), std::invalid_argument,
                                               [](const std::invalid_argument &iae) {
                                                   return boost::contains(
                                                       iae.what(),
@@ -277,7 +276,7 @@ struct msgpack_s11n_tester {
                         msgpack::sbuffer sbuf;
                         msgpack::packer<msgpack::sbuffer> p(sbuf);
                         d.msgpack_pack(p, f, ss);
-                        ss.add("z");
+                        ss.emplace_hint(ss.end(), "z");
                         auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
                         BOOST_CHECK_EXCEPTION(d.msgpack_convert(oh.get(), f, ss), std::invalid_argument,
                                               [](const std::invalid_argument &iae) {
@@ -299,8 +298,8 @@ struct msgpack_s11n_tester {
         p.pack_array(0);
         msgpack_pack(p, T(0), msgpack_format::binary);
         auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-        BOOST_CHECK_EXCEPTION(dv.msgpack_convert(oh.get(), msgpack_format::binary, symbol_set{}), std::invalid_argument,
-                              [](const std::invalid_argument &iae) {
+        BOOST_CHECK_EXCEPTION(dv.msgpack_convert(oh.get(), msgpack_format::binary, symbol_fset{}),
+                              std::invalid_argument, [](const std::invalid_argument &iae) {
                                   return boost::contains(iae.what(),
                                                          "the divisor loaded from a msgpack object failed internal "
                                                          "consistency checks");

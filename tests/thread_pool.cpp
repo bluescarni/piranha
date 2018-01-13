@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         return n;
     };
-    auto instant_task = []() {};
+    auto instant_task = []() noexcept {};
     {
         task_queue tq(0, true);
     }
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
     }
     {
         task_queue tq(0, true);
-        tq.enqueue([]() {});
+        tq.enqueue([]() noexcept {});
         tq.stop();
         tq.stop();
     }
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
     }
     {
         task_queue tq(0, true);
-        auto f1 = tq.enqueue([](int n) { return n + n; }, 45);
+        auto f1 = tq.enqueue([](int n) noexcept { return n + n; }, 45);
         BOOST_CHECK(f1.get() == 90);
     }
     {
@@ -201,8 +201,8 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
     {
         task_queue tq(0, true);
         noncopyable nc;
-        tq.enqueue([](noncopyable &) {}, std::ref(nc));
-        tq.enqueue([](const noncopyable &) {}, std::cref(nc));
+        tq.enqueue([](noncopyable &) noexcept {}, std::ref(nc));
+        tq.enqueue([](const noncopyable &) noexcept {}, std::cref(nc));
     }
     {
         task_queue tq(0, true);
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
         }
     }
     for (unsigned i = 0u; i < initial_size; ++i) {
-        thread_pool::enqueue(i, []() {}).get();
+        thread_pool::enqueue(i, []() noexcept {}).get();
     }
     auto slow_task = []() { std::this_thread::sleep_for(std::chrono::milliseconds(250)); };
     thread_pool::resize(1);

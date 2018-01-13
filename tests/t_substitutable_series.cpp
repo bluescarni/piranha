@@ -52,7 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/pow.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
-#include <piranha/symbol_set.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -62,20 +62,20 @@ struct key02 {
     key02(key02 &&) noexcept;
     key02 &operator=(const key02 &) = default;
     key02 &operator=(key02 &&) noexcept;
-    key02(const symbol_set &);
+    key02(const symbol_fset &);
     bool operator==(const key02 &) const;
     bool operator!=(const key02 &) const;
-    bool is_compatible(const symbol_set &) const noexcept;
-    bool is_ignorable(const symbol_set &) const noexcept;
-    key02 merge_args(const symbol_set &, const symbol_set &) const;
-    bool is_unitary(const symbol_set &) const;
-    void print(std::ostream &, const symbol_set &) const;
-    void print_tex(std::ostream &, const symbol_set &) const;
+    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_zero(const symbol_fset &) const noexcept;
+    key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    bool is_unitary(const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
-    std::vector<std::pair<std::string, key02>> t_subs(const std::string &, const T &, const U &,
-                                                      const symbol_set &) const;
-    void trim_identify(symbol_set &, const symbol_set &) const;
-    key02 trim(const symbol_set &, const symbol_set &) const;
+    std::vector<std::pair<std::string, key02>> t_subs(const symbol_idx &, const T &, const U &,
+                                                      const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    key02 trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 namespace std
@@ -145,8 +145,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
                       c * c * c * c * c);
     BOOST_CHECK_EQUAL(
         (math::t_subs((10 * math::sin(2 * x) - 5 * math::sin(6 * x) + math::sin(10 * x)) / 512, "x", c, s))
-            .subs("c", math::cos(x))
-            .subs("s", math::sin(x)),
+            .template subs<p_type1>({{"c", math::cos(x)}, {"s", math::sin(x)}}),
         math::pow(math::cos(x), 5) * math::pow(math::sin(x), 5));
     BOOST_CHECK_EQUAL((math::cos(x) * math::cos(y)).t_subs("x", c, s), c * math::cos(y));
     BOOST_CHECK_EQUAL((math::sin(x) * math::sin(y)).t_subs("x", c, s), s * math::sin(y));
@@ -186,11 +185,11 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
         math::t_subs(math::pow(math::sin(p_type3{"x"}), 7), "x", real(math::pow(real(3), .5)) / 2, real(.5)),
         math::pow(real(.5), 7));
     BOOST_CHECK(
-        math::abs(math::evaluate(((math::pow(math::sin(p_type3{"x"}), 5) * math::pow(math::cos(p_type3{"x"}), 5))
-                                      .t_subs("x", real(math::pow(real(3), .5)) / 2, real(.5))
-                                  - math::pow(real(.5), 5) * math::pow(real(math::pow(real(3), .5)) / 2, 5))
-                                     .trim(),
-                                 std::unordered_map<std::string, real>{}))
+        math::abs(math::evaluate<real>(((math::pow(math::sin(p_type3{"x"}), 5) * math::pow(math::cos(p_type3{"x"}), 5))
+                                            .t_subs("x", real(math::pow(real(3), .5)) / 2, real(.5))
+                                        - math::pow(real(.5), 5) * math::pow(real(math::pow(real(3), .5)) / 2, 5))
+                                           .trim(),
+                                       {}))
         < 1E-9);
     BOOST_CHECK((has_t_subs<p_type3, p_type3, p_type3>::value));
     BOOST_CHECK((has_t_subs<p_type3, double, double>::value));
