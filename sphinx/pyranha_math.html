@@ -264,7 +264,7 @@ low-level function</p>
 <dd><p>Evaluation.</p>
 <p>This function will evaluate <em>arg</em> according to the evaluation dictionary <em>eval_dict</em>. Evaluation
 is the replacement of all symbolic quantities with numerical values.</p>
-<p><em>eval_dict</em> must be a dictionary of <code class="docutils literal"><span class="pre">(name,value)</span></code> pairs, where the <code class="docutils literal"><span class="pre">name</span></code> is a string referring to the symbol
+<p><em>eval_dict</em> must be a dictionary of <code class="docutils literal"><span class="pre">(name,value)</span></code> pairs, where <code class="docutils literal"><span class="pre">name</span></code> is a string referring to the symbol
 to be replaced and <code class="docutils literal"><span class="pre">value</span></code> is the value with which <code class="docutils literal"><span class="pre">name</span></code> will be replaced. All values must be of the same type,
 and this type needs to support the operations needed to compute the evaluation.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -804,41 +804,63 @@ low-level function</td>
 
 <dl class="function">
 <dt id="pyranha.math.subs">
-<code class="descclassname">pyranha.math.</code><code class="descname">subs</code><span class="sig-paren">(</span><em>arg</em>, <em>name</em>, <em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#subs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.subs" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyranha.math.</code><code class="descname">subs</code><span class="sig-paren">(</span><em>arg</em>, <em>subs_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha/math.html#subs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.math.subs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Substitution.</p>
-<p>This function will replace, in <em>arg</em>, the symbol called <em>name</em> with the generic object <em>x</em>.
-Internally, the functionality is implemented via a call to a lower-level C++ routine that
-supports various combinations for the types of <em>arg</em> and <em>x</em>.</p>
+<p>This function will replace, in <em>arg</em>, the symbols listed in the dictionary <em>subs_dict</em>
+with their mapped values. Internally, the functionality is implemented via a call to a
+lower-level C++ routine that supports various combinations of input argument types.</p>
+<p><em>subs_dict</em> must be a dictionary of <code class="docutils literal"><span class="pre">(name,value)</span></code> pairs, where <code class="docutils literal"><span class="pre">name</span></code> is a string referring to the symbol
+to be substituted and <code class="docutils literal"><span class="pre">value</span></code> is the value with which <code class="docutils literal"><span class="pre">name</span></code> will be replaced. All values must be
+of the same type, and this type needs to support the operations needed to compute the
+substitution.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arg</strong> (<em>a symbolic type</em>) – argument for the substitution</li>
-<li><strong>name</strong> (<em>a string</em>) – name of the symbol to be substituted</li>
-<li><strong>x</strong> (<em>any type supported by the low-level C++ routine</em>) – the quantity that will be substituted for <em>name</em></li>
+<li><strong>arg</strong> (<em>a symbolic type</em>) – the argument for the substitution</li>
+<li><strong>subs_dict</strong> (<em>a dictionary mapping strings to values</em><em>, </em><em>with all values of the same type</em>) – the substitution dictionary</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><em>arg</em> after the substitution of the symbol called <em>name</em> with <em>x</em></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><em>arg</em> after the substitution of the symbols in <em>subs_dict</em> with the mapped values</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> in case the input types are not supported or invalid</p>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if <em>subs_dict</em> does not satisfy the requirements outlined above</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">any exception raised by the invoked low-level function</p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> if <em>subs_dict</em> is empty</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">any exception raised by the invoked low-level function</p>
 </td>
 </tr>
 </tbody>
 </table>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyranha.types</span> <span class="k">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">[</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">]()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
-<span class="go">5/2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="n">y</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">y</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">),</span> <span class="n">pt</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span>
+<span class="go">-9/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="mf">3.01</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="o">-</span><span class="mf">3.32</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">:</span><span class="mf">5.34</span><span class="p">})</span> 
+<span class="go">4.7217...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="mf">3.1</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="o">-</span><span class="mf">3.2</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">})</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">all values in an evaluation/substitution dictionary must be of the same type</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,{})</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">an evaluation/substitution dictionary cannot be empty</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">:</span><span class="mi">5</span><span class="p">})</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">all keys in an evaluation/substitution dictionary must be string objects</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span> 
+<span class="gt">Traceback (most recent call last):</span>
+   <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">an evaluation/substitution dictionary must be a dict object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span><span class="s1">&#39;c&#39;</span><span class="p">})</span> 
 <span class="gt">Traceback (most recent call last):</span>
    <span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">invalid argument type(s)</span>
@@ -1210,7 +1232,7 @@ a list of strings enumerating the variables to be considered for the computation
     </p>
     <p>
         &copy; Copyright 2009-2017, Francesco Biscani.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
     </p>
   </div>
 </footer>
