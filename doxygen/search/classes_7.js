@@ -2,7 +2,6 @@ var searchData=
 [
   ['has_5fabs',['has_abs',['../classpiranha_1_1has__abs.html',1,'piranha']]],
   ['has_5fadd3',['has_add3',['../classpiranha_1_1has__add3.html',1,'piranha']]],
-  ['has_5fbegin_5fend',['has_begin_end',['../classpiranha_1_1has__begin__end.html',1,'piranha']]],
   ['has_5fbinomial',['has_binomial',['../classpiranha_1_1has__binomial.html',1,'piranha']]],
   ['has_5fboost_5fload',['has_boost_load',['../classpiranha_1_1has__boost__load.html',1,'piranha']]],
   ['has_5fboost_5fsave',['has_boost_save',['../classpiranha_1_1has__boost__save.html',1,'piranha']]],
@@ -12,6 +11,7 @@ var searchData=
   ['has_5fdiv3',['has_div3',['../classpiranha_1_1has__div3.html',1,'piranha']]],
   ['has_5fgcd',['has_gcd',['../classpiranha_1_1has__gcd.html',1,'piranha']]],
   ['has_5fgcd3',['has_gcd3',['../classpiranha_1_1has__gcd3.html',1,'piranha']]],
+  ['has_5finput_5fbegin_5fend',['has_input_begin_end',['../classpiranha_1_1has__input__begin__end.html',1,'piranha']]],
   ['has_5fipow_5fsubs',['has_ipow_subs',['../classpiranha_1_1has__ipow__subs.html',1,'piranha']]],
   ['has_5fis_5funitary',['has_is_unitary',['../classpiranha_1_1has__is__unitary.html',1,'piranha']]],
   ['has_5fis_5fzero',['has_is_zero',['../classpiranha_1_1has__is__zero.html',1,'piranha']]],
@@ -46,8 +46,8 @@ var searchData=
   ['hash_3c_20piranha_3a_3amonomial_3c_20t_2c_20s_20_3e_20_3e',['hash&lt; piranha::monomial&lt; T, S &gt; &gt;',['../structstd_1_1hash_3_01piranha_1_1monomial_3_01_t_00_01_s_01_4_01_4.html',1,'std']]],
   ['hash_3c_20piranha_3a_3amp_5frational_3c_20ssize_20_3e_20_3e',['hash&lt; piranha::mp_rational&lt; SSize &gt; &gt;',['../structstd_1_1hash_3_01piranha_1_1mp__rational_3_01_s_size_01_4_01_4.html',1,'std']]],
   ['hash_3c_20piranha_3a_3areal_5ftrigonometric_5fkronecker_5fmonomial_3c_20t_20_3e_20_3e',['hash&lt; piranha::real_trigonometric_kronecker_monomial&lt; T &gt; &gt;',['../structstd_1_1hash_3_01piranha_1_1real__trigonometric__kronecker__monomial_3_01_t_01_4_01_4.html',1,'std']]],
-  ['hash_3c_20piranha_3a_3asymbol_20_3e',['hash&lt; piranha::symbol &gt;',['../structstd_1_1hash_3_01piranha_1_1symbol_01_4.html',1,'std']]],
+  ['hash_3c_20piranha_3a_3aterm_3c_20cf_2c_20key_20_3e_20_3e',['hash&lt; piranha::term&lt; Cf, Key &gt; &gt;',['../structstd_1_1hash_3_01piranha_1_1term_3_01_cf_00_01_key_01_4_01_4.html',1,'std']]],
   ['hash_5fset',['hash_set',['../classpiranha_1_1hash__set.html',1,'piranha']]],
   ['hash_5fset_3c_20p_5ftype_2c_20p_5ftype_5fhasher_20_3e',['hash_set&lt; p_type, p_type_hasher &gt;',['../classpiranha_1_1hash__set.html',1,'piranha']]],
-  ['hash_5fset_3c_20term_5ftype_2c_20detail_3a_3aterm_5fhasher_3c_20term_5ftype_20_3e_20_3e',['hash_set&lt; term_type, detail::term_hasher&lt; term_type &gt; &gt;',['../classpiranha_1_1hash__set.html',1,'piranha']]]
+  ['hash_5fset_3c_20term_5ftype_20_3e',['hash_set&lt; term_type &gt;',['../classpiranha_1_1hash__set.html',1,'piranha']]]
 ];

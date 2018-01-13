@@ -2,7 +2,7 @@ var searchData=
 [
   ['_5fbucket',['_bucket',['../classpiranha_1_1hash__set.html#af8ad9ba81277978bf96b02fc90a1f286',1,'piranha::hash_set']]],
   ['_5fbucket_5ffrom_5fhash',['_bucket_from_hash',['../classpiranha_1_1hash__set.html#abe6dcabef7fb619b03726c43c3fc4668',1,'piranha::hash_set']]],
-  ['_5fcontainer',['_container',['../classpiranha_1_1series.html#a2af49084d17c39794e0b6802bcc1b530',1,'piranha::series::_container()'],['../classpiranha_1_1series.html#aef3d05e9347eecb91b17db09689e32a1',1,'piranha::series::_container() const']]],
+  ['_5fcontainer',['_container',['../classpiranha_1_1divisor.html#a00609d7f2bccd300480908a5bbfa6d11',1,'piranha::divisor::_container() const'],['../classpiranha_1_1divisor.html#ac5d0d377e55d3b84b3600b03a6fc60d6',1,'piranha::divisor::_container()'],['../classpiranha_1_1series.html#a2af49084d17c39794e0b6802bcc1b530',1,'piranha::series::_container()'],['../classpiranha_1_1series.html#aef3d05e9347eecb91b17db09689e32a1',1,'piranha::series::_container() const']]],
   ['_5fden',['_den',['../classpiranha_1_1mp__rational.html#a6d8f1c9980c6188b8abb1b35c9aa2c08',1,'piranha::mp_rational']]],
   ['_5ferase',['_erase',['../classpiranha_1_1hash__set.html#a0f392934e0c83ee9b02e353970411d71',1,'piranha::hash_set']]],
   ['_5ffind',['_find',['../classpiranha_1_1hash__set.html#a26ab6ab53908bc4ce0f85c2d76858752',1,'piranha::hash_set']]],

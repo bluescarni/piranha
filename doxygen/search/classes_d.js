@@ -9,8 +9,6 @@ var searchData=
   ['plain_5fmultiplier',['plain_multiplier',['../classpiranha_1_1base__series__multiplier_1_1plain__multiplier.html',1,'piranha::base_series_multiplier']]],
   ['poisson_5fseries',['poisson_series',['../classpiranha_1_1poisson__series.html',1,'piranha']]],
   ['polynomial',['polynomial',['../classpiranha_1_1polynomial.html',1,'piranha']]],
-  ['positions',['positions',['../classpiranha_1_1symbol__set_1_1positions.html',1,'piranha::symbol_set']]],
-  ['positions_5fmap',['positions_map',['../classpiranha_1_1symbol__set_1_1positions__map.html',1,'piranha::symbol_set']]],
   ['pow_5fimpl',['pow_impl',['../structpiranha_1_1math_1_1pow__impl.html',1,'piranha::math']]],
   ['pow_5fimpl_3c_20series_2c_20t_2c_20pow_5fseries_5fenabler_3c_20series_2c_20t_20_3e_20_3e',['pow_impl&lt; Series, T, pow_series_enabler&lt; Series, T &gt; &gt;',['../structpiranha_1_1math_1_1pow__impl_3_01_series_00_01_t_00_01pow__series__enabler_3_01_series_00_01_t_01_4_01_4.html',1,'piranha::math']]],
   ['pow_5fimpl_3c_20t_2c_20u_2c_20detail_3a_3areal_5fpow_5fenabler_3c_20t_2c_20u_20_3e_20_3e',['pow_impl&lt; T, U, detail::real_pow_enabler&lt; T, U &gt; &gt;',['../structpiranha_1_1math_1_1pow__impl_3_01_t_00_01_u_00_01detail_1_1real__pow__enabler_3_01_t_00_01_u_01_4_01_4.html',1,'piranha::math']]],

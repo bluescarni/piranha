@@ -20,8 +20,6 @@ var searchData=
   ['_7esmall_5fvector',['~small_vector',['../classpiranha_1_1small__vector.html#a39377555e41c414e8b9ebf2eacd1b683',1,'piranha::small_vector']]],
   ['_7estatic_5fvector',['~static_vector',['../classpiranha_1_1static__vector.html#a52066cd447fd1347a41d2373561c810c',1,'piranha::static_vector']]],
   ['_7esubstitutable_5fseries',['~substitutable_series',['../classpiranha_1_1substitutable__series.html#a5a50d5888a328f958568c1319591f13c',1,'piranha::substitutable_series']]],
-  ['_7esymbol',['~symbol',['../classpiranha_1_1symbol.html#a6a4eb0f20b3c2104ae55aa44e04260dd',1,'piranha::symbol']]],
-  ['_7esymbol_5fset',['~symbol_set',['../classpiranha_1_1symbol__set.html#a9ca3702604de1afed1f2f42e3e3cafb3',1,'piranha::symbol_set']]],
   ['_7et_5fsubstitutable_5fseries',['~t_substitutable_series',['../classpiranha_1_1t__substitutable__series.html#a291555ff643996e9da8ee870df291b6d',1,'piranha::t_substitutable_series']]],
   ['_7eterm',['~term',['../classpiranha_1_1term.html#aa63219c9c9cd7de8fc14f1e4011a5423',1,'piranha::term']]],
   ['_7ethread_5fbarrier',['~thread_barrier',['../classpiranha_1_1thread__barrier.html#a84e1f19bd8376ba4d4eb057eabea341c',1,'piranha::thread_barrier']]],
