@@ -165,13 +165,13 @@ inline namespace impl
 
 // Enabler for the pow specialisation.
 template <typename T, typename U>
-using math_rational_pow_enabler = enable_if_t<is_detected<mppp::rational_common_t, T, U>::value>;
+using math_rational_pow_enabler = enable_if_t<mppp::are_rational_op_types<T, U>::value>;
 }
 
 /// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
 /**
- * This specialisation is activated when at least one of the arguments is an mp++ rational,
- * and the mp++ exponentiation function can be successfully called on instances of ``T`` and ``U``.
+ * This specialisation is activated if the mp++ rational exponentiation function can be successfully called on instances
+ * of ``T`` and ``U``.
  */
 template <typename T, typename U>
 struct pow_impl<T, U, math_rational_pow_enabler<T, U>> {
@@ -261,68 +261,74 @@ struct partial_impl<mppp::rational<SSize>> {
 inline namespace impl
 {
 
-// Binomial follows the same rules as pow.
+// NOTE: binomial follows the same rules as pow, for now. One of the overloads
+// comes from mp++, the others are implemented here.
 template <typename T, typename U>
 using math_rational_binomial_enabler = math_rational_pow_enabler<T, U>;
 }
 
 /// Specialisation of the implementation of piranha::math::binomial() for mp++'s rationals.
 /**
- * This specialisation is activated when at least one of the arguments is an mp++ rational,
- * and the mp++ exponentiation function can be successfully called on instances of ``T`` and ``U``.
+ * This specialisation is activated when at least one of the types is an mp++ rational,
+ * and the other type can interoperate with it.
  *
  * The implementation follows these rules:
- * - if the top is rational and the bottom an integral type or piranha::mp_integer, then
- *   piranha::mp_rational::binomial() is used;
+ * - if the top argument is a rational and the bottom argument an integral type, then
+ *   the rational binomial function from mp++ is used;
  * - if the non-rational argument is a floating-point type, then the rational argument is converted
  *   to that floating-point type and piranha::math::binomial() is used;
- * - if both arguments are rational, they are both converted to \p double and then piranha::math::binomial()
+ * - if both arguments are rationals, they are both converted to \p double and then piranha::math::binomial()
  *   is used;
- * - if the top is an integral type or piranha::mp_integer and the bottom a rational, then both
+ * - if the top argument is an integral type and the bottom argument a rational, then both
  *   arguments are converted to \p double and piranha::math::binomial() is used.
  */
 template <typename T, typename U>
 struct binomial_impl<T, U, math_rational_binomial_enabler<T, U>> {
 private:
-    template <std::size_t SSize, typename T2>
-    static auto impl(const mp_rational<SSize> &x, const T2 &y) -> decltype(x.binomial(y))
+    // rational - rational.
+    template <std::size_t SSize>
+    static double impl(const mppp::rational<SSize> &x, const mppp::rational<SSize> &y)
     {
-        return x.binomial(y);
+        return math::binomial(static_cast<double>(x), static_cast<double>(y));
     }
+    // rational - integral.
+    template <std::size_t SSize, typename T2, enable_if_t<!std::is_floating_point<T2>::value, int> = 0>
+    static mppp::rational<SSize> impl(const mppp::rational<SSize> &x, const T2 &y)
+    {
+        return mppp::binomial(x, y);
+    }
+    // rational - fp.
     template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    static T2 impl(const mp_rational<SSize> &x, const T2 &y)
+    static T2 impl(const mppp::rational<SSize> &x, const T2 &y)
     {
         return math::binomial(static_cast<T2>(x), y);
     }
+    // integral - rational.
+    template <std::size_t SSize, typename T2, enable_if_t<!std::is_floating_point<T2>::value, int> = 0>
+    static double impl(const T2 &x, const mppp::rational<SSize> &y)
+    {
+        return math::binomial(static_cast<double>(x), static_cast<double>(y));
+    }
+    // fp - rational.
     template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    static T2 impl(const T2 &x, const mp_rational<SSize> &y)
+    static T2 impl(const T2 &x, const mppp::rational<SSize> &y)
     {
         return math::binomial(x, static_cast<T2>(y));
-    }
-    template <std::size_t SSize>
-    static double impl(const mp_rational<SSize> &x, const mp_rational<SSize> &y)
-    {
-        return math::binomial(static_cast<double>(x), static_cast<double>(y));
-    }
-    template <std::size_t SSize, typename T2,
-              enable_if_t<disjunction<std::is_integral<T2>, is_mp_integer<T2>>::value, int> = 0>
-    static double impl(const T2 &x, const mp_rational<SSize> &y)
-    {
-        return math::binomial(static_cast<double>(x), static_cast<double>(y));
     }
     using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
 
 public:
     /// Call operator.
     /**
-     * @param x top argument.
-     * @param y bottom argument.
+     * @param x the top argument.
+     * @param y the bottom argument.
      *
      * @returns \f$ x \choose y \f$.
      *
      * @throws unspecified any exception thrown by:
-     * - piranha::mp_rational::binomial(),
-     * - converting piranha::mp_rational or piranha::mp_integer to a floating-point type.
+     * - mp++'s rational binomial function,
+     * - piranha::math::binomial(),
+     * - the conversion of rationals to floating-point types.
      */
     ret_type operator()(const T &x, const U &y) const
     {

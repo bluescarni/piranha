@@ -180,6 +180,8 @@ struct mp_integer_pow_tester {
         BOOST_CHECK((is_exponentiable<int_type, int_type>::value));
         BOOST_CHECK((!is_exponentiable<int_type, void>::value));
         BOOST_CHECK((!is_exponentiable<void, int_type>::value));
+        BOOST_CHECK((!is_exponentiable<int_type, std::string>::value));
+        BOOST_CHECK((!is_exponentiable<std::string, int_type>::value));
         BOOST_CHECK((is_exponentiable<const int_type, int_type &>::value));
         BOOST_CHECK((is_exponentiable<float, int_type>::value));
         BOOST_CHECK((is_exponentiable<float &&, const int_type &>::value));

@@ -124,8 +124,8 @@ inline namespace impl
 
 // Enabler for integral power.
 template <typename T, typename U>
-using integer_pow_enabler = enable_if_t<disjunction<is_detected<mppp::integer_common_t, T, U>,
-                                                    conjunction<std::is_integral<T>, std::is_integral<U>>>::value>;
+using integer_pow_enabler = enable_if_t<
+    disjunction<mppp::are_integer_op_types<T, U>, conjunction<std::is_integral<T>, std::is_integral<U>>>::value>;
 }
 
 // NOTE: this specialisation must be here as in the integral-integral overload we use mppp::integer inside,
@@ -135,13 +135,13 @@ using integer_pow_enabler = enable_if_t<disjunction<is_detected<mppp::integer_co
 /**
  * \note
  * This specialisation is activated when:
- * - one argument is an mp++ integer and the mp++ integer exponentiation function can be successfully called on
- *   instances of ``T`` and ``U``,
+ * - the mp++ integer exponentiation function can be successfully called on
+ *   instances of ``T`` and ``U``, or
  * - both arguments are C++ integral types.
  *
  * The implementation follows these rules:
- * - if both arguments are C++ integral types, the mp++ integer exponentiation function is used after the conversion of
- *   the base to piranha::integer; otherwise,
+ * - if both arguments are C++ integral types, then the mp++ integer exponentiation function is used after the
+ *   conversion of the base to piranha::integer; otherwise,
  * - the mp++ integer exponentiation function is used directly.
  */
 template <typename T, typename U>
