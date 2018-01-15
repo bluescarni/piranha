@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE type_traits_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/integer_traits.hpp>
 #include <complex>
 #include <cstddef>
 #include <functional>
@@ -39,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <ios>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <list>
 #include <memory>
 #include <set>
@@ -50,7 +50,6 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
-#include <piranha/init.hpp>
 #include <piranha/is_cf.hpp>
 
 using namespace piranha;
@@ -86,7 +85,6 @@ struct bar_t : foo_t<T> {
 
 BOOST_AUTO_TEST_CASE(type_traits_has_typedef_test)
 {
-    init();
     BOOST_CHECK(has_typedef_foo_type<foo>::value);
     BOOST_CHECK(!has_typedef_foo_type<bar>::value);
     BOOST_CHECK(!has_typedef_foo_type<int>::value);
@@ -1227,14 +1225,14 @@ BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
     BOOST_CHECK((std::is_same<unsigned, max_int<unsigned>>::value));
     BOOST_CHECK((std::is_same<int, max_int<short, int>>::value));
     BOOST_CHECK((std::is_same<unsigned, max_int<unsigned short, unsigned>>::value));
-    if (boost::integer_traits<long long>::const_max > boost::integer_traits<int>::const_max
-        && boost::integer_traits<long long>::const_min < boost::integer_traits<int>::const_min) {
+    if (std::numeric_limits<long long>::max() > std::numeric_limits<int>::max()
+        && std::numeric_limits<long long>::min() < std::numeric_limits<int>::min()) {
         BOOST_CHECK((std::is_same<long long, max_int<short, int, signed char, long long>>::value));
         BOOST_CHECK((std::is_same<long long, max_int<long long, int, signed char, short>>::value));
         BOOST_CHECK((std::is_same<long long, max_int<int, long long, signed char, short>>::value));
         BOOST_CHECK((std::is_same<long long, max_int<short, signed char, long long, int>>::value));
     }
-    if (boost::integer_traits<unsigned long long>::const_max > boost::integer_traits<unsigned>::const_max) {
+    if (std::numeric_limits<unsigned long long>::max() > std::numeric_limits<unsigned>::max()) {
         BOOST_CHECK((std::is_same<unsigned long long,
                                   max_int<unsigned short, unsigned, unsigned char, unsigned long long>>::value));
         BOOST_CHECK((std::is_same<unsigned long long,
@@ -1244,14 +1242,14 @@ BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
         BOOST_CHECK((std::is_same<unsigned long long,
                                   max_int<unsigned short, unsigned char, unsigned long long, unsigned>>::value));
     }
-    if (boost::integer_traits<signed char>::const_max < boost::integer_traits<short>::const_max
-        && boost::integer_traits<signed char>::const_min > boost::integer_traits<short>::const_min) {
+    if (std::numeric_limits<signed char>::max() < std::numeric_limits<short>::max()
+        && std::numeric_limits<signed char>::min() > std::numeric_limits<short>::min()) {
         BOOST_CHECK((std::is_same<signed char, min_int<short, int, signed char, long long>>::value));
         BOOST_CHECK((std::is_same<signed char, min_int<long long, int, signed char, short>>::value));
         BOOST_CHECK((std::is_same<signed char, min_int<int, long long, signed char, short>>::value));
         BOOST_CHECK((std::is_same<signed char, min_int<short, signed char, long long, int>>::value));
     }
-    if (boost::integer_traits<unsigned char>::const_min < boost::integer_traits<unsigned short>::const_max) {
+    if (std::numeric_limits<unsigned char>::min() < std::numeric_limits<unsigned short>::max()) {
         BOOST_CHECK(
             (std::is_same<unsigned char, min_int<unsigned short, unsigned, unsigned char, unsigned long long>>::value));
         BOOST_CHECK(
@@ -1939,17 +1937,6 @@ BOOST_AUTO_TEST_CASE(type_traits_ref_mod_t)
     BOOST_CHECK((std::is_same<int, decay_t<const int &>>::value));
     BOOST_CHECK((std::is_same<int, decay_t<int &&>>::value));
     BOOST_CHECK((std::is_same<int *, decay_t<int[2]>>::value));
-}
-
-BOOST_AUTO_TEST_CASE(type_traits_void_t)
-{
-    BOOST_CHECK((std::is_same<void, void_t<int>>::value));
-    BOOST_CHECK((std::is_same<void, void_t<void>>::value));
-    BOOST_CHECK((std::is_same<void, void_t<void *>>::value));
-    BOOST_CHECK((std::is_same<void, void_t<std::string &>>::value));
-    BOOST_CHECK((std::is_same<void, void_t<std::string const &>>::value));
-    BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
-    BOOST_CHECK((std::is_same<void, void_t<std::string const &&>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_detected)

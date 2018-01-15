@@ -29,14 +29,16 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SAFE_CAST_HPP
 #define PIRANHA_SAFE_CAST_HPP
 
-#include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #include <piranha/detail/demangle.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -118,7 +120,7 @@ struct safe_cast_impl<To, From, sc_int_int_enabler<To, From>> {
             return boost::numeric_cast<To>(f);
         } catch (...) {
             piranha_throw(safe_cast_failure, "the integral value " + std::to_string(f)
-                                                 + " cannot be converted to the type '" + detail::demangle<To>()
+                                                 + " cannot be converted to the type '" + demangle<To>()
                                                  + "', as the conversion cannot preserve the original value");
         }
     }
@@ -155,21 +157,20 @@ struct safe_cast_impl<To, From, sc_float_to_int_enabler<To, From>> {
     {
         if (unlikely(!std::isfinite(f))) {
             piranha_throw(safe_cast_failure, "the non-finite floating-point value " + std::to_string(f)
-                                                 + " cannot be converted to the integral type '"
-                                                 + detail::demangle<To>() + "'");
+                                                 + " cannot be converted to the integral type '" + demangle<To>()
+                                                 + "'");
         }
         if (std::trunc(f) != f) {
             piranha_throw(safe_cast_failure, "the floating-point value with nonzero fractional part "
                                                  + std::to_string(f) + " cannot be converted to the integral type '"
-                                                 + detail::demangle<To>()
+                                                 + demangle<To>()
                                                  + "', as the conversion cannot preserve the original value");
         }
         try {
             return boost::numeric_cast<To>(f);
         } catch (...) {
             piranha_throw(safe_cast_failure, "the floating-point value " + std::to_string(f)
-                                                 + " cannot be converted to the integral type '"
-                                                 + detail::demangle<To>()
+                                                 + " cannot be converted to the integral type '" + demangle<To>()
                                                  + "', as the conversion cannot preserve the original value");
         }
     }

@@ -26,18 +26,20 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_BINOMIAL_HPP
-#define PIRANHA_BINOMIAL_HPP
+#ifndef PIRANHA_MATH_BINOMIAL_HPP
+#define PIRANHA_MATH_BINOMIAL_HPP
 
-#include <boost/math/constants/constants.hpp>
 #include <cmath>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
 
+#include <boost/math/constants/constants.hpp>
+
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -262,10 +264,11 @@ private:
         return mp_integer_binomial_wrapper(integer{x}, y);
     }
     // mp_integer--integral, integral--mp_integer, mp_integer--mp_integer overload.
-    template <typename T2, typename U2, enable_if_t<disjunction<conjunction<is_mp_integer<T2>, std::is_integral<U2>>,
-                                                                conjunction<is_mp_integer<U2>, std::is_integral<T2>>,
-                                                                is_same_mp_integer<T2, U2>>::value,
-                                                    int> = 0>
+    template <typename T2, typename U2,
+              enable_if_t<
+                  disjunction<conjunction<is_mp_integer<T2>, std::is_integral<U2>>,
+                              conjunction<is_mp_integer<U2>, std::is_integral<T2>>, is_same_mp_integer<T2, U2>>::value,
+                  int> = 0>
     static auto impl(const T2 &x, const U2 &y) -> decltype(mp_integer_binomial_wrapper(x, y))
     {
         return mp_integer_binomial_wrapper(x, y);

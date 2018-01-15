@@ -26,15 +26,12 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 
-#define BOOST_TEST_MODULE mp_integer_02_test
+#define BOOST_TEST_MODULE integer_02_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <atomic>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
-#include <boost/filesystem.hpp>
 #include <initializer_list>
 #include <limits>
 #include <random>
@@ -46,9 +43,14 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#include <boost/filesystem.hpp>
+
+#include <mp++/integer.hpp>
+
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -121,7 +123,7 @@ struct boost_s11n_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, int_type>::value));
         BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, int_type &>::value));
         BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, const int_type &>::value));
@@ -178,8 +180,7 @@ struct boost_s11n_tester {
                 }
                 auto tmp2 = boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
                     cmp, pdist(rng));
-                // NOTE: binary saving preserves the staticness.
-                if (tmp2 != cmp || tmp2.is_static() != cmp.is_static()) {
+                if (tmp2 != cmp) {
                     status.store(false);
                 }
                 tmp2 = boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(cmp, pdist(rng));
@@ -196,7 +197,7 @@ struct boost_s11n_tester {
                 }
                 auto tmp2 = boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(
                     cmp, pdist(rng));
-                if (tmp2 != cmp || tmp2.is_static() != cmp.is_static()) {
+                if (tmp2 != cmp) {
                     status.store(false);
                 }
                 tmp2 = boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(cmp, pdist(rng));
@@ -214,9 +215,8 @@ struct boost_s11n_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_boost_s11n_test)
+BOOST_AUTO_TEST_CASE(integer_boost_s11n_test)
 {
-    init();
     tuple_for_each(size_types{}, boost_s11n_tester{});
 }
 
@@ -224,7 +224,7 @@ struct save_load_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         std::atomic<bool> status(true);
         auto checker = [&status](unsigned n) {
             std::mt19937 rng(static_cast<std::mt19937::result_type>(n));
@@ -279,7 +279,7 @@ struct save_load_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_save_load_test)
+BOOST_AUTO_TEST_CASE(integer_save_load_test)
 {
     tuple_for_each(size_types{}, save_load_tester{});
 }
@@ -305,7 +305,7 @@ struct msgpack_s11n_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK((has_msgpack_pack<std::stringstream, int_type>::value));
         BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, int_type>::value));
         BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, int_type &>::value));
@@ -352,7 +352,7 @@ struct msgpack_s11n_tester {
                         cmp.neg();
                     }
                     auto tmp = msgpack_roundtrip(cmp, f, pdist(rng));
-                    if (tmp != cmp || (f == msgpack_format::binary && tmp.is_static() != cmp.is_static())) {
+                    if (tmp != cmp) {
                         status.store(false);
                     }
                 }
@@ -366,7 +366,7 @@ struct msgpack_s11n_tester {
                         cmp.promote();
                     }
                     auto tmp = msgpack_roundtrip(cmp, f, pdist(rng));
-                    if (tmp != cmp || (f == msgpack_format::binary && tmp.is_static() != cmp.is_static())) {
+                    if (tmp != cmp) {
                         status.store(false);
                     }
                 }
@@ -378,82 +378,10 @@ struct msgpack_s11n_tester {
         t2.join();
         t3.join();
         BOOST_CHECK(status.load());
-        // Test various failure modes.
-        {
-            // Array of only 1 element.
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> p(sbuf);
-            p.pack_array(1);
-            p.pack(123);
-            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            int_type n{1};
-            BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::binary), msgpack::type_error);
-            BOOST_CHECK_EQUAL(n, 1);
-        }
-        {
-            if (T::value < 3u) {
-                // Wrong number of static int limbs.
-                msgpack::sbuffer sbuf;
-                msgpack::packer<msgpack::sbuffer> p(sbuf);
-                p.pack_array(3);
-                p.pack(true);
-                p.pack(true);
-                p.pack_array(3);
-                p.pack(1);
-                p.pack(2);
-                p.pack(3);
-                auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-                int_type n{1};
-                BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::binary), std::invalid_argument);
-                BOOST_CHECK_EQUAL(n, 1);
-            }
-        }
-        {
-            if (T::value > 1u) {
-                // Static int, wrong limb type.
-                msgpack::sbuffer sbuf;
-                msgpack::packer<msgpack::sbuffer> p(sbuf);
-                p.pack_array(3);
-                p.pack(true);
-                p.pack(true);
-                p.pack_array(2);
-                p.pack(1);
-                p.pack("hello");
-                auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-                int_type n{1};
-                BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::binary), msgpack::type_error);
-                BOOST_CHECK_EQUAL(n, 0);
-            }
-        }
-        {
-            // Dynamic int, wrong limb type.
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> p(sbuf);
-            p.pack_array(3);
-            p.pack(false);
-            p.pack(true);
-            p.pack_array(2);
-            p.pack(1);
-            p.pack("hello");
-            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            int_type n{1};
-            BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::binary), msgpack::type_error);
-            BOOST_CHECK_EQUAL(n, 0);
-        }
-        {
-            // Wrong string.
-            msgpack::sbuffer sbuf;
-            msgpack::packer<msgpack::sbuffer> p(sbuf);
-            p.pack("booyah");
-            auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
-            int_type n{1};
-            BOOST_CHECK_THROW(msgpack_convert(n, oh.get(), msgpack_format::portable), std::invalid_argument);
-            BOOST_CHECK_EQUAL(n, 1);
-        }
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_msgpack_s11n_test)
+BOOST_AUTO_TEST_CASE(integer_msgpack_s11n_test)
 {
     tuple_for_each(size_types{}, msgpack_s11n_tester{});
 }

@@ -1,4 +1,4 @@
-# Doxyfile 1.8.12
+# Doxyfile 1.8.13
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project.
@@ -38,7 +38,7 @@ PROJECT_NAME           = piranha
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 0.10
+PROJECT_NUMBER         = @piranha_VERSION@
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -171,7 +171,7 @@ STRIP_FROM_PATH        =
 # specify the list of include paths that are normally passed to the compiler
 # using the -I flag.
 
-STRIP_FROM_INC_PATH    =  @PIRANHA_DOXYGEN_STRIP_FROM_INC_PATH@
+STRIP_FROM_INC_PATH    =
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter (but
 # less readable) file names. This can be useful is your file systems doesn't
@@ -1057,25 +1057,6 @@ USE_HTAGS              = NO
 # The default value is: YES.
 
 VERBATIM_HEADERS       = YES
-
-# If the CLANG_ASSISTED_PARSING tag is set to YES then doxygen will use the
-# clang parser (see: http://clang.llvm.org/) for more accurate parsing at the
-# cost of reduced performance. This can be particularly helpful with template
-# rich C++ code for which doxygen's built-in parser lacks the necessary type
-# information.
-# Note: The availability of this option depends on whether or not doxygen was
-# generated with the -Duse-libclang=ON option for CMake.
-# The default value is: NO.
-
-#CLANG_ASSISTED_PARSING = NO
-
-# If clang assisted parsing is enabled you can provide the compiler with command
-# line options that you would normally use when invoking the compiler. Note that
-# the include paths will already be set by doxygen for the files and directories
-# specified with INPUT and INCLUDE_PATH.
-# This tag requires that the tag CLANG_ASSISTED_PARSING is set to YES.
-
-#CLANG_OPTIONS          =
 
 #---------------------------------------------------------------------------
 # Configuration options related to the alphabetical class index
@@ -2089,11 +2070,8 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = PIRANHA_DOXYGEN_INVOKED \
                          PIRANHA_WITH_MSGPACK \
-                         PIRANHA_HAVE_THREAD_LOCAL \
                          PIRANHA_WITH_ZLIB \
-                         PIRANHA_WITH_BZIP2 \
-                         MPPP_NAMESPACE=mppp \
-                         MPPP_WITH_LONG_DOUBLE
+                         PIRANHA_WITH_BZIP2
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
@@ -2414,6 +2392,11 @@ DIAFILE_DIRS           =
 # will not generate output for the diagram.
 
 PLANTUML_JAR_PATH      =
+
+# When using plantuml, the PLANTUML_CFG_FILE tag can be used to specify a
+# configuration file for plantuml.
+
+PLANTUML_CFG_FILE      =
 
 # When using plantuml, the specified paths are searched for files specified by
 # the !include statement in a plantuml block.

@@ -37,8 +37,9 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
+#include <mp++/integer.hpp>
+
+#include <piranha/integer.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -49,7 +50,6 @@ using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integ
 
 BOOST_AUTO_TEST_CASE(pow_fp_test)
 {
-    init();
     BOOST_CHECK(math::pow(2., 2.) == std::pow(2., 2.));
     BOOST_CHECK(math::pow(2.f, 2.) == std::pow(2.f, 2.));
     BOOST_CHECK(math::pow(2., 2.f) == std::pow(2., 2.f));
@@ -89,7 +89,7 @@ struct int_pow_tester {
         template <typename T>
         void operator()(const T &) const
         {
-            using int_type = mp_integer<U::value>;
+            using int_type = mppp::integer<U::value>;
             BOOST_CHECK((is_exponentiable<int_type, T>::value));
             BOOST_CHECK((is_exponentiable<int_type, float>::value));
             BOOST_CHECK((is_exponentiable<float, int_type>::value));
@@ -176,7 +176,7 @@ struct mp_integer_pow_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK((is_exponentiable<int_type, int_type>::value));
         BOOST_CHECK((!is_exponentiable<int_type, void>::value));
         BOOST_CHECK((!is_exponentiable<void, int_type>::value));
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(pow_mp_integer_test)
     BOOST_CHECK((is_exponentiable<int, int>::value));
     BOOST_CHECK((is_exponentiable<int, char>::value));
     BOOST_CHECK((is_exponentiable<unsigned, long long>::value));
-    BOOST_CHECK((!is_exponentiable<mp_integer<1>, mp_integer<2>>::value));
-    BOOST_CHECK((!is_exponentiable<mp_integer<2>, mp_integer<1>>::value));
+    BOOST_CHECK((!is_exponentiable<mppp::integer<1>, mppp::integer<2>>::value));
+    BOOST_CHECK((!is_exponentiable<mppp::integer<2>, mppp::integer<1>>::value));
     BOOST_CHECK((!is_exponentiable<integer, std::string>::value));
 }

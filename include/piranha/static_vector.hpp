@@ -60,9 +60,9 @@ using static_vector_size_types = std::tuple<unsigned char, unsigned short, unsig
 template <std::size_t Size, std::size_t Index = 0u>
 struct static_vector_size_type {
     using candidate_type = typename std::tuple_element<Index, static_vector_size_types>::type;
-    using type = typename std::
-        conditional<(std::numeric_limits<candidate_type>::max() >= Size), candidate_type,
-                    typename static_vector_size_type<Size, static_cast<std::size_t>(Index + 1u)>::type>::type;
+    using type = typename std::conditional<
+        (std::numeric_limits<candidate_type>::max() >= Size), candidate_type,
+        typename static_vector_size_type<Size, static_cast<std::size_t>(Index + 1u)>::type>::type;
 };
 
 template <std::size_t Size>
@@ -184,9 +184,7 @@ public:
     /**
      * Will construct a vector of size 0.
      */
-    static_vector() : m_tag(1u), m_size(0u)
-    {
-    }
+    static_vector() : m_tag(1u), m_size(0u) {}
     /// Copy constructor.
     /**
      * @param other target of the copy operation.

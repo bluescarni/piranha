@@ -29,12 +29,6 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_TYPE_TRAITS_HPP
 #define PIRANHA_TYPE_TRAITS_HPP
 
-/** \file type_traits.hpp
- * \brief Type traits.
- *
- * This header contains general-purpose type traits classes.
- */
-
 #include <cstdarg>
 #include <cstddef>
 #include <functional>
@@ -46,7 +40,10 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <mp++/detail/type_traits.hpp>
+
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 
 namespace piranha
 {
@@ -54,72 +51,14 @@ namespace piranha
 inline namespace impl
 {
 
-// http://en.cppreference.com/w/cpp/types/void_t
-template <typename... Ts>
-struct make_void {
-    typedef void type;
-};
-
-template <typename... Ts>
-using void_t = typename make_void<Ts...>::type;
-
-// http://en.cppreference.com/w/cpp/experimental/is_detected
-template <class Default, class AlwaysVoid, template <class...> class Op, class... Args>
-struct detector {
-    using value_t = std::false_type;
-    using type = Default;
-};
-
-template <class Default, template <class...> class Op, class... Args>
-struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
-    using value_t = std::true_type;
-    using type = Op<Args...>;
-};
-
-// http://en.cppreference.com/w/cpp/experimental/nonesuch
-struct nonesuch {
-    nonesuch() = delete;
-    ~nonesuch() = delete;
-    nonesuch(nonesuch const &) = delete;
-    void operator=(nonesuch const &) = delete;
-};
-
-template <template <class...> class Op, class... Args>
-using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
-
-template <template <class...> class Op, class... Args>
-using detected_t = typename detector<nonesuch, void, Op, Args...>::type;
-
-// http://en.cppreference.com/w/cpp/types/conjunction
-template <class...>
-struct conjunction : std::true_type {
-};
-
-template <class B1>
-struct conjunction<B1> : B1 {
-};
-
-template <class B1, class... Bn>
-struct conjunction<B1, Bn...> : std::conditional<B1::value != false, conjunction<Bn...>, B1>::type {
-};
-
-// http://en.cppreference.com/w/cpp/types/disjunction
-template <class...>
-struct disjunction : std::false_type {
-};
-
-template <class B1>
-struct disjunction<B1> : B1 {
-};
-
-template <class B1, class... Bn>
-struct disjunction<B1, Bn...> : std::conditional<B1::value != false, B1, disjunction<Bn...>>::type {
-};
-
-// http://en.cppreference.com/w/cpp/types/negation
-template <class B>
-struct negation : std::integral_constant<bool, !B::value> {
-};
+// Import a bunch of type traits / utils from mp++.
+using mppp::conjunction;
+using mppp::detected_t;
+using mppp::disjunction;
+using mppp::enable_if_t;
+using mppp::is_detected;
+using mppp::negation;
+using mppp::nonesuch;
 
 // This is like disjunction, but instead of providing true/false it provides
 // the index of the first boolean class which evaluates to true. If no class
@@ -143,6 +82,15 @@ struct disjunction_idx_impl<CurIdx, B1, Bn...>
 template <class... Bs>
 struct disjunction_idx : disjunction_idx_impl<0u, Bs...> {
 };
+
+#if PIRANHA_CPLUSPLUS >= 201402L
+
+// Handy bits available since C++14, we re-implement them below.
+using std::decay_t;
+using std::index_sequence;
+using std::make_index_sequence;
+
+#else
 
 // std::index_sequence and std::make_index_sequence implementation for C++11. These are available
 // in the std library in C++14. Implementation taken from:
@@ -178,16 +126,21 @@ template <>
 struct make_index_sequence<1> : index_sequence<0> {
 };
 
+template <typename T>
+using decay_t = typename std::decay<T>::type;
+
+#endif
+
+// Tuple for_each(). Execute the functor f on each element of the input Tuple.
+// https://isocpp.org/blog/2015/01/for-each-arg-eric-niebler
+// https://www.reddit.com/r/cpp/comments/2tffv3/for_each_argumentsean_parent/
+// https://www.reddit.com/r/cpp/comments/33b06v/for_each_in_tuple/
 template <typename T, typename F, std::size_t... Is>
 void apply_to_each_item(T &&t, const F &f, index_sequence<Is...>)
 {
     (void)std::initializer_list<int>{0, (void(f(std::get<Is>(std::forward<T>(t)))), 0)...};
 }
 
-// Tuple for_each(). Execute the functor f on each element of the input Tuple.
-// https://isocpp.org/blog/2015/01/for-each-arg-eric-niebler
-// https://www.reddit.com/r/cpp/comments/2tffv3/for_each_argumentsean_parent/
-// https://www.reddit.com/r/cpp/comments/33b06v/for_each_in_tuple/
 template <class Tuple, class F>
 void tuple_for_each(Tuple &&t, const F &f)
 {
@@ -200,21 +153,13 @@ template <typename T>
 using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 template <typename T>
-using decay_t = typename std::decay<T>::type;
-
-template <typename T>
 using unref_t = typename std::remove_reference<T>::type;
 
 template <typename T>
 using addlref_t = typename std::add_lvalue_reference<T>::type;
 
-template <bool B, typename T = void>
-using enable_if_t = typename std::enable_if<B, T>::type;
-
 template <typename T>
-using is_nonconst_rvalue_ref
-    = std::integral_constant<bool,
-                             conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>::value>;
+using is_nonconst_rvalue_ref = conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>;
 
 // The type resulting from the addition of T and U.
 template <typename T, typename U>
