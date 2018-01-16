@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <mp++/config.hpp>
 #include <mp++/exceptions.hpp>
 #include <mp++/integer.hpp>
 
@@ -358,12 +359,22 @@ struct gcd_tester {
         BOOST_CHECK((has_gcd<wchar_t, int_type>::value));
         BOOST_CHECK((!has_gcd<int_type, void>::value));
         BOOST_CHECK((!has_gcd<void, int_type>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK((has_gcd<int_type, __int128_t>::value));
+        BOOST_CHECK((has_gcd<__int128_t, int_type>::value));
+        BOOST_CHECK((has_gcd<int_type, __uint128_t>::value));
+        BOOST_CHECK((has_gcd<__uint128_t, int_type>::value));
+#endif
         BOOST_CHECK_EQUAL(math::gcd(int_type{4}, int_type{6}), 2);
         BOOST_CHECK_EQUAL(math::gcd(int_type{0}, int_type{-6}), 6);
         BOOST_CHECK_EQUAL(math::gcd(int_type{6}, int_type{0}), 6);
         BOOST_CHECK_EQUAL(math::gcd(int_type{0}, int_type{0}), 0);
         BOOST_CHECK_EQUAL(math::gcd(-4, int_type{6}), 2);
         BOOST_CHECK_EQUAL(math::gcd(int_type{4}, -6ll), 2);
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK_EQUAL(math::gcd(__int128_t(-4), int_type{6}), 2);
+        BOOST_CHECK_EQUAL(math::gcd(int_type{4}, __uint128_t(6)), 2);
+#endif
         int_type n;
         math::gcd3(n, int_type{4}, int_type{6});
         BOOST_CHECK_EQUAL(n, 2);
@@ -390,7 +401,12 @@ BOOST_AUTO_TEST_CASE(integer_literal_test)
     BOOST_CHECK_EQUAL(n0, -456l);
 }
 
-using fp_types = std::tuple<float, double, long double>;
+using fp_types = std::tuple<float, double
+#if defined(MPPP_WITH_MPFR)
+                            ,
+                            long double
+#endif
+                            >;
 
 using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,
                              unsigned long, long long, unsigned long long>;
@@ -490,6 +506,16 @@ struct safe_cast_int_tester {
         tuple_for_each(int_types{}, runner<S>{});
         using int_type = mppp::integer<S::value>;
         BOOST_CHECK((has_safe_cast<int_type, wchar_t>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK((has_safe_cast<int_type, __int128_t>::value));
+        BOOST_CHECK((has_safe_cast<int_type, __uint128_t>::value));
+        BOOST_CHECK((has_safe_cast<__int128_t, int_type>::value));
+        BOOST_CHECK((has_safe_cast<__uint128_t, int_type>::value));
+        BOOST_CHECK(safe_cast<__int128_t>(int_type{12}) == 12);
+        BOOST_CHECK(safe_cast<__uint128_t>(int_type{12}) == 12u);
+        BOOST_CHECK(safe_cast<int_type>(__int128_t(12)) == 12);
+        BOOST_CHECK(safe_cast<int_type>(__uint128_t(12)) == 12);
+#endif
     }
 };
 

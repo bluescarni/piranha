@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/concepts.hpp>
 #include <mp++/integer.hpp>
 
 #include <piranha/config.hpp>
@@ -72,7 +73,7 @@ struct multiply_accumulate_impl<mppp::integer<SSize>> {
      */
     void operator()(mppp::integer<SSize> &x, const mppp::integer<SSize> &y, const mppp::integer<SSize> &z) const
     {
-        addmul(x, y, z);
+        mppp::addmul(x, y, z);
     }
 };
 
@@ -147,7 +148,7 @@ struct sin_impl<mppp::integer<SSize>> {
      */
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &n) const
     {
-        if (likely(is_zero(n))) {
+        if (likely(n.is_zero())) {
             return mppp::integer<SSize>{};
         }
         piranha_throw(std::invalid_argument, "cannot compute the sine of a non-zero integer");
@@ -167,7 +168,7 @@ struct cos_impl<mppp::integer<SSize>> {
      */
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &n) const
     {
-        if (likely(is_zero(n))) {
+        if (likely(n.is_zero())) {
             return mppp::integer<SSize>{1};
         }
         piranha_throw(std::invalid_argument, "cannot compute the cosine of a non-zero integer");
@@ -200,11 +201,11 @@ struct partial_impl<mppp::integer<SSize>> {
 template <std::size_t SSize>
 inline mppp::integer<SSize> factorial(const mppp::integer<SSize> &n)
 {
-    if (unlikely(sgn(n) < 0)) {
+    if (unlikely(n.sgn() < 0)) {
         piranha_throw(std::domain_error, "cannot compute the factorial of the negative integer " + n.to_string());
     }
     mppp::integer<SSize> retval;
-    fac_ui(retval, static_cast<unsigned long>(n));
+    mppp::fac_ui(retval, static_cast<unsigned long>(n));
     return retval;
 }
 
@@ -222,19 +223,15 @@ inline namespace impl
 
 // Enabler for ipow_subs().
 template <typename T, typename U>
-using math_ipow_subs_t_
+using math_ipow_subs_t
     = decltype(math::ipow_subs_impl<T, U>{}(std::declval<const T &>(), std::declval<const std::string &>(),
                                             std::declval<const integer &>(), std::declval<const U &>()));
-
-template <typename T, typename U>
-using math_ipow_subs_t = enable_if_t<is_returnable<math_ipow_subs_t_<T, U>>::value, math_ipow_subs_t_<T, U>>;
 }
 
 /// Substitution of integral power.
 /**
  * \note
- * This function is enabled only if the expression <tt>ipow_subs_impl<T, U>{}(x, name, n, y)</tt> is valid, returning
- * a type which satisfies piranha::is_returnable.
+ * This function is enabled only if the expression <tt>ipow_subs_impl<T, U>{}(x, name, n, y)</tt> is valid.
  *
  * Substitute, in \p x, <tt>name**n</tt> with \p y. The actual implementation of this function is in the
  * piranha::math::ipow_subs_impl functor's call operator. The body of this function is equivalent to:
@@ -257,6 +254,39 @@ inline math_ipow_subs_t<T, U> ipow_subs(const T &x, const std::string &name, con
     return ipow_subs_impl<T, U>{}(x, name, n, y);
 }
 
+inline namespace impl
+{
+
+// Enabler for the overload below.
+template <typename T, typename U, typename Int>
+using math_ipow_subs_int_t = enable_if_t<mppp::is_cpp_integral_interoperable<Int>::value, math_ipow_subs_t<T, U>>;
+}
+
+/// Substitution of integral power (convenience overload).
+/**
+ * \note
+ * This function is enabled only if:
+ * - \p Int is a C++ integral type with which mp++'s integers can interoperate, and
+ * - the other overload of piranha::math::ipow_subs() is enabled with template arguments \p T and \p U.
+ *
+ * This function is a convenience wrapper that will call the other piranha::math::ipow_subs() overload, with \p n
+ * converted to a piranha::integer.
+ *
+ * @param x the quantity that will be subject to substitution.
+ * @param name the name of the symbolic variable that will be substituted.
+ * @param n the power of \p name that will be substituted.
+ * @param y the object that will substitute the variable.
+ *
+ * @return \p x after the substitution of \p name to the power of \p n with \p y.
+ *
+ * @throws unspecified any exception thrown by the other overload of piranha::math::ipow_subs().
+ */
+template <typename T, typename U, typename Int>
+inline math_ipow_subs_int_t<T, U, Int> ipow_subs(const T &x, const std::string &name, const Int &n, const U &y)
+{
+    return math::ipow_subs(x, name, integer{n}, y);
+}
+
 /// Specialisation of the implementation of piranha::math::add3() for mp++'s integers.
 template <std::size_t SSize>
 struct add3_impl<mppp::integer<SSize>> {
@@ -268,7 +298,7 @@ struct add3_impl<mppp::integer<SSize>> {
      */
     void operator()(mppp::integer<SSize> &out, const mppp::integer<SSize> &a, const mppp::integer<SSize> &b) const
     {
-        add(out, a, b);
+        mppp::add(out, a, b);
     }
 };
 
@@ -283,7 +313,7 @@ struct sub3_impl<mppp::integer<SSize>> {
      */
     void operator()(mppp::integer<SSize> &out, const mppp::integer<SSize> &a, const mppp::integer<SSize> &b) const
     {
-        sub(out, a, b);
+        mppp::sub(out, a, b);
     }
 };
 
@@ -298,7 +328,7 @@ struct mul3_impl<mppp::integer<SSize>> {
      */
     void operator()(mppp::integer<SSize> &out, const mppp::integer<SSize> &a, const mppp::integer<SSize> &b) const
     {
-        mul(out, a, b);
+        mppp::mul(out, a, b);
     }
 };
 
@@ -315,7 +345,7 @@ struct div3_impl<mppp::integer<SSize>> {
      */
     void operator()(mppp::integer<SSize> &out, const mppp::integer<SSize> &a, const mppp::integer<SSize> &b) const
     {
-        tdiv_q(out, a, b);
+        mppp::tdiv_q(out, a, b);
     }
 };
 
@@ -324,9 +354,7 @@ inline namespace impl
 
 // Enabler for the GCD specialisation.
 template <typename T, typename U>
-using math_integer_gcd_enabler = enable_if_t<
-    disjunction<conjunction<std::is_integral<T>, mppp::is_integer<U>>,
-                conjunction<std::is_integral<U>, mppp::is_integer<T>>, mppp::is_same_ssize_integer<T, U>>::value>;
+using math_integer_gcd_enabler = enable_if_t<mppp::are_integer_integral_op_types<T, U>::value>;
 }
 
 /// Specialisation of the implementation of piranha::math::gcd() for mp++'s integers.
@@ -354,7 +382,7 @@ struct gcd_impl<T, U, math_integer_gcd_enabler<T, U>> {
     template <std::size_t SSize, typename T1>
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &a, const T1 &b) const
     {
-        return operator()(a, mppp::integer<SSize>(b));
+        return operator()(a, mppp::integer<SSize>{b});
     }
     /// Call operator, integral - mp++ integer overload.
     /**
@@ -381,47 +409,9 @@ struct gcd3_impl<mppp::integer<SSize>> {
      */
     void operator()(mppp::integer<SSize> &out, const mppp::integer<SSize> &a, const mppp::integer<SSize> &b) const
     {
-        gcd(out, a, b);
+        mppp::gcd(out, a, b);
     }
 };
-
-inline namespace impl
-{
-
-// Enabler for the overload below.
-// NOTE: is_returnable is already checked by the invocation of the other overload.
-template <typename T, typename U, typename Int>
-using math_ipow_subs_int_t_ = decltype(math::ipow_subs(std::declval<const T &>(), std::declval<const std::string &>(),
-                                                       std::declval<const integer &>(), std::declval<const U &>()));
-
-template <typename T, typename U, typename Int>
-using math_ipow_subs_int_t = enable_if_t<std::is_integral<Int>::value, math_ipow_subs_int_t_<T, U, Int>>;
-}
-
-/// Substitution of integral power (convenience overload).
-/**
- * \note
- * This function is enabled only if:
- * - \p Int is a C++ integral type, and
- * - the other overload of piranha::math::ipow_subs() is enabled with template arguments \p T and \p U.
- *
- * This function is a convenience wrapper that will call the other piranha::math::ipow_subs() overload, with \p n
- * converted to a piranha::integer.
- *
- * @param x the quantity that will be subject to substitution.
- * @param name the name of the symbolic variable that will be substituted.
- * @param n the power of \p name that will be substituted.
- * @param y the object that will substitute the variable.
- *
- * @return \p x after the substitution of \p name to the power of \p n with \p y.
- *
- * @throws unspecified any exception thrown by the other overload of piranha::math::ipow_subs().
- */
-template <typename T, typename U, typename Int>
-inline math_ipow_subs_int_t<T, U, Int> ipow_subs(const T &x, const std::string &name, const Int &n, const U &y)
-{
-    return ipow_subs(x, name, integer{n}, y);
-}
 }
 
 /// Type trait to detect the availability of the piranha::math::ipow_subs() function.
@@ -439,11 +429,15 @@ class has_ipow_subs
 
 public:
     /// Value of the type trait.
-    static const bool value = implementation_defined;
+    static constexpr bool value = implementation_defined;
 };
 
+#if PIRANHA_CPLUSPLUS < 201703L
+
 template <typename T, typename U>
-const bool has_ipow_subs<T, U>::value;
+constexpr bool has_ipow_subs<T, U>::value;
+
+#endif
 
 /// Type trait to detect the presence of the integral power substitution method in keys.
 /**
@@ -474,12 +468,15 @@ class key_has_ipow_subs
 
 public:
     /// Value of the type trait.
-    static const bool value = implementation_defined;
+    static constexpr bool value = implementation_defined;
 };
 
-// Static init.
+#if PIRANHA_CPLUSPLUS < 201703L
+
 template <typename Key, typename T>
-const bool key_has_ipow_subs<Key, T>::value;
+constexpr bool key_has_ipow_subs<Key, T>::value;
+
+#endif
 
 inline namespace literals
 {
@@ -734,31 +731,28 @@ inline namespace impl
 // Enabler for safe_cast specialisation.
 template <typename To, typename From>
 using integer_safe_cast_enabler = enable_if_t<
-    // NOTE: we need the is_constructible check here because mp++ might not support long double.
-    disjunction<conjunction<mppp::is_integer<To>, std::is_floating_point<From>, std::is_constructible<To, From>>,
-                conjunction<mppp::is_integer<To>, std::is_integral<From>>,
-                conjunction<mppp::is_integer<From>, std::is_integral<To>>>::value>;
+    // NOTE: let's keep the first disjunction here separated: we don't want to catch all
+    // CppInteroperable types here, as safe casting needs to be done on a controlled
+    // case-by-case basis.
+    disjunction<conjunction<mppp::is_integer<To>, disjunction<mppp::is_cpp_floating_point_interoperable<From>,
+                                                              mppp::is_cpp_integral_interoperable<From>>>,
+                conjunction<mppp::is_integer<From>, mppp::is_cpp_integral_interoperable<To>>>::value>;
 }
 
 /// Specialisation of piranha::safe_cast() for conversions involving mp++'s integers.
 /**
  * \note
  * This specialisation is enabled in the following cases:
- * - \p To is an mp++ integer and \p From is a C++ floating-point type from which \p To
- *   can be constructed,
- * - \p To is an mp++ integer and \p From is a C++ integral type,
- * - \p From is an mp++ integer and \p To is a C++ integral type.
+ * - \p To is an mp++ integer and \p From is a C++ floating-point or integral type with which
+ *   mp++ integer can interoperate,
+ * - \p From is an mp++ integer and \p To is a C++ integral type with which
+ *   mp++ integer can interoperate.
  */
 template <typename To, typename From>
 struct safe_cast_impl<To, From, integer_safe_cast_enabler<To, From>> {
 private:
-    template <typename T>
-    using float_enabler = enable_if_t<std::is_floating_point<T>::value, int>;
-    template <typename T>
-    using mp_int_enabler = enable_if_t<mppp::is_integer<T>::value, int>;
-    template <typename T>
-    using int_enabler = enable_if_t<std::is_integral<T>::value, int>;
-    template <typename T, float_enabler<T> = 0>
+    // From float to mppp::integer.
+    template <typename T, enable_if_t<mppp::is_cpp_floating_point_interoperable<T>::value, int> = 0>
     static To impl(const T &f)
     {
         if (unlikely(!std::isfinite(f))) {
@@ -772,21 +766,23 @@ private:
         }
         return To{f};
     }
-    template <typename T, mp_int_enabler<T> = 0>
+    // From C++ integral to mppp::integer.
+    template <typename T, enable_if_t<mppp::is_cpp_integral_interoperable<T>::value, int> = 0>
+    static To impl(const T &n)
+    {
+        return To{n};
+    }
+    // From mppp::integer to C++ integral.
+    template <typename T, enable_if_t<mppp::is_integer<T>::value, int> = 0>
     static To impl(const T &n)
     {
         try {
-            return To(n);
+            return static_cast<To>(n);
         } catch (const std::overflow_error &) {
             piranha_throw(safe_cast_failure, "the arbitrary-precision integer " + n.to_string()
                                                  + " cannot be converted to the type '" + demangle<To>()
                                                  + "', as the conversion cannot preserve the original value");
         }
-    }
-    template <typename T, int_enabler<T> = 0>
-    static To impl(const T &n)
-    {
-        return To{n};
     }
 
 public:
