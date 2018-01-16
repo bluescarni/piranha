@@ -37,6 +37,8 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <mp++/config.hpp>
+#include <mp++/exceptions.hpp>
 #include <mp++/integer.hpp>
 
 #include <piranha/integer.hpp>
@@ -81,7 +83,12 @@ BOOST_AUTO_TEST_CASE(pow_fp_test)
 }
 
 using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,
-                             unsigned long, long long, unsigned long long>;
+                             unsigned long, long long, unsigned long long
+#if defined(MPPP_HAVE_GCC_INT128)
+                             ,
+                             __int128_t, __uint128_t
+#endif
+                             >;
 
 struct int_pow_tester {
     template <typename U>
@@ -94,10 +101,13 @@ struct int_pow_tester {
             BOOST_CHECK((is_exponentiable<int_type, float>::value));
             BOOST_CHECK((is_exponentiable<float, int_type>::value));
             BOOST_CHECK((is_exponentiable<double, int_type>::value));
+#if defined(MPPP_WITH_MPFR)
             BOOST_CHECK((is_exponentiable<long double, int_type>::value));
+#endif
             int_type n;
             BOOST_CHECK((std::is_same<int_type, decltype(math::pow(n, T(0)))>::value));
             BOOST_CHECK_EQUAL(math::pow(n, T(0)), 1);
+            // NOTE: for the 128-bit ints, is_signed will always be false.
             if (std::is_signed<T>::value) {
                 BOOST_CHECK_THROW(math::pow(n, T(-1)), mppp::zero_division_error);
             }
@@ -187,8 +197,10 @@ struct mp_integer_pow_tester {
         BOOST_CHECK((is_exponentiable<float &&, const int_type &>::value));
         BOOST_CHECK((is_exponentiable<double, int_type>::value));
         BOOST_CHECK((is_exponentiable<double, int_type &>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((is_exponentiable<long double, int_type>::value));
         BOOST_CHECK((is_exponentiable<const long double, int_type &&>::value));
+#endif
         int_type n;
         BOOST_CHECK((std::is_same<int_type, decltype(math::pow(n, n))>::value));
         BOOST_CHECK_EQUAL(math::pow(n, int_type(0)), 1);
@@ -231,4 +243,16 @@ BOOST_AUTO_TEST_CASE(pow_mp_integer_test)
     BOOST_CHECK((!is_exponentiable<mppp::integer<1>, mppp::integer<2>>::value));
     BOOST_CHECK((!is_exponentiable<mppp::integer<2>, mppp::integer<1>>::value));
     BOOST_CHECK((!is_exponentiable<integer, std::string>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+    BOOST_CHECK((is_exponentiable<__int128_t, int>::value));
+    BOOST_CHECK((is_exponentiable<__uint128_t, int>::value));
+    BOOST_CHECK((is_exponentiable<__int128_t, __int128_t>::value));
+    BOOST_CHECK((is_exponentiable<__uint128_t, __uint128_t>::value));
+    BOOST_CHECK_EQUAL(math::pow(__int128_t(4), 2), 16);
+    BOOST_CHECK_EQUAL(math::pow(__int128_t(4), __uint128_t(2)), 16);
+    BOOST_CHECK_EQUAL(math::pow(4, __int128_t(2)), 16);
+    BOOST_CHECK((std::is_same<integer, decltype(math::pow(__int128_t(4), 2))>::value));
+    BOOST_CHECK((std::is_same<integer, decltype(math::pow(__int128_t(4), __int128_t(2)))>::value));
+    BOOST_CHECK((std::is_same<integer, decltype(math::pow(4, __int128_t(2)))>::value));
+#endif
 }

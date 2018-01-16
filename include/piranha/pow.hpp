@@ -34,8 +34,10 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <mp++/concepts.hpp>
 #include <mp++/integer.hpp>
 
+#include <piranha/config.hpp>
 #include <piranha/detail/init.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/type_traits.hpp>
@@ -125,7 +127,8 @@ inline namespace impl
 // Enabler for integral power.
 template <typename T, typename U>
 using integer_pow_enabler = enable_if_t<
-    disjunction<mppp::are_integer_op_types<T, U>, conjunction<std::is_integral<T>, std::is_integral<U>>>::value>;
+    disjunction<mppp::are_integer_op_types<T, U>,
+                conjunction<mppp::is_cpp_integral_interoperable<T>, mppp::is_cpp_integral_interoperable<U>>>::value>;
 }
 
 // NOTE: this specialisation must be here as in the integral-integral overload we use mppp::integer inside,
@@ -137,7 +140,7 @@ using integer_pow_enabler = enable_if_t<
  * This specialisation is activated when:
  * - the mp++ integer exponentiation function can be successfully called on
  *   instances of ``T`` and ``U``, or
- * - both arguments are C++ integral types.
+ * - both arguments are C++ integral types with which mp++'s integers can interoperate.
  *
  * The implementation follows these rules:
  * - if both arguments are C++ integral types, then the mp++ integer exponentiation function is used after the
@@ -161,7 +164,8 @@ private:
     }
     using ret_type
         = decltype(impl(std::declval<const T &>(), std::declval<const U &>(),
-                        std::integral_constant<bool, conjunction<std::is_integral<T>, std::is_integral<U>>::value>{}));
+                        std::integral_constant<bool, conjunction<mppp::is_cpp_integral_interoperable<T>,
+                                                                 mppp::is_cpp_integral_interoperable<U>>::value>{}));
 
 public:
     /// Call operator.
@@ -175,7 +179,9 @@ public:
      */
     ret_type operator()(const T &b, const U &e) const
     {
-        return impl(b, e, std::integral_constant<bool, conjunction<std::is_integral<T>, std::is_integral<U>>::value>{});
+        return impl(b, e,
+                    std::integral_constant<bool, conjunction<mppp::is_cpp_integral_interoperable<T>,
+                                                             mppp::is_cpp_integral_interoperable<U>>::value>{});
     }
 };
 }
@@ -200,12 +206,15 @@ class is_exponentiable
 
 public:
     /// Value of the type trait.
-    static const bool value = implementation_defined;
+    static constexpr bool value = implementation_defined;
 };
 
-// Static init.
+#if PIRANHA_CPLUSPLUS < 201703L
+
 template <typename T, typename U>
-const bool is_exponentiable<T, U>::value;
+constexpr bool is_exponentiable<T, U>::value;
+
+#endif
 }
 
 #endif
