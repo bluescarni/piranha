@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <mp++/config.hpp>
 #include <mp++/integer.hpp>
 
 #include <piranha/integer.hpp>
@@ -155,4 +156,20 @@ BOOST_AUTO_TEST_CASE(binomial_test_01)
     // Different static sizes.
     BOOST_CHECK((!has_binomial<mppp::integer<1>, mppp::integer<2>>::value));
     BOOST_CHECK((!has_binomial<mppp::integer<2>, mppp::integer<1>>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+    BOOST_CHECK((has_binomial<int_type, __int128_t>::value));
+    BOOST_CHECK((has_binomial<int_type, __uint128_t>::value));
+    BOOST_CHECK((has_binomial<__int128_t, int_type>::value));
+    BOOST_CHECK((has_binomial<__uint128_t, int_type>::value));
+    BOOST_CHECK((has_binomial<__int128_t, __int128_t>::value));
+    BOOST_CHECK((has_binomial<__uint128_t, __uint128_t>::value));
+    BOOST_CHECK((has_binomial<__int128_t, __uint128_t>::value));
+    BOOST_CHECK((has_binomial<__uint128_t, __int128_t>::value));
+    BOOST_CHECK((std::is_same<decltype(math::binomial(__uint128_t(), __int128_t())), int_type>::value));
+    BOOST_CHECK((std::is_same<decltype(math::binomial(int_type(), __int128_t())), int_type>::value));
+    BOOST_CHECK((std::is_same<decltype(math::binomial(__int128_t(), int_type())), int_type>::value));
+    BOOST_CHECK_EQUAL(math::binomial(__int128_t(4), __uint128_t(2)), math::binomial(int_type(4), 2));
+    BOOST_CHECK_EQUAL(math::binomial(__int128_t(4), int_type(2)), math::binomial(int_type(4), 2));
+    BOOST_CHECK_EQUAL(math::binomial(int_type(4), __uint128_t(2)), math::binomial(int_type(4), 2));
+#endif
 }
