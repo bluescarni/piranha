@@ -1,10 +1,10 @@
 # Python version check.
-if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTHON_VERSION_MINOR} LESS 6))
-	message(FATAL_ERROR "Minimum supported Python version is 2.6.")
+if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTHON_VERSION_MINOR} LESS 7))
+	message(FATAL_ERROR "Minimum supported Python version is 2.7.")
 endif()
 
 # Helper file with version number.
-CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/_version.py.in" "${CMAKE_CURRENT_BINARY_DIR}/_version.py")
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/_version.py.in" "${CMAKE_CURRENT_BINARY_DIR}/_version.py" @ONLY)
 
 # Tutorial files.
 set(PYRANHA_TUTORIAL_FILES
@@ -67,10 +67,27 @@ YACMA_PYTHON_MODULE(_core
  # Setup the installation path.
 set(PYRANHA_INSTALL_PATH "${YACMA_PYTHON_MODULES_INSTALL_PATH}/pyranha")
 
+# Boost.Python version 1.64 (and possibly later?) has issues with default hidden visibility.
+if(${Boost_MAJOR_VERSION} GREATER 1 OR (${Boost_MAJOR_VERSION} EQUAL 1 AND ${Boost_MINOR_VERSION} GREATER 63))
+	list(FIND PIRANHA_CXX_FLAGS_DEBUG "-fvisibility=hidden" _PYGMO_HAS_VHIDDEN)
+	if (NOT ${_PYGMO_HAS_VHIDDEN} EQUAL -1)
+		message(STATUS "Removing the '-fvisibility=hidden' flag for Boost.Python > 1.63.")
+		list(REMOVE_ITEM PIRANHA_CXX_FLAGS_DEBUG "-fvisibility=hidden")
+		list(REMOVE_ITEM PIRANHA_CXX_FLAGS_RELEASE "-fvisibility=hidden")
+	endif()
+endif()
+
+# The name of the BP target to link to depends on the Python version.
+if(${PYTHON_VERSION_MAJOR} EQUAL 2)
+	set(PYRANHA_BP_TARGET "Boost::python")
+else()
+	set(PYRANHA_BP_TARGET "Boost::python3")
+endif()
+
 target_compile_options(_core PRIVATE "$<$<CONFIG:DEBUG>:${PIRANHA_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PIRANHA_CXX_FLAGS_RELEASE}>")
 # The module needs Boost.Python and the mandatory libraries. Python libs and includes are already linked in
 # by YACMA_PYTHON_MODULE().
-target_link_libraries(_core PRIVATE piranha Boost::python ${PIRANHA_MANDATORY_LINK_TARGETS})
+target_link_libraries(_core PRIVATE piranha ${PYRANHA_BP_TARGET} ${PIRANHA_MANDATORY_LINK_TARGETS})
 set_property(TARGET _core PROPERTY CXX_STANDARD 11)
 set_property(TARGET _core PROPERTY CXX_STANDARD_REQUIRED YES)
 set_property(TARGET _core PROPERTY CXX_EXTENSIONS NO)

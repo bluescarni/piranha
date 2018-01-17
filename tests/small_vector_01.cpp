@@ -912,12 +912,12 @@ struct serialization_tester {
         using v_type = small_vector<int, T>;
         using size_type = typename v_type::size_type;
         std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-        std::uniform_int_distribution<size_type> size_dist(0u, 10u);
+        std::uniform_int_distribution<unsigned> size_dist(0u, 10u);
         v_type tmp;
         for (int i = 0; i < ntries; ++i) {
             // Create a vector of random size and with random contents.
             v_type v;
-            const auto size = size_dist(rng);
+            const auto size = static_cast<size_type>(size_dist(rng));
             for (size_type j = 0u; j < size; ++j) {
                 v.push_back(int_dist(rng));
             }
@@ -938,7 +938,7 @@ struct serialization_tester {
         v_type2 tmp2;
         for (int i = 0; i < ntries; ++i) {
             v_type2 v;
-            const auto size = size_dist(rng);
+            const auto size = static_cast<size_type>(size_dist(rng));
             for (size_type j = 0u; j < size; ++j) {
                 v.push_back(integer(int_dist(rng)));
             }

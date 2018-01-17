@@ -154,13 +154,17 @@ message(STATUS "Git revision: ${PIRANHA_GIT_REVISION}")
 message(STATUS "Piranha version: ${piranha_VERSION}")
 
 # Configure config.hpp.
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/piranha/config.hpp")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/piranha/config.hpp" @ONLY)
+
+# Configure Doxyfile.
+set(PIRANHA_DOXYGEN_STRIP_FROM_INC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile.in" "${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile" @ONLY)
 
 # Setup the piranha interface library.
 add_library(piranha INTERFACE)
 target_include_directories(piranha INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 target_link_libraries(piranha INTERFACE ${PIRANHA_MANDATORY_LINK_TARGETS})
 
@@ -174,6 +178,7 @@ if(PIRANHA_INSTALL_HEADERS)
 	endif()
 	if(PIRANHA_WITH_BZIP2)
 		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}include(PiranhaFindBZip2)\n")
+		install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/PiranhaFindBZip2.cmake" DESTINATION "lib/cmake/piranha")
 	endif()
 	if(PIRANHA_WITH_MSGPACK)
 		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}find_package(MSGPACK-C REQUIRED)\n")
@@ -182,8 +187,7 @@ if(PIRANHA_INSTALL_HEADERS)
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/piranha-config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/piranha-config.cmake" @ONLY)
 	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/piranha-config.cmake" DESTINATION "lib/cmake/piranha")
 	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/FindGMP.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/FindMPFR.cmake"
-		"${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/PiranhaFindBoost.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/PiranhaFindBZip2.cmake"
-		DESTINATION "lib/cmake/piranha")
+		"${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/PiranhaFindBoost.cmake" DESTINATION "lib/cmake/piranha")
 	install(EXPORT piranha_export NAMESPACE Piranha:: DESTINATION lib/cmake/piranha)
 	# Take care of versioning.
 	include(CMakePackageConfigHelpers)
@@ -228,7 +232,7 @@ IF(PIRANHA_BUILD_PYRANHA)
 	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/pyranha")
 	if(MINGW)
 		message(STATUS "Creating the files for the generation of a binary wheel for MinGW.")
-		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/mingw_wheel_setup.py" "${CMAKE_CURRENT_BINARY_DIR}/wheel/setup.py")
-		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/mingw_wheel_libs_python${PYTHON_VERSION_MAJOR}.txt" "${CMAKE_CURRENT_BINARY_DIR}/wheel/mingw_wheel_libs_python${PYTHON_VERSION_MAJOR}.txt")
+		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/mingw_wheel_setup.py" "${CMAKE_CURRENT_BINARY_DIR}/wheel/setup.py" @ONLY)
+		configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/mingw_wheel_libs_python${PYTHON_VERSION_MAJOR}.txt" "${CMAKE_CURRENT_BINARY_DIR}/wheel/mingw_wheel_libs_python${PYTHON_VERSION_MAJOR}.txt" @ONLY)
 	endif()
 endif()

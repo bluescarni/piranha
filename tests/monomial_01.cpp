@@ -721,6 +721,17 @@ struct print_tester {
 BOOST_AUTO_TEST_CASE(monomial_print_test)
 {
     boost::mpl::for_each<expo_types>(print_tester());
+    // Tests with rational coefficients.
+    using m_type = monomial<rational>;
+    symbol_set vs{symbol{"x"}};
+    m_type m1{rational{2}};
+    std::ostringstream oss;
+    m1.print(oss, vs);
+    BOOST_CHECK(oss.str() == "x**2");
+    oss.str("");
+    m1 = m_type{rational{-2, 3}};
+    m1.print(oss, vs);
+    BOOST_CHECK(oss.str() == "x**(-2/3)");
 }
 
 struct linear_argument_tester {
