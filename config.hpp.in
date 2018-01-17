@@ -49,9 +49,13 @@ see https://www.gnu.org/licenses/. */
 #define unlikely(x) mppp_unlikely(x)
 
 #define PIRANHA_MAYBE_TLS MPPP_MAYBE_TLS
-#define PIRANHA_HAVE_THREAD_LOCAL MPPP_HAVE_THREAD_LOCAL
+#if defined(MPPP_HAVE_THREAD_LOCAL)
+#define PIRANHA_HAVE_THREAD_LOCAL
+#endif
 
-#define PIRANHA_HAVE_CONCEPTS MPPP_HAVE_CONCEPTS
+#if defined(MPPP_HAVE_CONCEPTS)
+#define PIRANHA_HAVE_CONCEPTS
+#endif
 
 #define PIRANHA_CPLUSPLUS MPPP_CPLUSPLUS
 
