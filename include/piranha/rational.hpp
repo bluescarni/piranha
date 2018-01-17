@@ -30,34 +30,31 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_RATIONAL_HPP
 
 // #include <array>
-// #include <boost/functional/hash.hpp>
-// #include <boost/lexical_cast.hpp>
 // #include <climits>
 // #include <cmath>
 #include <cstddef>
 // #include <cstring>
-// #include <functional>
 #include <iostream>
 // #include <limits>
 #include <stdexcept>
 #include <string>
 // #include <type_traits>
-// #include <unordered_map>
 #include <utility>
 
+#include <mp++/concepts.hpp>
 #include <mp++/integer.hpp>
 #include <mp++/rational.hpp>
 
 #include <piranha/binomial.hpp>
 #include <piranha/config.hpp>
-// #include <piranha/detail/demangle.hpp>
+#include <piranha/detail/demangle.hpp>
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/print_tex_coefficient.hpp>
-// #include <piranha/s11n.hpp>
-// #include <piranha/safe_cast.hpp>
+#include <piranha/s11n.hpp>
+#include <piranha/safe_cast.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -257,84 +254,6 @@ struct partial_impl<mppp::rational<SSize>> {
         return mppp::rational<SSize>{};
     }
 };
-
-inline namespace impl
-{
-
-// NOTE: binomial follows the same rules as pow, for now. One of the overloads
-// comes from mp++, the others are implemented here.
-template <typename T, typename U>
-using math_rational_binomial_enabler = math_rational_pow_enabler<T, U>;
-}
-
-/// Specialisation of the implementation of piranha::math::binomial() for mp++'s rationals.
-/**
- * This specialisation is activated when at least one of the types is an mp++ rational,
- * and the other type can interoperate with it.
- *
- * The implementation follows these rules:
- * - if the top argument is a rational and the bottom argument an integral type, then
- *   the rational binomial function from mp++ is used;
- * - if the non-rational argument is a floating-point type, then the rational argument is converted
- *   to that floating-point type and piranha::math::binomial() is used;
- * - if both arguments are rationals, they are both converted to \p double and then piranha::math::binomial()
- *   is used;
- * - if the top argument is an integral type and the bottom argument a rational, then both
- *   arguments are converted to \p double and piranha::math::binomial() is used.
- */
-template <typename T, typename U>
-struct binomial_impl<T, U, math_rational_binomial_enabler<T, U>> {
-private:
-    // rational - rational.
-    template <std::size_t SSize>
-    static double impl(const mppp::rational<SSize> &x, const mppp::rational<SSize> &y)
-    {
-        return math::binomial(static_cast<double>(x), static_cast<double>(y));
-    }
-    // rational - integral.
-    template <std::size_t SSize, typename T2, enable_if_t<!std::is_floating_point<T2>::value, int> = 0>
-    static mppp::rational<SSize> impl(const mppp::rational<SSize> &x, const T2 &y)
-    {
-        return mppp::binomial(x, y);
-    }
-    // rational - fp.
-    template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    static T2 impl(const mppp::rational<SSize> &x, const T2 &y)
-    {
-        return math::binomial(static_cast<T2>(x), y);
-    }
-    // integral - rational.
-    template <std::size_t SSize, typename T2, enable_if_t<!std::is_floating_point<T2>::value, int> = 0>
-    static double impl(const T2 &x, const mppp::rational<SSize> &y)
-    {
-        return math::binomial(static_cast<double>(x), static_cast<double>(y));
-    }
-    // fp - rational.
-    template <std::size_t SSize, typename T2, enable_if_t<std::is_floating_point<T2>::value, int> = 0>
-    static T2 impl(const T2 &x, const mppp::rational<SSize> &y)
-    {
-        return math::binomial(x, static_cast<T2>(y));
-    }
-    using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
-
-public:
-    /// Call operator.
-    /**
-     * @param x the top argument.
-     * @param y the bottom argument.
-     *
-     * @returns \f$ x \choose y \f$.
-     *
-     * @throws unspecified any exception thrown by:
-     * - mp++'s rational binomial function,
-     * - piranha::math::binomial(),
-     * - the conversion of rationals to floating-point types.
-     */
-    ret_type operator()(const T &x, const U &y) const
-    {
-        return impl(x, y);
-    }
-};
 }
 
 inline namespace impl
@@ -342,7 +261,7 @@ inline namespace impl
 
 template <typename To, typename From>
 using sc_rat_enabler = enable_if_t<
-    disjunction<conjunction<is_mp_rational<To>, disjunction<std::is_arithmetic<From>, is_mp_integer<From>>>,
+    disjunction<conjunction<mppp::is_rational<To>, disjunction<std::is_arithmetic<From>, is_mp_integer<From>>>,
                 conjunction<is_mp_rational<From>, disjunction<std::is_integral<To>, is_mp_integer<To>>>>::value>;
 }
 
@@ -364,7 +283,7 @@ private:
             return To(x);
         } catch (const std::invalid_argument &) {
             piranha_throw(safe_cast_failure, "cannot convert value " + boost::lexical_cast<std::string>(x)
-                                                 + " of type '" + detail::demangle<T>()
+                                                 + " of type '" + demangle<T>()
                                                  + "' to a rational, as the conversion would not preserve the value");
         }
     }
@@ -373,14 +292,14 @@ private:
     {
         if (unlikely(!q.den().is_one())) {
             piranha_throw(safe_cast_failure, "cannot convert the rational value " + boost::lexical_cast<std::string>(q)
-                                                 + " to the integral type '" + detail::demangle<To>()
+                                                 + " to the integral type '" + demangle<To>()
                                                  + "', as the rational value as non-unitary denominator");
         }
         try {
             return static_cast<To>(q);
         } catch (const std::overflow_error &) {
             piranha_throw(safe_cast_failure, "cannot convert the rational value " + boost::lexical_cast<std::string>(q)
-                                                 + " to the integral type '" + detail::demangle<To>()
+                                                 + " to the integral type '" + demangle<To>()
                                                  + "', as the conversion cannot preserve the value");
         }
     }
@@ -509,31 +428,6 @@ struct msgpack_convert_impl<T, mp_rational_msgpack_convert_enabler<T>> {
 };
 
 #endif
-}
-
-namespace std
-{
-
-/// Specialisation of \p std::hash for piranha::mp_rational.
-template <std::size_t SSize>
-struct hash<piranha::mp_rational<SSize>> {
-    /// Result type.
-    typedef size_t result_type;
-    /// Argument type.
-    typedef piranha::mp_rational<SSize> argument_type;
-    /// Hash operator.
-    /**
-     * @param q piranha::mp_rational whose hash value will be returned.
-     *
-     * @return <tt>q.hash()</tt>.
-     *
-     * @see piranha::mp_rational::hash()
-     */
-    result_type operator()(const argument_type &q) const
-    {
-        return q.hash();
-    }
-};
 }
 
 #endif
