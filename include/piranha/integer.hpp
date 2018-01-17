@@ -790,13 +790,14 @@ private:
     template <typename T, enable_if_t<mppp::is_integer<T>::value, int> = 0>
     static To impl(const T &n)
     {
-        try {
-            return static_cast<To>(n);
-        } catch (const std::overflow_error &) {
+        To retval;
+        const auto status = mppp::get(retval, n);
+        if (unlikely(!status)) {
             piranha_throw(safe_cast_failure, "the arbitrary-precision integer " + n.to_string()
                                                  + " cannot be converted to the type '" + demangle<To>()
                                                  + "', as the conversion cannot preserve the original value");
         }
+        return retval;
     }
 
 public:
