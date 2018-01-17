@@ -200,8 +200,12 @@ struct sin_cos_tester {
         using int_type = mppp::integer<T::value>;
         BOOST_CHECK_EQUAL(math::sin(int_type()), 0);
         BOOST_CHECK_EQUAL(math::cos(int_type()), 1);
-        BOOST_CHECK_THROW(math::sin(int_type(1)), std::invalid_argument);
-        BOOST_CHECK_THROW(math::cos(int_type(1)), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(math::sin(int_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "cannot compute the sine of a non-zero integer");
+        });
+        BOOST_CHECK_EXCEPTION(math::cos(int_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "cannot compute the cosine of a non-zero integer");
+        });
         BOOST_CHECK((std::is_same<int_type, decltype(math::cos(int_type{}))>::value));
         BOOST_CHECK((std::is_same<int_type, decltype(math::sin(int_type{}))>::value));
         BOOST_CHECK(has_sine<int_type>::value);
