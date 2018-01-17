@@ -223,15 +223,19 @@ inline namespace impl
 
 // Enabler for ipow_subs().
 template <typename T, typename U>
-using math_ipow_subs_t
+using math_ipow_subs_t_
     = decltype(math::ipow_subs_impl<T, U>{}(std::declval<const T &>(), std::declval<const std::string &>(),
                                             std::declval<const integer &>(), std::declval<const U &>()));
+
+template <typename T, typename U>
+using math_ipow_subs_t = enable_if_t<is_returnable<math_ipow_subs_t_<T, U>>::value, math_ipow_subs_t_<T, U>>;
 }
 
 /// Substitution of integral power.
 /**
  * \note
- * This function is enabled only if the expression <tt>ipow_subs_impl<T, U>{}(x, name, n, y)</tt> is valid.
+ * This function is enabled only if the expression <tt>ipow_subs_impl<T, U>{}(x, name, n, y)</tt> is valid,
+ * returning a type which satisfies piranha::is_returnable.
  *
  * Substitute, in \p x, <tt>name**n</tt> with \p y. The actual implementation of this function is in the
  * piranha::math::ipow_subs_impl functor's call operator. The body of this function is equivalent to:
@@ -258,6 +262,7 @@ inline namespace impl
 {
 
 // Enabler for the overload below.
+// NOTE: is_returnable is already checked by the invocation of the other overload.
 template <typename T, typename U, typename Int>
 using math_ipow_subs_int_t = enable_if_t<mppp::is_cpp_integral_interoperable<Int>::value, math_ipow_subs_t<T, U>>;
 }

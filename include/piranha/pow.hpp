@@ -94,13 +94,17 @@ inline namespace impl
 
 // Enabler for math::pow().
 template <typename T, typename U>
-using math_pow_t = decltype(math::pow_impl<T, U>{}(std::declval<const T &>(), std::declval<const U &>()));
+using math_pow_t_ = decltype(math::pow_impl<T, U>{}(std::declval<const T &>(), std::declval<const U &>()));
+
+template <typename T, typename U>
+using math_pow_t = enable_if_t<is_returnable<math_pow_t_<T, U>>::value, math_pow_t_<T, U>>;
 }
 
 /// Exponentiation.
 /**
  * \note
- * This function is enabled only if the expression <tt>pow_impl<T, U>{}(x, y)</tt> is valid.
+ * This function is enabled only if the expression <tt>pow_impl<T, U>{}(x, y)</tt> is valid,
+ * returning a type which satisfies piranha::is_returnable.
  *
  * Return \p x to the power of \p y. The actual implementation of this function is in the piranha::math::pow_impl
  * functor's call operator. The body of this function is equivalent to:

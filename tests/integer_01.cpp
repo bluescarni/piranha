@@ -277,6 +277,37 @@ BOOST_AUTO_TEST_CASE(integer_factorial_test)
     tuple_for_each(size_types{}, factorial_tester{});
 }
 
+struct b_00 {
+    b_00() = default;
+    b_00(const b_00 &) = delete;
+    b_00(b_00 &&) = delete;
+};
+
+struct b_01 {
+    b_01() = default;
+    b_01(const b_01 &) = default;
+    b_01(b_01 &&) = default;
+    ~b_01() = delete;
+};
+
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct ipow_subs_impl<b_00, b_00> {
+    b_00 operator()(const b_00 &, const std::string &, const integer &, const b_00 &) const;
+};
+
+template <>
+struct ipow_subs_impl<b_01, b_01> {
+    b_01 operator()(const b_01 &, const std::string &, const integer &, const b_01 &) const;
+};
+}
+}
+
 struct ipow_subs_tester {
     template <typename T>
     void operator()(const T &) const
@@ -297,6 +328,8 @@ struct ipow_subs_tester {
 BOOST_AUTO_TEST_CASE(integer_ipow_subs_test)
 {
     tuple_for_each(size_types{}, ipow_subs_tester{});
+    BOOST_CHECK((!has_ipow_subs<b_00, b_00>::value));
+    BOOST_CHECK((!has_ipow_subs<b_01, b_01>::value));
 }
 
 struct ternary_tester {

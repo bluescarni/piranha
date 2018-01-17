@@ -50,6 +50,37 @@ using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integ
                               std::integral_constant<std::size_t, 3>, std::integral_constant<std::size_t, 7>,
                               std::integral_constant<std::size_t, 10>>;
 
+struct b_00 {
+    b_00() = default;
+    b_00(const b_00 &) = delete;
+    b_00(b_00 &&) = delete;
+};
+
+struct b_01 {
+    b_01() = default;
+    b_01(const b_01 &) = default;
+    b_01(b_01 &&) = default;
+    ~b_01() = delete;
+};
+
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct pow_impl<b_00, b_00> {
+    b_00 operator()(const b_00 &, const b_00 &) const;
+};
+
+template <>
+struct pow_impl<b_01, b_01> {
+    b_01 operator()(const b_01 &, const b_01 &) const;
+};
+}
+}
+
 BOOST_AUTO_TEST_CASE(pow_fp_test)
 {
     BOOST_CHECK(math::pow(2., 2.) == std::pow(2., 2.));
@@ -182,7 +213,7 @@ struct int_pow_tester {
     }
 };
 
-struct mp_integer_pow_tester {
+struct integer_pow_tester {
     template <typename T>
     void operator()(const T &) const
     {
@@ -229,10 +260,10 @@ struct mp_integer_pow_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(pow_mp_integer_test)
+BOOST_AUTO_TEST_CASE(pow_integer_test)
 {
     tuple_for_each(size_types{}, int_pow_tester{});
-    tuple_for_each(size_types{}, mp_integer_pow_tester{});
+    tuple_for_each(size_types{}, integer_pow_tester{});
     // Integral--integral pow.
     BOOST_CHECK_EQUAL(math::pow(4, 2), 16);
     BOOST_CHECK_EQUAL(math::pow(-3ll, static_cast<unsigned short>(3)), -27);
@@ -243,6 +274,8 @@ BOOST_AUTO_TEST_CASE(pow_mp_integer_test)
     BOOST_CHECK((!is_exponentiable<mppp::integer<1>, mppp::integer<2>>::value));
     BOOST_CHECK((!is_exponentiable<mppp::integer<2>, mppp::integer<1>>::value));
     BOOST_CHECK((!is_exponentiable<integer, std::string>::value));
+    BOOST_CHECK((!is_exponentiable<b_00, b_00>::value));
+    BOOST_CHECK((!is_exponentiable<b_01, b_01>::value));
 #if defined(MPPP_HAVE_GCC_INT128)
     BOOST_CHECK((is_exponentiable<__int128_t, int>::value));
     BOOST_CHECK((is_exponentiable<__uint128_t, int>::value));
