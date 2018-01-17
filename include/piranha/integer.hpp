@@ -354,6 +354,8 @@ struct div3_impl<mppp::integer<SSize>> {
     }
 };
 
+#if !defined(PIRANHA_HAVE_CONCEPTS)
+
 inline namespace impl
 {
 
@@ -362,9 +364,16 @@ template <typename T, typename U>
 using math_integer_gcd_enabler = enable_if_t<mppp::are_integer_integral_op_types<T, U>::value>;
 }
 
+#endif
+
 /// Specialisation of the implementation of piranha::math::gcd() for mp++'s integers.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename T, mppp::IntegerIntegralOpTypes<T> U>
+struct gcd_impl<T, U> {
+#else
 template <typename T, typename U>
 struct gcd_impl<T, U, math_integer_gcd_enabler<T, U>> {
+#endif
     /// Call operator, overload for mp++'s integers.
     /**
      * @param a the first argument.
