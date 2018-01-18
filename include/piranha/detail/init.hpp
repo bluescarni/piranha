@@ -32,6 +32,12 @@ see https://www.gnu.org/licenses/. */
 #include <ios>
 #include <iostream>
 
+#include <mp++/config.hpp>
+
+// NOTE: so far the only init we need is to check the MPFR build, so let's implement
+// the following only if mp++ was built with MPFR support.
+#if defined(MPPP_WITH_MPFR)
+
 #include <mp++/detail/mpfr.hpp>
 
 #include <piranha/config.hpp>
@@ -82,5 +88,7 @@ inline const mpfr_init_checks mpfr_init_checks_register;
 #endif
 }
 }
+
+#endif // MPPP_WITH_MPFR
 
 #endif
