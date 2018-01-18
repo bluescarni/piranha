@@ -29,16 +29,12 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_RATIONAL_HPP
 #define PIRANHA_RATIONAL_HPP
 
-// #include <array>
-// #include <climits>
-// #include <cmath>
+#include <cmath>
 #include <cstddef>
-// #include <cstring>
 #include <iostream>
-// #include <limits>
 #include <stdexcept>
 #include <string>
-// #include <type_traits>
+#include <type_traits>
 #include <utility>
 
 #include <mp++/concepts.hpp>
@@ -259,57 +255,105 @@ struct partial_impl<mppp::rational<SSize>> {
 inline namespace impl
 {
 
+// Conversion to rational is enabled from integral interoperable
+// types for rational and C++ floats.
 template <typename To, typename From>
-using sc_rat_enabler = enable_if_t<
-    disjunction<conjunction<mppp::is_rational<To>, disjunction<std::is_arithmetic<From>, is_mp_integer<From>>>,
-                conjunction<is_mp_rational<From>, disjunction<std::is_integral<To>, is_mp_integer<To>>>>::value>;
+struct sc_to_rational : std::false_type {
+};
+
+template <std::size_t SSize, typename From>
+struct sc_to_rational<mppp::rational<SSize>, From> : disjunction<mppp::is_rational_integral_interoperable<From, SSize>,
+                                                                 mppp::is_cpp_floating_point_interoperable<From>> {
+};
+
+// Conversion from rational is enabled if the destination is an integral interoperable
+// type for rational.
+template <typename To, typename From>
+struct sc_from_rational : std::false_type {
+};
+
+template <typename To, std::size_t SSize>
+struct sc_from_rational<To, mppp::rational<SSize>> : mppp::is_rational_integral_interoperable<To, SSize> {
+};
+
+template <typename To, typename From>
+using sc_rat_enabler = enable_if_t<disjunction<sc_to_rational<To, From>, sc_from_rational<To, From>>::value>;
 }
 
-/// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_rational.
+/// Specialisation of piranha::safe_cast() for conversions involving mp++'s rationals.
 /**
  * \note
  * This specialisation is enabled in the following cases:
- * - \p To is a rational type and \p From is either an arithmetic type or piranha::mp_integer,
- * - \p To is an integral type or piranha::mp_integer, and \p From is piranha::mp_rational.
+ * - \p To is a rational and \p From is an integral or floating-point interoperable type for \p To,
+ * - \p From is a rational and \p To is is an integral interoperable type for \p From.
  */
 template <typename To, typename From>
 struct safe_cast_impl<To, From, sc_rat_enabler<To, From>> {
 private:
-    template <typename T, enable_if_t<disjunction<std::is_arithmetic<T>, is_mp_integer<T>>::value, int> = 0>
+    // Small local utility for string conversion.
+    template <typename T>
+    static std::string to_string(const T &x)
+    {
+        return std::to_string(x);
+    }
+    template <std::size_t SSize>
+    static std::string to_string(const mppp::integer<SSize> &n)
+    {
+        return n.to_string();
+    }
+    // Small local utility to check for finiteness.
+    template <typename T>
+    static bool isfinite(const T &x, const std::true_type &)
+    {
+        return std::isfinite(x);
+    }
+    template <typename T>
+    static bool isfinite(const T &, const std::false_type &)
+    {
+        return true;
+    }
+    // Conversion to rational.
+    template <typename T>
     static To impl(const T &x)
     {
-        try {
-            // NOTE: checks for finiteness of an fp value are in the ctor.
-            return To(x);
-        } catch (const std::invalid_argument &) {
-            piranha_throw(safe_cast_failure, "cannot convert value " + boost::lexical_cast<std::string>(x)
-                                                 + " of type '" + demangle<T>()
-                                                 + "' to a rational, as the conversion would not preserve the value");
+        // NOTE: the only way this fails is if x is a non-finite floating-point.
+        if (unlikely(!isfinite(x, std::is_floating_point<T>{}))) {
+            piranha_throw(safe_cast_failure, "cannot convert the non-finite floating-point value " + to_string(x)
+                                                 + " of type '" + demangle<T>() + "' to a rational");
         }
+        return To{x};
     }
-    template <typename T, enable_if_t<is_mp_rational<T>::value, int> = 0>
-    static To impl(const T &q)
+    // Conversion from rational.
+    template <std::size_t SSize>
+    static To impl(const mppp::rational<SSize> &q)
     {
-        if (unlikely(!q.den().is_one())) {
-            piranha_throw(safe_cast_failure, "cannot convert the rational value " + boost::lexical_cast<std::string>(q)
+        // Only conversion to C++ integral can fail, due to non-unitary denom of overflow error.
+        if (unlikely(!q.get_den().is_one())) {
+            piranha_throw(safe_cast_failure, "cannot convert the rational value " + to_string(q)
                                                  + " to the integral type '" + demangle<To>()
-                                                 + "', as the rational value as non-unitary denominator");
+                                                 + "', as the rational value has a non-unitary denominator");
         }
-        try {
-            return static_cast<To>(q);
-        } catch (const std::overflow_error &) {
-            piranha_throw(safe_cast_failure, "cannot convert the rational value " + boost::lexical_cast<std::string>(q)
+        To retval;
+        const bool status = mppp::get(retval, q);
+        if (unlikely(!status)) {
+            piranha_throw(safe_cast_failure, "cannot convert the rational value " + to_string(q)
                                                  + " to the integral type '" + demangle<To>()
-                                                 + "', as the conversion cannot preserve the value");
+                                                 + "', as the conversion would result in overflow");
         }
+        return retval;
     }
 
 public:
     /// Call operator.
     /**
-     * The conversion is performed via piranha::mp_rational's constructor and conversion operator.
+     * The conversion is performed via the constructors and conversion operators of mp++'s rationals.
      *
-     * @param x input value.
+     * Conversion from a rational can fail if the rational has a non-unitary denominator or if the
+     * target C++ integral type has an insufficient range.
+     *
+     * Conversion to a rational can fail only if the floating-point argument is not finite.
+     *
+     * @param x the input value.
      *
      * @return \p x converted to \p To.
      *
@@ -320,7 +364,7 @@ public:
         return impl(x);
     }
 };
-
+#if 0
 inline namespace impl
 {
 
@@ -428,6 +472,7 @@ struct msgpack_convert_impl<T, mp_rational_msgpack_convert_enabler<T>> {
 };
 
 #endif
+#endif // If zero.
 }
 
 #endif
