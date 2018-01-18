@@ -520,12 +520,12 @@ struct safe_cast_int_tester {
             BOOST_CHECK((has_safe_cast<T &&, const int_type &>::value));
 
             // Simple checks.
-            BOOST_CHECK_EQUAL(safe_cast<int_type>(T(0)), int_type{0});
-            BOOST_CHECK_EQUAL(safe_cast<int_type>(T(1)), int_type{1});
-            BOOST_CHECK_EQUAL(safe_cast<int_type>(T(12)), int_type{12});
-            BOOST_CHECK_EQUAL(safe_cast<T>(int_type(0)), T{0});
-            BOOST_CHECK_EQUAL(safe_cast<T>(int_type(1)), T{1});
-            BOOST_CHECK_EQUAL(safe_cast<T>(int_type{12}), T{12});
+            BOOST_CHECK(safe_cast<int_type>(T(0)) == int_type{0});
+            BOOST_CHECK(safe_cast<int_type>(T(1)) == int_type{1});
+            BOOST_CHECK(safe_cast<int_type>(T(12)) == int_type{12});
+            BOOST_CHECK(safe_cast<T>(int_type(0)) == T{0});
+            BOOST_CHECK(safe_cast<T>(int_type(1)) == T{1});
+            BOOST_CHECK(safe_cast<T>(int_type{12}) == T{12});
 
             // Failures.
             using lim = std::numeric_limits<T>;
@@ -574,11 +574,18 @@ struct sep_tester {
         BOOST_CHECK_EQUAL(math::evaluate(int_type{10}, edict<double>{{"", 1.321}}), 10);
         BOOST_CHECK((is_evaluable<int_type, int>::value));
         BOOST_CHECK((is_evaluable<int_type, double>::value));
+#if defined(MPPP_WITH_MPFR)
+        BOOST_CHECK((std::is_same<long double,
+                                  decltype(math::evaluate(int_type{10}, edict<long double>{{"", 1.321l}}))>::value));
+#else
+        BOOST_CHECK(
+            (std::is_same<int_type, decltype(math::evaluate(int_type{10}, edict<long double>{{"", 1.321l}}))>::value));
+#endif
 #if defined(MPPP_HAVE_GCC_INT128)
         BOOST_CHECK((is_evaluable<int_type, __int128_t>::value));
         BOOST_CHECK((is_evaluable<int_type, __uint128_t>::value));
-        BOOST_CHECK_EQUAL(math::evaluate(int_type{12}, edict<__int128_t>{{"", 1}}), 12);
-        BOOST_CHECK_EQUAL(math::evaluate(int_type{12}, edict<__uint128_t>{{"", 1}}), 12);
+        BOOST_CHECK((math::evaluate(int_type{12}, edict<__int128_t>{{"", 1}}) == 12));
+        BOOST_CHECK((math::evaluate(int_type{12}, edict<__uint128_t>{{"", 1}}) == 12));
 #endif
         BOOST_CHECK((std::is_same<double, decltype(math::evaluate(int_type{10}, edict<double>{{"", 1.321}}))>::value));
         BOOST_CHECK((!has_subs<int_type, int_type>::value));

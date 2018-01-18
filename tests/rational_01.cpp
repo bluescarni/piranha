@@ -255,8 +255,12 @@ struct sin_cos_tester {
         BOOST_CHECK_EQUAL(math::cos(q_type()), 1);
         BOOST_CHECK((std::is_same<q_type, decltype(math::cos(q_type()))>::value));
         BOOST_CHECK((std::is_same<q_type, decltype(math::sin(q_type()))>::value));
-        BOOST_CHECK_THROW(math::sin(q_type(1)), std::invalid_argument);
-        BOOST_CHECK_THROW(math::cos(q_type(1)), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(math::sin(q_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "cannot compute the sine of a non-zero rational");
+        });
+        BOOST_CHECK_EXCEPTION(math::cos(q_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "cannot compute the cosine of a non-zero rational");
+        });
         BOOST_CHECK(has_sine<q_type>::value);
         BOOST_CHECK(has_cosine<q_type>::value);
     }
@@ -281,6 +285,20 @@ struct sep_tester {
         BOOST_CHECK_EQUAL(math::evaluate(q_type{10}, edict<double>{{"", 1.321}}), 10);
         BOOST_CHECK((is_evaluable<q_type, int>::value));
         BOOST_CHECK((is_evaluable<q_type, double>::value));
+        BOOST_CHECK((is_evaluable<q_type, long double>::value));
+#if defined(MPPP_WITH_MPFR)
+        BOOST_CHECK(
+            (std::is_same<long double, decltype(math::evaluate(q_type{10}, edict<long double>{{"", 1.321l}}))>::value));
+#else
+        BOOST_CHECK(
+            (std::is_same<q_type, decltype(math::evaluate(q_type{10}, edict<long double>{{"", 1.321l}}))>::value));
+#endif
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK(
+            (std::is_same<q_type, decltype(math::evaluate(q_type{10}, edict<__int128_t>{{"", __int128_t()}}))>::value));
+        BOOST_CHECK((std::is_same<q_type, decltype(math::evaluate(q_type{10},
+                                                                  edict<__uint128_t>{{"", __uint128_t()}}))>::value));
+#endif
         BOOST_CHECK((std::is_same<double, decltype(math::evaluate(q_type{10}, edict<double>{{"", 1.321}}))>::value));
         BOOST_CHECK((!has_subs<q_type, q_type>::value));
         BOOST_CHECK((!has_subs<q_type, int>::value));
