@@ -164,6 +164,16 @@ struct pow_tester {
         BOOST_CHECK_THROW(math::pow(int_type(2), q_type(1, radix)), std::domain_error);
         BOOST_CHECK_EQUAL(math::pow(2, q_type(2)), 4);
         BOOST_CHECK_EQUAL(math::pow(int_type(3), q_type(2)), 9);
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK((is_exponentiable<__int128_t, q_type>::value));
+        BOOST_CHECK((is_exponentiable<__uint128_t, q_type>::value));
+        BOOST_CHECK((is_exponentiable<q_type, __int128_t>::value));
+        BOOST_CHECK((is_exponentiable<q_type, __uint128_t>::value));
+        BOOST_CHECK_EQUAL(math::pow(__int128_t(2), q_type(2)), 4);
+        BOOST_CHECK_EQUAL(math::pow(__uint128_t(2), q_type(2)), 4);
+        BOOST_CHECK_EQUAL(math::pow(q_type(2), __int128_t(2)), 4);
+        BOOST_CHECK_EQUAL(math::pow(q_type(2), __uint128_t(2)), 4);
+#endif
         // Special cases.
         BOOST_CHECK_EQUAL(math::pow(1, q_type(2, 3)), 1);
         BOOST_CHECK_EQUAL(math::pow(int_type(1), q_type(2, 3)), 1);
@@ -187,24 +197,19 @@ BOOST_AUTO_TEST_CASE(rational_pow_test)
     BOOST_CHECK((!is_exponentiable<mppp::integer<2>, std::string>::value));
     BOOST_CHECK((!is_exponentiable<mppp::integer<2>, void>::value));
 }
-#if 0
+
 struct abs_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using q_type = mp_rational<T::value>;
-        BOOST_CHECK_EQUAL(q_type{}.abs(), q_type(0));
-        BOOST_CHECK_EQUAL(q_type(1, 3).abs(), q_type(1, 3));
-        BOOST_CHECK_EQUAL(q_type(1, -3).abs(), q_type(1, 3));
-        BOOST_CHECK_EQUAL(q_type(-4, -3).abs(), q_type(4, 3));
-        BOOST_CHECK_EQUAL(q_type(-4, 5).abs(), q_type(4, 5));
+        using q_type = mppp::rational<T::value>;
         BOOST_CHECK_EQUAL(math::abs(q_type(-4, 5)), q_type(4, 5));
         BOOST_CHECK_EQUAL(math::abs(q_type(4, -5)), q_type(4, 5));
         BOOST_CHECK_EQUAL(math::abs(q_type(-4, -5)), q_type(4, 5));
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_rational_abs_test)
+BOOST_AUTO_TEST_CASE(rational_abs_test)
 {
     tuple_for_each(size_types{}, abs_tester());
 }
@@ -213,7 +218,7 @@ struct print_tex_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using q_type = mp_rational<T::value>;
+        using q_type = mppp::rational<T::value>;
         BOOST_CHECK(has_print_tex_coefficient<q_type>::value);
         std::ostringstream ss;
         print_tex_coefficient(ss, q_type(0));
@@ -236,7 +241,7 @@ struct print_tex_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_rational_print_tex_test)
+BOOST_AUTO_TEST_CASE(rational_print_tex_test)
 {
     tuple_for_each(size_types{}, print_tex_tester());
 }
@@ -245,7 +250,7 @@ struct sin_cos_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using q_type = mp_rational<T::value>;
+        using q_type = mppp::rational<T::value>;
         BOOST_CHECK_EQUAL(math::sin(q_type()), 0);
         BOOST_CHECK_EQUAL(math::cos(q_type()), 1);
         BOOST_CHECK((std::is_same<q_type, decltype(math::cos(q_type()))>::value));
@@ -257,7 +262,7 @@ struct sin_cos_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_rational_sin_cos_test)
+BOOST_AUTO_TEST_CASE(rational_sin_cos_test)
 {
     tuple_for_each(size_types{}, sin_cos_tester());
 }
@@ -268,7 +273,7 @@ struct sep_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using q_type = mp_rational<T::value>;
+        using q_type = mppp::rational<T::value>;
         BOOST_CHECK_EQUAL(math::partial(q_type{1}, ""), 0);
         BOOST_CHECK((std::is_same<q_type, decltype(math::partial(q_type{1}, ""))>::value));
         BOOST_CHECK(is_differentiable<q_type>::value);
@@ -287,11 +292,11 @@ struct sep_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_rational_sep_test)
+BOOST_AUTO_TEST_CASE(rational_sep_test)
 {
     tuple_for_each(size_types{}, sep_tester());
 }
-
+#if 0
 struct binomial_tester {
     template <typename T>
     void operator()(const T &) const

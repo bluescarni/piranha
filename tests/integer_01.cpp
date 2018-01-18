@@ -34,6 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
 
@@ -45,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/math.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -559,4 +561,37 @@ struct safe_cast_int_tester {
 BOOST_AUTO_TEST_CASE(integer_safe_cast_int_test)
 {
     tuple_for_each(size_types{}, safe_cast_int_tester{});
+}
+
+struct sep_tester {
+    template <typename T>
+    using edict = symbol_fmap<T>;
+    template <typename T>
+    void operator()(const T &) const
+    {
+        using int_type = mppp::integer<T::value>;
+        BOOST_CHECK_EQUAL(math::evaluate(int_type{12}, edict<int>{{"", 1}}), 12);
+        BOOST_CHECK_EQUAL(math::evaluate(int_type{10}, edict<double>{{"", 1.321}}), 10);
+        BOOST_CHECK((is_evaluable<int_type, int>::value));
+        BOOST_CHECK((is_evaluable<int_type, double>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK((is_evaluable<int_type, __int128_t>::value));
+        BOOST_CHECK((is_evaluable<int_type, __uint128_t>::value));
+        BOOST_CHECK_EQUAL(math::evaluate(int_type{12}, edict<__int128_t>{{"", 1}}), 12);
+        BOOST_CHECK_EQUAL(math::evaluate(int_type{12}, edict<__uint128_t>{{"", 1}}), 12);
+#endif
+        BOOST_CHECK((std::is_same<double, decltype(math::evaluate(int_type{10}, edict<double>{{"", 1.321}}))>::value));
+        BOOST_CHECK((!has_subs<int_type, int_type>::value));
+        BOOST_CHECK((!has_subs<int_type, int>::value));
+        BOOST_CHECK((!has_subs<int_type, long double>::value));
+        BOOST_CHECK((!has_ipow_subs<int_type, int>::value));
+        BOOST_CHECK((!has_ipow_subs<int_type, double>::value));
+        BOOST_CHECK((!has_ipow_subs<int_type, float>::value));
+        BOOST_CHECK((!has_ipow_subs<int_type, unsigned short>::value));
+    }
+};
+
+BOOST_AUTO_TEST_CASE(integer_sep_test)
+{
+    tuple_for_each(size_types{}, sep_tester());
 }
