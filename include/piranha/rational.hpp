@@ -41,7 +41,6 @@ see https://www.gnu.org/licenses/. */
 #include <mp++/integer.hpp>
 #include <mp++/rational.hpp>
 
-#include <piranha/binomial.hpp>
 #include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
 #include <piranha/detail/init.hpp>
@@ -300,6 +299,11 @@ private:
     static std::string to_string(const mppp::integer<SSize> &n)
     {
         return n.to_string();
+    }
+    template <std::size_t SSize>
+    static std::string to_string(const mppp::rational<SSize> &q)
+    {
+        return q.to_string();
     }
     // Small local utility to check for finiteness.
     template <typename T>

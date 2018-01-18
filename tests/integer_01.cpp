@@ -529,14 +529,14 @@ struct safe_cast_int_tester {
 
             // Failures.
             using lim = std::numeric_limits<T>;
-            BOOST_CHECK_EXCEPTION(
-                safe_cast<T>(int_type(lim::max()) + 1), safe_cast_failure, [](const safe_cast_failure &e) {
-                    return boost::contains(e.what(), "the conversion cannot preserve the original value");
-                });
-            BOOST_CHECK_EXCEPTION(
-                safe_cast<T>(int_type(lim::min()) - 1), safe_cast_failure, [](const safe_cast_failure &e) {
-                    return boost::contains(e.what(), "the conversion cannot preserve the original value");
-                });
+            BOOST_CHECK_EXCEPTION(safe_cast<T>(int_type(lim::max()) + 1), safe_cast_failure,
+                                  [](const safe_cast_failure &e) {
+                                      return boost::contains(e.what(), "as the conversion would result in overflow");
+                                  });
+            BOOST_CHECK_EXCEPTION(safe_cast<T>(int_type(lim::min()) - 1), safe_cast_failure,
+                                  [](const safe_cast_failure &e) {
+                                      return boost::contains(e.what(), "as the conversion would result in overflow");
+                                  });
         }
     };
     template <typename S>

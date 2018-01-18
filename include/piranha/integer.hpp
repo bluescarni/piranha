@@ -795,7 +795,7 @@ private:
         if (unlikely(!status)) {
             piranha_throw(safe_cast_failure, "the arbitrary-precision integer " + n.to_string()
                                                  + " cannot be converted to the type '" + demangle<To>()
-                                                 + "', as the conversion cannot preserve the original value");
+                                                 + "', as the conversion would result in overflow");
         }
         return retval;
     }
