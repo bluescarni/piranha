@@ -36,13 +36,11 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <iostream>
 #include <limits>
-#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <vector>
 
 #include <mp++/config.hpp>
 #include <mp++/exceptions.hpp>
@@ -55,9 +53,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
-
-static std::mt19937 rng;
-static const int ntries = 1000;
 
 using namespace piranha;
 
@@ -430,45 +425,12 @@ BOOST_AUTO_TEST_CASE(rational_safe_cast_test)
 {
     tuple_for_each(size_types{}, safe_cast_tester{});
 }
-#if 0
-struct serialization_tester {
-    template <typename T>
-    void operator()(const T &) const
-    {
-        using q_type = mp_rational<T::value>;
-        std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-        q_type tmp;
-        for (int i = 0; i < ntries; ++i) {
-            auto num(int_dist(rng)), den(int_dist(rng));
-            q_type q{num, den};
-            std::stringstream ss;
-            {
-                boost::archive::text_oarchive oa(ss);
-                oa << q;
-            }
-            {
-                boost::archive::text_iarchive ia(ss);
-                ia >> tmp;
-            }
-            BOOST_CHECK_EQUAL(tmp, q);
-            // NOTE: we don't check for the static/dynamic character here as the following could happen:
-            // when initing q, a GCD computation is run which could turn num/den into dynamic from static
-            // even if the final result fits into static. Then when deserializing, we would have a static
-            // vs dynamic mismatch.
-        }
-    }
-};
-
-BOOST_AUTO_TEST_CASE(mp_rational_serialization_test)
-{
-    tuple_for_each(size_types{}, serialization_tester());
-}
 
 struct is_unitary_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using q_type = mp_rational<T::value>;
+        using q_type = mppp::rational<T::value>;
         BOOST_CHECK(!math::is_unitary(q_type{}));
         BOOST_CHECK(!math::is_unitary(q_type{-1}));
         BOOST_CHECK(!math::is_unitary(q_type{-1, 5}));
@@ -481,8 +443,28 @@ struct is_unitary_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_rational_is_unitary_test)
+BOOST_AUTO_TEST_CASE(rational_is_unitary_test)
 {
-    tuple_for_each(size_types{}, is_unitary_tester());
+    tuple_for_each(size_types{}, is_unitary_tester{});
 }
-#endif
+
+struct negate_tester {
+    template <typename T>
+    void operator()(const T &) const
+    {
+        using q_type = mppp::rational<T::value>;
+        q_type q1;
+        math::negate(q1);
+        BOOST_CHECK_EQUAL(q1, 0);
+        q1 = q_type{3, 4};
+        math::negate(q1);
+        BOOST_CHECK_EQUAL(q1, (q_type{3, -4}));
+        math::negate(q1);
+        BOOST_CHECK_EQUAL(q1, (q_type{3, 4}));
+    }
+};
+
+BOOST_AUTO_TEST_CASE(rational_negate_test)
+{
+    tuple_for_each(size_types{}, negate_tester{});
+}

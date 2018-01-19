@@ -148,7 +148,7 @@ struct negate_impl<mppp::rational<SSize>> {
      */
     void operator()(mppp::rational<SSize> &q) const
     {
-        q.negate();
+        q.neg();
     }
 };
 
