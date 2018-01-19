@@ -26,11 +26,12 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 
-#define BOOST_TEST_MODULE mp_rational_02_test
+#define BOOST_TEST_MODULE rational_02_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <random>
@@ -38,19 +39,21 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <mp++/exceptions.hpp>
+#include <mp++/rational.hpp>
+
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
 #include <piranha/s11n.hpp>
 
 using namespace piranha;
 
-using boost::archive::binary_oarchive;
 using boost::archive::binary_iarchive;
-using boost::archive::text_oarchive;
+using boost::archive::binary_oarchive;
 using boost::archive::text_iarchive;
-using boost::archive::xml_oarchive;
+using boost::archive::text_oarchive;
 using boost::archive::xml_iarchive;
+using boost::archive::xml_oarchive;
 
 using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integral_constant<std::size_t, 2>,
                               std::integral_constant<std::size_t, 3>, std::integral_constant<std::size_t, 7>,
@@ -80,7 +83,7 @@ struct boost_s11n_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using q_type = mp_rational<T::value>;
+        using q_type = mppp::rational<T::value>;
         BOOST_CHECK((has_boost_save<binary_oarchive, q_type>::value));
         BOOST_CHECK((has_boost_save<binary_oarchive &, q_type>::value));
         BOOST_CHECK((has_boost_save<binary_oarchive &, q_type &>::value));
@@ -115,13 +118,29 @@ struct boost_s11n_tester {
             boost_roundtrip<binary_oarchive, binary_iarchive>(q_type{num, den});
             boost_roundtrip<text_oarchive, text_iarchive>(q_type{num, den});
         }
+        // Error checking.
+        q_type q0{3};
+        q0._get_den() = 0;
+        std::stringstream ss;
+        {
+            binary_oarchive oa(ss);
+            boost_save(oa, q0);
+        }
+        {
+            binary_iarchive ia(ss);
+            BOOST_CHECK_EXCEPTION(
+                boost_load(ia, q0), mppp::zero_division_error, [](const mppp::zero_division_error &e) {
+                    return boost::contains(
+                        e.what(), "a zero denominator was encountered during the deserialisation of a rational");
+                });
+        }
+        BOOST_CHECK_EQUAL(q0, 0);
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_rational_boost_s11n_test)
+BOOST_AUTO_TEST_CASE(rational_boost_s11n_test)
 {
-    init();
-    tuple_for_each(size_types{}, boost_s11n_tester());
+    tuple_for_each(size_types{}, boost_s11n_tester{});
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -142,8 +161,8 @@ struct msgpack_s11n_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using q_type = mp_rational<T::value>;
-        using int_type = typename q_type::int_type;
+        using q_type = mppp::rational<T::value>;
+        using int_type = typename q_type::int_t;
         BOOST_CHECK((has_msgpack_pack<std::stringstream, q_type>::value));
         BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, q_type>::value));
         BOOST_CHECK((has_msgpack_pack<msgpack::sbuffer, q_type &>::value));
@@ -196,8 +215,13 @@ struct msgpack_s11n_tester {
             msgpack_pack(p, int_type{0}, msgpack_format::portable);
             auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
             q_type q{42};
-            BOOST_CHECK_THROW(msgpack_convert(q, oh.get(), msgpack_format::portable), zero_division_error);
-            BOOST_CHECK_EQUAL(q, 42);
+            BOOST_CHECK_EXCEPTION(
+                msgpack_convert(q, oh.get(), msgpack_format::portable), mppp::zero_division_error,
+                [](const mppp::zero_division_error &e) {
+                    return boost::contains(
+                        e.what(), "a zero denominator was encountered during the deserialisation of a rational");
+                });
+            BOOST_CHECK_EQUAL(q, 0);
         }
         {
             // Explicitly canonicalise the value when using binary format.
@@ -215,7 +239,7 @@ struct msgpack_s11n_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_rational_msgpack_s11n_test)
+BOOST_AUTO_TEST_CASE(rational_msgpack_s11n_test)
 {
     tuple_for_each(size_types{}, msgpack_s11n_tester());
 }

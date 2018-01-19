@@ -375,6 +375,9 @@ struct safe_cast_tester {
         BOOST_CHECK_EXCEPTION(safe_cast<int>(q_type{-4} / 3), safe_cast_failure, [](const safe_cast_failure &e) {
             return boost::contains(e.what(), "as the rational value has a non-unitary denominator");
         });
+        BOOST_CHECK_EXCEPTION(safe_cast<z_type>(q_type{-4} / 3), safe_cast_failure, [](const safe_cast_failure &e) {
+            return boost::contains(e.what(), "as the rational value has a non-unitary denominator");
+        });
         BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{-4}), safe_cast_failure);
         BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{4} / 3), safe_cast_failure);
         BOOST_CHECK_THROW(safe_cast<z_type>(q_type{4} / 3), safe_cast_failure);

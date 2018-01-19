@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_RATIONAL_HPP
 #define PIRANHA_RATIONAL_HPP
 
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
@@ -38,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include <mp++/concepts.hpp>
+#include <mp++/exceptions.hpp>
 #include <mp++/integer.hpp>
 #include <mp++/rational.hpp>
 
@@ -295,11 +297,16 @@ private:
     {
         return std::to_string(x);
     }
+    // NOTE: this needs to be here in order for the impl()
+    // overloads below to compile, but it is never called
+    // as conversion from integral to rational can never fail.
+    // LCOV_EXCL_START
     template <std::size_t SSize>
     static std::string to_string(const mppp::integer<SSize> &n)
     {
         return n.to_string();
     }
+    // LCOV_EXCL_STOP
     template <std::size_t SSize>
     static std::string to_string(const mppp::rational<SSize> &q)
     {
@@ -368,49 +375,98 @@ public:
         return impl(x);
     }
 };
-#if 0
+}
+
+namespace boost
+{
+namespace serialization
+{
+
+template <typename Archive, std::size_t SSize>
+inline void save(Archive &ar, const mppp::rational<SSize> &q, unsigned)
+{
+    // Just store numerator and denominator.
+    piranha::boost_save(ar, q.get_num());
+    piranha::boost_save(ar, q.get_den());
+}
+
+template <typename Archive, std::size_t SSize>
+inline void load(Archive &ar, mppp::rational<SSize> &q, unsigned)
+{
+    try {
+        piranha::boost_load(ar, q._get_num());
+        piranha::boost_load(ar, q._get_den());
+        // Run a zero check on the denominator. This is cheap,
+        // so we do it always.
+        if (unlikely(q.get_den().is_zero())) {
+            piranha_throw(mppp::zero_division_error,
+                          "a zero denominator was encountered during the deserialisation of a rational");
+        }
+        if (!std::is_same<Archive, boost::archive::binary_iarchive>::value) {
+            // If the archive is not a binary archive, we want to make sure
+            // that the loaded rational is canonical.
+            q.canonicalise();
+        }
+    } catch (...) {
+        // In case of any error, make sure we leave q in a sane
+        // state before re-throwing.
+        q._get_num().set_zero();
+        q._get_den().set_one();
+        throw;
+    }
+}
+
+template <class Archive, std::size_t SSize>
+inline void serialize(Archive &ar, mppp::rational<SSize> &q, const unsigned int file_version)
+{
+    split_free(ar, q, file_version);
+}
+}
+}
+
+namespace piranha
+{
+
 inline namespace impl
 {
 
 template <typename Archive, std::size_t SSize>
-using mp_rational_boost_save_enabler
-    = enable_if_t<has_boost_save<Archive, typename mp_rational<SSize>::int_type>::value>;
+using rational_boost_save_enabler = enable_if_t<has_boost_save<Archive, typename mppp::rational<SSize>::int_t>::value>;
 
 template <typename Archive, std::size_t SSize>
-using mp_rational_boost_load_enabler
-    = enable_if_t<has_boost_load<Archive, typename mp_rational<SSize>::int_type>::value>;
+using rational_boost_load_enabler = enable_if_t<has_boost_load<Archive, typename mppp::rational<SSize>::int_t>::value>;
 }
 
-/// Specialisation of piranha::boost_save() for piranha::mp_rational.
+/// Specialisation of piranha::boost_save() for mp++'s rationals.
 /**
  * \note
- * This specialisation is enabled only if the numerator/denominator type of piranha::mp_rational satisfies
- * piranha::has_boost_save.
+ * This specialisation is enabled only if the numerator/denominator type of
+ * the mp++ rational type satisfies piranha::has_boost_save.
  *
  * The rational will be serialized as a numerator/denominator pair.
  *
  * @throws unspecified any exception thrown by piranha::boost_save().
  */
 template <typename Archive, std::size_t SSize>
-struct boost_save_impl<Archive, mp_rational<SSize>, mp_rational_boost_save_enabler<Archive, SSize>>
-    : boost_save_via_boost_api<Archive, mp_rational<SSize>> {
+struct boost_save_impl<Archive, mppp::rational<SSize>, rational_boost_save_enabler<Archive, SSize>>
+    : boost_save_via_boost_api<Archive, mppp::rational<SSize>> {
 };
 
-/// Specialisation of piranha::boost_load() for piranha::mp_rational.
+/// Specialisation of piranha::boost_load() for mp++'s rationals.
 /**
  * \note
- * This specialisation is enabled only if the numerator/denominator type of piranha::mp_rational satisfies
- * piranha::has_boost_load.
+ * This specialisation is enabled only if the numerator/denominator type of
+ * the mp++ rational type satisfies piranha::has_boost_load.
  *
- * If \p Archive is boost::archive::binary_iarchive, the serialized numerator/denominator pair is loaded
+ * If \p Archive is ``boost::archive::binary_iarchive``, the serialized numerator/denominator pair is loaded
  * as-is, without canonicality checks. Otherwise, the rational will be canonicalised after deserialization.
  *
- * @throws unspecified any exception thrown by piranha::boost_load() or by the constructor of piranha::mp_rational
- * from numerator and denominator.
+ * @throws mppp::zero_division_error if a zero denominator is detected.
+ * @throws unspecified any exception thrown by piranha::boost_load().
  */
 template <typename Archive, std::size_t SSize>
-struct boost_load_impl<Archive, mp_rational<SSize>, mp_rational_boost_load_enabler<Archive, SSize>>
-    : boost_load_via_boost_api<Archive, mp_rational<SSize>> {
+struct boost_load_impl<Archive, mppp::rational<SSize>, rational_boost_load_enabler<Archive, SSize>>
+    : boost_load_via_boost_api<Archive, mppp::rational<SSize>> {
 };
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -418,65 +474,93 @@ struct boost_load_impl<Archive, mp_rational<SSize>, mp_rational_boost_load_enabl
 inline namespace impl
 {
 
-template <typename Stream, typename T>
-using mp_rational_msgpack_pack_enabler
-    = enable_if_t<conjunction<is_mp_rational<T>, is_detected<msgpack_pack_member_t, Stream, T>>::value>;
+template <typename Stream, std::size_t SSize>
+using rational_msgpack_pack_enabler = enable_if_t<
+    conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename mppp::rational<SSize>::int_t>>::value>;
 
-template <typename T>
-using mp_rational_msgpack_convert_enabler
-    = enable_if_t<conjunction<is_mp_rational<T>, is_detected<msgpack_convert_member_t, T>>::value>;
+template <std::size_t SSize>
+using rational_msgpack_convert_enabler = enable_if_t<has_msgpack_convert<typename mppp::rational<SSize>::int_t>::value>;
 }
 
-/// Specialisation of piranha::msgpack_pack() for piranha::mp_rational.
+/// Specialisation of piranha::msgpack_pack() for mp++'s rationals.
 /**
  * \note
- * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
- * piranha::mp_rational::msgpack_pack() method.
+ * This specialisation is enabled only if \p Stream satisfies piranha::is_msgpack_stream and the type representing the
+ * numerator and denominator of the rational satisfies piranha::has_msgpack_pack.
  */
-template <typename Stream, typename T>
-struct msgpack_pack_impl<Stream, T, mp_rational_msgpack_pack_enabler<Stream, T>> {
+template <typename Stream, std::size_t SSize>
+struct msgpack_pack_impl<Stream, mppp::rational<SSize>, rational_msgpack_pack_enabler<Stream, SSize>> {
     /// Call operator.
     /**
-     * The call operator will use the piranha::mp_rational::msgpack_pack() method of \p q.
+     * This method will pack \p q into \p p as a numerator-denominator pair.
      *
-     * @param p the source <tt>msgpack::packer</tt>.
+     * @param p the target <tt>msgpack::packer</tt>.
      * @param q the input rational.
      * @param f the desired piranha::msgpack_format.
      *
-     * @throws unspecified any exception thrown by piranha::mp_rational::msgpack_pack().
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::packer</tt>,
+     * - piranha::msgpack_pack().
      */
-    void operator()(msgpack::packer<Stream> &p, const T &q, msgpack_format f) const
+    void operator()(msgpack::packer<Stream> &p, const mppp::rational<SSize> &q, msgpack_format f) const
     {
-        q.msgpack_pack(p, f);
+        p.pack_array(2u);
+        piranha::msgpack_pack(p, q.get_num(), f);
+        piranha::msgpack_pack(p, q.get_den(), f);
     }
 };
 
-/// Specialisation of piranha::msgpack_convert() for piranha::mp_rational.
+/// Specialisation of piranha::msgpack_convert() for for mp++'s rationals.
 /**
  * \note
- * This specialisation is enabled only if \p T is an instance of piranha::mp_rational supporting the
- * piranha::mp_rational::msgpack_convert() method.
+ * This specialisation is enabled only if the type representing the
+ * numerator and denominator of the rational satisfies piranha::has_msgpack_convert.
  */
-template <typename T>
-struct msgpack_convert_impl<T, mp_rational_msgpack_convert_enabler<T>> {
+template <std::size_t SSize>
+struct msgpack_convert_impl<mppp::rational<SSize>, rational_msgpack_convert_enabler<SSize>> {
     /// Call operator.
     /**
-     * The call operator will use the piranha::mp_rational::msgpack_convert() method of \p q.
+     * This method will convert \p o into \p q. If \p f is piranha::msgpack_format::portable
+     * this method will ensure that the deserialized rational is in canonical form,
+     * otherwise no check will be performed.
      *
-     * @param q the target rational.
      * @param o the source <tt>msgpack::object</tt>.
+     * @param q the output rational.
      * @param f the desired piranha::msgpack_format.
      *
-     * @throws unspecified any exception thrown by piranha::mp_rational::msgpack_convert().
+     * @throws mppp::zero_division_error if a zero denominator is detected.
+     * @throws unspecified any exception thrown by:
+     * - the public interface of <tt>msgpack::object</tt>,
+     * - piranha::msgpack_convert().
      */
-    void operator()(T &q, const msgpack::object &o, msgpack_format f) const
+    void operator()(mppp::rational<SSize> &q, const msgpack::object &o, msgpack_format f) const
     {
-        q.msgpack_convert(o, f);
+        PIRANHA_MAYBE_TLS std::array<msgpack::object, 2u> v;
+        o.convert(v);
+        try {
+            piranha::msgpack_convert(q._get_num(), v[0], f);
+            piranha::msgpack_convert(q._get_den(), v[1], f);
+            // Always run the cheap zero den detection.
+            if (unlikely(q.get_den().is_zero())) {
+                piranha_throw(mppp::zero_division_error,
+                              "a zero denominator was encountered during the deserialisation of a rational");
+            }
+            if (f != msgpack_format::binary) {
+                // If the serialisation format is not binary, we want to make sure
+                // that the loaded rational is canonical.
+                q.canonicalise();
+            }
+        } catch (...) {
+            // In case of any error, make sure we leave q in a sane
+            // state before re-throwing.
+            q._get_num().set_zero();
+            q._get_den().set_one();
+            throw;
+        }
     }
 };
 
 #endif
-#endif // If zero.
 }
 
 #endif
