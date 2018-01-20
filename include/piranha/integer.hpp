@@ -516,9 +516,9 @@ namespace boost
 namespace serialization
 {
 
-template <typename Archive, std::size_t SSize,
-          piranha::enable_if_t<std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
-inline void save(Archive &ar, const mppp::integer<SSize> &n, unsigned)
+// Binary serialisation.
+template <std::size_t SSize>
+inline void save(boost::archive::binary_oarchive &ar, const mppp::integer<SSize> &n, unsigned)
 {
     PIRANHA_MAYBE_TLS std::vector<char> tmp_v;
     // Make sure we use exactly the amount of storage required
@@ -532,9 +532,8 @@ inline void save(Archive &ar, const mppp::integer<SSize> &n, unsigned)
     ar << tmp_v;
 }
 
-template <typename Archive, std::size_t SSize,
-          piranha::enable_if_t<std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
-inline void load(Archive &ar, mppp::integer<SSize> &n, unsigned)
+template <std::size_t SSize>
+inline void load(boost::archive::binary_iarchive &ar, mppp::integer<SSize> &n, unsigned)
 {
     PIRANHA_MAYBE_TLS std::vector<char> tmp_v;
     // Load the data in the temp buffer from the archive.
@@ -544,8 +543,7 @@ inline void load(Archive &ar, mppp::integer<SSize> &n, unsigned)
 }
 
 // Portable serialization.
-template <class Archive, std::size_t SSize,
-          piranha::enable_if_t<!std::is_same<Archive, boost::archive::binary_oarchive>::value, int> = 0>
+template <class Archive, std::size_t SSize>
 inline void save(Archive &ar, const mppp::integer<SSize> &n, unsigned)
 {
     // NOTE: here we have an unnecessary copy (but at least we are avoiding memory allocations).
@@ -558,8 +556,7 @@ inline void save(Archive &ar, const mppp::integer<SSize> &n, unsigned)
     piranha::boost_save(ar, tmp_s);
 }
 
-template <class Archive, std::size_t SSize,
-          piranha::enable_if_t<!std::is_same<Archive, boost::archive::binary_iarchive>::value, int> = 0>
+template <class Archive, std::size_t SSize>
 inline void load(Archive &ar, mppp::integer<SSize> &n, unsigned)
 {
     PIRANHA_MAYBE_TLS std::string tmp;
