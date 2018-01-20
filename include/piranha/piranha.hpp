@@ -29,13 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_PIRANHA_HPP
 #define PIRANHA_PIRANHA_HPP
 
-/** \file piranha.hpp
- * \brief Global piranha header file.
- *
- * Include this file to import piranha's entire public interface.
- */
-
-/// Root piranha namespace.
+// Root piranha namespace.
 /*
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly
  * that
@@ -229,24 +223,10 @@ see https://www.gnu.org/licenses/. */
  * the return type as well for consistency (see lambdify docs) -> actually start using sphinx napoleon - UPDATE:
  * note also that the settings' methods' docstrings need to be filled out properly with exception specs, return types,
  * etc.
- * \todo "quick install" should not be the title of the getting started section in sphinx
- * \todo it seems like in C++17 we can finally have an automatically inited global class in which to tuck the init
- * code (and probably the thread pool as well), via inline variables. Probably we will need to define it in a separate
- * header and then make sure to include that header in every piranha public header.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
  * \todo guidelines for type traits modernization:
- * - beautify enablers,
- * - replace std::decay with uncvref_t,
- * - check returnability,
  * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
  *   in the same fashion as the s11n type traits.
- * \todo instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
- * atexit() function to clean up custom derivatives before static destruction starts. We could register the atexit
- * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each
- * time. Or maybe when the static derivative registry is constructed the first time. Same goes for pow_caches.
- * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
- * work in a more generic fashion (or otherwise we need to make clear). More generally, we need to think if there's
- * a robust way of sorting out the init/destruction sequence for the global state. Destruction is harder.
  */
 namespace piranha
 {
@@ -263,11 +243,13 @@ inline namespace impl
 {
 }
 
-/// Inline namespace for the definition of user-defined literals.
+// Inline namespace for the definition of user-defined literals.
 inline namespace literals
 {
 }
 }
+
+#include <mp++/config.hpp>
 
 #include <piranha/array_key.hpp>
 #include <piranha/base_series_multiplier.hpp>
@@ -282,6 +264,7 @@ inline namespace literals
 #include <piranha/exceptions.hpp>
 #include <piranha/hash_set.hpp>
 #include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/ipow_substitutable_series.hpp>
 #include <piranha/is_cf.hpp>
@@ -294,15 +277,16 @@ inline namespace literals
 #include <piranha/math.hpp>
 #include <piranha/memory.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/runtime_info.hpp>
 #include <piranha/s11n.hpp>
