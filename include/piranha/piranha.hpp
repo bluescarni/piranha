@@ -228,26 +228,6 @@ see https://www.gnu.org/licenses/. */
  * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
  *   in the same fashion as the s11n type traits.
  */
-namespace piranha
-{
-
-// Namespace for implementation details.
-// Classes and functions defined in this namespace are non-documented implementation details.
-// Users should never employ functionality implemented in this namespace.
-namespace detail
-{
-}
-
-// Same as above, new version as inline namespace so we don't have to use detail:: everywhere.
-inline namespace impl
-{
-}
-
-// Inline namespace for the definition of user-defined literals.
-inline namespace literals
-{
-}
-}
 
 #include <mp++/config.hpp>
 
