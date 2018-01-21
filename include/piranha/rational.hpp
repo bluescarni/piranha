@@ -416,7 +416,7 @@ inline void load(Archive &ar, mppp::rational<SSize> &q, unsigned)
     }
 }
 
-template <class Archive, std::size_t SSize>
+template <typename Archive, std::size_t SSize>
 inline void serialize(Archive &ar, mppp::rational<SSize> &q, const unsigned int file_version)
 {
     split_free(ar, q, file_version);

@@ -543,7 +543,7 @@ inline void load(boost::archive::binary_iarchive &ar, mppp::integer<SSize> &n, u
 }
 
 // Portable serialization.
-template <class Archive, std::size_t SSize>
+template <typename Archive, std::size_t SSize>
 inline void save(Archive &ar, const mppp::integer<SSize> &n, unsigned)
 {
     // NOTE: here we have an unnecessary copy (but at least we are avoiding memory allocations).
@@ -556,7 +556,7 @@ inline void save(Archive &ar, const mppp::integer<SSize> &n, unsigned)
     piranha::boost_save(ar, tmp_s);
 }
 
-template <class Archive, std::size_t SSize>
+template <typename Archive, std::size_t SSize>
 inline void load(Archive &ar, mppp::integer<SSize> &n, unsigned)
 {
     PIRANHA_MAYBE_TLS std::string tmp;
@@ -564,7 +564,7 @@ inline void load(Archive &ar, mppp::integer<SSize> &n, unsigned)
     n = mppp::integer<SSize>{tmp};
 }
 
-template <class Archive, std::size_t SSize>
+template <typename Archive, std::size_t SSize>
 inline void serialize(Archive &ar, mppp::integer<SSize> &n, const unsigned int file_version)
 {
     split_free(ar, n, file_version);
