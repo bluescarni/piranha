@@ -34,8 +34,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include <piranha/config.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/type_traits.hpp>
 

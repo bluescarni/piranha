@@ -34,13 +34,10 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <stdexcept>
 
-#include <piranha/init.hpp>
-
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(sia_test_00)
 {
-    init();
     {
         // Short.
         using int_type = short;

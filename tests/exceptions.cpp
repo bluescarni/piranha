@@ -36,25 +36,18 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include <piranha/init.hpp>
-
 using namespace piranha;
 
 struct exc0 {
-    exc0(int, double)
-    {
-    }
+    exc0(int, double) {}
 };
 
 struct exc1 {
-    exc1(int)
-    {
-    }
+    exc1(int) {}
 };
 
 BOOST_AUTO_TEST_CASE(exception_test_00)
 {
-    init();
     // not_implemented_error.
     BOOST_CHECK((std::is_constructible<not_implemented_error, std::string>::value));
     BOOST_CHECK((std::is_constructible<not_implemented_error, char *>::value));

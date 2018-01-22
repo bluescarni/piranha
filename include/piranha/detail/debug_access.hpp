@@ -26,20 +26,21 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_DEBUG_ACCESS_HPP
-#define PIRANHA_DEBUG_ACCESS_HPP
+#ifndef PIRANHA_DETAIL_DEBUG_ACCESS_HPP
+#define PIRANHA_DETAIL_DEBUG_ACCESS_HPP
 
 namespace piranha
 {
 
-/// Debug class.
-/**
- * Used to access private and protected class members for debug purposes.
- */
+inline namespace impl
+{
+
+// Used to access private and protected class members for debug purposes.
 template <typename T>
 class debug_access
 {
 };
+}
 }
 
 #endif

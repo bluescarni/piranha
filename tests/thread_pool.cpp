@@ -41,9 +41,12 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
+#include <mp++/config.hpp>
+
+#include <piranha/integer.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/runtime_info.hpp>
 #include <piranha/thread_management.hpp>
 #include <piranha/type_traits.hpp>
@@ -99,7 +102,6 @@ struct cref_test_functor {
 
 BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 {
-    init();
     // A few simple tests.
     auto simple_00 = []() {};
     BOOST_CHECK((is_detected<enqueue_t, decltype(simple_00)>::value));
@@ -204,12 +206,14 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
         tq.enqueue([](noncopyable &) noexcept {}, std::ref(nc));
         tq.enqueue([](const noncopyable &) noexcept {}, std::cref(nc));
     }
+#if defined(MPPP_WITH_MPFR)
     {
         task_queue tq(0, true);
         for (int i = 0; i < 100; ++i) {
-            tq.enqueue([]() { real{}.pi(); });
+            tq.enqueue([]() { mppp::real_pi(500); });
         }
     }
+#endif
 #if !defined(__APPLE_CC__)
     // Check the binding.
     const unsigned hc = runtime_info::get_hardware_concurrency();

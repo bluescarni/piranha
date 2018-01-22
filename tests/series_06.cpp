@@ -44,10 +44,9 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
@@ -142,7 +141,6 @@ struct mock_cf3 {
 
 BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
 {
-    init();
     using pt1 = polynomial<integer, monomial<int>>;
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, pt1>::value));
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, pt1 &>::value));

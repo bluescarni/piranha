@@ -37,13 +37,10 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <vector>
 
-#include <piranha/init.hpp>
-
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(symbol_utils_ss_merge_test)
 {
-    init();
     // The empty test.
     auto ret = ss_merge(symbol_fset{}, symbol_fset{});
     BOOST_CHECK(std::get<0>(ret).empty());

@@ -53,14 +53,13 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -103,7 +102,6 @@ struct yes_negate {
 
 BOOST_AUTO_TEST_CASE(math_negate_test)
 {
-    init();
     boost::fusion::for_each(arithmetic_values, check_negate());
     BOOST_CHECK(!has_negate<no_negate>::value);
     BOOST_CHECK(!has_negate<no_negate2>::value);

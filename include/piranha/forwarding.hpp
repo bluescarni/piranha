@@ -38,6 +38,8 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <piranha/detail/init.hpp>
+
 /// Constructor-forwarding macro.
 /**
  * This macro will declare and define an explicit constructor for class \p Derived that accepts
@@ -48,11 +50,10 @@ see https://www.gnu.org/licenses/. */
  * the constructor will be disabled.
  */
 #define PIRANHA_FORWARDING_CTOR(Derived, Base)                                                                         \
-    template <                                                                                                         \
-        typename T_, typename... Args_,                                                                                \
-        typename = typename std::                                                                                      \
-            enable_if<std::is_constructible<Base, T_ &&, Args_ &&...>::value                                           \
-                      && (sizeof...(Args_) || !std::is_base_of<Derived, typename std::decay<T_>::type>::value)>::type> \
+    template <typename T_, typename... Args_,                                                                          \
+              typename = typename std::enable_if<                                                                      \
+                  std::is_constructible<Base, T_ &&, Args_ &&...>::value                                               \
+                  && (sizeof...(Args_) || !std::is_base_of<Derived, typename std::decay<T_>::type>::value)>::type>     \
     explicit Derived(T_ &&arg0, Args_ &&... args) : Base(std::forward<T_>(arg0), std::forward<Args_>(args)...)         \
     {                                                                                                                  \
     }

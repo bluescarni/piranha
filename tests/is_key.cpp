@@ -34,7 +34,6 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <functional>
 #include <iostream>
-#include <piranha/init.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <vector>
 
@@ -203,7 +202,6 @@ struct hash<key08> {
 
 BOOST_AUTO_TEST_CASE(is_key_test_00)
 {
-    init();
     BOOST_CHECK(!is_key<void>::value);
     BOOST_CHECK(!is_key<int>::value);
     BOOST_CHECK(!is_key<double>::value);

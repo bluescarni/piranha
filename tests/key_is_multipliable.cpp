@@ -37,7 +37,6 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <vector>
 
-#include <piranha/init.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/symbol_utils.hpp>
 
@@ -131,7 +130,6 @@ struct hash<mock_key_01> {
 
 BOOST_AUTO_TEST_CASE(key_is_multipliable_test_00)
 {
-    init();
     BOOST_CHECK(is_key<mock_key>::value);
     BOOST_CHECK(!(key_is_multipliable<double, mock_key>::value));
     BOOST_CHECK(is_key<mock_key_00>::value);

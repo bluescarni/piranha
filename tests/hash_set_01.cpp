@@ -52,8 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/thread_pool.hpp>
 #include <piranha/type_traits.hpp>
@@ -69,9 +68,7 @@ class custom_string : public std::string
 public:
     custom_string() = default;
     custom_string(const custom_string &) = default;
-    custom_string(custom_string &&other) noexcept : std::string(std::move(other))
-    {
-    }
+    custom_string(custom_string &&other) noexcept : std::string(std::move(other)) {}
     template <typename... Args>
     custom_string(Args &&... params) : std::string(std::forward<Args>(params)...)
     {
@@ -82,9 +79,7 @@ public:
         std::string::operator=(std::move(other));
         return *this;
     }
-    ~custom_string() noexcept
-    {
-    }
+    ~custom_string() noexcept {}
 };
 
 namespace std
@@ -210,21 +205,15 @@ struct random_failure {
     {
         throw;
     }
-    random_failure(int n) : m_str(boost::lexical_cast<std::string>(n))
-    {
-    }
+    random_failure(int n) : m_str(boost::lexical_cast<std::string>(n)) {}
     random_failure(const random_failure &rf) : m_str(rf.m_str)
     {
         if (!dist(rng)) {
             throw std::runtime_error("fail!");
         }
     }
-    random_failure(random_failure &&rf) noexcept : m_str(std::move(rf.m_str))
-    {
-    }
-    ~random_failure() noexcept
-    {
-    }
+    random_failure(random_failure &&rf) noexcept : m_str(std::move(rf.m_str)) {}
+    ~random_failure() noexcept {}
     std::size_t hash() const
     {
         return static_cast<std::size_t>(boost::lexical_cast<int>(m_str));
@@ -256,7 +245,6 @@ struct hash<random_failure> {
 
 BOOST_AUTO_TEST_CASE(hash_set_constructors_test)
 {
-    init();
     // Def ctor.
     hash_set<custom_string> ht;
     BOOST_CHECK(ht.begin() == ht.end());

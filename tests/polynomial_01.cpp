@@ -41,16 +41,17 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
+#include <mp++/rational.hpp>
+
 #include <piranha/base_series_multiplier.hpp>
-#include <piranha/debug_access.hpp>
+#include <piranha/detail/debug_access.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
@@ -185,7 +186,6 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(polynomial_constructors_test)
 {
-    init();
     boost::mpl::for_each<cf_types>(constructor_tester());
 }
 
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(polynomial_degree_test)
 }
 
 struct multiplication_tester {
-    template <typename Cf, typename std::enable_if<!is_mp_rational<Cf>::value, int>::type = 0>
+    template <typename Cf, typename std::enable_if<!mppp::is_rational<Cf>::value, int>::type = 0>
     void operator()(const Cf &)
     {
         // NOTE: this test is going to be exact in case of coefficients cancellations with double
@@ -404,7 +404,7 @@ struct multiplication_tester {
             BOOST_CHECK(tmp1 == p_type{tmp_alt});
         }
     }
-    template <typename Cf, typename std::enable_if<is_mp_rational<Cf>::value, int>::type = 0>
+    template <typename Cf, typename std::enable_if<mppp::is_rational<Cf>::value, int>::type = 0>
     void operator()(const Cf &)
     {
     }

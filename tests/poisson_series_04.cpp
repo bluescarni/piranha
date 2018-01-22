@@ -43,14 +43,13 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -84,7 +83,6 @@ struct mock_cf {
 
 BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 {
-    init();
     using math::cos;
     using math::partial;
     using math::pow;

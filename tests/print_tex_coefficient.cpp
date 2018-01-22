@@ -36,8 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/real.hpp>
 
 using namespace piranha;
@@ -57,7 +56,6 @@ std::ostream &operator<<(std::ostream &, trivial_with_stream &);
 
 BOOST_AUTO_TEST_CASE(print_tex_coefficient_main_test)
 {
-    init();
     std::ostringstream oss;
     print_tex_coefficient(oss, -10);
     BOOST_CHECK_EQUAL(oss.str(), "-10");

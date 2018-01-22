@@ -34,22 +34,26 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 
 using namespace piranha;
-using math::pow;
+
 using math::invert;
+using math::pow;
+
+static inline real operator"" _r(const char *s)
+{
+    return real(s, 100);
+}
 
 BOOST_AUTO_TEST_CASE(invert_test_00)
 {
-    init();
     // Some tests with non-piranha types.
     BOOST_CHECK(is_invertible<float>::value);
     BOOST_CHECK(is_invertible<double>::value);
@@ -61,6 +65,7 @@ BOOST_AUTO_TEST_CASE(invert_test_00)
     BOOST_CHECK_EQUAL(math::pow(1.5l, -1), invert(1.5l));
     BOOST_CHECK((std::is_same<long double, decltype(invert(1.5l))>::value));
     BOOST_CHECK(!is_invertible<std::string>::value);
+    BOOST_CHECK(!is_invertible<void>::value);
     // Test with piranha's scalar types.
     BOOST_CHECK(is_invertible<integer>::value);
     BOOST_CHECK(is_invertible<rational>::value);

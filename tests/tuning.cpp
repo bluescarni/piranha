@@ -34,13 +34,10 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <thread>
 
-#include <piranha/init.hpp>
-
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(tuning_parallel_memory_set_test)
 {
-    init();
     BOOST_CHECK(tuning::get_parallel_memory_set());
     tuning::set_parallel_memory_set(false);
     BOOST_CHECK(!tuning::get_parallel_memory_set());

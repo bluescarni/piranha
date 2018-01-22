@@ -35,11 +35,10 @@ see https://www.gnu.org/licenses/. */
 #include <boost/mpl/vector.hpp>
 #include <stdexcept>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/symbol_utils.hpp>
 
@@ -129,7 +128,6 @@ struct um_tester {
 
 BOOST_AUTO_TEST_CASE(polynomial_multiplier_untruncated_test)
 {
-    init();
     boost::mpl::for_each<cf_types>(um_tester());
     BOOST_CHECK((!has_untruncated_multiplication<polynomial<short, k_monomial>>()));
     BOOST_CHECK((!has_untruncated_multiplication<polynomial<char, k_monomial>>()));

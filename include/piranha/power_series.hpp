@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/safe_integral_adder.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/math.hpp>

@@ -31,6 +31,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <type_traits>
 
+#include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/math.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
@@ -55,18 +57,21 @@ template <typename T>
 class is_cf
 {
     static const bool implementation_defined
-        = is_container_element<T>::value && has_print_coefficient<T>::value && has_print_tex_coefficient<T>::value
-          && has_is_zero<T>::value && has_negate<T>::value && is_equality_comparable<T>::value && is_addable<T>::value
-          && is_addable_in_place<T>::value && is_subtractable_in_place<T>::value && is_subtractable<T>::value
-          && std::is_constructible<T, int>::value;
+        = conjunction<is_container_element<T>, has_print_coefficient<T>, has_print_tex_coefficient<T>, has_is_zero<T>,
+                      has_negate<T>, is_equality_comparable<T>, is_addable<T>, is_addable_in_place<T>,
+                      is_subtractable_in_place<T>, is_subtractable<T>, std::is_constructible<T, const int &>>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = implementation_defined;
+    static constexpr bool value = implementation_defined;
 };
 
+#if PIRANHA_CPLUSPLUS < 201703L
+
 template <typename T>
-const bool is_cf<T>::value;
+constexpr bool is_cf<T>::value;
+
+#endif
 }
 
 #endif

@@ -43,13 +43,12 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/s11n.hpp>
@@ -135,7 +134,6 @@ struct hash<fake_int> {
 
 BOOST_AUTO_TEST_CASE(power_series_test_02)
 {
-    init();
     // Check the rational degree.
     typedef g_series_type<double, rational> stype0;
     BOOST_CHECK((has_degree<stype0>::value));

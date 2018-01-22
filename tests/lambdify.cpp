@@ -38,17 +38,16 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 
 using namespace piranha;
-using math::lambdify;
 using math::evaluate;
+using math::lambdify;
 
 static std::mt19937 rng;
 
@@ -78,7 +77,6 @@ struct callable_generic {
 
 BOOST_AUTO_TEST_CASE(lambdify_test_00)
 {
-    init();
     {
         using p_type = polynomial<integer, k_monomial>;
         p_type x{"x"}, y{"y"}, z{"z"};
@@ -129,17 +127,18 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
         // Various checks with the extra symbol map.
         using p_type = polynomial<integer, k_monomial>;
         p_type x{"x"}, y{"y"}, z{"z"};
-        auto l0 = lambdify<integer>(x + y + z, {"x"}, {{"z",
-                                                        [](const std::vector<integer> &v) -> integer {
-                                                            BOOST_CHECK_EQUAL(v.size(), 1u);
-                                                            // z is 3*x.
-                                                            return v[0] * 3_z;
-                                                        }},
-                                                       {"y", [](const std::vector<integer> &v) -> integer {
-                                                            BOOST_CHECK_EQUAL(v.size(), 1u);
-                                                            // y is 2*x.
-                                                            return v[0] * 2_z;
-                                                        }}});
+        auto l0 = lambdify<integer>(x + y + z, {"x"},
+                                    {{"z",
+                                      [](const std::vector<integer> &v) -> integer {
+                                          BOOST_CHECK_EQUAL(v.size(), 1u);
+                                          // z is 3*x.
+                                          return v[0] * 3_z;
+                                      }},
+                                     {"y", [](const std::vector<integer> &v) -> integer {
+                                          BOOST_CHECK_EQUAL(v.size(), 1u);
+                                          // y is 2*x.
+                                          return v[0] * 2_z;
+                                      }}});
         BOOST_CHECK_EQUAL(l0({1_z}), 6);
         BOOST_CHECK_EQUAL(l0({2_z}), 12);
         BOOST_CHECK_EQUAL(l0({0_z}), 0);
@@ -153,54 +152,59 @@ BOOST_AUTO_TEST_CASE(lambdify_test_00)
         // Too many values provided.
         BOOST_CHECK_THROW(l1({1_z, 2_z}), std::invalid_argument);
         // Check an init list that contains duplicates.
-        BOOST_CHECK_EQUAL(lambdify<integer>(x + y, {"x"}, {{"y",
-                                                            [](const std::vector<integer> &v) -> integer {
-                                                                BOOST_CHECK_EQUAL(v.size(), 1u);
-                                                                return 4_z;
-                                                            }},
-                                                           {"y",
-                                                            [](const std::vector<integer> &v) -> integer {
-                                                                BOOST_CHECK_EQUAL(v.size(), 1u);
-                                                                return 3_z;
-                                                            }}})({1_z}),
+        BOOST_CHECK_EQUAL(lambdify<integer>(x + y, {"x"},
+                                            {{"y",
+                                              [](const std::vector<integer> &v) -> integer {
+                                                  BOOST_CHECK_EQUAL(v.size(), 1u);
+                                                  return 4_z;
+                                              }},
+                                             {"y",
+                                              [](const std::vector<integer> &v) -> integer {
+                                                  BOOST_CHECK_EQUAL(v.size(), 1u);
+                                                  return 3_z;
+                                              }}})({1_z}),
                           5);
         // Check with extra non-evaluated args.
-        BOOST_CHECK_EQUAL(lambdify<integer>(x + y, {"x", "z"}, {{"y",
-                                                                 [](const std::vector<integer> &v) -> integer {
-                                                                     BOOST_CHECK_EQUAL(v.size(), 2u);
-                                                                     return 4_z;
-                                                                 }},
-                                                                {"t",
-                                                                 [](const std::vector<integer> &v) -> integer {
-                                                                     BOOST_CHECK_EQUAL(v.size(), 2u);
-                                                                     return 3_z;
-                                                                 }}})({1_z, 123_z}),
+        BOOST_CHECK_EQUAL(lambdify<integer>(x + y, {"x", "z"},
+                                            {{"y",
+                                              [](const std::vector<integer> &v) -> integer {
+                                                  BOOST_CHECK_EQUAL(v.size(), 2u);
+                                                  return 4_z;
+                                              }},
+                                             {"t",
+                                              [](const std::vector<integer> &v) -> integer {
+                                                  BOOST_CHECK_EQUAL(v.size(), 2u);
+                                                  return 3_z;
+                                              }}})({1_z, 123_z}),
                           5);
         // Check with extra symbol already in positional args.
-        BOOST_CHECK_THROW(lambdify<integer>(x + y, {"x", "y"}, {{"y",
-                                                                 [](const std::vector<integer> &v) -> integer {
-                                                                     BOOST_CHECK_EQUAL(v.size(), 2u);
-                                                                     return 4_z;
-                                                                 }}})({1_z, 123_z}),
+        BOOST_CHECK_THROW(lambdify<integer>(x + y, {"x", "y"},
+                                            {{"y",
+                                              [](const std::vector<integer> &v) -> integer {
+                                                  BOOST_CHECK_EQUAL(v.size(), 2u);
+                                                  return 4_z;
+                                              }}})({1_z, 123_z}),
                           std::invalid_argument);
         // Another error check.
-        BOOST_CHECK_THROW(lambdify<integer>(x + y, {"x"}, {{"y",
-                                                            [](const std::vector<integer> &v) -> integer {
-                                                                BOOST_CHECK_EQUAL(v.size(), 2u);
-                                                                return 4_z;
-                                                            }}})({1_z, 123_z}),
+        BOOST_CHECK_THROW(lambdify<integer>(x + y, {"x"},
+                                            {{"y",
+                                              [](const std::vector<integer> &v) -> integer {
+                                                  BOOST_CHECK_EQUAL(v.size(), 2u);
+                                                  return 4_z;
+                                              }}})({1_z, 123_z}),
                           std::invalid_argument);
         // A test with only custom symbols.
-        BOOST_CHECK_EQUAL(lambdify<integer>(x + y, {}, {{"x",
-                                                         [](const std::vector<integer> &v) -> integer {
-                                                             BOOST_CHECK_EQUAL(v.size(), 0u);
-                                                             return 4_z;
-                                                         }},
-                                                        {"y",
-                                                         [](const std::vector<integer> &v) -> integer {
-                                                             BOOST_CHECK_EQUAL(v.size(), 0u);
-                                                             return 3_z;
-                                                         }}})({}),
+        BOOST_CHECK_EQUAL(lambdify<integer>(x + y, {},
+                                            {{"x",
+                                              [](const std::vector<integer> &v) -> integer {
+                                                  BOOST_CHECK_EQUAL(v.size(), 0u);
+                                                  return 4_z;
+                                              }},
+                                             {"y",
+                                              [](const std::vector<integer> &v) -> integer {
+                                                  BOOST_CHECK_EQUAL(v.size(), 0u);
+                                                  return 3_z;
+                                              }}})({}),
                           7);
         // A couple of tests with nothing.
         BOOST_CHECK_EQUAL(lambdify<integer>(p_type{}, {})({}), 0);
@@ -280,8 +284,9 @@ BOOST_AUTO_TEST_CASE(lambdify_test_02)
     auto l1 = lambdify<integer>(x + y + z, {"z", "y", "x"}, {{"t", [](const std::vector<integer> &) { return 1_z; }}});
     en = l1.get_extra_names();
     BOOST_CHECK(en == std::vector<std::string>{"t"});
-    auto l2 = lambdify<integer>(x + y + z, {"z", "y", "x"}, {{"t", [](const std::vector<integer> &) { return 1_z; }},
-                                                             {"a", [](const std::vector<integer> &) { return 1_z; }}});
+    auto l2 = lambdify<integer>(x + y + z, {"z", "y", "x"},
+                                {{"t", [](const std::vector<integer> &) { return 1_z; }},
+                                 {"a", [](const std::vector<integer> &) { return 1_z; }}});
     en = l2.get_extra_names();
     BOOST_CHECK((en == std::vector<std::string>{"t", "a"} || en == std::vector<std::string>{"a", "t"}));
 }

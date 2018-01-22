@@ -46,14 +46,13 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -230,7 +229,6 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(monomial_constructor_test)
 {
-    init();
     tuple_for_each(expo_types{}, constructor_tester{});
 }
 

@@ -59,17 +59,17 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/convert_to.hpp>
-#include <piranha/debug_access.hpp>
-#include <piranha/detail/init_data.hpp>
+#include <piranha/detail/debug_access.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/series_fwd.hpp>
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/hash_set.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
@@ -1690,10 +1690,6 @@ private:
     // Set of checks to be run on destruction in debug mode.
     bool destruction_checks() const
     {
-        // Run destruction checks only if we are not in shutdown.
-        if (shutdown()) {
-            return true;
-        }
         for (auto it = m_container.begin(); it != m_container.end(); ++it) {
             if (!it->is_compatible(m_symbol_set)) {
                 std::cout << "Term not compatible.\n";

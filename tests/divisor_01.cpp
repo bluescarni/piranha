@@ -47,22 +47,31 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/config.hpp>
+#include <mp++/exceptions.hpp>
+
 #include <piranha/detail/vector_hasher.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
+
+static inline real operator"" _r(const char *s)
+{
+    return real(s, 100);
+}
 
 using value_types = std::tuple<signed char, short, int, long, long long, integer>;
 
@@ -125,7 +134,6 @@ struct ctor_tester {
 
 BOOST_AUTO_TEST_CASE(divisor_ctor_test)
 {
-    init();
     tuple_for_each(value_types{}, ctor_tester{});
 }
 
@@ -560,14 +568,18 @@ struct evaluate_tester {
         BOOST_CHECK((key_is_evaluable<d_type, rational>::value));
         BOOST_CHECK((key_is_evaluable<d_type, double>::value));
         BOOST_CHECK((key_is_evaluable<d_type, long double>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((key_is_evaluable<d_type, real>::value));
+#endif
         BOOST_CHECK((!key_is_evaluable<d_type, std::string>::value));
         BOOST_CHECK((!key_is_evaluable<d_type, void>::value));
         // Empty divisor.
         BOOST_CHECK_EQUAL(d.template evaluate<rational>({}, symbol_fset{}), 1_q);
         BOOST_CHECK((std::is_same<rational, decltype(d.template evaluate<rational>({}, symbol_fset{}))>::value));
         BOOST_CHECK((std::is_same<double, decltype(d.template evaluate<double>({}, symbol_fset{}))>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((std::is_same<real, decltype(d.template evaluate<real>({}, symbol_fset{}))>::value));
+#endif
         T exponent(2);
         std::vector<T> tmp;
         tmp = {T(1), T(-2)};
@@ -592,10 +604,12 @@ struct evaluate_tester {
         BOOST_CHECK_EQUAL(d.template evaluate<rational>({-1_q, 2_q}, symbol_fset{"x", "y"}), 1 / 43200_q);
         BOOST_CHECK_EQUAL(d.template evaluate<rational>({2 / 3_q, -4 / 5_q}, symbol_fset{"x", "y"}),
                           -759375_z / 303038464_q);
-        BOOST_CHECK_THROW(d.template evaluate<rational>({2_q, 1_q}, symbol_fset{"x", "y"}), zero_division_error);
+        BOOST_CHECK_THROW(d.template evaluate<rational>({2_q, 1_q}, symbol_fset{"x", "y"}), mppp::zero_division_error);
+#if defined(MPPP_WITH_MPFR)
         // A simple test with real.
         BOOST_CHECK_EQUAL(d.template evaluate<real>({-1.5_r, 2.5_r}, symbol_fset{"x", "y"}),
                           1 / (math::pow(-1.5_r - 2.5_r * 2, 2) * math::pow(-1.5_r * 2 + 7 * 2.5_r, 3)));
+#endif
     }
 };
 
@@ -642,7 +656,9 @@ struct multiply_tester {
         // Test the type trait first.
         BOOST_CHECK((key_is_multipliable<double, d_type>::value));
         BOOST_CHECK((key_is_multipliable<integer, d_type>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((key_is_multipliable<real, d_type>::value));
+#endif
         BOOST_CHECK((key_is_multipliable<rational, d_type>::value));
         BOOST_CHECK((!key_is_multipliable<mock_cf3, d_type>::value));
         std::array<term<integer, d_type>, 1u> res;

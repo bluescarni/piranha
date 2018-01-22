@@ -44,14 +44,13 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/series_multiplier.hpp>
@@ -148,7 +147,6 @@ struct negate_tester {
 
 BOOST_AUTO_TEST_CASE(series_negate_test)
 {
-    init();
     tuple_for_each(cf_types{}, negate_tester());
 }
 

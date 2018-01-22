@@ -33,9 +33,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <limits>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/real.hpp>
@@ -45,7 +44,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(series_zero_is_absorbing_test)
 {
-    init();
     {
         using pt1 = polynomial<double, monomial<int>>;
         using pt2 = polynomial<pt1, monomial<int>>;

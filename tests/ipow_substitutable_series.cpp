@@ -47,12 +47,11 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
@@ -61,6 +60,11 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/term.hpp>
 
 using namespace piranha;
+
+static inline real operator"" _r(const char *s)
+{
+    return real(s, 100);
+}
 
 template <typename Cf, typename Key>
 class g_series_type : public ipow_substitutable_series<series<Cf, Key, g_series_type<Cf, Key>>, g_series_type<Cf, Key>>
@@ -157,7 +161,6 @@ struct hash<new_monomial<T>> {
 
 BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
 {
-    init();
     // Substitution on key only.
     using stype0 = g_series_type<rational, monomial<int>>;
     // Type trait checks.
@@ -223,7 +226,7 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
         BOOST_CHECK_EQUAL(tmp4, 3 * x + y * y / 7);
         tmp4 = (3 * x + y * y / 7).ipow_subs("y", 2, 2.123_r);
         BOOST_CHECK(tmp4.is_identical(math::ipow_subs(3 * x + y * y / 7, "y", 2, 2.123_r)));
-        BOOST_CHECK_EQUAL(tmp4, 3 * x + 2.123_r / 7);
+        BOOST_CHECK_EQUAL(tmp4, 3 * x + 2.123_r / 7_q);
         tmp4 = (3 * x + y * y * y / 7).ipow_subs("y", 2, 2.123_r);
         BOOST_CHECK(tmp4.is_identical(math::ipow_subs(3 * x + y * y * y / 7, "y", 2, 2.123_r)));
         BOOST_CHECK_EQUAL(tmp4, 3 * x + y * 2.123_r / 7);

@@ -42,8 +42,9 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -55,7 +56,7 @@ namespace detail
 
 // Type requirement for Kronecker array.
 template <typename T>
-using ka_type_reqs = std::integral_constant<bool, std::is_integral<T>::value && std::is_signed<T>::value>;
+using ka_type_reqs = conjunction<std::is_integral<T>, std::is_signed<T>>;
 }
 
 /// Kronecker array.

@@ -42,8 +42,6 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include <piranha/init.hpp>
-
 using namespace piranha;
 
 typedef boost::mpl::vector<std::int_least8_t, std::int_least16_t, std::int_least32_t,
@@ -85,7 +83,6 @@ struct limits_tester {
 
 BOOST_AUTO_TEST_CASE(kronecker_array_limits_test)
 {
-    init();
     boost::mpl::for_each<int_types>(limits_tester());
 }
 

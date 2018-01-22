@@ -39,7 +39,6 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/config.hpp>
-#include <piranha/init.hpp>
 #include <piranha/type_traits.hpp>
 
 using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,
@@ -195,7 +194,6 @@ struct fp_int_checker {
 
 BOOST_AUTO_TEST_CASE(safe_cast_test_00)
 {
-    init();
     // Same type.
     BOOST_CHECK((has_safe_cast<std::string, std::string>::value));
     BOOST_CHECK((has_safe_cast<std::string, const std::string>::value));

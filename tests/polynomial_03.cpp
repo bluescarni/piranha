@@ -34,9 +34,8 @@ see https://www.gnu.org/licenses/. */
 #include <sstream>
 
 #include <piranha/config.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/s11n.hpp>
 
@@ -44,7 +43,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(polynomial_truncation_pow_cache_test)
 {
-    init();
     using p_type = polynomial<integer, monomial<int>>;
     p_type x{"x"}, y{"y"};
     BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y + x * x + y * y + 2 * x * y);

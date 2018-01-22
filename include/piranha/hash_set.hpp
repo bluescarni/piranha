@@ -48,8 +48,8 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
-#include <piranha/debug_access.hpp>
-#include <piranha/detail/init_data.hpp>
+#include <piranha/detail/debug_access.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -97,27 +97,24 @@ namespace piranha
  * equality predicate have been moved-from.
  */
 /* Some improvement NOTEs:
-* - tests for low-level methods
-* - better increase_size with recycling of dynamically-allocated nodes
-* - see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list) -> this should be
-* a general review of the internal linked list
-* implementation.
-* - memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference
-* typedefs defined within, replace
-* positional new with construct even in the list implementation. Then it can be made a template parameter with default =
-* std::allocator.
-* - use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of
-* root new, it is used as well
-* in static_vector for instance.
-* - inline the first bucket, with the idea of avoiding memory allocations when the series consist of a single element
-* (useful for instance
-* when iterating over the series with the fat iterator).
-* - optimisation for the begin() iterator,
-* - check again about the mod implementation,
-* - in the dtor checks, do we still want the shutdown() logic after we rework symbol?
-*   are we still accessing potentially global variables?
-* - maybe a bit more enabling for ctor and other template methods, not really essential though.
-*/
+ * - tests for low-level methods
+ * - better increase_size with recycling of dynamically-allocated nodes
+ * - see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list) -> this should
+ * be a general review of the internal linked list implementation.
+ * - memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference
+ * typedefs defined within, replace
+ * positional new with construct even in the list implementation. Then it can be made a template parameter with default
+ * = std::allocator.
+ * - use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of
+ * root new, it is used as well
+ * in static_vector for instance.
+ * - inline the first bucket, with the idea of avoiding memory allocations when the series consist of a single element
+ * (useful for instance
+ * when iterating over the series with the fat iterator).
+ * - optimisation for the begin() iterator,
+ * - check again about the mod implementation,
+ * - maybe a bit more enabling for ctor and other template methods, not really essential though.
+ */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
 {
@@ -130,9 +127,7 @@ class hash_set
     // Node class for bucket element.
     struct node {
         typedef typename std::aligned_storage<sizeof(T), alignof(T)>::type storage_type;
-        node() : m_next(nullptr)
-        {
-        }
+        node() : m_next(nullptr) {}
         // Erase all other ctors/assignments, we do not want to
         // copy around this object as m_storage is not what it is
         // (and often could be uninitialized, which would lead to UB if used).
@@ -190,12 +185,8 @@ class hash_set
             friend class iterator_impl;
 
         public:
-            iterator_impl() : m_ptr(nullptr)
-            {
-            }
-            explicit iterator_impl(ptr_type ptr) : m_ptr(ptr)
-            {
-            }
+            iterator_impl() : m_ptr(nullptr) {}
+            explicit iterator_impl(ptr_type ptr) : m_ptr(ptr) {}
             // Constructor from other iterator type.
             template <typename V,
                       enable_if_t<std::is_convertible<typename iterator_impl<V>::ptr_type, ptr_type>::value, int> = 0>
@@ -229,9 +220,7 @@ class hash_set
         // Static checks on the iterator types.
         PIRANHA_TT_CHECK(is_forward_iterator, iterator);
         PIRANHA_TT_CHECK(is_forward_iterator, const_iterator);
-        list() : m_node()
-        {
-        }
+        list() : m_node() {}
         list(list &&other) noexcept : m_node()
         {
             steal_from_rvalue(std::move(other));
@@ -425,12 +414,8 @@ private:
                                           typename list::iterator>::type it_type;
 
     public:
-        iterator_impl() : m_set(nullptr), m_idx(0u), m_it()
-        {
-        }
-        explicit iterator_impl(set_type *set, const size_type &idx, it_type it) : m_set(set), m_idx(idx), m_it(it)
-        {
-        }
+        iterator_impl() : m_set(nullptr), m_idx(0u), m_it() {}
+        explicit iterator_impl(set_type *set, const size_type &idx, it_type it) : m_set(set), m_idx(idx), m_it(it) {}
 
     private:
         friend class boost::iterator_core_access;
@@ -595,10 +580,6 @@ private:
     // Run a consistency check on the set, will return false if something is wrong.
     bool sanity_check() const
     {
-        // Ignore sanity checks on shutdown.
-        if (shutdown()) {
-            return true;
-        }
         size_type count = 0u;
         for (size_type i = 0u; i < bucket_count(); ++i) {
             for (auto it = ptr()[i].begin(); it != ptr()[i].end(); ++it) {
@@ -1514,10 +1495,9 @@ inline namespace impl
 
 // Enablers for msgpack s11n.
 template <typename Stream, typename T, typename Hash, typename Pred>
-using hash_set_msgpack_pack_enabler
-    = enable_if_t<conjunction<is_msgpack_stream<Stream>,
-                              has_safe_cast<std::uint32_t, typename hash_set<T, Hash, Pred>::size_type>,
-                              has_msgpack_pack<Stream, T>>::value>;
+using hash_set_msgpack_pack_enabler = enable_if_t<
+    conjunction<is_msgpack_stream<Stream>, has_safe_cast<std::uint32_t, typename hash_set<T, Hash, Pred>::size_type>,
+                has_msgpack_pack<Stream, T>>::value>;
 
 template <typename T>
 using hash_set_msgpack_convert_enabler = enable_if_t<has_msgpack_convert<T>::value>;

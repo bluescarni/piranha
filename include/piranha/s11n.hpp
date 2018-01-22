@@ -124,13 +124,8 @@ using impl
                   // return a type which is implicitly convertible to some unsigned int.
                   // This seems to work and it should cover also the cases in which the
                   // return type is a real unsigned int.
-                  std::is_convertible<detected_t<get_library_version_t, Archive>, unsigned long long>
-#if BOOST_VERSION >= 105700
-                  //  Helper support is available since 1.57.
-                  ,
-                  is_detected<get_helper_t_1, Archive>, is_detected<get_helper_t_2, Archive>
-#endif
-                  >;
+                  std::is_convertible<detected_t<get_library_version_t, Archive>, unsigned long long>,
+                  is_detected<get_helper_t_1, Archive>, is_detected<get_helper_t_2, Archive>>;
 }
 }
 
@@ -184,12 +179,8 @@ using impl = conjunction<
     std::is_same<detected_t<and_t, Archive, T>, addlref_t<Archive>>, is_detected<load_binary_t, Archive, unref_t<T>>,
     is_detected<ibsa_impl::register_type_t, Archive, uncvref_t<T>>,
     std::is_convertible<detected_t<ibsa_impl::get_library_version_t, Archive>, unsigned long long>,
-    is_detected<reset_object_address_t, Archive, unref_t<T>>, is_detected<delete_created_pointers_t, Archive>
-#if BOOST_VERSION >= 105700
-    ,
-    is_detected<ibsa_impl::get_helper_t_1, Archive>, is_detected<ibsa_impl::get_helper_t_2, Archive>
-#endif
-    >;
+    is_detected<reset_object_address_t, Archive, unref_t<T>>, is_detected<delete_created_pointers_t, Archive>,
+    is_detected<ibsa_impl::get_helper_t_1, Archive>, is_detected<ibsa_impl::get_helper_t_2, Archive>>;
 }
 }
 

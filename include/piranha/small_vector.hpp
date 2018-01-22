@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/small_vector_fwd.hpp>
 #include <piranha/detail/vector_hasher.hpp>
 #include <piranha/exceptions.hpp>

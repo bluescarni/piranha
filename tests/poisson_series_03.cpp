@@ -36,19 +36,17 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
-#include <piranha/init.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(poisson_series_boost_s11n_test)
 {
-    init();
     using pst1 = poisson_series<polynomial<rational, monomial<short>>>;
     BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, pst1>::value));
     BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, pst1>::value));

@@ -36,7 +36,6 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
@@ -174,7 +173,6 @@ public:
 
 BOOST_AUTO_TEST_CASE(series_generic_ctor_forwarding_test)
 {
-    init();
     using st0 = g_series_type<mock_cf, int>;
     BOOST_CHECK(is_series<st0>::value);
     // Test we are using copy ctor and copy assignment.

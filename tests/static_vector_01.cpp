@@ -45,8 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/type_traits.hpp>
 
 // NOTE: here we define a custom string class base on std::string that respects nothrow requirements in hash_set:
@@ -57,9 +56,7 @@ public:
     custom_string() = default;
     custom_string(const custom_string &) = default;
     // NOTE: strange thing here, move constructor of std::string results in undefined reference?
-    custom_string(custom_string &&other) noexcept : std::string(other)
-    {
-    }
+    custom_string(custom_string &&other) noexcept : std::string(other) {}
     template <typename... Args>
     custom_string(Args &&... params) : std::string(std::forward<Args>(params)...)
     {
@@ -70,9 +67,7 @@ public:
         std::string::operator=(std::move(other));
         return *this;
     }
-    ~custom_string()
-    {
-    }
+    ~custom_string() {}
 };
 
 namespace std
@@ -172,7 +167,6 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(static_vector_constructor_test)
 {
-    init();
     boost::mpl::for_each<value_types>(constructor_tester());
 }
 
@@ -337,9 +331,7 @@ struct time_bomb {
     {
         return m_vector == other.m_vector;
     }
-    ~time_bomb()
-    {
-    }
+    ~time_bomb() {}
     std::vector<int> m_vector;
     static unsigned s_counter;
 };

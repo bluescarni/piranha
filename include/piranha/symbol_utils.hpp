@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/tuple/tuple.hpp>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/safe_cast.hpp>
 

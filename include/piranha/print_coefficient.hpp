@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <utility>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha

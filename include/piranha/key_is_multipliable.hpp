@@ -34,6 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -51,9 +52,9 @@ struct key_is_multipliable_impl : std::false_type {
 };
 
 template <typename Cf, typename Key>
-struct key_is_multipliable_impl<Cf, Key,
-                                enable_if_t<std::is_same<const std::size_t, decltype(Key::multiply_arity)>::value
-                                            && (Key::multiply_arity > 0u)>> {
+struct key_is_multipliable_impl<
+    Cf, Key,
+    enable_if_t<std::is_same<const std::size_t, decltype(Key::multiply_arity)>::value && (Key::multiply_arity > 0u)>> {
     template <typename Cf1, typename Key1>
     using multiply_t
         = decltype(Key1::multiply(std::declval<std::array<term<Cf1, Key1>, Key1::multiply_arity> &>(),

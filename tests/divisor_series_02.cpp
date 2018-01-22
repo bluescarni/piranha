@@ -33,18 +33,16 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/divisor.hpp>
-#include <piranha/init.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(divisor_series_boost_s11n_test)
 {
-    init();
     using p_type = divisor_series<polynomial<rational, monomial<char>>, divisor<short>>;
     BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, p_type>::value));
     BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive &, p_type>::value));

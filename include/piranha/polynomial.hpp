@@ -30,7 +30,6 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_POLYNOMIAL_HPP
 
 #include <algorithm>
-#include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
 #include <cstddef>
 #include <functional>
@@ -47,12 +46,17 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <boost/numeric/conversion/cast.hpp>
+
+#include <mp++/rational.hpp>
+
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/config.hpp>
-#include <piranha/debug_access.hpp>
 #include <piranha/detail/atomic_flag_array.hpp>
 #include <piranha/detail/cf_mult_impl.hpp>
+#include <piranha/detail/debug_access.hpp>
 #include <piranha/detail/divisor_series_fwd.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/parallel_vector_transform.hpp>
 #include <piranha/detail/poisson_series_fwd.hpp>
 #include <piranha/detail/polynomial_fwd.hpp>
@@ -60,6 +64,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/ipow_substitutable_series.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_multipliable.hpp>
@@ -67,7 +72,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/safe_cast.hpp>
@@ -1518,15 +1522,15 @@ public:
 private:
     // NOTE: wrapper to multadd that treats specially rational coefficients. We need to decide in the future
     // if this stays here or if it is better to generalise it.
-    template <typename T, typename std::enable_if<!is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<!mppp::is_rational<T>::value, int>::type = 0>
     static void fma_wrap(T &a, const T &b, const T &c)
     {
         math::multiply_accumulate(a, b, c);
     }
-    template <typename T, typename std::enable_if<is_mp_rational<T>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<mppp::is_rational<T>::value, int>::type = 0>
     static void fma_wrap(T &a, const T &b, const T &c)
     {
-        math::multiply_accumulate(a._num(), b.num(), c.num());
+        math::multiply_accumulate(a._get_num(), b.get_num(), c.get_num());
     }
     // Wrapper for the plain multiplication routine.
     // Case 1: no auto truncation available, just run the plain multiplication.

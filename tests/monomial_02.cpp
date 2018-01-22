@@ -45,10 +45,9 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_key.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -294,7 +293,6 @@ struct boost_s11n_tester {
 
 BOOST_AUTO_TEST_CASE(monomial_boost_s11n_test)
 {
-    init();
     tuple_for_each(expo_types{}, boost_s11n_tester());
     BOOST_CHECK((is_key<monomial<fake_int_01>>::value));
     BOOST_CHECK(

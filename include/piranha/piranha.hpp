@@ -237,7 +237,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/cache_aligning_allocator.hpp>
 #include <piranha/config.hpp>
 #include <piranha/convert_to.hpp>
-#include <piranha/debug_access.hpp>
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/dynamic_aligning_allocator.hpp>

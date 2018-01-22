@@ -51,15 +51,16 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/binomial.hpp>
 #include <piranha/config.hpp>
 #include <piranha/detail/cf_mult_impl.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/km_commons.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/detail/safe_integral_adder.hpp>
 #include <piranha/exceptions.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/static_vector.hpp>

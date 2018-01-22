@@ -51,9 +51,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/integer.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 
@@ -76,9 +75,7 @@ typedef boost::mpl::vector<std::integral_constant<std::size_t, 0u>, std::integra
 
 // Class that throws after a few copies.
 struct time_bomb {
-    time_bomb() : m_vector(5)
-    {
-    }
+    time_bomb() : m_vector(5) {}
     time_bomb(time_bomb &&) = default;
     time_bomb(const time_bomb &other) : m_vector(other.m_vector)
     {
@@ -92,9 +89,7 @@ struct time_bomb {
         m_vector = std::move(other.m_vector);
         return *this;
     }
-    ~time_bomb() noexcept
-    {
-    }
+    ~time_bomb() noexcept {}
     std::vector<int> m_vector;
     static unsigned s_counter;
 };
@@ -346,7 +341,6 @@ struct dynamic_tester {
 
 BOOST_AUTO_TEST_CASE(small_vector_dynamic_test)
 {
-    init();
     boost::mpl::for_each<value_types>(dynamic_tester());
 }
 
@@ -657,9 +651,7 @@ BOOST_AUTO_TEST_CASE(small_vector_resize_test)
 
 // Class that throws after a few constructions.
 struct time_bomb2 {
-    time_bomb2() : m_vector(5)
-    {
-    }
+    time_bomb2() : m_vector(5) {}
     time_bomb2(time_bomb2 &&) = default;
     time_bomb2(const time_bomb2 &) = default;
     time_bomb2(int)
@@ -674,9 +666,7 @@ struct time_bomb2 {
         m_vector = std::move(other.m_vector);
         return *this;
     }
-    ~time_bomb2() noexcept
-    {
-    }
+    ~time_bomb2() noexcept {}
     std::vector<int> m_vector;
     static unsigned s_counter;
 };

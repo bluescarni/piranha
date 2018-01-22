@@ -39,11 +39,10 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/detail/safe_integral_adder.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/settings.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -181,6 +180,5 @@ struct main_tester {
 
 BOOST_AUTO_TEST_CASE(polynomial_truncation_main_test)
 {
-    init();
     boost::mpl::for_each<cf_types>(main_tester());
 }

@@ -42,6 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 
 #include <piranha/integer.hpp>
+#include <piranha/is_cf.hpp>
 #include <piranha/math.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
@@ -57,6 +58,11 @@ using namespace piranha;
 static inline real operator"" _r(const char *s)
 {
     return real(s, 100);
+}
+
+BOOST_AUTO_TEST_CASE(real_tt_test)
+{
+    BOOST_CHECK(is_cf<real>::value);
 }
 
 BOOST_AUTO_TEST_CASE(real_negate_test)

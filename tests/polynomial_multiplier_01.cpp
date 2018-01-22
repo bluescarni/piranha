@@ -39,13 +39,12 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/settings.hpp>
 #include <piranha/symbol_utils.hpp>
 
@@ -181,7 +180,6 @@ struct bounds_tester {
 
 BOOST_AUTO_TEST_CASE(polynomial_multiplier_bounds_test)
 {
-    init();
     boost::mpl::for_each<cf_types>(bounds_tester());
 }
 

@@ -42,14 +42,13 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
@@ -80,7 +79,6 @@ struct mock_cf {
 
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 {
-    init();
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     {
         BOOST_CHECK((has_ipow_subs<p_type1, p_type1>::value));
@@ -124,8 +122,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
     // Try also with eps.
     {
         using eps = poisson_series<divisor_series<polynomial<rational, monomial<short>>, divisor<short>>>;
-        using math::invert;
         using math::cos;
+        using math::invert;
         using math::ipow_subs;
         eps x{"x"}, y{"y"}, z{"z"};
         BOOST_CHECK((has_ipow_subs<eps, eps>::value));
@@ -185,8 +183,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_rebind_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 {
-    using math::invert;
     using math::cos;
+    using math::invert;
     using math::pow;
     using math::sin;
     using div_type0 = divisor<short>;
@@ -293,15 +291,12 @@ BOOST_AUTO_TEST_CASE(poisson_series_poly_in_cf_test)
     BOOST_CHECK((detail::poly_in_cf<poisson_series<polynomial<rational, monomial<short>>>>::value));
     BOOST_CHECK(
         (detail::poly_in_cf<poisson_series<divisor_series<polynomial<real, monomial<short>>, divisor<short>>>>::value));
-    BOOST_CHECK(
-        (detail::poly_in_cf<poisson_series<divisor_series<polynomial<rational, monomial<short>>, divisor<short>>>>::
-             value));
-    BOOST_CHECK(
-        (!detail::poly_in_cf<poisson_series<divisor_series<divisor_series<real, divisor<short>>, divisor<short>>>>::
-             value));
-    BOOST_CHECK(
-        (!detail::poly_in_cf<poisson_series<divisor_series<divisor_series<rational, divisor<short>>, divisor<short>>>>::
-             value));
+    BOOST_CHECK((detail::poly_in_cf<
+                 poisson_series<divisor_series<polynomial<rational, monomial<short>>, divisor<short>>>>::value));
+    BOOST_CHECK((!detail::poly_in_cf<
+                 poisson_series<divisor_series<divisor_series<real, divisor<short>>, divisor<short>>>>::value));
+    BOOST_CHECK((!detail::poly_in_cf<
+                 poisson_series<divisor_series<divisor_series<rational, divisor<short>>, divisor<short>>>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
@@ -398,8 +393,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_multiplier_test)
     {
         using ps = poisson_series<polynomial<rational, monomial<short>>>;
         using math::cos;
-        using math::sin;
         using math::pow;
+        using math::sin;
         settings::set_min_work_per_thread(1u);
         ps x{"x"}, y{"y"}, z{"z"};
         for (unsigned nt = 1u; nt <= 4u; ++nt) {
@@ -416,8 +411,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_multiplier_test)
     {
         using ps = poisson_series<polynomial<integer, monomial<short>>>;
         using math::cos;
-        using math::sin;
         using math::pow;
+        using math::sin;
         settings::set_min_work_per_thread(1u);
         ps x{"x"}, y{"y"}, z{"z"};
         for (unsigned nt = 1u; nt <= 4u; ++nt) {

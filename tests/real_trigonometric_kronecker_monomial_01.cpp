@@ -46,14 +46,13 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
@@ -174,7 +173,6 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
 {
-    init();
     tuple_for_each(int_types{}, constructor_tester{});
 }
 
@@ -604,32 +602,32 @@ struct multiply_tester {
         t2.m_key = key_type{T(3)};
         std::array<term_type, 2u> retval;
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(5));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(retval[0u].m_key.get_flavour());
         BOOST_CHECK(retval[1u].m_key.get_flavour());
         t1.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(5));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
         BOOST_CHECK(!retval[1u].m_key.get_flavour());
         t2.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(5));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(retval[0u].m_key.get_flavour());
         BOOST_CHECK(retval[1u].m_key.get_flavour());
         t1.m_key.set_flavour(true);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(5));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -639,8 +637,8 @@ struct multiply_tester {
         t2.m_key = key_type{T(-2)};
         t1.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(1));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(3));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -649,8 +647,8 @@ struct multiply_tester {
         t2.m_key = key_type{T(2)};
         t1.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(3));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -659,8 +657,8 @@ struct multiply_tester {
         t2.m_key = key_type{T(-2)};
         t2.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(1));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(3));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -669,8 +667,8 @@ struct multiply_tester {
         t2.m_key = key_type{T(2)};
         t2.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(3));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());

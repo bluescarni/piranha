@@ -34,6 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/runtime_info.hpp>
 #include <piranha/thread_pool.hpp>

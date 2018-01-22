@@ -45,14 +45,13 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
@@ -61,6 +60,11 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/term.hpp>
 
 using namespace piranha;
+
+static inline real operator"" _r(const char *s)
+{
+    return real(s, 100);
+}
 
 template <typename Cf, typename Key>
 class g_series_type : public substitutable_series<series<Cf, Key, g_series_type<Cf, Key>>, g_series_type<Cf, Key>>
@@ -157,7 +161,6 @@ struct hash<new_monomial<T>> {
 
 BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 {
-    init();
     // Substitution on key only.
     using stype0 = g_series_type<rational, monomial<int>>;
     // Type trait checks.

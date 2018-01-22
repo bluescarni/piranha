@@ -29,6 +29,8 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SERIES_MULTIPLIER_HPP
 #define PIRANHA_SERIES_MULTIPLIER_HPP
 
+#include <piranha/detail/init.hpp>
+
 namespace piranha
 {
 

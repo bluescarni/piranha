@@ -73,6 +73,7 @@ extern "C" {
 #include <thread>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/runtime_info.hpp>
 #include <piranha/safe_cast.hpp>

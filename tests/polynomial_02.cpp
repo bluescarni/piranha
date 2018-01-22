@@ -44,14 +44,13 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
@@ -110,7 +109,6 @@ public:
 
 BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 {
-    init();
     // Simple echelon-1 polynomial.
     typedef polynomial<rational, monomial<short>> p_type1;
     BOOST_CHECK(is_integrable<p_type1>::value);

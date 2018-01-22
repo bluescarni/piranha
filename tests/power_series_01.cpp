@@ -35,13 +35,12 @@ see https://www.gnu.org/licenses/. */
 #include <boost/mpl/vector.hpp>
 #include <type_traits>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/series.hpp>
@@ -226,6 +225,5 @@ struct degree_tester {
 
 BOOST_AUTO_TEST_CASE(power_series_test_01)
 {
-    init();
     boost::mpl::for_each<cf_types>(degree_tester());
 }

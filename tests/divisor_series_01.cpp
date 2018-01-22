@@ -38,18 +38,19 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <mp++/exceptions.hpp>
+
 #include <piranha/divisor.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -93,7 +94,6 @@ struct test_00_tester {
 
 BOOST_AUTO_TEST_CASE(divisor_series_test_00)
 {
-    init();
     tuple_for_each(cf_types{}, test_00_tester());
 }
 struct partial_tester {
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)), "1/[(x)]");
         BOOST_CHECK_EQUAL(math::invert(s_type{2}), 1 / 2_q);
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x, -1)), "x**-1");
-        BOOST_CHECK_THROW(math::invert(null), zero_division_error);
+        BOOST_CHECK_THROW(math::invert(null), mppp::zero_division_error);
         BOOST_CHECK((std::is_same<decltype(x.invert()), s_type>::value));
         BOOST_CHECK((std::is_same<decltype(math::invert(x)), s_type>::value));
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x - y)), "1/[(x-y)]");
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x + y + z - z)), "1/[(x+y)]");
         BOOST_CHECK_THROW(math::invert(x - 1), std::invalid_argument);
         BOOST_CHECK_THROW(math::invert(x - y / 2), std::invalid_argument);
-        BOOST_CHECK_THROW(math::invert(x - x), zero_division_error);
+        BOOST_CHECK_THROW(math::invert(x - x), mppp::zero_division_error);
         // Out of bounds for short.
         BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max() + 1_q) * x + y), std::invalid_argument);
         // Check, if appropriate, construction from outside the bounds defined in divisor.
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)), "1/[(x)]");
         BOOST_CHECK_EQUAL(math::invert(s_type{2}), 1 / 2_q);
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x, -1)), "x**-1");
-        BOOST_CHECK_THROW(math::invert(null), zero_division_error);
+        BOOST_CHECK_THROW(math::invert(null), mppp::zero_division_error);
         BOOST_CHECK((std::is_same<decltype(x.invert()), s_type>::value));
         BOOST_CHECK((std::is_same<decltype(math::invert(x)), s_type>::value));
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x - y)), "1/[(x-y)]");
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x + y + z - z)), "1/[(x+y)]");
         BOOST_CHECK_THROW(math::invert(x - 1), std::invalid_argument);
         BOOST_CHECK_THROW(math::invert(x - y / 2), std::invalid_argument);
-        BOOST_CHECK_THROW(math::invert(x - x), zero_division_error);
+        BOOST_CHECK_THROW(math::invert(x - x), mppp::zero_division_error);
         // Out of bounds for short.
         BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max() + 1_q) * x + y), std::invalid_argument);
         // Check, if appropriate, construction from outside the bounds defined in divisor.
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)), "1/[(x)]");
         BOOST_CHECK_EQUAL(math::invert(s_type{2}), 1 / 2_q);
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x, -1)), "x**-1");
-        BOOST_CHECK_THROW(math::invert(null), zero_division_error);
+        BOOST_CHECK_THROW(math::invert(null), mppp::zero_division_error);
         BOOST_CHECK((std::is_same<decltype(x.invert()), s_type>::value));
         BOOST_CHECK((std::is_same<decltype(math::invert(x)), s_type>::value));
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x - y)), "1/[(x-y)]");
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x + y + z - z)), "1/[(x+y)]");
         BOOST_CHECK_THROW(math::invert(x - 1), std::invalid_argument);
         BOOST_CHECK_THROW(math::invert(x - y / 2), std::invalid_argument);
-        BOOST_CHECK_THROW(math::invert(x - x), zero_division_error);
+        BOOST_CHECK_THROW(math::invert(x - x), mppp::zero_division_error);
         // Out of bounds for short.
         BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max() + 1_q) * x + y), std::invalid_argument);
         // Check, if appropriate, construction from outside the bounds defined in divisor.
@@ -386,8 +386,8 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK_THROW(math::invert(math::cos(2 * x)), std::invalid_argument);
         BOOST_CHECK_THROW(math::pow(x + y, -1), std::invalid_argument);
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-2 * x + 4 * y)), "-1/2*1/[(x-2*y)]");
-        BOOST_CHECK_THROW(math::invert(null), zero_division_error);
-        BOOST_CHECK_THROW(math::pow(null, -1), zero_division_error);
+        BOOST_CHECK_THROW(math::invert(null), mppp::zero_division_error);
+        BOOST_CHECK_THROW(math::pow(null, -1), mppp::zero_division_error);
     }
 }
 

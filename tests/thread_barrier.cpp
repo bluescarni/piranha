@@ -34,12 +34,10 @@ see https://www.gnu.org/licenses/. */
 #include <functional>
 #include <type_traits>
 
-#include <piranha/init.hpp>
 #include <piranha/thread_pool.hpp>
 
 BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
 {
-    piranha::init();
     const unsigned n_threads = 100;
     piranha::thread_barrier tb(n_threads);
     piranha::thread_pool::resize(n_threads);

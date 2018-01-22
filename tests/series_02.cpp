@@ -44,16 +44,15 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/base_series_multiplier.hpp>
-#include <piranha/debug_access.hpp>
+#include <piranha/detail/debug_access.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series_multiplier.hpp>
@@ -219,7 +218,6 @@ struct mock_cf {
 
 BOOST_AUTO_TEST_CASE(series_partial_test)
 {
-    init();
     {
         typedef g_series_type<rational, int> p_type1;
         p_type1 x1{"x"};
@@ -403,7 +401,7 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
     BOOST_CHECK_EQUAL(math::evaluate(x, dict_type{{"x", rational(1)}}), 1);
     BOOST_CHECK_THROW(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}}), std::invalid_argument);
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
-                      rational(1) + (2 * rational(2, 3)).pow(3));
+                      rational(1) + math::pow(2 * rational(2, 3), 3));
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type{})), rational>::value));

@@ -34,7 +34,6 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <vector>
 
-#include <piranha/init.hpp>
 #include <piranha/settings.hpp>
 
 using namespace piranha;
@@ -42,7 +41,6 @@ using namespace piranha::detail;
 
 BOOST_AUTO_TEST_CASE(pvt_test_00)
 {
-    init();
     // First check the throwing conditions.
     {
         std::vector<int> v1, v2;

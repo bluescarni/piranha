@@ -43,16 +43,17 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/config.hpp>
 #include <piranha/detail/divisor_series_fwd.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/poisson_series_fwd.hpp>
 #include <piranha/detail/polynomial_fwd.hpp>
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/ipow_substitutable_series.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/safe_cast.hpp>
@@ -700,7 +701,7 @@ public:
      * @throws std::invalid_argument if the calling series has a unitary key.
      * @throws unspecified any exception thrown by:
      * - memory errors in standard containers,
-     * - the public interfaces of piranha::symbol_fset, piranha::mp_integer and piranha::series,
+     * - the public interfaces of piranha::symbol_fset, piranha::integer and piranha::series,
      * - piranha::math::is_zero(), piranha::math::negate(),
      * - the mathematical operations needed to compute the result,
      * - piranha::divisor::insert(),

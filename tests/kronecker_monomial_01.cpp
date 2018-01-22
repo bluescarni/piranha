@@ -46,16 +46,16 @@ see https://www.gnu.org/licenses/. */
 #include <typeinfo>
 #include <vector>
 
+#include <piranha/detail/demangle.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -199,7 +199,6 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_constructor_test)
 {
-    init();
     tuple_for_each(int_types{}, constructor_tester{});
 }
 
@@ -621,7 +620,7 @@ struct pow_tester {
         BOOST_CHECK_EXCEPTION(k1.pow(42.5, symbol_fset{"x"}), safe_cast_failure, [](const safe_cast_failure &e) {
             return boost::contains(e.what(), "the floating-point value with nonzero fractional part "
                                                  + std::to_string(42.5) + " cannot be converted to the integral type '"
-                                                 + detail::demangle<T>()
+                                                 + demangle<T>()
                                                  + "', as the conversion cannot preserve the original value");
         });
         k1 = k_type{2};

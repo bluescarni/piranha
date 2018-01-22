@@ -42,14 +42,13 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -104,7 +103,6 @@ public:
 
 BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 {
-    init();
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     p_type1 x{"x"}, y{"y"};
     BOOST_CHECK((has_t_subs<p_type1, p_type1, p_type1>::value));
