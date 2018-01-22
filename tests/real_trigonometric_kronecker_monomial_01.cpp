@@ -46,6 +46,8 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
+#include <mp++/real.hpp>
+
 #include <piranha/integer.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
@@ -173,6 +175,7 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
 {
+    mppp::real_set_default_prec(100);
     tuple_for_each(int_types{}, constructor_tester{});
 }
 

@@ -41,6 +41,8 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
+#include <mp++/real.hpp>
+
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/integer.hpp>
@@ -83,6 +85,7 @@ struct mock_cf {
 
 BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 {
+    mppp::real_set_default_prec(100);
     using math::cos;
     using math::partial;
     using math::pow;

@@ -41,6 +41,9 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
+#include <mp++/exceptions.hpp>
+#include <mp++/real.hpp>
+
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
@@ -109,6 +112,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 {
+    mppp::real_set_default_prec(100);
     // Simple echelon-1 polynomial.
     typedef polynomial<rational, monomial<short>> p_type1;
     BOOST_CHECK(is_integrable<p_type1>::value);
@@ -309,7 +313,7 @@ BOOST_AUTO_TEST_CASE(polynomial_invert_test)
     BOOST_CHECK_EQUAL(math::invert(pt1{1}), 1);
     BOOST_CHECK_EQUAL(math::invert(pt1{2}), 1 / 2_q);
     BOOST_CHECK_EQUAL(math::invert(2 * pt1{"y"}), 1 / 2_q * pt1{"y"}.pow(-1));
-    BOOST_CHECK_THROW(math::invert(pt1{0}), zero_division_error);
+    BOOST_CHECK_THROW(math::invert(pt1{0}), mppp::zero_division_error);
     BOOST_CHECK_THROW(math::invert(pt1{"x"} + pt1{"y"}), std::invalid_argument);
 }
 

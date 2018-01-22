@@ -33,6 +33,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <limits>
 
+#include <mp++/real.hpp>
+
 #include <piranha/integer.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
@@ -44,6 +46,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(series_zero_is_absorbing_test)
 {
+    mppp::real_set_default_prec(100);
     {
         using pt1 = polynomial<double, monomial<int>>;
         using pt2 = polynomial<pt1, monomial<int>>;

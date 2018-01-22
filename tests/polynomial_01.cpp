@@ -42,6 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <mp++/rational.hpp>
+#include <mp++/real.hpp>
 
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/detail/debug_access.hpp>
@@ -186,6 +187,7 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(polynomial_constructors_test)
 {
+    mppp::real_set_default_prec(100);
     boost::mpl::for_each<cf_types>(constructor_tester());
 }
 

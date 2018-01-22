@@ -41,6 +41,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/real.hpp>
+
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/math.hpp>
@@ -103,6 +105,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 {
+    mppp::real_set_default_prec(100);
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     p_type1 x{"x"}, y{"y"};
     BOOST_CHECK((has_t_subs<p_type1, p_type1, p_type1>::value));

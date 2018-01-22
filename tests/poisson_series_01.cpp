@@ -130,6 +130,7 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(poisson_series_constructors_test)
 {
+    mppp::real_set_default_prec(100);
     tuple_for_each(cf_types{}, constructor_tester());
 }
 
@@ -214,8 +215,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
     BOOST_CHECK_EQUAL(math::sin(p_type2{3}), math::sin(real(3)));
     BOOST_CHECK_EQUAL(math::cos(p_type2{3}), math::cos(real(3)));
     p_type2 p2 = p_type2{"x"} - 2 * p_type2{"y"};
-    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p2)), "-1.0000000000*sin(x-2*y)");
-    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p2)), "1.0000000000*cos(x-2*y)");
+    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p2)),
+                      "-1.0000000000000000000000000000000*sin(x-2*y)");
+    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p2)), "1.0000000000000000000000000000000*cos(x-2*y)");
     BOOST_CHECK_THROW(math::sin(p_type2{"x"} * real(rational(1, 2))), std::invalid_argument);
     BOOST_CHECK_THROW(math::cos(p_type2{"x"} * real(rational(1, 2))), std::invalid_argument);
     typedef poisson_series<real> p_type3;
@@ -302,14 +304,12 @@ BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
     // NOTE: these won't work until we specialise safe_cast for real, due
     // to the new monomial pow() requirements.
     typedef poisson_series<polynomial<real, monomial<short>>> p_type2;
-    mppp::real_set_default_prec(100);
     BOOST_CHECK_EQUAL(math::pow(p_type2(real("1.234")), real("-5.678")), math::pow(real("1.234"), real("-5.678")));
     BOOST_CHECK_EQUAL(sin(p_type2(real("1.234"))), sin(real("1.234")));
     BOOST_CHECK_EQUAL(cos(p_type2(real("1.234"))), cos(real("1.234")));
     typedef poisson_series<real> p_type3;
     BOOST_CHECK_EQUAL(sin(p_type3(real("1.234"))), sin(real("1.234")));
     BOOST_CHECK_EQUAL(cos(p_type3(real("1.234"))), cos(real("1.234")));
-    mppp::real_reset_default_prec();
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_degree_test)

@@ -43,6 +43,9 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/exceptions.hpp>
+#include <mp++/real.hpp>
+
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/detail/debug_access.hpp>
 #include <piranha/exceptions.hpp>
@@ -218,6 +221,7 @@ struct mock_cf {
 
 BOOST_AUTO_TEST_CASE(series_partial_test)
 {
+    mppp::real_set_default_prec(100);
     {
         typedef g_series_type<rational, int> p_type1;
         p_type1 x1{"x"};
@@ -1807,9 +1811,9 @@ public:
                 BOOST_CHECK_THROW(zero /= 0, mppp::zero_division_error);
             }
             if (std::is_same<rational, Cf>::value) {
-                BOOST_CHECK_THROW(p_type1{} / 0, zero_division_error);
+                BOOST_CHECK_THROW(p_type1{} / 0, mppp::zero_division_error);
                 p_type1 zero;
-                BOOST_CHECK_THROW(zero /= 0, zero_division_error);
+                BOOST_CHECK_THROW(zero /= 0, mppp::zero_division_error);
             }
             // Check with scalar on the left.
             BOOST_CHECK((!is_divisible_in_place<int, p_type1>::value));

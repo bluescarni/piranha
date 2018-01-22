@@ -41,6 +41,9 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <mp++/exceptions.hpp>
+#include <mp++/real.hpp>
+
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
@@ -147,6 +150,7 @@ struct negate_tester {
 
 BOOST_AUTO_TEST_CASE(series_negate_test)
 {
+    mppp::real_set_default_prec(100);
     tuple_for_each(cf_types{}, negate_tester());
 }
 
@@ -445,7 +449,7 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
     }
     // Check division by zero error.
     typedef g_series_type<rational, int> p_type2;
-    BOOST_CHECK_THROW(math::pow(p_type2{}, -1), zero_division_error);
+    BOOST_CHECK_THROW(math::pow(p_type2{}, -1), mppp::zero_division_error);
     // Check the safe_cast mechanism.
     typedef g_series_type<real, int> p_type3;
     auto p = p_type3{"x"} + 1;

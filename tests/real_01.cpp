@@ -37,7 +37,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <limits>
-#include <random>
 #include <sstream>
 #include <string>
 
@@ -49,9 +48,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
-
-static std::mt19937 rng;
-static const int ntries = 1000;
 
 using namespace piranha;
 
