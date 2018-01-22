@@ -38,6 +38,8 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
+#include <mp++/exceptions.hpp>
+
 #include <piranha/detail/polynomial_fwd.hpp>
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
@@ -101,14 +103,14 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
             BOOST_CHECK((has_ipow_subs<p_type2, typename p_type2::term_type::cf_type>::value));
             p_type2 x{"x"}, y{"y"};
             BOOST_CHECK_EQUAL((x * x * x + y * y).ipow_subs("x", integer(1), real(1.234)),
-                              y * y + math::pow(real(1.234), 3));
+                              y * y + math::pow(real(1.234), integer(3)));
             BOOST_CHECK_EQUAL((x * x * x + y * y).ipow_subs("x", integer(3), real(1.234)), y * y + real(1.234));
             BOOST_CHECK_EQUAL(
                 (x * x * x + y * y).ipow_subs("x", integer(2), real(1.234)).ipow_subs("y", integer(2), real(-5.678)),
                 real(-5.678) + real(1.234) * x);
             BOOST_CHECK_EQUAL(math::ipow_subs(x * x * x + y * y, "x", integer(1), real(1.234))
                                   .ipow_subs("y", integer(1), real(-5.678)),
-                              math::pow(real(-5.678), 2) + math::pow(real(1.234), 3));
+                              math::pow(real(-5.678), integer(2)) + math::pow(real(1.234), integer(3)));
         }
         p_type1 x{"x"}, y{"y"}, z{"z"};
         BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z, "x", integer(2), y), x.pow(-7) + y + z);
@@ -314,7 +316,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
     BOOST_CHECK_EQUAL(math::invert(pt1{1}), 1);
     BOOST_CHECK_EQUAL(math::invert(pt1{2}), 1 / 2_q);
     BOOST_CHECK_EQUAL(math::invert(2 * pt1{"y"}), 1 / 2_q * pt1{"y"}.pow(-1));
-    BOOST_CHECK_THROW(math::invert(pt1{0}), zero_division_error);
+    BOOST_CHECK_THROW(math::invert(pt1{0}), mppp::zero_division_error);
     BOOST_CHECK_THROW(math::invert(pt1{"x"} + pt1{"y"}), std::invalid_argument);
     using pt2 = poisson_series<polynomial<double, monomial<long>>>;
     BOOST_CHECK(is_invertible<pt2>::value);

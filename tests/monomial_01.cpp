@@ -926,7 +926,7 @@ struct evaluate_tester {
                 (std::is_same<decltype(k1.evaluate(std::vector<real>{real(5.678), real(1.234)}, symbol_fset{"x", "y"})),
                               decltype(math::pow(real{}, T{}))>::value));
             BOOST_CHECK_EQUAL(k1.evaluate(std::vector<real>{real(5.678), real(1.234)}, symbol_fset{"x", "y"}),
-                              math::pow(real(5.678), -2) * math::pow(real(1.234), -4));
+                              math::pow(real(5.678), T(-2)) * math::pow(real(1.234), T(-4)));
         }
     };
     template <typename T>

@@ -41,6 +41,8 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
+#include <mp++/real.hpp>
+
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/integer.hpp>
@@ -171,7 +173,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_stream_test)
     typedef poisson_series<rational> p_type2;
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{}), "0");
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{rational(1, 2)}), "1/2");
-    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{real("-0.5")}), "-1/2");
+    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{real("-0.5", 32)}), "-1/2");
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type3;
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{}), "0");
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{"x"}), "x");
@@ -212,10 +214,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
     BOOST_CHECK_EQUAL(math::sin(p_type2{3}), math::sin(real(3)));
     BOOST_CHECK_EQUAL(math::cos(p_type2{3}), math::cos(real(3)));
     p_type2 p2 = p_type2{"x"} - 2 * p_type2{"y"};
-    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p2)),
-                      "-1.00000000000000000000000000000000000*sin(x-2*y)");
-    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p2)),
-                      "1.00000000000000000000000000000000000*cos(x-2*y)");
+    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p2)), "-1.0000000000*sin(x-2*y)");
+    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p2)), "1.0000000000*cos(x-2*y)");
     BOOST_CHECK_THROW(math::sin(p_type2{"x"} * real(rational(1, 2))), std::invalid_argument);
     BOOST_CHECK_THROW(math::cos(p_type2{"x"} * real(rational(1, 2))), std::invalid_argument);
     typedef poisson_series<real> p_type3;
@@ -302,12 +302,14 @@ BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
     // NOTE: these won't work until we specialise safe_cast for real, due
     // to the new monomial pow() requirements.
     typedef poisson_series<polynomial<real, monomial<short>>> p_type2;
+    mppp::real_set_default_prec(100);
     BOOST_CHECK_EQUAL(math::pow(p_type2(real("1.234")), real("-5.678")), math::pow(real("1.234"), real("-5.678")));
     BOOST_CHECK_EQUAL(sin(p_type2(real("1.234"))), sin(real("1.234")));
     BOOST_CHECK_EQUAL(cos(p_type2(real("1.234"))), cos(real("1.234")));
     typedef poisson_series<real> p_type3;
     BOOST_CHECK_EQUAL(sin(p_type3(real("1.234"))), sin(real("1.234")));
     BOOST_CHECK_EQUAL(cos(p_type3(real("1.234"))), cos(real("1.234")));
+    mppp::real_reset_default_prec();
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_degree_test)

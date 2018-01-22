@@ -135,9 +135,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
     symbol_fmap<real> dict{{"x", real(1.234)}, {"y", real(5.678)}};
     p_type1 x{"x"}, y{"y"};
     auto s1 = (x + y) * cos(x + y);
-    auto tmp1 = (real(0) + real(1) * pow(real(1.234), 1) * pow(real(5.678), 0)
-                 + real(1) * pow(real(1.234), 0) * pow(real(5.678), 1))
-                * cos(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
+    auto tmp1 = (real(1.234) * 1_q + real(5.678) * 1_q) * math::cos(real(1.234) * short(1) + real(5.678) * short(1));
     BOOST_CHECK_EQUAL(math::evaluate(s1, dict), tmp1);
     BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s1, dict))>::value));
     auto s2 = pow(y, 3) * sin(x + y);

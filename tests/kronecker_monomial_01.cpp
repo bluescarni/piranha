@@ -626,13 +626,9 @@ struct pow_tester {
         k1 = k_type{2};
         k_type k2({4});
         BOOST_CHECK(k1.pow(2, symbol_fset{"x"}) == k2);
-        BOOST_CHECK_EXCEPTION(k1.pow(std::numeric_limits<T>::max(), symbol_fset{"x"}), std::overflow_error,
-                              [](const std::overflow_error &e) {
-                                  return boost::contains(
-                                      e.what(), "Conversion of the integer "
-                                                    + (integer{2} * std::numeric_limits<T>::max()).to_string()
-                                                    + " to the type " + typeid(T).name() + " results in overflow");
-                              });
+        BOOST_CHECK_EXCEPTION(
+            k1.pow(std::numeric_limits<T>::max(), symbol_fset{"x"}), std::overflow_error,
+            [](const std::overflow_error &e) { return boost::contains(e.what(), "results in overflow"); });
         k1 = k_type{1};
         if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
             BOOST_CHECK_EXCEPTION(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), symbol_fset{"x"}), std::invalid_argument,
@@ -743,7 +739,7 @@ struct evaluate_tester {
         BOOST_CHECK_EQUAL(k1.template evaluate<rational>({-4_q / 3, 1_q / 2}, symbol_fset{"x", "y"}),
                           math::pow(rational(4, -3), -2) * math::pow(rational(-1, -2), -3));
         BOOST_CHECK_EQUAL(k1.template evaluate<real>({real(1.234), real(5.678)}, symbol_fset{"x", "y"}),
-                          math::pow(real(5.678), -3) * math::pow(real(1.234), -2));
+                          math::pow(real(5.678), T(-3)) * math::pow(real(1.234), T(-2)));
     }
 };
 
