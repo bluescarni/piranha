@@ -31,12 +31,14 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE fateman1_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/lexical_cast.hpp>
 #include <limits>
 
-#include <piranha/init.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <mp++/detail/gmp.hpp>
+#include <mp++/integer.hpp>
+
 #include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/settings.hpp>
 
 using namespace piranha;
@@ -47,13 +49,12 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(fateman1_test)
 {
-    init();
     settings::set_thread_binding(true);
     if (boost::unit_test::framework::master_test_suite().argc > 1) {
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    BOOST_CHECK_EQUAL((fateman1<mp_integer<2>, kronecker_monomial<>>(
+    BOOST_CHECK_EQUAL((fateman1<mppp::integer<2>, kronecker_monomial<>>(
                            static_cast<unsigned long long>(std::numeric_limits<::mp_limb_t>::max()))
                            .size()),
                       135751u);

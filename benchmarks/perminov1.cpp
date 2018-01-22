@@ -39,12 +39,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
-#include <piranha/init.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/settings.hpp>
@@ -63,7 +62,6 @@ static const bfs::path root_path(PIRANHA_TESTS_DIRECTORY);
 
 BOOST_AUTO_TEST_CASE(perminov1_test)
 {
-    init();
     settings::set_thread_binding(true);
     if (boost::unit_test::framework::master_test_suite().argc > 1) {
         settings::set_n_threads(

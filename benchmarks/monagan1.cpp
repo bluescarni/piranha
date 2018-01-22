@@ -31,9 +31,9 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/lexical_cast.hpp>
 
-#include <piranha/init.hpp>
+#include <mp++/integer.hpp>
+
 #include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/settings.hpp>
 
 #include "monagan.hpp"
@@ -42,11 +42,10 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(monagan1_test)
 {
-    init();
     settings::set_thread_binding(true);
     if (boost::unit_test::framework::master_test_suite().argc > 1) {
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    BOOST_CHECK_EQUAL((monagan1<mp_integer<2>, kronecker_monomial<>>().size()), 12341u);
+    BOOST_CHECK_EQUAL((monagan1<mppp::integer<2>, kronecker_monomial<>>().size()), 12341u);
 }
