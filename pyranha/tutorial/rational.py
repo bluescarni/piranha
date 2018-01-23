@@ -24,6 +24,3 @@ print(F(42, 13)**-3)
 
 # Conversion to int yields the truncated value.
 print(int(F(10, 3)))
-
-# Calculate (42/13 choose 21) via the math::binomial() function.
-print(math.binomial(F(42, 13), 21))

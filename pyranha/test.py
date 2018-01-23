@@ -386,29 +386,9 @@ class math_test_case(_ut.TestCase):
         self.lambdifyTest()
 
     def binomialTest(self):
-        from fractions import Fraction as F
         from .math import binomial
-        # Check the return types of binomial.
         self.assertEqual(type(binomial(5, 4)), int)
-        self.assertEqual(type(binomial(5, 4.)), float)
-        self.assertEqual(type(binomial(5, F(4))), float)
-        self.assertEqual(type(binomial(5., 4)), float)
-        self.assertEqual(type(binomial(5., 4.)), float)
-        self.assertEqual(type(binomial(5., F(4))), float)
-        self.assertEqual(type(binomial(F(5), 4)), F)
-        self.assertEqual(type(binomial(F(5), 4.)), float)
-        self.assertEqual(type(binomial(F(5), F(4))), float)
-        try:
-            from mpmath import mpf
-        except ImportError:
-            return
-        self.assertEqual(type(binomial(mpf(5), mpf(4))), mpf)
-        self.assertEqual(type(binomial(5, mpf(4))), mpf)
-        self.assertEqual(type(binomial(5., mpf(4))), mpf)
-        self.assertEqual(type(binomial(F(5), mpf(4))), mpf)
-        self.assertEqual(type(binomial(mpf(5), 4)), mpf)
-        self.assertEqual(type(binomial(mpf(5), 4.)), mpf)
-        self.assertEqual(type(binomial(mpf(5), F(4))), mpf)
+        self.assertEqual(binomial(-5, 4), 70)
 
     def sincosTest(self):
         from fractions import Fraction as F
@@ -832,25 +812,25 @@ class converters_test_case(_ut.TestCase):
             self.assertRaises(ZeroDivisionError, lambda: pt(F(5, 6)))
         # Reals, if possible.
         try:
-            from mpmath import mpf, mp, workdps, binomial as bin, fabs
+            from mpmath import mpf, mp, workdps, cos as mpcos, fabs
         except ImportError:
             return
         pt = polynomial[integer, monomial[int16]]()
         self.assertEqual(mpf, type(evaluate(pt("x"), {"x": mpf(5)})))
         self.assertEqual(evaluate(pt("x"), {"x": mpf(5)}), mpf(5))
         # Check the handling of the precision.
-        from .math import binomial
+        from .math import cos
         # Original number of decimal digits.
         orig_dps = mp.dps
-        tmp = binomial(mpf(5.1), mpf(3.2))
+        tmp = cos(mpf(5.1))
         self.assertEqual(tmp.context.dps, orig_dps)
         with workdps(100):
             # Check that the precision is maintained on output
             # and that the values computed with our implementation and
             # mpmath are close.
-            tmp = binomial(mpf(5.1), mpf(3.2))
+            tmp = cos(mpf(5.1))
             self.assertEqual(tmp.context.dps, 100)
-            self.assertTrue(fabs(tmp - bin(mpf(5.1), mpf(3.2)))
+            self.assertTrue(fabs(tmp - mpcos(mpf(5.1)))
                             < mpf('5e-100'))
 
 
@@ -1017,9 +997,10 @@ class integrate_test_case(_ut.TestCase):
         self.assertEqual(s.integrate('y'), F(1, 6) * z * cos(4 * x - 2 * y))
         self.assertEqual(s.integrate('z'), z**2 / 6 * sin(4 * x - 2 * y))
         pt = polynomial[integer, monomial[rational]]()
+        ptq = polynomial[rational, monomial[rational]]()
         z = pt('z')
         s = z**F(3, 4)
-        self.assertEqual(type(s), pt)
+        self.assertEqual(type(s), ptq)
         self.assertEqual(s.integrate('z'), F(4, 7) * z**F(7, 4))
         self.assertEqual(type(s.integrate('z')), polynomial[
             rational, monomial[rational]]())

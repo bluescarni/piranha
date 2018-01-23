@@ -111,14 +111,13 @@ def sin(arg):
 def binomial(x, y):
     """Binomial coefficient.
 
-    This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient :math:`{x \choose y}`,
-    supporting various combinations of integral, rational, floating-point and arbitrary-precision floating-point types
-    as input.
+    This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient
+    of the input integer values *x* and *y*.
 
     :param x: top argument for the binomial coefficient
-    :type x: ``int``, ``float``, ``Fraction``, ``mpf``
+    :type x: ``int``
     :param y: bottom argument for the binomial coefficient
-    :type y: ``int``, ``float``, ``Fraction``, ``mpf``
+    :type y: ``int``
     :returns: *x* choose *y*
     :raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported
     :raises: any exception raised by the invoked low-level function
@@ -127,11 +126,6 @@ def binomial(x, y):
     3
     >>> binomial(-6,2)
     21
-    >>> from fractions import Fraction as F
-    >>> binomial(F(-4,5),2)
-    Fraction(18, 25)
-    >>> binomial(10,2.4) # doctest: +ELLIPSIS
-    70.3995282...
     >>> binomial('hello world',2.4) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
        ...
