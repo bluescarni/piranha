@@ -237,6 +237,33 @@ BOOST_AUTO_TEST_CASE(real_safe_cast_test)
     });
 }
 
+BOOST_AUTO_TEST_CASE(real_ternary_arith_test)
+{
+    real out;
+    math::add3(out, real{4}, real{-1});
+    BOOST_CHECK(out == 3);
+    math::sub3(out, real{4}, real{-1});
+    BOOST_CHECK(out == 5);
+    math::mul3(out, real{4}, real{-1});
+    BOOST_CHECK(out == -4);
+    math::div3(out, real{4}, real{-1});
+    BOOST_CHECK(out == -4);
+}
+
+BOOST_AUTO_TEST_CASE(real_is_unitary_test)
+{
+    real out;
+    BOOST_CHECK(!math::is_unitary(out));
+    out = 1.234;
+    BOOST_CHECK(!math::is_unitary(out));
+    out = 1;
+    BOOST_CHECK(math::is_unitary(out));
+    out = real{"inf", 5};
+    BOOST_CHECK(!math::is_unitary(out));
+    out = real{"-nan", 5};
+    BOOST_CHECK(!math::is_unitary(out));
+}
+
 #else
 
 int main()

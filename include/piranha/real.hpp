@@ -95,6 +95,21 @@ struct is_zero_impl<real> {
     }
 };
 
+/// Specialisation of the implementation of piranha::math::is_unitary() for piranha::real.
+template <>
+struct is_unitary_impl<real> {
+    /// Call operator.
+    /**
+     * @param r the value to be tested.
+     *
+     * @return \p true if \p r is exactly one, \p false otherwise.
+     */
+    bool operator()(const real &r) const
+    {
+        return r.is_one();
+    }
+};
+
 inline namespace impl
 {
 
@@ -214,6 +229,66 @@ struct multiply_accumulate_impl<real> {
 #else
         mppp::fma(x, y, z, x);
 #endif
+    }
+};
+
+/// Specialisation of the implementation of piranha::math::add3() for piranha::real.
+template <>
+struct add3_impl<real> {
+    /// Call operator.
+    /**
+     * @param out the return value.
+     * @param x the first operand.
+     * @param y the second operand.
+     */
+    void operator()(real &out, const real &x, const real &y) const
+    {
+        mppp::add(out, x, y);
+    }
+};
+
+/// Specialisation of the implementation of piranha::math::sub3() for piranha::real.
+template <>
+struct sub3_impl<real> {
+    /// Call operator.
+    /**
+     * @param out the return value.
+     * @param x the first operand.
+     * @param y the second operand.
+     */
+    void operator()(real &out, const real &x, const real &y) const
+    {
+        mppp::sub(out, x, y);
+    }
+};
+
+/// Specialisation of the implementation of piranha::math::mul3() for piranha::real.
+template <>
+struct mul3_impl<real> {
+    /// Call operator.
+    /**
+     * @param out the return value.
+     * @param x the first operand.
+     * @param y the second operand.
+     */
+    void operator()(real &out, const real &x, const real &y) const
+    {
+        mppp::mul(out, x, y);
+    }
+};
+
+/// Specialisation of the implementation of piranha::math::div3() for piranha::real.
+template <>
+struct div3_impl<real> {
+    /// Call operator.
+    /**
+     * @param out the return value.
+     * @param x the first operand.
+     * @param y the second operand.
+     */
+    void operator()(real &out, const real &x, const real &y) const
+    {
+        mppp::div(out, x, y);
     }
 };
 }
