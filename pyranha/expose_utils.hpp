@@ -57,14 +57,13 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
-#include <piranha/detail/sfinae_types.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/lambdify.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>

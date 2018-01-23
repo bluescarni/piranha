@@ -52,15 +52,14 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -102,9 +101,7 @@ static inline void test_exception()
 }
 
 // Small helper to retrieve the argument error exception from python.
-static inline void generate_argument_error(int)
-{
-}
+static inline void generate_argument_error(int) {}
 
 BOOST_PYTHON_MODULE(_core)
 {
@@ -119,8 +116,6 @@ BOOST_PYTHON_MODULE(_core)
     // to roll back the initialisation, and if the user tries again the init probably a lot of things would
     // go haywire. Like this, we will not re-run any init code in a successive attempt at loading the module.
     inited = true;
-    // Piranha init.
-    piranha::init();
     // Docstring options setup.
     bp::docstring_options doc_options(false, false, false);
     // Type generator class.
@@ -253,22 +248,7 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_factorial", &piranha::math::factorial<1>);
 // Binomial coefficient.
 #define PYRANHA_EXPOSE_BINOMIAL(top, bot) bp::def("_binomial", &piranha::math::binomial<top, bot>)
-    PYRANHA_EXPOSE_BINOMIAL(double, double);
-    PYRANHA_EXPOSE_BINOMIAL(double, piranha::integer);
-    PYRANHA_EXPOSE_BINOMIAL(double, piranha::rational);
-    PYRANHA_EXPOSE_BINOMIAL(double, piranha::real);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::integer, double);
     PYRANHA_EXPOSE_BINOMIAL(piranha::integer, piranha::integer);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::integer, piranha::rational);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::integer, piranha::real);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::rational, double);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::rational, piranha::integer);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::rational, piranha::rational);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::rational, piranha::real);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::real, double);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::real, piranha::integer);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::real, piranha::rational);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::real, piranha::real);
 #undef PYRANHA_EXPOSE_BINOMIAL
 // Sine and cosine.
 #define PYRANHA_EXPOSE_SIN_COS(arg)                                                                                    \

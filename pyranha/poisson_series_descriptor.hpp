@@ -36,12 +36,12 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 
 namespace pyranha
@@ -60,9 +60,9 @@ struct poisson_series_descriptor {
         // Divisor series for the rational polynomial coefficients.
         std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational, piranha::monomial<piranha::rational>>,
                                            piranha::divisor<std::int_least16_t>>>,
-        std::
-            tuple<piranha::divisor_series<piranha::polynomial<piranha::rational, piranha::monomial<std::int_least16_t>>,
-                                          piranha::divisor<std::int_least16_t>>>,
+        std::tuple<
+            piranha::divisor_series<piranha::polynomial<piranha::rational, piranha::monomial<std::int_least16_t>>,
+                                    piranha::divisor<std::int_least16_t>>>,
         std::tuple<piranha::divisor_series<piranha::polynomial<piranha::rational, piranha::kronecker_monomial<>>,
                                            piranha::divisor<std::int_least16_t>>>,
         // Divisor series for the double polynomial coefficients.

@@ -36,11 +36,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/real.hpp>
 
 namespace pyranha
