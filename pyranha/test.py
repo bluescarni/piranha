@@ -331,6 +331,9 @@ class mpmath_test_case(_ut.TestCase):
     """
 
     def runTest(self):
+        from ._core import _with_mpfr
+        if not _with_mpfr:
+            return
         try:
             from mpmath import workdps, mpf, pi
         except ImportError:
@@ -362,7 +365,7 @@ class math_test_case(_ut.TestCase):
     def runTest(self):
         import math
         from .math import cos as pcos, sin as psin
-        from .types import polynomial, k_monomial, double, real
+        from .types import polynomial, k_monomial, double
         # NOTE: according to
         # https://docs.python.org/3/library/math.html
         # the CPython math functions are wrappers around the corresponding
@@ -400,6 +403,9 @@ class math_test_case(_ut.TestCase):
         self.assertEqual(type(sin(F(0))), F)
         self.assertEqual(type(cos(1.)), float)
         self.assertEqual(type(sin(1.)), float)
+        from ._core import _with_mpfr
+        if not _with_mpfr:
+            return
         try:
             from mpmath import mpf
         except ImportError:
@@ -410,7 +416,7 @@ class math_test_case(_ut.TestCase):
     def evaluateTest(self):
         from fractions import Fraction as F
         from .math import evaluate
-        from .types import polynomial, k_monomial, double, integer, real, rational
+        from .types import polynomial, k_monomial, double, integer, rational
         pt = polynomial[double, k_monomial]()
         x, y, z = pt('x'), pt('y'), pt('z')
         self.assertEqual(evaluate(3 * x * y, {'x': 4, 'y': 5}), 3. * (4. * 5.))
@@ -440,6 +446,9 @@ class math_test_case(_ut.TestCase):
         # A missing symbol, thrown from C++.
         self.assertRaises(ValueError, lambda: evaluate(
             3 * x * y, {'x': 4, 'z': 5}))
+        from ._core import _with_mpfr
+        if not _with_mpfr:
+            return
         try:
             from mpmath import mpf
         except ImportError:
@@ -456,7 +465,7 @@ class math_test_case(_ut.TestCase):
     def subsTest(self):
         from fractions import Fraction as F
         from .math import subs, ipow_subs, t_subs, cos, sin
-        from .types import poisson_series, polynomial, k_monomial, rational, double, real
+        from .types import poisson_series, polynomial, k_monomial, rational, double
         pt = poisson_series[polynomial[rational, k_monomial]]()
         x, y, z = pt('x'), pt('y'), pt('z')
         # Normal subs().
@@ -495,7 +504,9 @@ class math_test_case(_ut.TestCase):
         self.assertAlmostEqual(invert(-3.456), -3.456**-1.)
         try:
             from mpmath import mpf
-            self.assertEqual(type(invert(mpf(1.23))), mpf)
+            from ._core import _with_mpfr
+            if _with_mpfr:
+                self.assertEqual(type(invert(mpf(1.23))), mpf)
         except ImportError:
             pass
         from .types import polynomial, monomial, rational, int16, divisor_series, divisor, poisson_series
@@ -578,9 +589,11 @@ class math_test_case(_ut.TestCase):
         # Try with optional modules:
         try:
             from mpmath import mpf
-            l = lambdify(mpf, x - y, ['x', 'y'])
-            self.assertEqual(l([mpf(1), mpf(2)]), mpf(1) - mpf(2))
-            self.assertEqual(type(l([mpf(1), mpf(2)])), mpf)
+            from ._core import _with_mpfr
+            if _with_mpfr:
+                l = lambdify(mpf, x - y, ['x', 'y'])
+                self.assertEqual(l([mpf(1), mpf(2)]), mpf(1) - mpf(2))
+                self.assertEqual(type(l([mpf(1), mpf(2)])), mpf)
         except ImportError:
             pass
         try:
@@ -605,7 +618,7 @@ class polynomial_test_case(_ut.TestCase):
     """
 
     def runTest(self):
-        from .types import polynomial, rational, int16, integer, double, real, monomial
+        from .types import polynomial, rational, int16, integer, double, monomial
         from fractions import Fraction
         from .math import integrate
         self.assertEqual(
@@ -651,7 +664,7 @@ class divisor_series_test_case(_ut.TestCase):
     """
 
     def runTest(self):
-        from .types import divisor_series, rational, int16, double, real, divisor, monomial, polynomial
+        from .types import divisor_series, rational, int16, double, divisor, monomial, polynomial
         from fractions import Fraction
         from .math import partial, integrate, invert
         self.assertEqual(type(divisor_series[polynomial[rational, monomial[int16]], divisor[
@@ -747,7 +760,7 @@ class converters_test_case(_ut.TestCase):
 
     def runTest(self):
         import sys
-        from .types import polynomial, int16, integer, rational, real, monomial
+        from .types import polynomial, int16, integer, rational, monomial
         from fractions import Fraction as F
         from .math import evaluate
         # Context for the temporary monkey-patching of type t to return bogus
@@ -811,6 +824,9 @@ class converters_test_case(_ut.TestCase):
         with patch_str(F, "5/0"):
             self.assertRaises(ZeroDivisionError, lambda: pt(F(5, 6)))
         # Reals, if possible.
+        from ._core import _with_mpfr
+        if not _with_mpfr:
+            return
         try:
             from mpmath import mpf, mp, workdps, cos as mpcos, fabs
         except ImportError:

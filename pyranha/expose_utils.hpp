@@ -64,7 +64,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/rational.hpp>
-#include <piranha/real.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>

@@ -42,12 +42,17 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/object.hpp>
 #include <boost/python/type_id.hpp>
 
+#include <mp++/config.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <mp++/detail/mpfr.hpp>
+#endif
 
 #include <piranha/config.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/safe_cast.hpp>
 
 // NOTE: useful resources for python converters and C API:
@@ -173,6 +178,8 @@ struct rational_converter {
     }
 };
 
+#if defined(MPPP_WITH_MPFR)
+
 struct real_converter {
     real_converter()
     {
@@ -279,6 +286,8 @@ struct real_converter {
         data->convertible = storage;
     }
 };
+
+#endif
 }
 
 #endif

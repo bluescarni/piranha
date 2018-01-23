@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import as _ai
 
-from ._core import types as _t
+from ._core import types as _t, _with_mpfr
 
 #: This type generator represents the standard C++ type ``double``.
 double = _t.double
@@ -44,8 +44,9 @@ integer = _t.integer
 #: This type generator represents the arbitrary-precision rational type provided by the piranha C++ library.
 rational = _t.rational
 
-#: This type generator represents the multiprecision floating-point type provided by the piranha C++ library.
-real = _t.real
+if _with_mpfr:
+    #: This type generator represents the multiprecision floating-point type provided by the piranha C++ library.
+    real = _t.real
 
 #: This type generator represents the Kronecker monomial type (that is, a monomial "compressed" into a single
 #: signed integral value).

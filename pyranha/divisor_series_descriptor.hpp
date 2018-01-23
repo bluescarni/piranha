@@ -34,6 +34,8 @@ see https://www.gnu.org/licenses/. */
 #include <cstdint>
 #include <tuple>
 
+#include <mp++/config.hpp>
+
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/integer.hpp>
@@ -41,7 +43,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 
 namespace pyranha
 {
@@ -58,7 +62,12 @@ struct divisor_series_descriptor {
         std::tuple<piranha::polynomial<piranha::rational, piranha::kronecker_monomial<>>, d_type>>;
     using interop_types = std::tuple<double, piranha::integer, piranha::rational>;
     using pow_types = interop_types;
-    using eval_types = std::tuple<double, piranha::integer, piranha::rational, piranha::real>;
+    using eval_types = std::tuple<double, piranha::integer, piranha::rational
+#if defined(MPPP_WITH_MPFR)
+                                  ,
+                                  piranha::real
+#endif
+                                  >;
     interop_types it;
     pow_types pt;
     eval_types et;

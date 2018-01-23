@@ -34,6 +34,8 @@ see https://www.gnu.org/licenses/. */
 #include <cstdint>
 #include <tuple>
 
+#include <mp++/config.hpp>
+
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/integer.hpp>
@@ -42,7 +44,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 
 namespace pyranha
 {
@@ -74,7 +78,12 @@ struct poisson_series_descriptor {
                                            piranha::divisor<std::int_least16_t>>>>;
     using interop_types = std::tuple<double, piranha::integer, piranha::rational>;
     using pow_types = interop_types;
-    using eval_types = std::tuple<double, piranha::integer, piranha::rational, piranha::real>;
+    using eval_types = std::tuple<double, piranha::integer, piranha::rational
+#if defined(MPPP_WITH_MPFR)
+                                  ,
+                                  piranha::real
+#endif
+                                  >;
     using subs_types = interop_types;
     using degree_truncation_types = std::tuple<piranha::integer, piranha::rational>;
     interop_types it;
