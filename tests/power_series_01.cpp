@@ -41,7 +41,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/rational.hpp>
-#include <piranha/real.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>

@@ -43,13 +43,17 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
+#include <mp++/config.hpp>
+
 #include <piranha/integer.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
@@ -57,7 +61,13 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double, integer, real> cf_types;
+typedef boost::mpl::vector<double, integer
+#if defined(MPPP_WITH_MPFR)
+                           ,
+                           real
+#endif
+                           >
+    cf_types;
 typedef boost::mpl::vector<int, integer> expo_types;
 
 template <typename Cf, typename Expo>

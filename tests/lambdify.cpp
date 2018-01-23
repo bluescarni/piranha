@@ -43,7 +43,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/rational.hpp>
-#include <piranha/real.hpp>
 
 using namespace piranha;
 using math::evaluate;

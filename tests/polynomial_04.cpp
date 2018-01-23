@@ -41,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
+#include <mp++/config.hpp>
 #include <mp++/rational.hpp>
 
 #include <piranha/base_series_multiplier.hpp>
@@ -53,7 +54,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/monomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
@@ -244,6 +247,7 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
         BOOST_CHECK_EQUAL((math::pow(y + 4 * z, 5) * math::pow(x, -1)).template subs<rational>({{"x", rational(3)}}),
                           (math::pow(y + 4 * z, 5)) / 3);
     }
+#if defined(MPPP_WITH_MPFR)
     {
         typedef polynomial<real, monomial<int>> p_type2;
         BOOST_CHECK((has_subs<p_type2, rational>::value));
@@ -258,6 +262,7 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
         BOOST_CHECK_EQUAL(math::subs<real>(x * x * x + y * y, {{"x", real(1.234)}, {"y", real(-5.678)}}),
                           math::pow(real(-5.678), 2) + math::pow(real(1.234), 3));
     }
+#endif
     typedef polynomial<integer, monomial<long>> p_type3;
     BOOST_CHECK((has_subs<p_type3, rational>::value));
     BOOST_CHECK((has_subs<p_type3, double>::value));

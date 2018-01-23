@@ -43,6 +43,8 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <mp++/config.hpp>
+
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
@@ -52,7 +54,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
@@ -61,10 +65,14 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
+#if defined(MPPP_WITH_MPFR)
+
 static inline real operator"" _r(const char *s)
 {
     return real(s, 100);
 }
+
+#endif
 
 template <typename Cf, typename Key>
 class g_series_type : public ipow_substitutable_series<series<Cf, Key, g_series_type<Cf, Key>>, g_series_type<Cf, Key>>
@@ -168,7 +176,9 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
     BOOST_CHECK((has_ipow_subs<stype0, double>::value));
     BOOST_CHECK((has_ipow_subs<stype0, integer>::value));
     BOOST_CHECK((has_ipow_subs<stype0, rational>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((has_ipow_subs<stype0, real>::value));
+#endif
     BOOST_CHECK((!has_ipow_subs<stype0, std::string>::value));
     {
         stype0 x{"x"}, y{"y"}, z{"z"};
@@ -217,6 +227,7 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
         tmp3 = (3 * x + y * y * y / 7).ipow_subs("y", 2, 2 / 5_q);
         BOOST_CHECK(tmp3.is_identical(math::ipow_subs(3 * x + y * y * y / 7, "y", 2, 2 / 5_q)));
         BOOST_CHECK_EQUAL(tmp3, 3 * x + 2 / 5_q / 7 * y);
+#if defined(MPPP_WITH_MPFR)
         auto tmp4 = (3 * x + y * y / 7).ipow_subs("y", 1, 2.123_r);
         BOOST_CHECK(tmp4.is_identical(math::ipow_subs(3 * x + y * y / 7, "y", 1, 2.123_r)));
         BOOST_CHECK((std::is_same<decltype(tmp4), g_series_type<real, monomial<int>>>::value));
@@ -230,6 +241,7 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
         tmp4 = (3 * x + y * y * y / 7).ipow_subs("y", 2, 2.123_r);
         BOOST_CHECK(tmp4.is_identical(math::ipow_subs(3 * x + y * y * y / 7, "y", 2, 2.123_r)));
         BOOST_CHECK_EQUAL(tmp4, 3 * x + y * 2.123_r / 7);
+#endif
         auto tmp5 = (3 * x + y * y / 7).ipow_subs("y", 1, -2_z);
         BOOST_CHECK(tmp5.is_identical(math::ipow_subs(3 * x + y * y / 7, "y", 1, -2_z)));
         BOOST_CHECK((std::is_same<decltype(tmp5), stype0>::value));
@@ -253,7 +265,9 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
     BOOST_CHECK((has_ipow_subs<stype1, double>::value));
     BOOST_CHECK((has_ipow_subs<stype1, integer>::value));
     BOOST_CHECK((has_ipow_subs<stype1, rational>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((has_ipow_subs<stype1, real>::value));
+#endif
     BOOST_CHECK((!has_ipow_subs<stype1, std::string>::value));
     {
         stype1 x{stype0{"x"}}, y{stype0{"y"}}, z{stype0{"z"}};
@@ -318,7 +332,9 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
     BOOST_CHECK((has_ipow_subs<stype2, double>::value));
     BOOST_CHECK((has_ipow_subs<stype2, integer>::value));
     BOOST_CHECK((has_ipow_subs<stype2, rational>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((has_ipow_subs<stype2, real>::value));
+#endif
     BOOST_CHECK((!has_ipow_subs<stype2, std::string>::value));
     {
         // Recursive poly with x and y at the first level, z in the second.

@@ -52,6 +52,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/config.hpp>
+
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
@@ -60,7 +62,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -372,7 +376,9 @@ BOOST_AUTO_TEST_CASE(math_integrate_test)
     BOOST_CHECK(!piranha::is_integrable<int const &>::value);
     BOOST_CHECK(!piranha::is_integrable<long>::value);
     BOOST_CHECK(!piranha::is_integrable<double>::value);
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK(!piranha::is_integrable<real>::value);
+#endif
     BOOST_CHECK(!piranha::is_integrable<rational>::value);
     BOOST_CHECK(!piranha::is_integrable<std::string>::value);
 }

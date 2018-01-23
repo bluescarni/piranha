@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <mp++/config.hpp>
 #include <mp++/exceptions.hpp>
 
 #include <piranha/divisor.hpp>
@@ -51,13 +52,19 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
-using cf_types = std::tuple<double, integer, real, rational, polynomial<rational, monomial<int>>>;
+using cf_types = std::tuple<double, integer,
+#if defined(MPPP_WITH_MPFR)
+                            real,
+#endif
+                            rational, polynomial<rational, monomial<int>>>;
 using expo_types = std::tuple<short, int, long, integer>;
 
 struct test_00_tester {

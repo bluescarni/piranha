@@ -407,7 +407,7 @@ struct safe_cast_tester {
         BOOST_CHECK((has_safe_cast<q_type, long double>::value));
         BOOST_CHECK_EQUAL(safe_cast<q_type>(1.l / rl), q_type(1, r));
 #else
-        BOOST_CHECK((!has_safe_cast<q_type, long double, >::value));
+        BOOST_CHECK((!has_safe_cast<q_type, long double>::value));
 #endif
         if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
             BOOST_CHECK_EXCEPTION(safe_cast<q_type>(std::numeric_limits<double>::infinity()), safe_cast_failure,

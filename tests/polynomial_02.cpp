@@ -41,8 +41,11 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
+#include <mp++/config.hpp>
 #include <mp++/exceptions.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <mp++/real.hpp>
+#endif
 
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/exceptions.hpp>
@@ -54,7 +57,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/monomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
@@ -112,7 +117,9 @@ public:
 
 BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 {
+#if defined(MPPP_WITH_MPFR)
     mppp::real_set_default_prec(100);
+#endif
     // Simple echelon-1 polynomial.
     typedef polynomial<rational, monomial<short>> p_type1;
     BOOST_CHECK(is_integrable<p_type1>::value);
@@ -236,6 +243,7 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
         BOOST_CHECK_EQUAL(x.pow(-5).ipow_subs("y", -2, 5), x.pow(-5));
         BOOST_CHECK_EQUAL((x.pow(-5) * y * z).ipow_subs("x", -4, 5), x.pow(-1) * 5 * z * y);
     }
+#if defined(MPPP_WITH_MPFR)
     {
         typedef polynomial<real, monomial<int>> p_type2;
         BOOST_CHECK((has_ipow_subs<p_type2, p_type2>::value));
@@ -251,6 +259,7 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
             math::ipow_subs(x * x * x + y * y, "x", integer(1), real(1.234)).ipow_subs("y", integer(1), real(-5.678)),
             math::pow(real(-5.678), 2) + math::pow(real(1.234), 3));
     }
+#endif
     {
         typedef polynomial<integer, monomial<long>> p_type3;
         BOOST_CHECK((has_ipow_subs<p_type3, p_type3>::value));

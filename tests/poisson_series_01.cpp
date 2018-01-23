@@ -41,7 +41,10 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
+#include <mp++/config.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <mp++/real.hpp>
+#endif
 
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
@@ -52,7 +55,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -130,7 +135,9 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(poisson_series_constructors_test)
 {
+#if defined(MPPP_WITH_MPFR)
     mppp::real_set_default_prec(100);
+#endif
     tuple_for_each(cf_types{}, constructor_tester());
 }
 
@@ -174,7 +181,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_stream_test)
     typedef poisson_series<rational> p_type2;
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{}), "0");
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{rational(1, 2)}), "1/2");
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{real("-0.5", 32)}), "-1/2");
+#endif
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type3;
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{}), "0");
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{"x"}), "x");
@@ -209,6 +218,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
     BOOST_CHECK_THROW(math::cos(p_type1{"x"} * rational(1, 2)), std::invalid_argument);
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p_type1{"x"} * rational(4, -2))), "-sin(2*x)");
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-math::cos(p_type1{"x"} * rational(4, 2))), "-cos(2*x)");
+#if defined(MPPP_WITH_MPFR)
     typedef poisson_series<polynomial<real, monomial<short>>> p_type2;
     BOOST_CHECK((std::is_same<p_type2, decltype(math::sin(p_type2{}))>::value));
     BOOST_CHECK((std::is_same<p_type2, decltype(math::cos(p_type2{}))>::value));
@@ -223,6 +233,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
     typedef poisson_series<real> p_type3;
     BOOST_CHECK_EQUAL(math::sin(p_type3{3}), math::sin(real(3)));
     BOOST_CHECK_EQUAL(math::cos(p_type3{3}), math::cos(real(3)));
+#endif
     typedef poisson_series<double> p_type4;
     BOOST_CHECK((std::is_same<p_type4, decltype(math::sin(p_type4{}))>::value));
     BOOST_CHECK((std::is_same<p_type4, decltype(math::cos(p_type4{}))>::value));
@@ -233,8 +244,10 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
     // Type traits checks.
     BOOST_CHECK(has_sine<p_type4>::value);
     BOOST_CHECK(has_cosine<p_type4>::value);
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK(has_sine<p_type3>::value);
     BOOST_CHECK(has_cosine<p_type3>::value);
+#endif
     BOOST_CHECK(has_sine<p_type1>::value);
     BOOST_CHECK(has_cosine<p_type1>::value);
     BOOST_CHECK(has_sine<poisson_series<rational>>::value);
@@ -301,6 +314,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
     BOOST_CHECK_EQUAL(math::pow(cos(x), 5) * math::pow(sin(x), 5),
                       (10 * sin(2 * x) - 5 * sin(6 * x) + sin(10 * x)) / 512);
     BOOST_CHECK_EQUAL(math::pow(p_type1{rational(1, 2)}, 5), math::pow(rational(1, 2), 5));
+#if defined(MPPP_WITH_MPFR)
     // NOTE: these won't work until we specialise safe_cast for real, due
     // to the new monomial pow() requirements.
     typedef poisson_series<polynomial<real, monomial<short>>> p_type2;
@@ -310,6 +324,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
     typedef poisson_series<real> p_type3;
     BOOST_CHECK_EQUAL(sin(p_type3(real("1.234"))), sin(real("1.234")));
     BOOST_CHECK_EQUAL(cos(p_type3(real("1.234"))), cos(real("1.234")));
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_degree_test)

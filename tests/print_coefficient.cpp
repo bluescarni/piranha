@@ -36,8 +36,12 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
+#include <mp++/config.hpp>
+
 #include <piranha/integer.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 
 using namespace piranha;
 
@@ -63,8 +67,10 @@ BOOST_AUTO_TEST_CASE(print_coefficient_main_test)
     print_coefficient(oss, integer(-5));
     BOOST_CHECK_EQUAL(oss.str(), "-5");
     oss.str("");
+#if defined(MPPP_WITH_MPFR)
     print_coefficient(oss, real("1.2345", 23));
     BOOST_CHECK_EQUAL(oss.str(), boost::lexical_cast<std::string>(real("1.2345", 23)));
+#endif
     BOOST_CHECK((std::is_same<decltype(print_coefficient(oss, 42)), std::ostream &>::value));
     BOOST_CHECK((std::is_same<decltype(print_coefficient(oss, integer(-5))), std::ostream &>::value));
 }

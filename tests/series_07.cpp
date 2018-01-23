@@ -33,20 +33,27 @@ see https://www.gnu.org/licenses/. */
 
 #include <limits>
 
+#include <mp++/config.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <mp++/real.hpp>
+#endif
 
 #include <piranha/integer.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(series_zero_is_absorbing_test)
 {
+#if defined(MPPP_WITH_MPFR)
     mppp::real_set_default_prec(100);
+#endif
     {
         using pt1 = polynomial<double, monomial<int>>;
         using pt2 = polynomial<pt1, monomial<int>>;
@@ -63,6 +70,7 @@ BOOST_AUTO_TEST_CASE(series_zero_is_absorbing_test)
             BOOST_CHECK((!zero_is_absorbing<pt2 &&>::value));
         }
     }
+#if defined(MPPP_WITH_MPFR)
     {
         using pt1 = polynomial<real, monomial<int>>;
         using pt2 = polynomial<pt1, monomial<int>>;
@@ -77,6 +85,7 @@ BOOST_AUTO_TEST_CASE(series_zero_is_absorbing_test)
         BOOST_CHECK((!zero_is_absorbing<const pt2>::value));
         BOOST_CHECK((!zero_is_absorbing<pt2 &&>::value));
     }
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
@@ -146,6 +155,7 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
             BOOST_CHECK(math::pow(pt1(0.), -1).size() == 1u);
         }
     }
+#if defined(MPPP_WITH_MPFR)
     {
         using pt2 = polynomial<real, monomial<int>>;
         pt2 x{"x"};
@@ -202,6 +212,7 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
         BOOST_CHECK(math::pow(pt2(0.), real{"nan"}).size() == 1u);
         BOOST_CHECK(math::pow(pt2(0.), -1).size() == 1u);
     }
+#endif
     {
         using pt1 = polynomial<polynomial<double, monomial<int>>, monomial<int>>;
         pt1 x{"x"};
@@ -267,6 +278,7 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
             BOOST_CHECK(math::pow(pt1(0.), -1).size() == 1u);
         }
     }
+#if defined(MPPP_WITH_MPFR)
     {
         using pt2 = polynomial<polynomial<real, monomial<int>>, monomial<int>>;
         pt2 x{"x"};
@@ -323,4 +335,5 @@ BOOST_AUTO_TEST_CASE(series_fp_coefficient_test)
         BOOST_CHECK(math::pow(pt2(0.), real{"nan"}).size() == 1u);
         BOOST_CHECK(math::pow(pt2(0.), -1).size() == 1u);
     }
+#endif
 }

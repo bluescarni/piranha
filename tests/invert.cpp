@@ -34,23 +34,31 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
+#include <mp++/config.hpp>
+
 #include <piranha/integer.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 
 using namespace piranha;
 
 using math::invert;
 using math::pow;
 
+#if defined(MPPP_WITH_MPFR)
+
 static inline real operator"" _r(const char *s)
 {
     return real(s, 100);
 }
+
+#endif
 
 BOOST_AUTO_TEST_CASE(invert_test_00)
 {
@@ -69,7 +77,9 @@ BOOST_AUTO_TEST_CASE(invert_test_00)
     // Test with piranha's scalar types.
     BOOST_CHECK(is_invertible<integer>::value);
     BOOST_CHECK(is_invertible<rational>::value);
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK(is_invertible<real>::value);
+#endif
     BOOST_CHECK_EQUAL(invert(1_z), 1);
     BOOST_CHECK_EQUAL(invert(-1_z), -1);
     BOOST_CHECK_EQUAL(invert(2_z), 0);
@@ -78,10 +88,12 @@ BOOST_AUTO_TEST_CASE(invert_test_00)
     BOOST_CHECK_EQUAL(invert(1 / 2_q), 2);
     BOOST_CHECK_EQUAL(invert(-2 / 3_q), -3 / 2_q);
     BOOST_CHECK((std::is_same<rational, decltype(invert(1_q))>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK_EQUAL(invert(1_r), 1);
     BOOST_CHECK_EQUAL(invert(1.5_r), pow(1.5_r, -1));
     BOOST_CHECK_EQUAL(invert(-2.5_r), pow(-2.5_r, -1));
     BOOST_CHECK((std::is_same<real, decltype(invert(1_r))>::value));
+#endif
     // Test with some series types.
     using p_type = polynomial<rational, monomial<short>>;
     BOOST_CHECK(is_invertible<p_type>::value);

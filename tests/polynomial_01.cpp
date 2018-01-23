@@ -41,8 +41,11 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
+#include <mp++/config.hpp>
 #include <mp++/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <mp++/real.hpp>
+#endif
 
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/detail/debug_access.hpp>
@@ -53,7 +56,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/monomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
@@ -187,7 +192,9 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(polynomial_constructors_test)
 {
+#if defined(MPPP_WITH_MPFR)
     mppp::real_set_default_prec(100);
+#endif
     boost::mpl::for_each<cf_types>(constructor_tester());
 }
 
@@ -474,12 +481,14 @@ public:
             p2 = p_type2{"x"} * 2.5 + p_type2{"y"} * 4.;
             BOOST_CHECK_THROW(p2.integral_combination(), std::invalid_argument);
         }
+#if defined(MPPP_WITH_MPFR)
         typedef polynomial<real, monomial<int>> p_type3;
         p_type3 p3;
         p3 = p_type3{"x"} * 2 + p_type3{"y"} * 4;
         BOOST_CHECK((p3.integral_combination() == map_type{{"x", integer(2)}, {"y", integer(4)}}));
         p3 = p_type3{"x"} * real{"2.5"} + p_type3{"y"} * 4.;
         BOOST_CHECK_THROW(p3.integral_combination(), std::invalid_argument);
+#endif
     }
 };
 }
@@ -532,10 +541,12 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
     BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.pow(2.)), polynomial<double, monomial<int>>>::value));
     BOOST_CHECK_EQUAL((p_type1{"x"}.pow(2.)),
                       (polynomial<double, monomial<int>>{"x"} * polynomial<double, monomial<int>>{"x"}));
+#if defined(MPPP_WITH_MPFR)
     typedef polynomial<real, monomial<int>> p_type2;
     BOOST_CHECK((is_exponentiable<p_type2, integer>::value));
     BOOST_CHECK((is_exponentiable<p_type2, real>::value));
     BOOST_CHECK((!is_exponentiable<p_type2, std::string>::value));
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_partial_test)

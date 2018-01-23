@@ -68,10 +68,14 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
+#if defined(MPPP_WITH_MPFR)
+
 static inline real operator"" _r(const char *s)
 {
     return real(s, 100);
 }
+
+#endif
 
 using value_types = std::tuple<signed char, short, int, long, long long, integer>;
 
@@ -567,8 +571,8 @@ struct evaluate_tester {
         // Test the type trait first.
         BOOST_CHECK((key_is_evaluable<d_type, rational>::value));
         BOOST_CHECK((key_is_evaluable<d_type, double>::value));
-        BOOST_CHECK((key_is_evaluable<d_type, long double>::value));
 #if defined(MPPP_WITH_MPFR)
+        BOOST_CHECK((key_is_evaluable<d_type, long double>::value));
         BOOST_CHECK((key_is_evaluable<d_type, real>::value));
 #endif
         BOOST_CHECK((!key_is_evaluable<d_type, std::string>::value));

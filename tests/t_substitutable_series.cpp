@@ -41,7 +41,10 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/config.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <mp++/real.hpp>
+#endif
 
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
@@ -51,7 +54,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
 
@@ -105,7 +110,9 @@ public:
 
 BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 {
+#if defined(MPPP_WITH_MPFR)
     mppp::real_set_default_prec(100);
+#endif
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     p_type1 x{"x"}, y{"y"};
     BOOST_CHECK((has_t_subs<p_type1, p_type1, p_type1>::value));
@@ -169,6 +176,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK_EQUAL(math::cos(-x + p_type1{"2pi"}).t_subs("2pi", 1, 0), math::cos(x));
     BOOST_CHECK_EQUAL(math::sin(-x + p_type1{"2pi"}).t_subs("2pi", 1, 0), -math::sin(x));
     BOOST_CHECK_EQUAL(math::t_subs(math::sin(-x + p_type1{"2pi"}), "2pi", 1, 0), -math::sin(x));
+#if defined(MPPP_WITH_MPFR)
     // Real and mixed-series subs.
     typedef poisson_series<polynomial<real, monomial<short>>> p_type3;
     BOOST_CHECK((std::is_same<decltype(p_type3{"x"}.t_subs("x", c, s)), p_type3>::value));
@@ -197,6 +205,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK((has_t_subs<p_type3, real, real>::value));
     BOOST_CHECK((has_t_subs<p_type3, double, double>::value));
     BOOST_CHECK((!has_t_subs<p_type3, double, int>::value));
+#endif
     // Trig subs in the coefficient.
     typedef polynomial<poisson_series<rational>, monomial<short>> p_type2;
     BOOST_CHECK_EQUAL(p_type2{}.t_subs("x", 1, 2), p_type2{});

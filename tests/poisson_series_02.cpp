@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
+#include <mp++/config.hpp>
 #include <mp++/exceptions.hpp>
 
 #include <piranha/detail/polynomial_fwd.hpp>
@@ -51,7 +52,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 
@@ -96,6 +99,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
             BOOST_CHECK_EQUAL((x.pow(7) + x.pow(2) * y + z).ipow_subs("x", integer(3), x), x.pow(3) + x.pow(2) * y + z);
             BOOST_CHECK_EQUAL((x.pow(6) + x.pow(2) * y + z).ipow_subs("x", integer(3), p_type1{}), x.pow(2) * y + z);
         }
+#if defined(MPPP_WITH_MPFR)
         {
             typedef poisson_series<polynomial<real, monomial<short>>> p_type2;
             BOOST_CHECK((has_ipow_subs<p_type2, p_type2>::value));
@@ -112,6 +116,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
                                   .ipow_subs("y", integer(1), real(-5.678)),
                               math::pow(real(-5.678), integer(2)) + math::pow(real(1.234), integer(3)));
         }
+#endif
         p_type1 x{"x"}, y{"y"}, z{"z"};
         BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z, "x", integer(2), y), x.pow(-7) + y + z);
         BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z, "x", integer(-2), y), x.pow(-1) * y.pow(3) + y + z);
@@ -143,7 +148,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     BOOST_CHECK((is_evaluable<p_type1, double>::value));
     BOOST_CHECK((is_evaluable<p_type1, float>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
+#endif
     BOOST_CHECK((is_evaluable<p_type1, rational>::value));
     BOOST_CHECK((is_evaluable<p_type1, integer>::value));
     BOOST_CHECK((is_evaluable<p_type1, int>::value));
@@ -288,9 +295,12 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 BOOST_AUTO_TEST_CASE(poisson_series_poly_in_cf_test)
 {
     BOOST_CHECK((!detail::poly_in_cf<poisson_series<double>>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((!detail::poly_in_cf<poisson_series<real>>::value));
     BOOST_CHECK((detail::poly_in_cf<poisson_series<polynomial<real, monomial<short>>>>::value));
+#endif
     BOOST_CHECK((detail::poly_in_cf<poisson_series<polynomial<rational, monomial<short>>>>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK(
         (detail::poly_in_cf<poisson_series<divisor_series<polynomial<real, monomial<short>>, divisor<short>>>>::value));
     BOOST_CHECK((detail::poly_in_cf<
@@ -299,6 +309,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_poly_in_cf_test)
                  poisson_series<divisor_series<divisor_series<real, divisor<short>>, divisor<short>>>>::value));
     BOOST_CHECK((!detail::poly_in_cf<
                  poisson_series<divisor_series<divisor_series<rational, divisor<short>>, divisor<short>>>>::value));
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_invert_test)

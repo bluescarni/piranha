@@ -46,6 +46,8 @@ see https://www.gnu.org/licenses/. */
 #include <typeinfo>
 #include <vector>
 
+#include <mp++/config.hpp>
+
 #include <piranha/detail/demangle.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
@@ -56,7 +58,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -738,8 +742,10 @@ struct evaluate_tester {
         k1 = k_type({T(-2), T(-3)});
         BOOST_CHECK_EQUAL(k1.template evaluate<rational>({-4_q / 3, 1_q / 2}, symbol_fset{"x", "y"}),
                           math::pow(rational(4, -3), -2) * math::pow(rational(-1, -2), -3));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK_EQUAL(k1.template evaluate<real>({real(1.234), real(5.678)}, symbol_fset{"x", "y"}),
                           math::pow(real(5.678), T(-3)) * math::pow(real(1.234), T(-2)));
+#endif
     }
 };
 
@@ -760,7 +766,9 @@ struct subs_tester {
         // Test the type trait.
         BOOST_CHECK((key_has_subs<k_type, integer>::value));
         BOOST_CHECK((key_has_subs<k_type, rational>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((key_has_subs<k_type, real>::value));
+#endif
         BOOST_CHECK((key_has_subs<k_type, double>::value));
         BOOST_CHECK((!key_has_subs<k_type, std::string>::value));
         BOOST_CHECK((!key_has_subs<k_type, std::vector<std::string>>::value));
@@ -799,11 +807,13 @@ struct subs_tester {
         BOOST_CHECK_EQUAL(ret.size(), 1u);
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(-2), T(3)));
         BOOST_CHECK((ret[0u].second == k_type{T(2), T(0)}));
+#if defined(MPPP_WITH_MPFR)
         auto ret2 = k1.template subs<real>({{0, real(-2.345)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 1u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(2)));
         BOOST_CHECK((ret2[0u].second == k_type{T(0), T(3)}));
         BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
+#endif
         auto ret3 = k1.template subs<rational>({{0, -1_q / 2}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret3.size(), 1u);
         BOOST_CHECK_EQUAL(ret3[0u].first, rational(1, 4));
@@ -1059,7 +1069,9 @@ struct ipow_subs_tester {
         // Test the type trait.
         BOOST_CHECK((key_has_ipow_subs<k_type, integer>::value));
         BOOST_CHECK((key_has_ipow_subs<k_type, double>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((key_has_ipow_subs<k_type, real>::value));
+#endif
         BOOST_CHECK((key_has_ipow_subs<k_type, rational>::value));
         BOOST_CHECK((!key_has_ipow_subs<k_type, std::string>::value));
         k_type k1;
@@ -1139,11 +1151,13 @@ struct ipow_subs_tester {
         BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
         BOOST_CHECK((ret[0u].second == k_type{T(2), T(-1)}));
         k1 = k_type({T(-7), T(2)});
+#if defined(MPPP_WITH_MPFR)
         auto ret2 = k1.ipow_subs(0, integer(-4), real(-2.345), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 1u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(1)));
         BOOST_CHECK((ret2[0u].second == k_type{T(-3), T(2)}));
         BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
+#endif
         auto ret3 = k1.ipow_subs(0, integer(-3), rational(-1, 2), symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret3.size(), 1u);
         BOOST_CHECK_EQUAL(ret3[0u].first, math::pow(rational(-1, 2), T(2)));
