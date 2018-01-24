@@ -61,19 +61,6 @@ BOOST_AUTO_TEST_CASE(exception_test_00)
                           [](const std::runtime_error &e) { return boost::contains(e.what(), "foobar"); });
     BOOST_CHECK_EXCEPTION(piranha_throw(not_implemented_error, std::string("foobar")), std::runtime_error,
                           [](const std::runtime_error &e) { return boost::contains(e.what(), "foobar"); });
-    // zero_division_error.
-    BOOST_CHECK((std::is_constructible<zero_division_error, std::string>::value));
-    BOOST_CHECK((std::is_constructible<zero_division_error, char *>::value));
-    BOOST_CHECK((std::is_constructible<zero_division_error, const char *>::value));
-    BOOST_CHECK((!std::is_constructible<zero_division_error>::value));
-    BOOST_CHECK_EXCEPTION(piranha_throw(zero_division_error, "foobar"), zero_division_error,
-                          [](const zero_division_error &e) { return boost::contains(e.what(), "foobar"); });
-    BOOST_CHECK_EXCEPTION(piranha_throw(zero_division_error, std::string("foobar")), zero_division_error,
-                          [](const zero_division_error &e) { return boost::contains(e.what(), "foobar"); });
-    BOOST_CHECK_EXCEPTION(piranha_throw(zero_division_error, "foobar"), std::domain_error,
-                          [](const std::domain_error &e) { return boost::contains(e.what(), "foobar"); });
-    BOOST_CHECK_EXCEPTION(piranha_throw(zero_division_error, std::string("foobar")), std::domain_error,
-                          [](const std::domain_error &e) { return boost::contains(e.what(), "foobar"); });
     // A couple of tests with exceptions that do not accept string ctor.
     BOOST_CHECK_THROW(piranha_throw(std::bad_alloc, ), std::bad_alloc);
     BOOST_CHECK_THROW(piranha_throw(exc0, 1, 2.3), exc0);

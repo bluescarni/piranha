@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(hash_set_constructors_test)
     BOOST_CHECK(ht.empty());
     BOOST_CHECK_EQUAL(ht.size(), unsigned(0));
     BOOST_CHECK_EQUAL(ht.bucket_count(), unsigned(0));
-    BOOST_CHECK_THROW(ht.bucket("hello"), zero_division_error);
+    BOOST_CHECK_THROW(ht.bucket("hello"), std::invalid_argument);
     // Ctor from number of buckets.
     hash_set<custom_string> ht0(0);
     BOOST_CHECK(ht0.bucket_count() == 0);

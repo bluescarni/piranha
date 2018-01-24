@@ -181,7 +181,6 @@ BOOST_PYTHON_MODULE(_core)
     // our more specific exceptions have the priority when translating.
     pyranha::generic_translate<&PyExc_ValueError, std::domain_error>();
     pyranha::generic_translate<&PyExc_OverflowError, std::overflow_error>();
-    pyranha::generic_translate<&PyExc_ZeroDivisionError, piranha::zero_division_error>();
     pyranha::generic_translate<&PyExc_ZeroDivisionError, mppp::zero_division_error>();
     pyranha::generic_translate<&PyExc_NotImplementedError, piranha::not_implemented_error>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::positive_overflow>();
@@ -289,7 +288,7 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_gcd", &piranha::math::gcd<piranha::integer, piranha::integer>);
     // Tests for exception translation.
     bp::def("_test_safe_cast_failure", &test_exception<piranha::safe_cast_failure>);
-    bp::def("_test_zero_division_error", &test_exception<piranha::zero_division_error>);
+    bp::def("_test_zero_division_error", &test_exception<mppp::zero_division_error>);
     bp::def("_test_not_implemented_error", &test_exception<piranha::not_implemented_error>);
     bp::def("_test_overflow_error", &test_exception<std::overflow_error>);
     bp::def("_test_bn_poverflow_error", &test_exception<boost::numeric::positive_overflow>);

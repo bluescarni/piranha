@@ -923,13 +923,13 @@ public:
      *
      * @return index of the destination bucket for \p k.
      *
-     * @throws piranha::zero_division_error if bucket_count() returns zero.
+     * @throws std::invalid_argument if bucket_count() returns zero.
      * @throws unspecified any exception thrown by _bucket().
      */
     size_type bucket(const key_type &k) const
     {
         if (unlikely(!bucket_count())) {
-            piranha_throw(zero_division_error, "cannot calculate bucket index in an empty set");
+            piranha_throw(std::invalid_argument, "cannot calculate bucket index in an empty set");
         }
         return _bucket(k);
     }
