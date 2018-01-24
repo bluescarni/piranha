@@ -45,16 +45,19 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
+#include <mp++/config.hpp>
+
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
@@ -230,7 +233,6 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(monomial_constructor_test)
 {
-    init();
     tuple_for_each(expo_types{}, constructor_tester{});
 }
 
@@ -924,11 +926,13 @@ struct evaluate_tester {
             BOOST_CHECK_EQUAL(
                 k1.evaluate(std::vector<rational>{rational(4, -3), rational(-1, -2)}, symbol_fset{"x", "y"}),
                 math::pow(rational(4, -3), -2) * math::pow(rational(-1, -2), -4));
+#if defined(MPPP_WITH_MPFR)
             BOOST_CHECK(
                 (std::is_same<decltype(k1.evaluate(std::vector<real>{real(5.678), real(1.234)}, symbol_fset{"x", "y"})),
                               decltype(math::pow(real{}, T{}))>::value));
             BOOST_CHECK_EQUAL(k1.evaluate(std::vector<real>{real(5.678), real(1.234)}, symbol_fset{"x", "y"}),
-                              math::pow(real(5.678), -2) * math::pow(real(1.234), -4));
+                              math::pow(real(5.678), T(-2)) * math::pow(real(1.234), T(-4)));
+#endif
         }
     };
     template <typename T>
@@ -942,7 +946,9 @@ BOOST_AUTO_TEST_CASE(monomial_evaluate_test)
 {
     tuple_for_each(expo_types{}, evaluate_tester{});
     BOOST_CHECK((key_is_evaluable<monomial<rational>, double>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((key_is_evaluable<monomial<rational>, real>::value));
+#endif
     BOOST_CHECK((!key_is_evaluable<monomial<rational>, std::string>::value));
     BOOST_CHECK((!key_is_evaluable<monomial<rational>, void *>::value));
     BOOST_CHECK((!key_is_evaluable<monomial<rational>, void>::value));
@@ -959,7 +965,9 @@ struct subs_tester {
             // Test the type trait.
             BOOST_CHECK((key_has_subs<k_type, integer>::value));
             BOOST_CHECK((key_has_subs<k_type, rational>::value));
+#if defined(MPPP_WITH_MPFR)
             BOOST_CHECK((key_has_subs<k_type, real>::value));
+#endif
             BOOST_CHECK((key_has_subs<k_type, double>::value));
             BOOST_CHECK((!key_has_subs<k_type, std::string>::value));
             BOOST_CHECK((!key_has_subs<k_type, std::vector<std::string>>::value));
@@ -992,11 +1000,13 @@ struct subs_tester {
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0u].first, -8);
             BOOST_CHECK((ret[0u].second == k_type{T(2), T(0)}));
+#if defined(MPPP_WITH_MPFR)
             auto ret2 = k1.template subs<real>({{0, real(-2.345)}}, symbol_fset{"x", "y"});
             BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
             BOOST_CHECK_EQUAL(ret2.size(), 1u);
             BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(2)));
             BOOST_CHECK((ret2[0u].second == k_type{T(0), T(3)}));
+#endif
             auto ret3 = k1.template subs<rational>({{0, -1_q / 2}}, symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret3.size(), 1u);
             BOOST_CHECK_EQUAL(ret3[0u].first, rational(1, 4));
@@ -1201,7 +1211,9 @@ struct ipow_subs_tester {
             // Test the type trait.
             BOOST_CHECK((key_has_ipow_subs<k_type, integer>::value));
             BOOST_CHECK((key_has_ipow_subs<k_type, double>::value));
+#if defined(MPPP_WITH_MPFR)
             BOOST_CHECK((key_has_ipow_subs<k_type, real>::value));
+#endif
             BOOST_CHECK((key_has_ipow_subs<k_type, rational>::value));
             BOOST_CHECK((!key_has_ipow_subs<k_type, std::string>::value));
             BOOST_CHECK((!key_has_ipow_subs<k_type, void>::value));
@@ -1282,11 +1294,13 @@ struct ipow_subs_tester {
                         e.what(), "invalid integral power for ipow_subs() in a monomial: the power must be nonzero");
                 });
             k1 = k_type({T(-7), T(2)});
+#if defined(MPPP_WITH_MPFR)
             auto ret2 = k1.ipow_subs(0, integer(-4), real(-2.345), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret2.size(), 1u);
             BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(1)));
             BOOST_CHECK((ret2[0u].second == k_type{T(-3), T(2)}));
             BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
+#endif
             auto ret3 = k1.ipow_subs(0, integer(-3), rational(-1, 2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret3.size(), 1u);
             BOOST_CHECK_EQUAL(ret3[0u].first, math::pow(rational(-1, 2), T(2)));

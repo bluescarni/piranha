@@ -42,17 +42,20 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <mp++/integer.hpp>
+
 #include <piranha/config.hpp>
 #include <piranha/detail/cf_mult_impl.hpp>
 #include <piranha/detail/divisor_series_fwd.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/detail/series_fwd.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/hash_set.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -165,7 +168,7 @@ struct msgpack_convert_impl<
  *
  * ## Type requirements ##
  *
- * \p T must be either a C++ signed integral type or an instance of piranha::mp_integer.
+ * \p T must be either a C++ signed integral type or an mp++ integer.
  *
  * ## Exception safety guarantee ##
  *
@@ -181,8 +184,8 @@ struct msgpack_convert_impl<
 template <typename T>
 class divisor
 {
-    static_assert((std::is_signed<T>::value && std::is_integral<T>::value) || is_mp_integer<T>::value,
-                  "The value type must be a signed integer or an mp_integer");
+    static_assert((std::is_signed<T>::value && std::is_integral<T>::value) || mppp::is_integer<T>::value,
+                  "The value type must be a signed integer or an mp++ integer");
     // Make friend with the divisor series.
     template <typename, typename>
     friend class divisor_series;
@@ -803,8 +806,8 @@ public:
      * \note
      * This method is enabled only if \p Cf satisfies piranha::has_mul3.
      *
-     * Multiply \p t1 by \p t2, storing the result in the only element of \p res.  If \p Cf is an instance of
-     * piranha::mp_rational, then only the numerators of the coefficients will be multiplied.
+     * Multiply \p t1 by \p t2, storing the result in the only element of \p res.  If \p Cf is an mp++
+     * rational, then only the numerators of the coefficients will be multiplied.
      *
      * This method offers the basic exception safety guarantee.
      *

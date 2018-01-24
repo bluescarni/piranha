@@ -37,8 +37,11 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
+#include <mp++/config.hpp>
+#include <mp++/exceptions.hpp>
+#include <mp++/integer.hpp>
+
+#include <piranha/integer.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -47,9 +50,39 @@ using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integ
                               std::integral_constant<std::size_t, 3>, std::integral_constant<std::size_t, 7>,
                               std::integral_constant<std::size_t, 10>>;
 
+struct b_00 {
+    b_00() = default;
+    b_00(const b_00 &) = delete;
+    b_00(b_00 &&) = delete;
+};
+
+struct b_01 {
+    b_01() = default;
+    b_01(const b_01 &) = default;
+    b_01(b_01 &&) = default;
+    ~b_01() = delete;
+};
+
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct pow_impl<b_00, b_00> {
+    b_00 operator()(const b_00 &, const b_00 &) const;
+};
+
+template <>
+struct pow_impl<b_01, b_01> {
+    b_01 operator()(const b_01 &, const b_01 &) const;
+};
+}
+}
+
 BOOST_AUTO_TEST_CASE(pow_fp_test)
 {
-    init();
     BOOST_CHECK(math::pow(2., 2.) == std::pow(2., 2.));
     BOOST_CHECK(math::pow(2.f, 2.) == std::pow(2.f, 2.));
     BOOST_CHECK(math::pow(2., 2.f) == std::pow(2., 2.f));
@@ -81,7 +114,12 @@ BOOST_AUTO_TEST_CASE(pow_fp_test)
 }
 
 using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,
-                             unsigned long, long long, unsigned long long>;
+                             unsigned long, long long, unsigned long long
+#if defined(MPPP_HAVE_GCC_INT128)
+                             ,
+                             __int128_t, __uint128_t
+#endif
+                             >;
 
 struct int_pow_tester {
     template <typename U>
@@ -89,15 +127,18 @@ struct int_pow_tester {
         template <typename T>
         void operator()(const T &) const
         {
-            using int_type = mp_integer<U::value>;
+            using int_type = mppp::integer<U::value>;
             BOOST_CHECK((is_exponentiable<int_type, T>::value));
             BOOST_CHECK((is_exponentiable<int_type, float>::value));
             BOOST_CHECK((is_exponentiable<float, int_type>::value));
             BOOST_CHECK((is_exponentiable<double, int_type>::value));
+#if defined(MPPP_WITH_MPFR)
             BOOST_CHECK((is_exponentiable<long double, int_type>::value));
+#endif
             int_type n;
             BOOST_CHECK((std::is_same<int_type, decltype(math::pow(n, T(0)))>::value));
             BOOST_CHECK_EQUAL(math::pow(n, T(0)), 1);
+            // NOTE: for the 128-bit ints, is_signed will always be false.
             if (std::is_signed<T>::value) {
                 BOOST_CHECK_THROW(math::pow(n, T(-1)), mppp::zero_division_error);
             }
@@ -172,21 +213,25 @@ struct int_pow_tester {
     }
 };
 
-struct mp_integer_pow_tester {
+struct integer_pow_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK((is_exponentiable<int_type, int_type>::value));
         BOOST_CHECK((!is_exponentiable<int_type, void>::value));
         BOOST_CHECK((!is_exponentiable<void, int_type>::value));
+        BOOST_CHECK((!is_exponentiable<int_type, std::string>::value));
+        BOOST_CHECK((!is_exponentiable<std::string, int_type>::value));
         BOOST_CHECK((is_exponentiable<const int_type, int_type &>::value));
         BOOST_CHECK((is_exponentiable<float, int_type>::value));
         BOOST_CHECK((is_exponentiable<float &&, const int_type &>::value));
         BOOST_CHECK((is_exponentiable<double, int_type>::value));
         BOOST_CHECK((is_exponentiable<double, int_type &>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((is_exponentiable<long double, int_type>::value));
         BOOST_CHECK((is_exponentiable<const long double, int_type &&>::value));
+#endif
         int_type n;
         BOOST_CHECK((std::is_same<int_type, decltype(math::pow(n, n))>::value));
         BOOST_CHECK_EQUAL(math::pow(n, int_type(0)), 1);
@@ -215,10 +260,10 @@ struct mp_integer_pow_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(pow_mp_integer_test)
+BOOST_AUTO_TEST_CASE(pow_integer_test)
 {
     tuple_for_each(size_types{}, int_pow_tester{});
-    tuple_for_each(size_types{}, mp_integer_pow_tester{});
+    tuple_for_each(size_types{}, integer_pow_tester{});
     // Integral--integral pow.
     BOOST_CHECK_EQUAL(math::pow(4, 2), 16);
     BOOST_CHECK_EQUAL(math::pow(-3ll, static_cast<unsigned short>(3)), -27);
@@ -226,7 +271,21 @@ BOOST_AUTO_TEST_CASE(pow_mp_integer_test)
     BOOST_CHECK((is_exponentiable<int, int>::value));
     BOOST_CHECK((is_exponentiable<int, char>::value));
     BOOST_CHECK((is_exponentiable<unsigned, long long>::value));
-    BOOST_CHECK((!is_exponentiable<mp_integer<1>, mp_integer<2>>::value));
-    BOOST_CHECK((!is_exponentiable<mp_integer<2>, mp_integer<1>>::value));
+    BOOST_CHECK((!is_exponentiable<mppp::integer<1>, mppp::integer<2>>::value));
+    BOOST_CHECK((!is_exponentiable<mppp::integer<2>, mppp::integer<1>>::value));
     BOOST_CHECK((!is_exponentiable<integer, std::string>::value));
+    BOOST_CHECK((!is_exponentiable<b_00, b_00>::value));
+    BOOST_CHECK((!is_exponentiable<b_01, b_01>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+    BOOST_CHECK((is_exponentiable<__int128_t, int>::value));
+    BOOST_CHECK((is_exponentiable<__uint128_t, int>::value));
+    BOOST_CHECK((is_exponentiable<__int128_t, __int128_t>::value));
+    BOOST_CHECK((is_exponentiable<__uint128_t, __uint128_t>::value));
+    BOOST_CHECK_EQUAL(math::pow(__int128_t(4), 2), 16);
+    BOOST_CHECK_EQUAL(math::pow(__int128_t(4), __uint128_t(2)), 16);
+    BOOST_CHECK_EQUAL(math::pow(4, __int128_t(2)), 16);
+    BOOST_CHECK((std::is_same<integer, decltype(math::pow(__int128_t(4), 2))>::value));
+    BOOST_CHECK((std::is_same<integer, decltype(math::pow(__int128_t(4), __int128_t(2)))>::value));
+    BOOST_CHECK((std::is_same<integer, decltype(math::pow(4, __int128_t(2)))>::value));
+#endif
 }

@@ -41,18 +41,25 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <mp++/config.hpp>
+#include <mp++/exceptions.hpp>
+#if defined(MPPP_WITH_MPFR)
+#include <mp++/real.hpp>
+#endif
+
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/safe_cast.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
@@ -148,7 +155,9 @@ struct negate_tester {
 
 BOOST_AUTO_TEST_CASE(series_negate_test)
 {
-    init();
+#if defined(MPPP_WITH_MPFR)
+    mppp::real_set_default_prec(100);
+#endif
     tuple_for_each(cf_types{}, negate_tester());
 }
 
@@ -447,7 +456,8 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
     }
     // Check division by zero error.
     typedef g_series_type<rational, int> p_type2;
-    BOOST_CHECK_THROW(math::pow(p_type2{}, -1), zero_division_error);
+    BOOST_CHECK_THROW(math::pow(p_type2{}, -1), mppp::zero_division_error);
+#if defined(MPPP_WITH_MPFR)
     // Check the safe_cast mechanism.
     typedef g_series_type<real, int> p_type3;
     auto p = p_type3{"x"} + 1;
@@ -488,6 +498,7 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
     BOOST_CHECK((std::is_same<decltype(g_series_type<rational, int>{}.pow(3_z)), g_series_type<rational, int>>::value));
     BOOST_CHECK_EQUAL((g_series_type<rational, int>{"x"}.pow(2_z)),
                       (g_series_type<rational, int>{"x"} * g_series_type<rational, int>{"x"}));
+#endif
     // Some multi-threaded testing.
     p_type1 ret0, ret1;
     std::thread t0([&ret0]() {
@@ -512,5 +523,7 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
     // Clear the caches.
     p_type1::clear_pow_cache();
     p_type2::clear_pow_cache();
+#if defined(MPPP_WITH_MPFR)
     p_type3::clear_pow_cache();
+#endif
 }

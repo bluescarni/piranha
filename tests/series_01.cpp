@@ -40,14 +40,13 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/config.hpp>
-#include <piranha/debug_access.hpp>
+#include <piranha/detail/debug_access.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -328,7 +327,6 @@ typedef debug_access<construction_tag> constructor_tester;
 
 BOOST_AUTO_TEST_CASE(series_constructor_test)
 {
-    init();
     tuple_for_each(cf_types{}, constructor_tester());
 }
 

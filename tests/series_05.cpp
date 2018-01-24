@@ -39,10 +39,9 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -96,7 +95,6 @@ struct mock_cf {
 // A few extra tests for division after the recent changes in implementation.
 BOOST_AUTO_TEST_CASE(series_division_test)
 {
-    init();
     {
         // Equal rec index, no type changes.
         using s_type = g_series_type<integer, int>;

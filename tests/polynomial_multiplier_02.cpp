@@ -38,11 +38,10 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <type_traits>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/settings.hpp>
 
 using namespace piranha;
@@ -92,7 +91,6 @@ struct st_vs_mt_tester {
 
 BOOST_AUTO_TEST_CASE(polynomial_multiplier_st_vs_mt_test)
 {
-    init();
     boost::mpl::for_each<cf_types>(st_vs_mt_tester());
     settings::reset_n_threads();
 }

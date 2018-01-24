@@ -59,7 +59,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/symbol_utils.hpp>
 
@@ -405,7 +404,6 @@ struct hash<keyb> {
 
 BOOST_AUTO_TEST_CASE(s11n_test_boost_tt)
 {
-    init();
     // Saving archive.
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive, int>::value));
     BOOST_CHECK((is_boost_saving_archive<boost::archive::binary_oarchive, std::string>::value));
@@ -450,9 +448,7 @@ BOOST_AUTO_TEST_CASE(s11n_test_boost_tt)
     // Test custom archives.
     BOOST_CHECK((is_boost_saving_archive<sa0, int>::value));
     BOOST_CHECK((!is_boost_saving_archive<sa0, unserial>::value));
-#if BOOST_VERSION >= 105700
     BOOST_CHECK((!is_boost_saving_archive<sa1, int>::value));
-#endif
     BOOST_CHECK((!is_boost_saving_archive<sa2, int>::value));
     BOOST_CHECK((!is_boost_saving_archive<sa3, int>::value));
     BOOST_CHECK((!is_boost_saving_archive<sa4, int>::value));
@@ -1208,8 +1204,7 @@ BOOST_AUTO_TEST_CASE(s11n_test_save_load)
             // Unserializable type.
             no_boost_msgpack n;
             auto msg_checker = [](const not_implemented_error &nie) -> bool {
-                return boost::contains(nie.what(),
-                                       "type '" + detail::demangle<no_boost_msgpack>() + "' does not support");
+                return boost::contains(nie.what(), "type '" + demangle<no_boost_msgpack>() + "' does not support");
             };
             BOOST_CHECK_EXCEPTION(save_file(n, "foo", f, c), not_implemented_error, msg_checker);
             BOOST_CHECK_EXCEPTION(load_file(n, "foo", f, c), not_implemented_error, msg_checker);

@@ -41,19 +41,22 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
+#include <mp++/config.hpp>
+
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
@@ -61,6 +64,15 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/term.hpp>
 
 using namespace piranha;
+
+#if defined(MPPP_WITH_MPFR)
+
+static inline real operator"" _r(const char *s)
+{
+    return real(s, 100);
+}
+
+#endif
 
 template <typename Cf, typename Key>
 class g_series_type : public substitutable_series<series<Cf, Key, g_series_type<Cf, Key>>, g_series_type<Cf, Key>>
@@ -157,7 +169,6 @@ struct hash<new_monomial<T>> {
 
 BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 {
-    init();
     // Substitution on key only.
     using stype0 = g_series_type<rational, monomial<int>>;
     // Type trait checks.
@@ -165,7 +176,9 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
     BOOST_CHECK((has_subs<stype0, double>::value));
     BOOST_CHECK((has_subs<stype0, integer>::value));
     BOOST_CHECK((has_subs<stype0, rational>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((has_subs<stype0, real>::value));
+#endif
     BOOST_CHECK((!has_subs<stype0, std::string>::value));
     {
         stype0 x{"x"}, y{"y"}, z{"z"};
@@ -190,10 +203,12 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
         BOOST_CHECK(tmp3.is_identical(math::subs<rational>(3 * x + y * y / 7, {{"y", 2 / 5_q}})));
         BOOST_CHECK((std::is_same<decltype(tmp3), stype0>::value));
         BOOST_CHECK_EQUAL(tmp3, 3 * x + 2 / 5_q * 2 / 5_q / 7);
+#if defined(MPPP_WITH_MPFR)
         auto tmp4 = (3 * x + y * y / 7).subs<real>({{"y", 2.123_r}});
         BOOST_CHECK(tmp4.is_identical(math::subs<real>(3 * x + y * y / 7, {{"y", 2.123_r}})));
         BOOST_CHECK((std::is_same<decltype(tmp4), g_series_type<real, monomial<int>>>::value));
         BOOST_CHECK_EQUAL(tmp4, 3 * x + math::pow(2.123_r, 2) / 7);
+#endif
         auto tmp5 = (3 * x + y * y / 7).subs<integer>({{"y", -2_z}});
         BOOST_CHECK(tmp5.is_identical(math::subs<integer>(3 * x + y * y / 7, {{"y", -2_z}})));
         BOOST_CHECK((std::is_same<decltype(tmp5), stype0>::value));
@@ -213,7 +228,9 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
     BOOST_CHECK((has_subs<stype1, double>::value));
     BOOST_CHECK((has_subs<stype1, integer>::value));
     BOOST_CHECK((has_subs<stype1, rational>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((has_subs<stype1, real>::value));
+#endif
     BOOST_CHECK((!has_subs<stype1, std::string>::value));
     {
         stype1 x{stype0{"x"}}, y{stype0{"y"}}, z{stype0{"z"}};
@@ -237,11 +254,13 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
         BOOST_CHECK(tmp3.is_identical(math::subs<rational>(3 * x + y * y / 7, {{"y", 2 / 5_q}})));
         BOOST_CHECK((std::is_same<decltype(tmp3), stype1>::value));
         BOOST_CHECK_EQUAL(tmp3, 3 * x + 2 / 5_q * 2 / 5_q / 7);
+#if defined(MPPP_WITH_MPFR)
         auto tmp4 = (3 * x + y * y / 7).subs<real>({{"y", 2.123_r}});
         BOOST_CHECK(tmp4.is_identical(math::subs<real>(3 * x + y * y / 7, {{"y", 2.123_r}})));
         BOOST_CHECK((
             std::is_same<decltype(tmp4), g_series_type<g_series_type<real, monomial<int>>, new_monomial<int>>>::value));
         BOOST_CHECK_EQUAL(tmp4, 3 * x + math::pow(2.123_r, 2) / 7);
+#endif
         auto tmp5 = (3 * x + y * y / 7).subs<integer>({{"y", -2_z}});
         BOOST_CHECK(tmp5.is_identical(math::subs<integer>(3 * x + y * y / 7, {{"y", -2_z}})));
         BOOST_CHECK((std::is_same<decltype(tmp5), stype1>::value));
@@ -260,7 +279,9 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
     BOOST_CHECK((has_subs<stype2, double>::value));
     BOOST_CHECK((has_subs<stype2, integer>::value));
     BOOST_CHECK((has_subs<stype2, rational>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((has_subs<stype2, real>::value));
+#endif
     BOOST_CHECK((!has_subs<stype2, std::string>::value));
     {
         // Recursive poly with x and y at the first level, z in the second.
@@ -288,11 +309,13 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
         BOOST_CHECK(tmp4.is_identical(math::subs<rational>((3 * x + y * y / 7) * z, {{"y", 2 / 3_q}, {"z", 4_q}})));
         BOOST_CHECK((std::is_same<decltype(tmp4), stype2>::value));
         BOOST_CHECK_EQUAL(tmp4, (3 * x + 2 / 3_q * 2 / 3_q / 7) * 4_z);
+#if defined(MPPP_WITH_MPFR)
         auto tmp5 = ((3 * x + y * y / 7) * z).subs<real>({{"y", -2.123_r}});
         BOOST_CHECK(tmp5.is_identical(math::subs<real>((3 * x + y * y / 7) * z, {{"y", -2.123_r}})));
         BOOST_CHECK(
             (std::is_same<decltype(tmp5), g_series_type<g_series_type<real, monomial<int>>, monomial<int>>>::value));
         BOOST_CHECK_EQUAL(tmp5, (3 * x + math::pow(-2.123_r, 2) / 7) * z);
+#endif
         auto tmp6 = ((3 * x + y * y / 7) * z).subs<stype2>({{"z", 2 * t}});
         BOOST_CHECK(tmp6.is_identical(math::subs<stype2>((3 * x + y * y / 7) * z, {{"z", 2 * t}})));
         BOOST_CHECK((std::is_same<decltype(tmp6), stype2>::value));

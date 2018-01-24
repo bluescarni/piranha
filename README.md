@@ -7,6 +7,12 @@
 [![DOI](https://zenodo.org/badge/20656/bluescarni/piranha.svg)](https://zenodo.org/badge/latestdoi/20656/bluescarni/piranha)
 [![codecov.io](https://codecov.io/github/bluescarni/piranha/coverage.svg?branch=master)](https://codecov.io/github/bluescarni/piranha?branch=master)
 
+**WARNING**
+
+*Piranha is currently undergoing an extensive internal rework: features may (temporarily) disappear
+and the API will be subject to various breaking changes. Please keep on using the latest released version (0.10)
+until further notice.*
+
 Piranha is a C++11-based computer algebra library for the manipulation of
 algebraic objects, such as polynomials and Poisson series, commonly encountered
 in celestial mechanics.

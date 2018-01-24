@@ -44,12 +44,11 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/settings.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/tuning.hpp>
@@ -132,17 +131,17 @@ struct m_checker : public base_series_multiplier<Series> {
                        [](const typename T::term_type &t) { return &t; });
         for (size_type i = 0u; i != s1.size(); ++i) {
             BOOST_CHECK(h1.find(this->m_v1[i]) == h1.end());
-            BOOST_CHECK(this->m_v1[i]->m_cf.den() == 1);
+            BOOST_CHECK(this->m_v1[i]->m_cf.get_den() == 1);
             auto it = s1._container().find(*this->m_v1[i]);
             BOOST_CHECK(it != s1._container().end());
-            BOOST_CHECK(this->m_v1[i]->m_cf.num() % it->m_cf.num() == 0);
+            BOOST_CHECK(this->m_v1[i]->m_cf.get_num() % it->m_cf.get_num() == 0);
         }
         for (size_type i = 0u; i != s2.size(); ++i) {
             BOOST_CHECK(h2.find(this->m_v2[i]) == h2.end());
-            BOOST_CHECK(this->m_v2[i]->m_cf.den() == 1);
+            BOOST_CHECK(this->m_v2[i]->m_cf.get_den() == 1);
             auto it = s2._container().find(*this->m_v2[i]);
             BOOST_CHECK(it != s2._container().end());
-            BOOST_CHECK(this->m_v2[i]->m_cf.num() % it->m_cf.num() == 0);
+            BOOST_CHECK(this->m_v2[i]->m_cf.get_num() % it->m_cf.get_num() == 0);
         }
     }
     // Perfect forwarding of protected members, to make them accessible.
@@ -179,7 +178,6 @@ struct m_checker : public base_series_multiplier<Series> {
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
 {
-    init();
     {
         // Check with empty series.
         using pt = p_type<rational>;

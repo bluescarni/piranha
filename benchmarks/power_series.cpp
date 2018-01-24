@@ -31,9 +31,9 @@ see https://www.gnu.org/licenses/. */
 
 #include <iostream>
 
-#include <piranha/init.hpp>
+#include <mp++/integer.hpp>
+
 #include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
 
 #include "pearce1.hpp"
 #include "simple_timer.hpp"
@@ -42,10 +42,9 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(pearce1_test)
 {
-    init();
     settings::set_thread_binding(true);
     std::cout << "Timing multiplication:\n";
-    auto ret1 = pearce1<mp_integer<2>, kronecker_monomial<>>();
+    auto ret1 = pearce1<mppp::integer<2>, kronecker_monomial<>>();
     decltype(ret1) ret2;
     {
         std::cout << "Timing degree computation: ";

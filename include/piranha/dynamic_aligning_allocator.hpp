@@ -35,6 +35,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/memory.hpp>
 
 namespace piranha
@@ -66,9 +67,7 @@ public:
     /**
      * Will set the internal alignment value to zero.
      */
-    dynamic_aligning_allocator() : m_alignment(0)
-    {
-    }
+    dynamic_aligning_allocator() : m_alignment(0) {}
     /// Defaulted copy constructor.
     dynamic_aligning_allocator(const dynamic_aligning_allocator &) = default;
     /// Defaulted move constructor.
@@ -77,9 +76,7 @@ public:
     /**
      * @param alignment alignment value that will be used for allocation.
      */
-    explicit dynamic_aligning_allocator(const std::size_t &alignment) : m_alignment(alignment)
-    {
-    }
+    explicit dynamic_aligning_allocator(const std::size_t &alignment) : m_alignment(alignment) {}
     /// Converting copy constructor.
     /**
      * After construction, the alignment will be the same as \p other.

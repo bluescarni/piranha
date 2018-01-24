@@ -38,7 +38,6 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include <piranha/init.hpp>
 #include <piranha/thread_barrier.hpp>
 
 using namespace piranha;
@@ -48,7 +47,6 @@ using alg = detail::atomic_lock_guard;
 
 BOOST_AUTO_TEST_CASE(atomic_utils_atomic_flag_array_test)
 {
-    init();
     // Test with just an empty array.
     a_array a0(0u);
     // Non-empty.

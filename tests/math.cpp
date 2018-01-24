@@ -52,16 +52,19 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/config.hpp>
+
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -103,7 +106,6 @@ struct yes_negate {
 
 BOOST_AUTO_TEST_CASE(math_negate_test)
 {
-    init();
     boost::fusion::for_each(arithmetic_values, check_negate());
     BOOST_CHECK(!has_negate<no_negate>::value);
     BOOST_CHECK(!has_negate<no_negate2>::value);
@@ -374,7 +376,9 @@ BOOST_AUTO_TEST_CASE(math_integrate_test)
     BOOST_CHECK(!piranha::is_integrable<int const &>::value);
     BOOST_CHECK(!piranha::is_integrable<long>::value);
     BOOST_CHECK(!piranha::is_integrable<double>::value);
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK(!piranha::is_integrable<real>::value);
+#endif
     BOOST_CHECK(!piranha::is_integrable<rational>::value);
     BOOST_CHECK(!piranha::is_integrable<std::string>::value);
 }

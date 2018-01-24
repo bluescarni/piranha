@@ -26,7 +26,6 @@ the library are fully documented in the `Doxygen documentation`_.
    :maxdepth: 2
 
    getting_started.rst
-   tutorial.rst
    reference.rst
 
 Indices and tables

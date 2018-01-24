@@ -47,18 +47,19 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/detail/cf_mult_impl.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/km_commons.hpp>
 #include <piranha/detail/monomial_common.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/detail/safe_integral_adder.hpp>
 #include <piranha/exceptions.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/static_vector.hpp>
@@ -513,7 +514,7 @@ public:
      * This method is enabled only if \p Cf satisfies piranha::has_mul3.
      *
      * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
-     * offers the basic exception safety guarantee. If \p Cf is an instance of piranha::mp_rational, then
+     * offers the basic exception safety guarantee. If \p Cf is an mp++ rational, then
      * only the numerators of the coefficients will be multiplied.
      *
      * Note that the key of the return value is generated directly from the addition of the values of the input keys.

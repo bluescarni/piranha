@@ -44,15 +44,14 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/base_series_multiplier.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -253,7 +252,6 @@ public:
 
 BOOST_AUTO_TEST_CASE(series_is_single_coefficient_test)
 {
-    init();
     typedef g_series_type<integer, int> p_type;
     BOOST_CHECK(p_type{}.is_single_coefficient());
     BOOST_CHECK(p_type{1}.is_single_coefficient());

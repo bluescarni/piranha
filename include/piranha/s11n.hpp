@@ -30,6 +30,15 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_S11N_HPP
 
 // Common headers for serialization.
+#include <cstddef>
+#include <fstream>
+#include <ios>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -40,17 +49,11 @@ see https://www.gnu.org/licenses/. */
 #include <boost/serialization/split_free.hpp>
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/version.hpp>
-#include <cstddef>
-#include <fstream>
-#include <ios>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
-#include <utility>
 
 #include <piranha/detail/demangle.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/safe_cast.hpp>
@@ -121,13 +124,8 @@ using impl
                   // return a type which is implicitly convertible to some unsigned int.
                   // This seems to work and it should cover also the cases in which the
                   // return type is a real unsigned int.
-                  std::is_convertible<detected_t<get_library_version_t, Archive>, unsigned long long>
-#if BOOST_VERSION >= 105700
-                  //  Helper support is available since 1.57.
-                  ,
-                  is_detected<get_helper_t_1, Archive>, is_detected<get_helper_t_2, Archive>
-#endif
-                  >;
+                  std::is_convertible<detected_t<get_library_version_t, Archive>, unsigned long long>,
+                  is_detected<get_helper_t_1, Archive>, is_detected<get_helper_t_2, Archive>>;
 }
 }
 
@@ -181,12 +179,8 @@ using impl = conjunction<
     std::is_same<detected_t<and_t, Archive, T>, addlref_t<Archive>>, is_detected<load_binary_t, Archive, unref_t<T>>,
     is_detected<ibsa_impl::register_type_t, Archive, uncvref_t<T>>,
     std::is_convertible<detected_t<ibsa_impl::get_library_version_t, Archive>, unsigned long long>,
-    is_detected<reset_object_address_t, Archive, unref_t<T>>, is_detected<delete_created_pointers_t, Archive>
-#if BOOST_VERSION >= 105700
-    ,
-    is_detected<ibsa_impl::get_helper_t_1, Archive>, is_detected<ibsa_impl::get_helper_t_2, Archive>
-#endif
-    >;
+    is_detected<reset_object_address_t, Archive, unref_t<T>>, is_detected<delete_created_pointers_t, Archive>,
+    is_detected<ibsa_impl::get_helper_t_1, Archive>, is_detected<ibsa_impl::get_helper_t_2, Archive>>;
 }
 }
 
@@ -659,7 +653,7 @@ const bool is_msgpack_stream<T>::value;
 /// Serialization format for msgpack.
 /**
  * The serialization of non-primitive objects can often be performed in different ways, with different tradeoffs
- * between performance, storage requirements and portability. The piranha::mp_integer class, for instance, can be
+ * between performance, storage requirements and portability. The piranha::integer class, for instance, can be
  * serialized either via a string representation (slow and with high storage requirements, but portable across
  * architectures, compilers and operating systems) or as an array of platform-dependent unsigned integrals (fast
  * and compact, but not portable).
@@ -750,13 +744,14 @@ struct msgpack_pack_impl<Stream, long double, msgpack_ld_enabler<Stream>> {
      *
      * @throws unspecified any exception thrown by:
      * - the public interface of \p msgpack::packer and \p std::ostringstream,
+     * - piranha::safe_cast(),
      * - piranha::msgpack_pack().
      */
     void operator()(msgpack::packer<Stream> &packer, const long double &x, msgpack_format f) const
     {
         if (f == msgpack_format::binary) {
-            packer.pack_bin(sizeof(long double));
-            packer.pack_bin_body(reinterpret_cast<const char *>(&x), sizeof(long double));
+            packer.pack_bin(safe_cast<std::uint32_t>(sizeof(long double)));
+            packer.pack_bin_body(reinterpret_cast<const char *>(&x), safe_cast<std::uint32_t>(sizeof(long double)));
         } else {
             if (std::isnan(x)) {
                 if (std::signbit(x)) {
@@ -1323,8 +1318,7 @@ template <typename T, enable_if_t<disjunction<negation<has_boost_save<boost::arc
                                   int> = 0>
 inline void save_file_boost_impl(const T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error,
-                  "type '" + detail::demangle<T>() + "' does not support serialization via Boost");
+    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support serialization via Boost");
 }
 
 template <typename T, enable_if_t<conjunction<has_boost_load<boost::archive::binary_iarchive, T>,
@@ -1363,8 +1357,7 @@ template <typename T, enable_if_t<disjunction<negation<has_boost_load<boost::arc
                                   int> = 0>
 inline void load_file_boost_impl(T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error,
-                  "type '" + detail::demangle<T>() + "' does not support deserialization via Boost");
+    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support deserialization via Boost");
 }
 
 #if defined(PIRANHA_WITH_MSGPACK)
@@ -1435,8 +1428,7 @@ template <
         int> = 0>
 inline void save_file_msgpack_impl(const T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error,
-                  "type '" + detail::demangle<T>() + "' does not support serialization via msgpack");
+    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support serialization via msgpack");
 }
 
 template <typename T, enable_if_t<has_msgpack_convert<T>::value, int> = 0>
@@ -1477,8 +1469,7 @@ inline void load_file_msgpack_impl(T &x, const std::string &filename, data_forma
 template <typename T, enable_if_t<!has_msgpack_convert<T>::value, int> = 0>
 inline void load_file_msgpack_impl(T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error,
-                  "type '" + detail::demangle<T>() + "' does not support deserialization via msgpack");
+    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support deserialization via msgpack");
 }
 
 #else
@@ -1671,7 +1662,7 @@ inline namespace impl
 
 #if defined(PIRANHA_WITH_MSGPACK)
 
-// These typedefs are useful when checking the availability of boost save/load member functions, which
+// These typedefs are useful when checking the availability of msgpack save/load member functions, which
 // we use fairly often to implement the _impl functors.
 template <typename Stream, typename T>
 using msgpack_pack_member_t = decltype(

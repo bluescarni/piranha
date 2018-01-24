@@ -61,7 +61,7 @@ bp::object type_generator::operator()() const
     const auto it = et_map.find(m_t_idx);
     if (it == et_map.end()) {
         ::PyErr_SetString(PyExc_TypeError,
-                          ("the type '" + piranha::detail::demangle(m_t_idx) + "' has not been registered").c_str());
+                          ("the type '" + piranha::demangle(m_t_idx) + "' has not been registered").c_str());
         bp::throw_error_already_set();
     }
     return it->second;
@@ -69,7 +69,7 @@ bp::object type_generator::operator()() const
 
 std::string type_generator::repr() const
 {
-    return "Type generator for the C++ type '" + piranha::detail::demangle(m_t_idx) + "'";
+    return "Type generator for the C++ type '" + piranha::demangle(m_t_idx) + "'";
 }
 
 // Implementation of the hasher for ti_map_t.
@@ -88,7 +88,7 @@ static inline std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t
 {
     std::string tv_name = "[";
     for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
-        tv_name += piranha::detail::demangle(v_t_idx[i]);
+        tv_name += piranha::demangle(v_t_idx[i]);
         if (i != v_t_idx.size() - 1u) {
             tv_name += ", ";
         }

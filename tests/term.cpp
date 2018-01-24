@@ -38,12 +38,11 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -92,7 +91,6 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(term_constructor_test)
 {
-    init();
     tuple_for_each(cf_types{}, constructor_tester{});
 }
 

@@ -40,6 +40,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -127,14 +128,6 @@ namespace piranha
  */
 struct not_implemented_error final : std::runtime_error {
     using std::runtime_error::runtime_error;
-};
-
-/// Exception for signalling division by zero.
-/**
- * This class inherits the constructors from \p std::domain_error.
- */
-struct zero_division_error final : std::domain_error {
-    using std::domain_error::domain_error;
 };
 }
 

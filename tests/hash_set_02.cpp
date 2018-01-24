@@ -41,9 +41,8 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 
 #include <piranha/config.hpp>
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/integer.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -133,7 +132,6 @@ struct boost_s11n_tester {
 
 BOOST_AUTO_TEST_CASE(hash_set_boost_s11n_test)
 {
-    init();
     tuple_for_each(types{}, boost_s11n_tester{});
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, hash_set<no_s11n>>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, hash_set<no_s11n>>::value));

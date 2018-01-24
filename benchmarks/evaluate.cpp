@@ -29,10 +29,11 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE evaluate_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <piranha/init.hpp>
+#include <mp++/integer.hpp>
+
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 
 #include "pearce1.hpp"
 #include "simple_timer.hpp"
@@ -41,7 +42,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(evaluate_test)
 {
-    init();
     settings::set_thread_binding(true);
     {
         std::cout << "Timing multiplication, integer:\n";

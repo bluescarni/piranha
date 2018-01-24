@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <type_traits>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>

@@ -34,12 +34,16 @@ see https://www.gnu.org/licenses/. */
 #include <cstdint>
 #include <tuple>
 
+#include <mp++/config.hpp>
+
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 
 namespace pyranha
 {
@@ -66,7 +70,12 @@ struct polynomial_descriptor {
         std::tuple<piranha::rational, piranha::kronecker_monomial<>>>;
     using interop_types = std::tuple<double, piranha::integer, piranha::rational>;
     using pow_types = interop_types;
-    using eval_types = std::tuple<double, piranha::integer, piranha::rational, piranha::real>;
+    using eval_types = std::tuple<double, piranha::integer, piranha::rational
+#if defined(MPPP_WITH_MPFR)
+                                  ,
+                                  piranha::real
+#endif
+                                  >;
     using subs_types = interop_types;
     // For now, we have only degrees computed as integers or rationals.
     using degree_truncation_types = std::tuple<piranha::integer, piranha::rational>;

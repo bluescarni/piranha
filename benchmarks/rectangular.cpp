@@ -33,7 +33,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/lexical_cast.hpp>
 
-#include <piranha/init.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/settings.hpp>
 
@@ -47,7 +46,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(rectangular_test)
 {
-    init();
     settings::set_thread_binding(true);
     if (boost::unit_test::framework::master_test_suite().argc > 1) {
         settings::set_n_threads(

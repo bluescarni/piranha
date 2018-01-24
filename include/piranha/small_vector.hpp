@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/small_vector_fwd.hpp>
 #include <piranha/detail/vector_hasher.hpp>
 #include <piranha/exceptions.hpp>
@@ -109,9 +110,7 @@ public:
     static const size_type max_size = std::numeric_limits<size_type>::max();
     using iterator = pointer;
     using const_iterator = const_pointer;
-    dynamic_storage() : m_tag(0u), m_size(0u), m_capacity(0u), m_ptr(nullptr)
-    {
-    }
+    dynamic_storage() : m_tag(0u), m_size(0u), m_capacity(0u), m_ptr(nullptr) {}
     dynamic_storage(dynamic_storage &&other) noexcept
         : m_tag(0u), m_size(other.m_size), m_capacity(other.m_capacity), m_ptr(other.m_ptr)
     {
@@ -367,8 +366,9 @@ private:
         }
         // NOTE: capacity should double, but without going past max_size, and in case it is zero it should go to 1.
         const size_type new_capacity
-            = (m_capacity > max_size / 2u) ? max_size : ((m_capacity != 0u) ? static_cast<size_type>(m_capacity * 2u)
-                                                                            : static_cast<size_type>(1u));
+            = (m_capacity > max_size / 2u)
+                  ? max_size
+                  : ((m_capacity != 0u) ? static_cast<size_type>(m_capacity * 2u) : static_cast<size_type>(1u));
         reserve(new_capacity);
     }
     bool consistency_checks()
@@ -438,9 +438,7 @@ union small_vector_union {
                                                 static_vector<T, S::value>>::type;
     using d_storage = dynamic_storage<T>;
     // NOTE: each constructor must be invoked explicitly.
-    small_vector_union() : m_st()
-    {
-    }
+    small_vector_union() : m_st() {}
     small_vector_union(const small_vector_union &other)
     {
         if (other.is_static()) {
@@ -1150,9 +1148,9 @@ struct boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size
  * - the size type of the vector can be safely converted to \p std::uint32_t.
  */
 template <typename Stream, typename T, std::size_t Size>
-struct msgpack_pack_impl<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                         msgpack_pack_vector_enabler<Stream,
-                                                     small_vector<T, std::integral_constant<std::size_t, Size>>>> {
+struct msgpack_pack_impl<
+    Stream, small_vector<T, std::integral_constant<std::size_t, Size>>,
+    msgpack_pack_vector_enabler<Stream, small_vector<T, std::integral_constant<std::size_t, Size>>>> {
     /// Call operator.
     /**
      * This method will serialize into \p packer the input vector \p v using the format \p f.

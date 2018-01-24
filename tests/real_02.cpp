@@ -26,6 +26,10 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
+#include <mp++/config.hpp>
+
+#if defined(MPPP_WITH_MPFR)
+
 #include <piranha/real.hpp>
 
 #define BOOST_TEST_MODULE real_02_test
@@ -45,9 +49,9 @@ see https://www.gnu.org/licenses/. */
 #include <typeinfo>
 #include <vector>
 
+#include <mp++/detail/mpfr.hpp>
+
 #include <piranha/config.hpp>
-#include <piranha/detail/mpfr.hpp>
-#include <piranha/init.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -84,7 +88,6 @@ static const std::vector<::mpfr_prec_t> vprec{32, 64, 113, 128, 197, 256, 273, 5
 
 BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
 {
-    init();
     BOOST_CHECK((has_boost_save<boost::archive::binary_oarchive, real>::value));
     BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, real>::value));
     BOOST_CHECK((has_boost_load<boost::archive::binary_iarchive, real>::value));
@@ -141,7 +144,7 @@ BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
                     boost::archive::binary_iarchive ia(ss);
                     boost_load(ia, retval);
                 }
-                BOOST_CHECK(retval.is_nan());
+                BOOST_CHECK(retval.nan_p());
                 BOOST_CHECK_EQUAL(retval.get_prec(), prec);
             }
             {
@@ -155,7 +158,7 @@ BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
                     boost::archive::binary_iarchive ia(ss);
                     boost_load(ia, retval);
                 }
-                BOOST_CHECK(retval.is_nan());
+                BOOST_CHECK(retval.nan_p());
                 BOOST_CHECK_EQUAL(retval.get_prec(), prec);
             }
             {
@@ -169,7 +172,7 @@ BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
                     boost::archive::text_iarchive ia(ss);
                     boost_load(ia, retval);
                 }
-                BOOST_CHECK(retval.is_nan());
+                BOOST_CHECK(retval.nan_p());
                 BOOST_CHECK_EQUAL(retval.get_prec(), prec);
             }
             {
@@ -183,7 +186,7 @@ BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
                     boost::archive::text_iarchive ia(ss);
                     boost_load(ia, retval);
                 }
-                BOOST_CHECK(retval.is_nan());
+                BOOST_CHECK(retval.nan_p());
                 BOOST_CHECK_EQUAL(retval.get_prec(), prec);
             }
         }
@@ -259,7 +262,7 @@ BOOST_AUTO_TEST_CASE(real_msgpack_s11n_test)
                     auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
                     real retval;
                     msgpack_convert(retval, oh.get(), f);
-                    BOOST_CHECK(retval.is_nan());
+                    BOOST_CHECK(retval.nan_p());
                     BOOST_CHECK_EQUAL(retval.get_prec(), prec);
                 }
                 {
@@ -269,7 +272,7 @@ BOOST_AUTO_TEST_CASE(real_msgpack_s11n_test)
                     auto oh = msgpack::unpack(sbuf.data(), sbuf.size());
                     real retval;
                     msgpack_convert(retval, oh.get(), f);
-                    BOOST_CHECK(retval.is_nan());
+                    BOOST_CHECK(retval.nan_p());
                     BOOST_CHECK_EQUAL(retval.get_prec(), prec);
                 }
             }
@@ -339,3 +342,12 @@ BOOST_AUTO_TEST_CASE(real_zero_is_absorbing_test)
     BOOST_CHECK((!zero_is_absorbing<const real &>::value));
     BOOST_CHECK((!zero_is_absorbing<const real>::value));
 }
+
+#else
+
+int main()
+{
+    return 0;
+}
+
+#endif

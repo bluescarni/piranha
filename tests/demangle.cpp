@@ -39,26 +39,11 @@ see https://www.gnu.org/licenses/. */
 #include <unordered_set>
 #include <vector>
 
-#include <piranha/init.hpp>
-
 using namespace piranha;
-using detail::demangle;
-
-// Check the macro definition is not leaking.
-static bool phbd_defined =
-#if defined(PIRANHA_HAVE_BOOST_DEMANGLE)
-    true;
-#else
-    false;
-#endif
 
 struct base_foo {
-    virtual void f() const
-    {
-    }
-    virtual ~base_foo()
-    {
-    }
+    virtual void f() const {}
+    virtual ~base_foo() {}
 };
 
 struct foo : base_foo {
@@ -74,8 +59,6 @@ struct bar {
 
 BOOST_AUTO_TEST_CASE(demangle_test)
 {
-    init();
-    BOOST_CHECK(!phbd_defined);
     // Likely not a valid mangled name.
     std::cout << demangle("helloworld!") << '\n';
     std::cout << demangle("") << '\n';

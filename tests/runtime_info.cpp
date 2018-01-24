@@ -33,7 +33,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <iostream>
 
-#include <piranha/init.hpp>
 #include <piranha/memory.hpp>
 #include <piranha/settings.hpp>
 
@@ -41,7 +40,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(runtime_info_print_test)
 {
-    init();
     std::cout << "Concurrency: " << runtime_info::get_hardware_concurrency() << '\n';
     std::cout << "Cache line size: " << runtime_info::get_cache_line_size() << '\n';
     std::cout << "Memory alignment primitives: "

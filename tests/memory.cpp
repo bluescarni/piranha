@@ -44,7 +44,6 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
-#include <piranha/init.hpp>
 #include <piranha/settings.hpp>
 
 // Helper to def-init as an array of T the raw storage returned by the memory alloc function.
@@ -60,7 +59,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(memory_aligned_malloc_test)
 {
-    init();
     // Test the common codepath.
     auto ptr = aligned_palloc(0, 0);
     BOOST_CHECK(ptr == nullptr);

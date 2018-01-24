@@ -41,17 +41,23 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <unordered_map>
 
+#include <mp++/config.hpp>
+#if defined(MPPP_WITH_MPFR)
+#include <mp++/real.hpp>
+#endif
+
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -84,7 +90,9 @@ struct mock_cf {
 
 BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 {
-    init();
+#if defined(MPPP_WITH_MPFR)
+    mppp::real_set_default_prec(100);
+#endif
     using math::cos;
     using math::partial;
     using math::pow;
@@ -128,6 +136,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
     BOOST_CHECK_EQUAL(s_t, (3 * x + 3 * y + 1) * cos(x));
 }
 
+#if defined(MPPP_WITH_MPFR)
+
 BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
 {
     using math::cos;
@@ -137,9 +147,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
     symbol_fmap<real> dict{{"x", real(1.234)}, {"y", real(5.678)}};
     p_type1 x{"x"}, y{"y"};
     auto s1 = (x + y) * cos(x + y);
-    auto tmp1 = (real(0) + real(1) * pow(real(1.234), 1) * pow(real(5.678), 0)
-                 + real(1) * pow(real(1.234), 0) * pow(real(5.678), 1))
-                * cos(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
+    auto tmp1 = (real(1.234) * 1_q + real(5.678) * 1_q) * math::cos(real(1.234) * short(1) + real(5.678) * short(1));
     BOOST_CHECK_EQUAL(math::evaluate(s1, dict), tmp1);
     BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s1, dict))>::value));
     auto s2 = pow(y, 3) * sin(x + y);
@@ -154,6 +162,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
     // BOOST_CHECK_EQUAL(tmp1 + tmp2,(s2 + s1).evaluate(dict));
 }
 
+#endif
+
 BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 {
     using math::cos;
@@ -161,6 +171,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
     using math::sin;
     using math::subs;
     {
+#if defined(MPPP_WITH_MPFR)
         typedef poisson_series<polynomial<real, monomial<short>>> p_type1;
         BOOST_CHECK((has_subs<p_type1, rational>::value));
         BOOST_CHECK((has_subs<p_type1, double>::value));
@@ -217,6 +228,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
         BOOST_CHECK_EQUAL(math::subs<integer>(-3 * math::pow(c, 4), {{"J_2", 0_z}}), -3 * math::pow(c, 4));
         // Test substitution with integral after math::sin/cos additional overload.
         BOOST_CHECK_EQUAL(math::subs<int>(-3 * math::pow(c, 4), {{"J_2", 0}}), -3 * math::pow(c, 4));
+#endif
     }
     {
         // Test with eps.

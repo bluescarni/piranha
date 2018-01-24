@@ -43,6 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
@@ -2806,7 +2807,7 @@ namespace detail
 
 // Greatest common divisor using the euclidean algorithm.
 // NOTE: this can yield negative values, depending on the signs
-// of a and b. Supports C++ integrals and mp_integer.
+// of a and b. Supports C++ integrals and mppp::integer.
 // NOTE: using this with C++ integrals unchecked on ranges can result in undefined
 // behaviour.
 template <typename T>

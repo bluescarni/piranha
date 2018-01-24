@@ -38,13 +38,16 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <mp++/config.hpp>
+
 #include <piranha/detail/safe_integral_adder.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/settings.hpp>
 #include <piranha/symbol_utils.hpp>
 
@@ -157,11 +160,13 @@ struct main_tester {
                 BOOST_CHECK_EQUAL((x + y + z + t) * (x + y + z + t), t * t + 2 * t * x + 2 * t * y + 2 * t * z
                                                                          + 2 * x * y + 2 * x * z + y * y + 2 * y * z
                                                                          + z * z);
+#if defined(MPPP_WITH_MPFR)
                 // Check that for another series type the truncation settings are untouched.
                 auto tup2 = polynomial<real, Key>::get_auto_truncate_degree();
                 BOOST_CHECK_EQUAL(std::get<0u>(tup2), 0);
                 BOOST_CHECK_EQUAL(std::get<1u>(tup2), 0);
                 BOOST_CHECK(std::get<2u>(tup2).empty());
+#endif
                 // Check the unsetting.
                 pt::unset_auto_truncate_degree();
                 tup = pt::get_auto_truncate_degree();
@@ -181,6 +186,5 @@ struct main_tester {
 
 BOOST_AUTO_TEST_CASE(polynomial_truncation_main_test)
 {
-    init();
     boost::mpl::for_each<cf_types>(main_tester());
 }

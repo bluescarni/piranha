@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <array>
-#include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
 #include <iterator>
@@ -43,14 +42,19 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <boost/numeric/conversion/cast.hpp>
+
+#include <mp++/rational.hpp>
+
 #include <piranha/config.hpp>
 #include <piranha/detail/atomic_flag_array.hpp>
 #include <piranha/detail/atomic_lock_guard.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>
 #include <piranha/settings.hpp>
@@ -150,11 +154,11 @@ struct base_series_multiplier_impl {
 
 template <typename Series, typename Derived>
 struct base_series_multiplier_impl<
-    Series, Derived, typename std::enable_if<is_mp_rational<typename Series::term_type::cf_type>::value>::type> {
+    Series, Derived, typename std::enable_if<mppp::is_rational<typename Series::term_type::cf_type>::value>::type> {
     // Useful shortcuts.
     using term_type = typename Series::term_type;
     using rat_type = typename term_type::cf_type;
-    using int_type = typename std::decay<decltype(std::declval<rat_type>().num())>::type;
+    using int_type = typename std::decay<decltype(std::declval<rat_type>().get_num())>::type;
     using container_type = typename std::decay<decltype(std::declval<Series>()._container())>::type;
     void fill_term_pointers(const container_type &c1, const container_type &c2, std::vector<term_type const *> &v1,
                             std::vector<term_type const *> &v2)
@@ -164,14 +168,14 @@ struct base_series_multiplier_impl<
         auto it_f = c1.end();
         int_type g;
         for (auto it = c1.begin(); it != it_f; ++it) {
-            math::gcd3(g, m_lcm, it->m_cf.den());
-            math::mul3(m_lcm, m_lcm, it->m_cf.den());
+            math::gcd3(g, m_lcm, it->m_cf.get_den());
+            math::mul3(m_lcm, m_lcm, it->m_cf.get_den());
             divexact(m_lcm, m_lcm, g);
         }
         it_f = c2.end();
         for (auto it = c2.begin(); it != it_f; ++it) {
-            math::gcd3(g, m_lcm, it->m_cf.den());
-            math::mul3(m_lcm, m_lcm, it->m_cf.den());
+            math::gcd3(g, m_lcm, it->m_cf.get_den());
+            math::mul3(m_lcm, m_lcm, it->m_cf.get_den());
             divexact(m_lcm, m_lcm, g);
         }
         // All these computations involve only positive numbers,
@@ -181,11 +185,13 @@ struct base_series_multiplier_impl<
         it_f = c1.end();
         for (auto it = c1.begin(); it != it_f; ++it) {
             // NOTE: these divisions are exact, we could take advantage of that.
-            m_terms1.push_back(term_type(rat_type(m_lcm / it->m_cf.den() * it->m_cf.num(), int_type(1)), it->m_key));
+            m_terms1.push_back(
+                term_type(rat_type(m_lcm / it->m_cf.get_den() * it->m_cf.get_num(), int_type(1)), it->m_key));
         }
         it_f = c2.end();
         for (auto it = c2.begin(); it != it_f; ++it) {
-            m_terms2.push_back(term_type(rat_type(m_lcm / it->m_cf.den() * it->m_cf.num(), int_type(1)), it->m_key));
+            m_terms2.push_back(
+                term_type(rat_type(m_lcm / it->m_cf.get_den() * it->m_cf.get_num(), int_type(1)), it->m_key));
         }
         // Copy over the pointers.
         std::transform(m_terms1.begin(), m_terms1.end(), std::back_inserter(v1), [](const term_type &t) { return &t; });
@@ -265,7 +271,8 @@ private:
         return Term{std::move(t.m_cf), t.m_key};
     }
     // Implementation of finalise().
-    template <typename T, typename std::enable_if<is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
+    template <typename T,
+              typename std::enable_if<mppp::is_rational<typename T::term_type::cf_type>::value, int>::type = 0>
     void finalise_impl(T &s) const
     {
         // Nothing to do if the lcm is unitary.
@@ -279,7 +286,7 @@ private:
         // Single thread implementation.
         if (m_n_threads == 1u) {
             for (const auto &t : container) {
-                t.m_cf._set_den(l2);
+                t.m_cf._get_den() = l2;
                 t.m_cf.canonicalise();
             }
             return;
@@ -296,7 +303,7 @@ private:
             for (; start_idx != end_idx; ++start_idx) {
                 auto &list = container._get_bucket_list(start_idx);
                 for (const auto &t : list) {
-                    t.m_cf._set_den(l2);
+                    t.m_cf._get_den() = l2;
                     t.m_cf.canonicalise();
                 }
             }
@@ -317,7 +324,7 @@ private:
         }
     }
     template <typename T,
-              typename std::enable_if<!is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
+              typename std::enable_if<!mppp::is_rational<typename T::term_type::cf_type>::value, int>::type = 0>
     void finalise_impl(T &) const
     {
     }
@@ -330,7 +337,7 @@ public:
      * series, \p m_v2 will store references to the smaller series. The constructor will also store a copy of the symbol
      * set of \p s1 and \p s2 in the protected member base_series_multiplier::m_ss.
      *
-     * If the coefficient type of \p Series is an instance of piranha::mp_rational, then the pointers in \p m_v1 and \p
+     * If the coefficient type of \p Series is an mp++ rational, then the pointers in \p m_v1 and \p
      * m_v2 will refer not to the original terms in \p s1 and \p s2 but to *copies* of these terms, in which all
      * coefficients have unitary denominator and the numerators have all been multiplied by the global least common
      * multiplier. This transformation allows to reduce the multiplication of series with rational coefficients to the
@@ -591,7 +598,7 @@ protected:
         // Sync mutex - actually used only in multithreading.
         std::mutex mut;
         // The estimation functor.
-        auto estimator = [&lf, size1, n_threads, tpt, this, &c_estimate, &mut](unsigned thread_idx) {
+        auto estimator = [&lf, size1, n_threads, tpt, this, &c_estimate, &mut, multiplier](unsigned thread_idx) {
             piranha_assert(thread_idx < n_threads);
             // Vectors of indices into m_v1.
             std::vector<size_type> v_idx1(safe_cast<typename std::vector<size_type>::size_type>(size1));
@@ -1105,11 +1112,9 @@ protected:
     /**
      * This method will finalise the output \p s of a series multiplication undertaken via
      * piranha::base_series_multiplier.
-     * Currently, this method will not do anything unless the coefficient type of \p Series is an instance of
-     * piranha::mp_rational.
+     * Currently, this method will not do anything unless the coefficient type of \p Series is an mp++ rational.
      * In this case, the coefficients of \p s will be normalised with respect to the least common multiplier computed in
-     * the
-     * constructor of piranha::base_series_multiplier.
+     * the constructor of piranha::base_series_multiplier.
      *
      * @param s the \p Series to be finalised.
      *

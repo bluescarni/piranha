@@ -36,8 +36,8 @@ see https://www.gnu.org/licenses/. */
 #include <cstdlib>
 #include <functional>
 #include <future>
-// See old usage of cout below.
-// #include <iostream>
+#include <ios>
+#include <iostream>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -50,11 +50,16 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/config.hpp>
+#if defined(MPPP_WITH_MPFR)
+#include <mp++/detail/mpfr.hpp>
+#endif
+
 #include <piranha/config.hpp>
 #include <piranha/detail/atomic_lock_guard.hpp>
-#include <piranha/detail/mpfr.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/runtime_info.hpp>
 #include <piranha/thread_management.hpp>
 #include <piranha/type_traits.hpp>
@@ -109,8 +114,11 @@ struct task_queue {
                 // NOTE: logging candidate.
                 std::abort();
             }
-            // Free the MPFR caches.
+#if defined(MPPP_WITH_MPFR)
+            // If mp++ has been configured with mpfr, freee the MPFR caches
+            // on thread termination.
             ::mpfr_free_cache();
+#endif
         };
         m_thread = std::thread(std::move(runner));
     }
@@ -150,14 +158,13 @@ struct task_queue {
     // - we can build a packaged_task from the nullary wrapper (requires F and Args to be move/copy ctible),
     // - the return type of F is returnable.
     template <typename F, typename... Args>
-    using enabler
-        = enable_if_t<conjunction<std::is_constructible<decay_t<F>, F>, std::is_constructible<uncvref_t<Args>, Args>...,
-                                  disjunction<std::is_copy_constructible<decay_t<F>>,
-                                              std::is_move_constructible<decay_t<F>>>,
-                                  conjunction<disjunction<std::is_copy_constructible<uncvref_t<Args>>,
-                                                          std::is_move_constructible<uncvref_t<Args>>>>...,
-                                  is_returnable<f_ret_type<F, Args...>>>::value,
-                      int>;
+    using enabler = enable_if_t<
+        conjunction<std::is_constructible<decay_t<F>, F>, std::is_constructible<uncvref_t<Args>, Args>...,
+                    disjunction<std::is_copy_constructible<decay_t<F>>, std::is_move_constructible<decay_t<F>>>,
+                    conjunction<disjunction<std::is_copy_constructible<uncvref_t<Args>>,
+                                            std::is_move_constructible<uncvref_t<Args>>>>...,
+                    is_returnable<f_ret_type<F, Args...>>>::value,
+        int>;
     // Main enqueue function.
     template <typename F, typename... Args, enabler<F &&, Args &&...> = 0>
     std::future<f_ret_type<F &&, Args &&...>> enqueue(F &&f, Args &&... args)
@@ -212,13 +219,6 @@ using thread_queues_t = std::pair<std::vector<std::unique_ptr<task_queue>>, std:
 
 inline thread_queues_t get_initial_thread_queues()
 {
-    // NOTE: we used to have this print statement here, but it turns out that
-    // in certain setups the cout object is not yet constructed at this point,
-    // and a segfault is generated. I *think* it is possible to enforce the creation
-    // of cout via construction of an init object:
-    // http://en.cppreference.com/w/cpp/io/ios_base/Init
-    // However, this is hardly essential. Let's leave this disabled for the moment.
-    // std::cout << "Initializing the thread pool.\n";
     thread_queues_t retval;
     // Create the vector of queues.
     const unsigned candidate = runtime_info::get_hardware_concurrency(), hc = (candidate > 0u) ? candidate : 1u;
@@ -233,6 +233,11 @@ inline thread_queues_t get_initial_thread_queues()
         (void)p;
         piranha_assert(p.second);
     }
+#if !defined(NDEBUG)
+    // Ensure we can write to cout during static initialisation.
+    std::ios_base::Init ios_init;
+    std::cout << "Thread pool initialised with " << hc << " threads.\n";
+#endif
     return retval;
 }
 
@@ -282,10 +287,8 @@ class thread_pool_ : private thread_pool_base<>
     using base = thread_pool_base<>;
     // Enabler for use_threads.
     template <typename Int>
-    using use_threads_enabler
-        = enable_if_t<disjunction<std::is_same<Int, integer>,
-                                  conjunction<std::is_integral<Int>, std::is_unsigned<Int>>>::value,
-                      int>;
+    using use_threads_enabler = enable_if_t<
+        disjunction<std::is_same<Int, integer>, conjunction<std::is_integral<Int>, std::is_unsigned<Int>>>::value, int>;
     // The return type for enqueue().
     template <typename F, typename... Args>
     using enqueue_t = decltype(std::declval<task_queue &>().enqueue(std::declval<F>(), std::declval<Args>()...));

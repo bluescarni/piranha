@@ -74,10 +74,10 @@ inline void register_exposed_type(const bp::class_<T, Args...> &c)
 {
     std::type_index t_idx(typeid(T));
     if (et_map.find(t_idx) != et_map.end()) {
-        ::PyErr_SetString(PyExc_TypeError,
-                          ("the C++ type '" + piranha::detail::demangle(t_idx) + "' has already been "
-                                                                                 "registered in pyranha's type system")
-                              .c_str());
+        ::PyErr_SetString(PyExc_TypeError, ("the C++ type '" + piranha::demangle(t_idx)
+                                            + "' has already been "
+                                              "registered in pyranha's type system")
+                                               .c_str());
         bp::throw_error_already_set();
     }
     et_map[t_idx] = c;
@@ -91,7 +91,7 @@ inline void instantiate_type_generator(const std::string &name, bp::object &o)
     // We do not want to have duplicate instances on the Python side.
     if (hasattr(o, name.c_str())) {
         ::PyErr_SetString(PyExc_AttributeError, ("error while trying to instantiate a type generator for the C++ type '"
-                                                 + piranha::detail::demangle<T>() + "': an attribute called '" + name
+                                                 + piranha::demangle<T>() + "': an attribute called '" + name
                                                  + "' already exists in the object '" + str(o) + "'")
                                                     .c_str());
         bp::throw_error_already_set();
@@ -150,7 +150,7 @@ void register_template_instance()
     if (ti_map[name].find(v_t_idx) != ti_map[name].end()) {
         ::PyErr_SetString(
             PyExc_TypeError,
-            ("the template instance '" + piranha::detail::demangle(tidx) + "' has already been registered").c_str());
+            ("the template instance '" + piranha::demangle(tidx) + "' has already been registered").c_str());
         bp::throw_error_already_set();
     }
     ti_map[name].emplace(std::move(v_t_idx), std::move(tidx));

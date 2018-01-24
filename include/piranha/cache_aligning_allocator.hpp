@@ -32,6 +32,7 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <utility>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/dynamic_aligning_allocator.hpp>
 #include <piranha/memory.hpp>
 #include <piranha/safe_cast.hpp>
@@ -113,9 +114,7 @@ public:
      *   performed by piranha::alignment_check() of \p T, it will be used as construction value;
      * - otherwise, zero will be used.
      */
-    cache_aligning_allocator() : base(determine_alignment())
-    {
-    }
+    cache_aligning_allocator() : base(determine_alignment()) {}
     /// Defaulted copy constructor.
     cache_aligning_allocator(const cache_aligning_allocator &) = default;
     /// Defaulted move constructor.

@@ -39,8 +39,10 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
+#include <mp++/config.hpp>
+#include <mp++/integer.hpp>
+
+#include <piranha/integer.hpp>
 #include <piranha/type_traits.hpp>
 
 static std::mt19937 rng;
@@ -51,26 +53,6 @@ using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integ
                               std::integral_constant<std::size_t, 10>>;
 
 using namespace piranha;
-
-BOOST_AUTO_TEST_CASE(binomial_fp_test)
-{
-    init();
-    // Random testing.
-    std::uniform_real_distribution<double> rdist(-100., 100.);
-    for (int i = 0; i < ntries; ++i) {
-        const double x = rdist(rng), y = rdist(rng);
-        // NOTE: at the moment we have nothing to check this against,
-        // maybe in the future we can check against real.
-        BOOST_CHECK(std::isfinite(math_fp_binomial(x, y)));
-    }
-    std::uniform_int_distribution<int> idist(-100, 100);
-    for (int i = 0; i < ntries; ++i) {
-        // NOTE: maybe this could be checked against the mp_integer implementation.
-        const int x = idist(rng), y = idist(rng);
-        BOOST_CHECK(std::isfinite(math_fp_binomial(static_cast<double>(x), static_cast<double>(y))));
-        BOOST_CHECK(std::isfinite(math_fp_binomial(static_cast<long double>(x), static_cast<long double>(y))));
-    }
-}
 
 struct b_00 {
     b_00() = default;
@@ -105,38 +87,10 @@ struct binomial_impl<b_01, b_01> {
 
 BOOST_AUTO_TEST_CASE(binomial_test_00)
 {
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0))>::value));
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0u))>::value));
-    BOOST_CHECK((std::is_same<double, decltype(math::binomial(0., 0l))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0u))>::value));
-    BOOST_CHECK((std::is_same<float, decltype(math::binomial(0.f, 0ll))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, 0))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, char(0)))>::value));
-    BOOST_CHECK((std::is_same<long double, decltype(math::binomial(0.l, short(0)))>::value));
-    BOOST_CHECK((has_binomial<double, int>::value));
-    BOOST_CHECK((has_binomial<double &, int>::value));
-    BOOST_CHECK((has_binomial<double &, const int>::value));
-    BOOST_CHECK((has_binomial<const double &, int &&>::value));
-    BOOST_CHECK((has_binomial<double, unsigned>::value));
-    BOOST_CHECK((has_binomial<float, char>::value));
-    BOOST_CHECK((has_binomial<float, float>::value));
-    BOOST_CHECK((has_binomial<float, double>::value));
+    BOOST_CHECK((!has_binomial<double, double>::value));
     BOOST_CHECK((!has_binomial<void, double>::value));
     BOOST_CHECK((!has_binomial<double, void>::value));
     BOOST_CHECK((!has_binomial<void, void>::value));
-    if (std::numeric_limits<double>::has_quiet_NaN && std::numeric_limits<double>::has_infinity) {
-        BOOST_CHECK_THROW(math::binomial(1., std::numeric_limits<double>::quiet_NaN()), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(1., std::numeric_limits<double>::infinity()), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::quiet_NaN(), 1.), std::invalid_argument);
-        BOOST_CHECK_THROW(math::binomial(std::numeric_limits<double>::infinity(), 1.), std::invalid_argument);
-        BOOST_CHECK_THROW(
-            math::binomial(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity()),
-            std::invalid_argument);
-        BOOST_CHECK_THROW(
-            math::binomial(std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()),
-            std::invalid_argument);
-    }
     BOOST_CHECK((!has_binomial<b_00, b_00>::value));
     BOOST_CHECK((!has_binomial<b_01, b_01>::value));
 }
@@ -145,7 +99,7 @@ struct binomial_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK((has_binomial<int_type, int_type>::value));
         BOOST_CHECK((has_binomial<int_type, int_type &>::value));
         BOOST_CHECK((has_binomial<const int_type, int_type &>::value));
@@ -168,10 +122,8 @@ struct binomial_tester {
         BOOST_CHECK((has_binomial<int, int_type>::value));
         BOOST_CHECK((std::is_same<int_type, decltype(math::binomial(int_type{}, 0))>::value));
         BOOST_CHECK((std::is_same<decltype(math::binomial(int_type{}, 0)), int_type>::value));
-        BOOST_CHECK((has_binomial<int_type, double>::value));
-        BOOST_CHECK((has_binomial<double, int_type>::value));
-        BOOST_CHECK((std::is_same<double, decltype(math::binomial(int_type{}, 0.))>::value));
-        BOOST_CHECK((std::is_same<decltype(math::binomial(int_type{}, 0.)), double>::value));
+        BOOST_CHECK((!has_binomial<int_type, double>::value));
+        BOOST_CHECK((!has_binomial<double, int_type>::value));
         BOOST_CHECK((has_binomial<int_type, int_type>::value));
         BOOST_CHECK((std::is_same<int_type, decltype(math::binomial(int_type{}, int_type{}))>::value));
         // Random tests.
@@ -184,18 +136,6 @@ struct binomial_tester {
                 n.promote();
             }
             BOOST_CHECK_NO_THROW(math::binomial(n, tmp2));
-            // int -- double.
-            BOOST_CHECK_EQUAL(math::binomial(n, static_cast<double>(tmp2)),
-                              math::binomial(double(n), static_cast<double>(tmp2)));
-            // double -- int.
-            BOOST_CHECK_EQUAL(math::binomial(static_cast<double>(tmp2), n),
-                              math::binomial(static_cast<double>(tmp2), double(n)));
-            // int -- float.
-            BOOST_CHECK_EQUAL(math::binomial(n, static_cast<float>(tmp2)),
-                              math::binomial(float(n), static_cast<float>(tmp2)));
-            // float -- int.
-            BOOST_CHECK_EQUAL(math::binomial(static_cast<float>(tmp2), n),
-                              math::binomial(static_cast<float>(tmp2), float(n)));
         }
     }
 };
@@ -214,6 +154,22 @@ BOOST_AUTO_TEST_CASE(binomial_test_01)
     BOOST_CHECK((std::is_same<decltype(math::binomial(7ll, 4)), int_type>::value));
     BOOST_CHECK_EQUAL(math::binomial(-7ll, 4u), math::binomial(int_type(-7), 4));
     // Different static sizes.
-    BOOST_CHECK((!has_binomial<mp_integer<1>, mp_integer<2>>::value));
-    BOOST_CHECK((!has_binomial<mp_integer<2>, mp_integer<1>>::value));
+    BOOST_CHECK((!has_binomial<mppp::integer<1>, mppp::integer<2>>::value));
+    BOOST_CHECK((!has_binomial<mppp::integer<2>, mppp::integer<1>>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+    BOOST_CHECK((has_binomial<int_type, __int128_t>::value));
+    BOOST_CHECK((has_binomial<int_type, __uint128_t>::value));
+    BOOST_CHECK((has_binomial<__int128_t, int_type>::value));
+    BOOST_CHECK((has_binomial<__uint128_t, int_type>::value));
+    BOOST_CHECK((has_binomial<__int128_t, __int128_t>::value));
+    BOOST_CHECK((has_binomial<__uint128_t, __uint128_t>::value));
+    BOOST_CHECK((has_binomial<__int128_t, __uint128_t>::value));
+    BOOST_CHECK((has_binomial<__uint128_t, __int128_t>::value));
+    BOOST_CHECK((std::is_same<decltype(math::binomial(__uint128_t(), __int128_t())), int_type>::value));
+    BOOST_CHECK((std::is_same<decltype(math::binomial(int_type(), __int128_t())), int_type>::value));
+    BOOST_CHECK((std::is_same<decltype(math::binomial(__int128_t(), int_type())), int_type>::value));
+    BOOST_CHECK_EQUAL(math::binomial(__int128_t(4), __uint128_t(2)), math::binomial(int_type(4), 2));
+    BOOST_CHECK_EQUAL(math::binomial(__int128_t(4), int_type(2)), math::binomial(int_type(4), 2));
+    BOOST_CHECK_EQUAL(math::binomial(int_type(4), __uint128_t(2)), math::binomial(int_type(4), 2));
+#endif
 }

@@ -31,6 +31,8 @@ see https://www.gnu.org/licenses/. */
 
 #include "python_includes.hpp"
 
+#include <string>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/python/converter/registry.hpp>
 #include <boost/python/converter/rvalue_from_python_data.hpp>
@@ -39,13 +41,18 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/import.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/type_id.hpp>
-#include <string>
+
+#include <mp++/config.hpp>
+#if defined(MPPP_WITH_MPFR)
+#include <mp++/detail/mpfr.hpp>
+#endif
 
 #include <piranha/config.hpp>
-#include <piranha/detail/mpfr.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/integer.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/safe_cast.hpp>
 
 // NOTE: useful resources for python converters and C API:
@@ -123,11 +130,12 @@ struct integer_converter {
     };
     static void *convertible(::PyObject *obj_ptr)
     {
-        if (!obj_ptr || (
+        if (!obj_ptr
+            || (
 #if PY_MAJOR_VERSION < 3
-                            !PyInt_CheckExact(obj_ptr) &&
+                   !PyInt_CheckExact(obj_ptr) &&
 #endif
-                            !PyLong_CheckExact(obj_ptr))) {
+                   !PyLong_CheckExact(obj_ptr))) {
             return nullptr;
         }
         return obj_ptr;
@@ -149,7 +157,7 @@ struct rational_converter {
         {
             bp::object frac_module = bp::import("fractions");
             bp::object frac_class = frac_module.attr("Fraction");
-            return bp::incref(frac_class(q.num(), q.den()).ptr());
+            return bp::incref(frac_class(q.get_num(), q.get_den()).ptr());
         }
     };
     static void *convertible(::PyObject *obj_ptr)
@@ -169,6 +177,8 @@ struct rational_converter {
         construct_from_str<piranha::rational>(obj_ptr, data, "rational");
     }
 };
+
+#if defined(MPPP_WITH_MPFR)
 
 struct real_converter {
     real_converter()
@@ -276,6 +286,8 @@ struct real_converter {
         data->convertible = storage;
     }
 };
+
+#endif
 }
 
 #endif

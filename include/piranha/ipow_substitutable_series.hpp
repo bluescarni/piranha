@@ -33,8 +33,9 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>

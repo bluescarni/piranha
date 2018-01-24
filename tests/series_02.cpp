@@ -43,18 +43,25 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/config.hpp>
+#include <mp++/exceptions.hpp>
+#if defined(MPPP_WITH_MPFR)
+#include <mp++/real.hpp>
+#endif
+
 #include <piranha/base_series_multiplier.hpp>
-#include <piranha/debug_access.hpp>
+#include <piranha/detail/debug_access.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -219,7 +226,9 @@ struct mock_cf {
 
 BOOST_AUTO_TEST_CASE(series_partial_test)
 {
-    init();
+#if defined(MPPP_WITH_MPFR)
+    mppp::real_set_default_prec(100);
+#endif
     {
         typedef g_series_type<rational, int> p_type1;
         p_type1 x1{"x"};
@@ -403,10 +412,11 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
     BOOST_CHECK_EQUAL(math::evaluate(x, dict_type{{"x", rational(1)}}), 1);
     BOOST_CHECK_THROW(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}}), std::invalid_argument);
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
-                      rational(1) + (2 * rational(2, 3)).pow(3));
+                      rational(1) + math::pow(2 * rational(2, 3), 3));
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type{})), rational>::value));
+#if defined(MPPP_WITH_MPFR)
     typedef symbol_fmap<real> dict_type2;
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
     BOOST_CHECK_EQUAL(
@@ -416,6 +426,7 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
         math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
         math::evaluate(x + math::pow(2 * y, 3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type2{})), real>::value));
+#endif
     typedef symbol_fmap<double> dict_type3;
     BOOST_CHECK((is_evaluable<p_type1, double>::value));
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
@@ -1809,9 +1820,9 @@ public:
                 BOOST_CHECK_THROW(zero /= 0, mppp::zero_division_error);
             }
             if (std::is_same<rational, Cf>::value) {
-                BOOST_CHECK_THROW(p_type1{} / 0, zero_division_error);
+                BOOST_CHECK_THROW(p_type1{} / 0, mppp::zero_division_error);
                 p_type1 zero;
-                BOOST_CHECK_THROW(zero /= 0, zero_division_error);
+                BOOST_CHECK_THROW(zero /= 0, mppp::zero_division_error);
             }
             // Check with scalar on the left.
             BOOST_CHECK((!is_divisible_in_place<int, p_type1>::value));

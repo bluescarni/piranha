@@ -34,6 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <mutex>
 #include <stdexcept>
 
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/thread_barrier.hpp>
 

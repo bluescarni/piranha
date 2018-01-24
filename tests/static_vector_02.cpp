@@ -38,9 +38,8 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/integer.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -136,7 +135,6 @@ struct boost_s11n_tester {
 
 BOOST_AUTO_TEST_CASE(static_vector_boost_s11n_test)
 {
-    init();
     tuple_for_each(value_types{}, boost_s11n_tester());
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, static_vector<no_s11n, 10u>>::value));
     BOOST_CHECK((!has_boost_save<boost::archive::text_oarchive, static_vector<no_s11n, 10u>>::value));

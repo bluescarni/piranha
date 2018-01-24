@@ -46,20 +46,23 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/rational.hpp>
+
 #include <piranha/array_key.hpp>
 #include <piranha/config.hpp>
 #include <piranha/detail/cf_mult_impl.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/detail/monomial_common.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/detail/safe_integral_adder.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -701,16 +704,16 @@ public:
 private:
     // Let's hard code the custom behaviour for rational exponents for the moment.
     // We can offer a customization point in the future.
-    template <typename U, enable_if_t<is_mp_rational<U>::value, int> = 0>
+    template <typename U, enable_if_t<mppp::is_rational<U>::value, int> = 0>
     static void print_exponent(std::ostream &os, const U &e)
     {
-        if (math::is_unitary(e.den())) {
+        if (math::is_unitary(e.get_den())) {
             os << e;
         } else {
             os << '(' << e << ')';
         }
     }
-    template <typename U, enable_if_t<!is_mp_rational<U>::value, int> = 0>
+    template <typename U, enable_if_t<!mppp::is_rational<U>::value, int> = 0>
     static void print_exponent(std::ostream &os, const U &e)
     {
         os << detail::prepare_for_print(e);
@@ -1097,8 +1100,8 @@ public:
      * - \p T satisfies piranha::has_add3,
      * - \p Cf satisfies piranha::has_mul3.
      *
-     * Multiply \p t1 by \p t2, storing the result in the only element of \p res. If \p Cf is an instance of
-     * piranha::mp_rational, then only the numerators of the coefficients will be multiplied.
+     * Multiply \p t1 by \p t2, storing the result in the only element of \p res. If \p Cf is an mp++
+     * rational, then only the numerators of the coefficients will be multiplied.
      *
      * This method offers the basic exception safety guarantee.
      *

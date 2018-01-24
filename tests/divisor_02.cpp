@@ -42,9 +42,8 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/math.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -189,7 +188,6 @@ struct boost_s11n_tester {
 
 BOOST_AUTO_TEST_CASE(divisor_boost_s11n_test)
 {
-    init();
     tuple_for_each(value_types{}, boost_s11n_tester{});
 }
 

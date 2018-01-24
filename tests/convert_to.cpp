@@ -35,15 +35,16 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
-#include <piranha/config.hpp>
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
-#include <piranha/real.hpp>
+#include <mp++/config.hpp>
 
-static void test_func()
-{
-}
+#include <piranha/config.hpp>
+#include <piranha/integer.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
+#include <piranha/real.hpp>
+#endif
+
+static void test_func() {}
 static auto l1 = []() {};
 
 struct base {
@@ -111,7 +112,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(convert_to_main_test)
 {
-    init();
     BOOST_CHECK_EQUAL(convert_to<int>(3.5), 3);
     BOOST_CHECK((std::is_same<int, decltype(convert_to<int>(3.5))>::value));
     BOOST_CHECK_EQUAL(convert_to<std::string>("asdasd"), "asdasd");
@@ -122,15 +122,20 @@ BOOST_AUTO_TEST_CASE(convert_to_main_test)
     BOOST_CHECK((has_convert_to<std::string, const char *>::value));
     BOOST_CHECK((has_convert_to<std::string, char *>::value));
     BOOST_CHECK((has_convert_to<double, long double>::value));
+    BOOST_CHECK((has_convert_to<void, long double>::value));
+    BOOST_CHECK((!has_convert_to<long double, void>::value));
+    BOOST_CHECK((!has_convert_to<void, void>::value));
     BOOST_CHECK((has_convert_to<long double, double>::value));
     BOOST_CHECK((has_convert_to<long double, int>::value));
     BOOST_CHECK((has_convert_to<std::function<void()>, void (*)()>::value));
     BOOST_CHECK((has_convert_to<std::function<void()>, decltype(l1)>::value));
     BOOST_CHECK((has_convert_to<void (*)(), decltype(l1)>::value));
+#if defined(MPPP_WITH_MPFR)
     BOOST_CHECK((has_convert_to<real, rational>::value));
     BOOST_CHECK((has_convert_to<rational, real>::value));
     BOOST_CHECK((has_convert_to<integer, real>::value));
     BOOST_CHECK((has_convert_to<real, real>::value));
+#endif
     // NOTE: this used to be problematic with libc++ in an earlier implementation
     // of convert_to().
     BOOST_CHECK((has_convert_to<int, integer>::value));

@@ -26,15 +26,20 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_POW_HPP
-#define PIRANHA_POW_HPP
+#ifndef PIRANHA_MATH_POW_HPP
+#define PIRANHA_MATH_POW_HPP
 
 #include <cmath>
 #include <cstddef>
 #include <type_traits>
 #include <utility>
 
-#include <piranha/mp_integer.hpp>
+#include <mp++/concepts.hpp>
+#include <mp++/integer.hpp>
+
+#include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -51,7 +56,6 @@ namespace math
 template <typename T, typename U, typename = void>
 struct pow_impl {
 };
-}
 
 inline namespace impl
 {
@@ -62,9 +66,6 @@ using pow_fp_arith_enabler
     = enable_if_t<conjunction<std::is_arithmetic<T>, std::is_arithmetic<U>,
                               disjunction<std::is_floating_point<T>, std::is_floating_point<U>>>::value>;
 }
-
-namespace math
-{
 
 /// Specialisation of the implementation of piranha::math::pow() for arithmetic and floating-point types.
 /**
@@ -77,8 +78,8 @@ struct pow_impl<T, U, pow_fp_arith_enabler<T, U>> {
     /**
      * This operator will compute the exponentiation via one of the overloads of <tt>std::pow()</tt>.
      *
-     * @param x base.
-     * @param y exponent.
+     * @param x the base.
+     * @param y the exponent.
      *
      * @return <tt>x**y</tt>.
      */
@@ -87,7 +88,6 @@ struct pow_impl<T, U, pow_fp_arith_enabler<T, U>> {
         return std::pow(x, y);
     }
 };
-}
 
 inline namespace impl
 {
@@ -100,14 +100,11 @@ template <typename T, typename U>
 using math_pow_t = enable_if_t<is_returnable<math_pow_t_<T, U>>::value, math_pow_t_<T, U>>;
 }
 
-namespace math
-{
-
 /// Exponentiation.
 /**
  * \note
- * This function is enabled only if the expression <tt>pow_impl<T, U>{}(x, y)</tt> is valid, returning
- * a type which satisfies piranha::is_returnable.
+ * This function is enabled only if the expression <tt>pow_impl<T, U>{}(x, y)</tt> is valid,
+ * returning a type which satisfies piranha::is_returnable.
  *
  * Return \p x to the power of \p y. The actual implementation of this function is in the piranha::math::pow_impl
  * functor's call operator. The body of this function is equivalent to:
@@ -115,8 +112,8 @@ namespace math
  * return pow_impl<T, U>{}(x, y);
  * @endcode
  *
- * @param x base.
- * @param y exponent.
+ * @param x the base.
+ * @param y the exponent.
  *
  * @return \p x to the power of \p y.
  *
@@ -127,78 +124,68 @@ inline math_pow_t<T, U> pow(const T &x, const U &y)
 {
     return pow_impl<T, U>{}(x, y);
 }
-}
 
 inline namespace impl
 {
 
 // Enabler for integral power.
 template <typename T, typename U>
-using integer_pow_enabler
-    = enable_if_t<disjunction<conjunction<is_mp_integer<T>, mppp::mppp_impl::is_supported_interop<U>>,
-                              conjunction<is_mp_integer<U>, mppp::mppp_impl::is_supported_interop<T>>,
-                              conjunction<std::is_integral<T>, std::is_integral<U>>, is_same_mp_integer<T, U>>::value>;
-
-// Wrapper for ADL.
-template <typename T, typename U>
-inline auto mp_integer_pow_wrapper(const T &base, const U &exp) -> decltype(pow(base, exp))
-{
-    return pow(base, exp);
-}
+using integer_pow_enabler = enable_if_t<
+    disjunction<mppp::are_integer_op_types<T, U>,
+                conjunction<mppp::is_cpp_integral_interoperable<T>, mppp::is_cpp_integral_interoperable<U>>>::value>;
 }
 
-namespace math
-{
-
-// NOTE: this specialisation must be here as in the integral-integral overload we use mp_integer inside,
-// so the declaration of mp_integer must be avaiable. On the other hand, we cannot put this in mp_integer.hpp
-// as the integral-integral overload is supposed to work without including mp_integer.hpp.
-/// Specialisation of the implementation of piranha::math::pow() for piranha::mp_integer and integral types.
+// NOTE: this specialisation must be here as in the integral-integral overload we use mppp::integer inside,
+// so the declaration of mppp::integer must be avaiable. On the other hand, we cannot put this in integer.hpp
+// as the integral-integral overload is supposed to work without including mppp::integer.hpp.
+/// Specialisation of the implementation of piranha::math::pow() for mp++'s integers and C++ integral types.
 /**
  * \note
  * This specialisation is activated when:
- * - both arguments are piranha::mp_integer with the same static size,
- * - one of the arguments is piranha::mp_integer and the other is an interoperable type for piranha::mp_integer,
- * - both arguments are C++ integral types.
+ * - the mp++ integer exponentiation function can be successfully called on
+ *   instances of ``T`` and ``U``, or
+ * - both arguments are C++ integral types with which mp++'s integers can interoperate.
  *
  * The implementation follows these rules:
- * - if the arguments are both piranha::mp_integer, or a piranha::mp_integer and an interoperable type for
- *   piranha::mp_integer, then piranha::mp_integer::pow() is used to compute the result,
- * - if both arguments are integral types, piranha::mp_integer::pow() is used after the conversion of the base
- *   to piranha::integer.
+ * - if both arguments are C++ integral types, then the mp++ integer exponentiation function is used after the
+ *   conversion of the base to piranha::integer; otherwise,
+ * - the mp++ integer exponentiation function is used directly.
  */
 template <typename T, typename U>
 struct pow_impl<T, U, integer_pow_enabler<T, U>> {
 private:
     // C++ integral -- C++ integral.
-    template <typename T2, typename U2,
-              enable_if_t<conjunction<std::is_integral<T2>, std::is_integral<U2>>::value, int> = 0>
-    static integer impl(const T2 &b, const U2 &e)
+    template <typename T2, typename U2>
+    static integer impl(const T2 &b, const U2 &e, const std::true_type &)
     {
-        return mp_integer_pow_wrapper(integer{b}, e);
+        return mppp::pow(integer{b}, e);
     }
     // The other cases.
-    template <typename T2, typename U2,
-              enable_if_t<negation<conjunction<std::is_integral<T2>, std::is_integral<U2>>>::value, int> = 0>
-    static auto impl(const T2 &b, const U2 &e) -> decltype(mp_integer_pow_wrapper(b, e))
+    template <typename T2, typename U2>
+    static auto impl(const T2 &b, const U2 &e, const std::false_type &) -> decltype(mppp::pow(b, e))
     {
-        return mp_integer_pow_wrapper(b, e);
+        return mppp::pow(b, e);
     }
-    using ret_type = decltype(impl(std::declval<const T &>(), std::declval<const U &>()));
+    using ret_type
+        = decltype(impl(std::declval<const T &>(), std::declval<const U &>(),
+                        std::integral_constant<bool, conjunction<mppp::is_cpp_integral_interoperable<T>,
+                                                                 mppp::is_cpp_integral_interoperable<U>>::value>{}));
 
 public:
     /// Call operator.
     /**
-     * @param b base.
-     * @param e exponent.
+     * @param b the base.
+     * @param e the exponent.
      *
      * @returns <tt>b**e</tt>.
      *
-     * @throws unspecified any exception thrown by piranha::mp_integer::pow().
+     * @throws unspecified any exception thrown by mp++'s integer exponentiation function.
      */
     ret_type operator()(const T &b, const U &e) const
     {
-        return impl(b, e);
+        return impl(b, e,
+                    std::integral_constant<bool, conjunction<mppp::is_cpp_integral_interoperable<T>,
+                                                             mppp::is_cpp_integral_interoperable<U>>::value>{});
     }
 };
 }
@@ -223,12 +210,15 @@ class is_exponentiable
 
 public:
     /// Value of the type trait.
-    static const bool value = implementation_defined;
+    static constexpr bool value = implementation_defined;
 };
 
-// Static init.
+#if PIRANHA_CPLUSPLUS < 201703L
+
 template <typename T, typename U>
-const bool is_exponentiable<T, U>::value;
+constexpr bool is_exponentiable<T, U>::value;
+
+#endif
 }
 
 #endif

@@ -46,15 +46,21 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
-#include <piranha/init.hpp>
+#include <mp++/config.hpp>
+#if defined(MPPP_WITH_MPFR)
+#include <mp++/real.hpp>
+#endif
+
+#include <piranha/integer.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
@@ -174,7 +180,9 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
 {
-    init();
+#if defined(MPPP_WITH_MPFR)
+    mppp::real_set_default_prec(100);
+#endif
     tuple_for_each(int_types{}, constructor_tester{});
 }
 
@@ -604,32 +612,32 @@ struct multiply_tester {
         t2.m_key = key_type{T(3)};
         std::array<term_type, 2u> retval;
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(5));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(retval[0u].m_key.get_flavour());
         BOOST_CHECK(retval[1u].m_key.get_flavour());
         t1.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(5));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
         BOOST_CHECK(!retval[1u].m_key.get_flavour());
         t2.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(5));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(retval[0u].m_key.get_flavour());
         BOOST_CHECK(retval[1u].m_key.get_flavour());
         t1.m_key.set_flavour(true);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(5));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -639,8 +647,8 @@ struct multiply_tester {
         t2.m_key = key_type{T(-2)};
         t1.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(1));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(3));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -649,8 +657,8 @@ struct multiply_tester {
         t2.m_key = key_type{T(2)};
         t1.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(3));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -659,8 +667,8 @@ struct multiply_tester {
         t2.m_key = key_type{T(-2)};
         t2.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, -(t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(1));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(3));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -669,8 +677,8 @@ struct multiply_tester {
         t2.m_key = key_type{T(2)};
         t2.m_key.set_flavour(false);
         key_type::multiply(retval, t1, t2, symbol_fset{"x"});
-        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
-        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.num() * t2.m_cf.num()));
+        BOOST_CHECK_EQUAL(retval[0u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
+        BOOST_CHECK_EQUAL(retval[1u].m_cf, (t1.m_cf.get_num() * t2.m_cf.get_num()));
         BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(), T(3));
         BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(), T(1));
         BOOST_CHECK(!retval[0u].m_key.get_flavour());
@@ -1031,6 +1039,7 @@ struct evaluate_tester {
         // result according to the standard integral promotions.
         BOOST_CHECK((std::is_same<T, decltype(k1.template evaluate<int>({0}, symbol_fset{"x"}))>::value
                      || std::is_same<int, decltype(k1.template evaluate<int>({0}, symbol_fset{"x"}))>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK(
             (std::is_same<real, decltype(k1.template evaluate<real>(std::vector<real>{}, symbol_fset{}))>::value));
         BOOST_CHECK((
@@ -1053,6 +1062,7 @@ struct evaluate_tester {
         BOOST_CHECK_EQUAL(k1.template evaluate<rational>({2_q / 3, 1_q}, symbol_fset{"x", "y"}), 1);
         k1.set_flavour(false);
         BOOST_CHECK_EQUAL(k1.template evaluate<rational>({2_q / 3, 1_q}, symbol_fset{"x", "y"}), 0);
+#endif
     }
 };
 
@@ -1072,7 +1082,9 @@ struct subs_tester {
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
         // Test the type trait.
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((key_has_subs<k_type, real>::value));
+#endif
         BOOST_CHECK((key_has_subs<k_type, double>::value));
         BOOST_CHECK((!key_has_subs<k_type, std::string>::value));
         BOOST_CHECK((!key_has_subs<k_type, std::vector<std::string>>::value));
@@ -1097,6 +1109,7 @@ struct subs_tester {
         BOOST_CHECK_THROW(k1.template subs<integer>({{0, 5_z}}, symbol_fset{"x"}), std::invalid_argument);
         // Subs with no sign changes.
         k1 = k_type({T(2), T(3)});
+#if defined(MPPP_WITH_MPFR)
         auto ret2 = k1.template subs<real>({{0, real(5)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
         BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(5) * T(2)));
@@ -1209,6 +1222,7 @@ struct subs_tester {
                                                          "Kronecker monomial: the last index of the substitution map "
                                                          "(6) must be smaller than the monomial's size (3)");
                               });
+#endif
     }
 };
 
@@ -1567,6 +1581,7 @@ struct t_subs_tester {
         // Test with no substitution.
         typedef real_trigonometric_kronecker_monomial<T> k_type;
         k_type k;
+#if defined(MPPP_WITH_MPFR)
         auto res = k.t_subs(0, real(.5), real(.0), symbol_fset{});
         typedef decltype(res) res_type1;
         BOOST_CHECK((std::is_same<typename res_type1::value_type::first_type, real>::value));
@@ -1594,6 +1609,7 @@ struct t_subs_tester {
         BOOST_CHECK(res[1u].second == k);
         k.set_flavour(true);
         BOOST_CHECK(res[0u].second == k);
+#endif
         // Test substitution with no canonicalisation.
         k = k_type{T(2), T(3)};
         auto c = rational(1, 2), s = rational(4, 5);
@@ -1696,7 +1712,9 @@ struct is_evaluable_tester {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
         BOOST_CHECK((key_is_evaluable<k_type, float>::value));
         BOOST_CHECK((key_is_evaluable<k_type, double>::value));
+#if defined(MPPP_WITH_MPFR)
         BOOST_CHECK((key_is_evaluable<k_type, real>::value));
+#endif
         BOOST_CHECK((key_is_evaluable<k_type, integer>::value));
         BOOST_CHECK((key_is_evaluable<k_type, rational>::value));
         BOOST_CHECK((key_is_evaluable<k_type, int>::value));

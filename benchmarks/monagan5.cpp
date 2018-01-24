@@ -31,9 +31,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/lexical_cast.hpp>
 
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/settings.hpp>
 
 #include "monagan.hpp"
@@ -42,7 +41,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(monagan5_test)
 {
-    init();
     settings::set_thread_binding(true);
     if (boost::unit_test::framework::master_test_suite().argc > 1) {
         settings::set_n_threads(

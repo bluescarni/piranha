@@ -29,13 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_PIRANHA_HPP
 #define PIRANHA_PIRANHA_HPP
 
-/** \file piranha.hpp
- * \brief Global piranha header file.
- *
- * Include this file to import piranha's entire public interface.
- */
-
-/// Root piranha namespace.
+// Root piranha namespace.
 /*
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly
  * that
@@ -88,24 +82,10 @@ see https://www.gnu.org/licenses/. */
  * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
  * and keep lexical_cast only for the conversion of piranha's types to string. UPDATE: it looks like to_string is
  * influenced by the locale setting, it's probably better to roll our implementation.
- * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in term. Should we require it
  * to be
  * noexcept as well and put the requirement in the is_cf type trait?
- * \todo floating point stuff: there's a few things we can improve here. The first problem is that, in some places where
- * it could
- * matter (interop mp_integer/rational <--> float) we don't check for math errors, as explained here:
- * http://en.cppreference.com/w/cpp/numeric/math/math_errhandling
- * We should probably check for errors when we need things to be exact and safe. These include ilogb, scalb, trunc, etc.
- * Secondly,
- * we have a bunch of generic fp algorithms that could be easily extended to work with nonstandard fp types such as
- * quadmath
- * and decimal. We need then to abstract fp standard functions in our own wrappers and abstract away in a separate place
- * our
- * generic algos scattered around. Then in the wrappers we could add automatic checks for errno (raise exception) and
- * kill two
- * birds with one stone.
  * \todo review the usage of _fwd headers. It seems it is ok for friend declarations for instance, but wherever we might
  * need the full definition of the object we might want to reorganise the code.
  * \todo the prepare_for_print() should probably become a public print_exponent(), that also takes care of putting
@@ -120,8 +100,6 @@ see https://www.gnu.org/licenses/. */
  * system and maybe the list of arguments. Also, what happens if we expose, say, polynomial<double> *and*
  * polynomial<double,k_monomial>,
  * supposing that they are the same type one day?
- * \todo should the print coefficient operator of real print the precision as well or is the number of digits enough
- * hint?
  * \todo need to review the requirements on all std object we use as members of classes. We often require them to be
  * noexcept
  * but they do not need to be by the standard (e.g., hash, equal_to, vector, ...). Note that in all our classes we mark
@@ -167,14 +145,9 @@ see https://www.gnu.org/licenses/. */
  * in his use cases could
  * benefit from parallelisation?
  * \todo the replace_symbol() method for series. Or maybe rename_symbol().
- * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of
- * checking the shutdown flag.
  * \todo consider the use of the upcoming std::shared_lock/mutex for multiple readers/single writer situations (e.g., in
  * the custom derivative
  * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
- * \todo it looks like in many cases we can hide excess default template parameters used in TMP by adding an extra layer
- * of indirection. This has only cosmetic
- * value, but might be worth for clarity in the long run.
  * \todo the pattern of sin/cos in poisson series and invert in divisor_series (that is, recurse until a polynomial
  * coefficient is found) should probably
  * be applied in the integration routine for poisson series that integrates by part when coefficient has positive degree
@@ -211,13 +184,6 @@ see https://www.gnu.org/licenses/. */
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type
  * traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
- * \todo in mp_integer probably the ternary operations (and multadd etc.) should be modified so that the
- * return value is demoted to
- * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times,
- * once it is set to dynamic
- * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that
- * iteratively always increases).
- * Not sure there's a general solution.
  * \todo it seems like, at least in some cases, it is possible to avoid extra template arguments for enabling purposes
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
@@ -229,45 +195,13 @@ see https://www.gnu.org/licenses/. */
  * the return type as well for consistency (see lambdify docs) -> actually start using sphinx napoleon - UPDATE:
  * note also that the settings' methods' docstrings need to be filled out properly with exception specs, return types,
  * etc.
- * \todo "quick install" should not be the title of the getting started section in sphinx
- * \todo it seems like in C++17 we can finally have an automatically inited global class in which to tuck the init
- * code (and probably the thread pool as well), via inline variables. Probably we will need to define it in a separate
- * header and then make sure to include that header in every piranha public header.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
  * \todo guidelines for type traits modernization:
- * - beautify enablers,
- * - replace std::decay with uncvref_t,
- * - check returnability,
  * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
  *   in the same fashion as the s11n type traits.
- * \todo instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
- * atexit() function to clean up custom derivatives before static destruction starts. We could register the atexit
- * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each
- * time. Or maybe when the static derivative registry is constructed the first time. Same goes for pow_caches.
- * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
- * work in a more generic fashion (or otherwise we need to make clear). More generally, we need to think if there's
- * a robust way of sorting out the init/destruction sequence for the global state. Destruction is harder.
  */
-namespace piranha
-{
 
-// Namespace for implementation details.
-// Classes and functions defined in this namespace are non-documented implementation details.
-// Users should never employ functionality implemented in this namespace.
-namespace detail
-{
-}
-
-// Same as above, new version as inline namespace so we don't have to use detail:: everywhere.
-inline namespace impl
-{
-}
-
-/// Inline namespace for the definition of user-defined literals.
-inline namespace literals
-{
-}
-}
+#include <mp++/config.hpp>
 
 #include <piranha/array_key.hpp>
 #include <piranha/base_series_multiplier.hpp>
@@ -275,13 +209,13 @@ inline namespace literals
 #include <piranha/cache_aligning_allocator.hpp>
 #include <piranha/config.hpp>
 #include <piranha/convert_to.hpp>
-#include <piranha/debug_access.hpp>
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/dynamic_aligning_allocator.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/hash_set.hpp>
 #include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/ipow_substitutable_series.hpp>
 #include <piranha/is_cf.hpp>
@@ -294,15 +228,16 @@ inline namespace literals
 #include <piranha/math.hpp>
 #include <piranha/memory.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
 #include <piranha/runtime_info.hpp>
 #include <piranha/s11n.hpp>

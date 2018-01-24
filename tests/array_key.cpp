@@ -42,8 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -165,7 +164,6 @@ struct constructor_tester {
 
 BOOST_AUTO_TEST_CASE(array_key_constructor_test)
 {
-    init();
     tuple_for_each(value_types{}, constructor_tester{});
 }
 

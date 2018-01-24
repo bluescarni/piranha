@@ -39,12 +39,11 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/forwarding.hpp>
-#include <piranha/init.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -53,7 +52,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 {
-    init();
     using math::cos;
     using math::sin;
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;

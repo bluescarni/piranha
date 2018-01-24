@@ -45,7 +45,6 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <vector>
 
-#include <piranha/init.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -180,7 +179,6 @@ struct boost_s11n_tester {
 
 BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
 {
-    init();
     tuple_for_each(int_types{}, boost_s11n_tester());
 }
 

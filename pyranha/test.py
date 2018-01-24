@@ -331,6 +331,9 @@ class mpmath_test_case(_ut.TestCase):
     """
 
     def runTest(self):
+        from ._core import _with_mpfr
+        if not _with_mpfr:
+            return
         try:
             from mpmath import workdps, mpf, pi
         except ImportError:
@@ -362,7 +365,7 @@ class math_test_case(_ut.TestCase):
     def runTest(self):
         import math
         from .math import cos as pcos, sin as psin
-        from .types import polynomial, k_monomial, double, real
+        from .types import polynomial, k_monomial, double
         # NOTE: according to
         # https://docs.python.org/3/library/math.html
         # the CPython math functions are wrappers around the corresponding
@@ -386,29 +389,9 @@ class math_test_case(_ut.TestCase):
         self.lambdifyTest()
 
     def binomialTest(self):
-        from fractions import Fraction as F
         from .math import binomial
-        # Check the return types of binomial.
         self.assertEqual(type(binomial(5, 4)), int)
-        self.assertEqual(type(binomial(5, 4.)), float)
-        self.assertEqual(type(binomial(5, F(4))), float)
-        self.assertEqual(type(binomial(5., 4)), float)
-        self.assertEqual(type(binomial(5., 4.)), float)
-        self.assertEqual(type(binomial(5., F(4))), float)
-        self.assertEqual(type(binomial(F(5), 4)), F)
-        self.assertEqual(type(binomial(F(5), 4.)), float)
-        self.assertEqual(type(binomial(F(5), F(4))), float)
-        try:
-            from mpmath import mpf
-        except ImportError:
-            return
-        self.assertEqual(type(binomial(mpf(5), mpf(4))), mpf)
-        self.assertEqual(type(binomial(5, mpf(4))), mpf)
-        self.assertEqual(type(binomial(5., mpf(4))), mpf)
-        self.assertEqual(type(binomial(F(5), mpf(4))), mpf)
-        self.assertEqual(type(binomial(mpf(5), 4)), mpf)
-        self.assertEqual(type(binomial(mpf(5), 4.)), mpf)
-        self.assertEqual(type(binomial(mpf(5), F(4))), mpf)
+        self.assertEqual(binomial(-5, 4), 70)
 
     def sincosTest(self):
         from fractions import Fraction as F
@@ -420,6 +403,9 @@ class math_test_case(_ut.TestCase):
         self.assertEqual(type(sin(F(0))), F)
         self.assertEqual(type(cos(1.)), float)
         self.assertEqual(type(sin(1.)), float)
+        from ._core import _with_mpfr
+        if not _with_mpfr:
+            return
         try:
             from mpmath import mpf
         except ImportError:
@@ -430,7 +416,7 @@ class math_test_case(_ut.TestCase):
     def evaluateTest(self):
         from fractions import Fraction as F
         from .math import evaluate
-        from .types import polynomial, k_monomial, double, integer, real, rational
+        from .types import polynomial, k_monomial, double, integer, rational
         pt = polynomial[double, k_monomial]()
         x, y, z = pt('x'), pt('y'), pt('z')
         self.assertEqual(evaluate(3 * x * y, {'x': 4, 'y': 5}), 3. * (4. * 5.))
@@ -460,6 +446,9 @@ class math_test_case(_ut.TestCase):
         # A missing symbol, thrown from C++.
         self.assertRaises(ValueError, lambda: evaluate(
             3 * x * y, {'x': 4, 'z': 5}))
+        from ._core import _with_mpfr
+        if not _with_mpfr:
+            return
         try:
             from mpmath import mpf
         except ImportError:
@@ -476,7 +465,7 @@ class math_test_case(_ut.TestCase):
     def subsTest(self):
         from fractions import Fraction as F
         from .math import subs, ipow_subs, t_subs, cos, sin
-        from .types import poisson_series, polynomial, k_monomial, rational, double, real
+        from .types import poisson_series, polynomial, k_monomial, rational, double
         pt = poisson_series[polynomial[rational, k_monomial]]()
         x, y, z = pt('x'), pt('y'), pt('z')
         # Normal subs().
@@ -515,7 +504,9 @@ class math_test_case(_ut.TestCase):
         self.assertAlmostEqual(invert(-3.456), -3.456**-1.)
         try:
             from mpmath import mpf
-            self.assertEqual(type(invert(mpf(1.23))), mpf)
+            from ._core import _with_mpfr
+            if _with_mpfr:
+                self.assertEqual(type(invert(mpf(1.23))), mpf)
         except ImportError:
             pass
         from .types import polynomial, monomial, rational, int16, divisor_series, divisor, poisson_series
@@ -598,9 +589,11 @@ class math_test_case(_ut.TestCase):
         # Try with optional modules:
         try:
             from mpmath import mpf
-            l = lambdify(mpf, x - y, ['x', 'y'])
-            self.assertEqual(l([mpf(1), mpf(2)]), mpf(1) - mpf(2))
-            self.assertEqual(type(l([mpf(1), mpf(2)])), mpf)
+            from ._core import _with_mpfr
+            if _with_mpfr:
+                l = lambdify(mpf, x - y, ['x', 'y'])
+                self.assertEqual(l([mpf(1), mpf(2)]), mpf(1) - mpf(2))
+                self.assertEqual(type(l([mpf(1), mpf(2)])), mpf)
         except ImportError:
             pass
         try:
@@ -625,7 +618,7 @@ class polynomial_test_case(_ut.TestCase):
     """
 
     def runTest(self):
-        from .types import polynomial, rational, int16, integer, double, real, monomial
+        from .types import polynomial, rational, int16, integer, double, monomial
         from fractions import Fraction
         from .math import integrate
         self.assertEqual(
@@ -671,7 +664,7 @@ class divisor_series_test_case(_ut.TestCase):
     """
 
     def runTest(self):
-        from .types import divisor_series, rational, int16, double, real, divisor, monomial, polynomial
+        from .types import divisor_series, rational, int16, double, divisor, monomial, polynomial
         from fractions import Fraction
         from .math import partial, integrate, invert
         self.assertEqual(type(divisor_series[polynomial[rational, monomial[int16]], divisor[
@@ -767,7 +760,7 @@ class converters_test_case(_ut.TestCase):
 
     def runTest(self):
         import sys
-        from .types import polynomial, int16, integer, rational, real, monomial
+        from .types import polynomial, int16, integer, rational, monomial
         from fractions import Fraction as F
         from .math import evaluate
         # Context for the temporary monkey-patching of type t to return bogus
@@ -831,26 +824,29 @@ class converters_test_case(_ut.TestCase):
         with patch_str(F, "5/0"):
             self.assertRaises(ZeroDivisionError, lambda: pt(F(5, 6)))
         # Reals, if possible.
+        from ._core import _with_mpfr
+        if not _with_mpfr:
+            return
         try:
-            from mpmath import mpf, mp, workdps, binomial as bin, fabs
+            from mpmath import mpf, mp, workdps, cos as mpcos, fabs
         except ImportError:
             return
         pt = polynomial[integer, monomial[int16]]()
         self.assertEqual(mpf, type(evaluate(pt("x"), {"x": mpf(5)})))
         self.assertEqual(evaluate(pt("x"), {"x": mpf(5)}), mpf(5))
         # Check the handling of the precision.
-        from .math import binomial
+        from .math import cos
         # Original number of decimal digits.
         orig_dps = mp.dps
-        tmp = binomial(mpf(5.1), mpf(3.2))
+        tmp = cos(mpf(5.1))
         self.assertEqual(tmp.context.dps, orig_dps)
         with workdps(100):
             # Check that the precision is maintained on output
             # and that the values computed with our implementation and
             # mpmath are close.
-            tmp = binomial(mpf(5.1), mpf(3.2))
+            tmp = cos(mpf(5.1))
             self.assertEqual(tmp.context.dps, 100)
-            self.assertTrue(fabs(tmp - bin(mpf(5.1), mpf(3.2)))
+            self.assertTrue(fabs(tmp - mpcos(mpf(5.1)))
                             < mpf('5e-100'))
 
 
@@ -1017,9 +1013,10 @@ class integrate_test_case(_ut.TestCase):
         self.assertEqual(s.integrate('y'), F(1, 6) * z * cos(4 * x - 2 * y))
         self.assertEqual(s.integrate('z'), z**2 / 6 * sin(4 * x - 2 * y))
         pt = polynomial[integer, monomial[rational]]()
+        ptq = polynomial[rational, monomial[rational]]()
         z = pt('z')
         s = z**F(3, 4)
-        self.assertEqual(type(s), pt)
+        self.assertEqual(type(s), ptq)
         self.assertEqual(s.integrate('z'), F(4, 7) * z**F(7, 4))
         self.assertEqual(type(s.integrate('z')), polynomial[
             rational, monomial[rational]]())
@@ -1085,20 +1082,6 @@ class doctests_test_case(_ut.TestCase):
             doctest.testmod(test, raise_on_error=True)
         except Exception as e:
             self.fail(str(e))
-
-
-class tutorial_test_case(_ut.TestCase):
-    """Test case that will check the tutorial files.
-
-    To be used within the :mod:`unittest` framework.
-
-    >>> import unittest as ut
-    >>> suite = ut.TestLoader().loadTestsFromTestCase(tutorial_test_case)
-
-    """
-
-    def runTest(self):
-        from . import _tutorial
 
 
 class degree_test_case(_ut.TestCase):
@@ -1208,32 +1191,5 @@ def run_test_suite():
     test_result = _ut.TextTestRunner(verbosity=2).run(suite)
     if len(test_result.failures) > 0 or len(test_result.errors) > 0:
         retval = 1
-    suite = _ut.TestLoader().loadTestsFromTestCase(tutorial_test_case)
-    # Context for the suppression of output while running the tutorials. Inspired by:
-    # http://stackoverflow.com/questions/8522689/how-to-temporary-hide-stdout-or-stderr-while-running-a-unittest-in-python
-    # This will temporarily replace sys.stdout with the null device.
-
-    class suppress_stdout(object):
-
-        def __init__(self):
-            pass
-
-        def __enter__(self):
-            import sys
-            import os
-            self._stdout = sys.stdout
-            # NOTE: originally here it was 'wb', but apparently this will create problems
-            # in Python 3 due to the string changes. With 'wt' it seems to work ok in both Python 2
-            # and 3.
-            null = open(os.devnull, 'wt')
-            sys.stdout = null
-
-        def __exit__(self, type, value, traceback):
-            import sys
-            sys.stdout = self._stdout
-    with suppress_stdout():
-        test_result = _ut.TextTestRunner(verbosity=2).run(suite)
-        if len(test_result.failures) > 0:
-            retval = 1
     if retval != 0:
         raise RuntimeError('One or more tests failed.')

@@ -26,22 +26,27 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include <piranha/mp_integer.hpp>
+#include <piranha/integer.hpp>
 
-#define BOOST_TEST_MODULE mp_integer_01_test
+#define BOOST_TEST_MODULE integer_01_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
 
-#include <piranha/init.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
+#include <mp++/config.hpp>
+#include <mp++/exceptions.hpp>
+#include <mp++/integer.hpp>
+
 #include <piranha/math.hpp>
-#include <piranha/mppp/mp++.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 using namespace piranha;
@@ -54,7 +59,7 @@ struct negate_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK(has_negate<int_type>::value);
         BOOST_CHECK(has_negate<int_type &>::value);
         BOOST_CHECK(!has_negate<const int_type &>::value);
@@ -71,9 +76,8 @@ struct negate_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_negate_test)
+BOOST_AUTO_TEST_CASE(integer_negate_test)
 {
-    init();
     tuple_for_each(size_types{}, negate_tester{});
 }
 
@@ -81,7 +85,7 @@ struct is_zero_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK(has_is_zero<int_type>::value);
         BOOST_CHECK(has_is_zero<const int_type>::value);
         BOOST_CHECK(has_is_zero<int_type &>::value);
@@ -110,7 +114,7 @@ struct is_zero_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_is_zero_test)
+BOOST_AUTO_TEST_CASE(integer_is_zero_test)
 {
     tuple_for_each(size_types{}, is_zero_tester{});
 }
@@ -119,7 +123,7 @@ struct addmul_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK(has_multiply_accumulate<int_type>::value);
         BOOST_CHECK(has_multiply_accumulate<int_type &>::value);
         BOOST_CHECK(!has_multiply_accumulate<const int_type &>::value);
@@ -134,7 +138,7 @@ struct addmul_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_multiply_accumulate_test)
+BOOST_AUTO_TEST_CASE(integer_multiply_accumulate_test)
 {
     tuple_for_each(size_types{}, addmul_tester{});
 }
@@ -143,7 +147,7 @@ struct is_unitary_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK(has_is_unitary<int_type>::value);
         BOOST_CHECK(has_is_unitary<const int_type>::value);
         BOOST_CHECK(has_is_unitary<int_type &>::value);
@@ -162,7 +166,7 @@ struct is_unitary_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_is_unitary_test)
+BOOST_AUTO_TEST_CASE(integer_is_unitary_test)
 {
     tuple_for_each(size_types{}, is_unitary_tester{});
 }
@@ -171,7 +175,7 @@ struct abs_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK(has_abs<int_type>::value);
         BOOST_CHECK(has_abs<const int_type>::value);
         BOOST_CHECK(has_abs<int_type &>::value);
@@ -186,7 +190,7 @@ struct abs_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_abs_test)
+BOOST_AUTO_TEST_CASE(integer_abs_test)
 {
     tuple_for_each(size_types{}, abs_tester{});
 }
@@ -195,11 +199,15 @@ struct sin_cos_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK_EQUAL(math::sin(int_type()), 0);
         BOOST_CHECK_EQUAL(math::cos(int_type()), 1);
-        BOOST_CHECK_THROW(math::sin(int_type(1)), std::invalid_argument);
-        BOOST_CHECK_THROW(math::cos(int_type(1)), std::invalid_argument);
+        BOOST_CHECK_EXCEPTION(math::sin(int_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "cannot compute the sine of a non-zero integer");
+        });
+        BOOST_CHECK_EXCEPTION(math::cos(int_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
+            return boost::contains(e.what(), "cannot compute the cosine of a non-zero integer");
+        });
         BOOST_CHECK((std::is_same<int_type, decltype(math::cos(int_type{}))>::value));
         BOOST_CHECK((std::is_same<int_type, decltype(math::sin(int_type{}))>::value));
         BOOST_CHECK(has_sine<int_type>::value);
@@ -211,7 +219,7 @@ struct sin_cos_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_sin_cos_test)
+BOOST_AUTO_TEST_CASE(integer_sin_cos_test)
 {
     tuple_for_each(size_types{}, sin_cos_tester{});
 }
@@ -220,7 +228,7 @@ struct partial_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK(is_differentiable<int_type>::value);
         BOOST_CHECK(is_differentiable<int_type &>::value);
         BOOST_CHECK(is_differentiable<const int_type &>::value);
@@ -234,7 +242,7 @@ struct partial_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_partial_test)
+BOOST_AUTO_TEST_CASE(integer_partial_test)
 {
     tuple_for_each(size_types{}, partial_tester{});
 }
@@ -243,7 +251,7 @@ struct factorial_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         int_type n;
         BOOST_CHECK(math::factorial(n) == 1);
         n = 1;
@@ -270,16 +278,47 @@ struct factorial_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_factorial_test)
+BOOST_AUTO_TEST_CASE(integer_factorial_test)
 {
     tuple_for_each(size_types{}, factorial_tester{});
+}
+
+struct b_00 {
+    b_00() = default;
+    b_00(const b_00 &) = delete;
+    b_00(b_00 &&) = delete;
+};
+
+struct b_01 {
+    b_01() = default;
+    b_01(const b_01 &) = default;
+    b_01(b_01 &&) = default;
+    ~b_01() = delete;
+};
+
+namespace piranha
+{
+
+namespace math
+{
+
+template <>
+struct ipow_subs_impl<b_00, b_00> {
+    b_00 operator()(const b_00 &, const std::string &, const integer &, const b_00 &) const;
+};
+
+template <>
+struct ipow_subs_impl<b_01, b_01> {
+    b_01 operator()(const b_01 &, const std::string &, const integer &, const b_01 &) const;
+};
+}
 }
 
 struct ipow_subs_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK((!has_ipow_subs<int_type, int_type>::value));
         BOOST_CHECK((!has_ipow_subs<int_type, int>::value));
         BOOST_CHECK((!has_ipow_subs<int_type, long>::value));
@@ -292,16 +331,18 @@ struct ipow_subs_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_ipow_subs_test)
+BOOST_AUTO_TEST_CASE(integer_ipow_subs_test)
 {
     tuple_for_each(size_types{}, ipow_subs_tester{});
+    BOOST_CHECK((!has_ipow_subs<b_00, b_00>::value));
+    BOOST_CHECK((!has_ipow_subs<b_01, b_01>::value));
 }
 
 struct ternary_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK(has_add3<int_type>::value);
         BOOST_CHECK(has_add3<int_type &>::value);
         BOOST_CHECK(!has_add3<const int_type &>::value);
@@ -334,7 +375,7 @@ struct ternary_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_ternary_test)
+BOOST_AUTO_TEST_CASE(integer_ternary_test)
 {
     tuple_for_each(size_types{}, ternary_tester{});
 }
@@ -343,7 +384,7 @@ struct gcd_tester {
     template <typename T>
     void operator()(const T &) const
     {
-        using int_type = mp_integer<T::value>;
+        using int_type = mppp::integer<T::value>;
         BOOST_CHECK((has_gcd<int_type>::value));
         BOOST_CHECK((has_gcd<int_type, int>::value));
         BOOST_CHECK((has_gcd<long, int_type>::value));
@@ -353,16 +394,26 @@ struct gcd_tester {
         BOOST_CHECK((has_gcd3<int_type &>::value));
         BOOST_CHECK((!has_gcd3<const int_type &>::value));
         BOOST_CHECK((!has_gcd3<const int_type>::value));
-        BOOST_CHECK((!has_gcd<int_type, wchar_t>::value));
-        BOOST_CHECK((!has_gcd<wchar_t, int_type>::value));
+        BOOST_CHECK((has_gcd<int_type, wchar_t>::value));
+        BOOST_CHECK((has_gcd<wchar_t, int_type>::value));
         BOOST_CHECK((!has_gcd<int_type, void>::value));
         BOOST_CHECK((!has_gcd<void, int_type>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK((has_gcd<int_type, __int128_t>::value));
+        BOOST_CHECK((has_gcd<__int128_t, int_type>::value));
+        BOOST_CHECK((has_gcd<int_type, __uint128_t>::value));
+        BOOST_CHECK((has_gcd<__uint128_t, int_type>::value));
+#endif
         BOOST_CHECK_EQUAL(math::gcd(int_type{4}, int_type{6}), 2);
         BOOST_CHECK_EQUAL(math::gcd(int_type{0}, int_type{-6}), 6);
         BOOST_CHECK_EQUAL(math::gcd(int_type{6}, int_type{0}), 6);
         BOOST_CHECK_EQUAL(math::gcd(int_type{0}, int_type{0}), 0);
         BOOST_CHECK_EQUAL(math::gcd(-4, int_type{6}), 2);
         BOOST_CHECK_EQUAL(math::gcd(int_type{4}, -6ll), 2);
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK_EQUAL(math::gcd(__int128_t(-4), int_type{6}), 2);
+        BOOST_CHECK_EQUAL(math::gcd(int_type{4}, __uint128_t(6)), 2);
+#endif
         int_type n;
         math::gcd3(n, int_type{4}, int_type{6});
         BOOST_CHECK_EQUAL(n, 2);
@@ -371,14 +422,14 @@ struct gcd_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_gcd_test)
+BOOST_AUTO_TEST_CASE(integer_gcd_test)
 {
     tuple_for_each(size_types{}, gcd_tester{});
-    BOOST_CHECK((!has_gcd<mp_integer<1>, mp_integer<2>>::value));
-    BOOST_CHECK((!has_gcd<mp_integer<2>, mp_integer<1>>::value));
+    BOOST_CHECK((!has_gcd<mppp::integer<1>, mppp::integer<2>>::value));
+    BOOST_CHECK((!has_gcd<mppp::integer<2>, mppp::integer<1>>::value));
 }
 
-BOOST_AUTO_TEST_CASE(mp_integer_literal_test)
+BOOST_AUTO_TEST_CASE(integer_literal_test)
 {
     auto n0 = 12345_z;
     BOOST_CHECK((std::is_same<integer, decltype(n0)>::value));
@@ -389,7 +440,12 @@ BOOST_AUTO_TEST_CASE(mp_integer_literal_test)
     BOOST_CHECK_EQUAL(n0, -456l);
 }
 
-using fp_types = std::tuple<float, double, long double>;
+using fp_types = std::tuple<float, double
+#if defined(MPPP_WITH_MPFR)
+                            ,
+                            long double
+#endif
+                            >;
 
 using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,
                              unsigned long, long long, unsigned long long>;
@@ -400,7 +456,7 @@ struct safe_cast_float_tester {
         template <typename T>
         void operator()(const T &) const
         {
-            using int_type = mp_integer<S::value>;
+            using int_type = mppp::integer<S::value>;
             // Type trait.
             BOOST_CHECK((has_safe_cast<int_type, T>::value));
             BOOST_CHECK((has_safe_cast<int_type, T &>::value));
@@ -441,7 +497,7 @@ struct safe_cast_float_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_safe_cast_float_test)
+BOOST_AUTO_TEST_CASE(integer_safe_cast_float_test)
 {
     tuple_for_each(size_types{}, safe_cast_float_tester());
 }
@@ -452,7 +508,7 @@ struct safe_cast_int_tester {
         template <typename T>
         void operator()(const T &) const
         {
-            using int_type = mp_integer<S::value>;
+            using int_type = mppp::integer<S::value>;
             // Type trait.
             BOOST_CHECK((has_safe_cast<int_type, T>::value));
             BOOST_CHECK((has_safe_cast<int_type, T &>::value));
@@ -464,35 +520,85 @@ struct safe_cast_int_tester {
             BOOST_CHECK((has_safe_cast<T &&, const int_type &>::value));
 
             // Simple checks.
-            BOOST_CHECK_EQUAL(safe_cast<int_type>(T(0)), int_type{0});
-            BOOST_CHECK_EQUAL(safe_cast<int_type>(T(1)), int_type{1});
-            BOOST_CHECK_EQUAL(safe_cast<int_type>(T(12)), int_type{12});
-            BOOST_CHECK_EQUAL(safe_cast<T>(int_type(0)), T{0});
-            BOOST_CHECK_EQUAL(safe_cast<T>(int_type(1)), T{1});
-            BOOST_CHECK_EQUAL(safe_cast<T>(int_type{12}), T{12});
+            BOOST_CHECK(safe_cast<int_type>(T(0)) == int_type{0});
+            BOOST_CHECK(safe_cast<int_type>(T(1)) == int_type{1});
+            BOOST_CHECK(safe_cast<int_type>(T(12)) == int_type{12});
+            BOOST_CHECK(safe_cast<T>(int_type(0)) == T{0});
+            BOOST_CHECK(safe_cast<T>(int_type(1)) == T{1});
+            BOOST_CHECK(safe_cast<T>(int_type{12}) == T{12});
 
             // Failures.
             using lim = std::numeric_limits<T>;
-            BOOST_CHECK_EXCEPTION(
-                safe_cast<T>(int_type(lim::max()) + 1), safe_cast_failure, [](const safe_cast_failure &e) {
-                    return boost::contains(e.what(), "the conversion cannot preserve the original value");
-                });
-            BOOST_CHECK_EXCEPTION(
-                safe_cast<T>(int_type(lim::min()) - 1), safe_cast_failure, [](const safe_cast_failure &e) {
-                    return boost::contains(e.what(), "the conversion cannot preserve the original value");
-                });
+            BOOST_CHECK_EXCEPTION(safe_cast<T>(int_type(lim::max()) + 1), safe_cast_failure,
+                                  [](const safe_cast_failure &e) {
+                                      return boost::contains(e.what(), "as the conversion would result in overflow");
+                                  });
+            BOOST_CHECK_EXCEPTION(safe_cast<T>(int_type(lim::min()) - 1), safe_cast_failure,
+                                  [](const safe_cast_failure &e) {
+                                      return boost::contains(e.what(), "as the conversion would result in overflow");
+                                  });
         }
     };
     template <typename S>
     void operator()(const S &) const
     {
         tuple_for_each(int_types{}, runner<S>{});
-        using int_type = mp_integer<S::value>;
-        BOOST_CHECK((!has_safe_cast<int_type, wchar_t>::value));
+        using int_type = mppp::integer<S::value>;
+        BOOST_CHECK((has_safe_cast<int_type, wchar_t>::value));
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK((has_safe_cast<int_type, __int128_t>::value));
+        BOOST_CHECK((has_safe_cast<int_type, __uint128_t>::value));
+        BOOST_CHECK((has_safe_cast<__int128_t, int_type>::value));
+        BOOST_CHECK((has_safe_cast<__uint128_t, int_type>::value));
+        BOOST_CHECK(safe_cast<__int128_t>(int_type{12}) == 12);
+        BOOST_CHECK(safe_cast<__uint128_t>(int_type{12}) == 12u);
+        BOOST_CHECK(safe_cast<int_type>(__int128_t(12)) == 12);
+        BOOST_CHECK(safe_cast<int_type>(__uint128_t(12)) == 12);
+#endif
     }
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_safe_cast_int_test)
+BOOST_AUTO_TEST_CASE(integer_safe_cast_int_test)
 {
     tuple_for_each(size_types{}, safe_cast_int_tester{});
+}
+
+struct sep_tester {
+    template <typename T>
+    using edict = symbol_fmap<T>;
+    template <typename T>
+    void operator()(const T &) const
+    {
+        using int_type = mppp::integer<T::value>;
+        BOOST_CHECK_EQUAL(math::evaluate(int_type{12}, edict<int>{{"", 1}}), 12);
+        BOOST_CHECK_EQUAL(math::evaluate(int_type{10}, edict<double>{{"", 1.321}}), 10);
+        BOOST_CHECK((is_evaluable<int_type, int>::value));
+        BOOST_CHECK((is_evaluable<int_type, double>::value));
+#if defined(MPPP_WITH_MPFR)
+        BOOST_CHECK((std::is_same<long double,
+                                  decltype(math::evaluate(int_type{10}, edict<long double>{{"", 1.321l}}))>::value));
+#else
+        BOOST_CHECK(
+            (std::is_same<int_type, decltype(math::evaluate(int_type{10}, edict<long double>{{"", 1.321l}}))>::value));
+#endif
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK((is_evaluable<int_type, __int128_t>::value));
+        BOOST_CHECK((is_evaluable<int_type, __uint128_t>::value));
+        BOOST_CHECK((math::evaluate(int_type{12}, edict<__int128_t>{{"", 1}}) == 12));
+        BOOST_CHECK((math::evaluate(int_type{12}, edict<__uint128_t>{{"", 1}}) == 12));
+#endif
+        BOOST_CHECK((std::is_same<double, decltype(math::evaluate(int_type{10}, edict<double>{{"", 1.321}}))>::value));
+        BOOST_CHECK((!has_subs<int_type, int_type>::value));
+        BOOST_CHECK((!has_subs<int_type, int>::value));
+        BOOST_CHECK((!has_subs<int_type, long double>::value));
+        BOOST_CHECK((!has_ipow_subs<int_type, int>::value));
+        BOOST_CHECK((!has_ipow_subs<int_type, double>::value));
+        BOOST_CHECK((!has_ipow_subs<int_type, float>::value));
+        BOOST_CHECK((!has_ipow_subs<int_type, unsigned short>::value));
+    }
+};
+
+BOOST_AUTO_TEST_CASE(integer_sep_test)
+{
+    tuple_for_each(size_types{}, sep_tester());
 }

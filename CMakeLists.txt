@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.2.0)
+cmake_minimum_required(VERSION 3.3.0)
 
-project(piranha VERSION 0.10)
+project(piranha VERSION 0.11)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/yacma")
 
@@ -18,9 +18,6 @@ option(PIRANHA_BUILD_TESTS "Build test set." OFF)
 
 # Build option: enable benchmarks.
 option(PIRANHA_BUILD_BENCHMARKS "Build benchmarks." OFF)
-
-# Build option: build the C++ tutorials.
-option(PIRANHA_BUILD_TUTORIALS "Build the C++ tutorials." OFF)
 
 # Build option: build the Python bindings.
 option(PIRANHA_BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
@@ -52,9 +49,6 @@ include(YACMACompilerLinkerSettings)
 include(YACMAThreadingSetup)
 if(YACMA_HAVE_PTHREAD_AFFINITY)
 	set(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
-endif()
-if(YACMA_HAVE_THREAD_LOCAL)
-	set(PIRANHA_THREAD_LOCAL "#define PIRANHA_HAVE_THREAD_LOCAL")
 endif()
 
 # Start to set up the list of mandatory targets for piranha to link to.
@@ -91,17 +85,9 @@ endif()
 include(PiranhaFindBoost)
 list(APPEND PIRANHA_MANDATORY_LINK_TARGETS Boost::boost Boost::disable_autolinking Boost::serialization Boost::iostreams)
 
-# GMP/MPFR setup.
-find_package(GMP REQUIRED)
-message(STATUS "GMP library found.")
-message(STATUS "GMP include dir is: ${GMP_INCLUDE_DIR}")
-message(STATUS "GMP library is: ${GMP_LIBRARY}")
-find_package(MPFR REQUIRED)
-message(STATUS "MPFR library found.")
-message(STATUS "MPFR include dir is: ${MPFR_INCLUDE_DIR}")
-message(STATUS "MPFR library is: ${MPFR_LIBRARY}")
-# NOTE: link last GMP, link order might matter depending on the situation.
-list(APPEND PIRANHA_MANDATORY_LINK_TARGETS MPFR::MPFR GMP::GMP)
+# Find mp++.
+find_package(mp++ 0.8 REQUIRED)
+list(APPEND PIRANHA_MANDATORY_LINK_TARGETS mp++::mp++)
 
 if(PIRANHA_WITH_MSGPACK)
 	find_package(MSGPACK-C REQUIRED)
@@ -157,7 +143,6 @@ message(STATUS "Piranha version: ${piranha_VERSION}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/piranha/config.hpp" @ONLY)
 
 # Configure Doxyfile.
-set(PIRANHA_DOXYGEN_STRIP_FROM_INC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile.in" "${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile" @ONLY)
 
 # Setup the piranha interface library.
@@ -186,11 +171,11 @@ if(PIRANHA_INSTALL_HEADERS)
 	endif()
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/piranha-config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/piranha-config.cmake" @ONLY)
 	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/piranha-config.cmake" DESTINATION "lib/cmake/piranha")
-	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/FindGMP.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/FindMPFR.cmake"
-		"${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/PiranhaFindBoost.cmake" DESTINATION "lib/cmake/piranha")
+	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/PiranhaFindBoost.cmake" DESTINATION "lib/cmake/piranha")
 	install(EXPORT piranha_export NAMESPACE Piranha:: DESTINATION lib/cmake/piranha)
 	# Take care of versioning.
 	include(CMakePackageConfigHelpers)
+	# NOTE: for the moment, set COMPATIBILITY to ExactVersion, as piranha is evolving fast.
 	write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/piranha-config-version.cmake" VERSION ${piranha_VERSION}
 		COMPATIBILITY ExactVersion)
 	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/piranha-config-version.cmake" DESTINATION "lib/cmake/piranha")
@@ -222,10 +207,6 @@ endif()
 
 if(PIRANHA_BUILD_BENCHMARKS)
 	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/benchmarks")
-endif()
-
-if(PIRANHA_BUILD_TUTORIALS)
-	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tutorials")
 endif()
 
 IF(PIRANHA_BUILD_PYRANHA)

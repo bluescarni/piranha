@@ -33,9 +33,9 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/lexical_cast.hpp>
 
-#include <piranha/init.hpp>
+#include <mp++/integer.hpp>
+
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/settings.hpp>
 
@@ -47,14 +47,13 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(fateman1_unpacked_test)
 {
-    init();
     settings::set_thread_binding(true);
     if (boost::unit_test::framework::master_test_suite().argc > 1) {
         settings::set_n_threads(
             boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
     }
-    polynomial<mp_integer<2>, monomial<signed char>>::set_auto_truncate_degree(20);
-    BOOST_CHECK_EQUAL((fateman1<mp_integer<2>, monomial<signed char>>().size()), 10626u);
-    polynomial<mp_integer<2>, monomial<signed char>>::set_auto_truncate_degree(30);
-    BOOST_CHECK_EQUAL((fateman1<mp_integer<2>, monomial<signed char>>().size()), 46376u);
+    polynomial<mppp::integer<2>, monomial<signed char>>::set_auto_truncate_degree(20);
+    BOOST_CHECK_EQUAL((fateman1<mppp::integer<2>, monomial<signed char>>().size()), 10626u);
+    polynomial<mppp::integer<2>, monomial<signed char>>::set_auto_truncate_degree(30);
+    BOOST_CHECK_EQUAL((fateman1<mppp::integer<2>, monomial<signed char>>().size()), 46376u);
 }

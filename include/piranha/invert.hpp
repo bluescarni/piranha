@@ -30,9 +30,12 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_INVERT_HPP
 
 #include <type_traits>
+#include <utility>
 
-#include <piranha/detail/sfinae_types.hpp>
+#include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/pow.hpp>
+#include <piranha/type_traits.hpp>
 
 namespace piranha
 {
@@ -66,8 +69,7 @@ struct invert_impl {
 /// Compute the inverse.
 /**
  * Return the multiplicative inverse of \p x. The actual implementation of this function is in the
- * piranha::math::invert_impl functor's
- * call operator.
+ * piranha::math::invert_impl functor's call operator.
  *
  * @param x argument.
  *
@@ -76,9 +78,9 @@ struct invert_impl {
  * @throws unspecified any exception thrown by the call operator of the piranha::math::invert_impl functor.
  */
 template <typename T>
-inline auto invert(const T &x) -> decltype(invert_impl<T>()(x))
+inline auto invert(const T &x) -> decltype(invert_impl<T>{}(x))
 {
-    return invert_impl<T>()(x);
+    return invert_impl<T>{}(x);
 }
 }
 
@@ -89,20 +91,23 @@ inline auto invert(const T &x) -> decltype(invert_impl<T>()(x))
  * The call to piranha::math::invert() will be tested with const reference arguments.
  */
 template <typename T>
-class is_invertible : detail::sfinae_types
+class is_invertible
 {
     template <typename T1>
-    static auto test(const T1 &x) -> decltype(math::invert(x), void(), yes());
-    static no test(...);
+    using invert_t = decltype(math::invert(std::declval<const T1 &>()));
+    static const bool implementation_defined = is_detected<invert_t, T>::value;
 
 public:
     /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<T>())), yes>::value;
+    static constexpr bool value = implementation_defined;
 };
 
-// Static init.
+#if PIRANHA_CPLUSPLUS < 201703L
+
 template <typename T>
-const bool is_invertible<T>::value;
+constexpr bool is_invertible<T>::value;
+
+#endif
 }
 
 #endif

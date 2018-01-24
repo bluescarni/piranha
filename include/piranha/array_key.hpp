@@ -42,6 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
 #include <piranha/safe_cast.hpp>

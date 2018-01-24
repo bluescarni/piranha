@@ -47,21 +47,24 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 
+#include <mp++/config.hpp>
+
 #include <piranha/binomial.hpp>
 #include <piranha/config.hpp>
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
 #include <piranha/exceptions.hpp>
-#include <piranha/init.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/mp_integer.hpp>
-#include <piranha/mp_rational.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
+#include <piranha/rational.hpp>
+#if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
+#endif
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/thread_pool.hpp>
@@ -102,9 +105,7 @@ static inline void test_exception()
 }
 
 // Small helper to retrieve the argument error exception from python.
-static inline void generate_argument_error(int)
-{
-}
+static inline void generate_argument_error(int) {}
 
 BOOST_PYTHON_MODULE(_core)
 {
@@ -119,8 +120,6 @@ BOOST_PYTHON_MODULE(_core)
     // to roll back the initialisation, and if the user tries again the init probably a lot of things would
     // go haywire. Like this, we will not re-run any init code in a successive attempt at loading the module.
     inited = true;
-    // Piranha init.
-    piranha::init();
     // Docstring options setup.
     bp::docstring_options doc_options(false, false, false);
     // Type generator class.
@@ -146,12 +145,22 @@ BOOST_PYTHON_MODULE(_core)
     // borrowed, both in Python 2 and 3.
     auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr)));
     bp::scope().attr("types") = types_module;
+    // Signal the presence of MPFR.
+    bp::scope().attr("_with_mpfr") =
+#if defined(MPPP_WITH_MPFR)
+        true
+#else
+        false
+#endif
+        ;
     // Expose concrete instances of type generators.
     pyranha::instantiate_type_generator<std::int_least16_t>("int16", types_module);
     pyranha::instantiate_type_generator<double>("double", types_module);
     pyranha::instantiate_type_generator<piranha::integer>("integer", types_module);
     pyranha::instantiate_type_generator<piranha::rational>("rational", types_module);
+#if defined(MPPP_WITH_MPFR)
     pyranha::instantiate_type_generator<piranha::real>("real", types_module);
+#endif
     pyranha::instantiate_type_generator<piranha::k_monomial>("k_monomial", types_module);
     // Register template instances of monomial, and instantiate the type generator template.
     pyranha::instantiate_type_generator_template<piranha::monomial>("monomial", types_module);
@@ -163,14 +172,15 @@ BOOST_PYTHON_MODULE(_core)
     // Arithmetic converters.
     pyranha::integer_converter i_c;
     pyranha::rational_converter ra_c;
+#if defined(MPPP_WITH_MPFR)
     pyranha::real_converter re_c;
+#endif
     // Exceptions translation.
     // NOTE: the order matters here, as translators registered later are tried first.
     // Since some of our exceptions derive from std exceptions, we want to make sure
     // our more specific exceptions have the priority when translating.
     pyranha::generic_translate<&PyExc_ValueError, std::domain_error>();
     pyranha::generic_translate<&PyExc_OverflowError, std::overflow_error>();
-    pyranha::generic_translate<&PyExc_ZeroDivisionError, piranha::zero_division_error>();
     pyranha::generic_translate<&PyExc_ZeroDivisionError, mppp::zero_division_error>();
     pyranha::generic_translate<&PyExc_NotImplementedError, piranha::not_implemented_error>();
     pyranha::generic_translate<&PyExc_OverflowError, boost::numeric::positive_overflow>();
@@ -253,22 +263,7 @@ BOOST_PYTHON_MODULE(_core)
     bp::def("_factorial", &piranha::math::factorial<1>);
 // Binomial coefficient.
 #define PYRANHA_EXPOSE_BINOMIAL(top, bot) bp::def("_binomial", &piranha::math::binomial<top, bot>)
-    PYRANHA_EXPOSE_BINOMIAL(double, double);
-    PYRANHA_EXPOSE_BINOMIAL(double, piranha::integer);
-    PYRANHA_EXPOSE_BINOMIAL(double, piranha::rational);
-    PYRANHA_EXPOSE_BINOMIAL(double, piranha::real);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::integer, double);
     PYRANHA_EXPOSE_BINOMIAL(piranha::integer, piranha::integer);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::integer, piranha::rational);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::integer, piranha::real);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::rational, double);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::rational, piranha::integer);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::rational, piranha::rational);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::rational, piranha::real);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::real, double);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::real, piranha::integer);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::real, piranha::rational);
-    PYRANHA_EXPOSE_BINOMIAL(piranha::real, piranha::real);
 #undef PYRANHA_EXPOSE_BINOMIAL
 // Sine and cosine.
 #define PYRANHA_EXPOSE_SIN_COS(arg)                                                                                    \
@@ -277,19 +272,23 @@ BOOST_PYTHON_MODULE(_core)
     PYRANHA_EXPOSE_SIN_COS(double);
     PYRANHA_EXPOSE_SIN_COS(piranha::integer);
     PYRANHA_EXPOSE_SIN_COS(piranha::rational);
+#if defined(MPPP_WITH_MPFR)
     PYRANHA_EXPOSE_SIN_COS(piranha::real);
+#endif
 #undef PYRANHA_EXPOSE_SIN_COS
 #define PYRANHA_EXPOSE_INVERT(arg) bp::def("_invert", &piranha::math::invert<arg>)
     PYRANHA_EXPOSE_INVERT(double);
     PYRANHA_EXPOSE_INVERT(piranha::integer);
     PYRANHA_EXPOSE_INVERT(piranha::rational);
+#if defined(MPPP_WITH_MPFR)
     PYRANHA_EXPOSE_INVERT(piranha::real);
+#endif
 #undef PYRANHA_EXPOSE_INVERT
     // GCD.
     bp::def("_gcd", &piranha::math::gcd<piranha::integer, piranha::integer>);
     // Tests for exception translation.
     bp::def("_test_safe_cast_failure", &test_exception<piranha::safe_cast_failure>);
-    bp::def("_test_zero_division_error", &test_exception<piranha::zero_division_error>);
+    bp::def("_test_zero_division_error", &test_exception<mppp::zero_division_error>);
     bp::def("_test_not_implemented_error", &test_exception<piranha::not_implemented_error>);
     bp::def("_test_overflow_error", &test_exception<std::overflow_error>);
     bp::def("_test_bn_poverflow_error", &test_exception<boost::numeric::positive_overflow>);
