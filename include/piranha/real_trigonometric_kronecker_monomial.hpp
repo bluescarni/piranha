@@ -642,7 +642,7 @@ public:
      * This method will compute the result of the multiplication of the two terms \p t1 and \p t2 with trigonometric
      * key. The result is stored in the two terms of \p res and it is computed using basic trigonometric formulae.
      * Note however that this method will **not** perform the division by two implied by Werner's formulae. Also, in
-     * case \p Cf is an instance of piranha::mp_rational, only the numerators of the coefficients will be multiplied.
+     * case \p Cf is an mp++ rational, only the numerators of the coefficients will be multiplied.
      *
      * @param res result of the multiplication.
      * @param t1 first argument.

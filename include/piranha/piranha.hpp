@@ -82,24 +82,10 @@ see https://www.gnu.org/licenses/. */
  * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
  * and keep lexical_cast only for the conversion of piranha's types to string. UPDATE: it looks like to_string is
  * influenced by the locale setting, it's probably better to roll our implementation.
- * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in term. Should we require it
  * to be
  * noexcept as well and put the requirement in the is_cf type trait?
- * \todo floating point stuff: there's a few things we can improve here. The first problem is that, in some places where
- * it could
- * matter (interop mp_integer/rational <--> float) we don't check for math errors, as explained here:
- * http://en.cppreference.com/w/cpp/numeric/math/math_errhandling
- * We should probably check for errors when we need things to be exact and safe. These include ilogb, scalb, trunc, etc.
- * Secondly,
- * we have a bunch of generic fp algorithms that could be easily extended to work with nonstandard fp types such as
- * quadmath
- * and decimal. We need then to abstract fp standard functions in our own wrappers and abstract away in a separate place
- * our
- * generic algos scattered around. Then in the wrappers we could add automatic checks for errno (raise exception) and
- * kill two
- * birds with one stone.
  * \todo review the usage of _fwd headers. It seems it is ok for friend declarations for instance, but wherever we might
  * need the full definition of the object we might want to reorganise the code.
  * \todo the prepare_for_print() should probably become a public print_exponent(), that also takes care of putting
@@ -114,8 +100,6 @@ see https://www.gnu.org/licenses/. */
  * system and maybe the list of arguments. Also, what happens if we expose, say, polynomial<double> *and*
  * polynomial<double,k_monomial>,
  * supposing that they are the same type one day?
- * \todo should the print coefficient operator of real print the precision as well or is the number of digits enough
- * hint?
  * \todo need to review the requirements on all std object we use as members of classes. We often require them to be
  * noexcept
  * but they do not need to be by the standard (e.g., hash, equal_to, vector, ...). Note that in all our classes we mark
@@ -161,14 +145,9 @@ see https://www.gnu.org/licenses/. */
  * in his use cases could
  * benefit from parallelisation?
  * \todo the replace_symbol() method for series. Or maybe rename_symbol().
- * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of
- * checking the shutdown flag.
  * \todo consider the use of the upcoming std::shared_lock/mutex for multiple readers/single writer situations (e.g., in
  * the custom derivative
  * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
- * \todo it looks like in many cases we can hide excess default template parameters used in TMP by adding an extra layer
- * of indirection. This has only cosmetic
- * value, but might be worth for clarity in the long run.
  * \todo the pattern of sin/cos in poisson series and invert in divisor_series (that is, recurse until a polynomial
  * coefficient is found) should probably
  * be applied in the integration routine for poisson series that integrates by part when coefficient has positive degree
@@ -205,13 +184,6 @@ see https://www.gnu.org/licenses/. */
  * in terms of const references. I think in some cases it should be made more explicit and consistent across the type
  * traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
- * \todo in mp_integer probably the ternary operations (and multadd etc.) should be modified so that the
- * return value is demoted to
- * static if the other operands are static as well. Right now, if one re-uses the same output object multiple times,
- * once it is set to dynamic
- * storage there's no going back. On the other hand, that is what one might want in some cases (e.g., a value that
- * iteratively always increases).
- * Not sure there's a general solution.
  * \todo it seems like, at least in some cases, it is possible to avoid extra template arguments for enabling purposes
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.

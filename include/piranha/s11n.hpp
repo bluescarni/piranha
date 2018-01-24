@@ -653,7 +653,7 @@ const bool is_msgpack_stream<T>::value;
 /// Serialization format for msgpack.
 /**
  * The serialization of non-primitive objects can often be performed in different ways, with different tradeoffs
- * between performance, storage requirements and portability. The piranha::mp_integer class, for instance, can be
+ * between performance, storage requirements and portability. The piranha::integer class, for instance, can be
  * serialized either via a string representation (slow and with high storage requirements, but portable across
  * architectures, compilers and operating systems) or as an array of platform-dependent unsigned integrals (fast
  * and compact, but not portable).

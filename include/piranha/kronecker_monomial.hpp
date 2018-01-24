@@ -514,7 +514,7 @@ public:
      * This method is enabled only if \p Cf satisfies piranha::has_mul3.
      *
      * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
-     * offers the basic exception safety guarantee. If \p Cf is an instance of piranha::mp_rational, then
+     * offers the basic exception safety guarantee. If \p Cf is an mp++ rational, then
      * only the numerators of the coefficients will be multiplied.
      *
      * Note that the key of the return value is generated directly from the addition of the values of the input keys.
