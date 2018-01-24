@@ -29,7 +29,13 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_PIRANHA_HPP
 #define PIRANHA_PIRANHA_HPP
 
-// Root piranha namespace.
+// NOTE: we need to document the namespace here otherwise
+// doxygen complains when documenting enums.
+/// Root piranha namespace.
+namespace piranha
+{
+}
+
 /*
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly
  * that
