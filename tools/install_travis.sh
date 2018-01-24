@@ -123,10 +123,7 @@ if [[ "${BUILD_TYPE}" == "Python2" && "${TRAVIS_OS_NAME}" != "osx" ]]; then
     done
 fi
 
-if [[ "${BUILD_TYPE}" == "Tutorial" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TUTORIALS=yes ../;
-    make VERBOSE=1;
-elif [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
+if [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
     # Configure.
     cmake ../;
     # Now run it.

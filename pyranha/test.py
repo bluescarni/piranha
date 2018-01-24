@@ -1084,20 +1084,6 @@ class doctests_test_case(_ut.TestCase):
             self.fail(str(e))
 
 
-class tutorial_test_case(_ut.TestCase):
-    """Test case that will check the tutorial files.
-
-    To be used within the :mod:`unittest` framework.
-
-    >>> import unittest as ut
-    >>> suite = ut.TestLoader().loadTestsFromTestCase(tutorial_test_case)
-
-    """
-
-    def runTest(self):
-        from . import _tutorial
-
-
 class degree_test_case(_ut.TestCase):
     """Test case for the degree/ldegree functionality.
 
@@ -1205,32 +1191,5 @@ def run_test_suite():
     test_result = _ut.TextTestRunner(verbosity=2).run(suite)
     if len(test_result.failures) > 0 or len(test_result.errors) > 0:
         retval = 1
-    suite = _ut.TestLoader().loadTestsFromTestCase(tutorial_test_case)
-    # Context for the suppression of output while running the tutorials. Inspired by:
-    # http://stackoverflow.com/questions/8522689/how-to-temporary-hide-stdout-or-stderr-while-running-a-unittest-in-python
-    # This will temporarily replace sys.stdout with the null device.
-
-    class suppress_stdout(object):
-
-        def __init__(self):
-            pass
-
-        def __enter__(self):
-            import sys
-            import os
-            self._stdout = sys.stdout
-            # NOTE: originally here it was 'wb', but apparently this will create problems
-            # in Python 3 due to the string changes. With 'wt' it seems to work ok in both Python 2
-            # and 3.
-            null = open(os.devnull, 'wt')
-            sys.stdout = null
-
-        def __exit__(self, type, value, traceback):
-            import sys
-            sys.stdout = self._stdout
-    with suppress_stdout():
-        test_result = _ut.TextTestRunner(verbosity=2).run(suite)
-        if len(test_result.failures) > 0:
-            retval = 1
     if retval != 0:
         raise RuntimeError('One or more tests failed.')

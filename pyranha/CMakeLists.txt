@@ -1,18 +1,10 @@
 # Python version check.
 if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTHON_VERSION_MINOR} LESS 7))
-	message(FATAL_ERROR "Minimum supported Python version is 2.7.")
+	message(FATAL_ERROR "The minimum supported Python version is 2.7.")
 endif()
 
 # Helper file with version number.
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/_version.py.in" "${CMAKE_CURRENT_BINARY_DIR}/_version.py" @ONLY)
-
-# Tutorial files.
-set(PYRANHA_TUTORIAL_FILES
-	tutorial/__init__.py
-	tutorial/hello_piranha.py
-	tutorial/integer.py
-	tutorial/rational.py
-)
 
 YACMA_PYTHON_MODULE(_core
 	# General.
@@ -98,6 +90,3 @@ install(TARGETS _core
 
 # Add the global init file and the additional submodules.
 install(FILES __init__.py _common.py celmec.py math.py test.py types.py "${CMAKE_CURRENT_BINARY_DIR}/_version.py" DESTINATION ${PYRANHA_INSTALL_PATH})
-
-# Install the tutorial files.
-install(FILES ${PYRANHA_TUTORIAL_FILES} DESTINATION "${PYRANHA_INSTALL_PATH}/_tutorial")
