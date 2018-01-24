@@ -6,6 +6,5 @@
         "doc/doxygen/latex/": true,
         "doc/doxygen/xml/": true,
         "doc/sphinx/_build/": true
-    },
-    "restructuredtext.confPath": "/home/yardbird/repos/piranha"
+    }
 }
