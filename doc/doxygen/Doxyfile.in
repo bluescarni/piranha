@@ -2070,6 +2070,7 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = PIRANHA_DOXYGEN_INVOKED \
                          PIRANHA_CPLUSPLUS=201703L \
+                         PIRANHA_HAVE_THREAD_LOCAL \
                          PIRANHA_HAVE_CONCEPTS \
                          PIRANHA_WITH_MSGPACK \
                          PIRANHA_WITH_ZLIB \
