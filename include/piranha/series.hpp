@@ -2975,6 +2975,7 @@ namespace math
 
 /// Specialisation of the piranha::math::pow() functor for piranha::series.
 /**
+ * \ingroup math_pow_impl
  * This specialisation is activated when \p Series is an instance of piranha::series with
  * a method with the same signature as piranha::series::pow().
  */

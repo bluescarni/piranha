@@ -56,8 +56,14 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Multiprecision integer type.
-using integer = mppp::integer<1>;
+/// Main multiprecision integer type.
+/**
+ * \rststar
+ * This type is the main multiprecision integer type used throughout piranha.
+ * It is an :cpp:class:`mppp::integer <mppp::integer>` with a static size of 1 limb.
+ * \endrststar
+ */
+typedef mppp::integer<1> integer;
 
 namespace math
 {

@@ -1,9 +1,12 @@
 .. _reference:
 
-Complete reference
-==================
+Reference
+=========
+
+The following subsections contain the detailed documentation of piranha's public classes and functions.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   pyranha_reference.rst
+   types.rst
+   math.rst

@@ -57,8 +57,14 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Multiprecision rational type.
-using rational = mppp::rational<1>;
+/// Main multiprecision rational type.
+/**
+ * \rststar
+ * This type is the main multiprecision rational type used throughout piranha.
+ * It is an :cpp:class:`mppp::rational <mppp::rational>` with a static size of 1 limb.
+ * \endrststar
+ */
+typedef mppp::rational<1> rational;
 
 inline namespace literals
 {
@@ -164,6 +170,7 @@ using math_rational_pow_enabler = enable_if_t<mppp::are_rational_op_types<T, U>:
 
 /// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
 /**
+ * \ingroup math_pow_impl
  * This specialisation is activated if the mp++ rational exponentiation function can be successfully called on instances
  * of ``T`` and ``U``.
  */

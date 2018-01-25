@@ -120,6 +120,7 @@ using math_real_pow_enabler = enable_if_t<mppp::are_real_op_types<T, U>::value>;
 
 /// Specialisation of piranha::math::pow() for piranha::real.
 /**
+ * \ingroup math_pow_impl
  * This specialisation is activated when one of the arguments is piranha::real
  * and the other is either piranha::real or an interoperable type for piranha::real.
  * The result is computed via mp++'s exponentiation function for piranha::real.
