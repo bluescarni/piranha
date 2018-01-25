@@ -48,20 +48,10 @@ namespace piranha
 namespace math
 {
 
-/** @defgroup math_pow_impl math_pow_impl
- *  @{
- */
-
-/// Default functor for the implementation of piranha::math::pow().
-/**
- * This functor can be specialised via the \p std::enable_if mechanism. The default implementation does not define
- * the call operator, and will thus generate a compile-time error if used.
- */
+// The default (empty) implementation.
 template <typename T, typename U, typename Enable = void>
 struct pow_impl {
 };
-
-/** @} */
 }
 
 inline namespace impl
@@ -137,12 +127,7 @@ concept bool PowFpArith = is_pow_fp_arith<T, U>::value;
 #endif
 }
 
-/// Specialisation of the implementation of piranha::math::pow() for arithmetic and floating-point types.
-/**
- * \ingroup math_pow_impl
- * This specialisation is activated when both arguments are C++ arithmetic types and at least one argument
- * is a floating-point type.
- */
+// Specialisation for arithmetic-fp types.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <typename U, PowFpArith<U> T>
 struct pow_impl<T, U> {
@@ -150,15 +135,6 @@ struct pow_impl<T, U> {
 template <typename T, typename U>
 struct pow_impl<T, U, pow_fp_arith_enabler<T, U>> {
 #endif
-    /// Call operator.
-    /**
-     * This operator will compute the exponentiation via one of the overloads of <tt>std::pow()</tt>.
-     *
-     * @param x the base.
-     * @param y the exponent.
-     *
-     * @return <tt>x**y</tt>.
-     */
     auto operator()(const T &x, const U &y) const -> decltype(std::pow(x, y))
     {
         return std::pow(x, y);
@@ -178,20 +154,7 @@ using integer_pow_enabler = enable_if_t<
 // NOTE: this specialisation must be here as in the integral-integral overload we use mppp::integer inside,
 // so the declaration of mppp::integer must be avaiable. On the other hand, we cannot put this in integer.hpp
 // as the integral-integral overload is supposed to work without including mppp::integer.hpp.
-/// Specialisation of the implementation of piranha::math::pow() for mp++'s integers and C++ integral types.
-/**
- * \ingroup math_pow_impl
- * \note
- * This specialisation is activated when:
- * - the mp++ integer exponentiation function can be successfully called on
- *   instances of ``T`` and ``U``, or
- * - both arguments are C++ integral types with which mp++'s integers can interoperate.
- *
- * The implementation follows these rules:
- * - if both arguments are C++ integral types, then the mp++ integer exponentiation function is used after the
- *   conversion of the base to piranha::integer; otherwise,
- * - the mp++ integer exponentiation function is used directly.
- */
+// Specialisation for mp++'s integers and C++ integral types.
 template <typename T, typename U>
 struct pow_impl<T, U, integer_pow_enabler<T, U>> {
 private:
@@ -213,15 +176,6 @@ private:
                                                                  mppp::is_cpp_integral_interoperable<U>>::value>{}));
 
 public:
-    /// Call operator.
-    /**
-     * @param b the base.
-     * @param e the exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by mp++'s integer exponentiation function.
-     */
     ret_type operator()(const T &b, const U &e) const
     {
         return impl(b, e,

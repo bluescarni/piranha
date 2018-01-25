@@ -170,7 +170,6 @@ using math_rational_pow_enabler = enable_if_t<mppp::are_rational_op_types<T, U>:
 
 /// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
 /**
- * \ingroup math_pow_impl
  * This specialisation is activated if the mp++ rational exponentiation function can be successfully called on instances
  * of ``T`` and ``U``.
  */

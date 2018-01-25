@@ -7,30 +7,25 @@ Exponentiation
 
 .. doxygenfunction:: piranha::math::pow()
 
-.. cpp:namespace:: piranha
+.. cpp:ns:: mppp
 
-.. cpp:class:: template <typename T, Exponentiable<T> U> math::pow_impl<T, U>
-
-   Batuba!
-
-   .. cpp:function:: std::size_t size() const
-      
-      dsadsa
-
-      :exception TypeError: if the message_body is not a basestring
+   DSDDAS
 
 Concepts
 --------
 
-.. cpp:concept:: template <typename T, typename U> Exponentiable
+.. cpp:concept:: template <typename T, typename U> piranha::Exponentiable
 
-   This concept is satisfied if :cpp:func:`math::pow()` can be called
+   This concept is satisfied if :cpp:func:`piranha::math::pow()` can be called
    with a base of type ``T`` and an exponent of type ``U``. Specifically,
    this concept will be satisfied if 
 
 Implementations
 ---------------
 
-.. doxygengroup:: math_pow_impl
-   :content-only:
-   :members:
+.. cpp:class:: template <typename T, typename U> piranha::math::pow_impl
+
+.. cpp:class:: template <typename T, piranha::Exponentiable<T> U> piranha::math::pow_impl<T, U>
+
+   Batuba!
+

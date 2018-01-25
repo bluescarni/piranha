@@ -3,6 +3,12 @@
 Types
 =====
 
-.. doxygentypedef:: piranha::integer
+.. cpp:type:: piranha::integer = mppp::integer<1>
 
-.. doxygentypedef:: piranha::rational
+   *#include <piranha/integer.hpp>*
+
+   A mooo.
+
+.. cpp:type:: piranha::rational = mppp::rational<1>
+
+.. cpp:type:: piranha::real = mppp::real
