@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/binomial.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
@@ -167,6 +168,23 @@ public:
     auto operator()(const T &b, const U &e) const -> decltype(mppp::pow(b, e))
     {
         return mppp::pow(b, e);
+    }
+};
+
+// Specialisation of the implementation of piranha::math::binomial() for mp++ rational top argument.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <std::size_t SSize, mppp::RationalIntegralInteroperable<SSize> T>
+class binomial_impl<mppp::rational<SSize>, T>
+#else
+template <std::size_t SSize, typename T>
+class binomial_impl<mppp::rational<SSize>, T, enable_if_t<mppp::is_rational_integral_interoperable<T, SSize>::value>>
+#endif
+{
+public:
+    template <typename T1, typename U1>
+    auto operator()(T1 &&x, U1 &&y) const -> decltype(mppp::binomial(std::forward<T1>(x), std::forward<U1>(y)))
+    {
+        return mppp::binomial(std::forward<T1>(x), std::forward<U1>(y));
     }
 };
 

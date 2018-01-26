@@ -7,3 +7,4 @@ Mathematical functions
    :maxdepth: 1
 
    math_pow.rst
+   math_binomial.rst

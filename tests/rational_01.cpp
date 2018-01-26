@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/binomial.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/safe_cast.hpp>
@@ -470,4 +471,38 @@ struct negate_tester {
 BOOST_AUTO_TEST_CASE(rational_negate_test)
 {
     tuple_for_each(size_types{}, negate_tester{});
+}
+
+struct rational_binomial_tester {
+    template <typename T>
+    void operator()(const T &) const
+    {
+        using rat_type = mppp::rational<T::value>;
+        using int_type = typename rat_type::int_t;
+        BOOST_CHECK((are_binomial_types<rat_type, int_type>::value));
+        BOOST_CHECK((are_binomial_types<rat_type, int_type &>::value));
+        BOOST_CHECK((are_binomial_types<const rat_type, const int_type &>::value));
+        BOOST_CHECK((are_binomial_types<rat_type, int>::value));
+        BOOST_CHECK((are_binomial_types<rat_type, long long>::value));
+        BOOST_CHECK((are_binomial_types<rat_type, unsigned long long>::value));
+        BOOST_CHECK((!are_binomial_types<rat_type, void>::value));
+        BOOST_CHECK((!are_binomial_types<int_type, rat_type>::value));
+        BOOST_CHECK((!are_binomial_types<rat_type, double>::value));
+        BOOST_CHECK((std::is_same<decltype(math::binomial(rat_type{7, 3}, 4)), rat_type>::value));
+        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, 4), (rat_type{-7, 243}));
+        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, -3}, int_type{4}), (rat_type{1820, 243}));
+        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, static_cast<signed char>(-4)), 0);
+#if defined(MPPP_HAVE_GCC_INT128)
+        BOOST_CHECK((are_binomial_types<rat_type, __int128_t>::value));
+        BOOST_CHECK((are_binomial_types<rat_type, __uint128_t>::value));
+        BOOST_CHECK((!are_binomial_types<__int128_t, rat_type>::value));
+        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, __int128_t(4)), (rat_type{-7, 243}));
+        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, __uint128_t(4)), (rat_type{-7, 243}));
+#endif
+    }
+};
+
+BOOST_AUTO_TEST_CASE(rational_binomial_test)
+{
+    tuple_for_each(size_types{}, rational_binomial_tester{});
 }
