@@ -26,7 +26,7 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include <piranha/pow.hpp>
+#include <piranha/math/pow.hpp>
 
 #define BOOST_TEST_MODULE pow_test
 #include <boost/test/included/unit_test.hpp>
@@ -70,12 +70,16 @@ namespace math
 {
 
 template <>
-struct pow_impl<b_00, b_00> {
+class pow_impl<b_00, b_00>
+{
+public:
     b_00 operator()(const b_00 &, const b_00 &) const;
 };
 
 template <>
-struct pow_impl<b_01, b_01> {
+class pow_impl<b_01, b_01>
+{
+public:
     b_01 operator()(const b_01 &, const b_01 &) const;
 };
 }

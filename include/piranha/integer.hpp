@@ -56,14 +56,8 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Main multiprecision integer type.
-/**
- * \rststar
- * This type is the main multiprecision integer type used throughout piranha.
- * It is an :cpp:class:`mppp::integer <mppp::integer>` with a static size of 1 limb.
- * \endrststar
- */
-typedef mppp::integer<1> integer;
+// Main multiprecision integer type.
+using integer = mppp::integer<1>;
 
 namespace math
 {
@@ -360,26 +354,15 @@ struct div3_impl<mppp::integer<SSize>> {
     }
 };
 
-#if !defined(PIRANHA_HAVE_CONCEPTS)
-
-inline namespace impl
-{
-
-// Enabler for the GCD specialisation.
-template <typename T, typename U>
-using math_integer_gcd_enabler = enable_if_t<mppp::are_integer_integral_op_types<T, U>::value>;
-}
-
-#endif
-
 /// Specialisation of the implementation of piranha::math::gcd() for mp++'s integers.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <typename T, mppp::IntegerIntegralOpTypes<T> U>
-struct gcd_impl<T, U> {
+template <typename U, mppp::IntegerIntegralOpTypes<U> T>
+struct gcd_impl<T, U>
 #else
 template <typename T, typename U>
-struct gcd_impl<T, U, math_integer_gcd_enabler<T, U>> {
+struct gcd_impl<T, U, enable_if_t<mppp::are_integer_integral_op_types<T, U>::value>>
 #endif
+{
     /// Call operator, overload for mp++'s integers.
     /**
      * @param a the first argument.

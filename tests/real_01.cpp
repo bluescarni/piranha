@@ -43,7 +43,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/math.hpp>
-#include <piranha/pow.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -115,16 +115,29 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
     BOOST_CHECK((is_exponentiable<real, __uint128_t>::value));
     BOOST_CHECK((is_exponentiable<__uint128_t, real>::value));
 #endif
-    real r1{2}, r2{5};
-    BOOST_CHECK_EQUAL(math::pow(r1, r2), 32);
-    BOOST_CHECK_EQUAL(math::pow(r1, 5), 32);
-    BOOST_CHECK_EQUAL(math::pow(2, r2), 32);
-    BOOST_CHECK_EQUAL(math::pow(r1, 5.), 32);
-    BOOST_CHECK_EQUAL(math::pow(2.l, r2), 32);
+    {
+        real r1{2}, r2{5};
+        BOOST_CHECK_EQUAL(math::pow(r1, r2), 32);
+        BOOST_CHECK_EQUAL(math::pow(r1, 5), 32);
+        BOOST_CHECK_EQUAL(math::pow(2, r2), 32);
+        BOOST_CHECK_EQUAL(math::pow(r1, 5.), 32);
+        BOOST_CHECK_EQUAL(math::pow(2.l, r2), 32);
 #if defined(MPPP_HAVE_GCC_INT128)
-    BOOST_CHECK_EQUAL(math::pow(r1, __int128_t(5)), 32);
-    BOOST_CHECK_EQUAL(math::pow(__uint128_t(2), r2), 32);
+        BOOST_CHECK_EQUAL(math::pow(r1, __int128_t(5)), 32);
+        BOOST_CHECK_EQUAL(math::pow(__uint128_t(2), r2), 32);
 #endif
+    }
+    {
+        // Verify perfect forwarding.
+        real r0{5, 100}, r1{2, 100};
+        auto res = math::pow(std::move(r0), r1);
+        BOOST_CHECK(res == 25);
+        BOOST_CHECK(r0.get_mpfr_t()->_mpfr_d == nullptr);
+        r0 = real{5, 100};
+        auto res2 = math::pow(r0, std::move(r1));
+        BOOST_CHECK(res2 == 25);
+        BOOST_CHECK(r1.get_mpfr_t()->_mpfr_d == nullptr);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(real_fma_test)

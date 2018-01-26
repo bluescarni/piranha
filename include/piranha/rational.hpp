@@ -48,7 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
-#include <piranha/pow.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -57,14 +57,8 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Main multiprecision rational type.
-/**
- * \rststar
- * This type is the main multiprecision rational type used throughout piranha.
- * It is an :cpp:class:`mppp::rational <mppp::rational>` with a static size of 1 limb.
- * \endrststar
- */
-typedef mppp::rational<1> rational;
+// Main multiprecision rational type.
+using rational = mppp::rational<1>;
 
 inline namespace literals
 {
@@ -160,30 +154,16 @@ struct negate_impl<mppp::rational<SSize>> {
     }
 };
 
-inline namespace impl
+// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename U, mppp::RationalOpTypes<U> T>
+class pow_impl<T, U>
+#else
+template <typename T, typename U>
+class pow_impl<T, U, enable_if_t<mppp::are_rational_op_types<T, U>::value>>
+#endif
 {
-
-// Enabler for the pow specialisation.
-template <typename T, typename U>
-using math_rational_pow_enabler = enable_if_t<mppp::are_rational_op_types<T, U>::value>;
-}
-
-/// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
-/**
- * This specialisation is activated if the mp++ rational exponentiation function can be successfully called on instances
- * of ``T`` and ``U``.
- */
-template <typename T, typename U>
-struct pow_impl<T, U, math_rational_pow_enabler<T, U>> {
-    /// Call operator.
-    /**
-     * @param b the base.
-     * @param e the exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by the mp++ exponentiation function.
-     */
+public:
     auto operator()(const T &b, const U &e) const -> decltype(mppp::pow(b, e))
     {
         return mppp::pow(b, e);

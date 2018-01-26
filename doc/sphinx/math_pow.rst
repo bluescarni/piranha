@@ -3,13 +3,32 @@
 Exponentiation
 ==============
 
-*#include <piranha/pow.hpp>*
+*#include <piranha/math/pow.hpp>*
 
-.. doxygenfunction:: piranha::math::pow()
+.. cpp:function:: template <typename T, typename U> auto piranha::math::pow(T &&x, U &&y)
 
-.. cpp:ns:: mppp
+   This function computes :math:`x^y`.
 
-   DSDDAS
+   The implementation is delegated to the call operator of the :cpp:class:`piranha::math::pow_impl` function object.
+   The body of this function is equivalent to:
+
+   .. code-block:: c++
+
+      return piranha::math::pow_impl<Tp, Up>{}(x, y);
+
+   where ``Tp`` and ``Up`` are ``T`` and ``U`` after the removal of reference and cv-qualifiers,
+   and *x* and *y* are perfectly forwarded to the call operator of :cpp:class:`piranha::math::pow_impl`.
+   If the expression above is invalid, this function will be disabled (i.e., it will not participate in
+   overload resolution).
+
+   Piranha provides specialisations of :cpp:class:`piranha::math::pow_impl` for the following types:
+
+   * all of C++'s arithmetic types,
+   * :cpp:class:`mppp::integer <mppp::integer>` types,
+   * :cpp:class:`mppp::rational <mppp::rational>` types,
+   * :cpp:class:`mppp::real <mppp::real>`.
+
+   :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::math::pow_impl`.
 
 Concepts
 --------
@@ -18,14 +37,78 @@ Concepts
 
    This concept is satisfied if :cpp:func:`piranha::math::pow()` can be called
    with a base of type ``T`` and an exponent of type ``U``. Specifically,
-   this concept will be satisfied if 
+   this concept will be satisfied if
+
+   .. code-block:: c++
+
+      piranha::math::pow(x, y)
+
+   is a valid expression, where ``x`` and ``y`` are ``const`` references to ``T`` and ``U`` respectively.
+
+.. cpp:concept:: template <typename T, typename U> piranha::StdPowTypes
+
+   This concept is satisfied if ``T`` and ``U`` are both C++ arithmetic types, and at least
+   one of them is a floating-point type.
+
+.. cpp:concept:: template <typename T, typename U> piranha::MpppPowTypes
+
+   This concept is satisfied in the following cases:
+
+   * ``T`` and ``U`` satisfy :cpp:concept:`mppp::IntegerOpTypes <mppp::IntegerOpTypes>`, or
+   * both ``T`` and ``U`` satisfy :cpp:concept:`mppp::CppIntegralInteroperable <mppp::CppIntegralInteroperable>`.
 
 Implementations
 ---------------
 
-.. cpp:class:: template <typename T, typename U> piranha::math::pow_impl
+.. cpp:class:: template <typename T, typename U, typename Enable = void> piranha::math::pow_impl
 
-.. cpp:class:: template <typename T, piranha::Exponentiable<T> U> piranha::math::pow_impl<T, U>
+   Unspecialised version of the function object implementing :cpp:func:`piranha::math::pow()`.
 
-   Batuba!
+   This default implementation does not define any call operator, and no default implementation
+   of :cpp:func:`piranha::math::pow()` is thus available.
 
+.. cpp:class:: template <typename U, piranha::StdPowTypes<U> T> piranha::math::pow_impl<T, U>
+
+   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for C++ floating-point types.
+
+   This implementation will calculate the result of the exponentiation via one of the overloads of ``std::pow()``.
+   The result will always be a C++ floating-point type.
+
+.. cpp:class:: template <typename U, piranha::MpppPowTypes<U> T> piranha::math::pow_impl<T, U>
+
+   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for integral types.
+
+   If ``T`` and ``U`` are both :cpp:concept:`mppp::CppIntegralInteroperable <mppp::CppIntegralInteroperable>` types,
+   then the base will be converted to :cpp:type:`piranha::integer`
+   before being passed, together with the exponent, to one of mp++'s :ref:`integer exponentiation <mppp:integer_exponentiation>`
+   overloads. The type of the result will be :cpp:type:`piranha::integer`.
+
+   Otherwise, one of mp++'s :ref:`integer exponentiation <mppp:integer_exponentiation>` overloads will be called directly
+   on the input base and exponent.
+
+   :exception unspecified: any exception thrown by the invoked :ref:`integer exponentiation <mppp:integer_exponentiation>` overload.
+
+.. cpp:class:: template <typename U, mppp::RationalOpTypes<U> T> piranha::math::pow_impl<T, U>
+
+   *#include <piranha/rational.hpp>*
+
+   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for :cpp:class:`mppp::rational <mppp::rational>`.
+
+   This implementation will invoke one of mp++'s :ref:`rational exponentiation <mppp:rational_exponentiation>` overloads.
+
+   :exception unspecified: any exception thrown by the invoked :ref:`rational exponentiation <mppp:rational_exponentiation>` overload.
+
+.. cpp:class:: template <typename U, mppp::RealOpTypes<U> T> piranha::math::pow_impl<T, U>
+
+   *#include <piranha/real.hpp>*
+
+   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for :cpp:class:`mppp::real <mppp::real>`.
+
+   This implementation will invoke one of mp++'s :ref:`real exponentiation <mppp:real_exponentiation>` overloads.
+
+   :exception unspecified: any exception thrown by the invoked :ref:`real exponentiation <mppp:real_exponentiation>` overload.
+
+   .. note::
+
+      This specialisation is available only if mp++ was configured with the ``MPPP_WITH_MPFR`` option enabled
+      (see the :ref:`mp++ installation instructions <mppp:installation>`).

@@ -376,8 +376,10 @@ namespace math
 {
 
 template <typename T, typename U>
-struct pow_impl<
-    T, U, typename std::enable_if<std::is_floating_point<T>::value && std::is_same<U, fake_int_01>::value>::type> {
+class pow_impl<T, U,
+               typename std::enable_if<std::is_floating_point<T>::value && std::is_same<U, fake_int_01>::value>::type>
+{
+public:
     T operator()(const T &, const U &) const;
 };
 

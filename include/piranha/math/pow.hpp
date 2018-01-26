@@ -50,114 +50,80 @@ namespace math
 
 // The default (empty) implementation.
 template <typename T, typename U, typename Enable = void>
-struct pow_impl {
+class pow_impl
+{
 };
-}
 
 inline namespace impl
 {
 
 // Enabler for math::pow().
 template <typename T, typename U>
-using math_pow_t_ = decltype(math::pow_impl<T, U>{}(std::declval<const T &>(), std::declval<const U &>()));
+using math_pow_t_ = decltype(pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
 
 template <typename T, typename U>
 using math_pow_t = enable_if_t<is_returnable<math_pow_t_<T, U>>::value, math_pow_t_<T, U>>;
 }
 
+// The exponentiation function.
 template <typename T, typename U>
-using is_exponentiable = is_detected<math_pow_t, T, U>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename U>
-concept bool Exponentiable = is_detected<math_pow_t, T, U>::value;
-
-#endif
-
-namespace math
+inline math_pow_t<T &&, U &&> pow(T &&x, U &&y)
 {
-
-/// Exponentiation.
-/**
- * \note
- * This function is enabled only if the expression <tt>pow_impl<T, U>{}(x, y)</tt> is valid,
- * returning a type which satisfies piranha::is_returnable.
- *
- * Return \p x to the power of \p y. The actual implementation of this function is in the piranha::math::pow_impl
- * functor's call operator. The body of this function is equivalent to:
- * @code
- * return pow_impl<T, U>{}(x, y);
- * @endcode
- *
- * @param x the base.
- * @param y the exponent.
- *
- * @return \p x to the power of \p y.
- *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::pow_impl functor.
- */
-#if defined(PIRANHA_HAVE_CONCEPTS)
-template <typename T>
-inline auto pow(const Exponentiable<T> &x, const T &y)
-#else
-template <typename T, typename U>
-inline math_pow_t<T, U> pow(const T &x, const U &y)
-#endif
-{
-    return pow_impl<uncvref_t<decltype(x)>, uncvref_t<decltype(y)>>{}(x, y);
+    return pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::forward<T>(x), std::forward<U>(y));
 }
 
-inline namespace impl
-{
-
-// Enabler for the pow overload for arithmetic and floating-point types.
+// Machinery for the pow overload for arithmetic and floating-point types.
 template <typename T, typename U>
-using is_pow_fp_arith = conjunction<std::is_arithmetic<T>, std::is_arithmetic<U>,
-                                    disjunction<std::is_floating_point<T>, std::is_floating_point<U>>>;
-
-template <typename T, typename U>
-using pow_fp_arith_enabler = enable_if_t<is_pow_fp_arith<T, U>::value>;
+using are_std_pow_types = conjunction<std::is_arithmetic<T>, std::is_arithmetic<U>,
+                                      disjunction<std::is_floating_point<T>, std::is_floating_point<U>>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T, typename U>
-concept bool PowFpArith = is_pow_fp_arith<T, U>::value;
+concept bool StdPowTypes = are_std_pow_types<T, U>::value;
 
 #endif
-}
 
-// Specialisation for arithmetic-fp types.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <typename U, PowFpArith<U> T>
-struct pow_impl<T, U> {
+template <typename U, StdPowTypes<U> T>
+class pow_impl<T, U>
 #else
 template <typename T, typename U>
-struct pow_impl<T, U, pow_fp_arith_enabler<T, U>> {
+class pow_impl<T, U, enable_if_t<are_std_pow_types<T, U>::value>>
 #endif
+{
+public:
     auto operator()(const T &x, const U &y) const -> decltype(std::pow(x, y))
     {
         return std::pow(x, y);
     }
 };
 
-inline namespace impl
-{
-
-// Enabler for integral power.
+// Machinery for the pow overload for integral types.
 template <typename T, typename U>
-using integer_pow_enabler = enable_if_t<
-    disjunction<mppp::are_integer_op_types<T, U>,
-                conjunction<mppp::is_cpp_integral_interoperable<T>, mppp::is_cpp_integral_interoperable<U>>>::value>;
-}
+using are_mppp_pow_types
+    = disjunction<mppp::are_integer_op_types<T, U>,
+                  conjunction<mppp::is_cpp_integral_interoperable<T>, mppp::is_cpp_integral_interoperable<U>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U>
+concept bool MpppPowTypes = are_mppp_pow_types<T, U>::value;
+
+#endif
 
 // NOTE: this specialisation must be here as in the integral-integral overload we use mppp::integer inside,
 // so the declaration of mppp::integer must be avaiable. On the other hand, we cannot put this in integer.hpp
 // as the integral-integral overload is supposed to work without including mppp::integer.hpp.
 // Specialisation for mp++'s integers and C++ integral types.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename U, MpppPowTypes<U> T>
+class pow_impl<T, U>
+#else
 template <typename T, typename U>
-struct pow_impl<T, U, integer_pow_enabler<T, U>> {
-private:
+class pow_impl<T, U, enable_if_t<are_mppp_pow_types<T, U>::value>>
+#endif
+{
     // C++ integral -- C++ integral.
     template <typename T2, typename U2>
     static integer impl(const T2 &b, const U2 &e, const std::true_type &)
@@ -184,6 +150,24 @@ public:
     }
 };
 }
+
+// Implementation of the type trait to detect exponentiability.
+inline namespace impl
+{
+
+template <typename T, typename U>
+using math_pow_t = decltype(math::pow(std::declval<const T &>(), std::declval<const U &>()));
+}
+
+template <typename T, typename U>
+using is_exponentiable = is_detected<math_pow_t, T, U>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U>
+concept bool Exponentiable = is_exponentiable<T, U>::value;
+
+#endif
 }
 
 #endif

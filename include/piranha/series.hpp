@@ -2979,8 +2979,8 @@ namespace math
  * a method with the same signature as piranha::series::pow().
  */
 template <typename Series, typename T>
-struct pow_impl<Series, T, pow_series_enabler<Series, T>> {
-private:
+class pow_impl<Series, T, pow_series_enabler<Series, T>>
+{
     using pow_type = series_pow_member_t<Series, T>;
 
 public:

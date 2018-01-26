@@ -8,5 +8,5 @@ The following subsections contain the detailed documentation of piranha's public
 .. toctree::
    :maxdepth: 1
 
-   types.rst
+   numerical_types.rst
    math.rst
