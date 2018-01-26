@@ -280,16 +280,4 @@ BOOST_AUTO_TEST_CASE(pow_integer_test)
     BOOST_CHECK((!is_exponentiable<integer, std::string>::value));
     BOOST_CHECK((!is_exponentiable<b_00, b_00>::value));
     BOOST_CHECK((!is_exponentiable<b_01, b_01>::value));
-#if defined(MPPP_HAVE_GCC_INT128)
-    BOOST_CHECK((is_exponentiable<__int128_t, int>::value));
-    BOOST_CHECK((is_exponentiable<__uint128_t, int>::value));
-    BOOST_CHECK((is_exponentiable<__int128_t, __int128_t>::value));
-    BOOST_CHECK((is_exponentiable<__uint128_t, __uint128_t>::value));
-    BOOST_CHECK_EQUAL(math::pow(__int128_t(4), 2), 16);
-    BOOST_CHECK_EQUAL(math::pow(__int128_t(4), __uint128_t(2)), 16);
-    BOOST_CHECK_EQUAL(math::pow(4, __int128_t(2)), 16);
-    BOOST_CHECK((std::is_same<integer, decltype(math::pow(__int128_t(4), 2))>::value));
-    BOOST_CHECK((std::is_same<integer, decltype(math::pow(__int128_t(4), __int128_t(2)))>::value));
-    BOOST_CHECK((std::is_same<integer, decltype(math::pow(4, __int128_t(2)))>::value));
-#endif
 }

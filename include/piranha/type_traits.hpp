@@ -1068,6 +1068,13 @@ concept bool Returnable = is_returnable<T>::value;
 
 #endif
 
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool Arithmetic = std::is_arithmetic<T>::value;
+
+#endif
+
 /// Detect if zero is a multiplicative absorber.
 /**
  * This type trait, defaulting to \p true, establishes if the zero element of the type \p T is a multiplicative

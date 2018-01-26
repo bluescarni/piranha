@@ -24,8 +24,8 @@ Exponentiation
    Piranha provides specialisations of :cpp:class:`piranha::math::pow_impl` for the following types:
 
    * all of C++'s arithmetic types,
-   * :cpp:class:`mppp::integer <mppp::integer>` types (including :cpp:type:`piranha::integer`),
-   * :cpp:class:`mppp::rational <mppp::rational>` types (including :cpp:type:`piranha::rational`),
+   * all :cpp:class:`mppp::integer <mppp::integer>` types (including :cpp:type:`piranha::integer`),
+   * all :cpp:class:`mppp::rational <mppp::rational>` types (including :cpp:type:`piranha::rational`),
    * :cpp:class:`mppp::real <mppp::real>`.
 
    See the :ref:`implementation <math_pow_impls>` section below for more details.
@@ -47,18 +47,6 @@ Concepts
 
    is a valid expression, where ``x`` and ``y`` are ``const`` references to ``T`` and ``U`` respectively.
 
-.. cpp:concept:: template <typename T, typename U> piranha::StdPowTypes
-
-   This concept is satisfied if ``T`` and ``U`` are both C++ arithmetic types, and at least
-   one of them is a floating-point type.
-
-.. cpp:concept:: template <typename T, typename U> piranha::MpppPowTypes
-
-   This concept is satisfied in the following cases:
-
-   * ``T`` and ``U`` satisfy :cpp:concept:`mppp::IntegerOpTypes <mppp::IntegerOpTypes>`, or
-   * both ``T`` and ``U`` satisfy :cpp:concept:`mppp::CppIntegralInteroperable <mppp::CppIntegralInteroperable>`.
-
 .. _math_pow_impls:
 
 Implementations
@@ -68,27 +56,27 @@ Implementations
 
    Unspecialised version of the function object implementing :cpp:func:`piranha::math::pow()`.
 
-   This default implementation does not define any call operator, and no default implementation
-   of :cpp:func:`piranha::math::pow()` is thus available.
+   This default implementation does not define any call operator, and thus no default implementation
+   of :cpp:func:`piranha::math::pow()` is available.
 
-.. cpp:class:: template <typename U, piranha::StdPowTypes<U> T> piranha::math::pow_impl<T, U>
+.. cpp:class:: template <piranha::Arithmetic T, piranha::Arithmetic U> piranha::math::pow_impl<T, U>
 
-   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for C++ floating-point types.
+   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for C++'s arithmetic types.
 
-   This implementation will calculate the result of the exponentiation via one of the overloads of ``std::pow()``.
-   The result will always be a C++ floating-point type.
+   If at least one of ``T`` and ``U`` is a floating-point type, the result of the exponentiation will be calculated
+   via one of the overloads of ``std::pow()``, and the result will be a C++ floating-point type.
 
-.. cpp:class:: template <typename U, piranha::MpppPowTypes<U> T> piranha::math::pow_impl<T, U>
-
-   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for integral types.
-
-   If ``T`` and ``U`` are both :cpp:concept:`mppp::CppIntegralInteroperable <mppp::CppIntegralInteroperable>` types,
-   then the base will be converted to :cpp:type:`piranha::integer`
+   Otherwise, the base will be converted to :cpp:type:`piranha::integer`
    before being passed, together with the exponent, to one of mp++'s :ref:`integer exponentiation <mppp:integer_exponentiation>`
    overloads. The type of the result will be :cpp:type:`piranha::integer`.
 
-   Otherwise, one of mp++'s :ref:`integer exponentiation <mppp:integer_exponentiation>` overloads will be called directly
-   on the input base and exponent.
+   :exception unspecified: any exception thrown by the invoked :ref:`integer exponentiation <mppp:integer_exponentiation>` overload.
+
+.. cpp:class:: template <typename U, mppp::IntegerOpTypes<U> T> piranha::math::pow_impl<T, U>
+
+   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for :cpp:class:`mppp::integer <mppp::integer>`.
+
+   This implementation will invoke one of mp++'s :ref:`integer exponentiation <mppp:integer_exponentiation>` overloads.
 
    :exception unspecified: any exception thrown by the invoked :ref:`integer exponentiation <mppp:integer_exponentiation>` overload.
 

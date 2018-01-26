@@ -72,81 +72,53 @@ inline math_pow_t<T &&, U &&> pow(T &&x, U &&y)
     return pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::forward<T>(x), std::forward<U>(y));
 }
 
-// Machinery for the pow overload for arithmetic and floating-point types.
-template <typename T, typename U>
-using are_std_pow_types = conjunction<std::is_arithmetic<T>, std::is_arithmetic<U>,
-                                      disjunction<std::is_floating_point<T>, std::is_floating_point<U>>>;
-
+// Specialisation of the implementation of piranha::math::pow() for C++ arithmetic types.
+// It will use std::pow() if at least one of the types is an FP, and mp++ integral exponentiation
+// otherwise.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename U>
-concept bool StdPowTypes = are_std_pow_types<T, U>::value;
-
-#endif
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-template <typename U, StdPowTypes<U> T>
+template <Arithmetic T, Arithmetic U>
 class pow_impl<T, U>
 #else
 template <typename T, typename U>
-class pow_impl<T, U, enable_if_t<are_std_pow_types<T, U>::value>>
+class pow_impl<T, U, enable_if_t<conjunction<std::is_arithmetic<T>, std::is_arithmetic<U>>::value>>
 #endif
 {
-public:
-    auto operator()(const T &x, const U &y) const -> decltype(std::pow(x, y))
+    using use_std_pow = disjunction<std::is_floating_point<T>, std::is_floating_point<U>>;
+    template <typename T1, typename U1>
+    static auto impl(const T1 &x, const U1 &y, const std::true_type &) -> decltype(std::pow(x, y))
     {
         return std::pow(x, y);
     }
+    template <typename T1, typename U1>
+    static integer impl(const T1 &x, const U1 &y, const std::false_type &)
+    {
+        return mppp::pow(integer{x}, y);
+    }
+
+public:
+    auto operator()(const T &x, const U &y) const -> decltype(impl(x, y, use_std_pow{}))
+    {
+        return impl(x, y, use_std_pow{});
+    }
 };
 
-// Machinery for the pow overload for integral types.
-template <typename T, typename U>
-using are_mppp_pow_types
-    = disjunction<mppp::are_integer_op_types<T, U>,
-                  conjunction<mppp::is_cpp_integral_interoperable<T>, mppp::is_cpp_integral_interoperable<U>>>;
-
+// Specialisation of the implementation of piranha::math::pow() for mp++'s integers.
+// NOTE: this specialisation must be here (rather than integer.hpp) as in the integral-integral overload above we use
+// mppp::integer inside, so the declaration of mppp::integer must be avaiable. On the other hand, we cannot put this in
+// integer.hpp as the integral-integral overload is supposed to work without including mppp::integer.hpp.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename U>
-concept bool MpppPowTypes = are_mppp_pow_types<T, U>::value;
-
-#endif
-
-// NOTE: this specialisation must be here as in the integral-integral overload we use mppp::integer inside,
-// so the declaration of mppp::integer must be avaiable. On the other hand, we cannot put this in integer.hpp
-// as the integral-integral overload is supposed to work without including mppp::integer.hpp.
-// Specialisation for mp++'s integers and C++ integral types.
-#if defined(PIRANHA_HAVE_CONCEPTS)
-template <typename U, MpppPowTypes<U> T>
+template <typename U, mppp::IntegerOpTypes<U> T>
 class pow_impl<T, U>
 #else
 template <typename T, typename U>
-class pow_impl<T, U, enable_if_t<are_mppp_pow_types<T, U>::value>>
+class pow_impl<T, U, enable_if_t<mppp::are_integer_op_types<T, U>::value>>
 #endif
 {
-    // C++ integral -- C++ integral.
-    template <typename T2, typename U2>
-    static integer impl(const T2 &b, const U2 &e, const std::true_type &)
-    {
-        return mppp::pow(integer{b}, e);
-    }
-    // The other cases.
-    template <typename T2, typename U2>
-    static auto impl(const T2 &b, const U2 &e, const std::false_type &) -> decltype(mppp::pow(b, e))
-    {
-        return mppp::pow(b, e);
-    }
-    using ret_type
-        = decltype(impl(std::declval<const T &>(), std::declval<const U &>(),
-                        std::integral_constant<bool, conjunction<mppp::is_cpp_integral_interoperable<T>,
-                                                                 mppp::is_cpp_integral_interoperable<U>>::value>{}));
-
 public:
-    ret_type operator()(const T &b, const U &e) const
+    template <typename T1, typename U1>
+    auto operator()(T1 &&b, U1 &&e) const -> decltype(mppp::pow(std::forward<T1>(b), std::forward<U1>(e)))
     {
-        return impl(b, e,
-                    std::integral_constant<bool, conjunction<mppp::is_cpp_integral_interoperable<T>,
-                                                             mppp::is_cpp_integral_interoperable<U>>::value>{});
+        return mppp::pow(std::forward<T1>(b), std::forward<U1>(e));
     }
 };
 }

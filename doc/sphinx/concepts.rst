@@ -5,6 +5,10 @@ General concepts and type traits
 
 *#include <piranha/type_traits.hpp>*
 
+.. cpp:concept:: template <typename T> piranha::Arithmetic
+
+   This concept is satisfied it ``T`` is a C++ arithmetic type, or a cv-qualified version thereof.
+
 .. cpp:concept:: template <typename T> piranha::Returnable
 
    This concept is satisfied if instances of type ``T`` can be returned from a function.
