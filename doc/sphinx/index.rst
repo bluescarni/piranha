@@ -19,9 +19,3 @@ and performance.
    :maxdepth: 2
 
    reference.rst
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`

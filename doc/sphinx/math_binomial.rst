@@ -23,14 +23,18 @@ Binomial coefficient
 
    Piranha provides specialisations of :cpp:class:`piranha::math::binomial_impl` for the following types:
 
-   * all of C++'s integral types (both as top and bottom arguments),
-   * all :cpp:class:`mppp::integer <mppp::integer>` types (including :cpp:type:`piranha::integer`, both as top and
-     bottom arguments),
+   * all of C++'s integral types,
+   * all :cpp:class:`mppp::integer <mppp::integer>` types (including :cpp:type:`piranha::integer`),
    * all :cpp:class:`mppp::rational <mppp::rational>` types (including :cpp:type:`piranha::rational`, only as top arguments
      and with integral bottom arguments).
 
    See the :ref:`implementation <math_binomial_impls>` section below for more details about the available
    specialisations.
+
+   :param x: the top argument.
+   :param y: the bottom argument.
+
+   :return: :math:`{x \choose y}`.
 
    :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::math::binomial_impl`.
 

@@ -31,6 +31,11 @@ Exponentiation
    See the :ref:`implementation <math_pow_impls>` section below for more details about the available
    specialisations.
 
+   :param x: the base.
+   :param y: the exponent.
+
+   :return: :math:`x^y`.
+
    :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::math::pow_impl`.
 
 Concepts
