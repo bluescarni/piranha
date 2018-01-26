@@ -48,7 +48,6 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include <piranha/binomial.hpp>
 #include <piranha/config.hpp>
 #include <piranha/detail/cf_mult_impl.hpp>
 #include <piranha/detail/init.hpp>
@@ -61,6 +60,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/binomial.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/static_vector.hpp>

@@ -204,7 +204,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/array_key.hpp>
 #include <piranha/base_series_multiplier.hpp>
-#include <piranha/binomial.hpp>
 #include <piranha/cache_aligning_allocator.hpp>
 #include <piranha/config.hpp>
 #include <piranha/convert_to.hpp>
@@ -225,6 +224,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/lambdify.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/binomial.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/memory.hpp>
 #include <piranha/monomial.hpp>

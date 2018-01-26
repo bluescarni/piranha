@@ -165,9 +165,10 @@ class pow_impl<T, U, enable_if_t<mppp::are_rational_op_types<T, U>::value>>
 #endif
 {
 public:
-    auto operator()(const T &b, const U &e) const -> decltype(mppp::pow(b, e))
+    template <typename T1, typename U1>
+    auto operator()(T1 &&b, U1 &&e) const -> decltype(mppp::pow(std::forward<T1>(b), std::forward<U1>(e)))
     {
-        return mppp::pow(b, e);
+        return mppp::pow(std::forward<T1>(b), std::forward<U1>(e));
     }
 };
 
