@@ -7,6 +7,7 @@ doc/doxygen/html/
 doc/doxygen/latex/
 doc/doxygen/xml/
 doc/sphinx/_build/
+doc/sphinx/conf.py
 
 # Temp files.
 *~
