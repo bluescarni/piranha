@@ -160,6 +160,24 @@ using addlref_t = typename std::add_lvalue_reference<T>::type;
 
 template <typename T>
 using is_nonconst_rvalue_ref = conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>;
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+// Provide concept versions of a few C++ type traits.
+template <typename T>
+concept bool CppArithmetic = std::is_arithmetic<T>::value;
+
+template <typename T>
+concept bool CppIntegral = std::is_integral<T>::value;
+
+template <typename T>
+concept bool CppFloatingPoint = std::is_floating_point<T>::value;
+
+#endif
+
+inline namespace impl
+{
 
 // The type resulting from the addition of T and U.
 template <typename T, typename U>
@@ -1065,13 +1083,6 @@ using is_returnable = disjunction<
 
 template <typename T>
 concept bool Returnable = is_returnable<T>::value;
-
-#endif
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T>
-concept bool Arithmetic = std::is_arithmetic<T>::value;
 
 #endif
 

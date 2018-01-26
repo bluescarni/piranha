@@ -49,7 +49,7 @@ namespace math
 {
 
 // The default (empty) implementation.
-template <typename T, typename U, typename Enable = void>
+template <typename T, typename U, typename = void>
 class pow_impl
 {
 };
@@ -76,7 +76,7 @@ inline math_pow_t<T &&, U &&> pow(T &&x, U &&y)
 // It will use std::pow() if at least one of the types is an FP, and mp++ integral exponentiation
 // otherwise.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <Arithmetic T, Arithmetic U>
+template <CppArithmetic T, CppArithmetic U>
 class pow_impl<T, U>
 #else
 template <typename T, typename U>

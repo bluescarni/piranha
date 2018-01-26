@@ -28,7 +28,8 @@ Exponentiation
    * all :cpp:class:`mppp::rational <mppp::rational>` types (including :cpp:type:`piranha::rational`),
    * :cpp:class:`mppp::real <mppp::real>`.
 
-   See the :ref:`implementation <math_pow_impls>` section below for more details.
+   See the :ref:`implementation <math_pow_impls>` section below for more details about the available
+   specialisations.
 
    :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::math::pow_impl`.
 
@@ -59,7 +60,7 @@ Implementations
    This default implementation does not define any call operator, and thus no default implementation
    of :cpp:func:`piranha::math::pow()` is available.
 
-.. cpp:class:: template <piranha::Arithmetic T, piranha::Arithmetic U> piranha::math::pow_impl<T, U>
+.. cpp:class:: template <piranha::CppArithmetic T, piranha::CppArithmetic U> piranha::math::pow_impl<T, U>
 
    Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for C++'s arithmetic types.
 
