@@ -51,9 +51,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
     BOOST_CHECK_EQUAL(math::evaluate(s1, dict), tmp1);
     BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s1, dict))>::value));
     auto s2 = pow(y, 3) * sin(x + y);
-    auto tmp2 = (real(0) + real(1) * pow(real(1.234), 0) * pow(real(5.678), 3))
+    auto tmp2 = (real(0) + real(1) * math::pow(real(1.234), 0) * math::pow(real(5.678), 3))
                 * sin(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
     BOOST_CHECK_EQUAL(tmp2, math::evaluate(s2, dict));
     BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s2, dict))>::value));
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
         s = (x + y) * cos(-2 * x + y) + pow(x, 3) * sin(-5 * x + y);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
                           (r + y) * (cos(r * 2) * cos(y) + sin(r * 2) * sin(y))
-                              + pow(r, 3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
+                              + math::pow(r, 3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
         typedef poisson_series<polynomial<rational, monomial<short>>> p_type2;
         BOOST_CHECK((has_subs<p_type2, rational>::value));
         BOOST_CHECK((has_subs<p_type2, double>::value));

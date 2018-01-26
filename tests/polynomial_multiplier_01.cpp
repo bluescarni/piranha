@@ -42,8 +42,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/kronecker_monomial.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/settings.hpp>
 #include <piranha/symbol_utils.hpp>

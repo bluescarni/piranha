@@ -156,11 +156,11 @@ inline namespace impl
 {
 
 template <typename T, typename U>
-using math_pow_t = decltype(math::pow(std::declval<const T &>(), std::declval<const U &>()));
+using pow_t = decltype(math::pow(std::declval<const T &>(), std::declval<const U &>()));
 }
 
 template <typename T, typename U>
-using is_exponentiable = is_detected<math_pow_t, T, U>;
+using is_exponentiable = is_detected<pow_t, T, U>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 

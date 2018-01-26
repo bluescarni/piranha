@@ -35,8 +35,8 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/integer.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/s11n.hpp>
 
 using namespace piranha;

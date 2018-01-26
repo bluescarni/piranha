@@ -46,10 +46,10 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/s11n.hpp>
 
 using namespace piranha;

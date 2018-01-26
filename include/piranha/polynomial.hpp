@@ -71,8 +71,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/kronecker_array.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>

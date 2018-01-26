@@ -232,11 +232,11 @@ namespace piranha
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/lambdify.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/memory.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>

@@ -32,8 +32,8 @@ see https://www.gnu.org/licenses/. */
 #include <boost/lexical_cast.hpp>
 
 #include <piranha/kronecker_monomial.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/settings.hpp>
 
 #include "simple_timer.hpp"

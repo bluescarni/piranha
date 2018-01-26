@@ -70,7 +70,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/math.hpp>
-#include <piranha/pow.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>

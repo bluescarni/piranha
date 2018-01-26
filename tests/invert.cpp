@@ -37,10 +37,10 @@ see https://www.gnu.org/licenses/. */
 #include <mp++/config.hpp>
 
 #include <piranha/integer.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(invert_test_00)
     BOOST_CHECK((std::is_same<rational, decltype(invert(1_q))>::value));
 #if defined(MPPP_WITH_MPFR)
     BOOST_CHECK_EQUAL(invert(1_r), 1);
-    BOOST_CHECK_EQUAL(invert(1.5_r), pow(1.5_r, -1));
-    BOOST_CHECK_EQUAL(invert(-2.5_r), pow(-2.5_r, -1));
+    BOOST_CHECK_EQUAL(invert(1.5_r), math::pow(1.5_r, -1));
+    BOOST_CHECK_EQUAL(invert(-2.5_r), math::pow(-2.5_r, -1));
     BOOST_CHECK((std::is_same<real, decltype(invert(1_r))>::value));
 #endif
     // Test with some series types.

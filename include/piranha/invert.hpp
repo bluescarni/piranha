@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/config.hpp>
 #include <piranha/detail/init.hpp>
-#include <piranha/pow.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha

@@ -61,7 +61,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
-#include <piranha/pow.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>

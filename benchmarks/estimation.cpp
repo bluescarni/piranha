@@ -40,8 +40,8 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/kronecker_monomial.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/settings.hpp>
 
