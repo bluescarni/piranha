@@ -76,7 +76,7 @@ if [[ "${BUILD_TYPE}" == "Python2" || "${BUILD_TYPE}" == "Python3" ]]; then
 fi
 
 if [[ "${BUILD_TYPE}" == "Python2" && "${TRAVIS_OS_NAME}" != "osx" ]]; then
-    pip install sphinx breathe requests[security] sphinx-bootstrap-theme;
+    pip install sphinx requests[security] sphinx-bootstrap-theme;
     cd ../doc/sphinx;
     export SPHINX_OUTPUT=`make html 2>&1 >/dev/null`;
     if [[ "${SPHINX_OUTPUT}" != "" ]]; then
