@@ -18,15 +18,17 @@ Exponentiation
 
    where ``Tp`` and ``Up`` are ``T`` and ``U`` after the removal of reference and cv-qualifiers,
    and *x* and *y* are perfectly forwarded to the call operator of :cpp:class:`piranha::math::pow_impl`.
-   If the expression above is invalid, this function will be disabled (i.e., it will not participate in
-   overload resolution).
+   If the expression above is invalid, or if it returns a type which does not satisfy :cpp:concept:`piranha::Returnable`,
+   then this function will be disabled (i.e., it will not participate in overload resolution).
 
    Piranha provides specialisations of :cpp:class:`piranha::math::pow_impl` for the following types:
 
    * all of C++'s arithmetic types,
-   * :cpp:class:`mppp::integer <mppp::integer>` types,
-   * :cpp:class:`mppp::rational <mppp::rational>` types,
+   * :cpp:class:`mppp::integer <mppp::integer>` types (including :cpp:type:`piranha::integer`),
+   * :cpp:class:`mppp::rational <mppp::rational>` types (including :cpp:type:`piranha::rational`),
    * :cpp:class:`mppp::real <mppp::real>`.
+
+   See the :ref:`implementation <math_pow_impls>` section below for more details.
 
    :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::math::pow_impl`.
 
@@ -56,6 +58,8 @@ Concepts
 
    * ``T`` and ``U`` satisfy :cpp:concept:`mppp::IntegerOpTypes <mppp::IntegerOpTypes>`, or
    * both ``T`` and ``U`` satisfy :cpp:concept:`mppp::CppIntegralInteroperable <mppp::CppIntegralInteroperable>`.
+
+.. _math_pow_impls:
 
 Implementations
 ---------------

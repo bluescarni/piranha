@@ -1055,26 +1055,18 @@ public:
 template <typename T>
 const bool has_input_begin_end<T>::value;
 
-/// Detect if type can be returned from a function.
-/**
- * The type trait will be true if \p T is destructible and copy or move
- * constructible, or if \p T is \p void.
- */
+// Detect if type can be returned from a function.
 template <typename T>
-class is_returnable
-{
-    static const bool implementation_defined
-        = disjunction<std::is_same<T, void>,
-                      conjunction<std::is_destructible<T>,
-                                  disjunction<std::is_copy_constructible<T>, std::is_move_constructible<T>>>>::value;
+using is_returnable = disjunction<
+    std::is_same<T, void>,
+    conjunction<std::is_destructible<T>, disjunction<std::is_copy_constructible<T>, std::is_move_constructible<T>>>>;
 
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
+#if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-const bool is_returnable<T>::value;
+concept bool Returnable = is_returnable<T>::value;
+
+#endif
 
 /// Detect if zero is a multiplicative absorber.
 /**
