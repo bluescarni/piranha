@@ -18,7 +18,8 @@ Exponentiation
 
    where ``Tp`` and ``Up`` are ``T`` and ``U`` after the removal of reference and cv-qualifiers,
    and *x* and *y* are perfectly forwarded to the call operator of :cpp:class:`piranha::math::pow_impl`.
-   If the expression above is invalid, or if it returns a type which does not satisfy :cpp:concept:`piranha::Returnable`,
+   If the expression above is invalid, or if it returns a type which does not satisfy the
+   :cpp:concept:`piranha::Returnable` concept,
    then this function will be disabled (i.e., it will not participate in overload resolution).
 
    Piranha provides specialisations of :cpp:class:`piranha::math::pow_impl` for the following types:

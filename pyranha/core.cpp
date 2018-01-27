@@ -262,7 +262,8 @@ BOOST_PYTHON_MODULE(_core)
     // Factorial.
     bp::def("_factorial", &piranha::math::factorial<1>);
 // Binomial coefficient.
-#define PYRANHA_EXPOSE_BINOMIAL(top, bot) bp::def("_binomial", &piranha::math::binomial<top, bot>)
+#define PYRANHA_EXPOSE_BINOMIAL(top, bot)                                                                              \
+    bp::def("_binomial", +[](const top &x, const bot &y) { return piranha::math::binomial(x, y); })
     PYRANHA_EXPOSE_BINOMIAL(piranha::integer, piranha::integer);
     PYRANHA_EXPOSE_BINOMIAL(piranha::rational, piranha::integer);
 #undef PYRANHA_EXPOSE_BINOMIAL
