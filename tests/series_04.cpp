@@ -47,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/print_coefficient.hpp>
@@ -307,7 +308,9 @@ namespace math
 
 // Provide mock sine/cosine implementation returning unusable return type.
 template <typename T>
-struct sin_impl<T, typename std::enable_if<std::is_same<T, mock_cf>::value>::type> {
+class sin_impl<T, typename std::enable_if<std::is_same<T, mock_cf>::value>::type>
+{
+public:
     std::string operator()(const T &) const;
 };
 
@@ -318,7 +321,9 @@ struct cos_impl<T, typename std::enable_if<std::is_same<T, mock_cf>::value>::typ
 
 // Sin/cos of mock_cf2 will return mock_cf.
 template <typename T>
-struct sin_impl<T, typename std::enable_if<std::is_same<T, mock_cf2>::value>::type> {
+class sin_impl<T, typename std::enable_if<std::is_same<T, mock_cf2>::value>::type>
+{
+public:
     mock_cf operator()(const T &) const;
 };
 
@@ -340,9 +345,9 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
     // - p_type1 has math::sin() via its coefficient type,
     // - g_series_type<mock_cf,int> has no sine because math::sin() on mock_cf is wrong,
     // - math::cos() on p_type1 returns the -42 value from the method.
-    BOOST_CHECK(has_sine<p_type1>::value);
+    BOOST_CHECK(is_sine_type<p_type1>::value);
     BOOST_CHECK(has_cosine<p_type1>::value);
-    BOOST_CHECK((!has_sine<g_series_type<mock_cf, int>>::value));
+    BOOST_CHECK((!is_sine_type<g_series_type<mock_cf, int>>::value));
     BOOST_CHECK((has_cosine<g_series_type<mock_cf, int>>::value));
     BOOST_CHECK_EQUAL(math::sin(p_type1{.5}), math::sin(.5));
     BOOST_CHECK_EQUAL(math::cos(p_type1{.5}), -42);
@@ -351,39 +356,39 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
     BOOST_CHECK_EQUAL(math::cos(p_type1{"x"}), -42);
     BOOST_CHECK_EQUAL(math::cos(p_type1{"x"} - 1), -42);
     typedef g_series_type2<double, int> p_type2;
-    BOOST_CHECK(has_sine<p_type2>::value);
+    BOOST_CHECK(is_sine_type<p_type2>::value);
     BOOST_CHECK(has_cosine<p_type2>::value);
     BOOST_CHECK_EQUAL(math::sin(p_type2{.5}), double(42));
     BOOST_CHECK_EQUAL(math::cos(p_type2{.5}), double(-42));
     typedef g_series_type2<p_type2, int> p_type3;
-    BOOST_CHECK(has_sine<p_type3>::value);
+    BOOST_CHECK(is_sine_type<p_type3>::value);
     BOOST_CHECK(has_cosine<p_type3>::value);
     BOOST_CHECK_EQUAL(math::sin(p_type3{.5}), double(42));
     BOOST_CHECK_EQUAL(math::cos(p_type3{.5}), double(-42));
     typedef g_series_type<mock_cf2, int> p_type4;
-    BOOST_CHECK(has_sine<p_type4>::value);
+    BOOST_CHECK(is_sine_type<p_type4>::value);
     BOOST_CHECK(has_cosine<p_type4>::value);
     BOOST_CHECK((std::is_same<decltype(math::sin(p_type4{})), g_series_type<mock_cf, int>>::value));
     BOOST_CHECK((std::is_same<decltype(math::cos(p_type4{})), int>::value));
     typedef g_series_type<mock_cf2, int> p_type4;
-    BOOST_CHECK(has_sine<p_type4>::value);
+    BOOST_CHECK(is_sine_type<p_type4>::value);
     BOOST_CHECK(has_cosine<p_type4>::value);
     BOOST_CHECK((std::is_same<decltype(math::sin(p_type4{})), g_series_type<mock_cf, int>>::value));
     BOOST_CHECK((std::is_same<decltype(math::cos(p_type4{})), int>::value));
     typedef g_series_type3<mock_cf2, int> p_type5;
-    BOOST_CHECK(has_sine<p_type5>::value);
+    BOOST_CHECK(is_sine_type<p_type5>::value);
     BOOST_CHECK(has_cosine<p_type5>::value);
     BOOST_CHECK((std::is_same<decltype(math::sin(p_type5{})), g_series_type3<mock_cf, int>>::value));
     BOOST_CHECK((std::is_same<decltype(math::cos(p_type5{})), g_series_type3<mock_cf, int>>::value));
     // Check that casting a series type to its base type and then calling sin/cos still gets out the original
     // type. Test with series with and without members.
     typedef g_series_type3<double, int> p_type6;
-    BOOST_CHECK(has_sine<p_type6>::value);
+    BOOST_CHECK(is_sine_type<p_type6>::value);
     BOOST_CHECK(has_cosine<p_type6>::value);
     BOOST_CHECK((std::is_same<p_type6, decltype(math::sin(std::declval<const p_type6::base &>()))>::value));
     BOOST_CHECK((std::is_same<p_type6, decltype(math::cos(std::declval<const p_type6::base &>()))>::value));
     typedef g_series_type4<double, int> p_type7;
-    BOOST_CHECK(has_sine<p_type7>::value);
+    BOOST_CHECK(is_sine_type<p_type7>::value);
     BOOST_CHECK(has_cosine<p_type7>::value);
     BOOST_CHECK((std::is_same<p_type7, decltype(math::sin(std::declval<const p_type7::base &>()))>::value));
     BOOST_CHECK((std::is_same<p_type7, decltype(math::cos(std::declval<const p_type7::base &>()))>::value));

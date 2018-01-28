@@ -54,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/type_traits.hpp>
@@ -127,15 +128,10 @@ public:
     }
 };
 
-/// Specialisation of piranha::math::sin() for piranha::real.
 template <>
-struct sin_impl<real> {
-    /// Call operator.
-    /**
-     * @param r the piranha::real argument.
-     *
-     * @return the sine of \p r.
-     */
+class sin_impl<real>
+{
+public:
     template <typename T>
     real operator()(T &&r) const
     {

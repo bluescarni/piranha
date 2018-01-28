@@ -71,6 +71,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
@@ -3259,7 +3260,9 @@ namespace math
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
-struct sin_impl<Series, detail::series_sin_enabler<Series>> {
+class sin_impl<Series, detail::series_sin_enabler<Series>>
+{
+public:
     /// Call operator.
     /**
      * @param s argument.

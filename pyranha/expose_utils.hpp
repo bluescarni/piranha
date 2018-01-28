@@ -62,6 +62,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/lambdify.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
@@ -871,14 +872,14 @@ class series_exposer
     }
     template <typename S>
     static void expose_sin_cos(
-        typename std::enable_if<piranha::has_sine<S>::value && piranha::has_cosine<S>::value>::type * = nullptr)
+        typename std::enable_if<piranha::is_sine_type<S>::value && piranha::has_cosine<S>::value>::type * = nullptr)
     {
         bp::def("_sin", sin_wrapper<S>);
         bp::def("_cos", cos_wrapper<S>);
     }
     template <typename S>
     static void expose_sin_cos(
-        typename std::enable_if<!piranha::has_sine<S>::value || !piranha::has_cosine<S>::value>::type * = nullptr)
+        typename std::enable_if<!piranha::is_sine_type<S>::value || !piranha::has_cosine<S>::value>::type * = nullptr)
     {
     }
     // Power series exposer.

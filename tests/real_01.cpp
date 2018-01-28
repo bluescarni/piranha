@@ -39,11 +39,13 @@ see https://www.gnu.org/licenses/. */
 #include <limits>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -156,6 +158,10 @@ BOOST_AUTO_TEST_CASE(real_sin_cos_test)
 {
     BOOST_CHECK_EQUAL(math::cos(real{0, 4}), 1);
     BOOST_CHECK_EQUAL(math::sin(real{0, 4}), 0);
+    // Check stealing semantics.
+    real x{1.23, 100};
+    auto tmp = math::sin(std::move(x));
+    BOOST_CHECK(x.get_mpfr_t()->_mpfr_d == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(real_partial_test)

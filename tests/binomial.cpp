@@ -76,12 +76,14 @@ namespace math
 template <>
 class binomial_impl<b_00, b_00>
 {
+public:
     b_00 operator()(const b_00 &, const b_00 &) const;
 };
 
 template <>
 class binomial_impl<b_01, b_01>
 {
+public:
     b_01 operator()(const b_01 &, const b_01 &) const;
 };
 }

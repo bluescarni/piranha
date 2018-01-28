@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -189,17 +190,10 @@ public:
     }
 };
 
-/// Specialisation of the implementation of piranha::math::sin() for mp++'s rationals.
 template <std::size_t SSize>
-struct sin_impl<mppp::rational<SSize>> {
-    /// Call operator.
-    /**
-     * @param q the argument.
-     *
-     * @return the sine of \p q.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
+class sin_impl<mppp::rational<SSize>>
+{
+public:
     mppp::rational<SSize> operator()(const mppp::rational<SSize> &q) const
     {
         if (q.is_zero()) {

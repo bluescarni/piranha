@@ -58,6 +58,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
@@ -284,37 +285,20 @@ template <>
 struct cos_impl<cos_01, void> {
     cos_01 operator()(const cos_01 &) const;
 };
-
-template <>
-struct sin_impl<sin_00, void> {
-    sin_00 operator()(const sin_00 &) const;
-};
-
-template <>
-struct sin_impl<sin_01, void> {
-    sin_01 operator()(const sin_01 &) const;
-};
 }
 }
 
 BOOST_AUTO_TEST_CASE(math_sin_cos_test)
 {
-    BOOST_CHECK(math::sin(1.f) == std::sin(1.f));
-    BOOST_CHECK(math::sin(2.) == std::sin(2.));
     BOOST_CHECK(math::cos(1.f) == std::cos(1.f));
     BOOST_CHECK(math::cos(2.) == std::cos(2.));
     BOOST_CHECK(math::cos(1.L) == std::cos(1.L));
     BOOST_CHECK(math::cos(2.L) == std::cos(2.L));
-    BOOST_CHECK_EQUAL(math::sin(0), 0);
     BOOST_CHECK_EQUAL(math::cos(0), 1);
-    BOOST_CHECK_THROW(math::sin(1), std::invalid_argument);
     BOOST_CHECK_THROW(math::cos(1), std::invalid_argument);
-    BOOST_CHECK((std::is_same<unsigned short, decltype(math::sin(static_cast<unsigned short>(0)))>::value));
     BOOST_CHECK((std::is_same<unsigned short, decltype(math::cos(static_cast<unsigned short>(0)))>::value));
     BOOST_CHECK(has_cosine<cos_00>::value);
     BOOST_CHECK(!has_cosine<cos_01>::value);
-    BOOST_CHECK(has_sine<sin_00>::value);
-    BOOST_CHECK(!has_sine<sin_01>::value);
 }
 
 BOOST_AUTO_TEST_CASE(math_partial_test)
@@ -632,14 +616,6 @@ BOOST_AUTO_TEST_CASE(math_is_evaluable_test)
 
 BOOST_AUTO_TEST_CASE(math_has_sine_cosine_test)
 {
-    BOOST_CHECK(has_sine<float>::value);
-    BOOST_CHECK(has_sine<float &>::value);
-    BOOST_CHECK(has_sine<float const>::value);
-    BOOST_CHECK(has_sine<float &&>::value);
-    BOOST_CHECK(has_sine<double>::value);
-    BOOST_CHECK(has_sine<long double &>::value);
-    BOOST_CHECK(has_sine<double const>::value);
-    BOOST_CHECK(has_sine<long double &&>::value);
     BOOST_CHECK(has_cosine<float>::value);
     BOOST_CHECK(has_cosine<float &>::value);
     BOOST_CHECK(has_cosine<float const>::value);
@@ -648,10 +624,6 @@ BOOST_AUTO_TEST_CASE(math_has_sine_cosine_test)
     BOOST_CHECK(has_cosine<long double &>::value);
     BOOST_CHECK(has_cosine<double const>::value);
     BOOST_CHECK(has_cosine<long double &&>::value);
-    BOOST_CHECK(has_sine<int>::value);
-    BOOST_CHECK(has_sine<long &>::value);
-    BOOST_CHECK(has_sine<long long &&>::value);
-    BOOST_CHECK(has_sine<long long const &>::value);
     BOOST_CHECK(has_cosine<int>::value);
     BOOST_CHECK(has_cosine<long &>::value);
     BOOST_CHECK(has_cosine<long long &&>::value);

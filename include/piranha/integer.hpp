@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -135,17 +136,10 @@ struct abs_impl<mppp::integer<SSize>> {
     }
 };
 
-/// Specialisation of the implementation of piranha::math::sin() for mp++'s integers.
 template <std::size_t SSize>
-struct sin_impl<mppp::integer<SSize>> {
-    /// Call operator.
-    /**
-     * @param n the input integer.
-     *
-     * @return the sine of \p n.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
+class sin_impl<mppp::integer<SSize>>
+{
+public:
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &n) const
     {
         if (likely(n.is_zero())) {

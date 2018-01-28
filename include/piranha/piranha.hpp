@@ -226,6 +226,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/memory.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>

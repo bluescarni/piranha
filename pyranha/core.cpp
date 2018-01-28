@@ -58,6 +58,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
@@ -262,14 +263,13 @@ BOOST_PYTHON_MODULE(_core)
     // Factorial.
     bp::def("_factorial", &piranha::math::factorial<1>);
 // Binomial coefficient.
-#define PYRANHA_EXPOSE_BINOMIAL(top, bot)                                                                              \
-    bp::def("_binomial", +[](const top &x, const bot &y) { return piranha::math::binomial(x, y); })
+#define PYRANHA_EXPOSE_BINOMIAL(top, bot) bp::def("_binomial", &piranha::math::binomial<const top &, const bot &>)
     PYRANHA_EXPOSE_BINOMIAL(piranha::integer, piranha::integer);
     PYRANHA_EXPOSE_BINOMIAL(piranha::rational, piranha::integer);
 #undef PYRANHA_EXPOSE_BINOMIAL
 // Sine and cosine.
 #define PYRANHA_EXPOSE_SIN_COS(arg)                                                                                    \
-    bp::def("_sin", &piranha::math::sin<arg>);                                                                         \
+    bp::def("_sin", &piranha::math::sin<const arg &>);                                                                 \
     bp::def("_cos", &piranha::math::cos<arg>)
     PYRANHA_EXPOSE_SIN_COS(double);
     PYRANHA_EXPOSE_SIN_COS(piranha::integer);

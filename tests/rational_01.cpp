@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -257,7 +258,7 @@ struct sin_cos_tester {
         BOOST_CHECK_EXCEPTION(math::cos(q_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
             return boost::contains(e.what(), "cannot compute the cosine of a non-zero rational");
         });
-        BOOST_CHECK(has_sine<q_type>::value);
+        BOOST_CHECK(is_sine_type<q_type>::value);
         BOOST_CHECK(has_cosine<q_type>::value);
     }
 };

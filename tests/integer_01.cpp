@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <mp++/integer.hpp>
 
 #include <piranha/math.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -210,11 +211,11 @@ struct sin_cos_tester {
         });
         BOOST_CHECK((std::is_same<int_type, decltype(math::cos(int_type{}))>::value));
         BOOST_CHECK((std::is_same<int_type, decltype(math::sin(int_type{}))>::value));
-        BOOST_CHECK(has_sine<int_type>::value);
+        BOOST_CHECK(is_sine_type<int_type>::value);
         BOOST_CHECK(has_cosine<int_type>::value);
-        BOOST_CHECK(has_sine<int_type &>::value);
+        BOOST_CHECK(is_sine_type<int_type &>::value);
         BOOST_CHECK(has_cosine<int_type &>::value);
-        BOOST_CHECK(has_sine<const int_type &>::value);
+        BOOST_CHECK(is_sine_type<const int_type &>::value);
         BOOST_CHECK(has_cosine<const int_type &>::value);
     }
 };
