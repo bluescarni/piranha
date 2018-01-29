@@ -966,7 +966,6 @@ public:
     }
 
 private:
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
     // Make friend with the s11n functions.
     template <typename Archive, typename T1>
     friend void boost::serialization::save(Archive &, const piranha::boost_s11n_key_wrapper<piranha::divisor<T1>> &,
@@ -974,7 +973,6 @@ private:
     template <typename Archive, typename T1>
     friend void boost::serialization::load(Archive &, piranha::boost_s11n_key_wrapper<piranha::divisor<T1>> &,
                                            unsigned);
-#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
     template <typename Stream>

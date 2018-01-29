@@ -1,11 +1,7 @@
 # Build dirs.
 build*
 
-# Documentation. Note that Doxyfile is generated automatically.
-doc/doxygen/Doxyfile
-doc/doxygen/html/
-doc/doxygen/latex/
-doc/doxygen/xml/
+# Documentation.
 doc/sphinx/_build/
 doc/sphinx/conf.py
 

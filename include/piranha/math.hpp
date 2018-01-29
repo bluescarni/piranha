@@ -901,8 +901,6 @@ const bool has_negate<T>::value;
 namespace detail
 {
 
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-
 // Type definition and type checking for the output of Poisson brackets.
 template <typename T>
 using pbracket_type_tmp = decltype(math::partial(std::declval<const T &>(), std::string())
@@ -928,8 +926,6 @@ struct pbracket_type_<
 // The final typedef.
 template <typename T>
 using pbracket_type = typename pbracket_type_<T>::type;
-
-#endif
 }
 
 namespace math

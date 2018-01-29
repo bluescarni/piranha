@@ -80,8 +80,6 @@ matrix:
       env: BUILD_TYPE="Python2"
     - compiler: clang
       env: BUILD_TYPE="Python3"
-    - compiler: gcc
-      env: BUILD_TYPE="Doxygen"
     - compiler: clang
       os: osx
       osx_image: xcode6.4

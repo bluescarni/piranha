@@ -99,9 +99,7 @@ struct static_vector_size_type<Size, static_cast<std::size_t>(std::tuple_size<st
 template <typename T, std::size_t MaxSize>
 class static_vector
 {
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
     static_assert(MaxSize > 0u, "Maximum size must be strictly positive.");
-#endif
     template <typename, typename>
     friend union detail::small_vector_union;
 
@@ -113,7 +111,6 @@ public:
     using size_type = typename detail::static_vector_size_type<MaxSize>::type;
 
 private:
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
     PIRANHA_TT_CHECK(is_container_element, T);
     // This check is against overflows when using memcpy.
     static_assert(std::numeric_limits<size_type>::max() <= std::numeric_limits<std::size_t>::max() / sizeof(T),
@@ -145,7 +142,6 @@ private:
     // - note that placement new will work as expected (i.e., it will construct the object exactly at the address passed
     //   in as parameter).
     using storage_type = typename std::aligned_storage<sizeof(T) * MaxSize, alignof(T)>::type;
-#endif
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>

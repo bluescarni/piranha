@@ -15,7 +15,7 @@ bash miniconda.sh -b -p $HOME/miniconda
 export PATH="$HOME/miniconda/bin:$PATH"
 conda config --add channels conda-forge --force
 
-conda_pkgs="gmp mpfr boost>=1.58 cmake>=3.2 bzip2 zlib msgpack-c doxygen"
+conda_pkgs="gmp mpfr boost>=1.58 cmake>=3.2 bzip2 zlib msgpack-c"
 
 if [[ "${BUILD_TYPE}" == "Python2" ]]; then
     conda_pkgs="$conda_pkgs python=2.7 numpy mpmath"

@@ -248,8 +248,6 @@ public:
 template <typename T, typename Enable>
 const std::size_t series_recursion_index<T, Enable>::value;
 
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-
 template <typename T>
 class series_recursion_index<
     T, typename std::enable_if<std::is_base_of<detail::series_tag, typename std::decay<T>::type>::value>::type>
@@ -264,8 +262,6 @@ public:
 template <typename T>
 const std::size_t series_recursion_index<
     T, typename std::enable_if<std::is_base_of<detail::series_tag, typename std::decay<T>::type>::value>::type>::value;
-
-#endif
 
 /// Type trait to detect the availability of a series multiplier.
 /**
@@ -1293,20 +1289,16 @@ private:
     // Partial need access to the custom derivatives.
     template <typename, typename>
     friend struct math::partial_impl;
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
     // Friendship with the series_merge_f helper.
     template <typename S1, typename S2, typename F>
     friend auto impl::series_merge_f(S1 &&s1, S2 &&s2, const F &f)
         -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)));
-#endif
 
 protected:
     /// Container type for terms.
     using container_type = hash_set<term_type>;
 
 private:
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-    // Avoid confusing doxygen.
     typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
     // Insertion.
     template <bool Sign, typename T>
@@ -2005,7 +1997,7 @@ private:
     // Final typedef.
     template <typename T, typename U>
     using pow_ret_type = typename pow_ret_type_<T, U>::type;
-#endif
+
 public:
     /// Size type.
     /**

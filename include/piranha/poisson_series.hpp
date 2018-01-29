@@ -118,7 +118,6 @@ class poisson_series
           poisson_series<Cf>>,
       detail::poisson_series_tag
 {
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
     using base
         = power_series<ipow_substitutable_series<
                            substitutable_series<t_substitutable_series<
@@ -515,7 +514,7 @@ class poisson_series
     template <typename T>
     using ti_type
         = decltype(std::declval<const T &>().t_integrate_impl(std::declval<const std::vector<std::string> &>()));
-#endif
+
 public:
     /// Series rebind alias.
     template <typename Cf2>
