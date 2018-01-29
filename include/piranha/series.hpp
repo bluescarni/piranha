@@ -896,7 +896,14 @@ class series_operators
             using cf_type = typename term_type::cf_type;
             using key_type = typename term_type::key_type;
             ret_type retval;
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             retval.insert(term_type{cf_type{0} / y, key_type{retval.get_symbol_set()}});
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
             return retval;
         }
         static_assert(std::is_same<typename std::decay<T>::type, ret_type>::value, "Invalid type.");
@@ -906,10 +913,17 @@ class series_operators
         const auto it_f = retval.m_container.end();
         try {
             for (auto it = retval.m_container.begin(); it != it_f;) {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
                 // NOTE: here the original requirement is that cf / y is defined, but we know
                 // that cf / y results in another cf, and we assume always that cf /= y is exactly equivalent
                 // to cf = cf / y. And cf must be move-assignable. So this should be possible.
                 it->m_cf /= y;
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
                 // NOTE: no need to check for compatibility, as it depends only on the key type and here
                 // we are only acting on the coefficient.
                 if (unlikely(it->is_zero(retval.m_symbol_set))) {
@@ -1315,20 +1329,34 @@ private:
     template <bool Sign, typename Iterator>
     static void insertion_cf_arithmetics(Iterator &it, const term_type &term)
     {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
         if (Sign) {
             it->m_cf += term.m_cf;
         } else {
             it->m_cf -= term.m_cf;
         }
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
     }
     template <bool Sign, typename Iterator>
     static void insertion_cf_arithmetics(Iterator &it, term_type &&term)
     {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
         if (Sign) {
             it->m_cf += std::move(term.m_cf);
         } else {
             it->m_cf -= std::move(term.m_cf);
         }
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
     }
     // Insert compatible, non-ignorable term.
     template <bool Sign, typename T>
@@ -1788,7 +1816,14 @@ private:
             retval.insert(term_type{math::partial(it->m_cf, name), it->m_key});
             // NOTE: if the partial of the key returns an incompatible key, an error will be raised.
             auto p_key = it->m_key.partial(pos, retval.m_symbol_set);
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             retval.insert(term_type{it->m_cf * p_key.first, std::move(p_key.second)});
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
         }
         return retval;
     }

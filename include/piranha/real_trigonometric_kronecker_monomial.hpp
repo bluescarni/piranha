@@ -984,13 +984,27 @@ public:
             }
             return eval_type<U>(0);
         }
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
         // Init the accumulator with the first element of the linear
         // combination.
         auto tmp(v[0] * values[0]);
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
         // Accumulate the sin/cos argument.
         for (decltype(values.size()) i = 1; i < values.size(); ++i) {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             // NOTE: this could be optimised with an FMA eventually.
             tmp += v[static_cast<decltype(v.size())>(i)] * values[i];
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
         }
         if (get_flavour()) {
             // NOTE: move it, in the future math::cos() may exploit this.
@@ -1069,15 +1083,29 @@ public:
             // Init a tmp value from the linear combination of the first value
             // of the map with the first multiplier.
             auto it = smap.begin();
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             auto tmp(v[static_cast<decltype(v.size())>(it->first)] * it->second);
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
             // Zero out the corresponding multiplier.
             v[static_cast<decltype(v.size())>(it->first)] = T(0);
             // Finish computing the linear combination of the values with
             // the corresponding multipliers.
             // NOTE: move to the next element in the init statement of the for loop.
             for (++it; it != smap.end(); ++it) {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
                 // NOTE: FMA in the future, maybe.
                 tmp += v[static_cast<decltype(v.size())>(it->first)] * it->second;
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
                 v[static_cast<decltype(v.size())>(it->first)] = T(0);
             }
             // Check if we need to canonicalise the vector, after zeroing out

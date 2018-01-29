@@ -861,11 +861,6 @@ class series_exposer
     }
     // Sin and cos.
     template <typename S>
-    static auto sin_wrapper(const S &s) -> decltype(piranha::math::sin(s))
-    {
-        return piranha::math::sin(s);
-    }
-    template <typename S>
     static auto cos_wrapper(const S &s) -> decltype(piranha::math::cos(s))
     {
         return piranha::math::cos(s);
@@ -874,7 +869,7 @@ class series_exposer
     static void expose_sin_cos(
         typename std::enable_if<piranha::is_sine_type<S>::value && piranha::has_cosine<S>::value>::type * = nullptr)
     {
-        bp::def("_sin", sin_wrapper<S>);
+        bp::def("_sin", &piranha::math::sin<const S &>);
         bp::def("_cos", cos_wrapper<S>);
     }
     template <typename S>
