@@ -69,39 +69,36 @@ inline math_sin_t<T &&> sin(T &&x)
     return sin_impl<uncvref_t<T>>{}(std::forward<T>(x));
 }
 
-// Specialisation of the implementation of piranha::math::sin() for C++ FP types.
+// Specialisation of the implementation of piranha::math::sin() for C++ arithmetic types.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <CppFloatingPoint T>
+template <CppArithmetic T>
 class sin_impl<T>
 #else
 template <typename T>
-class sin_impl<T, enable_if_t<std::is_floating_point<T>::value>>
+class sin_impl<T, enable_if_t<std::is_arithmetic<T>::value>>
 #endif
 {
-public:
-    T operator()(const T &x) const
+    // Floating-point overload.
+    template <typename T1>
+    static T1 impl(const T1 &x, const std::true_type &)
     {
         return std::sin(x);
     }
-};
+    // Integral overload.
+    template <typename T1>
+    static T1 impl(const T1 &x, const std::false_type &)
+    {
+        if (unlikely(x != T1(0))) {
+            piranha_throw(std::domain_error,
+                          "cannot compute the sine of the non-zero C++ integral " + std::to_string(x));
+        }
+        return T1(0);
+    }
 
-// Specialisation of the implementation of piranha::math::sin() for C++ integrals.
-#if defined(PIRANHA_HAVE_CONCEPTS)
-template <CppIntegral T>
-class sin_impl<T>
-#else
-template <typename T>
-class sin_impl<T, enable_if_t<std::is_integral<T>::value>>
-#endif
-{
 public:
     T operator()(const T &x) const
     {
-        if (unlikely(x != T(0))) {
-            piranha_throw(std::invalid_argument,
-                          "cannot compute the sine of the non-zero C++ integral " + std::to_string(x));
-        }
-        return T(0);
+        return impl(x, std::is_floating_point<T>{});
     }
 };
 }

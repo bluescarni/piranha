@@ -252,8 +252,8 @@ struct sin_cos_tester {
         BOOST_CHECK_EQUAL(math::cos(q_type()), 1);
         BOOST_CHECK((std::is_same<q_type, decltype(math::cos(q_type()))>::value));
         BOOST_CHECK((std::is_same<q_type, decltype(math::sin(q_type()))>::value));
-        BOOST_CHECK_EXCEPTION(math::sin(q_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
-            return boost::contains(e.what(), "cannot compute the sine of a non-zero rational");
+        BOOST_CHECK_EXCEPTION(math::sin(q_type(1)), std::domain_error, [](const std::domain_error &e) {
+            return boost::contains(e.what(), "cannot compute the sine of the non-zero rational 1");
         });
         BOOST_CHECK_EXCEPTION(math::cos(q_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
             return boost::contains(e.what(), "cannot compute the cosine of a non-zero rational");

@@ -196,10 +196,10 @@ class sin_impl<mppp::rational<SSize>>
 public:
     mppp::rational<SSize> operator()(const mppp::rational<SSize> &q) const
     {
-        if (q.is_zero()) {
-            return mppp::rational<SSize>{};
+        if (unlikely(!q.is_zero())) {
+            piranha_throw(std::domain_error, "cannot compute the sine of the non-zero rational " + q.to_string());
         }
-        piranha_throw(std::invalid_argument, "cannot compute the sine of a non-zero rational");
+        return mppp::rational<SSize>{};
     }
 };
 

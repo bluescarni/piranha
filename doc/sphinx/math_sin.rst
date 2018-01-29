@@ -65,19 +65,17 @@ Implementations
    This default implementation does not define any call operator, and thus no default implementation
    of :cpp:func:`piranha::math::sin()` is available.
 
-.. cpp:class:: template <piranha::CppFloatingPoint T> piranha::math::sin_impl<T>
+.. cpp:class:: template <piranha::CppArithmetic T> piranha::math::sin_impl<T>
 
-   Specialisation of the function object implementing :cpp:func:`piranha::math::sin()` for C++'s floating-point types.
+   Specialisation of the function object implementing :cpp:func:`piranha::math::sin()` for C++ arithmetic types.
 
-   The result of the operation, computed via ``std::sin()``, will be of type ``T``.
+   If ``T`` is a floating-point type, the result of the operation, computed via ``std::sin()``,
+   will be of type ``T``.
 
-.. cpp:class:: template <piranha::CppIntegral T> piranha::math::sin_impl<T>
+   Otherwise, the operation is successful only if the input argument is zero, in which case the result will be an
+   instance of ``T`` constructed from zero.
 
-   Specialisation of the function object implementing :cpp:func:`piranha::math::sin()` for C++'s integral types.
-
-   The operation is successful only if the input argument is zero, in which case the result will be a zero of type ``T``.
-
-   :exception std\:\:invalid_argument: if the input argument is not zero.
+   :exception std\:\:domain_error: if ``T`` is an integral type and the input argument is not zero.
 
 .. cpp:class:: template <std::size_t SSize> piranha::math::sin_impl<mppp::integer<SSize>>
 
@@ -85,18 +83,31 @@ Implementations
 
    Specialisation of the function object implementing :cpp:func:`piranha::math::sin()` for :cpp:class:`mppp::integer <mppp::integer>`.
 
-   The operation is successful only if the input argument is zero, in which case the result will be a zero of type
-   :cpp:class:`mppp::integer\<SSize\> <mppp::integer>`.
+   The operation is successful only if the input argument is zero, in which case the result will be an instance of
+   :cpp:class:`mppp::integer\<SSize\> <mppp::integer>` constructed from zero.
 
-.. cpp:class:: template <typename U, mppp::RealOpTypes<U> T> piranha::math::pow_impl<T, U>
+   :exception std\:\:domain_error: if the input argument is not zero.
+
+.. cpp:class:: template <std::size_t SSize> piranha::math::sin_impl<mppp::rational<SSize>>
+
+   *#include <piranha/rational.hpp>*
+
+   Specialisation of the function object implementing :cpp:func:`piranha::math::sin()` for :cpp:class:`mppp::rational <mppp::rational>`.
+
+   The operation is successful only if the input argument is zero, in which case the result will be an instance of
+   :cpp:class:`mppp::rational\<SSize\> <mppp::rational>` constructed from zero.
+
+   :exception std\:\:domain_error: if the input argument is not zero.
+
+.. cpp:class:: template <> piranha::math::sin_impl<mppp::real>
 
    *#include <piranha/real.hpp>*
 
-   Specialisation of the function object implementing :cpp:func:`piranha::math::pow()` for :cpp:class:`mppp::real <mppp::real>`.
+   Specialisation of the function object implementing :cpp:func:`piranha::math::sin()` for :cpp:class:`mppp::real <mppp::real>`.
 
-   This implementation will invoke one of mp++'s :ref:`real exponentiation <mppp:real_exponentiation>` overloads.
+   This implementation will invoke one of mp++'s :ref:`real trigonometric <mppp:real_trig>` overloads.
 
-   :exception unspecified: any exception thrown by the invoked :ref:`real exponentiation <mppp:real_exponentiation>` overload.
+   :exception unspecified: any exception thrown by the invoked :ref:`real trigonometric <mppp:real_trig>` overload.
 
    .. note::
 

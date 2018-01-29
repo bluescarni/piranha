@@ -142,10 +142,10 @@ class sin_impl<mppp::integer<SSize>>
 public:
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &n) const
     {
-        if (likely(n.is_zero())) {
-            return mppp::integer<SSize>{};
+        if (unlikely(!n.is_zero())) {
+            piranha_throw(std::domain_error, "cannot compute the sine of the non-zero integer " + n.to_string());
         }
-        piranha_throw(std::invalid_argument, "cannot compute the sine of a non-zero integer");
+        return mppp::integer<SSize>{};
     }
 };
 
