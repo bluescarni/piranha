@@ -270,7 +270,7 @@ BOOST_PYTHON_MODULE(_core)
 // Sine and cosine.
 #define PYRANHA_EXPOSE_SIN_COS(arg)                                                                                    \
     bp::def("_sin", &piranha::math::sin<const arg &>);                                                                 \
-    bp::def("_cos", &piranha::math::cos<arg>)
+    bp::def("_cos", &piranha::math::cos<const arg &>)
     PYRANHA_EXPOSE_SIN_COS(double);
     PYRANHA_EXPOSE_SIN_COS(piranha::integer);
     PYRANHA_EXPOSE_SIN_COS(piranha::rational);

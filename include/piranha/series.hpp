@@ -70,6 +70,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/print_coefficient.hpp>
@@ -3325,7 +3326,9 @@ public:
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
-struct cos_impl<Series, detail::series_cos_enabler<Series>> {
+class cos_impl<Series, detail::series_cos_enabler<Series>>
+{
+public:
     /// Call operator.
     /**
      * @param s argument.

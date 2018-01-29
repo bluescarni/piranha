@@ -105,9 +105,9 @@ Implementations
 
    Specialisation of the function object implementing :cpp:func:`piranha::math::sin()` for :cpp:class:`mppp::real <mppp::real>`.
 
-   This implementation will invoke one of mp++'s :ref:`real trigonometric <mppp:real_trig>` overloads.
+   This implementation will invoke one of mp++'s :ref:`real sine <mppp:real_trig>` overloads.
 
-   :exception unspecified: any exception thrown by the invoked :ref:`real trigonometric <mppp:real_trig>` overload.
+   :exception unspecified: any exception thrown by the invoked :ref:`real sine <mppp:real_trig>` overload.
 
    .. note::
 

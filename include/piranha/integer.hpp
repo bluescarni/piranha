@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -149,23 +150,16 @@ public:
     }
 };
 
-/// Specialisation of the implementation of piranha::math::cos() for mp++'s integers.
 template <std::size_t SSize>
-struct cos_impl<mppp::integer<SSize>> {
-    /// Call operator.
-    /**
-     * @param n the input integer.
-     *
-     * @return the cosine of \p n.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
+class cos_impl<mppp::integer<SSize>>
+{
+public:
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &n) const
     {
-        if (likely(n.is_zero())) {
-            return mppp::integer<SSize>{1};
+        if (unlikely(!n.is_zero())) {
+            piranha_throw(std::domain_error, "cannot compute the cosine of the non-zero integer " + n.to_string());
         }
-        piranha_throw(std::invalid_argument, "cannot compute the cosine of a non-zero integer");
+        return mppp::integer<SSize>{1};
     }
 };
 

@@ -56,6 +56,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/rational.hpp>
@@ -1105,9 +1106,9 @@ struct subs_tester {
         BOOST_CHECK_EQUAL(ret[1u].first, 1);
         BOOST_CHECK((ret[1u].second == k1));
         k1 = k_type{T(1)};
-        BOOST_CHECK_THROW(k1.template subs<integer>({{0, 5_z}}, symbol_fset{"x"}), std::invalid_argument);
+        BOOST_CHECK_THROW(k1.template subs<integer>({{0, 5_z}}, symbol_fset{"x"}), std::domain_error);
         k1 = k_type(T(1), false);
-        BOOST_CHECK_THROW(k1.template subs<integer>({{0, 5_z}}, symbol_fset{"x"}), std::invalid_argument);
+        BOOST_CHECK_THROW(k1.template subs<integer>({{0, 5_z}}, symbol_fset{"x"}), std::domain_error);
         // Subs with no sign changes.
         k1 = k_type({T(2), T(3)});
 #if defined(MPPP_WITH_MPFR)

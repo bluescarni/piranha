@@ -54,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>

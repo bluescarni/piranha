@@ -44,6 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/rational.hpp>
@@ -161,6 +162,9 @@ BOOST_AUTO_TEST_CASE(real_sin_cos_test)
     // Check stealing semantics.
     real x{1.23, 100};
     auto tmp = math::sin(std::move(x));
+    BOOST_CHECK(x.get_mpfr_t()->_mpfr_d == nullptr);
+    x = real{1.23, 100};
+    tmp = math::cos(std::move(x));
     BOOST_CHECK(x.get_mpfr_t()->_mpfr_d == nullptr);
 }
 

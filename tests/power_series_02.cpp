@@ -47,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/integer.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>

@@ -61,6 +61,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>

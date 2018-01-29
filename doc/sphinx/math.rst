@@ -9,3 +9,4 @@ Mathematical functions
    math_pow.rst
    math_binomial.rst
    math_sin.rst
+   math_cos.rst

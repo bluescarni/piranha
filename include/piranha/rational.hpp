@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/print_tex_coefficient.hpp>
@@ -203,23 +204,16 @@ public:
     }
 };
 
-/// Specialisation of the implementation of piranha::math::cos() for mp++'s rationals.
 template <std::size_t SSize>
-struct cos_impl<mppp::rational<SSize>> {
-    /// Call operator.
-    /**
-     * @param q the argument.
-     *
-     * @return the cosine of \p q.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
+class cos_impl<mppp::rational<SSize>>
+{
+public:
     mppp::rational<SSize> operator()(const mppp::rational<SSize> &q) const
     {
-        if (q.is_zero()) {
-            return mppp::rational<SSize>{1};
+        if (unlikely(!q.is_zero())) {
+            piranha_throw(std::domain_error, "cannot compute the cosine of the non-zero rational " + q.to_string());
         }
-        piranha_throw(std::invalid_argument, "cannot compute the cosine of a non-zero rational");
+        return mppp::rational<SSize>{1};
     }
 };
 

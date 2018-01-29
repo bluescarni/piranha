@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
@@ -139,15 +140,10 @@ public:
     }
 };
 
-/// Specialisation of piranha::math::cos() for piranha::real.
 template <>
-struct cos_impl<real> {
-    /// Call operator.
-    /**
-     * @param r the piranha::real argument.
-     *
-     * @return the cosine of \p r.
-     */
+class cos_impl<real>
+{
+public:
     template <typename T>
     real operator()(T &&r) const
     {

@@ -51,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/print_tex_coefficient.hpp>
@@ -257,11 +258,11 @@ struct sin_cos_tester {
         BOOST_CHECK_EXCEPTION(math::sin(q_type(1)), std::domain_error, [](const std::domain_error &e) {
             return boost::contains(e.what(), "cannot compute the sine of the non-zero rational 1");
         });
-        BOOST_CHECK_EXCEPTION(math::cos(q_type(1)), std::invalid_argument, [](const std::invalid_argument &e) {
-            return boost::contains(e.what(), "cannot compute the cosine of a non-zero rational");
+        BOOST_CHECK_EXCEPTION(math::cos(q_type(1)), std::domain_error, [](const std::domain_error &e) {
+            return boost::contains(e.what(), "cannot compute the cosine of the non-zero rational 1");
         });
         BOOST_CHECK(is_sine_type<q_type>::value);
-        BOOST_CHECK(has_cosine<q_type>::value);
+        BOOST_CHECK(is_cosine_type<q_type>::value);
     }
 };
 
