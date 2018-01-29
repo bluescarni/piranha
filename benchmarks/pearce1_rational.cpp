@@ -33,9 +33,10 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/lexical_cast.hpp>
 
-#include <mp++/integer.hpp>
+#include <mp++/rational.hpp>
 
 #include <piranha/kronecker_monomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/settings.hpp>
 
 using namespace piranha;

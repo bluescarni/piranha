@@ -44,9 +44,11 @@ see https://www.gnu.org/licenses/. */
 
 #include <mp++/config.hpp>
 #include <mp++/exceptions.hpp>
+#include <mp++/integer.hpp>
 #include <mp++/rational.hpp>
 
 #include <piranha/config.hpp>
+#include <piranha/integer.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/pow.hpp>

@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <mp++/rational.hpp>
 
 #include <piranha/kronecker_monomial.hpp>
+#include <piranha/rational.hpp>
 #include <piranha/settings.hpp>
 
 using namespace piranha;
