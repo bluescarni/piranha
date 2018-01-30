@@ -3,6 +3,5 @@
         "**/.git": true,
         "build*": true,
         "doc/sphinx/_build/": true
-    },
-    "restructuredtext.confPath": "/home/yardbird/repos/piranha"
+    }
 }
