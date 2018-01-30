@@ -48,7 +48,10 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
-#include <piranha/pow.hpp>
+#include <piranha/math/binomial.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -57,7 +60,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Multiprecision rational type.
+// Main multiprecision rational type.
 using rational = mppp::rational<1>;
 
 inline namespace literals
@@ -154,73 +157,63 @@ struct negate_impl<mppp::rational<SSize>> {
     }
 };
 
-inline namespace impl
+// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename U, mppp::RationalOpTypes<U> T>
+class pow_impl<T, U>
+#else
+template <typename T, typename U>
+class pow_impl<T, U, enable_if_t<mppp::are_rational_op_types<T, U>::value>>
+#endif
 {
-
-// Enabler for the pow specialisation.
-template <typename T, typename U>
-using math_rational_pow_enabler = enable_if_t<mppp::are_rational_op_types<T, U>::value>;
-}
-
-/// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
-/**
- * This specialisation is activated if the mp++ rational exponentiation function can be successfully called on instances
- * of ``T`` and ``U``.
- */
-template <typename T, typename U>
-struct pow_impl<T, U, math_rational_pow_enabler<T, U>> {
-    /// Call operator.
-    /**
-     * @param b the base.
-     * @param e the exponent.
-     *
-     * @returns <tt>b**e</tt>.
-     *
-     * @throws unspecified any exception thrown by the mp++ exponentiation function.
-     */
-    auto operator()(const T &b, const U &e) const -> decltype(mppp::pow(b, e))
+public:
+    template <typename T1, typename U1>
+    auto operator()(T1 &&b, U1 &&e) const -> decltype(mppp::pow(std::forward<T1>(b), std::forward<U1>(e)))
     {
-        return mppp::pow(b, e);
+        return mppp::pow(std::forward<T1>(b), std::forward<U1>(e));
     }
 };
 
-/// Specialisation of the implementation of piranha::math::sin() for mp++'s rationals.
-template <std::size_t SSize>
-struct sin_impl<mppp::rational<SSize>> {
-    /// Call operator.
-    /**
-     * @param q the argument.
-     *
-     * @return the sine of \p q.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
-    mppp::rational<SSize> operator()(const mppp::rational<SSize> &q) const
+// Specialisation of the implementation of piranha::math::binomial() for mp++ rational top argument.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <std::size_t SSize, mppp::RationalIntegralInteroperable<SSize> T>
+class binomial_impl<mppp::rational<SSize>, T>
+#else
+template <std::size_t SSize, typename T>
+class binomial_impl<mppp::rational<SSize>, T, enable_if_t<mppp::is_rational_integral_interoperable<T, SSize>::value>>
+#endif
+{
+public:
+    template <typename T1, typename U1>
+    auto operator()(T1 &&x, U1 &&y) const -> decltype(mppp::binomial(std::forward<T1>(x), std::forward<U1>(y)))
     {
-        if (q.is_zero()) {
-            return mppp::rational<SSize>{};
-        }
-        piranha_throw(std::invalid_argument, "cannot compute the sine of a non-zero rational");
+        return mppp::binomial(std::forward<T1>(x), std::forward<U1>(y));
     }
 };
 
-/// Specialisation of the implementation of piranha::math::cos() for mp++'s rationals.
 template <std::size_t SSize>
-struct cos_impl<mppp::rational<SSize>> {
-    /// Call operator.
-    /**
-     * @param q the argument.
-     *
-     * @return the cosine of \p q.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
+class sin_impl<mppp::rational<SSize>>
+{
+public:
     mppp::rational<SSize> operator()(const mppp::rational<SSize> &q) const
     {
-        if (q.is_zero()) {
-            return mppp::rational<SSize>{1};
+        if (unlikely(!q.is_zero())) {
+            piranha_throw(std::domain_error, "cannot compute the sine of the non-zero rational " + q.to_string());
         }
-        piranha_throw(std::invalid_argument, "cannot compute the cosine of a non-zero rational");
+        return mppp::rational<SSize>{};
+    }
+};
+
+template <std::size_t SSize>
+class cos_impl<mppp::rational<SSize>>
+{
+public:
+    mppp::rational<SSize> operator()(const mppp::rational<SSize> &q) const
+    {
+        if (unlikely(!q.is_zero())) {
+            piranha_throw(std::domain_error, "cannot compute the cosine of the non-zero rational " + q.to_string());
+        }
+        return mppp::rational<SSize>{1};
     }
 };
 

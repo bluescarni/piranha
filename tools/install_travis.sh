@@ -76,7 +76,7 @@ if [[ "${BUILD_TYPE}" == "Python2" || "${BUILD_TYPE}" == "Python3" ]]; then
 fi
 
 if [[ "${BUILD_TYPE}" == "Python2" && "${TRAVIS_OS_NAME}" != "osx" ]]; then
-    pip install sphinx breathe requests[security] sphinx-bootstrap-theme;
+    pip install sphinx requests[security] guzzle_sphinx_theme;
     cd ../doc/sphinx;
     export SPHINX_OUTPUT=`make html 2>&1 >/dev/null`;
     if [[ "${SPHINX_OUTPUT}" != "" ]]; then
@@ -111,58 +111,6 @@ if [[ "${BUILD_TYPE}" == "Python2" && "${TRAVIS_OS_NAME}" != "osx" ]]; then
     # We assume here that a failure in commit means that there's nothing
     # to commit.
     git commit -m "Update Sphinx documentation, commit ${TRAVIS_COMMIT} [skip ci]." || exit 0
-    PUSH_COUNTER=0
-    until git push -q
-    do
-        git pull -q
-        PUSH_COUNTER=$((PUSH_COUNTER + 1))
-        if [ "$PUSH_COUNTER" -gt 3 ]; then
-            echo "Push failed, aborting.";
-            exit 1;
-        fi
-    done
-fi
-
-if [[ "${BUILD_TYPE}" == "Doxygen" ]]; then
-    # Configure.
-    cmake ../;
-    # Now run it.
-    cd ../doc/doxygen;
-    export DOXYGEN_OUTPUT=`doxygen 2>&1 >/dev/null`;
-    # NOTE: remove this check for the time being. Doxygen is apparently confused
-    # when certain function names in mp++ are re-used in piranha (e.g., binomial(), pow()).
-    # if [[ "${DOXYGEN_OUTPUT}" != "" ]]; then
-    #     echo "Doxygen encountered some problem:";
-    #     echo "${DOXYGEN_OUTPUT}";
-    #     exit 1;
-    # fi
-    echo "Doxygen ran successfully";
-    if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
-        echo "Testing a pull request, the generated documentation will not be uploaded.";
-        exit 0;
-    fi
-    if [[ "${TRAVIS_BRANCH}" != "master" ]]; then
-        echo "Branch is not master, the generated documentation will not be uploaded.";
-        exit 0;
-    fi
-    # Move out the resulting documentation.
-    mv html $HOME/doxygen;
-    # Checkout a new copy of the repo, for pushing to gh-pages.
-    cd ../../../;
-    git config --global push.default simple
-    git config --global user.name "Travis CI"
-    git config --global user.email "bluescarni@gmail.com"
-    set +x
-    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages -q
-    set -x
-    cd piranha_gh_pages
-    git checkout -b gh-pages --track origin/gh-pages;
-    git rm -fr doxygen;
-    mv $HOME/doxygen .;
-    git add doxygen;
-    # We assume here that a failure in commit means that there's nothing
-    # to commit.
-    git commit -m "Update Doxygen documentation, commit ${TRAVIS_COMMIT} [skip ci]." || exit 0
     PUSH_COUNTER=0
     until git push -q
     do

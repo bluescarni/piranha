@@ -390,8 +390,13 @@ class math_test_case(_ut.TestCase):
 
     def binomialTest(self):
         from .math import binomial
+        from fractions import Fraction as F
         self.assertEqual(type(binomial(5, 4)), int)
         self.assertEqual(binomial(-5, 4), 70)
+        self.assertEqual(binomial(F(7,3),4), F(-7,243))
+        self.assertEqual(type(binomial(F(7,3),4)), F)
+        self.assertEqual(binomial(F(7,-3),4), F(1820, 243))
+        self.assertRaises(TypeError, lambda: binomial(F(7,-3),F(4,5)))
 
     def sincosTest(self):
         from fractions import Fraction as F

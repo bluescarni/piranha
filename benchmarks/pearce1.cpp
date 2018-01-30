@@ -34,6 +34,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <mp++/integer.hpp>
 
+#include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/settings.hpp>
 

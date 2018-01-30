@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/divisor_series.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/rational.hpp>

@@ -441,190 +441,6 @@ inline void multiply_accumulate(T &x, const T &y, const T &z)
     multiply_accumulate_impl<T>{}(x, y, z);
 }
 
-/// Default functor for the implementation of piranha::math::cos().
-/**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
- * the call operator, and will hence result in a compilation error when used.
- */
-template <typename T, typename Enable = void>
-struct cos_impl {
-};
-
-/// Specialisation of the piranha::math::cos() functor for floating-point types.
-/**
- * This specialisation is activated when \p T is a C++ floating-point type.
- * The result will be computed via the standard <tt>std::cos()</tt> function.
- */
-template <typename T>
-struct cos_impl<T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
-    /// Call operator.
-    /**
-     * The cosine will be computed via <tt>std::cos()</tt>.
-     *
-     * @param x argument.
-     *
-     * @return cosine of \p x.
-     */
-    T operator()(const T &x) const
-    {
-        return std::cos(x);
-    }
-};
-
-/// Specialisation of the piranha::math::cos() functor for integral types.
-/**
- * This specialisation is activated when \p T is an integral type.
- */
-template <typename T>
-struct cos_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
-    /// Call operator.
-    /**
-     * @param x argument.
-     *
-     * @return cosine of \p x.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
-    T operator()(const T &x) const
-    {
-        if (x == T(0)) {
-            return T(1);
-        }
-        piranha_throw(std::invalid_argument, "cannot compute the cosine of a non-zero integral");
-    }
-};
-}
-
-namespace detail
-{
-
-// Type for the result of math::cos().
-template <typename T>
-using math_cos_type_ = decltype(math::cos_impl<T>{}(std::declval<const T &>()));
-
-template <typename T>
-using math_cos_type = typename std::enable_if<is_returnable<math_cos_type_<T>>::value, math_cos_type_<T>>::type;
-}
-
-namespace math
-{
-
-/// Cosine.
-/**
- * \note
- * This function is enabled only if the expression <tt>cos_impl<T>{}(x)</tt> is valid, returning
- * a type which satisfies piranha::is_returnable.
- *
- * Returns the cosine of \p x. The actual implementation of this function is in the piranha::math::cos_impl functor's
- * call operator. The body of this function is equivalent to:
- * @code
- * return cos_impl<T>{}(x);
- * @endcode
- *
- * @param x cosine argument.
- *
- * @return cosine of \p x.
- *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::cos_impl functor.
- */
-template <typename T>
-inline detail::math_cos_type<T> cos(const T &x)
-{
-    return cos_impl<T>{}(x);
-}
-
-/// Default functor for the implementation of piranha::math::sin().
-/**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
- * the call operator, and will hence result in a compilation error when used.
- */
-template <typename T, typename Enable = void>
-struct sin_impl {
-};
-
-/// Specialisation of the piranha::math::sin() functor for floating-point types.
-/**
- * This specialisation is activated when \p T is a C++ floating-point type.
- * The result will be computed via the standard <tt>std::sin()</tt> function.
- */
-template <typename T>
-struct sin_impl<T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
-    /// Call operator.
-    /**
-     * The sine will be computed via <tt>std::sin()</tt>.
-     *
-     * @param x argument.
-     *
-     * @return sine of \p x.
-     */
-    T operator()(const T &x) const
-    {
-        return std::sin(x);
-    }
-};
-
-/// Specialisation of the piranha::math::sin() functor for integral types.
-/**
- * This specialisation is activated when \p T is an integral type.
- */
-template <typename T>
-struct sin_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
-    /// Call operator.
-    /**
-     * @param x argument.
-     *
-     * @return sine of \p x.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
-    T operator()(const T &x) const
-    {
-        if (x == T(0)) {
-            return T(0);
-        }
-        piranha_throw(std::invalid_argument, "cannot compute the sine of a non-zero integral");
-    }
-};
-}
-
-namespace detail
-{
-
-// Type for the result of math::sin().
-template <typename T>
-using math_sin_type_ = decltype(math::sin_impl<T>{}(std::declval<const T &>()));
-
-template <typename T>
-using math_sin_type = typename std::enable_if<is_returnable<math_sin_type_<T>>::value, math_sin_type_<T>>::type;
-}
-
-namespace math
-{
-
-/// Sine.
-/**
- * \note
- * This function is enabled only if the expression <tt>sin_impl<T>{}(x)</tt> is valid, returning
- * a type which satisfies piranha::is_returnable.
- *
- * Returns the sine of \p x. The actual implementation of this function is in the piranha::math::sin_impl functor's
- * call operator. The body of this function is equivalent to:
- * @code
- * return sin_impl<T>{}(x);
- * @endcode
- *
- * @param x sine argument.
- *
- * @return sine of \p x.
- *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::sin_impl functor.
- */
-template <typename T>
-inline detail::math_sin_type<T> sin(const T &x)
-{
-    return sin_impl<T>{}(x);
-}
-
 /// Default functor for the implementation of piranha::math::partial().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -1085,8 +901,6 @@ const bool has_negate<T>::value;
 namespace detail
 {
 
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-
 // Type definition and type checking for the output of Poisson brackets.
 template <typename T>
 using pbracket_type_tmp = decltype(math::partial(std::declval<const T &>(), std::string())
@@ -1112,8 +926,6 @@ struct pbracket_type_<
 // The final typedef.
 template <typename T>
 using pbracket_type = typename pbracket_type_<T>::type;
-
-#endif
 }
 
 namespace math
@@ -2444,46 +2256,6 @@ public:
 
 template <typename Key, typename T>
 const bool key_is_evaluable<Key, T>::value;
-
-/// Type trait to detect piranha::math::sin().
-/**
- * The type trait will be \p true if piranha::math::sin() can be used on instances of type \p T,
- * \p false otherwise.
- */
-template <typename T>
-class has_sine : detail::sfinae_types
-{
-    template <typename T1>
-    static auto test(const T1 &x) -> decltype(math::sin(x), void(), yes());
-    static no test(...);
-
-public:
-    /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<T>())), yes>::value;
-};
-
-template <typename T>
-const bool has_sine<T>::value;
-
-/// Type trait to detect piranha::math::cos().
-/**
- * The type trait will be \p true if piranha::math::cos() can be used on instances of type \p T,
- * \p false otherwise.
- */
-template <typename T>
-class has_cosine : detail::sfinae_types
-{
-    template <typename T1>
-    static auto test(const T1 &x) -> decltype(math::cos(x), void(), yes());
-    static no test(...);
-
-public:
-    /// Value of the type trait.
-    static const bool value = std::is_same<decltype(test(std::declval<T>())), yes>::value;
-};
-
-template <typename T>
-const bool has_cosine<T>::value;
 
 /// Detect piranha::math::transformation_is_canonical().
 /**

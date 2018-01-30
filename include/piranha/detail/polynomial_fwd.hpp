@@ -39,8 +39,6 @@ namespace piranha
 namespace detail
 {
 
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-
 // Polynomial tag struct to work around is_instace_of bug in GCC.
 struct polynomial_tag;
 
@@ -52,16 +50,16 @@ struct poly_in_cf {
 };
 
 template <typename T>
-struct poly_in_cf<T, typename std::enable_if<(series_recursion_index<T>::value > 0u)
-                                             && std::is_base_of<polynomial_tag,
-                                                                typename T::term_type::cf_type>::value>::type> {
+struct poly_in_cf<
+    T, typename std::enable_if<(series_recursion_index<T>::value > 0u)
+                               && std::is_base_of<polynomial_tag, typename T::term_type::cf_type>::value>::type> {
     static const bool value = true;
 };
 
 template <typename T>
-struct poly_in_cf<T, typename std::enable_if<(series_recursion_index<T>::value > 0u)
-                                             && !std::is_base_of<polynomial_tag,
-                                                                 typename T::term_type::cf_type>::value>::type> {
+struct poly_in_cf<
+    T, typename std::enable_if<(series_recursion_index<T>::value > 0u)
+                               && !std::is_base_of<polynomial_tag, typename T::term_type::cf_type>::value>::type> {
     static const bool value = poly_in_cf<typename T::term_type::cf_type>::value;
 };
 }
@@ -69,8 +67,6 @@ struct poly_in_cf<T, typename std::enable_if<(series_recursion_index<T>::value >
 // Forward declaration of polynomial class.
 template <typename, typename>
 class polynomial;
-
-#endif
 }
 
 #endif

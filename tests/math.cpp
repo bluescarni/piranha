@@ -57,10 +57,12 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
@@ -251,70 +253,6 @@ BOOST_AUTO_TEST_CASE(math_multiply_accumulate_test)
     BOOST_CHECK(!has_multiply_accumulate<no_fma>::value);
     BOOST_CHECK(!has_multiply_accumulate<no_fma const &>::value);
     BOOST_CHECK(!has_multiply_accumulate<no_fma &>::value);
-}
-
-struct cos_00 {
-};
-
-struct cos_01 {
-    cos_01(const cos_01 &) = delete;
-    cos_01(cos_01 &&) = delete;
-};
-
-struct sin_00 {
-};
-
-struct sin_01 {
-    sin_01(const sin_01 &) = delete;
-    sin_01(sin_01 &&) = delete;
-};
-
-namespace piranha
-{
-
-namespace math
-{
-
-template <>
-struct cos_impl<cos_00, void> {
-    cos_00 operator()(const cos_00 &) const;
-};
-
-template <>
-struct cos_impl<cos_01, void> {
-    cos_01 operator()(const cos_01 &) const;
-};
-
-template <>
-struct sin_impl<sin_00, void> {
-    sin_00 operator()(const sin_00 &) const;
-};
-
-template <>
-struct sin_impl<sin_01, void> {
-    sin_01 operator()(const sin_01 &) const;
-};
-}
-}
-
-BOOST_AUTO_TEST_CASE(math_sin_cos_test)
-{
-    BOOST_CHECK(math::sin(1.f) == std::sin(1.f));
-    BOOST_CHECK(math::sin(2.) == std::sin(2.));
-    BOOST_CHECK(math::cos(1.f) == std::cos(1.f));
-    BOOST_CHECK(math::cos(2.) == std::cos(2.));
-    BOOST_CHECK(math::cos(1.L) == std::cos(1.L));
-    BOOST_CHECK(math::cos(2.L) == std::cos(2.L));
-    BOOST_CHECK_EQUAL(math::sin(0), 0);
-    BOOST_CHECK_EQUAL(math::cos(0), 1);
-    BOOST_CHECK_THROW(math::sin(1), std::invalid_argument);
-    BOOST_CHECK_THROW(math::cos(1), std::invalid_argument);
-    BOOST_CHECK((std::is_same<unsigned short, decltype(math::sin(static_cast<unsigned short>(0)))>::value));
-    BOOST_CHECK((std::is_same<unsigned short, decltype(math::cos(static_cast<unsigned short>(0)))>::value));
-    BOOST_CHECK(has_cosine<cos_00>::value);
-    BOOST_CHECK(!has_cosine<cos_01>::value);
-    BOOST_CHECK(has_sine<sin_00>::value);
-    BOOST_CHECK(!has_sine<sin_01>::value);
 }
 
 BOOST_AUTO_TEST_CASE(math_partial_test)
@@ -628,36 +566,6 @@ BOOST_AUTO_TEST_CASE(math_is_evaluable_test)
     BOOST_CHECK((!is_evaluable<fake_ne &, int>::value));
     BOOST_CHECK((!is_evaluable<fake_ne const &, int>::value));
     BOOST_CHECK((!is_evaluable<fake_ne &&, int>::value));
-}
-
-BOOST_AUTO_TEST_CASE(math_has_sine_cosine_test)
-{
-    BOOST_CHECK(has_sine<float>::value);
-    BOOST_CHECK(has_sine<float &>::value);
-    BOOST_CHECK(has_sine<float const>::value);
-    BOOST_CHECK(has_sine<float &&>::value);
-    BOOST_CHECK(has_sine<double>::value);
-    BOOST_CHECK(has_sine<long double &>::value);
-    BOOST_CHECK(has_sine<double const>::value);
-    BOOST_CHECK(has_sine<long double &&>::value);
-    BOOST_CHECK(has_cosine<float>::value);
-    BOOST_CHECK(has_cosine<float &>::value);
-    BOOST_CHECK(has_cosine<float const>::value);
-    BOOST_CHECK(has_cosine<float &&>::value);
-    BOOST_CHECK(has_cosine<double>::value);
-    BOOST_CHECK(has_cosine<long double &>::value);
-    BOOST_CHECK(has_cosine<double const>::value);
-    BOOST_CHECK(has_cosine<long double &&>::value);
-    BOOST_CHECK(has_sine<int>::value);
-    BOOST_CHECK(has_sine<long &>::value);
-    BOOST_CHECK(has_sine<long long &&>::value);
-    BOOST_CHECK(has_sine<long long const &>::value);
-    BOOST_CHECK(has_cosine<int>::value);
-    BOOST_CHECK(has_cosine<long &>::value);
-    BOOST_CHECK(has_cosine<long long &&>::value);
-    BOOST_CHECK(has_cosine<long long const &>::value);
-    BOOST_CHECK(!has_cosine<std::string>::value);
-    BOOST_CHECK(!has_cosine<void *>::value);
 }
 
 namespace piranha

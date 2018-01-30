@@ -48,6 +48,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -56,7 +58,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Multiprecision integer type.
+// Main multiprecision integer type.
 using integer = mppp::integer<1>;
 
 namespace math
@@ -135,43 +137,29 @@ struct abs_impl<mppp::integer<SSize>> {
     }
 };
 
-/// Specialisation of the implementation of piranha::math::sin() for mp++'s integers.
 template <std::size_t SSize>
-struct sin_impl<mppp::integer<SSize>> {
-    /// Call operator.
-    /**
-     * @param n the input integer.
-     *
-     * @return the sine of \p n.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
+class sin_impl<mppp::integer<SSize>>
+{
+public:
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &n) const
     {
-        if (likely(n.is_zero())) {
-            return mppp::integer<SSize>{};
+        if (unlikely(!n.is_zero())) {
+            piranha_throw(std::domain_error, "cannot compute the sine of the non-zero integer " + n.to_string());
         }
-        piranha_throw(std::invalid_argument, "cannot compute the sine of a non-zero integer");
+        return mppp::integer<SSize>{};
     }
 };
 
-/// Specialisation of the implementation of piranha::math::cos() for mp++'s integers.
 template <std::size_t SSize>
-struct cos_impl<mppp::integer<SSize>> {
-    /// Call operator.
-    /**
-     * @param n the input integer.
-     *
-     * @return the cosine of \p n.
-     *
-     * @throws std::invalid_argument if the argument is not zero.
-     */
+class cos_impl<mppp::integer<SSize>>
+{
+public:
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &n) const
     {
-        if (likely(n.is_zero())) {
-            return mppp::integer<SSize>{1};
+        if (unlikely(!n.is_zero())) {
+            piranha_throw(std::domain_error, "cannot compute the cosine of the non-zero integer " + n.to_string());
         }
-        piranha_throw(std::invalid_argument, "cannot compute the cosine of a non-zero integer");
+        return mppp::integer<SSize>{1};
     }
 };
 
@@ -354,26 +342,15 @@ struct div3_impl<mppp::integer<SSize>> {
     }
 };
 
-#if !defined(PIRANHA_HAVE_CONCEPTS)
-
-inline namespace impl
-{
-
-// Enabler for the GCD specialisation.
-template <typename T, typename U>
-using math_integer_gcd_enabler = enable_if_t<mppp::are_integer_integral_op_types<T, U>::value>;
-}
-
-#endif
-
 /// Specialisation of the implementation of piranha::math::gcd() for mp++'s integers.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <typename T, mppp::IntegerIntegralOpTypes<T> U>
-struct gcd_impl<T, U> {
+template <typename U, mppp::IntegerIntegralOpTypes<U> T>
+struct gcd_impl<T, U>
 #else
 template <typename T, typename U>
-struct gcd_impl<T, U, math_integer_gcd_enabler<T, U>> {
+struct gcd_impl<T, U, enable_if_t<mppp::are_integer_integral_op_types<T, U>::value>>
 #endif
+{
     /// Call operator, overload for mp++'s integers.
     /**
      * @param a the first argument.

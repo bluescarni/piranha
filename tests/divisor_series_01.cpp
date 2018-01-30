@@ -47,10 +47,12 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/invert.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>

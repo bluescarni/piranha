@@ -1,10 +1,12 @@
+include(YACMACompilerLinkerSettings)
+
 # Python version check.
 if(${PYTHON_VERSION_MAJOR} LESS 2 OR (${PYTHON_VERSION_MAJOR} EQUAL 2 AND ${PYTHON_VERSION_MINOR} LESS 7))
 	message(FATAL_ERROR "The minimum supported Python version is 2.7.")
 endif()
 
 # Helper file with version number.
-CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/_version.py.in" "${CMAKE_CURRENT_BINARY_DIR}/_version.py" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/_version.py.in" "${CMAKE_CURRENT_BINARY_DIR}/_version.py" @ONLY)
 
 YACMA_PYTHON_MODULE(_core
 	# General.
@@ -80,9 +82,18 @@ target_compile_options(_core PRIVATE "$<$<CONFIG:DEBUG>:${PIRANHA_CXX_FLAGS_DEBU
 # The module needs Boost.Python and the mandatory libraries. Python libs and includes are already linked in
 # by YACMA_PYTHON_MODULE().
 target_link_libraries(_core PRIVATE piranha ${PYRANHA_BP_TARGET} ${PIRANHA_MANDATORY_LINK_TARGETS})
-set_property(TARGET _core PROPERTY CXX_STANDARD 11)
-set_property(TARGET _core PROPERTY CXX_STANDARD_REQUIRED YES)
-set_property(TARGET _core PROPERTY CXX_EXTENSIONS NO)
+
+# NOTE: for clang-cl, cmake tries to set -std=c++11 here, which makes
+# it error out. Disable it as MSVC 2015 is implicitly C++14 anyway.
+if(NOT (YACMA_COMPILER_IS_MSVC AND YACMA_COMPILER_IS_CLANGXX))
+	# Let's setup the target C++ standard, but only if the user did not provide it manually.
+	if(NOT CMAKE_CXX_STANDARD)
+		set_property(TARGET _core PROPERTY CXX_STANDARD 11)
+	endif()
+	set_property(TARGET _core PROPERTY CXX_STANDARD_REQUIRED YES)
+	set_property(TARGET _core PROPERTY CXX_EXTENSIONS NO)
+endif()
+
 install(TARGETS _core
 	RUNTIME DESTINATION ${PYRANHA_INSTALL_PATH}
 	LIBRARY DESTINATION ${PYRANHA_INSTALL_PATH}

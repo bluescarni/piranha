@@ -70,7 +70,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/math.hpp>
-#include <piranha/pow.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/s11n.hpp>
@@ -246,8 +248,6 @@ public:
 template <typename T, typename Enable>
 const std::size_t series_recursion_index<T, Enable>::value;
 
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-
 template <typename T>
 class series_recursion_index<
     T, typename std::enable_if<std::is_base_of<detail::series_tag, typename std::decay<T>::type>::value>::type>
@@ -262,8 +262,6 @@ public:
 template <typename T>
 const std::size_t series_recursion_index<
     T, typename std::enable_if<std::is_base_of<detail::series_tag, typename std::decay<T>::type>::value>::type>::value;
-
-#endif
 
 /// Type trait to detect the availability of a series multiplier.
 /**
@@ -895,7 +893,14 @@ class series_operators
             using cf_type = typename term_type::cf_type;
             using key_type = typename term_type::key_type;
             ret_type retval;
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             retval.insert(term_type{cf_type{0} / y, key_type{retval.get_symbol_set()}});
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
             return retval;
         }
         static_assert(std::is_same<typename std::decay<T>::type, ret_type>::value, "Invalid type.");
@@ -905,10 +910,17 @@ class series_operators
         const auto it_f = retval.m_container.end();
         try {
             for (auto it = retval.m_container.begin(); it != it_f;) {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
                 // NOTE: here the original requirement is that cf / y is defined, but we know
                 // that cf / y results in another cf, and we assume always that cf /= y is exactly equivalent
                 // to cf = cf / y. And cf must be move-assignable. So this should be possible.
                 it->m_cf /= y;
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
                 // NOTE: no need to check for compatibility, as it depends only on the key type and here
                 // we are only acting on the coefficient.
                 if (unlikely(it->is_zero(retval.m_symbol_set))) {
@@ -1277,20 +1289,16 @@ private:
     // Partial need access to the custom derivatives.
     template <typename, typename>
     friend struct math::partial_impl;
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
     // Friendship with the series_merge_f helper.
     template <typename S1, typename S2, typename F>
     friend auto impl::series_merge_f(S1 &&s1, S2 &&s2, const F &f)
         -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)));
-#endif
 
 protected:
     /// Container type for terms.
     using container_type = hash_set<term_type>;
 
 private:
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-    // Avoid confusing doxygen.
     typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
     // Insertion.
     template <bool Sign, typename T>
@@ -1314,20 +1322,34 @@ private:
     template <bool Sign, typename Iterator>
     static void insertion_cf_arithmetics(Iterator &it, const term_type &term)
     {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
         if (Sign) {
             it->m_cf += term.m_cf;
         } else {
             it->m_cf -= term.m_cf;
         }
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
     }
     template <bool Sign, typename Iterator>
     static void insertion_cf_arithmetics(Iterator &it, term_type &&term)
     {
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
         if (Sign) {
             it->m_cf += std::move(term.m_cf);
         } else {
             it->m_cf -= std::move(term.m_cf);
         }
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
     }
     // Insert compatible, non-ignorable term.
     template <bool Sign, typename T>
@@ -1787,7 +1809,14 @@ private:
             retval.insert(term_type{math::partial(it->m_cf, name), it->m_key});
             // NOTE: if the partial of the key returns an incompatible key, an error will be raised.
             auto p_key = it->m_key.partial(pos, retval.m_symbol_set);
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             retval.insert(term_type{it->m_cf * p_key.first, std::move(p_key.second)});
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#pragma GCC diagnostic pop
+#endif
         }
         return retval;
     }
@@ -1968,7 +1997,7 @@ private:
     // Final typedef.
     template <typename T, typename U>
     using pow_ret_type = typename pow_ret_type_<T, U>::type;
-#endif
+
 public:
     /// Size type.
     /**
@@ -2979,8 +3008,8 @@ namespace math
  * a method with the same signature as piranha::series::pow().
  */
 template <typename Series, typename T>
-struct pow_impl<Series, T, pow_series_enabler<Series, T>> {
-private:
+class pow_impl<Series, T, pow_series_enabler<Series, T>>
+{
     using pow_type = series_pow_member_t<Series, T>;
 
 public:
@@ -3259,7 +3288,9 @@ namespace math
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
-struct sin_impl<Series, detail::series_sin_enabler<Series>> {
+class sin_impl<Series, detail::series_sin_enabler<Series>>
+{
+public:
     /// Call operator.
     /**
      * @param s argument.
@@ -3287,7 +3318,9 @@ struct sin_impl<Series, detail::series_sin_enabler<Series>> {
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
-struct cos_impl<Series, detail::series_cos_enabler<Series>> {
+class cos_impl<Series, detail::series_cos_enabler<Series>>
+{
+public:
     /// Call operator.
     /**
      * @param s argument.

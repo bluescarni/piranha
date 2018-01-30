@@ -92,7 +92,6 @@ public:
     typedef SignedInteger int_type;
 
 private:
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
     static_assert(detail::ka_type_reqs<int_type>::value, "This class can be used only with signed integers.");
     // This is a 4-tuple of int_type built as follows:
     // 0. vector of absolute values of the upper/lower limit for each component,
@@ -102,7 +101,7 @@ private:
     typedef std::tuple<std::vector<int_type>, int_type, int_type, int_type> limit_type;
     // Vector of limits.
     typedef std::vector<limit_type> limits_type;
-#endif
+
 public:
     /// Size type.
     /**

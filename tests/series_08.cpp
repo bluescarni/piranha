@@ -53,9 +53,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
@@ -376,8 +376,10 @@ namespace math
 {
 
 template <typename T, typename U>
-struct pow_impl<
-    T, U, typename std::enable_if<std::is_floating_point<T>::value && std::is_same<U, fake_int_01>::value>::type> {
+class pow_impl<T, U,
+               typename std::enable_if<std::is_floating_point<T>::value && std::is_same<U, fake_int_01>::value>::type>
+{
+public:
     T operator()(const T &, const U &) const;
 };
 

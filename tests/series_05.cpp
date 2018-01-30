@@ -41,6 +41,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/symbol_utils.hpp>

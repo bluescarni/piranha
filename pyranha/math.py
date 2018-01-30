@@ -126,6 +126,9 @@ def binomial(x, y):
     3
     >>> binomial(-6,2)
     21
+    >>> from fractions import Fraction as F
+    >>> binomial(F(7,3),4)
+    Fraction(-7, 243)
     >>> binomial('hello world',2.4) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
        ...

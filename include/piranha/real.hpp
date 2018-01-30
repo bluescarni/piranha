@@ -53,7 +53,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
-#include <piranha/pow.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/type_traits.hpp>
@@ -61,7 +63,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Multiprecision floating-point type.
+// Multiprecision floating-point type.
 using real = mppp::real;
 
 namespace math
@@ -110,31 +112,16 @@ struct is_unitary_impl<real> {
     }
 };
 
-inline namespace impl
+// Specialisation of piranha::math::pow() for piranha::real.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename U, mppp::RealOpTypes<U> T>
+class pow_impl<T, U>
+#else
+template <typename T, typename U>
+class pow_impl<T, U, enable_if_t<mppp::are_real_op_types<T, U>::value>>
+#endif
 {
-
-// Enabler for real pow.
-template <typename T, typename U>
-using math_real_pow_enabler = enable_if_t<mppp::are_real_op_types<T, U>::value>;
-}
-
-/// Specialisation of piranha::math::pow() for piranha::real.
-/**
- * This specialisation is activated when one of the arguments is piranha::real
- * and the other is either piranha::real or an interoperable type for piranha::real.
- * The result is computed via mp++'s exponentiation function for piranha::real.
- */
-template <typename T, typename U>
-struct pow_impl<T, U, math_real_pow_enabler<T, U>> {
-    /// Call operator.
-    /**
-     * @param base the base.
-     * @param exp the exponent.
-     *
-     * @return ``base**exp``.
-     *
-     * @throws unspecified any exception thrown by the invoked mp++ exponentiation function.
-     */
+public:
     template <typename T1, typename U1>
     auto operator()(T1 &&base, U1 &&exp) const -> decltype(mppp::pow(std::forward<T1>(base), std::forward<U1>(exp)))
     {
@@ -142,15 +129,10 @@ struct pow_impl<T, U, math_real_pow_enabler<T, U>> {
     }
 };
 
-/// Specialisation of piranha::math::sin() for piranha::real.
 template <>
-struct sin_impl<real> {
-    /// Call operator.
-    /**
-     * @param r the piranha::real argument.
-     *
-     * @return the sine of \p r.
-     */
+class sin_impl<real>
+{
+public:
     template <typename T>
     real operator()(T &&r) const
     {
@@ -158,15 +140,10 @@ struct sin_impl<real> {
     }
 };
 
-/// Specialisation of piranha::math::cos() for piranha::real.
 template <>
-struct cos_impl<real> {
-    /// Call operator.
-    /**
-     * @param r the piranha::real argument.
-     *
-     * @return the cosine of \p r.
-     */
+class cos_impl<real>
+{
+public:
     template <typename T>
     real operator()(T &&r) const
     {

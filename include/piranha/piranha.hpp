@@ -29,7 +29,6 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_PIRANHA_HPP
 #define PIRANHA_PIRANHA_HPP
 
-// Root piranha namespace.
 /*
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly
  * that
@@ -205,7 +204,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/array_key.hpp>
 #include <piranha/base_series_multiplier.hpp>
-#include <piranha/binomial.hpp>
 #include <piranha/cache_aligning_allocator.hpp>
 #include <piranha/config.hpp>
 #include <piranha/convert_to.hpp>
@@ -226,11 +224,14 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/lambdify.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/binomial.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/memory.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>

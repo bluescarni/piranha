@@ -160,6 +160,24 @@ using addlref_t = typename std::add_lvalue_reference<T>::type;
 
 template <typename T>
 using is_nonconst_rvalue_ref = conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>;
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+// Provide concept versions of a few C++ type traits.
+template <typename T>
+concept bool CppArithmetic = std::is_arithmetic<T>::value;
+
+template <typename T>
+concept bool CppIntegral = std::is_integral<T>::value;
+
+template <typename T>
+concept bool CppFloatingPoint = std::is_floating_point<T>::value;
+
+#endif
+
+inline namespace impl
+{
 
 // The type resulting from the addition of T and U.
 template <typename T, typename U>
@@ -793,8 +811,6 @@ using max_int = typename detail::max_int_impl<T, Args...>::type;
 inline namespace impl
 {
 
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-
 // Detect the availability of std::iterator_traits on type It, plus a couple more requisites from the
 // iterator concept.
 // NOTE: this needs also the is_swappable type trait, but this seems to be difficult to implement in C++11. Mostly
@@ -828,8 +844,6 @@ template <typename T, typename... Args>
 struct convertible_type_in_tuple<T, std::tuple<Args...>> {
     static const bool value = disjunction<std::is_convertible<T, Args>...>::value;
 };
-
-#endif
 }
 
 // NOTE: this and the other iterator type traits seem to work ok in practice, but probably
@@ -877,8 +891,6 @@ const bool is_iterator<T>::value;
 
 inline namespace impl
 {
-
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
 
 // The purpose of these bits is to check whether U correctly implements the arrow operator.
 // A correct implementation will return a pointer, after potentially calling
@@ -933,8 +945,6 @@ struct is_input_iterator_impl<
         std::is_convertible<typename std::iterator_traits<T>::iterator_category, std::input_iterator_tag>>::value>>
     : std::true_type {
 };
-
-#endif
 }
 
 /// Input iterator type trait.
@@ -998,7 +1008,6 @@ const bool is_forward_iterator<T>::value;
 namespace detail
 {
 
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
 template <typename T>
 constexpr T safe_abs_sint_impl(T cur_p = T(1), T cur_n = T(-1))
 {
@@ -1016,7 +1025,6 @@ struct safe_abs_sint {
 
 template <typename T>
 const T safe_abs_sint<T>::value;
-#endif
 
 // A simple true type-trait that can be used inside enable_if with T a decltype() expression
 // subject to SFINAE. It is similar to the proposed void_t type (in C++14, maybe?).
@@ -1055,26 +1063,18 @@ public:
 template <typename T>
 const bool has_input_begin_end<T>::value;
 
-/// Detect if type can be returned from a function.
-/**
- * The type trait will be true if \p T is destructible and copy or move
- * constructible, or if \p T is \p void.
- */
+// Detect if type can be returned from a function.
 template <typename T>
-class is_returnable
-{
-    static const bool implementation_defined
-        = disjunction<std::is_same<T, void>,
-                      conjunction<std::is_destructible<T>,
-                                  disjunction<std::is_copy_constructible<T>, std::is_move_constructible<T>>>>::value;
+using is_returnable = disjunction<
+    std::is_same<T, void>,
+    conjunction<std::is_destructible<T>, disjunction<std::is_copy_constructible<T>, std::is_move_constructible<T>>>>;
 
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
+#if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-const bool is_returnable<T>::value;
+concept bool Returnable = is_returnable<T>::value;
+
+#endif
 
 /// Detect if zero is a multiplicative absorber.
 /**

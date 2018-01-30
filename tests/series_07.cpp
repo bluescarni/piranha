@@ -39,9 +39,9 @@ see https://www.gnu.org/licenses/. */
 #endif
 
 #include <piranha/integer.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
 #endif

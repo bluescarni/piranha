@@ -51,9 +51,11 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
+#include <piranha/math/pow.hpp>
+#include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
-#include <piranha/pow.hpp>
 #include <piranha/rational.hpp>
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
@@ -93,27 +95,25 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 #if defined(MPPP_WITH_MPFR)
     mppp::real_set_default_prec(100);
 #endif
-    using math::cos;
     using math::partial;
-    using math::pow;
-    using math::sin;
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     BOOST_CHECK(is_differentiable<p_type1>::value);
     BOOST_CHECK(has_pbracket<p_type1>::value);
     BOOST_CHECK(has_transformation_is_canonical<p_type1>::value);
     p_type1 x{"x"}, y{"y"};
-    BOOST_CHECK_EQUAL(partial(x * cos(y), "x"), cos(y));
-    BOOST_CHECK_EQUAL(partial(x * cos(2 * x), "x"), cos(2 * x) - 2 * x * sin(2 * x));
-    BOOST_CHECK_EQUAL(partial(x * cos(2 * x + y), "y"), -x * sin(2 * x + y));
-    BOOST_CHECK_EQUAL(partial(rational(3, 2) * cos(2 * x + y), "x"), -3 * sin(2 * x + y));
-    BOOST_CHECK_EQUAL(partial(rational(3, 2) * x * cos(y), "y"), -rational(3, 2) * x * sin(+y));
-    BOOST_CHECK_EQUAL(partial(pow(x * cos(y), 5), "y"), 5 * sin(-y) * x * pow(x * cos(y), 4));
-    BOOST_CHECK_EQUAL(partial(pow(x * cos(y), 5), "z"), 0);
+    BOOST_CHECK_EQUAL(partial(x * math::cos(y), "x"), math::cos(y));
+    BOOST_CHECK_EQUAL(partial(x * math::cos(2 * x), "x"), math::cos(2 * x) - 2 * x * math::sin(2 * x));
+    BOOST_CHECK_EQUAL(partial(x * math::cos(2 * x + y), "y"), -x * math::sin(2 * x + y));
+    BOOST_CHECK_EQUAL(partial(rational(3, 2) * math::cos(2 * x + y), "x"), -3 * math::sin(2 * x + y));
+    BOOST_CHECK_EQUAL(partial(rational(3, 2) * x * math::cos(y), "y"), -rational(3, 2) * x * math::sin(+y));
+    BOOST_CHECK_EQUAL(partial(math::pow(x * math::cos(y), 5), "y"),
+                      5 * math::sin(-y) * x * math::pow(x * math::cos(y), 4));
+    BOOST_CHECK_EQUAL(partial(math::pow(x * math::cos(y), 5), "z"), 0);
     // y as implicit function of x: y = cos(x).
-    p_type1::register_custom_derivative("x",
-                                        [x](const p_type1 &p) { return p.partial("x") - partial(p, "y") * sin(x); });
-    BOOST_CHECK_EQUAL(partial(x + cos(y), "x"), 1 + sin(y) * sin(x));
-    BOOST_CHECK_EQUAL(partial(x + x * cos(y), "x"), 1 + cos(y) + x * sin(y) * sin(x));
+    p_type1::register_custom_derivative(
+        "x", [x](const p_type1 &p) { return p.partial("x") - partial(p, "y") * math::sin(x); });
+    BOOST_CHECK_EQUAL(partial(x + math::cos(y), "x"), 1 + math::sin(y) * math::sin(x));
+    BOOST_CHECK_EQUAL(partial(x + x * math::cos(y), "x"), 1 + math::cos(y) + x * math::sin(y) * math::sin(x));
     BOOST_CHECK((!is_differentiable<poisson_series<polynomial<mock_cf, monomial<short>>>>::value));
     BOOST_CHECK((!has_pbracket<poisson_series<polynomial<mock_cf, monomial<short>>>>::value));
     BOOST_CHECK((!has_transformation_is_canonical<poisson_series<polynomial<mock_cf, monomial<short>>>>::value));
@@ -121,38 +121,32 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
 {
-    using math::cos;
-    using math::pow;
-    using math::sin;
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     typedef std::decay<decltype(*(p_type1{}.begin()))>::type pair_type;
     typedef std::decay<decltype(*(p_type1{}.begin()->first.begin()))>::type pair_type2;
     p_type1 x{"x"}, y{"y"};
-    auto s = pow(1 + x + y, 3) * cos(x) + pow(y, 3) * sin(x);
+    auto s = math::pow(1 + x + y, 3) * math::cos(x) + math::pow(y, 3) * math::sin(x);
     auto s_t = s.transform([](const pair_type &p) {
         return std::make_pair(p.first.filter([](const pair_type2 &p2) { return math::degree(p2.second) < 2; }),
                               p.second);
     });
-    BOOST_CHECK_EQUAL(s_t, (3 * x + 3 * y + 1) * cos(x));
+    BOOST_CHECK_EQUAL(s_t, (3 * x + 3 * y + 1) * math::cos(x));
 }
 
 #if defined(MPPP_WITH_MPFR)
 
 BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
 {
-    using math::cos;
-    using math::pow;
-    using math::sin;
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     symbol_fmap<real> dict{{"x", real(1.234)}, {"y", real(5.678)}};
     p_type1 x{"x"}, y{"y"};
-    auto s1 = (x + y) * cos(x + y);
+    auto s1 = (x + y) * math::cos(x + y);
     auto tmp1 = (real(1.234) * 1_q + real(5.678) * 1_q) * math::cos(real(1.234) * short(1) + real(5.678) * short(1));
     BOOST_CHECK_EQUAL(math::evaluate(s1, dict), tmp1);
     BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s1, dict))>::value));
-    auto s2 = pow(y, 3) * sin(x + y);
-    auto tmp2 = (real(0) + real(1) * pow(real(1.234), 0) * pow(real(5.678), 3))
-                * sin(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
+    auto s2 = math::pow(y, 3) * math::sin(x + y);
+    auto tmp2 = (real(0) + real(1) * math::pow(real(1.234), 0) * math::pow(real(5.678), 3))
+                * math::sin(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
     BOOST_CHECK_EQUAL(tmp2, math::evaluate(s2, dict));
     BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s2, dict))>::value));
     // NOTE: here it seems to be quite a brittle test: if one changes the order of the operands s1 and s2,
@@ -166,9 +160,6 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 {
-    using math::cos;
-    using math::pow;
-    using math::sin;
     using math::subs;
     {
 #if defined(MPPP_WITH_MPFR)
@@ -179,47 +170,50 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
         BOOST_CHECK((!has_subs<p_type1, std::string>::value));
         BOOST_CHECK(p_type1{}.template subs<integer>({{"x", integer(4)}}).empty());
         p_type1 x{"x"}, y{"y"};
-        auto s = (x + y) * cos(x) + pow(y, 3) * sin(x);
+        auto s = (x + y) * math::cos(x) + math::pow(y, 3) * math::sin(x);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", real(1.234)}}),
-                          (real(1.234) + y) * cos(real(1.234)) + pow(y, 3) * sin(real(1.234)));
+                          (real(1.234) + y) * math::cos(real(1.234)) + math::pow(y, 3) * math::sin(real(1.234)));
         BOOST_CHECK((std::is_same<decltype(s.template subs<real>({})), p_type1>::value));
         BOOST_CHECK((std::is_same<decltype(s.template subs<rational>({})), p_type1>::value));
-        s = (x + y) * cos(x + y) + pow(y, 3) * sin(x + y);
+        s = (x + y) * math::cos(x + y) + math::pow(y, 3) * math::sin(x + y);
         real r(1.234);
-        BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}), (r + y) * (cos(r) * cos(y) - sin(r) * sin(y))
-                                                                 + pow(y, 3) * (sin(r) * cos(y) + cos(r) * sin(y)));
-        BOOST_CHECK_EQUAL(subs<real>(s, {{"x", r}}), (r + y) * (cos(r) * cos(y) - sin(r) * sin(y))
-                                                         + pow(y, 3) * (sin(r) * cos(y) + cos(r) * sin(y)));
+        BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
+                          (r + y) * (math::cos(r) * math::cos(y) - math::sin(r) * math::sin(y))
+                              + math::pow(y, 3) * (math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
+        BOOST_CHECK_EQUAL(subs<real>(s, {{"x", r}}),
+                          (r + y) * (math::cos(r) * math::cos(y) - math::sin(r) * math::sin(y))
+                              + math::pow(y, 3) * (math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
         BOOST_CHECK_EQUAL(subs<real>(s, {{"z", r}}), s);
-        s = (x + y) * cos(-x + y) + pow(y, 3) * sin(-x + y);
-        BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}), (r + y) * (cos(r) * cos(y) + sin(r) * sin(y))
-                                                                 + pow(y, 3) * (-sin(r) * cos(y) + cos(r) * sin(y)));
-        s = (x + y) * cos(-2 * x + y) + pow(y, 3) * sin(-5 * x + y);
+        s = (x + y) * math::cos(-x + y) + math::pow(y, 3) * math::sin(-x + y);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
-                          (r + y) * (cos(r * 2) * cos(y) + sin(r * 2) * sin(y))
-                              + pow(y, 3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
-        s = (x + y) * cos(-2 * x + y) + pow(x, 3) * sin(-5 * x + y);
+                          (r + y) * (math::cos(r) * math::cos(y) + math::sin(r) * math::sin(y))
+                              + math::pow(y, 3) * (-math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
+        s = (x + y) * math::cos(-2 * x + y) + math::pow(y, 3) * math::sin(-5 * x + y);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
-                          (r + y) * (cos(r * 2) * cos(y) + sin(r * 2) * sin(y))
-                              + pow(r, 3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
+                          (r + y) * (math::cos(r * 2) * math::cos(y) + math::sin(r * 2) * math::sin(y))
+                              + math::pow(y, 3) * (-math::sin(r * 5) * math::cos(y) + math::cos(r * 5) * math::sin(y)));
+        s = (x + y) * math::cos(-2 * x + y) + math::pow(x, 3) * math::sin(-5 * x + y);
+        BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
+                          (r + y) * (math::cos(r * 2) * math::cos(y) + math::sin(r * 2) * math::sin(y))
+                              + math::pow(r, 3) * (-math::sin(r * 5) * math::cos(y) + math::cos(r * 5) * math::sin(y)));
         typedef poisson_series<polynomial<rational, monomial<short>>> p_type2;
         BOOST_CHECK((has_subs<p_type2, rational>::value));
         BOOST_CHECK((has_subs<p_type2, double>::value));
         BOOST_CHECK((has_subs<p_type2, integer>::value));
         BOOST_CHECK((!has_subs<p_type2, std::string>::value));
         p_type2 a{"a"}, b{"b"};
-        auto t = a * cos(a + b) + b * sin(a);
-        BOOST_CHECK_EQUAL(t.template subs<p_type2>({{"a", b}}), b * cos(b + b) + b * sin(b));
-        BOOST_CHECK_EQUAL(subs<p_type2>(t, {{"a", a + b}}), (a + b) * cos(a + b + b) + b * sin(a + b));
-        t = a * cos(-3 * a + b) + b * sin(-5 * a - b);
+        auto t = a * math::cos(a + b) + b * math::sin(a);
+        BOOST_CHECK_EQUAL(t.template subs<p_type2>({{"a", b}}), b * math::cos(b + b) + b * math::sin(b));
+        BOOST_CHECK_EQUAL(subs<p_type2>(t, {{"a", a + b}}), (a + b) * math::cos(a + b + b) + b * math::sin(a + b));
+        t = a * math::cos(-3 * a + b) + b * math::sin(-5 * a - b);
         BOOST_CHECK_EQUAL(subs<p_type2>(t, {{"a", a + b}}),
-                          (a + b) * cos(-3 * (a + b) + b) + b * sin(-5 * (a + b) - b));
+                          (a + b) * math::cos(-3 * (a + b) + b) + b * math::sin(-5 * (a + b) - b));
         BOOST_CHECK_EQUAL(subs<p_type2>(t, {{"a", 2 * (a + b)}}),
-                          2 * (a + b) * cos(-6 * (a + b) + b) + b * sin(-10 * (a + b) - b));
-        BOOST_CHECK_EQUAL(subs<p_type2>(t, {{"b", -5 * a}}), a * cos(-3 * a - 5 * a));
+                          2 * (a + b) * math::cos(-6 * (a + b) + b) + b * math::sin(-10 * (a + b) - b));
+        BOOST_CHECK_EQUAL(subs<p_type2>(t, {{"b", -5 * a}}), a * math::cos(-3 * a - 5 * a));
         BOOST_CHECK(t.template subs<p_type2>({{"b", 5 * a}}).template subs<rational>({{"a", rational(0)}}).empty());
-        BOOST_CHECK_EQUAL((a * cos(b)).template subs<rational>({{"b", rational(0)}}), a);
-        BOOST_CHECK_EQUAL((a * sin(b)).template subs<rational>({{"b", rational(0)}}), rational(0));
+        BOOST_CHECK_EQUAL((a * math::cos(b)).template subs<rational>({{"b", rational(0)}}), a);
+        BOOST_CHECK_EQUAL((a * math::sin(b)).template subs<rational>({{"b", rational(0)}}), rational(0));
         BOOST_CHECK((std::is_same<decltype(subs<p_type2>(t, {{"a", a + b}})), p_type2>::value));
         // This was a bug in the substitution routine.
         p_type2 c{"c"}, d{"d"};
@@ -277,21 +271,21 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
     BOOST_CHECK_EQUAL(p_type1{}.integrate("x"), p_type1{});
     BOOST_CHECK_EQUAL(x.integrate("x"), x * x / 2);
     BOOST_CHECK_EQUAL(x.pow(-2).integrate("x"), -x.pow(-1));
-    BOOST_CHECK_EQUAL(math::integrate((x + y) * cos(x) + cos(y), "x"), (x + y) * sin(x) + x * cos(y) + cos(x));
-    BOOST_CHECK_EQUAL(math::integrate((x + y) * cos(x) + cos(y), "y"), y / 2 * (2 * x + y) * cos(x) + sin(y));
-    BOOST_CHECK_EQUAL(math::integrate((x + y) * cos(x) + cos(x), "x"), (x + y + 1) * sin(x) + cos(x));
+    BOOST_CHECK_EQUAL(math::integrate((x + y) * cos(x) + cos(y), "x"), (x + y) * math::sin(x) + x * cos(y) + cos(x));
+    BOOST_CHECK_EQUAL(math::integrate((x + y) * cos(x) + cos(y), "y"), y / 2 * (2 * x + y) * cos(x) + math::sin(y));
+    BOOST_CHECK_EQUAL(math::integrate((x + y) * cos(x) + cos(x), "x"), (x + y + 1) * math::sin(x) + cos(x));
     BOOST_CHECK_THROW(math::integrate(x.pow(-1) * cos(x), "x"), std::invalid_argument);
     BOOST_CHECK_THROW(math::integrate(x.pow(-2) * cos(x + y) + x, "x"), std::invalid_argument);
     // Some examples computed with Wolfram alpha for checking.
-    BOOST_CHECK_EQUAL(math::integrate(x.pow(-2) * cos(x + y) + x, "y"), sin(x + y) * x.pow(-2) + x * y);
+    BOOST_CHECK_EQUAL(math::integrate(x.pow(-2) * cos(x + y) + x, "y"), math::sin(x + y) * x.pow(-2) + x * y);
     BOOST_CHECK_EQUAL(math::integrate(x.pow(5) * y.pow(4) * z.pow(3) * cos(5 * x + 4 * y + 3 * z), "x"),
                       y.pow(4) * z.pow(3) / 3125
-                          * (5 * x * (125 * x.pow(4) - 100 * x * x + 24) * sin(5 * x + 4 * y + 3 * z)
+                          * (5 * x * (125 * x.pow(4) - 100 * x * x + 24) * math::sin(5 * x + 4 * y + 3 * z)
                              + (625 * x.pow(4) - 300 * x * x + 24) * cos(5 * x + 4 * y + 3 * z)));
     BOOST_CHECK_EQUAL(math::integrate(x.pow(5) / 37 * y.pow(4) * z.pow(3) * cos(5 * x - 4 * y + 3 * z), "y"),
                       x.pow(5) * z.pow(3) / 4736
                           * (4 * y * (8 * y * y - 3) * cos(5 * x - 4 * y + 3 * z)
-                             + (-32 * y.pow(4) + 24 * y * y - 3) * sin(5 * x - 4 * y + 3 * z)));
+                             + (-32 * y.pow(4) + 24 * y * y - 3) * math::sin(5 * x - 4 * y + 3 * z)));
     BOOST_CHECK_EQUAL(
         math::partial(math::integrate(x.pow(5) / 37 * y.pow(4) * z.pow(3) * cos(5 * x - 4 * y + 3 * z), "y"), "y"),
         x.pow(5) / 37 * y.pow(4) * z.pow(3) * cos(5 * x - 4 * y + 3 * z));
@@ -304,51 +298,51 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
             "y"),
         x.pow(5) / 37 * y.pow(4) * z.pow(3) * cos(5 * x - 4 * y + 3 * z));
     BOOST_CHECK_EQUAL(math::integrate(rational(1, 37) * y.pow(4) * z.pow(3) * cos(5 * x - 4 * y + 3 * z), "x"),
-                      rational(1, 185) * y.pow(4) * z.pow(3) * sin(5 * x - 4 * y + 3 * z));
+                      rational(1, 185) * y.pow(4) * z.pow(3) * math::sin(5 * x - 4 * y + 3 * z));
     BOOST_CHECK_EQUAL(math::integrate(rational(1, 37) * x.pow(4) * z.pow(3) * cos(4 * y - 3 * z), "x"),
                       rational(1, 185) * x.pow(5) * z.pow(3) * cos(4 * y - 3 * z));
-    BOOST_CHECK_EQUAL(math::integrate(y.pow(-5) * cos(4 * x - 3 * z) - x * y * y * sin(y).pow(4), "x"),
-                      (sin(4 * x - 3 * z) - 2 * x * x * y.pow(7) * sin(y).pow(4)) * (4 * y.pow(5)).pow(-1));
-    BOOST_CHECK_EQUAL((x * x * cos(x)).integrate("x"), (x * x - 2) * sin(x) + 2 * x * cos(x));
-    BOOST_CHECK_EQUAL(((x * x + y) * cos(x) - y * cos(x)).integrate("x"), (x * x - 2) * sin(x) + 2 * x * cos(x));
-    BOOST_CHECK_EQUAL(((x * x + y) * cos(x) + y * cos(x) - x * sin(y)).integrate("x"),
-                      -(x * x) / 2 * sin(y) + (x * x + 2 * y - 2) * sin(x) + 2 * x * cos(x));
+    BOOST_CHECK_EQUAL(math::integrate(y.pow(-5) * cos(4 * x - 3 * z) - x * y * y * math::sin(y).pow(4), "x"),
+                      (math::sin(4 * x - 3 * z) - 2 * x * x * y.pow(7) * math::sin(y).pow(4)) * (4 * y.pow(5)).pow(-1));
+    BOOST_CHECK_EQUAL((x * x * cos(x)).integrate("x"), (x * x - 2) * math::sin(x) + 2 * x * cos(x));
+    BOOST_CHECK_EQUAL(((x * x + y) * cos(x) - y * cos(x)).integrate("x"), (x * x - 2) * math::sin(x) + 2 * x * cos(x));
+    BOOST_CHECK_EQUAL(((x * x + y) * cos(x) + y * cos(x) - x * math::sin(y)).integrate("x"),
+                      -(x * x) / 2 * math::sin(y) + (x * x + 2 * y - 2) * math::sin(x) + 2 * x * cos(x));
     BOOST_CHECK_EQUAL(
-        ((x * x * x + y * x) * cos(2 * x - 3 * y) + y * x.pow(4) * cos(x) - (x.pow(-5) * sin(y))).integrate("x"),
+        ((x * x * x + y * x) * cos(2 * x - 3 * y) + y * x.pow(4) * cos(x) - (x.pow(-5) * math::sin(y))).integrate("x"),
         x.pow(-4) / 8
             * (32 * (x * x - 6) * x.pow(5) * y * cos(x) + x.pow(4) * (6 * x * x + 2 * y - 3) * cos(2 * x - 3 * y)
                + 2
-                     * (x.pow(5) * (2 * x * x + 2 * y - 3) * sin(2 * x - 3 * y)
-                        + 4 * (x.pow(4) - 12 * x * x + 24) * x.pow(4) * y * sin(x) + sin(y))));
+                     * (x.pow(5) * (2 * x * x + 2 * y - 3) * math::sin(2 * x - 3 * y)
+                        + 4 * (x.pow(4) - 12 * x * x + 24) * x.pow(4) * y * math::sin(x) + math::sin(y))));
     BOOST_CHECK_EQUAL(math::integrate((x.pow(-1) * cos(y) + x * y * cos(x)).pow(2), "x"),
                       x.pow(-1) / 24
-                          * (4 * x.pow(4) * y * y + 6 * x.pow(3) * y * y * sin(2 * x) + 6 * x * x * y * y * cos(2 * x)
-                             - 3 * x * y * y * sin(2 * x) + 24 * x * y * sin(x - y) + 24 * x * y * sin(x + y)
-                             - 12 * cos(2 * y) - 12));
+                          * (4 * x.pow(4) * y * y + 6 * x.pow(3) * y * y * math::sin(2 * x)
+                             + 6 * x * x * y * y * cos(2 * x) - 3 * x * y * y * math::sin(2 * x)
+                             + 24 * x * y * math::sin(x - y) + 24 * x * y * math::sin(x + y) - 12 * cos(2 * y) - 12));
     BOOST_CHECK_EQUAL(math::integrate((cos(y) * x.pow(-2) + x * x * y * cos(x)).pow(2), "x"),
                       x.pow(5) * y * y / 10 - (cos(y).pow(2)) * x.pow(-3) / 3
                           + rational(1, 4) * (2 * x * x - 3) * x * y * y * cos(2 * x)
-                          + rational(1, 8) * (2 * x.pow(4) - 6 * x * x + 3) * y * y * sin(2 * x)
-                          + 2 * y * sin(x) * cos(y));
+                          + rational(1, 8) * (2 * x.pow(4) - 6 * x * x + 3) * y * y * math::sin(2 * x)
+                          + 2 * y * math::sin(x) * cos(y));
     BOOST_CHECK_EQUAL(math::integrate((x * cos(y) + y * cos(x)).pow(2), "x"),
                       rational(1, 6) * x * (x * x * cos(2 * y) + x * x + 3 * y * y)
-                          + rational(1, 4) * y * y * sin(2 * x) + 2 * y * cos(x) * cos(y)
-                          + 2 * x * y * sin(x) * cos(y));
+                          + rational(1, 4) * y * y * math::sin(2 * x) + 2 * y * cos(x) * cos(y)
+                          + 2 * x * y * math::sin(x) * cos(y));
     BOOST_CHECK_EQUAL(math::integrate((x * y * cos(y) + y * cos(x)).pow(2), "x"),
                       rational(1, 12) * y * y
-                          * (2 * x * (x * x * cos(2 * y) + x * x + 3) + 24 * cos(x) * cos(y) + 24 * x * sin(x) * cos(y)
-                             + 3 * sin(2 * x)));
-    BOOST_CHECK_EQUAL(
-        math::integrate((x * y * cos(y) + y * cos(x) + x * x * cos(x)).pow(2), "x"),
-        rational(1, 60)
-            * (15 * x * (2 * x * x + 2 * y - 3) * cos(x).pow(2)
-               + x
-                     * (6 * x.pow(4) + 5 * x * x * y * y + 10 * x * x * y * y * cos(y).pow(2)
-                        + 5 * x * x * y * y * cos(2 * y) + 20 * x * x * y - 15 * (2 * x * x + 2 * y - 3) * sin(x).pow(2)
-                        + 120 * y * (x * x + y - 6) * sin(x) * cos(y) + 30 * y * y)
-               + 15 * cos(x)
-                     * (8 * y * (3 * x * x + y - 6) * cos(y)
-                        + (2 * x.pow(4) + x * x * (4 * y - 6) + 2 * y * y - 2 * y + 3) * sin(x))));
+                          * (2 * x * (x * x * cos(2 * y) + x * x + 3) + 24 * cos(x) * cos(y)
+                             + 24 * x * math::sin(x) * cos(y) + 3 * math::sin(2 * x)));
+    BOOST_CHECK_EQUAL(math::integrate((x * y * cos(y) + y * cos(x) + x * x * cos(x)).pow(2), "x"),
+                      rational(1, 60)
+                          * (15 * x * (2 * x * x + 2 * y - 3) * cos(x).pow(2)
+                             + x
+                                   * (6 * x.pow(4) + 5 * x * x * y * y + 10 * x * x * y * y * cos(y).pow(2)
+                                      + 5 * x * x * y * y * cos(2 * y) + 20 * x * x * y
+                                      - 15 * (2 * x * x + 2 * y - 3) * math::sin(x).pow(2)
+                                      + 120 * y * (x * x + y - 6) * math::sin(x) * cos(y) + 30 * y * y)
+                             + 15 * cos(x)
+                                   * (8 * y * (3 * x * x + y - 6) * cos(y)
+                                      + (2 * x.pow(4) + x * x * (4 * y - 6) + 2 * y * y - 2 * y + 3) * math::sin(x))));
     // This would require sine/cosine integral special functions.
     BOOST_CHECK_THROW(math::integrate((x * y.pow(-1) * cos(y) + y * cos(x) + x * x * cos(x)).pow(2), "y"),
                       std::invalid_argument);
