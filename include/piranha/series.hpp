@@ -1364,13 +1364,6 @@ private:
         // Try to locate the element.
         auto bucket_idx = m_container._bucket(term);
         const auto it = m_container._find(term, bucket_idx);
-        // Cleanup function that checks ignorability of an element in the hash set,
-        // and removes it if necessary.
-        auto cleanup = [this](const typename container_type::const_iterator &it_c) {
-            if (unlikely(it_c->is_zero(this->m_symbol_set))) {
-                this->m_container.erase(it_c);
-            }
-        };
         if (it == m_container.end()) {
             if (unlikely(m_container.size() == std::numeric_limits<size_type>::max())) {
                 piranha_throw(std::overflow_error, "maximum number of elements reached");
@@ -1389,11 +1382,14 @@ private:
             if (!Sign) {
                 try {
                     math::negate(new_it->m_cf);
-                    cleanup(new_it);
+                    // Check if the term has become ignorable after the negation.
+                    if (unlikely(new_it->is_zero(m_symbol_set))) {
+                        m_container.erase(new_it);
+                    }
                 } catch (...) {
-                    // Run the cleanup function also in case of exceptions, as we do not know
-                    // in which state the modified term is.
-                    cleanup(new_it);
+                    // Clear up the whole container in case of errors, in order
+                    // to avoid having an inconsistent state.
+                    m_container.clear();
                     throw;
                 }
             }
@@ -1404,9 +1400,13 @@ private:
                 // The term exists already, update it.
                 insertion_cf_arithmetics<Sign>(it, std::forward<T>(term));
                 // Check if the term has become ignorable after the modification.
-                cleanup(it);
+                if (unlikely(it->is_zero(m_symbol_set))) {
+                    m_container.erase(it);
+                }
             } catch (...) {
-                cleanup(it);
+                // Clear up the whole container in case of errors, in order
+                // to avoid having an inconsistent state.
+                m_container.clear();
                 throw;
             }
         }
@@ -2234,7 +2234,7 @@ public:
      *
      * If any term becomes ignorable or incompatible after negation, it will be erased from the series.
      *
-     * @throws unspecified any exception thrown by math::negate() on the coefficient type.
+     * @throws unspecified any exception thrown by math::negate() or by piranha::term::is_zero().
      */
     void negate()
     {
