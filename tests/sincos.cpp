@@ -73,6 +73,20 @@ class sin_impl<b_01>
 public:
     b_01 operator()(const b_01 &) const;
 };
+
+template <>
+class cos_impl<b_00>
+{
+public:
+    b_00 operator()(const b_00 &) const;
+};
+
+template <>
+class cos_impl<b_01>
+{
+public:
+    b_01 operator()(const b_01 &) const;
+};
 }
 }
 
