@@ -848,7 +848,8 @@ protected:
      * - standard threading primitives,
      * - thread_pool::enqueue(),
      * - future_list::push_back(),
-     * - piranha::term::is_zero().
+     * - piranha::term::is_zero(),
+     * - piranha::term::is_compatible().
      */
     static void sanitise_series(Series &retval, unsigned n_threads)
     {

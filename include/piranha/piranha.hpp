@@ -153,13 +153,6 @@ see https://www.gnu.org/licenses/. */
  * with recursive polys in the same fashion. This should probably be a bullet point if we ever decide to support
  * recrusive polynomials as first-class citizens.
  * \todo the tuning:: class should probably be rolled into settings.
- * \todo think about removing the noexcept requirements for ignorability and compatibility of terms. This makes sense
- * logically as ignorability is anyway
- * gonna call is_zero(), which might throw (see bp_object for instance), we might end up simplifying the logic and we
- * don't lose much (not a big deal
- * if the exception safety is weaker). If we do this, we need to check all usages of is_ignorable()/is_compatible(),
- * re-evaluate the exception handling
- * where they are used and update the docs for exception specifications.
  * \todo hash_set needs more testing.
  * \todo maybe we should rename is_container_element to is_regular_type.
  * \todo the following items still remain to be finished up after the truncation rework:

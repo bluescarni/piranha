@@ -342,9 +342,9 @@ public:
      *
      * @param args the reference piranha::symbol_fset.
      *
-     * @return compatibility flag for the monomial.
+     * @return the compatibility flag for the monomial.
      */
-    bool is_compatible(const symbol_fset &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const
     {
         // NOTE: the idea here is to avoid unpack()ing for performance reasons: these checks
         // are already part of unpack(), and that's why unpack() is used instead of is_compatible()

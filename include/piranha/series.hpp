@@ -2179,7 +2179,8 @@ public:
      * - piranha::hash_set::find(),
      * - piranha::hash_set::erase(),
      * - piranha::math::negate(), in-place addition/subtraction on coefficient types,
-     * - piranha::term::is_zero().
+     * - piranha::term::is_zero(),
+     * - piranha::term::is_compatible().
      * @throws std::invalid_argument if \p term is incompatible.
      */
     template <bool Sign, typename T, insert_enabler<T> = 0>

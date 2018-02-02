@@ -51,7 +51,7 @@ struct key02 {
     key02(const symbol_fset &);
     bool operator==(const key02 &) const;
     bool operator!=(const key02 &) const;
-    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_compatible(const symbol_fset &) const;
     bool is_zero(const symbol_fset &) const;
     key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
@@ -70,7 +70,7 @@ struct key03 {
     key03(const symbol_fset &);
     bool operator==(const key03 &) const;
     bool operator!=(const key03 &) const;
-    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_compatible(const symbol_fset &) const;
     bool is_zero(const symbol_fset &) const;
     key03 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
@@ -89,7 +89,7 @@ struct key04 {
     key04(const symbol_fset &);
     bool operator==(const key04 &) const;
     bool operator!=(const key04 &) const;
-    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_compatible(const symbol_fset &) const;
     bool is_zero(const symbol_fset &) const;
     key04 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
@@ -108,7 +108,7 @@ struct key05 {
     key05(const symbol_fset &);
     bool operator==(const key05 &) const;
     bool operator!=(const key05 &) const;
-    bool is_compatible(const symbol_fset &) const;
+    bool is_compatible(const symbol_fset &);
     bool is_zero(const symbol_fset &) const;
     key05 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
@@ -127,7 +127,7 @@ struct key06 {
     key06(const symbol_fset &);
     bool operator==(const key06 &) const;
     bool operator!=(const key06 &) const;
-    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_compatible(const symbol_fset &) const;
     bool is_zero(const symbol_fset &) const;
     key06 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
@@ -146,7 +146,7 @@ struct key06a {
     key06a(const symbol_fset &);
     bool operator==(const key06a &) const;
     bool operator!=(const key06a &) const;
-    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_compatible(const symbol_fset &) const;
     bool is_zero(const symbol_fset &) const;
     key06a merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
@@ -165,7 +165,7 @@ struct key07 {
     key07(const symbol_fset &);
     bool operator==(const key07 &) const;
     bool operator!=(const key07 &) const;
-    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_compatible(const symbol_fset &) const;
     bool is_zero(const symbol_fset &) const;
     key07 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
@@ -183,7 +183,7 @@ struct key08 {
     key08(const symbol_fset &);
     bool operator==(const key08 &) const;
     bool operator!=(const key08 &) const;
-    bool is_compatible(const symbol_fset &) const noexcept;
+    bool is_compatible(const symbol_fset &) const;
     bool is_zero(const symbol_fset &) const;
     key08 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(symbol_fset &) const;
