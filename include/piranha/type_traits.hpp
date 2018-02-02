@@ -174,6 +174,9 @@ concept bool CppIntegral = std::is_integral<T>::value;
 template <typename T>
 concept bool CppFloatingPoint = std::is_floating_point<T>::value;
 
+template <typename T, typename... Args>
+concept bool Constructible = std::is_constructible<T, Args...>::value;
+
 #endif
 
 inline namespace impl
@@ -464,30 +467,29 @@ public:
 template <typename T, typename U>
 const bool has_right_shift_in_place<T, U>::value;
 
-/// Equality-comparable type trait.
-/**
- * This type trait is \p true if instances if type \p T can be compared for equality and inequality to instances of
- * type \p U. The operators must be non-mutable (i.e., implemented using pass-by-value or const
- * references) and must return a type implicitly convertible to \p bool.
- */
-template <typename T, typename U = T>
-class is_equality_comparable
+inline namespace impl
 {
-    template <typename T1, typename U1>
-    using eq_t = decltype(std::declval<const T1 &>() == std::declval<const U1 &>());
-    template <typename T1, typename U1>
-    using ineq_t = decltype(std::declval<const T1 &>() != std::declval<const U1 &>());
-    static const bool implementation_defined = conjunction<std::is_convertible<detected_t<eq_t, T, U>, bool>,
-                                                           std::is_convertible<detected_t<ineq_t, T, U>, bool>>::value;
 
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
+// Return types for the equality and inequality operators.
+template <typename T, typename U>
+using eq_t = decltype(std::declval<const T &>() == std::declval<const U &>());
+
+template <typename T, typename U>
+using ineq_t = decltype(std::declval<const T &>() != std::declval<const U &>());
+}
+
+// Equality-comparable type trait.
+template <typename T, typename U = T>
+struct is_equality_comparable : conjunction<std::is_convertible<detected_t<eq_t, T, U>, bool>,
+                                            std::is_convertible<detected_t<ineq_t, T, U>, bool>> {
 };
 
-// Static init.
-template <typename T, typename U>
-const bool is_equality_comparable<T, U>::value;
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U = T>
+concept bool EqualityComparable = is_equality_comparable<T, U>::value;
+
+#endif
 
 /// Less-than-comparable type trait.
 /**

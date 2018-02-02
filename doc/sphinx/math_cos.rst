@@ -51,7 +51,7 @@ Concepts
 
       piranha::math::cos(x)
 
-   is a valid expression, where ``x`` is a ``const`` reference to ``T``.
+   is a valid expression, where ``x`` is a reference to const ``T``.
 
 .. _math_cos_impls:
 

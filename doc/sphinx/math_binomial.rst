@@ -51,7 +51,7 @@ Concepts
 
       piranha::math::binomial(x, y)
 
-   is a valid expression, where ``x`` and ``y`` are ``const`` references to ``T`` and ``U`` respectively.
+   is a valid expression, where ``x`` and ``y`` are references to const ``T`` and ``U`` respectively.
 
 .. _math_binomial_impls:
 
