@@ -48,7 +48,7 @@ namespace piranha
  *
  * - it must satisfy piranha::is_container_element,
  * - it must satisfy piranha::has_print_coefficient and piranha::has_print_tex_coefficient,
- * - it must satisfy piranha::has_is_zero and piranha::has_negate,
+ * - it must satisfy piranha::is_is_zero_type and piranha::has_negate,
  * - it must be equality comparable,
  * - it must be addable and subtractable (both binary and in-place forms),
  * - it must be constructible from integer numerals.
@@ -57,9 +57,10 @@ template <typename T>
 class is_cf
 {
     static const bool implementation_defined
-        = conjunction<is_container_element<T>, has_print_coefficient<T>, has_print_tex_coefficient<T>, has_is_zero<T>,
-                      has_negate<T>, is_equality_comparable<T>, is_addable<T>, is_addable_in_place<T>,
-                      is_subtractable_in_place<T>, is_subtractable<T>, std::is_constructible<T, const int &>>::value;
+        = conjunction<is_container_element<T>, has_print_coefficient<T>, has_print_tex_coefficient<T>,
+                      is_is_zero_type<T>, has_negate<T>, is_equality_comparable<T>, is_addable<T>,
+                      is_addable_in_place<T>, is_subtractable_in_place<T>, is_subtractable<T>,
+                      std::is_constructible<T, const int &>>::value;
 
 public:
     /// Value of the type trait.

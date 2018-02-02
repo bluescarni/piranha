@@ -47,128 +47,15 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
 {
 
-/// Math namespace.
-/**
- * Namespace for general-purpose mathematical functions.
- */
 namespace math
 {
-
-/// Default functor for the implementation of piranha::math::is_zero().
-/**
- * This functor should be specialised via the \p std::enable_if mechanism. The default implementation defines a call
- * operator which is enabled only if the argument type is constructible from the C++ \p int type and \p T is equality
- * comparable.
- */
-template <typename T, typename = void>
-struct is_zero_impl {
-private:
-    // NOTE: the equality comparable requirement already implies that the return type of
-    // the comparison must be convertible to bool.
-    template <typename U>
-    using enabler =
-        typename std::enable_if<std::is_constructible<U, int>::value && is_equality_comparable<U>::value, int>::type;
-
-public:
-    /// Call operator.
-    /**
-     * \note
-     * This operator is enabled only if \p U is constructible from \p int and
-     * equality-comparable.
-     *
-     * The operator will compare \p x to an instance of \p U constructed from the literal 0.
-     *
-     * @param x argument to be tested.
-     *
-     * @return \p true if \p x is zero, \p false otherwise.
-     *
-     * @throws unspecified any exception thrown by the construction or comparison of instances of type \p U, or
-     * by the conversion of the result of the comparison to \p bool.
-     */
-    template <typename U, enabler<U> = 0>
-    bool operator()(const U &x) const
-    {
-        return x == U(0);
-    }
-};
-}
-
-namespace detail
-{
-
-// Enabler for math::is_zero().
-template <typename T>
-using math_is_zero_enabler = typename std::enable_if<
-    std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())), bool>::value, int>::type;
-}
-
-namespace math
-{
-
-/// Zero test.
-/**
- * \note
- * This function is enabled only if <tt>is_zero_impl<T>{}(x)</tt> is a well-formed expression returning
- * a type implicitly convertible to \p bool.
- *
- * Test if value is zero. The actual implementation of this function is in the piranha::math::is_zero_impl functor's
- * call operator. The body of this function is equivalent to:
- * @code
- * return is_zero_impl<T>{}(x);
- * @endcode
- *
- * @param x value to be tested.
- *
- * @return \p true if value is zero, \p false otherwise.
- *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::is_zero_impl functor or by
- * the conversion of the result to \p bool.
- */
-template <typename T, detail::math_is_zero_enabler<T> = 0>
-inline bool is_zero(const T &x)
-{
-    return is_zero_impl<T>{}(x);
-}
-}
-
-namespace detail
-{
-
-// Enabler for the std complex specialisation of is_zero.
-template <typename T>
-using math_is_zero_std_complex_enabler =
-    typename std::enable_if<std::is_same<T, std::complex<float>>::value || std::is_same<T, std::complex<double>>::value
-                            || std::is_same<T, std::complex<long double>>::value>::type;
-}
-
-namespace math
-{
-
-/// Specialisation of the piranha::math::is_zero() functor for C++ complex floating-point types.
-/**
- * This specialisation is enabled if \p T is an <tt>std::complex</tt> of a C++ floating-point type.
- */
-template <typename T>
-struct is_zero_impl<T, detail::math_is_zero_std_complex_enabler<T>> {
-    /// Call operator.
-    /**
-     * The operator will test separately the real and imaginary parts of the complex argument.
-     *
-     * @param c argument to be tested.
-     *
-     * @return \p true if \p c is zero, \p false otherwise.
-     */
-    bool operator()(const T &c) const
-    {
-        return is_zero(c.real()) && is_zero(c.imag());
-    }
-};
 
 /// Default functor for the implementation of piranha::math::is_unitary().
 /**
@@ -858,26 +745,6 @@ public:
 template <typename T>
 const bool has_abs<T>::value;
 
-/// Type trait to detect the presence of the piranha::math::is_zero() function.
-/**
- * The type trait will be \p true if piranha::math::is_zero() can be successfully called on instances of \p T.
- */
-template <typename T>
-class has_is_zero
-{
-    template <typename U>
-    using is_zero_t = decltype(math::is_zero(std::declval<const U &>()));
-    static const bool implementation_defined = is_detected<is_zero_t, T>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
-
-// Static init.
-template <typename T>
-const bool has_is_zero<T>::value;
-
 /// Type trait to detect the presence of the piranha::math::negate function.
 /**
  * The type trait will be \p true if piranha::math::negate can be successfully called on instances of \p T,
@@ -1012,7 +879,7 @@ namespace detail
 {
 
 template <typename T>
-using is_canonical_enabler = typename std::enable_if<has_pbracket<T>::value && has_is_zero<pbracket_type<T>>::value
+using is_canonical_enabler = typename std::enable_if<has_pbracket<T>::value && is_is_zero_type<pbracket_type<T>>::value
                                                          && std::is_constructible<pbracket_type<T>, int>::value
                                                          && is_equality_comparable<pbracket_type<T>>::value,
                                                      int>::type;
@@ -1067,8 +934,8 @@ namespace math
  * \note
  * This function is enabled only if all the following requirements are met:
  * - \p T satisfies piranha::has_pbracket,
- * - the output type of piranha::has_pbracket for \p T satisfies piranha::has_is_zero, it is constructible from \p int
- *   and it is equality comparable.
+ * - the output type of piranha::has_pbracket for \p T satisfies piranha::is_is_zero_type, it is constructible from \p
+ *   int and it is equality comparable.
  *
  * This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson
  * bracket test.
