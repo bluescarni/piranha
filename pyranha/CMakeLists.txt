@@ -81,7 +81,7 @@ endif()
 target_compile_options(_core PRIVATE "$<$<CONFIG:DEBUG>:${PIRANHA_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PIRANHA_CXX_FLAGS_RELEASE}>")
 # The module needs Boost.Python and the mandatory libraries. Python libs and includes are already linked in
 # by YACMA_PYTHON_MODULE().
-target_link_libraries(_core PRIVATE piranha ${PYRANHA_BP_TARGET} ${PIRANHA_MANDATORY_LINK_TARGETS})
+target_link_libraries(_core PRIVATE piranha ${PYRANHA_BP_TARGET})
 
 # NOTE: for clang-cl, cmake tries to set -std=c++11 here, which makes
 # it error out. Disable it as MSVC 2015 is implicitly C++14 anyway.

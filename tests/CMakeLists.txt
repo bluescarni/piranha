@@ -22,7 +22,13 @@ function(ADD_PIRANHA_TESTCASE arg1)
 	if(NOT (YACMA_COMPILER_IS_MSVC AND YACMA_COMPILER_IS_CLANGXX))
 		# Let's setup the target C++ standard, but only if the user did not provide it manually.
 		if(NOT CMAKE_CXX_STANDARD)
-			set_property(TARGET ${arg1} PROPERTY CXX_STANDARD 11)
+			if(PIRANHA_COMPILER_SUPPORTS_CONCEPTS)
+				# NOTE: the idea here is that we want to use C++14 if the compilers supports
+				# concepts (as variable concepts are essentially template variables).
+				set_property(TARGET ${arg1} PROPERTY CXX_STANDARD 14)
+			else()
+				set_property(TARGET ${arg1} PROPERTY CXX_STANDARD 11)
+			endif()
 		endif()
 		set_property(TARGET ${arg1} PROPERTY CXX_STANDARD_REQUIRED YES)
 		set_property(TARGET ${arg1} PROPERTY CXX_EXTENSIONS NO)
