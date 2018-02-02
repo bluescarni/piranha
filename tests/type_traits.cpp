@@ -50,7 +50,6 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/config.hpp>
-#include <piranha/is_cf.hpp>
 
 using namespace piranha;
 
@@ -1070,153 +1069,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_function_object_test)
     BOOST_CHECK((!is_equality_function_object<efo10, int>::value));
 }
 
-struct cf01 {
-};
-
-struct cf02 {
-    cf02();
-    cf02(const int &);
-    cf02(const cf02 &);
-    cf02(cf02 &&) noexcept;
-    cf02 &operator=(const cf02 &);
-    cf02 &operator=(cf02 &&) noexcept;
-    friend std::ostream &operator<<(std::ostream &, const cf02 &);
-    cf02 operator-() const;
-    bool operator==(const cf02 &) const;
-    bool operator!=(const cf02 &) const;
-    cf02 &operator+=(const cf02 &);
-    cf02 &operator-=(const cf02 &);
-    cf02 operator+(const cf02 &) const;
-    cf02 operator-(const cf02 &) const;
-};
-
-struct cf03 {
-    cf03();
-    cf03(const int &);
-    cf03(const cf03 &);
-    cf03(cf03 &&) noexcept;
-    cf03 &operator=(const cf03 &);
-    cf03 &operator=(cf03 &&) noexcept;
-    friend std::ostream &operator<<(std::ostream &, const cf03 &);
-    bool operator==(const cf03 &) const;
-    bool operator!=(const cf03 &) const;
-    cf03 &operator+=(const cf03 &);
-    cf03 &operator-=(const cf03 &);
-    cf03 operator+(const cf03 &) const;
-    cf03 operator-(const cf03 &) const;
-};
-
-struct cf04 {
-    cf04();
-    cf04(const int &);
-    cf04(const cf04 &);
-    cf04(cf04 &&) noexcept;
-    cf04 &operator=(const cf04 &);
-    cf04 &operator=(cf04 &&) noexcept;
-    friend std::ostream &operator<<(std::ostream &, const cf04 &);
-    cf04 operator-() const;
-    cf04 &operator+=(const cf04 &);
-    cf04 &operator-=(const cf04 &);
-    cf04 operator+(const cf04 &) const;
-    cf04 operator-(const cf04 &) const;
-};
-
-struct cf05 {
-    cf05();
-    cf05(const cf05 &);
-    cf05(cf05 &&) noexcept;
-    cf05 &operator=(const cf05 &);
-    cf05 &operator=(cf05 &&) noexcept;
-    friend std::ostream &operator<<(std::ostream &, const cf05 &);
-    cf05 operator-() const;
-    bool operator==(const cf05 &) const;
-    bool operator!=(const cf05 &) const;
-    cf05 &operator+=(const cf05 &);
-    cf05 &operator-=(const cf05 &);
-    cf05 operator+(const cf05 &) const;
-    cf05 operator-(const cf05 &) const;
-};
-
-struct cf06 {
-    cf06();
-    cf06(const int &);
-    cf06(const cf06 &);
-    cf06(cf06 &&) noexcept(false);
-    cf06 &operator=(const cf06 &);
-    cf06 &operator=(cf06 &&) noexcept;
-    friend std::ostream &operator<<(std::ostream &, const cf06 &);
-    cf06 operator-() const;
-    bool operator==(const cf06 &) const;
-    bool operator!=(const cf06 &) const;
-    cf06 &operator+=(const cf06 &);
-    cf06 &operator-=(const cf06 &);
-    cf06 operator+(const cf06 &) const;
-    cf06 operator-(const cf06 &) const;
-};
-
-struct cf07 {
-    cf07();
-    cf07(const int &);
-    cf07(const cf07 &);
-    cf07(cf07 &&) noexcept(false);
-    cf07 &operator=(const cf07 &);
-    cf07 &operator=(cf07 &&) noexcept;
-    friend std::ostream &operator<<(std::ostream &, const cf07 &);
-    cf07 operator-() const;
-    bool operator==(const cf07 &) const;
-    bool operator!=(const cf07 &) const;
-    cf07 &operator+=(const cf07 &);
-    cf07 &operator-=(const cf07 &);
-    cf07 operator+(const cf07 &) const;
-    cf07 operator-(const cf07 &) const;
-};
-
-namespace piranha
-{
-
-template <typename T>
-struct enable_noexcept_checks<T, typename std::enable_if<std::is_same<cf07, T>::value>::type> {
-    static const bool value = false;
-};
-
-template <typename T>
-const bool enable_noexcept_checks<T, typename std::enable_if<std::is_same<cf07, T>::value>::type>::value;
-}
-
-BOOST_AUTO_TEST_CASE(type_traits_is_cf_test)
-{
-    BOOST_CHECK(is_cf<int>::value);
-    BOOST_CHECK(is_cf<double>::value);
-    BOOST_CHECK(is_cf<long double>::value);
-    BOOST_CHECK(is_cf<std::complex<double>>::value);
-    // NOTE: the checks on the pointers here produce warnings in clang. The reason is that
-    // ptr1 -= ptr2
-    // expands to
-    // ptr1 = ptr1 - ptr2
-    // where ptr1 - ptr2 is some integer value (due to pointer arith.) that then gets assigned back to a pointer. It is
-    // not
-    // entirely clear if this should be a hard error (GCC) or just a warning (clang) so for now it is better to simply
-    // disable
-    // the check. Note that the same problem would be in is_subtractable_in_place if we checked for pointers there.
-    // BOOST_CHECK(!is_cf<double *>::value);
-    // BOOST_CHECK(!is_cf<double const *>::value);
-    BOOST_CHECK(!is_cf<int &>::value);
-    BOOST_CHECK(!is_cf<int const &>::value);
-    BOOST_CHECK(!is_cf<int const &>::value);
-    BOOST_CHECK(!is_cf<cf01>::value);
-    BOOST_CHECK(is_cf<cf02>::value);
-    // BOOST_CHECK(!is_cf<cf02 *>::value);
-    BOOST_CHECK(!is_cf<cf02 &&>::value);
-    BOOST_CHECK(!is_cf<cf03>::value);
-    BOOST_CHECK(!is_cf<cf04>::value);
-    BOOST_CHECK(!is_cf<cf05>::value);
-// Missing noexcept.
-#if !defined(PIRANHA_COMPILER_IS_INTEL)
-    BOOST_CHECK(!is_cf<cf06>::value);
-#endif
-    BOOST_CHECK(is_cf<cf07>::value);
-}
-
 BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
 {
     BOOST_CHECK((std::is_same<int, min_int<int>>::value));
@@ -2041,4 +1893,26 @@ BOOST_AUTO_TEST_CASE(type_traits_disj_idx)
     BOOST_CHECK(
         (disjunction_idx<std::is_same<int, float>, std::is_same<int, float>, std::is_same<int, std::string>>::value
          == 3u));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_cpp_complex)
+{
+    BOOST_CHECK(!is_cpp_complex<void>::value);
+    BOOST_CHECK(!is_cpp_complex<float>::value);
+    BOOST_CHECK(!is_cpp_complex<float &>::value);
+    BOOST_CHECK(is_cpp_complex<std::complex<float>>::value);
+    BOOST_CHECK(is_cpp_complex<std::complex<double>>::value);
+    BOOST_CHECK(is_cpp_complex<std::complex<long double>>::value);
+    BOOST_CHECK(is_cpp_complex<const std::complex<float>>::value);
+    BOOST_CHECK(is_cpp_complex<const std::complex<double>>::value);
+    BOOST_CHECK(is_cpp_complex<const std::complex<long double>>::value);
+    BOOST_CHECK(is_cpp_complex<const volatile std::complex<float>>::value);
+    BOOST_CHECK(is_cpp_complex<const volatile std::complex<double>>::value);
+    BOOST_CHECK(is_cpp_complex<const volatile std::complex<long double>>::value);
+    BOOST_CHECK(is_cpp_complex<volatile std::complex<float>>::value);
+    BOOST_CHECK(is_cpp_complex<volatile std::complex<double>>::value);
+    BOOST_CHECK(is_cpp_complex<volatile std::complex<long double>>::value);
+    BOOST_CHECK(!is_cpp_complex<std::complex<float> &>::value);
+    BOOST_CHECK(!is_cpp_complex<std::complex<double> &&>::value);
+    BOOST_CHECK(!is_cpp_complex<const std::complex<long double> &>::value);
 }

@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_TYPE_TRAITS_HPP
 #define PIRANHA_TYPE_TRAITS_HPP
 
+#include <complex>
 #include <cstdarg>
 #include <cstddef>
 #include <functional>
@@ -150,10 +151,13 @@ void tuple_for_each(Tuple &&t, const F &f)
 
 // Some handy aliases.
 template <typename T>
-using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+using uncv_t = typename std::remove_cv<T>::type;
 
 template <typename T>
 using unref_t = typename std::remove_reference<T>::type;
+
+template <typename T>
+using uncvref_t = uncv_t<unref_t<T>>;
 
 template <typename T>
 using addlref_t = typename std::add_lvalue_reference<T>::type;
@@ -176,6 +180,21 @@ concept bool CppFloatingPoint = std::is_floating_point<T>::value;
 
 template <typename T, typename... Args>
 concept bool Constructible = std::is_constructible<T, Args...>::value;
+
+template <typename From, typename To>
+concept bool Convertible = std::is_convertible<From, To>::value;
+
+#endif
+
+template <typename T>
+using is_cpp_complex
+    = disjunction<std::is_same<uncv_t<T>, std::complex<float>>, std::is_same<uncv_t<T>, std::complex<double>>,
+                  std::is_same<uncv_t<T>, std::complex<long double>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool CppComplex = is_cpp_complex<T>::value;
 
 #endif
 
