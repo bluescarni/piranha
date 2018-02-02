@@ -62,6 +62,40 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/symbol_utils.hpp>
 
+// Uniform int distribution wrapper, from min to max value for type T.
+template <typename T, typename = void>
+struct integral_minmax_dist {
+    integral_minmax_dist() : m_dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max()) {}
+    template <typename E>
+    T operator()(E &e)
+    {
+        return m_dist(e);
+    }
+    std::uniform_int_distribution<T> m_dist;
+};
+
+// NOTE: char types are not supported in uniform_int_distribution by the standard.
+// Use a small wrapper to get an int distribution instead, with the min max limits
+// from the char type. We will be casting back when using the distribution.
+template <typename T>
+struct integral_minmax_dist<
+    T, typename std::enable_if<std::is_same<char, T>::value || std::is_same<signed char, T>::value
+                               || std::is_same<unsigned char, T>::value || std::is_same<wchar_t, T>::value>::type> {
+    // Just gonna assume long/ulong can represent wchar_t here.
+    using type = typename std::conditional<std::is_signed<T>::value, long, unsigned long>::type;
+    static_assert(!std::is_same<T, wchar_t>::value
+                      || (std::numeric_limits<T>::max() <= std::numeric_limits<type>::max()
+                          && std::numeric_limits<T>::min() >= std::numeric_limits<type>::min()),
+                  "Invalid range for wchar_t.");
+    integral_minmax_dist() : m_dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max()) {}
+    template <typename E>
+    T operator()(E &e)
+    {
+        return static_cast<T>(m_dist(e));
+    }
+    std::uniform_int_distribution<type> m_dist;
+};
+
 using namespace piranha;
 
 namespace bfs = boost::filesystem;
@@ -524,7 +558,7 @@ struct boost_int_tester {
     {
         std::atomic<bool> status(true);
         auto checker = [&status](int n) {
-            std::uniform_int_distribution<T> dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+            integral_minmax_dist<T> dist;
             std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
             for (auto i = 0; i < ntrials; ++i) {
                 const auto tmp = dist(eng);
@@ -598,10 +632,10 @@ BOOST_AUTO_TEST_CASE(s11n_test_boost_string)
     auto checker = [&status](int n) {
         // NOTE: the numerical values of the decimal digits are guaranteed to be
         // consecutive.
-        std::uniform_int_distribution<char> dist('0', '9');
+        std::uniform_int_distribution<int> dist('0', '9');
         std::uniform_int_distribution<unsigned> sdist(0u, 10u);
         std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
-        auto gen = [&eng, &dist]() { return dist(eng); };
+        auto gen = [&eng, &dist]() { return static_cast<char>(dist(eng)); };
         std::array<char, 10u> achar;
         for (auto i = 0; i < ntrials; ++i) {
             const auto s = sdist(eng);
@@ -814,7 +848,7 @@ struct int_tester {
     {
         std::atomic<bool> status(true);
         auto checker = [&status](int n) {
-            std::uniform_int_distribution<T> dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+            integral_minmax_dist<T> dist;
             std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
             for (auto f : {0, 1}) {
                 for (auto i = 0; i < ntrials; ++i) {
@@ -927,10 +961,10 @@ BOOST_AUTO_TEST_CASE(s11n_test_msgpack_string)
 {
     std::atomic<bool> status(true);
     auto checker = [&status](int n) {
-        std::uniform_int_distribution<char> dist('0', '9');
+        std::uniform_int_distribution<int> dist('0', '9');
         std::uniform_int_distribution<unsigned> sdist(0u, 10u);
         std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
-        auto gen = [&eng, &dist]() { return dist(eng); };
+        auto gen = [&eng, &dist]() { return static_cast<char>(dist(eng)); };
         std::array<char, 10u> achar;
         for (auto i = 0; i < ntrials; ++i) {
             for (msgpack_format f : {msgpack_format::portable, msgpack_format::binary}) {
@@ -978,7 +1012,7 @@ struct int_save_load_tester {
     {
         std::atomic<bool> status(true);
         auto checker = [&status](int n) {
-            std::uniform_int_distribution<T> dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+            integral_minmax_dist<T> dist;
             std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
             for (auto i = 0; i < ntrials_file; ++i) {
                 for (auto f : dfs) {
@@ -1098,10 +1132,10 @@ static inline void string_save_load_tester()
     auto checker = [&status](int n) {
         // NOTE: the numerical values of the decimal digits are guaranteed to be
         // consecutive.
-        std::uniform_int_distribution<char> dist('0', '9');
+        std::uniform_int_distribution<int> dist('0', '9');
         std::uniform_int_distribution<unsigned> sdist(0u, 10u);
         std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
-        auto gen = [&eng, &dist]() { return dist(eng); };
+        auto gen = [&eng, &dist]() { return static_cast<char>(dist(eng)); };
         std::array<char, 10u> achar;
         for (auto i = 0; i < ntrials_file; ++i) {
             for (auto f : dfs) {
