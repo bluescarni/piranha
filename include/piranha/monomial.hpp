@@ -245,7 +245,7 @@ public:
      *
      * @return \p false.
      */
-    bool is_zero(const symbol_fset &) const noexcept
+    bool is_zero(const symbol_fset &) const
     {
         return false;
     }

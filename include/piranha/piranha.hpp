@@ -82,9 +82,6 @@ see https://www.gnu.org/licenses/. */
  * and keep lexical_cast only for the conversion of piranha's types to string. UPDATE: it looks like to_string is
  * influenced by the locale setting, it's probably better to roll our implementation.
  * \todo review the use of return statements with const objects, if any.
- * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in term. Should we require it
- * to be
- * noexcept as well and put the requirement in the is_cf type trait?
  * \todo review the usage of _fwd headers. It seems it is ok for friend declarations for instance, but wherever we might
  * need the full definition of the object we might want to reorganise the code.
  * \todo the prepare_for_print() should probably become a public print_exponent(), that also takes care of putting
@@ -108,9 +105,6 @@ see https://www.gnu.org/licenses/. */
  * - the program will terminate anyway). We should also probably check the uses of std::move in order to make sure we do
  * not use
  * exception guarantees throughout the code.
- * \todo do the noexcept methods in keys really need to be noexcept? Maybe it is better to offer a weaker exception
- * guarantee
- * and be done with them instead.
  * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such
  * as key_is_*,
  * series_is_*, etc. So far this has resulted in no practical problems, but in the future we might want to look again at

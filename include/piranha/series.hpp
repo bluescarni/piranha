@@ -1050,7 +1050,8 @@ public:
      * @throws unspecified any exception thrown by:
      * - any invoked series, coefficient or key constructor,
      * - construction, assignment and other operations on piranha::symbol_fset,
-     * - piranha::series::insert().
+     * - piranha::series::insert(),
+     * - piranha::term::is_zero().
      */
     template <typename T, typename... U>
     friend binary_add_type<T, U...> operator+(T &&x, U &&... y)
@@ -1170,6 +1171,7 @@ public:
      * - any invoked series, coefficient, term and key constructor,
      * - piranha::series::insert(),
      * - piranha::hash_set::erase(),
+     * - piranha::term::is_zero(),
      * - the division operator on the coefficient type of the result.
      */
     template <typename T, typename... U>
@@ -1302,9 +1304,7 @@ private:
     typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
     // Insertion.
     template <bool Sign, typename T>
-    void dispatch_insertion(
-        T &&term,
-        typename std::enable_if<std::is_same<typename std::decay<T>::type, term_type>::value>::type * = nullptr)
+    void dispatch_insertion(T &&term)
     {
         // Debug checks.
         piranha_assert(empty() || m_container.begin()->is_compatible(m_symbol_set));
@@ -1412,8 +1412,7 @@ private:
         }
     }
     template <typename T>
-    using insert_enabler =
-        typename std::enable_if<std::is_same<term_type, typename std::decay<T>::type>::value, int>::type;
+    using insert_enabler = enable_if_t<std::is_same<term_type, uncvref_t<T>>::value, int>;
     // Terms merging
     // =============
     // NOTE: ideas to improve the algorithm:
@@ -2179,7 +2178,8 @@ public:
      * - piranha::hash_set::insert(),
      * - piranha::hash_set::find(),
      * - piranha::hash_set::erase(),
-     * - piranha::math::negate(), in-place addition/subtraction on coefficient types.
+     * - piranha::math::negate(), in-place addition/subtraction on coefficient types,
+     * - piranha::term::is_zero().
      * @throws std::invalid_argument if \p term is incompatible.
      */
     template <bool Sign, typename T, insert_enabler<T> = 0>

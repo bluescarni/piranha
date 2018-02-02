@@ -403,7 +403,7 @@ public:
      *
      * @return ignorability flag.
      */
-    bool is_zero(const symbol_fset &) const noexcept
+    bool is_zero(const symbol_fset &) const
     {
         return m_value == value_type(0) && !m_flavour;
     }

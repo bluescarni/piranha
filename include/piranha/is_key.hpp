@@ -48,7 +48,7 @@ namespace piranha
  * Key types must implement the following methods:
  * @code{.unparsed}
  * bool is_compatible(const symbol_fset &) const noexcept;
- * bool is_zero(const symbol_fset &) const noexcept;
+ * bool is_zero(const symbol_fset &) const;
  * bool is_unitary(const symbol_fset &) const;
  * T merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
  * void print(std::ostream &, const symbol_fset &) const;
@@ -102,8 +102,7 @@ class is_key
         static const bool value
             = conjunction<is_container_element<U>, std::is_constructible<U, const symbol_fset &>,
                           is_equality_comparable<U>, is_hashable<U>>::value
-              && noexcept(std::declval<const U &>().is_compatible(std::declval<const symbol_fset &>()))
-              && noexcept(std::declval<const U &>().is_zero(std::declval<const symbol_fset &>()));
+              && noexcept(std::declval<const U &>().is_compatible(std::declval<const symbol_fset &>()));
     };
     static const bool implementation_defined = is_key_impl<T>::value;
 
