@@ -67,6 +67,18 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND YACMA_COMPILER_IS_CLANGXX)
 	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-stdlib=libc++")
 	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-stdlib=libc++")
 endif()
+if(YACMA_COMPILER_IS_MSVC)
+	# Disable the idiotic minmax macros on MSVC, some annoying warnings,
+	# and enable the bigobj option.
+	#list(APPEND MPPP_CXX_FLAGS_DEBUG "-DNOMINMAX" "/wd4459" "/wd4127" "/bigobj")
+	#list(APPEND MPPP_CXX_FLAGS_RELEASE "-DNOMINMAX" "/wd4459" "/wd4127" "/bigobj")
+	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-DNOMINMAX" "/bigobj")
+	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-DNOMINMAX" "/bigobj")
+	if(YACMA_COMPILER_IS_CLANGXX)
+		list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-Wno-inconsistent-dllimport" "-Wno-unknown-pragmas" "-Wno-unused-parameter" "-Wno-sign-compare" "-Wno-deprecated-declarations")
+		list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-Wno-inconsistent-dllimport" "-Wno-unknown-pragmas" "-Wno-unused-parameter" "-Wno-sign-compare" "-Wno-deprecated-declarations")
+	endif()
+endif()
 if(MINGW)
 	# Flag needed to deal with big binaries in MinGW.
 	message(STATUS "Enabling the '-Wa,-mbig-obj' flag in MinGW builds.")
