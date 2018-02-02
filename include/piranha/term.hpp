@@ -167,22 +167,23 @@ public:
      * @param args reference piranha::symbol_fset.
      *
      * @return the output of the key's <tt>is_compatible()</tt> method.
+     *
+     * @throws unspecified any exception thrown by the key's <tt>is_compatible()</tt> method.
      */
-    bool is_compatible(const symbol_fset &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const
     {
         return m_key.is_compatible(args);
     }
     /// Zero test.
     /**
-     * Note that this method is not allowed to throw, so any exception thrown by calling piranha::math::is_zero() on the
-     * coefficient will result in the termination of the program.
-     *
      * @param args reference piranha::symbol_fset.
      *
      * @return \p true if either the key's <tt>is_zero()</tt> method or piranha::math::is_zero() on the coefficient
      * return \p true, \p false otherwise.
+     *
+     * @throws unspecified any exception thrown by piranha::math::is_zero() or by the key's <tt>is_zero()</tt> method.
      */
-    bool is_zero(const symbol_fset &args) const noexcept
+    bool is_zero(const symbol_fset &args) const
     {
         return math::is_zero(m_cf) || m_key.is_zero(args);
     }

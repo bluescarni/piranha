@@ -365,7 +365,7 @@ public:
      *
      * @return compatibility flag for the monomial.
      */
-    bool is_compatible(const symbol_fset &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const
     {
         const auto s = args.size();
         // No args means the value must also be zero.
@@ -403,7 +403,7 @@ public:
      *
      * @return ignorability flag.
      */
-    bool is_zero(const symbol_fset &) const noexcept
+    bool is_zero(const symbol_fset &) const
     {
         return m_value == value_type(0) && !m_flavour;
     }

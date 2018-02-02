@@ -235,7 +235,7 @@ public:
      * @return ``true`` if the size of ``this`` is equal to the size of ``args``, ``false``
      * otherwise.
      */
-    bool is_compatible(const symbol_fset &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const
     {
         return this->size() == args.size();
     }
@@ -245,7 +245,7 @@ public:
      *
      * @return \p false.
      */
-    bool is_zero(const symbol_fset &) const noexcept
+    bool is_zero(const symbol_fset &) const
     {
         return false;
     }

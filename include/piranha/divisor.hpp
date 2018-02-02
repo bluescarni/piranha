@@ -546,7 +546,7 @@ public:
      *
      * @return \p true if \p this is compatible with \p args, \p false otherwise.
      */
-    bool is_compatible(const symbol_fset &args) const noexcept
+    bool is_compatible(const symbol_fset &args) const
     {
         return m_container.empty() || (m_container.begin()->v.size() == args.size());
     }
@@ -556,7 +556,7 @@ public:
      *
      * @return \p false.
      */
-    bool is_zero(const symbol_fset &) const noexcept
+    bool is_zero(const symbol_fset &) const
     {
         return false;
     }

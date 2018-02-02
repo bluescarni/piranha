@@ -846,7 +846,8 @@ public:
      *
      * @return the result of the multiplication.
      *
-     * @throws unspecified any exception thrown by base_series_multiplier::plain_multiplication().
+     * @throws unspecified any exception thrown by base_series_multiplier::plain_multiplication(),
+     * or by piranha::term::is_zero().
      */
     template <typename T = Series, call_enabler<T> = 0>
     Series operator()() const
