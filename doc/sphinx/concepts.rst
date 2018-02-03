@@ -35,7 +35,7 @@ Type properties
    This concept is satisfied if an instance of type ``T`` can be constructed from a set of arguments
    of types ``Args...``, as established by the standard ``std::is_constructible`` type trait.
 
-.. cpp:concept:: template <typename To, typename From> piranha::Convertible
+.. cpp:concept:: template <typename From, typename To> piranha::Convertible
 
    This concept is satisfied if an instance of type ``From`` can be converted to the type ``To``,
    as established by the standard ``std::is_convertible`` type trait.
