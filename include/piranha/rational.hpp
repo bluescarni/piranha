@@ -295,9 +295,10 @@ private:
     // as conversion from integral to rational can never fail.
     // LCOV_EXCL_START
     template <std::size_t SSize>
-    static std::string to_string(const mppp::integer<SSize> &)
+    [[noreturn]] static std::string to_string(const mppp::integer<SSize> &)
     {
         piranha_assert(false);
+        throw;
     }
     // LCOV_EXCL_STOP
     template <std::size_t SSize>
