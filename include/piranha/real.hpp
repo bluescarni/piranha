@@ -361,7 +361,16 @@ inline namespace impl
 // from its precision. This is used in the s11n functions.
 inline ::mpfr_prec_t real_size_from_prec(const ::mpfr_prec_t &prec)
 {
-    const ::mpfr_prec_t q = prec / ::mp_bits_per_limb, r = prec % ::mp_bits_per_limb;
+#if !defined(PIRANHA_COMPILER_IS_CLANG_CL)
+    piranha_assert(GMP_NUMB_BITS == ::mp_bits_per_limb);
+#endif
+    // NOTE: originally we had ::mp_bits_per_limb here, but I changed it because
+    // apparently the global ::mp_bits_per_limb variable is not exported in the conda
+    // packages for MPFR and we get a link error. The GMP_NUMB_BITS macro should
+    // be equivalent (also considering that MPFR does not support nail builds of GMP),
+    // and it should also be faster because it's a value known to the compiler
+    // at build time.
+    const ::mpfr_prec_t q = prec / GMP_NUMB_BITS, r = prec % GMP_NUMB_BITS;
     return q + (r != 0);
 }
 }

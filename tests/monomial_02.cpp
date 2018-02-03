@@ -208,14 +208,13 @@ struct boost_s11n_tester {
         void random_test() const
         {
             using monomial_type = monomial<T, U>;
-            using size_type = typename monomial_type::size_type;
-            std::uniform_int_distribution<size_type> sdist(0u, 10u);
+            std::uniform_int_distribution<unsigned> sdist(0u, 10u);
             std::uniform_int_distribution<int> edist(-10, 10);
             const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
             for (auto i = 0; i < ntrials; ++i) {
                 const auto size = sdist(rng);
                 std::vector<T> tmp;
-                for (size_type j = 0; j < size; ++j) {
+                for (auto j = 0u; j < size; ++j) {
                     tmp.emplace_back(edist(rng));
                 }
                 monomial_type m(tmp.begin(), tmp.end());
@@ -233,14 +232,13 @@ struct boost_s11n_tester {
         void random_test() const
         {
             using monomial_type = monomial<T, U>;
-            using size_type = typename monomial_type::size_type;
-            std::uniform_int_distribution<size_type> sdist(0u, 10u);
+            std::uniform_int_distribution<unsigned> sdist(0u, 10u);
             std::uniform_int_distribution<int> edist(-10, 10);
             const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
             for (auto i = 0; i < ntrials; ++i) {
                 const auto size = sdist(rng);
                 std::vector<T> tmp;
-                for (size_type j = 0; j < size; ++j) {
+                for (auto j = 0u; j < size; ++j) {
                     int num = edist(rng), den = edist(rng);
                     if (!den) {
                         den = 1;
@@ -262,14 +260,13 @@ struct boost_s11n_tester {
         void random_test() const
         {
             using monomial_type = monomial<T, U>;
-            using size_type = typename monomial_type::size_type;
-            std::uniform_int_distribution<size_type> sdist(0u, 10u);
-            std::uniform_int_distribution<T> edist(-10, 10);
+            std::uniform_int_distribution<unsigned> sdist(0u, 10u);
+            std::uniform_int_distribution<int> edist(-10, 10);
             const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
             for (auto i = 0; i < ntrials; ++i) {
                 const auto size = sdist(rng);
                 std::vector<T> tmp;
-                for (size_type j = 0; j < size; ++j) {
+                for (auto j = 0u; j < size; ++j) {
                     tmp.push_back(edist(rng));
                 }
                 monomial_type m(tmp.begin(), tmp.end());
@@ -399,18 +396,17 @@ struct msgpack_tester {
         void random_test() const
         {
             using monomial_type = monomial<T, U>;
-            using size_type = typename monomial_type::size_type;
             std::atomic<bool> flag(true);
             auto checker = [&flag](unsigned n) {
                 std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
-                std::uniform_int_distribution<size_type> sdist(0u, 10u);
+                std::uniform_int_distribution<unsigned> sdist(0u, 10u);
                 std::uniform_int_distribution<int> edist(-10, 10);
                 const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
                 for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
                     for (auto i = 0; i < ntrials; ++i) {
                         const auto size = sdist(eng);
                         std::vector<T> tmp;
-                        for (size_type j = 0; j < size; ++j) {
+                        for (auto j = 0u; j < size; ++j) {
                             tmp.emplace_back(edist(eng));
                         }
                         monomial_type m(tmp.begin(), tmp.end());
@@ -438,18 +434,17 @@ struct msgpack_tester {
         void random_test() const
         {
             using monomial_type = monomial<T, U>;
-            using size_type = typename monomial_type::size_type;
             std::atomic<bool> flag(true);
             auto checker = [&flag](unsigned n) {
                 std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
-                std::uniform_int_distribution<size_type> sdist(0u, 10u);
+                std::uniform_int_distribution<unsigned> sdist(0u, 10u);
                 std::uniform_int_distribution<int> edist(-10, 10);
                 const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
                 for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
                     for (auto i = 0; i < ntrials; ++i) {
                         const auto size = sdist(eng);
                         std::vector<T> tmp;
-                        for (size_type j = 0; j < size; ++j) {
+                        for (auto j = 0u; j < size; ++j) {
                             int num = edist(eng), den = edist(eng);
                             if (!den) {
                                 den = 1;
@@ -481,18 +476,17 @@ struct msgpack_tester {
         void random_test() const
         {
             using monomial_type = monomial<T, U>;
-            using size_type = typename monomial_type::size_type;
             std::atomic<bool> flag(true);
             auto checker = [&flag](unsigned n) {
                 std::mt19937 eng(static_cast<std::mt19937::result_type>(n));
-                std::uniform_int_distribution<size_type> sdist(0u, 10u);
-                std::uniform_int_distribution<T> edist(-10, 10);
+                std::uniform_int_distribution<unsigned> sdist(0u, 10u);
+                std::uniform_int_distribution<int> edist(-10, 10);
                 const std::vector<std::string> vs = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
                 for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
                     for (auto i = 0; i < ntrials; ++i) {
                         const auto size = sdist(eng);
                         std::vector<T> tmp;
-                        for (size_type j = 0; j < size; ++j) {
+                        for (auto j = 0u; j < size; ++j) {
                             tmp.push_back(edist(eng));
                         }
                         monomial_type m(tmp.begin(), tmp.end());

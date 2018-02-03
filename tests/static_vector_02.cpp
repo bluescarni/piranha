@@ -113,7 +113,7 @@ struct boost_s11n_tester {
             BOOST_CHECK((!has_boost_load<const boost::archive::binary_iarchive &, vector_type &>::value));
             BOOST_CHECK((!has_boost_load<const boost::archive::text_iarchive &, vector_type &>::value));
             BOOST_CHECK((!has_boost_load<void, vector_type &>::value));
-            std::uniform_int_distribution<typename vector_type::size_type> sdist(0u, U::value);
+            std::uniform_int_distribution<unsigned> sdist(0u, U::value);
             std::uniform_int_distribution<int> edist(-10, 10);
             for (int i = 0; i < ntrials; ++i) {
                 vector_type v;
@@ -172,7 +172,7 @@ struct msgpack_s11n_tester {
             BOOST_CHECK((has_msgpack_convert<vector_type>::value));
             BOOST_CHECK((has_msgpack_convert<vector_type &>::value));
             BOOST_CHECK((!has_msgpack_convert<const vector_type &>::value));
-            std::uniform_int_distribution<typename vector_type::size_type> sdist(0u, U::value);
+            std::uniform_int_distribution<unsigned> sdist(0u, U::value);
             std::uniform_int_distribution<int> edist(-10, 10);
             for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
                 for (int i = 0; i < ntrials; ++i) {

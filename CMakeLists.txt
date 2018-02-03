@@ -5,6 +5,7 @@ project(piranha VERSION 0.11)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/yacma")
 
 message(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "Piranha version: ${piranha_VERSION}")
 
 # Set default build type to "Release".
 if(NOT CMAKE_BUILD_TYPE)
@@ -44,18 +45,7 @@ mark_as_advanced(PIRANHA_RUN_ON_VALGRIND)
 
 # Setup of the compilation flags.
 include(YACMACompilerLinkerSettings)
-
-# Threading setup.
-include(YACMAThreadingSetup)
-if(YACMA_HAVE_PTHREAD_AFFINITY)
-	set(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
-endif()
-
-# Start to set up the list of mandatory targets for piranha to link to.
-set(PIRANHA_MANDATORY_LINK_TARGETS Threads::Threads)
-
-# Additional platform-specific setup.
-include(PiranhaPlatformSettings)
+include(CheckCXXCompilerFlag)
 
 # Assemble the flags.
 set(PIRANHA_CXX_FLAGS_DEBUG ${YACMA_CXX_FLAGS} ${YACMA_CXX_FLAGS_DEBUG} ${YACMA_THREADING_CXX_FLAGS})
@@ -67,12 +57,55 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND YACMA_COMPILER_IS_CLANGXX)
 	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-stdlib=libc++")
 	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-stdlib=libc++")
 endif()
+if(YACMA_COMPILER_IS_MSVC)
+	# Disable the idiotic minmax macros on MSVC and enable the bigobj option.
+	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-DNOMINMAX" "/bigobj")
+	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-DNOMINMAX" "/bigobj")
+	if(YACMA_COMPILER_IS_CLANGXX)
+		# clang-cl emits various warnings from the Boost libraries, let's just silence them.
+		# NOTE: at one point in the recent past, MSVC added an options similar to GCC's isystem:
+		# https://blogs.msdn.microsoft.com/vcblog/2017/12/13/broken-warnings-theory/
+		# We probably just need to wait for this to be picked up by CMake/clang-cl. Let's
+		# revisit the issue in the future.
+		list(APPEND _PIRANHA_CLANG_CL_DISABLED_WARNINGS
+			"-Wno-unused-variable"
+			"-Wno-inconsistent-dllimport"
+			"-Wno-unknown-pragmas"
+			"-Wno-unused-parameter"
+			"-Wno-sign-compare"
+			"-Wno-deprecated-declarations")
+		list(APPEND PIRANHA_CXX_FLAGS_DEBUG ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
+		list(APPEND PIRANHA_CXX_FLAGS_RELEASE ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
+		unset(_PIRANHA_CLANG_CL_DISABLED_WARNINGS)
+	endif()
+endif()
 if(MINGW)
 	# Flag needed to deal with big binaries in MinGW.
-	message(STATUS "Enabling the '-Wa,-mbig-obj' flag in MinGW builds.")
 	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-Wa,-mbig-obj")
 	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-Wa,-mbig-obj")
 endif()
+
+# Concepts detection.
+if(YACMA_COMPILER_IS_GNUCXX)
+    # This is just a hackish way of detecting concepts, need to revisit once
+    # more compilers support them.
+    check_cxx_compiler_flag("-fconcepts" PIRANHA_COMPILER_SUPPORTS_CONCEPTS)
+endif()
+
+# Threading setup.
+include(YACMAThreadingSetup)
+if(YACMA_HAVE_PTHREAD_AFFINITY)
+	set(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
+endif()
+
+# Additional platform-specific setup.
+include(PiranhaPlatformSettings)
+
+# Setup the piranha interface library.
+add_library(piranha INTERFACE)
+
+# Start to set up the list of mandatory targets for piranha to link to.
+target_link_libraries(piranha INTERFACE Threads::Threads)
 
 # NOTE: ideally we would want this inside the pyranha CMakeLists.txt, however
 # it seems like there's a strange interaction between the code for finding Boost.Python
@@ -83,11 +116,11 @@ endif()
 
 # Boost libraries setup.
 include(PiranhaFindBoost)
-list(APPEND PIRANHA_MANDATORY_LINK_TARGETS Boost::boost Boost::disable_autolinking Boost::serialization Boost::iostreams)
+target_link_libraries(piranha INTERFACE Boost::boost Boost::disable_autolinking Boost::serialization Boost::iostreams)
 
 # Find mp++.
 find_package(mp++ 0.8 REQUIRED)
-list(APPEND PIRANHA_MANDATORY_LINK_TARGETS mp++::mp++)
+target_link_libraries(piranha INTERFACE mp++::mp++)
 
 if(PIRANHA_WITH_MSGPACK)
 	find_package(MSGPACK-C REQUIRED)
@@ -106,7 +139,7 @@ if(PIRANHA_WITH_MSGPACK)
 	endif()
 	message(STATUS "Boost's memory mapped file is supported.")
 	set(PIRANHA_ENABLE_MSGPACK "#define PIRANHA_WITH_MSGPACK")
-	list(APPEND PIRANHA_MANDATORY_LINK_TARGETS MSGPACK-C::MSGPACK-C)
+	target_link_libraries(piranha INTERFACE MSGPACK-C::MSGPACK-C)
 endif()
 
 if(PIRANHA_WITH_ZLIB)
@@ -115,7 +148,7 @@ if(PIRANHA_WITH_ZLIB)
 	message(STATUS "zlib include dir is: ${ZLIB_INCLUDE_DIR}")
 	message(STATUS "zlib library is: ${ZLIB_LIBRARIES}")
 	set(PIRANHA_ENABLE_ZLIB "#define PIRANHA_WITH_ZLIB")
-	list(APPEND PIRANHA_MANDATORY_LINK_TARGETS ZLIB::ZLIB)
+	target_link_libraries(piranha INTERFACE ZLIB::ZLIB)
 endif()
 
 if(PIRANHA_WITH_BZIP2)
@@ -124,8 +157,14 @@ if(PIRANHA_WITH_BZIP2)
 	message(STATUS "bzip2 include dir is: ${BZIP2_INCLUDE_DIR}")
 	message(STATUS "bzip2 library is: ${BZIP2_LIBRARIES}")
 	set(PIRANHA_ENABLE_BZIP2 "#define PIRANHA_WITH_BZIP2")
-	list(APPEND PIRANHA_MANDATORY_LINK_TARGETS BZip2::BZip2)
+	target_link_libraries(piranha INTERFACE BZip2::BZip2)
 endif()
+
+# Finish setting up the piranha interface library.
+target_include_directories(piranha INTERFACE
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+	$<INSTALL_INTERFACE:include>)
 
 # Try to determine the git revision.
 find_package(Git)
@@ -137,21 +176,12 @@ if(NOT PIRANHA_GIT_REVISION)
 	set(PIRANHA_GIT_REVISION "unknown")
 endif()
 message(STATUS "Git revision: ${PIRANHA_GIT_REVISION}")
-message(STATUS "Piranha version: ${piranha_VERSION}")
 
 # Configure config.hpp.
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/piranha/config.hpp" @ONLY)
 
 # Configure the doc config file.
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/doc/sphinx/conf.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/doc/sphinx/conf.py" @ONLY)
-
-# Setup the piranha interface library.
-add_library(piranha INTERFACE)
-target_include_directories(piranha INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-target_link_libraries(piranha INTERFACE ${PIRANHA_MANDATORY_LINK_TARGETS})
 
 # Installation.
 if(PIRANHA_INSTALL_HEADERS)
@@ -172,7 +202,7 @@ if(PIRANHA_INSTALL_HEADERS)
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/piranha-config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/piranha-config.cmake" @ONLY)
 	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/piranha-config.cmake" DESTINATION "lib/cmake/piranha")
 	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/PiranhaFindBoost.cmake" DESTINATION "lib/cmake/piranha")
-	install(EXPORT piranha_export NAMESPACE Piranha:: DESTINATION lib/cmake/piranha)
+	install(EXPORT piranha_export NAMESPACE piranha:: DESTINATION lib/cmake/piranha)
 	# Take care of versioning.
 	include(CMakePackageConfigHelpers)
 	# NOTE: for the moment, set COMPATIBILITY to ExactVersion, as piranha is evolving fast.
