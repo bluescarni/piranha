@@ -35,4 +35,10 @@ see https://www.gnu.org/licenses/. */
 
 #define PIRANHA_COMPILER_IS_CLANG
 
+#if defined(_MSC_VER)
+
+#define PIRANHA_COMPILER_IS_CLANG_CL
+
+#endif
+
 #endif

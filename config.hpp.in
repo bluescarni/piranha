@@ -29,6 +29,8 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_CONFIG_HPP
 #define PIRANHA_CONFIG_HPP
 
+#include <cassert>
+
 // Start of defines instantiated by CMake.
 // clang-format off
 @PIRANHA_PTHREAD_AFFINITY@
@@ -61,8 +63,6 @@ see https://www.gnu.org/licenses/. */
 
 // Assertion macro, currently just calling assert(). In the future
 // we may add features.
-#include <cassert>
-
 #define piranha_assert(x) assert(x)
 
 // NOTE: clang has to go first, as it might define __GNUC__ internally.

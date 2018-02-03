@@ -62,10 +62,10 @@ if(YACMA_COMPILER_IS_MSVC)
 	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-DNOMINMAX" "/bigobj")
 	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-DNOMINMAX" "/bigobj")
 	if(YACMA_COMPILER_IS_CLANGXX)
-		# clang-cl emits various warnings in the Boost libraries, let's just silence them.
+		# clang-cl emits various warnings from the Boost libraries, let's just silence them.
 		# NOTE: at one point in the recent past, MSVC added an options similar to GCC's isystem:
 		# https://blogs.msdn.microsoft.com/vcblog/2017/12/13/broken-warnings-theory/
-		# We probably just need to wait for this to be picked up by CMake. Let's
+		# We probably just need to wait for this to be picked up by CMake/clang-cl. Let's
 		# revisit the issue in the future.
 		list(APPEND _PIRANHA_CLANG_CL_DISABLED_WARNINGS
 			"-Wno-unused-variable"
