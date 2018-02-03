@@ -839,12 +839,15 @@ public:
         // Now deal with the key.
         // Establish the largest and smallest divisor.
         const divisor &large = (t1.m_key.size() >= t2.m_key.size()) ? t1.m_key : t2.m_key;
-        const divisor &small = (t1.m_key.size() < t2.m_key.size()) ? t1.m_key : t2.m_key;
+        // NOTE: have to call it "small_" rather than "small" for some incredible
+        // Windows idiocy:
+        // https://stackoverflow.com/questions/5874215/what-is-rpcndr-h
+        const divisor &small_ = (t1.m_key.size() < t2.m_key.size()) ? t1.m_key : t2.m_key;
         // Assign the large to the result.
         t.m_key = large;
         // Run the multiplication.
-        const auto it_f = small.m_container.end();
-        for (auto it = small.m_container.begin(); it != it_f; ++it) {
+        const auto it_f = small_.m_container.end();
+        for (auto it = small_.m_container.begin(); it != it_f; ++it) {
             t.m_key.insertion_impl(*it);
         }
     }

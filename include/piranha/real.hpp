@@ -361,7 +361,7 @@ inline namespace impl
 // from its precision. This is used in the s11n functions.
 inline ::mpfr_prec_t real_size_from_prec(const ::mpfr_prec_t &prec)
 {
-    const ::mpfr_prec_t q = prec / ::mp_bits_per_limb, r = prec % ::mp_bits_per_limb;
+    const ::mpfr_prec_t q = prec / GMP_NUMB_BITS, r = prec % GMP_NUMB_BITS;
     return q + (r != 0);
 }
 }
