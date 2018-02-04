@@ -537,6 +537,56 @@ inline math_evaluate_t<T, U> evaluate(const T &x, const symbol_fmap<U> &dict)
     return evaluate_impl<T, U>{}(x, dict);
 }
 
+/// Default functor for the implementation of piranha::math::subs().
+/**
+ * This functor can be specialised via the \p std::enable_if mechanism. The default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename U, typename Enable = void>
+struct subs_impl {
+};
+}
+
+namespace detail
+{
+
+// Return type for math::subs().
+template <typename T, typename U>
+using math_subs_type_
+    = decltype(math::subs_impl<T, U>{}(std::declval<const T &>(), std::declval<const symbol_fmap<U> &>()));
+
+template <typename T, typename U>
+using math_subs_type = enable_if_t<is_returnable<math_subs_type_<T, U>>::value, math_subs_type_<T, U>>;
+}
+
+namespace math
+{
+
+/// Substitution.
+/**
+ * \note
+ * This function is enabled only if <tt>subs_impl<T,U>{}(x, dict)</tt> is a valid expression, returning
+ * a type which satisfies piranha::is_returnable.
+ *
+ * Substitute symbolic variables with generic objects. The actual implementation of this function is in the
+ * piranha::math::subs_impl functor. The body of this function is equivalent to:
+ * @code
+ * return subs_impl<T,U>{}(x, dict);
+ * @endcode
+ *
+ * @param x the quantity that will be subject to substitution.
+ * @param dict a dictionary mapping a set of symbols to the values that will be substituted for them.
+ *
+ * @return \p x after the substitution of the symbols in \p dict with the mapped values.
+ *
+ * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
+ */
+template <typename U, typename T>
+inline detail::math_subs_type<T, U> subs(const T &x, const symbol_fmap<U> &dict)
+{
+    return subs_impl<T, U>{}(x, dict);
+}
+
 /// Default functor for the implementation of piranha::math::t_subs().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -1874,6 +1924,32 @@ public:
 
 template <typename T>
 const bool has_is_unitary<T>::value;
+
+/// Type trait to detect the presence of the piranha::math::subs function.
+/**
+ * The type trait will be \p true if piranha::math::subs can be successfully called on instances
+ * of type \p T, with an instance of type \p U as substitution argument.
+ */
+template <typename T, typename U>
+class has_subs : detail::sfinae_types
+{
+    typedef typename std::decay<T>::type Td;
+    typedef typename std::decay<U>::type Ud;
+    template <typename T1, typename U1>
+    static auto test(const T1 &t, const U1 &u)
+        -> decltype(math::subs(t, std::declval<const symbol_fmap<U1> &>()), void(), yes());
+    static no test(...);
+    static const bool implementation_defined
+        = std::is_same<decltype(test(std::declval<Td>(), std::declval<Ud>())), yes>::value;
+
+public:
+    /// Value of the type trait.
+    static const bool value = implementation_defined;
+};
+
+// Static init.
+template <typename T, typename U>
+const bool has_subs<T, U>::value;
 
 /// Type trait to detect the presence of the piranha::math::t_subs function.
 /**
