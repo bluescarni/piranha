@@ -1024,12 +1024,13 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
         piranha_assert(this->m_v1.size() != 0u && this->m_v2.size() != 0u);
         // Sync mutex, actually used only in mt mode.
         std::mutex mut;
-        // Checker for monomial sizes in debug mode.
-        auto monomial_checker = [this](const term_type &t) { return t.m_key.size() == this->m_ss.size(); };
-        (void)monomial_checker;
         // The function used to determine minmaxs for the two series. This is used both in
         // single-thread and multi-thread mode.
-        auto thread_func = [&mut, this, &monomial_checker](unsigned t_idx, const v_ptr *vp, mm_vec *mmv) {
+        auto thread_func = [&mut, this](unsigned t_idx, const v_ptr *vp, mm_vec *mmv) {
+        // Checker for monomial sizes in debug mode.
+#if !defined(NDEBUG)
+            auto monomial_checker = [this](const term_type &t) { return t.m_key.size() == this->m_ss.size(); };
+#endif
             piranha_assert(t_idx < this->m_n_threads);
             // Establish the block size.
             const auto block_size = vp->size() / this->m_n_threads;
