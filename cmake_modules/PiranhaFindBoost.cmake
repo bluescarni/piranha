@@ -8,11 +8,6 @@ if(PIRANHA_WITH_ZLIB OR PIRANHA_WITH_BZIP2 OR PIRANHA_WITH_MSGPACK)
 	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS iostreams)
 endif()
 
-# Boost::system and Boost::filesystem are needed only if building the tests or the benchmarks.
-if(PIRANHA_BUILD_TESTS OR PIRANHA_BUILD_BENCHMARKS)
-	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS filesystem system)
-endif()
-
 # Boost::python.
 if(PIRANHA_BUILD_PYRANHA)
 	if(${PYTHON_VERSION_MAJOR} EQUAL 2)
