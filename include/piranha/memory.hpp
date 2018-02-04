@@ -153,6 +153,11 @@ inline void *aligned_palloc(const std::size_t &alignment, const std::size_t &siz
     }
     return ptr;
 #elif defined(_WIN32)
+    // _aligned_malloc() wants a power-of-2 value for the alignment:
+    // https://msdn.microsoft.com/en-us/library/8z34s9c6.aspx
+    if (unlikely(alignment & (alignment - 1u))) {
+        piranha_throw(std::bad_alloc, );
+    }
     void *ptr = ::_aligned_malloc(size, alignment);
     if (unlikely(ptr == nullptr)) {
         piranha_throw(std::bad_alloc, );

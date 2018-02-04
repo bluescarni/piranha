@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE invert_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <cmath>
 #include <string>
 #include <type_traits>
 
@@ -67,7 +68,7 @@ BOOST_AUTO_TEST_CASE(invert_test_00)
     BOOST_CHECK(is_invertible<double>::value);
     BOOST_CHECK(is_invertible<long double>::value);
     BOOST_CHECK_EQUAL(math::pow(1.5f, -1), invert(1.5f));
-    BOOST_CHECK((std::is_same<double, decltype(invert(1.5f))>::value));
+    BOOST_CHECK((std::is_same<decltype(std::pow(1.5f, -1)), decltype(invert(1.5f))>::value));
     BOOST_CHECK_EQUAL(math::pow(1.5, -1), invert(1.5));
     BOOST_CHECK((std::is_same<double, decltype(invert(1.5))>::value));
     BOOST_CHECK_EQUAL(math::pow(1.5l, -1), invert(1.5l));
