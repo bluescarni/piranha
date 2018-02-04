@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/print_tex_coefficient.hpp>
@@ -114,15 +115,11 @@ struct print_tex_coefficient_impl<mppp::rational<SSize>> {
 namespace math
 {
 
-/// Specialisation of the implementation of piranha::math::is_zero() for mp++'s rationals.
+// Specialisation of the implementation of piranha::math::is_zero() for mp++'s rationals.
 template <std::size_t SSize>
-struct is_zero_impl<mppp::rational<SSize>> {
-    /// Call operator.
-    /**
-     * @param q the rational to be tested.
-     *
-     * @return \p true if \p q is zero, \p false otherwise.
-     */
+class is_zero_impl<mppp::rational<SSize>>
+{
+public:
     bool operator()(const mppp::rational<SSize> &q) const
     {
         return q.is_zero();

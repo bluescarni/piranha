@@ -862,8 +862,7 @@ struct convertible_type_in_tuple {
 };
 
 template <typename T, typename... Args>
-struct convertible_type_in_tuple<T, std::tuple<Args...>> {
-    static const bool value = disjunction<std::is_convertible<T, Args>...>::value;
+struct convertible_type_in_tuple<T, std::tuple<Args...>> : disjunction<std::is_convertible<T, Args>...> {
 };
 }
 

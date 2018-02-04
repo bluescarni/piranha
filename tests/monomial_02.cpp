@@ -215,7 +215,7 @@ struct boost_s11n_tester {
                 const auto size = sdist(rng);
                 std::vector<T> tmp;
                 for (auto j = 0u; j < size; ++j) {
-                    tmp.emplace_back(edist(rng));
+                    tmp.emplace_back(static_cast<T>(edist(rng)));
                 }
                 monomial_type m(tmp.begin(), tmp.end());
                 symbol_fset ss(vs.begin(), vs.begin() + size);
@@ -267,7 +267,7 @@ struct boost_s11n_tester {
                 const auto size = sdist(rng);
                 std::vector<T> tmp;
                 for (auto j = 0u; j < size; ++j) {
-                    tmp.push_back(edist(rng));
+                    tmp.push_back(static_cast<T>(edist(rng)));
                 }
                 monomial_type m(tmp.begin(), tmp.end());
                 symbol_fset ss(vs.begin(), vs.begin() + size);
@@ -487,7 +487,7 @@ struct msgpack_tester {
                         const auto size = sdist(eng);
                         std::vector<T> tmp;
                         for (auto j = 0u; j < size; ++j) {
-                            tmp.push_back(edist(eng));
+                            tmp.push_back(static_cast<T>(edist(eng)));
                         }
                         monomial_type m(tmp.begin(), tmp.end());
                         symbol_fset ss(vs.begin(), vs.begin() + size);

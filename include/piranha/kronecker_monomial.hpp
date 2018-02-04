@@ -58,6 +58,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>

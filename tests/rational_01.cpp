@@ -52,6 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/print_tex_coefficient.hpp>
@@ -87,6 +88,10 @@ struct is_zero_tester {
     void operator()(const T &) const
     {
         using q_type = mppp::rational<T::value>;
+        BOOST_CHECK(is_is_zero_type<q_type>::value);
+        BOOST_CHECK(is_is_zero_type<q_type &>::value);
+        BOOST_CHECK(is_is_zero_type<const q_type &>::value);
+        BOOST_CHECK(is_is_zero_type<const q_type>::value);
         q_type q;
         BOOST_CHECK(math::is_zero(q));
         q = 1;

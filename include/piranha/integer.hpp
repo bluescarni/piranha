@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
@@ -92,15 +93,11 @@ struct negate_impl<mppp::integer<SSize>> {
     }
 };
 
-/// Specialisation of the implementation of piranha::math::is_zero() for mp++'s integers.
+// Specialisation of the implementation of piranha::math::is_zero() for mp++'s integers.
 template <std::size_t SSize>
-struct is_zero_impl<mppp::integer<SSize>> {
-    /// Call operator.
-    /**
-     * @param n the integer to be tested.
-     *
-     * @return \p true if \p n is zero, \p false otherwise.
-     */
+class is_zero_impl<mppp::integer<SSize>>
+{
+public:
     bool operator()(const mppp::integer<SSize> &n) const
     {
         return n.is_zero();

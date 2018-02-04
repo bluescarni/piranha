@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
@@ -627,8 +628,8 @@ struct is_zero_tester {
         {
             typedef g_series_type<Cf, Expo> p_type1;
             typedef g_series_type<p_type1, Expo> p_type11;
-            BOOST_CHECK(has_is_zero<p_type1>::value);
-            BOOST_CHECK(has_is_zero<p_type11>::value);
+            BOOST_CHECK(is_is_zero_type<p_type1>::value);
+            BOOST_CHECK(is_is_zero_type<p_type11>::value);
             BOOST_CHECK(math::is_zero(p_type1{}));
             BOOST_CHECK(math::is_zero(p_type11{}));
             BOOST_CHECK(math::is_zero(p_type1{0}));

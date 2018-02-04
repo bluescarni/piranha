@@ -54,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
@@ -82,15 +83,11 @@ struct negate_impl<real> {
     }
 };
 
-/// Specialisation of piranha::math::is_zero() for piranha::real.
+// Specialisation of piranha::math::is_zero() for piranha::real.
 template <>
-struct is_zero_impl<real> {
-    /// Call operator.
-    /**
-     * @param r the piranha::real to be tested.
-     *
-     * @return \p true if \p r is zero, \p false otherwise.
-     */
+class is_zero_impl<real>
+{
+public:
     bool operator()(const real &r) const
     {
         return r.zero_p();

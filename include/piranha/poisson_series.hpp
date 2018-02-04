@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/real_trigonometric_kronecker_monomial.hpp>
@@ -275,8 +276,8 @@ class poisson_series
         T, ResT,
         typename std::enable_if<
             // Coefficient differentiable, and can call is_zero on the result.
-            has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
-                                               std::declval<const std::string &>()))>::value
+            is_is_zero_type<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
+                                                   std::declval<const std::string &>()))>::value
             &&
             // The result needs to be addable in-place.
             is_addable_in_place<ResT>::value &&
