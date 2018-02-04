@@ -37,6 +37,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
@@ -241,12 +242,16 @@ class has_safe_cast
 
 public:
     /// Value of the type trait.
-    static const bool value = implementation_defined;
+    static constexpr bool value = implementation_defined;
 };
+
+#if PIRANHA_CPLUSPLUS < 201703L
 
 // Static init.
 template <typename To, typename From>
-const bool has_safe_cast<To, From>::value;
+constexpr bool has_safe_cast<To, From>::value;
+
+#endif
 }
 
 #endif
