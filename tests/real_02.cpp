@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(real_msgpack_s11n_test)
     // Failure modes in binary form.
     {
         ::mpfr_prec_t prec = 37;
-        const ::mpfr_prec_t q = prec / ::mp_bits_per_limb, r = prec % ::mp_bits_per_limb;
+        const ::mpfr_prec_t q = prec / GMP_NUMB_BITS, r = prec % GMP_NUMB_BITS;
         const ::mpfr_prec_t s_from_prec = q + (r != 0);
         msgpack::sbuffer sbuf;
         msgpack::packer<msgpack::sbuffer> p(sbuf);
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(real_msgpack_s11n_test)
     }
     {
         ::mpfr_prec_t prec = 371;
-        const ::mpfr_prec_t q = prec / ::mp_bits_per_limb, r = prec % ::mp_bits_per_limb;
+        const ::mpfr_prec_t q = prec / GMP_NUMB_BITS, r = prec % GMP_NUMB_BITS;
         const ::mpfr_prec_t s_from_prec = q + (r != 0);
         msgpack::sbuffer sbuf;
         msgpack::packer<msgpack::sbuffer> p(sbuf);
