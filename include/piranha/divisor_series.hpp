@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>

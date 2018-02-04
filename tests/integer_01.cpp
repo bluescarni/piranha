@@ -46,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -88,10 +89,10 @@ struct is_zero_tester {
     void operator()(const T &) const
     {
         using int_type = mppp::integer<T::value>;
-        BOOST_CHECK(has_is_zero<int_type>::value);
-        BOOST_CHECK(has_is_zero<const int_type>::value);
-        BOOST_CHECK(has_is_zero<int_type &>::value);
-        BOOST_CHECK(has_is_zero<const int_type &>::value);
+        BOOST_CHECK(is_is_zero_type<int_type>::value);
+        BOOST_CHECK(is_is_zero_type<const int_type>::value);
+        BOOST_CHECK(is_is_zero_type<int_type &>::value);
+        BOOST_CHECK(is_is_zero_type<const int_type &>::value);
         int_type n;
         BOOST_CHECK(math::is_zero(n));
         n = 1;

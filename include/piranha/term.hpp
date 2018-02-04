@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 

@@ -55,22 +55,30 @@ namespace math
 {
 
 template <>
-struct is_zero_impl<trivial_a, void> {
+class is_zero_impl<trivial_a, void>
+{
+public:
     char operator()(const trivial_a &);
 };
 
 template <>
-struct is_zero_impl<trivial_b, void> {
+class is_zero_impl<trivial_b, void>
+{
+public:
     char operator()(const trivial_a &);
 };
 
 template <>
-struct is_zero_impl<trivial_c, void> {
+class is_zero_impl<trivial_c, void>
+{
+public:
     std::string operator()(const trivial_c &);
 };
 
 template <>
-struct is_zero_impl<trivial_d, void> {
+class is_zero_impl<trivial_d, void>
+{
+public:
     trivial_d operator()(const trivial_d &) const;
 };
 }

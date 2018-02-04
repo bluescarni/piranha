@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
@@ -384,12 +385,16 @@ public:
 };
 
 template <typename T>
-struct is_zero_impl<T, typename std::enable_if<std::is_same<T, fake_int_01>::value>::type> {
+class is_zero_impl<T, typename std::enable_if<std::is_same<T, fake_int_01>::value>::type>
+{
+public:
     bool operator()(const T &) const;
 };
 
 template <typename T>
-struct is_zero_impl<T, typename std::enable_if<std::is_same<T, fake_int_02>::value>::type> {
+class is_zero_impl<T, typename std::enable_if<std::is_same<T, fake_int_02>::value>::type>
+{
+public:
     bool operator()(const T &) const;
 };
 }

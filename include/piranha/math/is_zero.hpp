@@ -41,39 +41,26 @@ namespace piranha
 namespace math
 {
 
-inline namespace impl
-{
-
-// Enabler condition for the default math::is_zero() implementation.
-// NOTE: the equality comparable requirement already implies that the return type of
-// the comparison must be convertible to bool.
-template <typename T>
-using has_default_math_is_zero = conjunction<std::is_constructible<T, const int &>, is_equality_comparable<T>>;
-}
-
 // Default functor for the implementation of piranha::math::is_zero().
 template <typename T, typename = void>
 class is_zero_impl
 {
 public:
-    template <typename U, enable_if_t<has_default_math_is_zero<U>::value, int> = 0>
+    // NOTE: the equality comparable requirement already implies that the return type of
+    // the comparison must be convertible to bool.
+    template <
+        typename U,
+        enable_if_t<conjunction<std::is_constructible<U, const int &>, is_equality_comparable<U>>::value, int> = 0>
     bool operator()(const U &x) const
     {
         return x == U(0);
     }
 };
 
-inline namespace impl
-{
-
-// Enabler+return type for math::is_zero().
-template <typename T>
-using math_is_zero_t
-    = enable_if_t<std::is_convertible<decltype(is_zero_impl<T>{}(std::declval<const T &>())), bool>::value, bool>;
-}
-
-template <typename T>
-inline math_is_zero_t<T> is_zero(const T &x)
+template <
+    typename T,
+    enable_if_t<std::is_convertible<decltype(is_zero_impl<T>{}(std::declval<const T &>())), bool>::value, int> = 0>
+inline bool is_zero(const T &x)
 {
     return is_zero_impl<T>{}(x);
 }
@@ -90,7 +77,7 @@ class is_zero_impl<T, enable_if_t<is_cpp_complex<T>::value>>
 public:
     bool operator()(const T &c) const
     {
-        return math::is_zero(c.real()) && math::is_zero(c.imag());
+        return c.real() == typename T::value_type(0) && c.imag() == typename T::value_type(0);
     }
 };
 }

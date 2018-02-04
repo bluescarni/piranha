@@ -71,6 +71,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/print_coefficient.hpp>
@@ -880,11 +881,11 @@ class series_operators
     // which is wrong, as the operators here should be found only via ADL and this class is in no way associated to
     // real. What happens then is that is_zero_impl is instantiated for a real type before the real specialisation is
     // seen, and GCC errors out. I *think* the nullptr syntax works because the bso_type enable_if disables the function
-    // before has_is_zero is encountered, or maybe because it does not participate in template deduction.
+    // before is_is_zero_type is encountered, or maybe because it does not participate in template deduction.
     template <typename T, typename U, typename std::enable_if<bso_type<T, U, 3>::value == 4u, int>::type = 0>
     static series_common_type<T, U, 3>
     dispatch_binary_div(T &&x, U &&y,
-                        typename std::enable_if<has_is_zero<typename std::decay<U>::type>::value>::type * = nullptr)
+                        typename std::enable_if<is_is_zero_type<typename std::decay<U>::type>::value>::type * = nullptr)
     {
         using ret_type = series_common_type<T, U, 3>;
         if (x.empty()) {
@@ -1929,7 +1930,8 @@ private:
     using pow_m_type = decltype(std::declval<const U &>() * std::declval<const U &>());
     // Common checks on the exponent.
     template <typename T>
-    using pow_expo_checks = std::integral_constant<bool, conjunction<has_is_zero<T>, has_safe_cast<integer, T>>::value>;
+    using pow_expo_checks
+        = std::integral_constant<bool, conjunction<is_is_zero_type<T>, has_safe_cast<integer, T>>::value>;
     // Hashing utils for series.
     struct series_hasher {
         template <typename T>
@@ -2974,7 +2976,9 @@ struct negate_impl<T, typename std::enable_if<is_series<T>::value>::type> {
  * The result will be computed via the series' <tt>empty()</tt> method.
  */
 template <typename Series>
-struct is_zero_impl<Series, typename std::enable_if<is_series<Series>::value>::type> {
+class is_zero_impl<Series, typename std::enable_if<is_series<Series>::value>::type>
+{
+public:
     /// Call operator.
     /**
      * @param s piranha::series to be tested.

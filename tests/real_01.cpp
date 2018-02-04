@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/rational.hpp>
@@ -84,7 +85,10 @@ BOOST_AUTO_TEST_CASE(real_negate_test)
 
 BOOST_AUTO_TEST_CASE(real_is_zero_test)
 {
-    BOOST_CHECK(has_is_zero<real>::value);
+    BOOST_CHECK(is_is_zero_type<real>::value);
+    BOOST_CHECK(is_is_zero_type<real &>::value);
+    BOOST_CHECK(is_is_zero_type<const real &>::value);
+    BOOST_CHECK(is_is_zero_type<const real>::value);
     real r1;
     BOOST_CHECK(math::is_zero(r1));
     r1.neg();
