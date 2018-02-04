@@ -94,11 +94,14 @@ struct tmp_file {
 template <typename T>
 static inline void boost_roundtrip_file(const T &x)
 {
-    // NOTE: on the current conda-based CI pipeline,
-    // this function results on some sort of memory error.
-    // I believe this is due to the fact that we are linking
-    // to a Boost filesystem library compiled with another compiler.
-    // Let's disable this for now.
+// NOTE: on the current conda-based CI pipeline,
+// this function results on some sort of memory error
+// (not at every invocation though). I've dug around a bit
+// and it does not look like the problem is in the serialisation
+// bits (as we would encounter issues when serialising elsewhere)
+// nor in the boost filesystem library (I tried to replace the
+// tmp file class with something else not based on boost filesystem,
+// still erroring out). For the moment let's just disable it.
 #if defined(PIRANHA_COMPILER_IS_CLANG_CL)
     (void)x;
 #else

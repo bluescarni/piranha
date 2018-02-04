@@ -550,8 +550,9 @@ struct safe_cast_int_tester {
 #if !defined(PIRANHA_COMPILER_IS_CLANG_CL)
         using int_type = mppp::integer<S::value>;
         // For whatever reason, this results in some sort of memory error
-        // on clang-cl. It might be related to the use of wchar_t, or who knows...
-        // Let's disable it for now.
+        // on clang-cl. It might be related to the use of wchar_t, or maybe
+        // a boost unit test incompatibility with clang-cl. Let's disable
+        // this for now.
         BOOST_CHECK((has_safe_cast<int_type, wchar_t>::value));
 #if defined(MPPP_HAVE_GCC_INT128)
         BOOST_CHECK((has_safe_cast<int_type, __int128_t>::value));
