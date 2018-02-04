@@ -1017,7 +1017,6 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
     void check_bounds() const
     {
         using expo_type = typename key_t<T>::value_type;
-        using term_type = typename Series::term_type;
         using mm_vec = std::vector<std::pair<expo_type, expo_type>>;
         using v_ptr = typename base::v_ptr;
         // NOTE: we know that the input series are not null.
@@ -1029,7 +1028,8 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
         auto thread_func = [&mut, this](unsigned t_idx, const v_ptr *vp, mm_vec *mmv) {
         // Checker for monomial sizes in debug mode.
 #if !defined(NDEBUG)
-            auto monomial_checker = [this](const term_type &t) { return t.m_key.size() == this->m_ss.size(); };
+            auto monomial_checker
+                = [this](const typename Series::term_type &t) { return t.m_key.size() == this->m_ss.size(); };
 #endif
             piranha_assert(t_idx < this->m_n_threads);
             // Establish the block size.
