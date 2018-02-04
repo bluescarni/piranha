@@ -25,7 +25,7 @@ Type categories
 
 .. cpp:concept:: template <typename T> piranha::CppComplex
 
-   This concept is satisfied it ``T`` is a complex C++ floating-point type, or a cv-qualified version thereof.
+   This concept is satisfied it ``T`` is a C++ complex floating-point type, or a cv-qualified version thereof.
 
 Type properties
 ---------------
