@@ -116,7 +116,9 @@ struct tmp_file {
     std::string m_path;
 };
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntrials = 1000;
+#endif
 
 using integral_types = std::tuple<char, signed char, short, int, long, long long, unsigned char, unsigned short,
                                   unsigned, unsigned long, unsigned long long>;
