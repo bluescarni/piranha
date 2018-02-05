@@ -32,12 +32,10 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <cstdio>
-#include <fstream>
 #include <initializer_list>
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 
 #include <piranha/config.hpp>
@@ -114,12 +112,9 @@ static std::random_device rd;
 // will happen if the file does not exist.
 struct tmp_file {
     tmp_file() : m_path(PIRANHA_BINARY_TESTS_DIR "/" + std::to_string(rd())) {}
-    ~tmp_file() noexcept(false)
+    ~tmp_file()
     {
-        std::ifstream f(m_path.c_str());
-        if (f.good() && std::remove(m_path.c_str())) {
-            throw std::runtime_error("Error removing the temporary file '" + m_path + "'");
-        }
+        std::remove(m_path.c_str());
     }
     std::string m_path;
 };
