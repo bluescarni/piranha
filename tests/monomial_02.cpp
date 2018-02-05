@@ -59,7 +59,9 @@ using expo_types = std::tuple<signed char, int, integer, rational>;
 using size_types = std::tuple<std::integral_constant<std::size_t, 0u>, std::integral_constant<std::size_t, 1u>,
                               std::integral_constant<std::size_t, 5u>, std::integral_constant<std::size_t, 10u>>;
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntrials = 100;
+#endif
 
 static std::mt19937 rng;
 
