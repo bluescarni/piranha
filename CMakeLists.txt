@@ -23,6 +23,9 @@ option(PIRANHA_BUILD_BENCHMARKS "Build benchmarks." OFF)
 # Build option: build the Python bindings.
 option(PIRANHA_BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 
+# Build option: enable the Boost serialization format.
+option(PIRANHA_WITH_BOOST_S11N "Enable support for the Boost serialization format." OFF)
+
 # Build option: enable the msgpack serialization format.
 option(PIRANHA_WITH_MSGPACK "Enable support for the msgpack serialization format." OFF)
 
@@ -116,7 +119,13 @@ endif()
 
 # Boost libraries setup.
 include(PiranhaFindBoost)
-target_link_libraries(piranha INTERFACE Boost::boost Boost::disable_autolinking Boost::serialization Boost::iostreams)
+target_link_libraries(piranha INTERFACE Boost::boost Boost::disable_autolinking)
+if(PIRANHA_WITH_BOOST_S11N)
+	target_link_libraries(piranha INTERFACE Boost::serialization)
+endif()
+if(PIRANHA_WITH_ZLIB OR PIRANHA_WITH_BZIP2)
+	target_link_libraries(piranha INTERFACE Boost::iostreams)
+endif()
 
 # Find mp++.
 find_package(mp++ 0.8 REQUIRED)
@@ -126,18 +135,6 @@ if(PIRANHA_WITH_MSGPACK)
 	find_package(MSGPACK-C REQUIRED)
 	message(STATUS "msgpack-c library found.")
 	message(STATUS "msgpack-c include dir is: ${MSGPACK-C_INCLUDE_DIR}")
-	# msgpack load file requires memory mapping for uncompressed format.
-	if(NOT PIRANHA_BOOST_MAPPED_FILE_CHECK)
-		message(STATUS "Testing whether Boost's memory mapped file is supported.")
-		try_compile(_PIRANHA_BOOST_MAPPED_FILE_CHECK "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/test_mmapped_file.cpp"
-			LINK_LIBRARIES Boost::boost Boost::disable_autolinking Boost::iostreams)
-		if(NOT _PIRANHA_BOOST_MAPPED_FILE_CHECK)
-			message(FATAL_ERROR "msgpack support in Piranha requires an implementation of Boost's memory mapped file, which seems to be unsupported on this platform.")
-		endif()
-		# Put it into the cache, so we avoid running the check again in future CMake invocations.
-		set(PIRANHA_BOOST_MAPPED_FILE_CHECK YES CACHE INTERNAL "")
-	endif()
-	message(STATUS "Boost's memory mapped file is supported.")
 	set(PIRANHA_ENABLE_MSGPACK "#define PIRANHA_WITH_MSGPACK")
 	target_link_libraries(piranha INTERFACE MSGPACK-C::MSGPACK-C)
 endif()
@@ -189,11 +186,14 @@ if(PIRANHA_INSTALL_HEADERS)
 	install(TARGETS piranha EXPORT piranha_export)
 	set(_PIRANHA_CONFIG_OPTIONAL_DEPS)
 	if(PIRANHA_WITH_ZLIB)
-		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}find_package(ZLIB REQUIRED)\n")
+		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}find_package(ZLIB REQUIRED)\nset(PIRANHA_WITH_ZLIB TRUE)\n")
 	endif()
 	if(PIRANHA_WITH_BZIP2)
-		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}include(PiranhaFindBZip2)\n")
+		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}include(PiranhaFindBZip2)\nset(PIRANHA_WITH_BZIP2 TRUE)\n")
 		install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/PiranhaFindBZip2.cmake" DESTINATION "lib/cmake/piranha")
+	endif()
+	if(PIRANHA_WITH_BOOST_S11N)
+		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}set(PIRANHA_WITH_BOOST_S11N TRUE)\n")
 	endif()
 	if(PIRANHA_WITH_MSGPACK)
 		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}find_package(MSGPACK-C REQUIRED)\n")

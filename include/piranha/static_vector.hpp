@@ -142,7 +142,8 @@ private:
     // - note that placement new will work as expected (i.e., it will construct the object exactly at the address passed
     //   in as parameter).
     using storage_type = typename std::aligned_storage<sizeof(T) * MaxSize, alignof(T)>::type;
-    // Serialization support.
+#if defined(PIRANHA_WITH_BOOST_S11N)
+    // Boost serialization support.
     friend class boost::serialization::access;
     template <class Archive>
     void save(Archive &ar, unsigned) const
@@ -155,6 +156,7 @@ private:
         boost_load_vector(ar, *this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
     // This is a small helper to default-init a range via positional new.
     // We use this in various POD optimisations below in order to make sure
     // objects of type T exist in the raw storage before doing anything with them.
@@ -691,6 +693,8 @@ private:
 template <typename T, std::size_t MaxSize>
 const typename static_vector<T, MaxSize>::size_type static_vector<T, MaxSize>::max_size;
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 /// Specialisation of piranha::boost_save() for piranha::static_vector.
 /**
  * \note
@@ -720,6 +724,8 @@ template <typename Archive, typename T, std::size_t S>
 struct boost_load_impl<Archive, static_vector<T, S>, boost_load_vector_enabler<Archive, static_vector<T, S>>>
     : boost_load_via_boost_api<Archive, static_vector<T, S>> {
 };
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

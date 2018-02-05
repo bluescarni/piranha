@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <mp++/config.hpp>
 
+#include <piranha/config.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
@@ -206,6 +207,8 @@ BOOST_AUTO_TEST_CASE(power_series_test_02)
     BOOST_CHECK((!has_ldegree<stype6>::value));
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(power_series_serialization_test)
 {
     typedef g_series_type<polynomial<rational, monomial<rational>>, rational> stype;
@@ -221,6 +224,8 @@ BOOST_AUTO_TEST_CASE(power_series_serialization_test)
     }
     BOOST_CHECK_EQUAL(z, tmp);
 }
+
+#endif
 
 BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 {

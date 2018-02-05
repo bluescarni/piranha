@@ -57,7 +57,6 @@ see https://www.gnu.org/licenses/. */
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
 #endif
-#include <piranha/s11n.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>

@@ -543,6 +543,7 @@ private:
             piranha_assert(!m_log2_size && !m_n_elements);
         }
     }
+#if defined(PIRANHA_WITH_BOOST_S11N)
     // Serialization support.
     friend class boost::serialization::access;
     template <class Archive>
@@ -574,6 +575,7 @@ private:
         }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
     // Enabler for insert().
     template <typename U>
     using insert_enabler = enable_if_t<std::is_same<key_type, uncvref_t<U>>::value, int>;
@@ -1436,6 +1438,8 @@ typename hash_set<T, Hash, Pred>::node hash_set<T, Hash, Pred>::list::terminator
 template <typename T, typename Hash, typename Pred>
 const typename hash_set<T, Hash, Pred>::size_type hash_set<T, Hash, Pred>::m_n_nonzero_sizes;
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 inline namespace impl
 {
 
@@ -1487,6 +1491,8 @@ template <typename Archive, typename T, typename Hash, typename Pred>
 struct boost_load_impl<Archive, hash_set<T, Hash, Pred>, hash_set_boost_load_enabler<Archive, T, Hash, Pred>>
     : boost_load_via_boost_api<Archive, hash_set<T, Hash, Pred>> {
 };
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

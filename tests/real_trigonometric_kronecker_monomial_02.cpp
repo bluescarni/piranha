@@ -33,8 +33,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
 #include <initializer_list>
 #include <mutex>
 #include <random>
@@ -44,6 +42,13 @@ see https://www.gnu.org/licenses/. */
 #include <thread>
 #include <tuple>
 #include <vector>
+
+#include <piranha/config.hpp>
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#endif
 
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -56,6 +61,10 @@ using int_types = std::tuple<signed char, int, long, long long>;
 static const int ntries = 1000;
 
 static std::mutex mut;
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename T>
 static inline void boost_roundtrip(const T &x, const symbol_fset &args, bool mt = false)
@@ -177,10 +186,12 @@ struct boost_s11n_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
+BOOST_AUTO_TEST_CASE(rtkm_boost_s11n_test)
 {
     tuple_for_each(int_types{}, boost_s11n_tester());
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

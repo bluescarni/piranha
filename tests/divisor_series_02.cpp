@@ -41,6 +41,10 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
+BOOST_AUTO_TEST_CASE(divisor_series_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(divisor_series_boost_s11n_test)
 {
     using p_type = divisor_series<polynomial<rational, monomial<char>>, divisor<short>>;
@@ -72,6 +76,8 @@ BOOST_AUTO_TEST_CASE(divisor_series_boost_s11n_test)
         BOOST_CHECK_EQUAL(tmp, retval);
     }
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

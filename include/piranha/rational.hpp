@@ -368,6 +368,8 @@ public:
 };
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 namespace boost
 {
 namespace serialization
@@ -415,8 +417,12 @@ inline void serialize(Archive &ar, mppp::rational<SSize> &q, const unsigned int 
 }
 }
 
+#endif
+
 namespace piranha
 {
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 inline namespace impl
 {
@@ -459,6 +465,8 @@ template <typename Archive, std::size_t SSize>
 struct boost_load_impl<Archive, mppp::rational<SSize>, rational_boost_load_enabler<Archive, SSize>>
     : boost_load_via_boost_api<Archive, mppp::rational<SSize>> {
 };
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

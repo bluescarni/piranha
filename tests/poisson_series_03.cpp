@@ -46,6 +46,10 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
+BOOST_AUTO_TEST_CASE(poisson_series_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(poisson_series_boost_s11n_test)
 {
     using pst1 = poisson_series<polynomial<rational, monomial<short>>>;
@@ -109,6 +113,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_boost_s11n_test)
         }
     }
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

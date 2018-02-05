@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #endif
 
 #include <piranha/base_series_multiplier.hpp>
+#include <piranha/config.hpp>
 #include <piranha/detail/debug_access.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
@@ -67,7 +68,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
-static const int ntries = 1000;
 static std::mt19937 rng;
 
 using namespace piranha;
@@ -334,6 +334,10 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
     }
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
+static const int ntries = 1000;
+
 BOOST_AUTO_TEST_CASE(series_serialization_test)
 {
     // Serialization test done with a randomly-generated series.
@@ -365,6 +369,8 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
         BOOST_CHECK_EQUAL(tmp, p);
     }
 }
+
+#endif
 
 struct mock_key {
     mock_key() = default;

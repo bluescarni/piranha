@@ -10,13 +10,16 @@ function(ADD_PIRANHA_TESTCASE arg1)
 		return()
 	endif()
 	add_executable("${arg1}" "${arg1}.cpp")
-	target_link_libraries(${arg1} piranha Boost::system Boost::filesystem)
+	target_link_libraries(${arg1} piranha)
 	target_compile_options(${arg1} PRIVATE "$<$<CONFIG:DEBUG>:${PIRANHA_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PIRANHA_CXX_FLAGS_RELEASE}>")
 	if(PIRANHA_RUN_ON_VALGRIND AND CMAKE_BUILD_TYPE STREQUAL "Debug")
 		# Add a special definition for the unit tests when the run-on-Valgrind
 		# option is selected.
 		target_compile_definitions(${arg1} PRIVATE PIRANHA_RUN_ON_VALGRIND)
 	endif()
+	# Pass down the current build directory to the tests as a definition
+	# (this is used for the creation of temporary files).
+	target_compile_definitions(${arg1} PRIVATE PIRANHA_BINARY_TESTS_DIR="${CMAKE_CURRENT_BINARY_DIR}")
 	# NOTE: for clang-cl, cmake tries to set -std=c++11 here, which makes
 	# it error out. Disable it as MSVC 2015 is implicitly C++14 anyway.
 	if(NOT (YACMA_COMPILER_IS_MSVC AND YACMA_COMPILER_IS_CLANGXX))

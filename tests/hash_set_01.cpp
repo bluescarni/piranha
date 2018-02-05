@@ -51,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/s11n.hpp>
@@ -673,6 +674,8 @@ BOOST_AUTO_TEST_CASE(hash_set_mt_test)
     }
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(hash_set_serialization_test)
 {
     {
@@ -730,3 +733,5 @@ BOOST_AUTO_TEST_CASE(hash_set_serialization_test)
         }
     }
 }
+
+#endif

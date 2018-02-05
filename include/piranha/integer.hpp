@@ -485,6 +485,8 @@ inline integer operator"" _z(const char *s)
 }
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 namespace boost
 {
 namespace serialization
@@ -546,8 +548,12 @@ inline void serialize(Archive &ar, mppp::integer<SSize> &n, const unsigned int f
 }
 }
 
+#endif
+
 namespace piranha
 {
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 inline namespace impl
 {
@@ -597,6 +603,8 @@ template <typename Archive, std::size_t SSize>
 struct boost_load_impl<Archive, mppp::integer<SSize>, integer_boost_load_enabler<Archive>>
     : boost_load_via_boost_api<Archive, mppp::integer<SSize>> {
 };
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

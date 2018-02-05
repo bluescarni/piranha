@@ -56,6 +56,10 @@ static std::mt19937 rng;
 
 static const int ntries = 1000;
 
+BOOST_AUTO_TEST_CASE(divisor_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 template <typename OArchive, typename IArchive, typename T>
 static inline void boost_round_trip(const T &d, const symbol_fset &s)
 {
@@ -190,6 +194,8 @@ BOOST_AUTO_TEST_CASE(divisor_boost_s11n_test)
 {
     tuple_for_each(value_types{}, boost_s11n_tester{});
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

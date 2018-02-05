@@ -32,8 +32,6 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
 #include <random>
 #include <sstream>
 #include <tuple>
@@ -43,21 +41,40 @@ see https://www.gnu.org/licenses/. */
 #include <mp++/rational.hpp>
 
 #include <piranha/config.hpp>
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#endif
+
 #include <piranha/exceptions.hpp>
 #include <piranha/s11n.hpp>
 
 using namespace piranha;
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
 using boost::archive::binary_iarchive;
 using boost::archive::binary_oarchive;
 using boost::archive::text_iarchive;
 using boost::archive::text_oarchive;
 using boost::archive::xml_iarchive;
 using boost::archive::xml_oarchive;
+#endif
 
 using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integral_constant<std::size_t, 2>,
                               std::integral_constant<std::size_t, 3>, std::integral_constant<std::size_t, 7>,
                               std::integral_constant<std::size_t, 10>>;
+
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
+
+static const int ntrials = 1000;
+static std::mt19937 rng;
+
+#endif
+
+BOOST_AUTO_TEST_CASE(rational_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename T>
 static inline void boost_roundtrip(const T &x)
@@ -74,10 +91,6 @@ static inline void boost_roundtrip(const T &x)
     }
     BOOST_CHECK_EQUAL(retval, x);
 }
-
-static const int ntrials = 1000;
-
-static std::mt19937 rng;
 
 struct boost_s11n_tester {
     template <typename T>
@@ -142,6 +155,8 @@ BOOST_AUTO_TEST_CASE(rational_boost_s11n_test)
 {
     tuple_for_each(size_types{}, boost_s11n_tester{});
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

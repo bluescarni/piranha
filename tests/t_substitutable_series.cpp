@@ -46,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include <mp++/real.hpp>
 #endif
 
+#include <piranha/config.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/math.hpp>
@@ -222,6 +223,8 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK((!has_t_subs<g_series_type<double, key02>, double, double>::value));
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
 {
     using stype = poisson_series<polynomial<rational, monomial<short>>>;
@@ -237,3 +240,5 @@ BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
     }
     BOOST_CHECK_EQUAL(z, tmp);
 }
+
+#endif

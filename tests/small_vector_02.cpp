@@ -56,6 +56,10 @@ using size_types = std::tuple<std::integral_constant<std::size_t, 0u>, std::inte
 struct no_s11n {
 };
 
+BOOST_AUTO_TEST_CASE(small_vector_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 template <typename OArchive, typename IArchive, typename V>
 static inline void boost_round_trip(const V &v)
 {
@@ -122,6 +126,8 @@ BOOST_AUTO_TEST_CASE(small_vector_boost_s11n_test)
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, small_vector<small_vector<no_s11n>>>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, small_vector<small_vector<no_s11n>>>::value));
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

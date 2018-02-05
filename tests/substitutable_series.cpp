@@ -329,6 +329,8 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
     }
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(subs_series_serialization_test)
 {
     using stype = g_series_type<rational, monomial<int>>;
@@ -344,3 +346,5 @@ BOOST_AUTO_TEST_CASE(subs_series_serialization_test)
     }
     BOOST_CHECK_EQUAL(z, tmp);
 }
+
+#endif

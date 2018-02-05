@@ -1436,6 +1436,8 @@ const std::size_t real_trigonometric_kronecker_monomial<T>::multiply_arity;
 using rtk_monomial = real_trigonometric_kronecker_monomial<>;
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 // Implementation of the Boost s11n api.
 namespace boost
 {
@@ -1548,6 +1550,8 @@ struct boost_load_impl<Archive, boost_s11n_key_wrapper<real_trigonometric_kronec
     : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<real_trigonometric_kronecker_monomial<T>>> {
 };
 }
+
+#endif
 
 namespace std
 {
