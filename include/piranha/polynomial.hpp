@@ -1713,9 +1713,12 @@ private:
         // as a temporary value for the computation of the result.
         auto task_consume = [&v1, &v2, &container, it_end, this](const task_type &task, term_type &tmp_term) {
             // Get the term in the first series.
-            term_type const *t1 = v1[std::get<0u>(task)];
+            auto t1 = v1[std::get<0u>(task)];
             // Get pointers to the second series.
-            term_type const **start2 = &(v2[std::get<1u>(task)]), **end2 = &(v2[std::get<2u>(task)]);
+            // NOTE: don't use the subscript operator[] here, as these could point
+            // one past the end of the vector.
+            auto start2 = v2.data() + std::get<1u>(task);
+            auto end2 = v2.data() + std::get<2u>(task);
             // NOTE: these will have to be adapted for kd_monomial.
             using int_type = decltype(t1->m_key.get_int());
             // Get shortcuts to cf and key in t1.
