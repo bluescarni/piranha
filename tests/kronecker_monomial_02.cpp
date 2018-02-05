@@ -58,9 +58,10 @@ using namespace piranha;
 
 using int_types = std::tuple<signed char, int, long, long long>;
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntries = 1000;
-
 static std::mutex mut;
+#endif
 
 BOOST_AUTO_TEST_CASE(kronecker_monomial_empty_test) {}
 

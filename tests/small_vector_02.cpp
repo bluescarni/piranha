@@ -44,7 +44,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 #include <piranha/type_traits.hpp>
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntries = 1000;
+#endif
 static std::mt19937 rng;
 
 using namespace piranha;

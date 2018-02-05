@@ -52,7 +52,9 @@ using size_types = std::tuple<std::integral_constant<std::size_t, 1u>, std::inte
 
 static std::mt19937 rng;
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntrials = 1000;
+#endif
 
 struct no_s11n {
 };

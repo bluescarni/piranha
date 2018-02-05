@@ -99,7 +99,9 @@ static inline T save_roundtrip(const T &x, data_format f, compression c)
     return retval;
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 constexpr int ntries = 1000;
+#endif
 
 constexpr int ntries_file = 100;
 

@@ -54,7 +54,9 @@ using value_types = std::tuple<signed char, short, int, long, long long, integer
 
 static std::mt19937 rng;
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntries = 1000;
+#endif
 
 BOOST_AUTO_TEST_CASE(divisor_empty_test) {}
 
