@@ -57,6 +57,22 @@ see https://www.gnu.org/licenses/. */
 
 using namespace piranha;
 
+static std::random_device rd;
+
+// Small raii class for creating a tmp file.
+// NOTE: this will not actually create the file, it will just create
+// a tmp file name - so one is supposed to use the m_path member to create a file
+// in the usual way. The destructor will attempt to delete the file at m_path, nothing
+// will happen if the file does not exist.
+struct tmp_file {
+    tmp_file() : m_path(PIRANHA_BINARY_TESTS_DIR "/" + std::to_string(rd())) {}
+    ~tmp_file()
+    {
+        std::remove(m_path.c_str());
+    }
+    std::string m_path;
+};
+
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename T>
@@ -102,22 +118,6 @@ static inline void boost_roundtrip_file(const T &x)
 }
 
 #endif
-
-static std::random_device rd;
-
-// Small raii class for creating a tmp file.
-// NOTE: this will not actually create the file, it will just create
-// a tmp file name - so one is supposed to use the m_path member to create a file
-// in the usual way. The destructor will attempt to delete the file at m_path, nothing
-// will happen if the file does not exist.
-struct tmp_file {
-    tmp_file() : m_path(PIRANHA_BINARY_TESTS_DIR "/" + std::to_string(rd())) {}
-    ~tmp_file()
-    {
-        std::remove(m_path.c_str());
-    }
-    std::string m_path;
-};
 
 #if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntrials = 10;
