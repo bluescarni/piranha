@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <vector>
 
+#include <piranha/config.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
@@ -63,7 +64,10 @@ see https://www.gnu.org/licenses/. */
 // These seem pretty safe in any concievable situation, but just keep it in mind. Note that the implementation
 // does not care about these assumptions, it's just the tests that do.
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
 static const int ntries = 1000;
+#endif
+
 static std::mt19937 rng;
 
 using namespace piranha;
@@ -895,6 +899,8 @@ BOOST_AUTO_TEST_CASE(small_vector_move_test)
     boost::mpl::for_each<value_types>(move_tester());
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 struct serialization_tester {
     template <typename T>
     void operator()(const T &)
@@ -951,6 +957,8 @@ BOOST_AUTO_TEST_CASE(small_vector_serialization_test)
 {
     boost::mpl::for_each<size_types>(serialization_tester());
 }
+
+#endif
 
 struct empty_tester {
     template <typename T>

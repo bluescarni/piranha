@@ -46,7 +46,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 #include <piranha/type_traits.hpp>
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntries = 1000;
+#endif
 
 using namespace piranha;
 
@@ -81,6 +83,10 @@ static inline bool check_eq(const H &h1, const H &h2)
     }
     return true;
 }
+
+BOOST_AUTO_TEST_CASE(hash_set_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename T>
 static inline void boost_roundtrip(const T &x)
@@ -136,6 +142,8 @@ BOOST_AUTO_TEST_CASE(hash_set_boost_s11n_test)
     BOOST_CHECK((!has_boost_save<boost::archive::binary_oarchive, hash_set<no_s11n>>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, hash_set<no_s11n>>::value));
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

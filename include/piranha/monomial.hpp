@@ -1159,6 +1159,7 @@ public:
     }
 
 private:
+#if defined(PIRANHA_WITH_BOOST_S11N)
     // Make friend with the s11n functions.
     template <typename Archive, typename T1, typename S1>
     friend void
@@ -1166,6 +1167,8 @@ private:
     template <typename Archive, typename T1, typename S1>
     friend void boost::serialization::load(Archive &, piranha::boost_s11n_key_wrapper<piranha::monomial<T1, S1>> &,
                                            unsigned);
+#endif
+
 #if defined(PIRANHA_WITH_MSGPACK)
     // Enablers for msgpack serialization.
     template <typename Stream>
@@ -1235,6 +1238,8 @@ public:
 template <typename T, typename S>
 const std::size_t monomial<T, S>::multiply_arity;
 }
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 // Implementation of the Boost s11n api.
 namespace boost
@@ -1321,6 +1326,8 @@ struct boost_load_impl<Archive, boost_s11n_key_wrapper<monomial<T, S>>, monomial
     : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<monomial<T, S>>> {
 };
 }
+
+#endif
 
 namespace std
 {

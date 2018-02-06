@@ -41,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <mp++/config.hpp>
 #include <mp++/exceptions.hpp>
 
+#include <piranha/config.hpp>
 #include <piranha/detail/polynomial_fwd.hpp>
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
@@ -162,6 +163,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
     BOOST_CHECK((is_evaluable<poisson_series<mock_cf>, double>::value));
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(poisson_series_serialization_test)
 {
     typedef poisson_series<polynomial<rational, monomial<short>>> stype;
@@ -177,6 +180,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_serialization_test)
     }
     BOOST_CHECK_EQUAL(z, tmp);
 }
+
+#endif
 
 BOOST_AUTO_TEST_CASE(poisson_series_rebind_test)
 {

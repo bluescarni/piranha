@@ -34,14 +34,6 @@ see https://www.gnu.org/licenses/. */
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/fusion/algorithm.hpp>
-#include <boost/fusion/include/algorithm.hpp>
-#include <boost/fusion/include/sequence.hpp>
-#include <boost/fusion/sequence.hpp>
-#include <boost/mpl/bool.hpp>
-#include <boost/version.hpp>
 #include <cstddef>
 #include <cstdio>
 #include <functional>
@@ -52,15 +44,21 @@ see https://www.gnu.org/licenses/. */
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/version.hpp>
 
 #include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
 #include <piranha/symbol_utils.hpp>
+#include <piranha/type_traits.hpp>
 
 // Uniform int distribution wrapper, from min to max value for type T.
 template <typename T, typename = void>
@@ -98,7 +96,7 @@ struct integral_minmax_dist<
 
 using namespace piranha;
 
-namespace bfs = boost::filesystem;
+static std::random_device rd;
 
 // Small raii class for creating a tmp file.
 // NOTE: this will not actually create the file, it will just create
@@ -106,29 +104,28 @@ namespace bfs = boost::filesystem;
 // in the usual way. The destructor will attempt to delete the file at m_path, nothing
 // will happen if the file does not exist.
 struct tmp_file {
-    tmp_file()
-    {
-        m_path = bfs::temp_directory_path();
-        // Concatenate with a unique filename.
-        m_path /= bfs::unique_path();
-    }
+    tmp_file() : m_path(PIRANHA_BINARY_TESTS_DIR "/" + std::to_string(rd())) {}
     ~tmp_file()
     {
-        bfs::remove(m_path);
+        std::remove(m_path.c_str());
     }
-    std::string name() const
-    {
-        return m_path.string();
-    }
-    bfs::path m_path;
+    std::string m_path;
 };
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntrials = 1000;
+#endif
 
-using integral_types = boost::mpl::vector<char, signed char, short, int, long, long long, unsigned char, unsigned short,
-                                          unsigned, unsigned long, unsigned long long>;
+using integral_types = std::tuple<char, signed char, short, int, long, long long, unsigned char, unsigned short,
+                                  unsigned, unsigned long, unsigned long long>;
 
-using fp_types = boost::mpl::vector<float, double, long double>;
+using fp_types = std::tuple<float, double, long double>;
+
+// NOTE: make an empty test in order to have something to run
+// even if no s11n support has been enabled.
+BOOST_AUTO_TEST_CASE(s11n_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 // Helper function to roundtrip the the (de)serialization of type T via boost serialization.
 template <typename T>
@@ -579,7 +576,7 @@ struct boost_int_tester {
 
 BOOST_AUTO_TEST_CASE(s11n_test_boost_int)
 {
-    boost::mpl::for_each<integral_types>(boost_int_tester());
+    tuple_for_each(integral_types{}, boost_int_tester{});
 }
 
 struct boost_fp_tester {
@@ -623,7 +620,7 @@ struct boost_fp_tester {
 
 BOOST_AUTO_TEST_CASE(s11n_test_boost_float)
 {
-    boost::mpl::for_each<fp_types>(boost_fp_tester());
+    tuple_for_each(fp_types{}, boost_fp_tester{});
 }
 
 BOOST_AUTO_TEST_CASE(s11n_test_boost_string)
@@ -654,6 +651,8 @@ BOOST_AUTO_TEST_CASE(s11n_test_boost_string)
     t3.join();
     BOOST_CHECK(status.load());
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 
@@ -875,7 +874,7 @@ struct int_tester {
 
 BOOST_AUTO_TEST_CASE(s11n_test_msgpack_int)
 {
-    boost::mpl::for_each<integral_types>(int_tester());
+    tuple_for_each(integral_types{}, int_tester{});
     // Test bool as well.
     for (auto f : {0, 1}) {
         BOOST_CHECK_EQUAL(true, msgpack_roundtrip(true, static_cast<msgpack_format>(f)));
@@ -954,7 +953,7 @@ struct fp_tester {
 
 BOOST_AUTO_TEST_CASE(s11n_test_msgpack_float)
 {
-    boost::mpl::for_each<fp_types>(fp_tester());
+    tuple_for_each(fp_types{}, fp_tester{});
 }
 
 BOOST_AUTO_TEST_CASE(s11n_test_msgpack_string)
@@ -1000,9 +999,9 @@ template <typename T>
 static inline T save_roundtrip(const T &x, data_format f, compression c)
 {
     tmp_file file;
-    save_file(x, file.name(), f, c);
+    save_file(x, file.m_path, f, c);
     T retval;
-    load_file(retval, file.name(), f, c);
+    load_file(retval, file.m_path, f, c);
     return retval;
 }
 
@@ -1018,7 +1017,8 @@ struct int_save_load_tester {
                 for (auto f : dfs) {
                     for (auto c : cfs) {
                         const auto tmp = dist(eng);
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
+#if defined(PIRANHA_WITH_BOOST_S11N) && defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)                    \
+    && defined(PIRANHA_WITH_BZIP2)
                         // NOTE: we are not expecting any failure if we have all optional deps.
                         auto cmp = save_roundtrip(tmp, f, c);
                         if (cmp != tmp) {
@@ -1073,7 +1073,8 @@ struct fp_save_load_tester {
                 for (auto f : dfs) {
                     for (auto c : cfs) {
                         const auto tmp = dist(eng);
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
+#if defined(PIRANHA_WITH_BOOST_S11N) && defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)                    \
+    && defined(PIRANHA_WITH_BZIP2)
                         auto cmp = save_roundtrip(tmp, f, c);
                         if (cmp != tmp) {
                             status.store(false);
@@ -1104,6 +1105,8 @@ struct fp_save_load_tester {
 struct no_boost_msgpack {
 };
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 struct only_boost {
 };
 
@@ -1125,6 +1128,8 @@ public:
 };
 }
 
+#endif
+
 // Save/load checker for string.
 static inline void string_save_load_tester()
 {
@@ -1143,7 +1148,8 @@ static inline void string_save_load_tester()
                     const auto s = sdist(eng);
                     std::generate_n(achar.begin(), s, gen);
                     std::string str(achar.begin(), achar.begin() + s);
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
+#if defined(PIRANHA_WITH_BOOST_S11N) && defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)                    \
+    && defined(PIRANHA_WITH_BZIP2)
                     // NOTE: we are not expecting any failure if we have all optional deps.
                     auto cmp = save_roundtrip(str, f, c);
                     if (cmp != str) {
@@ -1228,10 +1234,11 @@ BOOST_AUTO_TEST_CASE(s11n_test_get_cdf_from_filename)
 
 BOOST_AUTO_TEST_CASE(s11n_test_save_load)
 {
-    boost::mpl::for_each<integral_types>(int_save_load_tester());
-    boost::mpl::for_each<fp_types>(fp_save_load_tester());
+    tuple_for_each(integral_types{}, int_save_load_tester{});
+    tuple_for_each(fp_types{}, fp_save_load_tester{});
     string_save_load_tester();
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
+#if defined(PIRANHA_WITH_BOOST_S11N) && defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)                    \
+    && defined(PIRANHA_WITH_BZIP2)
     // Test failures.
     for (auto f : dfs) {
         for (auto c : cfs) {
@@ -1262,7 +1269,7 @@ BOOST_AUTO_TEST_CASE(s11n_test_save_load)
     for (auto sf : {".boostb", ".boostp", ".mpackb", ".mpackp"}) {
         for (auto sc : {"", ".bz2", ".gz", ".zip"}) {
             tmp_file filename;
-            auto fn = filename.name() + sf + sc;
+            auto fn = filename.m_path + sf + sc;
             save_file(42, fn);
             int n;
             load_file(n, fn);
@@ -1274,6 +1281,8 @@ BOOST_AUTO_TEST_CASE(s11n_test_save_load)
     BOOST_CHECK_THROW(save_file(42, "foo.bz2"), std::invalid_argument);
 #endif
 }
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 BOOST_AUTO_TEST_CASE(s11n_boost_s11n_key_wrapper_test)
 {
@@ -1292,3 +1301,5 @@ BOOST_AUTO_TEST_CASE(s11n_boost_s11n_key_wrapper_test)
                                           "that was constructed with a const key");
     });
 }
+
+#endif

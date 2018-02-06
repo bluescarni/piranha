@@ -622,7 +622,8 @@ private:
     // Enabler for the subtraction.
     template <typename U>
     using sub_enabler = typename std::enable_if<has_sub3<U>::value, int>::type;
-    // Serialization support.
+#if defined(PIRANHA_WITH_BOOST_S11N)
+    // Boost serialization support.
     friend class boost::serialization::access;
     template <class Archive>
     void save(Archive &ar, unsigned) const
@@ -635,6 +636,7 @@ private:
         boost_load_vector(ar, *this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
 public:
     /// Default constructor.
     /**
@@ -1105,6 +1107,8 @@ const typename std::decay<decltype(small_vector<T, S>::d_storage::max_size)>::ty
 template <typename T, typename S>
 const typename small_vector<T, S>::size_type small_vector<T, S>::max_size;
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 /// Specialisation of piranha::boost_save() for piranha::small_vector.
 /**
  * \note
@@ -1136,6 +1140,8 @@ struct boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size
                        boost_load_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
     : boost_load_via_boost_api<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>> {
 };
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

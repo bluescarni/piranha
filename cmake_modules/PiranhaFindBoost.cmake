@@ -1,16 +1,15 @@
-# We always link to the Boost::serialization library.
-set(_PIRANHA_REQUIRED_BOOST_LIBS serialization)
+# Init the list of required boost libraries.
+set(_PIRANHA_REQUIRED_BOOST_LIBS)
 
-# Boost::iostreams is needed if either:
-# - any compression is enabled (in which case we need the iostreams filter), or
-# - msgpack support is enabled (in which case we need the memory mapped file wrapper).
-if(PIRANHA_WITH_ZLIB OR PIRANHA_WITH_BZIP2 OR PIRANHA_WITH_MSGPACK)
-	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS iostreams)
+# Optional Boost serialization.
+if(PIRANHA_WITH_BOOST_S11N)
+	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS serialization)
+	set(PIRANHA_ENABLE_BOOST_S11N "#define PIRANHA_WITH_BOOST_S11N")
 endif()
 
-# Boost::system and Boost::filesystem are needed only if building the tests or the benchmarks.
-if(PIRANHA_BUILD_TESTS OR PIRANHA_BUILD_BENCHMARKS)
-	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS filesystem system)
+# Boost::iostreams is needed if any compression is enabled (in which case we need the iostreams filters).
+if(PIRANHA_WITH_ZLIB OR PIRANHA_WITH_BZIP2)
+	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS iostreams)
 endif()
 
 # Boost::python.
@@ -27,7 +26,7 @@ message(STATUS "Required Boost libraries: ${_PIRANHA_REQUIRED_BOOST_LIBS}")
 find_package(Boost 1.58.0 REQUIRED COMPONENTS "${_PIRANHA_REQUIRED_BOOST_LIBS}")
 
 if(NOT Boost_FOUND)
-	message(FATAL_ERROR "Not all requested Boost components were found, exiting.")
+	message(FATAL_ERROR "Not all the requested Boost components were found, exiting.")
 endif()
 
 message(STATUS "Detected Boost version: ${Boost_VERSION}")

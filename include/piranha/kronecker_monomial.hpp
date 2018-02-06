@@ -1171,6 +1171,8 @@ private:
 using k_monomial = kronecker_monomial<>;
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 // Implementation of the Boost s11n api.
 namespace boost
 {
@@ -1260,6 +1262,8 @@ struct boost_load_impl<Archive, boost_s11n_key_wrapper<kronecker_monomial<T>>,
     : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<kronecker_monomial<T>>> {
 };
 }
+
+#endif
 
 namespace std
 {

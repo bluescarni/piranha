@@ -58,7 +58,6 @@ see https://www.gnu.org/licenses/. */
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
 #endif
-#include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>

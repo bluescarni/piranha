@@ -61,6 +61,8 @@ BOOST_AUTO_TEST_CASE(polynomial_truncation_pow_cache_test)
     BOOST_CHECK_EQUAL(math::pow(x + y + 1, 2), 2 * x + 1 + 2 * y + x * x + 2 * x * y);
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(polynomial_boost_s11n_test)
 {
     using p_type = polynomial<integer, monomial<int>>;
@@ -121,6 +123,8 @@ BOOST_AUTO_TEST_CASE(polynomial_boost_s11n_test)
         BOOST_CHECK_EQUAL(ttmp, retval);
     }
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

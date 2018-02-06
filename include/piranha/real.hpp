@@ -373,6 +373,8 @@ inline ::mpfr_prec_t real_size_from_prec(const ::mpfr_prec_t &prec)
 }
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 namespace boost
 {
 namespace serialization
@@ -454,8 +456,12 @@ inline void serialize(Archive &ar, piranha::real &r, const unsigned int file_ver
 }
 }
 
+#endif
+
 namespace piranha
 {
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 inline namespace impl
 {
@@ -510,6 +516,8 @@ struct boost_save_impl<Archive, real, real_boost_save_enabler<Archive>> : boost_
 template <typename Archive>
 struct boost_load_impl<Archive, real, real_boost_load_enabler<Archive>> : boost_load_via_boost_api<Archive, real> {
 };
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

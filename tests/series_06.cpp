@@ -31,19 +31,21 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE series_06_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <cstdio>
 #include <initializer_list>
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 
+#include <piranha/config.hpp>
+
 #include <boost/algorithm/string/predicate.hpp>
+#if defined(PIRANHA_WITH_BOOST_S11N)
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
-#include <boost/filesystem.hpp>
+#endif
 
-#include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
@@ -54,6 +56,24 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 
 using namespace piranha;
+
+static std::random_device rd;
+
+// Small raii class for creating a tmp file.
+// NOTE: this will not actually create the file, it will just create
+// a tmp file name - so one is supposed to use the m_path member to create a file
+// in the usual way. The destructor will attempt to delete the file at m_path, nothing
+// will happen if the file does not exist.
+struct tmp_file {
+    tmp_file() : m_path(PIRANHA_BINARY_TESTS_DIR "/" + std::to_string(rd())) {}
+    ~tmp_file()
+    {
+        std::remove(m_path.c_str());
+    }
+    std::string m_path;
+};
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename T>
 static inline T boost_roundtrip(const T &x)
@@ -71,64 +91,37 @@ static inline T boost_roundtrip(const T &x)
     return retval;
 }
 
-namespace bfs = boost::filesystem;
-
-struct tmp_file {
-    tmp_file()
-    {
-        m_path = bfs::temp_directory_path();
-        // Concatenate with a unique filename.
-        m_path /= bfs::unique_path();
-    }
-    ~tmp_file()
-    {
-        bfs::remove(m_path);
-    }
-    std::string name() const
-    {
-        return m_path.string();
-    }
-    bfs::path m_path;
-};
-
 template <typename T>
 static inline void boost_roundtrip_file(const T &x)
 {
-// NOTE: on the current conda-based CI pipeline,
-// this function results on some sort of memory error
-// (not at every invocation though). I've dug around a bit
-// and it does not look like the problem is in the serialisation
-// bits (as we would encounter issues when serialising elsewhere)
-// nor in the boost filesystem library (I tried to replace the
-// tmp file class with something else not based on boost filesystem,
-// still erroring out). For the moment let's just disable it.
-#if defined(PIRANHA_COMPILER_IS_CLANG_CL)
-    (void)x;
-#else
     for (auto f : {data_format::boost_portable, data_format::boost_binary}) {
         for (auto c : {compression::none, compression::bzip2, compression::zlib, compression::gzip}) {
-#if defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
+#if defined(PIRANHA_WITH_BOOST_S11N) && defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)                    \
+    && defined(PIRANHA_WITH_BZIP2)
             tmp_file file;
-            save_file(x, file.name(), f, c);
+            save_file(x, file.m_path, f, c);
             T retval;
-            load_file(retval, file.name(), f, c);
+            load_file(retval, file.m_path, f, c);
             BOOST_CHECK_EQUAL(x, retval);
 #else
             try {
                 tmp_file file;
-                save_file(x, file.name(), f, c);
+                save_file(x, file.m_path, f, c);
                 T retval;
-                load_file(retval, file.name(), f, c);
+                load_file(retval, file.m_path, f, c);
                 BOOST_CHECK_EQUAL(x, retval);
             } catch (const not_implemented_error &) {
             }
 #endif
         }
     }
-#endif
 }
 
+#endif
+
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntrials = 10;
+#endif
 
 static std::mt19937 rng;
 
@@ -151,6 +144,10 @@ struct mock_cf3 {
     mock_cf3 &operator*=(const mock_cf3 &);
     mock_cf3 operator*(const mock_cf3 &)const;
 };
+
+BOOST_AUTO_TEST_CASE(series_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
 {
@@ -256,6 +253,8 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_01)
     }
 }
 
+#endif
+
 #if defined(PIRANHA_WITH_MSGPACK)
 
 template <typename T>
@@ -273,30 +272,27 @@ static inline T msgpack_roundtrip(const T &x, msgpack_format f)
 template <typename T>
 static inline void msgpack_roundtrip_file(const T &x)
 {
-#if defined(PIRANHA_COMPILER_IS_CLANG_CL)
-    (void)x;
-#else
     for (auto f : {data_format::msgpack_portable, data_format::msgpack_binary}) {
         for (auto c : {compression::none, compression::bzip2, compression::zlib, compression::gzip}) {
-#if defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
+#if defined(PIRANHA_WITH_BOOST_S11N) && defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)                    \
+    && defined(PIRANHA_WITH_BZIP2)
             tmp_file file;
-            save_file(x, file.name(), f, c);
+            save_file(x, file.m_path, f, c);
             T retval;
-            load_file(retval, file.name(), f, c);
+            load_file(retval, file.m_path, f, c);
             BOOST_CHECK_EQUAL(x, retval);
 #else
             try {
                 tmp_file file;
-                save_file(x, file.name(), f, c);
+                save_file(x, file.m_path, f, c);
                 T retval;
-                load_file(retval, file.name(), f, c);
+                load_file(retval, file.m_path, f, c);
                 BOOST_CHECK_EQUAL(x, retval);
             } catch (const not_implemented_error &) {
             }
 #endif
         }
     }
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(series_msgpack_s11n_test_00)

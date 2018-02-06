@@ -55,11 +55,18 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/s11n.hpp>
 #include <piranha/type_traits.hpp>
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntries = 1000;
-
 static std::mutex mut;
+#endif
 
 using namespace piranha;
+
+static const std::vector<::mpfr_prec_t> vprec{32, 64, 113, 128, 197, 256, 273, 512};
+
+BOOST_AUTO_TEST_CASE(real_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename T>
 static inline void boost_roundtrip(const T &x, bool mt = false)
@@ -83,8 +90,6 @@ static inline void boost_roundtrip(const T &x, bool mt = false)
         BOOST_CHECK_EQUAL(x.get_prec(), retval.get_prec());
     }
 }
-
-static const std::vector<::mpfr_prec_t> vprec{32, 64, 113, 128, 197, 256, 273, 512};
 
 BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
 {
@@ -192,6 +197,8 @@ BOOST_AUTO_TEST_CASE(real_boost_s11n_test)
         }
     }
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

@@ -1860,7 +1860,8 @@ private:
     using custom_partial_enabler =
         typename std::enable_if<std::is_constructible<std::function<series_p_type<Series>(const Derived &)>, F>::value,
                                 int>::type;
-    // Serialization support.
+#if defined(PIRANHA_WITH_BOOST_S11N)
+    // Boost serialization support.
     friend class boost::serialization::access;
     template <class Archive>
     void save(Archive &ar, unsigned) const
@@ -1920,6 +1921,7 @@ private:
         }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
     // Exponentiation machinery.
     // The type resulting from the exponentiation of the coefficient of a series U to the power of T.
     template <typename T, typename U>
@@ -3550,6 +3552,8 @@ public:
 };
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 inline namespace impl
 {
 
@@ -3611,6 +3615,8 @@ template <typename Archive, typename Series>
 struct boost_load_impl<Archive, Series, series_boost_load_enabler<Archive, Series>>
     : boost_load_via_boost_api<Archive, Series> {
 };
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

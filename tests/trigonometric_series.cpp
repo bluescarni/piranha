@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <piranha/config.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
@@ -355,6 +356,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_failures_test)
     BOOST_CHECK((!has_t_lorder<g_series_type<double, key05>>::value));
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(trigonometric_series_serialization_test)
 {
     using stype = poisson_series<polynomial<rational, monomial<short>>>;
@@ -370,3 +373,5 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_serialization_test)
     }
     BOOST_CHECK_EQUAL(z, tmp);
 }
+
+#endif

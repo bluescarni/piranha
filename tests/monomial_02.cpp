@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE monomial_02_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -43,6 +42,8 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 #include <vector>
+
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <piranha/config.hpp>
 #include <piranha/integer.hpp>
@@ -58,7 +59,9 @@ using expo_types = std::tuple<signed char, int, integer, rational>;
 using size_types = std::tuple<std::integral_constant<std::size_t, 0u>, std::integral_constant<std::size_t, 1u>,
                               std::integral_constant<std::size_t, 5u>, std::integral_constant<std::size_t, 10u>>;
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntrials = 100;
+#endif
 
 static std::mt19937 rng;
 
@@ -104,6 +107,10 @@ struct negate_impl<fake_int_01> {
 };
 }
 }
+
+BOOST_AUTO_TEST_CASE(monomial_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename Monomial>
 static inline Monomial boost_round_trip_monomial(const Monomial &m, const symbol_fset &s)
@@ -297,6 +304,8 @@ BOOST_AUTO_TEST_CASE(monomial_boost_s11n_test)
     BOOST_CHECK(
         (!has_boost_load<boost::archive::binary_iarchive, boost_s11n_key_wrapper<monomial<fake_int_01>>>::value));
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

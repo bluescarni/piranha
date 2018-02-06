@@ -38,6 +38,7 @@ see https://www.gnu.org/licenses/. */
 #include <tuple>
 #include <type_traits>
 
+#include <piranha/config.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
@@ -51,10 +52,16 @@ using size_types = std::tuple<std::integral_constant<std::size_t, 1u>, std::inte
 
 static std::mt19937 rng;
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 static const int ntrials = 1000;
+#endif
 
 struct no_s11n {
 };
+
+BOOST_AUTO_TEST_CASE(static_vector_empty_test) {}
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename V>
 static inline void boost_round_trip(const V &v)
@@ -141,6 +148,8 @@ BOOST_AUTO_TEST_CASE(static_vector_boost_s11n_test)
     BOOST_CHECK((!has_boost_load<boost::archive::binary_iarchive, static_vector<no_s11n, 10u>>::value));
     BOOST_CHECK((!has_boost_load<boost::archive::text_iarchive, static_vector<no_s11n, 10u>>::value));
 }
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 

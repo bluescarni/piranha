@@ -32,24 +32,26 @@ see https://www.gnu.org/licenses/. */
 #include <boost/test/included/unit_test.hpp>
 
 #include <atomic>
+#include <cstdio>
 #include <initializer_list>
 #include <limits>
 #include <random>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <tuple>
 #include <type_traits>
 #include <vector>
 
+#include <piranha/config.hpp>
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
-#include <boost/filesystem.hpp>
+#endif
 
 #include <mp++/integer.hpp>
 
-#include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/type_traits.hpp>
@@ -60,24 +62,20 @@ using size_types = std::tuple<std::integral_constant<std::size_t, 1>, std::integ
                               std::integral_constant<std::size_t, 3>, std::integral_constant<std::size_t, 7>,
                               std::integral_constant<std::size_t, 10>>;
 
-namespace bfs = boost::filesystem;
+static std::random_device rd;
 
+// Small raii class for creating a tmp file.
+// NOTE: this will not actually create the file, it will just create
+// a tmp file name - so one is supposed to use the m_path member to create a file
+// in the usual way. The destructor will attempt to delete the file at m_path, nothing
+// will happen if the file does not exist.
 struct tmp_file {
-    tmp_file()
-    {
-        m_path = bfs::temp_directory_path();
-        // Concatenate with a unique filename.
-        m_path /= bfs::unique_path();
-    }
+    tmp_file() : m_path(PIRANHA_BINARY_TESTS_DIR "/" + std::to_string(rd())) {}
     ~tmp_file()
     {
-        bfs::remove(m_path);
+        std::remove(m_path.c_str());
     }
-    std::string name() const
-    {
-        return m_path.string();
-    }
-    bfs::path m_path;
+    std::string m_path;
 };
 
 static const std::vector<data_format> dfs = {data_format::boost_binary, data_format::boost_portable,
@@ -90,15 +88,19 @@ template <typename T>
 static inline T save_roundtrip(const T &x, data_format f, compression c)
 {
     tmp_file file;
-    save_file(x, file.name(), f, c);
+    save_file(x, file.m_path, f, c);
     T retval;
-    load_file(retval, file.name(), f, c);
+    load_file(retval, file.m_path, f, c);
     return retval;
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N) || defined(PIRANHA_WITH_MSGPACK)
 constexpr int ntries = 1000;
+#endif
 
 constexpr int ntries_file = 100;
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 template <typename OArchive, typename IArchive, typename T>
 static inline T boost_roundtrip(const T &x, bool promote = false)
@@ -220,6 +222,8 @@ BOOST_AUTO_TEST_CASE(integer_boost_s11n_test)
     tuple_for_each(size_types{}, boost_s11n_tester{});
 }
 
+#endif
+
 struct save_load_tester {
     template <typename T>
     void operator()(const T &) const
@@ -248,7 +252,8 @@ struct save_load_tester {
                         if (pdist(rng)) {
                             tmp.neg();
                         }
-#if defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB) && defined(PIRANHA_WITH_BZIP2)
+#if defined(PIRANHA_WITH_BOOST_S11N) && defined(PIRANHA_WITH_MSGPACK) && defined(PIRANHA_WITH_ZLIB)                    \
+    && defined(PIRANHA_WITH_BZIP2)
                         // NOTE: we are not expecting any failure if we have all optional deps.
                         auto cmp = save_roundtrip(tmp, f, c);
                         if (cmp != tmp) {

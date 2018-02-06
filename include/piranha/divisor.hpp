@@ -87,7 +87,8 @@ struct divisor_p_type {
     {
         return v == other.v;
     }
-    // Serialization support.
+#if defined(PIRANHA_WITH_BOOST_S11N)
+    // Boost serialization support.
     template <class Archive>
     void save(Archive &ar, unsigned) const
     {
@@ -101,11 +102,14 @@ struct divisor_p_type {
         boost_load(ar, e);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
     // Members.
     v_type v;
     mutable T e;
 };
 }
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 // Serialization methods for the divisor's pair type. Not documented because they are implementation details.
 template <typename Archive, typename T>
@@ -121,6 +125,8 @@ struct boost_load_impl<Archive, divisor_p_type<T>,
                                                has_boost_load<Archive, typename divisor_p_type<T>::v_type>>::value>>
     : boost_load_via_boost_api<Archive, divisor_p_type<T>> {
 };
+
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
 
@@ -970,6 +976,7 @@ public:
     }
 
 private:
+#if defined(PIRANHA_WITH_BOOST_S11N)
     // Make friend with the s11n functions.
     template <typename Archive, typename T1>
     friend void boost::serialization::save(Archive &, const piranha::boost_s11n_key_wrapper<piranha::divisor<T1>> &,
@@ -977,6 +984,7 @@ private:
     template <typename Archive, typename T1>
     friend void boost::serialization::load(Archive &, piranha::boost_s11n_key_wrapper<piranha::divisor<T1>> &,
                                            unsigned);
+#endif
 
 #if defined(PIRANHA_WITH_MSGPACK)
     template <typename Stream>
@@ -1053,6 +1061,8 @@ private:
 template <typename T>
 const std::size_t divisor<T>::multiply_arity;
 }
+
+#if defined(PIRANHA_WITH_BOOST_S11N)
 
 // Implementation of the Boost s11n api.
 namespace boost
@@ -1139,6 +1149,8 @@ struct boost_load_impl<Archive, boost_s11n_key_wrapper<divisor<T>>, divisor_boos
     : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<divisor<T>>> {
 };
 }
+
+#endif
 
 namespace std
 {

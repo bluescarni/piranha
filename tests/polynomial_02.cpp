@@ -48,6 +48,7 @@ see https://www.gnu.org/licenses/. */
 #endif
 
 #include <piranha/base_series_multiplier.hpp>
+#include <piranha/config.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
@@ -280,6 +281,8 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
     }
 }
 
+#if defined(PIRANHA_WITH_BOOST_S11N)
+
 BOOST_AUTO_TEST_CASE(polynomial_serialization_test)
 {
     typedef polynomial<integer, monomial<long>> stype;
@@ -295,6 +298,8 @@ BOOST_AUTO_TEST_CASE(polynomial_serialization_test)
     }
     BOOST_CHECK_EQUAL(z, tmp);
 }
+
+#endif
 
 BOOST_AUTO_TEST_CASE(polynomial_rebind_test)
 {
