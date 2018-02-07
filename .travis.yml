@@ -8,23 +8,6 @@ sudo: false
 branches:
   except: /pr\/.*/
 
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    - llvm-toolchain-precise-3.8
-    packages:
-    - g++-4.8
-    - clang-3.8
-    - graphviz
-    - graphviz-dev
-    - texlive
-    - gcc-5
-    - g++-5
-    - gcc-6
-    - g++-6
-    - curl
-
 env:
   global:
     - secure: "Z2BoXKwSnvgXtGmW0oykroagBQSGZU+OQukG/AFtK1OAh9rxsF4tvQZ5mtGSo84BSiuZPcu9ThAJ7tEL9bJxgeGL6GIQTsPub8o8/WPFLuSoKYhi2mssuK4tIVJHvbxUHQOHQnGUEsGWmF9xwroehwE8sVwtMOxUDZjMRT54IEFMq9MQ/O1dqK44i+/ub6tm/+oodq9GNDiCca3dULUa3zrmbuePZoAx9WPk9IswPG4fdrYlPmji6jYZxrXtYlz1DA7pVtV3Uom0K2mU2WnG8Pp0oz9o6D/jc951Pe4cF0f9gTB6t24bNHkW5DkC3arO9MIHXqIAMCUe2CtNH/WQ193dcN8UguMrYHsyZXxJqoOLgQJUy0KTptL+XlidPdlSlIHqwBHEdCYFVB3I8PJ625e6EYvHf7G2iHx6OgJLBH2818wuFMmKbiaBbpzqq3sFooODBfY0PtcUjC8zVdENOYbVQqa1c5afZPhzVqnaULahqDW/TW0K5NM4HzXoCsdELR92OxYaE9KjE4zpntFtmPSIPhWlKd9Jgo13wCivr9IIZiRF3YNCF/1rbH8rfyJPs/Ih8UDzEjPuwxGpfLahoeqJwlBrAoLXsjX+yVKY/I/JEgv2BiEr7EupBHkey3YBx3ffBzoPLNet60kCSWDUoJWASZLqi4T9xnahXOLusDs="
@@ -32,87 +15,131 @@ env:
 
 matrix:
   include:
-    - compiler: gcc
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      os: osx
-      osx_image: xcode6.4
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      os: osx
-      osx_image: xcode6.4
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
-    - compiler: clang
-      os: osx
-      osx_image: xcode6.4
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
-    - compiler: clang
-      os: osx
-      osx_image: xcode6.4
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
-    - compiler: clang
-      os: osx
-      osx_image: xcode6.4
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
-    - compiler: gcc
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
-    - compiler: gcc
-      env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="0" TEST_NSPLIT="3"
-    - compiler: gcc
-      env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="1" TEST_NSPLIT="3"
-    - compiler: gcc
-      env: BUILD_TYPE="Coverage" SPLIT_TEST_NUM="2" TEST_NSPLIT="3"
-    - compiler: clang
-      env: BUILD_TYPE="Release"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="0" TEST_NSPLIT="3"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="1" TEST_NSPLIT="3"
-    - compiler: clang
-      env: BUILD_TYPE="Debug" SPLIT_TEST_NUM="2" TEST_NSPLIT="3"
-    - compiler: gcc
-      env: BUILD_TYPE="Python2"
-    - compiler: clang
-      env: BUILD_TYPE="Python3"
-    - compiler: clang
-      os: osx
-      osx_image: xcode6.4
-      env: BUILD_TYPE="Python2"
-    - compiler: clang
-      os: osx
-      osx_image: xcode6.4
-      env: BUILD_TYPE="Python3"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC7" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-7
+          - g++-7
+    - env: PIRANHA_BUILD="DebugGCC7" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-7
+          - g++-7
+    - env: PIRANHA_BUILD="DebugGCC7" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-7
+          - g++-7
+    - env: PIRANHA_BUILD="DebugGCC7" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-7
+          - g++-7
+    - env: PIRANHA_BUILD="DebugClang39" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
+      compiler: clang
+      os: linux
+      addons:
+        apt:
+          sources:
+          - llvm-toolchain-trusty-3.9
+          - ubuntu-toolchain-r-test
+          packages:
+          - clang-3.9
+          - gcc-7
+          - g++-7
+    - env: PIRANHA_BUILD="DebugClang39" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
+      compiler: clang
+      os: linux
+      addons:
+        apt:
+          sources:
+          - llvm-toolchain-trusty-3.9
+          - ubuntu-toolchain-r-test
+          packages:
+          - clang-3.9
+          - gcc-7
+          - g++-7
+    - env: PIRANHA_BUILD="DebugClang39" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
+      compiler: clang
+      os: linux
+      addons:
+        apt:
+          sources:
+          - llvm-toolchain-trusty-3.9
+          - ubuntu-toolchain-r-test
+          packages:
+          - clang-3.9
+          - gcc-7
+          - g++-7
+    - env: PIRANHA_BUILD="DebugClang39" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
+      compiler: clang
+      os: linux
+      addons:
+        apt:
+          sources:
+          - llvm-toolchain-trusty-3.9
+          - ubuntu-toolchain-r-test
+          packages:
+          - clang-3.9
+          - gcc-7
+          - g++-7
 
-install:
-    - if [[ "${CC}" == "clang" && "${TRAVIS_OS_NAME}" == "linux" ]]; then
-          export PIRANHA_COMPILER=clang;
-          export CC=clang-3.8;
-          export CXX=clang++-3.8;
-      elif [[ "${CC}" == "clang" && "${TRAVIS_OS_NAME}" == "osx" ]]; then
-          export PIRANHA_COMPILER=clang;
-          export CC=clang;
-          export CXX=clang++;
-      elif [[ "${CC}" == "gcc" && "${BUILD_TYPE}" == "Coverage" ]]; then
-          export PIRANHA_COMPILER=gcc;
-          export CC=gcc-5;
-          export CXX=g++-5;
-          export GCOV_EXECUTABLE=gcov-5;
-      else
-          export PIRANHA_COMPILER=gcc;
-          if [[ "${BUILD_TYPE}" == "Python2" ]]; then
-            export CC=gcc-6;
-            export CXX=g++-6;
-          else
-            export CC=gcc-4.8;
-            export CXX=g++-4.8;
-          fi
-      fi
 script:
     - mkdir build
     - cd build
