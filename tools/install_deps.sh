@@ -18,7 +18,7 @@ export PATH="$HOME/miniconda/bin:$PATH"
 bash miniconda.sh -b -p $HOME/miniconda
 conda config --add channels conda-forge --force
 
-conda_pkgs="cmake gmp mpfr boost-cpp bzip2 zlib msgpack-c mppp"
+conda_pkgs="cmake boost-cpp bzip2 zlib msgpack-c mppp"
 
 conda create -q -p $deps_dir -y $conda_pkgs
 source activate $deps_dir
