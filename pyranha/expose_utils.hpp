@@ -46,6 +46,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <cstddef>
+#include <ios>
 #include <limits>
 #include <locale>
 #include <sstream>
@@ -66,6 +67,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/power_series.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
+#include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -88,6 +90,23 @@ struct type_in_tuple<T, std::tuple<Args...>>
     : std::integral_constant<bool, piranha::disjunction<std::is_same<T, Args>...>::value> {
 };
 
+// Wrapper around the CPython function to create a bytes object from raw data.
+inline bp::object make_bytes(const char *ptr, ::Py_ssize_t len)
+{
+    ::PyObject *retval;
+    if (len) {
+        retval = PyBytes_FromStringAndSize(ptr, len);
+    } else {
+        retval = PyBytes_FromStringAndSize(nullptr, 0);
+    }
+    if (!retval) {
+        ::PyErr_SetString(::PyExc_RuntimeError, "unable to create a bytes object: the 'PyBytes_FromStringAndSize()' "
+                                                "function returned NULL");
+        bp::throw_error_already_set();
+    }
+    return bp::object(bp::handle<>(retval));
+}
+
 // Generic pickle support via Boost serialization.
 template <typename Series>
 struct generic_pickle_suite : bp::pickle_suite {
@@ -97,14 +116,30 @@ struct generic_pickle_suite : bp::pickle_suite {
     }
     static bp::tuple getstate(const Series &s)
     {
+#if defined(PIRANHA_WITH_BOOST_S11N)
+        // By default we use boost s11n, if available.
         std::stringstream ss;
         {
-            // NOTE: use text archive by default, as it's the safest. Maybe in the future
-            // we can make the pickle serialization backend selectable by the user.
-            boost::archive::text_oarchive oa(ss);
+            boost::archive::binary_oarchive oa(ss);
             oa << s;
         }
-        return bp::make_tuple(ss.str());
+        const auto tmp_str = ss.str();
+        return bp::make_tuple(make_bytes(tmp_str.data(), piranha::safe_cast<::Py_ssize_t>(tmp_str.size())));
+#elif defined(PIRANHA_WITH_MSGPACK)
+        // Otherwise msgpack, if available.
+        std::stringstream ss;
+        msgpack::packer<std::stringstream> p(ss);
+        piranha::msgpack_pack(p, s, piranha::msgpack_format::binary);
+        const auto tmp_str = ss.str();
+        return bp::make_tuple(make_bytes(tmp_str.data(), piranha::safe_cast<::Py_ssize_t>(tmp_str.size())));
+#else
+        (void)s;
+        ::PyErr_SetString(
+            ::PyExc_NotImplementedError,
+            "cannot pickle series, because piranha was configured with no support for any serialisation backend");
+        bp::throw_error_already_set();
+        throw;
+#endif
     }
     static void setstate(Series &s, bp::tuple state)
     {
@@ -112,11 +147,31 @@ struct generic_pickle_suite : bp::pickle_suite {
             ::PyErr_SetString(PyExc_ValueError, "the 'state' tuple must have exactly one element");
             bp::throw_error_already_set();
         }
-        std::string st = bp::extract<std::string>(state[0]);
+        // Check that we actually have a bytes object.
+        const auto ptr = ::PyBytes_AsString(bp::object(state[0]).ptr());
+        if (!ptr) {
+            ::PyErr_SetString(::PyExc_TypeError, "a bytes object is needed to deserialize a series");
+            bp::throw_error_already_set();
+        }
+        // Get out the length of the bytes object.
+        const auto b_len = bp::len(bp::object(state[0]));
+#if defined(PIRANHA_WITH_BOOST_S11N)
         std::stringstream ss;
-        ss.str(st);
-        boost::archive::text_iarchive ia(ss);
+        ss.write(ptr, piranha::safe_cast<std::streamsize>(b_len));
+        boost::archive::binary_iarchive ia(ss);
         ia >> s;
+#elif defined(PIRANHA_WITH_MSGPACK)
+        std::size_t offset = 0u;
+        auto oh = msgpack::unpack(ptr, piranha::safe_cast<std::size_t>(b_len), offset);
+        piranha::msgpack_convert(s, oh.get(), piranha::msgpack_format::binary);
+#else
+        (void)s;
+        ::PyErr_SetString(
+            ::PyExc_NotImplementedError,
+            "cannot unpickle series, because piranha was configured with no support for any serialisation backend");
+        bp::throw_error_already_set();
+        throw;
+#endif
     }
 };
 
