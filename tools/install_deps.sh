@@ -18,10 +18,10 @@ export PATH="$HOME/miniconda/bin:$PATH"
 bash miniconda.sh -b -p $HOME/miniconda
 conda config --add channels conda-forge --force
 
+conda_pkgs="cmake boost-cpp bzip2 zlib msgpack-c mppp"
+
 if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
-    conda_pkgs="pip"
-else
-    conda_pkgs="cmake boost-cpp bzip2 zlib msgpack-c mppp"
+    conda_pkgs="$conda_pkgs pip"
 fi
 
 conda create -q -p $deps_dir -y $conda_pkgs
