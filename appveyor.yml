@@ -10,17 +10,14 @@ environment:
 
   matrix:
     - BUILD_TYPE: "MSVC15_clang"
-      TEST_NSPLIT: "4"
+      TEST_NSPLIT: "3"
       SPLIT_TEST_NUM: "0"
     - BUILD_TYPE: "MSVC15_clang"
-      TEST_NSPLIT: "4"
+      TEST_NSPLIT: "3"
       SPLIT_TEST_NUM: "1"
     - BUILD_TYPE: "MSVC15_clang"
-      TEST_NSPLIT: "4"
+      TEST_NSPLIT: "3"
       SPLIT_TEST_NUM: "2"
-    - BUILD_TYPE: "MSVC15_clang"
-      TEST_NSPLIT: "4"
-      SPLIT_TEST_NUM: "3"
 
 install:
 - if [%BUILD_TYPE%]==[MSVC15_clang] set PATH=C:\Miniconda36-x64\Scripts;%PATH%
