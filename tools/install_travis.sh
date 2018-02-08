@@ -8,6 +8,9 @@ set -x
 export PATH="$HOME/miniconda/bin:$PATH"
 
 if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
+    # Make sure we run CMake and generate the sphinx config file.
+    CXX=g++-4.8 CC=gcc-4.8 cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes ../;
+
     cd ../doc/sphinx;
     pip install sphinx requests[security] guzzle_sphinx_theme;
     export SPHINX_OUTPUT=`make html linkcheck 2>&1 >/dev/null`;
@@ -16,6 +19,10 @@ if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
         echo "${SPHINX_OUTPUT}";
         exit 1;
     fi
+    echo "Sphinx ran successfully";
+    # Run the latex build as well. We don't check for stderr output here,
+    # as the command turns out to be quite chatty.
+    make latexpdf;
 elif [[ "${PIRANHA_BUILD}" == "ReleaseGCC48" ]]; then
     CXX=g++-4.8 CC=gcc-4.8 cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes ../;
     make install VERBOSE=1;
