@@ -25,6 +25,7 @@ matrix:
           packages:
           - g++-4.8
     - env: PIRANHA_BUILD="Documentation"
+      compiler: gcc
       os: linux
     - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
       compiler: gcc
