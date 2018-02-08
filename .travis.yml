@@ -15,7 +15,7 @@ env:
 
 matrix:
   include:
-    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="0" TEST_NSPLIT="8"
       compiler: gcc
       os: linux
       addons:
@@ -24,7 +24,7 @@ matrix:
           - ubuntu-toolchain-r-test
           packages:
           - g++-4.8
-    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="1" TEST_NSPLIT="8"
       compiler: gcc
       os: linux
       addons:
@@ -33,7 +33,7 @@ matrix:
           - ubuntu-toolchain-r-test
           packages:
           - g++-4.8
-    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="2" TEST_NSPLIT="8"
       compiler: gcc
       os: linux
       addons:
@@ -42,7 +42,43 @@ matrix:
           - ubuntu-toolchain-r-test
           packages:
           - g++-4.8
-    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="3" TEST_NSPLIT="8"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="4" TEST_NSPLIT="8"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="5" TEST_NSPLIT="8"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="6" TEST_NSPLIT="8"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="7" TEST_NSPLIT="8"
       compiler: gcc
       os: linux
       addons:

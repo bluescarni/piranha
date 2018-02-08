@@ -106,8 +106,8 @@ BOOST_AUTO_TEST_CASE(sin_test_00)
     BOOST_CHECK((std::is_same<decltype(math::sin(0)), int>::value));
     BOOST_CHECK((std::is_same<decltype(math::sin(0u)), unsigned>::value));
     BOOST_CHECK((std::is_same<decltype(math::sin(static_cast<signed char>(0))), signed char>::value));
-    BOOST_CHECK_EXCEPTION(math::sin(42), std::domain_error, [](const std::domain_error &ex) {
-        return boost::contains(ex.what(), "cannot compute the sine of the non-zero C++ integral 42");
+    BOOST_CHECK_EXCEPTION(math::sin(42), std::domain_error, [](const std::domain_error &e) {
+        return boost::contains(e.what(), "cannot compute the sine of the non-zero C++ integral 42");
     });
 }
 
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(cos_test_00)
     BOOST_CHECK((std::is_same<decltype(math::cos(0)), int>::value));
     BOOST_CHECK((std::is_same<decltype(math::cos(0u)), unsigned>::value));
     BOOST_CHECK((std::is_same<decltype(math::cos(static_cast<signed char>(0))), signed char>::value));
-    BOOST_CHECK_EXCEPTION(math::cos(42), std::domain_error, [](const std::domain_error &ex) {
-        return boost::contains(ex.what(), "cannot compute the cosine of the non-zero C++ integral 42");
+    BOOST_CHECK_EXCEPTION(math::cos(42), std::domain_error, [](const std::domain_error &e) {
+        return boost::contains(e.what(), "cannot compute the cosine of the non-zero C++ integral 42");
     });
 }
