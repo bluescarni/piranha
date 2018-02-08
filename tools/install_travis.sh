@@ -8,7 +8,7 @@ set -x
 export PATH="$HOME/miniconda/bin:$PATH"
 
 if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
-    cd doc/sphinx;
+    cd ../doc/sphinx;
     pip install sphinx requests[security] guzzle_sphinx_theme;
     export SPHINX_OUTPUT=`make html linkcheck 2>&1 >/dev/null`;
     if [[ "${SPHINX_OUTPUT}" != "" ]]; then

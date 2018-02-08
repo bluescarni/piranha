@@ -19,7 +19,7 @@ bash miniconda.sh -b -p $HOME/miniconda
 conda config --add channels conda-forge --force
 
 if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
-    conda_pkgs=""
+    conda_pkgs="pip"
 else
     conda_pkgs="cmake boost-cpp bzip2 zlib msgpack-c mppp"
 fi
