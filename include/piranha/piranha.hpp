@@ -199,7 +199,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/dynamic_aligning_allocator.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/hash_set.hpp>
-#include <piranha/init.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/ipow_substitutable_series.hpp>
