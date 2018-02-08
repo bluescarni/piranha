@@ -5,40 +5,41 @@ branches:
     - /pr\/.+/
 
 environment:
-  TWINE_PASSWORD:
-    secure: rcb0UlxG/p8yoPsvhAdsHA==
+  global:
+    PLATFORMTOOLSET: "v140"
+
+environment:
   matrix:
-    - BUILD_TYPE: "Release"
-      TEST_NSPLIT: "1"
+    - BUILD_TYPE: "MSVC15_clang"
+      TEST_NSPLIT: "4"
       SPLIT_TEST_NUM: "0"
-    - BUILD_TYPE: "Debug"
-      TEST_NSPLIT: "3"
-      SPLIT_TEST_NUM: "0"
-    - BUILD_TYPE: "Debug"
-      TEST_NSPLIT: "3"
+    - BUILD_TYPE: "MSVC15_clang"
+      TEST_NSPLIT: "4"
       SPLIT_TEST_NUM: "1"
-    - BUILD_TYPE: "Debug"
-      TEST_NSPLIT: "3"
+    - BUILD_TYPE: "MSVC15_clang"
+      TEST_NSPLIT: "4"
       SPLIT_TEST_NUM: "2"
-    - BUILD_TYPE: "Python27"
-    - BUILD_TYPE: "Python35"
-    - BUILD_TYPE: "Python36"
+    - BUILD_TYPE: "MSVC15_clang"
+      TEST_NSPLIT: "4"
+      SPLIT_TEST_NUM: "3"
 
 install:
-
-# Rename sh.exe as sh.exe in PATH interferes with MinGW.
-- rename "C:\Program Files\Git\usr\bin\sh.exe" "sh2.exe"
-# Get a Python version to run the script.
-- call tools\appveyor-download.cmd "https://github.com/bluescarni/binary_deps/raw/master/python35_mingw_64.7z" -FileName python.7z
-- 7z x -aoa -oC:\python4appveyor\ python.7z > NUL
+- if [%BUILD_TYPE%]==[MSVC15_clang] set PATH=C:\Miniconda36-x64\Scripts;%PATH%
+- if [%BUILD_TYPE%]==[MSVC15_clang] conda config --add channels conda-forge --force
+- if [%BUILD_TYPE%]==[MSVC15_clang] conda create -y --name piranha cmake boost-cpp msgpack-c mppp ninja clangdev
+- if [%BUILD_TYPE%]==[MSVC15_clang] call activate piranha
+- if [%BUILD_TYPE%]==[MSVC15_clang] clang-cl -v
+- if [%BUILD_TYPE%]==[MSVC15_clang] call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 
 build_script:
+- mkdir build
+- cd build
 
-- C:\python4appveyor\Python35\python.exe tools\install_appveyor.py
+- if [%BUILD_TYPE%]==[MSVC15_clang] cmake .. -GNinja -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER=clang-cl -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_MSGPACK=yes
+- if [%BUILD_TYPE%]==[MSVC15_clang] cmake --build . -- -j1
 
-artifacts:
-  - path: build\wheel\dist
-    name: wheels
+test_script:
+- if [%BUILD_TYPE%]==[MSVC15_clang] ctest -V
 
 # Enable this to be able to login to the build worker. You can use the
 # `remmina` program in Ubuntu, use the login information that the line below
