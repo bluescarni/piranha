@@ -34,7 +34,7 @@ build_script:
 - mkdir build
 - cd build
 
-- if [%BUILD_TYPE%]==[MSVC15_clang] cmake .. -GNinja -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER=clang-cl -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_MSGPACK=yes
+- if [%BUILD_TYPE%]==[MSVC15_clang] cmake .. -GNinja -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER=clang-cl -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_TEST_NSPLIT=%TEST_NSPLIT% -DPIRANHA_TEST_SPLIT_NUM=%SPLIT_TEST_NUM%
 - if [%BUILD_TYPE%]==[MSVC15_clang] cmake --build . -- -j1
 
 test_script:
