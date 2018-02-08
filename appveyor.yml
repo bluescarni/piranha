@@ -8,7 +8,6 @@ environment:
   global:
     PLATFORMTOOLSET: "v140"
 
-environment:
   matrix:
     - BUILD_TYPE: "MSVC15_clang"
       TEST_NSPLIT: "4"
