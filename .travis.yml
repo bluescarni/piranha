@@ -139,11 +139,24 @@ matrix:
           - clang-3.9
           - gcc-7
           - g++-7
+    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
+      os: osx
+      osx_image: xcode6.4
+    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
+      os: osx
+      osx_image: xcode6.4
+    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
+      os: osx
+      osx_image: xcode6.4
+    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
+      os: osx
+      osx_image: xcode6.4
 
 script:
     - mkdir build
     - cd build
     - source ../tools/install_deps.sh
     - source ../tools/install_travis.sh
+
 notifications:
   email: false
