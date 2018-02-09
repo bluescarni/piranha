@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
 
-# Exit on error
-set -e
 # Echo each command
 set -x
+
+# Exit on error
+set -e
 
 if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;
 else
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
 fi
+
 export deps_dir=$HOME/local
-bash miniconda.sh -b -p $HOME/miniconda
 export PATH="$HOME/miniconda/bin:$PATH"
+
+bash miniconda.sh -b -p $HOME/miniconda
 conda config --add channels conda-forge --force
 
-conda_pkgs="gmp mpfr boost>=1.58 cmake>=3.2 bzip2 zlib msgpack-c"
+conda_pkgs="cmake boost-cpp bzip2 zlib msgpack-c mppp"
 
-if [[ "${BUILD_TYPE}" == "Python2" ]]; then
-    conda_pkgs="$conda_pkgs python=2.7 numpy mpmath"
-elif [[ "${BUILD_TYPE}" == "Python3" ]]; then
-    conda_pkgs="$conda_pkgs python=3.5 numpy mpmath"
+if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
+    conda_pkgs="$conda_pkgs pip"
 fi
 
 conda create -q -p $deps_dir -y $conda_pkgs

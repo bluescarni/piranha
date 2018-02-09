@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.2.0)
+cmake_minimum_required(VERSION 3.3.0)
 
 project(sample_project)
 
-find_package(Piranha REQUIRED)
+find_package(piranha REQUIRED)
 
 add_executable(main main.cpp)
 target_link_libraries(main piranha::piranha)

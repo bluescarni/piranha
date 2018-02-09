@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
     BOOST_CHECK((!is_exponentiable<real, void>::value));
     BOOST_CHECK((!is_exponentiable<std::string, real>::value));
     BOOST_CHECK((!is_exponentiable<real, std::string>::value));
-#if defined(MPPP_HAVE_GCC_INT128)
+#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
     BOOST_CHECK((is_exponentiable<real, __int128_t>::value));
     BOOST_CHECK((is_exponentiable<__int128_t, real>::value));
     BOOST_CHECK((is_exponentiable<real, __uint128_t>::value));
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
         BOOST_CHECK_EQUAL(math::pow(2, r2), 32);
         BOOST_CHECK_EQUAL(math::pow(r1, 5.), 32);
         BOOST_CHECK_EQUAL(math::pow(2.l, r2), 32);
-#if defined(MPPP_HAVE_GCC_INT128)
+#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
         BOOST_CHECK_EQUAL(math::pow(r1, __int128_t(5)), 32);
         BOOST_CHECK_EQUAL(math::pow(__uint128_t(2), r2), 32);
 #endif
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(real_evaluate_test)
     BOOST_CHECK_EQUAL(math::evaluate(real(2), symbol_fmap<int>{}), real(2));
     BOOST_CHECK_EQUAL(math::evaluate(real(-3.5), symbol_fmap<double>{}), real(-3.5));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(real(), symbol_fmap<real>{})), real>::value));
-#if defined(MPPP_HAVE_GCC_INT128)
+#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
     BOOST_CHECK_EQUAL(math::evaluate(real(2), symbol_fmap<__int128_t>{}), real(2));
     BOOST_CHECK_EQUAL(math::evaluate(real(2), symbol_fmap<__uint128_t>{}), real(2));
 #endif
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(real_safe_cast_test)
     BOOST_CHECK((!has_safe_cast<real, void>::value));
     BOOST_CHECK_EQUAL(safe_cast<int>(3_r), 3);
     BOOST_CHECK_EQUAL(safe_cast<int>(-3_r), -3);
-#if defined(MPPP_HAVE_GCC_INT128)
+#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
     BOOST_CHECK(safe_cast<__int128_t>(3_r) == 3);
     BOOST_CHECK(safe_cast<__uint128_t>(3_r) == 3u);
     BOOST_CHECK_THROW(safe_cast<__uint128_t>(-3_r), safe_cast_failure);

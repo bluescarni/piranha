@@ -1,12 +1,16 @@
 include(YACMACompilerLinkerSettings)
 
 function(ADD_PIRANHA_TESTCASE arg1)
-	# Setup for the split compilation of tests.
 	if(PIRANHA_TEST_NSPLIT)
+		# Increase by one the _PIRANHA_TEST_NUM variable in the parent scope.
+		# NOTE: we do it here (rather than at the end of the function) because we may exit the
+		# function earlier in the return() below.
+		# NOTE: even though we updated the _PIRANHA_TEST_NUM variable in the parent scope,
+		# the _PIRANHA_TEST_NUM in the *current* scope still contains the old value.
 		math(EXPR __PIRANHA_TEST_NUM "(${_PIRANHA_TEST_NUM} + 1) % ${PIRANHA_TEST_NSPLIT}")
 		set(_PIRANHA_TEST_NUM ${__PIRANHA_TEST_NUM} PARENT_SCOPE)
 	endif()
-	if(PIRANHA_TEST_NSPLIT AND "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${_PIRANHA_TEST_NUM}")
+	if(PIRANHA_TEST_NSPLIT AND NOT "${PIRANHA_TEST_SPLIT_NUM}" STREQUAL "${_PIRANHA_TEST_NUM}")
 		return()
 	endif()
 	add_executable("${arg1}" "${arg1}.cpp")

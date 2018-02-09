@@ -5,34 +5,26 @@ set -e
 # Echo each command
 set -x
 
-export PATH="$deps_dir/bin:$PATH"
+export PATH="$HOME/miniconda/bin:$PATH"
 
-# This variable will contain something if this is a release build, otherwise it will be empty.
-export PIRANHA_RELEASE_VERSION=`echo "${TRAVIS_TAG}"|grep -E 'v[0-9]+\.[0-9]+.*'|cut -c 2-`
+if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
+    # Make sure we run CMake and generate the sphinx config file.
+    CXX=g++-4.8 CC=gcc-4.8 cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes ../;
 
-# In a release build, do something only if the BUILD_TYPE is "Release" as well.
-if [[ "${PIRANHA_RELEASE_VERSION}" != "" && "${BUILD_TYPE}" != "Release" ]]; then
-    echo "Release build detected, skipping non-release jobs."
-    exit 0;
-fi
-
-if [[ "${BUILD_TYPE}" == "Debug" ]]; then
-    if [[ "${PIRANHA_COMPILER}" == "gcc" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address -g0 -Os" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
-        make VERBOSE=1;
-        ctest -E "thread|memory" -V;
-    elif [[ "${PIRANHA_COMPILER}" == "clang" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DCMAKE_CXX_FLAGS_DEBUG="-g0 -Os" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
-        make VERBOSE=1;
-        ctest -E "thread" -V;
+    cd ../doc/sphinx;
+    pip install sphinx requests[security] guzzle_sphinx_theme;
+    export SPHINX_OUTPUT=`make html linkcheck 2>&1 >/dev/null`;
+    if [[ "${SPHINX_OUTPUT}" != "" ]]; then
+        echo "Sphinx encountered some problem:";
+        echo "${SPHINX_OUTPUT}";
+        exit 1;
     fi
-elif [[ "${BUILD_TYPE}" == "Coverage" ]]; then
-        cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DCMAKE_CXX_FLAGS_DEBUG="-g1 -Og --coverage" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
-        make VERBOSE=1;
-        ctest -E "thread" -V;
-        bash <(curl -s https://codecov.io/bash) -x $GCOV_EXECUTABLE
-elif [[ "${BUILD_TYPE}" == "Release" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_BUILD_TYPE=Release -DPIRANHA_BUILD_BENCHMARKS=yes ../;
+    echo "Sphinx ran successfully";
+    # Run the latex build as well. We don't check for stderr output here,
+    # as the command turns out to be quite chatty.
+    make latexpdf;
+elif [[ "${PIRANHA_BUILD}" == "ReleaseGCC48" ]]; then
+    CXX=g++-4.8 CC=gcc-4.8 cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes ../;
     make install VERBOSE=1;
 
     # Check that all headers are really installed.
@@ -59,68 +51,27 @@ elif [[ "${BUILD_TYPE}" == "Release" ]]; then
     cmake ../ -DCMAKE_PREFIX_PATH=$deps_dir;
     make;
     ./main;
-
-    # Do the release here.
-    if [[ "${PIRANHA_RELEASE_VERSION}" != "" ]]; then
-      echo "Creating new piranha release: ${PIRANHA_RELEASE_VERSION}"
-      set +x
-      curl -s --data '{"tag_name": "'"${TRAVIS_TAG}"'","name": "piranha-'"${PIRANHA_RELEASE_VERSION}"'","body": "Release of version '"${PIRANHA_RELEASE_VERSION}"'.","prerelease": true}' "https://api.github.com/repos/bluescarni/piranha/releases?access_token=${GH_RELEASE_TOKEN}" 2>&1 > /dev/null
-      set -x
-    fi
-fi
-
-if [[ "${BUILD_TYPE}" == "Python2" || "${BUILD_TYPE}" == "Python3" ]]; then
-    cmake -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_INSTALL_HEADERS=no -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_PYRANHA=yes -DCMAKE_CXX_FLAGS_DEBUG="-g0 -Os" -DCMAKE_INSTALL_PREFIX=$deps_dir  ../;
-    make install VERBOSE=1;
-    python -c "import pyranha.test; pyranha.test.run_test_suite()";
-fi
-
-if [[ "${BUILD_TYPE}" == "Python2" && "${TRAVIS_OS_NAME}" != "osx" ]]; then
-    pip install sphinx requests[security] guzzle_sphinx_theme;
-    cd ../doc/sphinx;
-    export SPHINX_OUTPUT=`make html 2>&1 >/dev/null`;
-    if [[ "${SPHINX_OUTPUT}" != "" ]]; then
-        echo "Sphinx encountered some problem:";
-        echo "${SPHINX_OUTPUT}";
-        exit 1;
-    fi
-    echo "Sphinx ran successfully";
-    if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
-        echo "Testing a pull request, the generated documentation will not be uploaded.";
-        exit 0;
-    fi
-    if [[ "${TRAVIS_BRANCH}" != "master" ]]; then
-        echo "Branch is not master, the generated documentation will not be uploaded.";
-        exit 0;
-    fi
-    # Move out the resulting documentation.
-    mv _build/html /home/travis/sphinx;
-    # Checkout a new copy of the repo, for pushing to gh-pages.
-    cd ../../../;
-    git config --global push.default simple
-    git config --global user.name "Travis CI"
-    git config --global user.email "bluescarni@gmail.com"
-    set +x
-    git clone "https://${GH_TOKEN}@github.com/bluescarni/piranha.git" piranha_gh_pages -q
-    set -x
-    cd piranha_gh_pages
-    git checkout -b gh-pages --track origin/gh-pages;
-    git rm -fr sphinx;
-    mv /home/travis/sphinx .;
-    git add sphinx;
-    # We assume here that a failure in commit means that there's nothing
-    # to commit.
-    git commit -m "Update Sphinx documentation, commit ${TRAVIS_COMMIT} [skip ci]." || exit 0
-    PUSH_COUNTER=0
-    until git push -q
-    do
-        git pull -q
-        PUSH_COUNTER=$((PUSH_COUNTER + 1))
-        if [ "$PUSH_COUNTER" -gt 3 ]; then
-            echo "Push failed, aborting.";
-            exit 1;
-        fi
-    done
+elif [[ "${PIRANHA_BUILD}" == "DebugGCC48" ]]; then
+    CXX=g++-4.8 CC=gcc-4.8 cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address -g0 -Os" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+    make VERBOSE=1;
+    ctest -E "thread|memory" -V;
+elif [[ "${PIRANHA_BUILD}" == "DebugGCC7" ]]; then
+    CXX=g++-7 CC=gcc-7 cmake -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DCMAKE_CXX_FLAGS_DEBUG="-Og --coverage -fconcepts" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+    make VERBOSE=1;
+    ctest -E "thread" -V;
+    bash <(curl -s https://codecov.io/bash) -x gcov-7
+elif [[ "${PIRANHA_BUILD}" == "DebugGCC6" ]]; then
+    CXX=g++-6 CC=gcc-6 cmake -DCMAKE_CXX_STANDARD=14 -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_MSGPACK=yes -DCMAKE_CXX_FLAGS_DEBUG="-g0 -Os -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC" -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+    make VERBOSE=1;
+    ctest -E "thread" -V;
+elif [[ "${PIRANHA_BUILD}" == "DebugClang39" ]]; then
+    CXX=clang++-3.9 CC=clang-3.9 cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} -DQuadmath_INCLUDE_DIR=/usr/lib/gcc/x86_64-linux-gnu/7/include -DQuadmath_LIBRARY=/usr/lib/gcc/x86_64-linux-gnu/7/libquadmath.so ../;
+    make VERBOSE=1;
+    ctest -E "thread" -V;
+elif [[ "${PIRANHA_BUILD}" == "OSXDebug" ]]; then
+    CXX=clang++ CC=clang cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes -DPIRANHA_TEST_NSPLIT=${TEST_NSPLIT} -DPIRANHA_TEST_SPLIT_NUM=${SPLIT_TEST_NUM} ../;
+    make VERBOSE=1;
+    ctest -E "thread" -V;
 fi
 
 set +e
