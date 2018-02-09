@@ -113,6 +113,46 @@ matrix:
           packages:
           - gcc-7
           - g++-7
+    - env: PIRANHA_BUILD="DebugGCC6" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-6
+          - g++-6
+    - env: PIRANHA_BUILD="DebugGCC6" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-6
+          - g++-6
+    - env: PIRANHA_BUILD="DebugGCC6" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-6
+          - g++-6
+    - env: PIRANHA_BUILD="DebugGCC6" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-6
+          - g++-6
     - env: PIRANHA_BUILD="DebugClang39" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
       compiler: clang
       os: linux
