@@ -37,7 +37,7 @@ matrix:
           - texlive-xetex
           - lmodern
           - latexmk
-    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="0" TEST_NSPLIT="5"
       compiler: gcc
       os: linux
       addons:
@@ -46,7 +46,7 @@ matrix:
           - ubuntu-toolchain-r-test
           packages:
           - g++-4.8
-    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="1" TEST_NSPLIT="5"
       compiler: gcc
       os: linux
       addons:
@@ -55,7 +55,7 @@ matrix:
           - ubuntu-toolchain-r-test
           packages:
           - g++-4.8
-    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="2" TEST_NSPLIT="5"
       compiler: gcc
       os: linux
       addons:
@@ -64,7 +64,16 @@ matrix:
           - ubuntu-toolchain-r-test
           packages:
           - g++-4.8
-    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="3" TEST_NSPLIT="5"
+      compiler: gcc
+      os: linux
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - g++-4.8
+    - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="4" TEST_NSPLIT="5"
       compiler: gcc
       os: linux
       addons:
@@ -201,16 +210,13 @@ matrix:
           - clang-3.9
           - gcc-7
           - g++-7
-    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="0" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="0" TEST_NSPLIT="3"
       os: osx
       osx_image: xcode6.4
-    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="1" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="1" TEST_NSPLIT="3"
       os: osx
       osx_image: xcode6.4
-    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="2" TEST_NSPLIT="4"
-      os: osx
-      osx_image: xcode6.4
-    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="3" TEST_NSPLIT="4"
+    - env: PIRANHA_BUILD="OSXDebug" SPLIT_TEST_NUM="2" TEST_NSPLIT="3"
       os: osx
       osx_image: xcode6.4
 
