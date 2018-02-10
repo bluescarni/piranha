@@ -497,16 +497,16 @@ struct rational_binomial_tester {
         BOOST_CHECK((!are_binomial_types<rat_type, void>::value));
         BOOST_CHECK((!are_binomial_types<int_type, rat_type>::value));
         BOOST_CHECK((!are_binomial_types<rat_type, double>::value));
-        BOOST_CHECK((std::is_same<decltype(math::binomial(rat_type{7, 3}, 4)), rat_type>::value));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, 4), (rat_type{-7, 243}));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, -3}, int_type{4}), (rat_type{1820, 243}));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, static_cast<signed char>(-4)), 0);
+        BOOST_CHECK((std::is_same<decltype(piranha::binomial(rat_type{7, 3}, 4)), rat_type>::value));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, 4), (rat_type{-7, 243}));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, -3}, int_type{4}), (rat_type{1820, 243}));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, static_cast<signed char>(-4)), 0);
 #if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
         BOOST_CHECK((are_binomial_types<rat_type, __int128_t>::value));
         BOOST_CHECK((are_binomial_types<rat_type, __uint128_t>::value));
         BOOST_CHECK((!are_binomial_types<__int128_t, rat_type>::value));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, __int128_t(4)), (rat_type{-7, 243}));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, __uint128_t(4)), (rat_type{-7, 243}));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, __int128_t(4)), (rat_type{-7, 243}));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, __uint128_t(4)), (rat_type{-7, 243}));
 #endif
     }
 };

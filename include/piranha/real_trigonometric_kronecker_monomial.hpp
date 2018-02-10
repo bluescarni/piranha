@@ -1229,15 +1229,16 @@ public:
         // the use of the binomial() overload for integer. In the future we might want
         // to disable the binomial() overload for integral C++ types.
         // TREQ: t_subs_type<U> move-ctible, dtible.
-        t_subs_type<U> cos_nx(cos_phase(abs_n) * math::binomial(integer(abs_n), T(0)) * (c_map[T(0)] * s_map[abs_n])),
-            sin_nx(sin_phase(abs_n) * math::binomial(integer(abs_n), T(0)) * (c_map[T(0)] * s_map[abs_n]));
+        t_subs_type<U> cos_nx(cos_phase(abs_n) * piranha::binomial(integer(abs_n), T(0))
+                              * (c_map[T(0)] * s_map[abs_n])),
+            sin_nx(sin_phase(abs_n) * piranha::binomial(integer(abs_n), T(0)) * (c_map[T(0)] * s_map[abs_n]));
         // Run the main iteration.
         for (T k = 0; k < abs_n; ++k) {
             const auto p = static_cast<T>(abs_n - (k + 1));
             piranha_assert(p >= T(0));
             // TREQ: mult_t<U,U> move ctible.
             const auto tmp = c_map[static_cast<T>(k + 1)] * s_map[p];
-            const auto tmp_bin = math::binomial(integer(abs_n), k + T(1));
+            const auto tmp_bin = piranha::binomial(integer(abs_n), k + T(1));
             // TREQ: t_subs_type<U> addable in-place.
             cos_nx += cos_phase(p) * tmp_bin * tmp;
             sin_nx += sin_phase(p) * tmp_bin * tmp;

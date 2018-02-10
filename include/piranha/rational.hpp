@@ -170,8 +170,9 @@ public:
         return mppp::pow(std::forward<T1>(b), std::forward<U1>(e));
     }
 };
+}
 
-// Specialisation of the implementation of piranha::math::binomial() for mp++ rational top argument.
+// Specialisation of the implementation of piranha::binomial() for mp++ rational top argument.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <std::size_t SSize, mppp::RationalIntegralInteroperable<SSize> T>
 class binomial_impl<mppp::rational<SSize>, T>
@@ -187,6 +188,9 @@ public:
         return mppp::binomial(std::forward<T1>(x), std::forward<U1>(y));
     }
 };
+
+namespace math
+{
 
 template <std::size_t SSize>
 class sin_impl<mppp::rational<SSize>>

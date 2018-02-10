@@ -70,9 +70,6 @@ struct b_01 {
 namespace piranha
 {
 
-namespace math
-{
-
 template <>
 class binomial_impl<b_00, b_00>
 {
@@ -86,7 +83,6 @@ class binomial_impl<b_01, b_01>
 public:
     b_01 operator()(const b_01 &, const b_01 &) const;
 };
-}
 }
 
 BOOST_AUTO_TEST_CASE(binomial_test_00)
@@ -114,22 +110,22 @@ struct binomial_tester {
         BOOST_CHECK((!are_binomial_types<int_type, void>::value));
         BOOST_CHECK((!are_binomial_types<void, int_type>::value));
         int_type n;
-        BOOST_CHECK(math::binomial(n, 0) == 1);
-        BOOST_CHECK(math::binomial(n, 1) == 0);
+        BOOST_CHECK(piranha::binomial(n, 0) == 1);
+        BOOST_CHECK(piranha::binomial(n, 1) == 0);
         n = 1;
-        BOOST_CHECK(math::binomial(n, 1) == 1);
+        BOOST_CHECK(piranha::binomial(n, 1) == 1);
         n = 5;
-        BOOST_CHECK(math::binomial(n, 3) == 10);
+        BOOST_CHECK(piranha::binomial(n, 3) == 10);
         n = -5;
-        BOOST_CHECK(math::binomial(n, int_type(4)) == 70);
+        BOOST_CHECK(piranha::binomial(n, int_type(4)) == 70);
         BOOST_CHECK((are_binomial_types<int_type, int>::value));
         BOOST_CHECK((are_binomial_types<int, int_type>::value));
-        BOOST_CHECK((std::is_same<int_type, decltype(math::binomial(int_type{}, 0))>::value));
-        BOOST_CHECK((std::is_same<decltype(math::binomial(int_type{}, 0)), int_type>::value));
+        BOOST_CHECK((std::is_same<int_type, decltype(piranha::binomial(int_type{}, 0))>::value));
+        BOOST_CHECK((std::is_same<decltype(piranha::binomial(int_type{}, 0)), int_type>::value));
         BOOST_CHECK((!are_binomial_types<int_type, double>::value));
         BOOST_CHECK((!are_binomial_types<double, int_type>::value));
         BOOST_CHECK((are_binomial_types<int_type, int_type>::value));
-        BOOST_CHECK((std::is_same<int_type, decltype(math::binomial(int_type{}, int_type{}))>::value));
+        BOOST_CHECK((std::is_same<int_type, decltype(piranha::binomial(int_type{}, int_type{}))>::value));
         // Random tests.
         std::uniform_int_distribution<int> ud(-1000, 1000);
         std::uniform_int_distribution<int> promote_dist(0, 1);
@@ -139,7 +135,7 @@ struct binomial_tester {
             if (promote_dist(rng) && n.is_static()) {
                 n.promote();
             }
-            BOOST_CHECK_NO_THROW(math::binomial(n, tmp2));
+            BOOST_CHECK_NO_THROW(piranha::binomial(n, tmp2));
         }
     }
 };
@@ -150,13 +146,13 @@ BOOST_AUTO_TEST_CASE(binomial_test_01)
     // Check the ints.
     using int_type = integer;
     BOOST_CHECK((are_binomial_types<int, int>::value));
-    BOOST_CHECK_EQUAL(math::binomial(4, 2), math::binomial(int_type(4), 2));
+    BOOST_CHECK_EQUAL(piranha::binomial(4, 2), piranha::binomial(int_type(4), 2));
     BOOST_CHECK((are_binomial_types<char, unsigned>::value));
-    BOOST_CHECK_EQUAL(math::binomial(char(4), 2u), math::binomial(int_type(4), 2));
+    BOOST_CHECK_EQUAL(piranha::binomial(char(4), 2u), piranha::binomial(int_type(4), 2));
     BOOST_CHECK((are_binomial_types<long long, int>::value));
-    BOOST_CHECK_EQUAL(math::binomial(7ll, 4), math::binomial(int_type(7), 4));
-    BOOST_CHECK((std::is_same<decltype(math::binomial(7ll, 4)), int_type>::value));
-    BOOST_CHECK_EQUAL(math::binomial(-7ll, 4u), math::binomial(int_type(-7), 4));
+    BOOST_CHECK_EQUAL(piranha::binomial(7ll, 4), piranha::binomial(int_type(7), 4));
+    BOOST_CHECK((std::is_same<decltype(piranha::binomial(7ll, 4)), int_type>::value));
+    BOOST_CHECK_EQUAL(piranha::binomial(-7ll, 4u), piranha::binomial(int_type(-7), 4));
     // Different static sizes.
     BOOST_CHECK((!are_binomial_types<mppp::integer<1>, mppp::integer<2>>::value));
     BOOST_CHECK((!are_binomial_types<mppp::integer<2>, mppp::integer<1>>::value));
@@ -165,9 +161,9 @@ BOOST_AUTO_TEST_CASE(binomial_test_01)
     BOOST_CHECK((are_binomial_types<int_type, __uint128_t>::value));
     BOOST_CHECK((are_binomial_types<__int128_t, int_type>::value));
     BOOST_CHECK((are_binomial_types<__uint128_t, int_type>::value));
-    BOOST_CHECK((std::is_same<decltype(math::binomial(int_type(), __int128_t())), int_type>::value));
-    BOOST_CHECK((std::is_same<decltype(math::binomial(__int128_t(), int_type())), int_type>::value));
-    BOOST_CHECK_EQUAL(math::binomial(__int128_t(4), int_type(2)), math::binomial(int_type(4), 2));
-    BOOST_CHECK_EQUAL(math::binomial(int_type(4), __uint128_t(2)), math::binomial(int_type(4), 2));
+    BOOST_CHECK((std::is_same<decltype(piranha::binomial(int_type(), __int128_t())), int_type>::value));
+    BOOST_CHECK((std::is_same<decltype(piranha::binomial(__int128_t(), int_type())), int_type>::value));
+    BOOST_CHECK_EQUAL(piranha::binomial(__int128_t(4), int_type(2)), piranha::binomial(int_type(4), 2));
+    BOOST_CHECK_EQUAL(piranha::binomial(int_type(4), __uint128_t(2)), piranha::binomial(int_type(4), 2));
 #endif
 }
