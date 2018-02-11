@@ -309,16 +309,19 @@ BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
     BOOST_CHECK_EQUAL(math::cos(-x) * math::sin(y), (math::sin(x + y) - math::sin(x - y)) / 2);
     BOOST_CHECK_EQUAL(math::cos(x) * math::sin(-y), -(math::sin(x + y) - math::sin(x - y)) / 2);
     BOOST_CHECK_EQUAL(math::cos(-x) * math::sin(-y), -(math::sin(x + y) - math::sin(x - y)) / 2);
-    BOOST_CHECK_EQUAL(math::pow(math::sin(x), 5), (10 * math::sin(x) - 5 * math::sin(3 * x) + math::sin(5 * x)) / 16);
-    BOOST_CHECK_EQUAL(math::pow(math::cos(x), 5), (10 * math::cos(x) + 5 * math::cos(3 * x) + math::cos(5 * x)) / 16);
-    BOOST_CHECK_EQUAL(math::pow(math::cos(x), 5) * math::pow(math::sin(x), 5),
+    BOOST_CHECK_EQUAL(piranha::pow(math::sin(x), 5),
+                      (10 * math::sin(x) - 5 * math::sin(3 * x) + math::sin(5 * x)) / 16);
+    BOOST_CHECK_EQUAL(piranha::pow(math::cos(x), 5),
+                      (10 * math::cos(x) + 5 * math::cos(3 * x) + math::cos(5 * x)) / 16);
+    BOOST_CHECK_EQUAL(piranha::pow(math::cos(x), 5) * piranha::pow(math::sin(x), 5),
                       (10 * math::sin(2 * x) - 5 * math::sin(6 * x) + math::sin(10 * x)) / 512);
-    BOOST_CHECK_EQUAL(math::pow(p_type1{rational(1, 2)}, 5), math::pow(rational(1, 2), 5));
+    BOOST_CHECK_EQUAL(piranha::pow(p_type1{rational(1, 2)}, 5), piranha::pow(rational(1, 2), 5));
 #if defined(MPPP_WITH_MPFR)
     // NOTE: these won't work until we specialise safe_cast for real, due
     // to the new monomial pow() requirements.
     typedef poisson_series<polynomial<real, monomial<short>>> p_type2;
-    BOOST_CHECK_EQUAL(math::pow(p_type2(real("1.234")), real("-5.678")), math::pow(real("1.234"), real("-5.678")));
+    BOOST_CHECK_EQUAL(piranha::pow(p_type2(real("1.234")), real("-5.678")),
+                      piranha::pow(real("1.234"), real("-5.678")));
     BOOST_CHECK_EQUAL(math::sin(p_type2(real("1.234"))), math::sin(real("1.234")));
     BOOST_CHECK_EQUAL(math::cos(p_type2(real("1.234"))), math::cos(real("1.234")));
     typedef poisson_series<real> p_type3;
@@ -346,8 +349,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
         BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"}, {"x"}) == 1);
         BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"}, {"y"}) == 0);
         p_type1 x{"x"}, y{"y"};
-        BOOST_CHECK(math::degree(math::pow(x, 2) * math::cos(y) + 1) == 2);
-        BOOST_CHECK(math::ldegree(math::pow(x, 2) * math::cos(y) + 1) == 0);
+        BOOST_CHECK(math::degree(piranha::pow(x, 2) * math::cos(y) + 1) == 2);
+        BOOST_CHECK(math::ldegree(piranha::pow(x, 2) * math::cos(y) + 1) == 0);
         BOOST_CHECK(math::ldegree((x * y + y) * math::cos(y) + 1, {"x"}) == 0);
         BOOST_CHECK(math::ldegree((x * y + y) * math::cos(y) + 1, {"y"}) == 0);
         BOOST_CHECK(math::ldegree((x * y + y) * math::cos(y) + y, {"y"}) == 1);

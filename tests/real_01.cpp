@@ -124,24 +124,24 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
 #endif
     {
         real r1{2}, r2{5};
-        BOOST_CHECK_EQUAL(math::pow(r1, r2), 32);
-        BOOST_CHECK_EQUAL(math::pow(r1, 5), 32);
-        BOOST_CHECK_EQUAL(math::pow(2, r2), 32);
-        BOOST_CHECK_EQUAL(math::pow(r1, 5.), 32);
-        BOOST_CHECK_EQUAL(math::pow(2.l, r2), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(r1, r2), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(r1, 5), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(2, r2), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(r1, 5.), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(2.l, r2), 32);
 #if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
-        BOOST_CHECK_EQUAL(math::pow(r1, __int128_t(5)), 32);
-        BOOST_CHECK_EQUAL(math::pow(__uint128_t(2), r2), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(r1, __int128_t(5)), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(__uint128_t(2), r2), 32);
 #endif
     }
     {
         // Verify perfect forwarding.
         real r0{5, 100}, r1{2, 100};
-        auto res = math::pow(std::move(r0), r1);
+        auto res = piranha::pow(std::move(r0), r1);
         BOOST_CHECK(res == 25);
         BOOST_CHECK(r0.get_mpfr_t()->_mpfr_d == nullptr);
         r0 = real{5, 100};
-        auto res2 = math::pow(r0, std::move(r1));
+        auto res2 = piranha::pow(r0, std::move(r1));
         BOOST_CHECK(res2 == 25);
         BOOST_CHECK(r1.get_mpfr_t()->_mpfr_d == nullptr);
     }

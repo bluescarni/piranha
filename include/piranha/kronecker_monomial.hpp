@@ -825,7 +825,7 @@ public:
 private:
     // Determination of the eval type.
     template <typename U>
-    using e_type = decltype(math::pow(std::declval<const U &>(), std::declval<const T &>()));
+    using e_type = decltype(piranha::pow(std::declval<const U &>(), std::declval<const T &>()));
     template <typename U>
     using eval_type = enable_if_t<conjunction<is_multipliable_in_place<e_type<U>>,
                                               std::is_constructible<e_type<U>, int>, is_returnable<e_type<U>>>::value,
@@ -836,12 +836,12 @@ public:
     /**
      * \note
      * This method is available only if \p U satisfies the following requirements:
-     * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
+     * - it can be used in piranha::pow() with the monomial exponents as powers, yielding a type \p eval_type,
      * - \p eval_type is constructible from \p int,
      * - \p eval_type is multipliable in place,
      * - \p eval_type satisfies piranha::is_returnable.
      *
-     * The return value will be built by iteratively applying piranha::math::pow() using the values provided
+     * The return value will be built by iteratively applying piranha::pow() using the values provided
      * by \p values as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
      * returned.
      *
@@ -854,7 +854,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - unpack(),
      * - the construction of the return type,
-     * - piranha::math::pow() or the in-place multiplication operator of the return type.
+     * - piranha::pow() or the in-place multiplication operator of the return type.
      */
     template <typename U>
     eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
@@ -869,12 +869,12 @@ public:
         }
         if (args.size()) {
             const auto v = unpack(args);
-            eval_type<U> retval(math::pow(values[0], v[0]));
+            eval_type<U> retval(piranha::pow(values[0], v[0]));
             for (decltype(v.size()) i = 1; i < v.size(); ++i) {
                 // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
-                // NOTE: math::pow() for C++ integrals produces an integer result, no need
+                // NOTE: piranha::pow() for C++ integrals produces an integer result, no need
                 // to worry about overflows.
-                retval *= math::pow(values[static_cast<decltype(values.size())>(i)], v[i]);
+                retval *= piranha::pow(values[static_cast<decltype(values.size())>(i)], v[i]);
             }
             return retval;
         }
@@ -891,7 +891,7 @@ public:
     /**
      * \note
      * This method is available only if \p U satisfies the following requirements:
-     * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p subs_type,
+     * - it can be used in piranha::pow() with the monomial exponents as powers, yielding a type \p subs_type,
      * - \p subs_type is constructible from \p int,
      * - \p subs_type is multipliable in place,
      * - \p subs_type satisfies piranha::is_returnable.
@@ -918,7 +918,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - unpack(),
      * - the construction of the return value,
-     * - piranha::math::pow() or the in-place multiplication operator of the return type,
+     * - piranha::pow() or the in-place multiplication operator of the return type,
      * - piranha::kronecker_array::encode().
      */
     template <typename U>
@@ -939,12 +939,12 @@ public:
             auto v = unpack(args);
             // Init the return value from the exponentiation of the first value in the map.
             auto it = smap.begin();
-            auto ret(math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]));
+            auto ret(piranha::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]));
             // Zero out the corresponding exponent.
             v[static_cast<decltype(v.size())>(it->first)] = T(0);
             // NOTE: move to the next element in the init statement of the for loop.
             for (++it; it != smap.end(); ++it) {
-                ret *= math::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]);
+                ret *= piranha::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]);
                 v[static_cast<decltype(v.size())>(it->first)] = T(0);
             }
             // NOTE: the is_returnable requirement ensures we can emplace back a pair
@@ -960,7 +960,7 @@ public:
 private:
     // ipow subs utilities.
     template <typename U>
-    using ips_type = decltype(math::pow(std::declval<const U &>(), std::declval<const integer &>()));
+    using ips_type = decltype(piranha::pow(std::declval<const U &>(), std::declval<const integer &>()));
     template <typename U>
     using ipow_subs_type
         = enable_if_t<conjunction<std::is_constructible<ips_type<U>, int>, is_returnable<ips_type<U>>>::value,
@@ -997,7 +997,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - unpack(),
      * - the construction of the return value,
-     * - piranha::math::pow(),
+     * - piranha::pow(),
      * - arithmetics on piranha::integer,
      * - piranha::kronecker_array::encode().
      */
@@ -1025,7 +1025,7 @@ public:
             tdiv_qr(q, r, d, n);
             if (q.sgn() > 0) {
                 v[static_cast<decltype(v.size())>(p)] = static_cast<T>(r);
-                retval.emplace_back(math::pow(x, q), kronecker_monomial(ka::encode(v)));
+                retval.emplace_back(piranha::pow(x, q), kronecker_monomial(ka::encode(v)));
                 return retval;
             }
         }

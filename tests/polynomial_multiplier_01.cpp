@@ -78,37 +78,38 @@ struct bounds_tester {
                 using int_type = typename Key::value_type;
                 settings::set_n_threads(nt);
                 auto x = pt{"x"}, y = pt{"y"};
-                BOOST_CHECK_THROW(math::pow(x, std::numeric_limits<int_type>::max()) * x, std::overflow_error);
-                BOOST_CHECK_THROW((math::pow(x, std::numeric_limits<int_type>::max()) + 1) * (x + 1),
+                BOOST_CHECK_THROW(piranha::pow(x, std::numeric_limits<int_type>::max()) * x, std::overflow_error);
+                BOOST_CHECK_THROW((piranha::pow(x, std::numeric_limits<int_type>::max()) + 1) * (x + 1),
                                   std::overflow_error);
-                BOOST_CHECK_THROW(math::pow(x, std::numeric_limits<int_type>::min()) * x.pow(-1), std::overflow_error);
-                BOOST_CHECK_THROW((math::pow(x, std::numeric_limits<int_type>::min()) + 1) * (x.pow(-1) + 1),
+                BOOST_CHECK_THROW(piranha::pow(x, std::numeric_limits<int_type>::min()) * x.pow(-1),
                                   std::overflow_error);
-                BOOST_CHECK_EQUAL(math::pow(x, std::numeric_limits<int_type>::max() - 1) * x,
-                                  math::pow(x, std::numeric_limits<int_type>::max()));
-                BOOST_CHECK_EQUAL(math::pow(x, std::numeric_limits<int_type>::min() + 1) * x.pow(-1),
-                                  math::pow(x, std::numeric_limits<int_type>::min()));
+                BOOST_CHECK_THROW((piranha::pow(x, std::numeric_limits<int_type>::min()) + 1) * (x.pow(-1) + 1),
+                                  std::overflow_error);
+                BOOST_CHECK_EQUAL(piranha::pow(x, std::numeric_limits<int_type>::max() - 1) * x,
+                                  piranha::pow(x, std::numeric_limits<int_type>::max()));
+                BOOST_CHECK_EQUAL(piranha::pow(x, std::numeric_limits<int_type>::min() + 1) * x.pow(-1),
+                                  piranha::pow(x, std::numeric_limits<int_type>::min()));
                 // Try also with more than one variable.
-                BOOST_CHECK_THROW(x * math::pow(y, std::numeric_limits<int_type>::max()) * y, std::overflow_error);
-                BOOST_CHECK_THROW((x + 1) * (math::pow(y, std::numeric_limits<int_type>::max()) * y + 1),
+                BOOST_CHECK_THROW(x * piranha::pow(y, std::numeric_limits<int_type>::max()) * y, std::overflow_error);
+                BOOST_CHECK_THROW((x + 1) * (piranha::pow(y, std::numeric_limits<int_type>::max()) * y + 1),
                                   std::overflow_error);
-                BOOST_CHECK_THROW(math::pow(x, std::numeric_limits<int_type>::max())
-                                      * math::pow(y, std::numeric_limits<int_type>::min()) * y.pow(-1),
+                BOOST_CHECK_THROW(piranha::pow(x, std::numeric_limits<int_type>::max())
+                                      * piranha::pow(y, std::numeric_limits<int_type>::min()) * y.pow(-1),
                                   std::overflow_error);
-                BOOST_CHECK_THROW((math::pow(x, std::numeric_limits<int_type>::max()) + 1)
-                                      * (math::pow(y, std::numeric_limits<int_type>::min()) * y.pow(-1) + 1),
+                BOOST_CHECK_THROW((piranha::pow(x, std::numeric_limits<int_type>::max()) + 1)
+                                      * (piranha::pow(y, std::numeric_limits<int_type>::min()) * y.pow(-1) + 1),
                                   std::overflow_error);
-                BOOST_CHECK_EQUAL(math::pow(y, std::numeric_limits<int_type>::max())
-                                      * math::pow(x, std::numeric_limits<int_type>::max() - 1) * x,
-                                  math::pow(y, std::numeric_limits<int_type>::max())
-                                      * math::pow(x, std::numeric_limits<int_type>::max()));
-                BOOST_CHECK_EQUAL(math::pow(y, std::numeric_limits<int_type>::min())
-                                      * math::pow(x, std::numeric_limits<int_type>::min() + 1) * x.pow(-1),
-                                  math::pow(y, std::numeric_limits<int_type>::min())
-                                      * math::pow(x, std::numeric_limits<int_type>::min()));
+                BOOST_CHECK_EQUAL(piranha::pow(y, std::numeric_limits<int_type>::max())
+                                      * piranha::pow(x, std::numeric_limits<int_type>::max() - 1) * x,
+                                  piranha::pow(y, std::numeric_limits<int_type>::max())
+                                      * piranha::pow(x, std::numeric_limits<int_type>::max()));
+                BOOST_CHECK_EQUAL(piranha::pow(y, std::numeric_limits<int_type>::min())
+                                      * piranha::pow(x, std::numeric_limits<int_type>::min() + 1) * x.pow(-1),
+                                  piranha::pow(y, std::numeric_limits<int_type>::min())
+                                      * piranha::pow(x, std::numeric_limits<int_type>::min()));
                 // Check with empty series.
-                BOOST_CHECK_EQUAL(math::pow(y, std::numeric_limits<int_type>::max()) * 0, 0);
-                BOOST_CHECK_EQUAL(math::pow(y, std::numeric_limits<int_type>::min()) * 0, 0);
+                BOOST_CHECK_EQUAL(piranha::pow(y, std::numeric_limits<int_type>::max()) * 0, 0);
+                BOOST_CHECK_EQUAL(piranha::pow(y, std::numeric_limits<int_type>::min()) * 0, 0);
                 BOOST_CHECK_EQUAL(pt(0) * pt(0), 0);
                 // Check with constant polys.
                 BOOST_CHECK_EQUAL(pt{2} * pt{3}, 6);

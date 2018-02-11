@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK_EQUAL(
         (math::t_subs((10 * math::sin(2 * x) - 5 * math::sin(6 * x) + math::sin(10 * x)) / 512, "x", c, s))
             .template subs<p_type1>({{"c", math::cos(x)}, {"s", math::sin(x)}}),
-        math::pow(math::cos(x), 5) * math::pow(math::sin(x), 5));
+        piranha::pow(math::cos(x), 5) * piranha::pow(math::sin(x), 5));
     BOOST_CHECK_EQUAL((math::cos(x) * math::cos(y)).t_subs("x", c, s), c * math::cos(y));
     BOOST_CHECK_EQUAL((math::sin(x) * math::sin(y)).t_subs("x", c, s), s * math::sin(y));
     BOOST_CHECK_EQUAL((math::sin(x) * math::cos(y)).t_subs("x", c, s), s * math::cos(y));
@@ -189,20 +189,22 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK((std::is_same<decltype(x.t_subs("x", p_type3{"c"}, p_type3{"s"})), p_type3>::value));
     BOOST_CHECK_EQUAL(x.t_subs("x", p_type3{"c"}, p_type3{"s"}), p_type3{"x"});
     BOOST_CHECK_EQUAL(math::sin(x).t_subs("x", p_type3{"c"}, p_type3{3.}), p_type3{3.});
-    BOOST_CHECK_EQUAL(math::pow(math::cos(p_type3{"x"}), 7).t_subs("x", real(.5), real(math::pow(real(3), .5)) / 2),
-                      math::pow(real(.5), 7));
-    BOOST_CHECK_EQUAL(math::pow(math::sin(p_type3{"x"}), 7).t_subs("x", real(math::pow(real(3), .5)) / 2, real(.5)),
-                      math::pow(real(.5), 7));
     BOOST_CHECK_EQUAL(
-        math::t_subs(math::pow(math::sin(p_type3{"x"}), 7), "x", real(math::pow(real(3), .5)) / 2, real(.5)),
-        math::pow(real(.5), 7));
-    BOOST_CHECK(
-        math::abs(math::evaluate<real>(((math::pow(math::sin(p_type3{"x"}), 5) * math::pow(math::cos(p_type3{"x"}), 5))
-                                            .t_subs("x", real(math::pow(real(3), .5)) / 2, real(.5))
-                                        - math::pow(real(.5), 5) * math::pow(real(math::pow(real(3), .5)) / 2, 5))
-                                           .trim(),
-                                       {}))
-        < 1E-9);
+        piranha::pow(math::cos(p_type3{"x"}), 7).t_subs("x", real(.5), real(piranha::pow(real(3), .5)) / 2),
+        piranha::pow(real(.5), 7));
+    BOOST_CHECK_EQUAL(
+        piranha::pow(math::sin(p_type3{"x"}), 7).t_subs("x", real(piranha::pow(real(3), .5)) / 2, real(.5)),
+        piranha::pow(real(.5), 7));
+    BOOST_CHECK_EQUAL(
+        math::t_subs(piranha::pow(math::sin(p_type3{"x"}), 7), "x", real(piranha::pow(real(3), .5)) / 2, real(.5)),
+        piranha::pow(real(.5), 7));
+    BOOST_CHECK(math::abs(math::evaluate<real>(
+                    ((piranha::pow(math::sin(p_type3{"x"}), 5) * piranha::pow(math::cos(p_type3{"x"}), 5))
+                         .t_subs("x", real(piranha::pow(real(3), .5)) / 2, real(.5))
+                     - piranha::pow(real(.5), 5) * piranha::pow(real(piranha::pow(real(3), .5)) / 2, 5))
+                        .trim(),
+                    {}))
+                < 1E-9);
     BOOST_CHECK((has_t_subs<p_type3, p_type3, p_type3>::value));
     BOOST_CHECK((has_t_subs<p_type3, double, double>::value));
     BOOST_CHECK((has_t_subs<p_type3, real, real>::value));

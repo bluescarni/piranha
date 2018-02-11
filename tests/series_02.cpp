@@ -330,7 +330,8 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
         BOOST_CHECK((is_differentiable<ss0>::value));
         BOOST_CHECK_EQUAL(math::partial(s0{"y"} * ss0{"x"}, "y"), ss0{"x"});
         BOOST_CHECK_EQUAL(math::partial(s0{"y"} * ss0{"x"}, "x"), s0{"y"});
-        BOOST_CHECK_EQUAL(math::partial(s0{"y"} * math::pow(ss0{"x"}, 5), "x"), 5 * s0{"y"} * math::pow(ss0{"x"}, 4));
+        BOOST_CHECK_EQUAL(math::partial(s0{"y"} * piranha::pow(ss0{"x"}, 5), "x"),
+                          5 * s0{"y"} * piranha::pow(ss0{"x"}, 4));
     }
 }
 
@@ -350,7 +351,7 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
         p_type1 p;
         const unsigned size = size_dist(rng);
         for (unsigned j = 0u; j < size; ++j) {
-            p += math::pow(x, int_dist(rng)) * math::pow(y, int_dist(rng)) * math::pow(z, int_dist(rng));
+            p += piranha::pow(x, int_dist(rng)) * piranha::pow(y, int_dist(rng)) * piranha::pow(z, int_dist(rng));
         }
         p *= int_dist(rng);
         const auto div = int_dist(rng);
@@ -418,7 +419,7 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
     BOOST_CHECK_EQUAL(math::evaluate(x, dict_type{{"x", rational(1)}}), 1);
     BOOST_CHECK_THROW(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}}), std::invalid_argument);
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
-                      rational(1) + math::pow(2 * rational(2, 3), 3));
+                      rational(1) + piranha::pow(2 * rational(2, 3), 3));
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}),
                       math::evaluate(x + (2 * y).pow(3), dict_type{{"x", rational(1)}, {"y", rational(2, 3)}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type{})), rational>::value));
@@ -427,18 +428,19 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
     BOOST_CHECK((is_evaluable<p_type1, real>::value));
     BOOST_CHECK_EQUAL(
         math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
-        real(1.234) + math::pow(2 * real(-5.678), 3));
+        real(1.234) + piranha::pow(2 * real(-5.678), 3));
     BOOST_CHECK_EQUAL(
         math::evaluate(x + (2 * y).pow(3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}),
-        math::evaluate(x + math::pow(2 * y, 3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}));
+        math::evaluate(x + piranha::pow(2 * y, 3), dict_type2{{"x", real(1.234)}, {"y", real(-5.678)}, {"z", real()}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type2{})), real>::value));
 #endif
     typedef symbol_fmap<double> dict_type3;
     BOOST_CHECK((is_evaluable<p_type1, double>::value));
     BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
-                      1.234 + math::pow(2 * -5.678, 3));
-    BOOST_CHECK_EQUAL(math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
-                      math::evaluate(x + math::pow(2 * y, 3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}));
+                      1.234 + piranha::pow(2 * -5.678, 3));
+    BOOST_CHECK_EQUAL(
+        math::evaluate(x + (2 * y).pow(3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}),
+        math::evaluate(x + piranha::pow(2 * y, 3), dict_type3{{"x", 1.234}, {"y", -5.678}, {"z", 0.0001}}));
     BOOST_CHECK((std::is_same<decltype(math::evaluate(p_type1{}, dict_type3{})), double>::value));
     BOOST_CHECK((std::is_same<decltype(math::evaluate<double>(g_series_type3<double, mock_key>{}, {})),
                               g_series_type3<double, mock_key>>::value));

@@ -826,12 +826,12 @@ public:
     /**
      * \note
      * This method is available only if \p U satisfies the following requirements:
-     * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
+     * - it can be used in piranha::pow() with the monomial exponents as powers, yielding a type \p eval_type,
      * - \p eval_type is constructible from \p int,
      * - \p eval_type is multipliable in place,
      * - \p eval_type satisfies piranha::is_returnable.
      *
-     * The return value will be built by iteratively applying piranha::math::pow() using the values provided
+     * The return value will be built by iteratively applying piranha::pow() using the values provided
      * by \p values as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
      * returned.
      *
@@ -844,7 +844,7 @@ public:
      * or if the sizes of \p this and \p args differ.
      * @throws unspecified any exception thrown by:
      * - the construction of the return type,
-     * - math::pow() or the in-place multiplication operator of the return type.
+     * - piranha::pow() or the in-place multiplication operator of the return type.
      */
     template <typename U>
     eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
@@ -861,12 +861,12 @@ public:
                               + ") differs from the size of the monomial (" + std::to_string(std::get<0>(sbe)) + ")");
         }
         if (args.size()) {
-            eval_type<U> retval(math::pow(values[0], *std::get<1>(sbe)++));
+            eval_type<U> retval(piranha::pow(values[0], *std::get<1>(sbe)++));
             for (decltype(values.size()) i = 1; i < values.size(); ++i, ++std::get<1>(sbe)) {
                 // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
-                // NOTE: math::pow() for C++ integrals produces an integer result, no need
+                // NOTE: piranha::pow() for C++ integrals produces an integer result, no need
                 // to worry about overflows.
-                retval *= math::pow(values[i], *std::get<1>(sbe));
+                retval *= piranha::pow(values[i], *std::get<1>(sbe));
             }
             piranha_assert(std::get<1>(sbe) == std::get<2>(sbe));
             return retval;
@@ -884,7 +884,7 @@ public:
     /**
      * \note
      * This method is available only if \p U satisfies the following requirements:
-     * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
+     * - it can be used in piranha::pow() with the monomial exponents as powers, yielding a type \p eval_type,
      * - \p eval_type is constructible from \p int,
      * - \p eval_type is multipliable in place,
      * - \p eval_type satisfies piranha::is_returnable.
@@ -912,7 +912,7 @@ public:
      * - the construction of the return value,
      * - the construction of an exponent from zero,
      * - the copy assignment of the exponent type,
-     * - piranha::math::pow() or the in-place multiplication operator of the return type,
+     * - piranha::pow() or the in-place multiplication operator of the return type,
      * - memory errors in standard containers.
      */
     template <typename U>
@@ -939,14 +939,14 @@ public:
             const PIRANHA_MAYBE_TLS T zero(0);
             // Init the subs return value from the exponentiation of the first value in the map.
             auto it = smap.begin();
-            auto ret(math::pow(it->second, std::get<1>(sbe)[it->first]));
+            auto ret(piranha::pow(it->second, std::get<1>(sbe)[it->first]));
             // Init the monomial return value with a copy of this.
             auto mon_ret(*this);
             // Zero out the corresponding exponent.
             mon_ret[static_cast<decltype(mon_ret.size())>(it->first)] = zero;
             //  NOTE: move to the next element in the init statement of the for loop.
             for (++it; it != smap.end(); ++it) {
-                ret *= math::pow(it->second, std::get<1>(sbe)[it->first]);
+                ret *= piranha::pow(it->second, std::get<1>(sbe)[it->first]);
                 mon_ret[static_cast<decltype(mon_ret.size())>(it->first)] = zero;
             }
             // NOTE: the is_returnable requirement ensures we can emplace back a pair
@@ -997,7 +997,7 @@ private:
     }
     // Definition of the return type.
     template <typename U>
-    using ips_type = decltype(math::pow(std::declval<const U &>(), std::declval<const integer &>()));
+    using ips_type = pow_t<U, integer>;
     // Final enabler.
     template <typename U>
     using ipow_subs_type
@@ -1039,7 +1039,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - the construction of the return value,
      * - piranha::safe_cast(),
-     * - piranha::math::pow(),
+     * - piranha::pow(),
      * - arithmetics on piranha::integer,
      * - the copy assignment operator of the exponent type,
      * - memory errors in standard containers.
@@ -1079,7 +1079,7 @@ public:
                 // Assign back the remainder r to expo, possibly with a safe
                 // conversion involved.
                 ipow_subs_expo_assign(expo, r, ipow_subs_expo_assign_dispatcher<T>{});
-                retval.emplace_back(math::pow(x, q), std::move(mon));
+                retval.emplace_back(piranha::pow(x, q), std::move(mon));
                 return retval;
             }
         }

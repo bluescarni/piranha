@@ -153,8 +153,9 @@ struct negate_impl<mppp::rational<SSize>> {
         q.neg();
     }
 };
+}
 
-// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
+// Specialisation of the implementation of piranha::pow() for mp++'s rationals.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <typename U, mppp::RationalOpTypes<U> T>
 class pow_impl<T, U>
@@ -170,7 +171,6 @@ public:
         return mppp::pow(std::forward<T1>(b), std::forward<U1>(e));
     }
 };
-}
 
 // Specialisation of the implementation of piranha::binomial() for mp++ rational top argument.
 #if defined(PIRANHA_HAVE_CONCEPTS)

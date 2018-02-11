@@ -1925,8 +1925,7 @@ private:
     // Exponentiation machinery.
     // The type resulting from the exponentiation of the coefficient of a series U to the power of T.
     template <typename T, typename U>
-    using pow_cf_type
-        = decltype(math::pow(std::declval<const typename U::term_type::cf_type &>(), std::declval<const T &>()));
+    using pow_cf_type = pow_t<typename U::term_type::cf_type, T>;
     // Type resulting from exponentiation via multiplication.
     template <typename U>
     using pow_m_type = decltype(std::declval<const U &>() * std::declval<const U &>());
@@ -2324,7 +2323,7 @@ public:
      * - series, term, coefficient and key construction,
      * - insert(),
      * - is_single_coefficient(),
-     * - piranha::math::pow(), piranha::math::is_zero() and piranha::safe_cast(),
+     * - piranha::pow(), piranha::math::is_zero() and piranha::safe_cast(),
      * - series multiplication,
      * - memory errors in standard containers,
      * - threading primitives,
@@ -2351,9 +2350,9 @@ public:
             ret_type retval;
             if (empty()) {
                 // An empty series is equal to zero.
-                retval.insert(r_term_type(math::pow(cf_type(0), x), key_type(symbol_fset{})));
+                retval.insert(r_term_type(piranha::pow(cf_type(0), x), key_type(symbol_fset{})));
             } else {
-                retval.insert(r_term_type(math::pow(m_container.begin()->m_cf, x), key_type(symbol_fset{})));
+                retval.insert(r_term_type(piranha::pow(m_container.begin()->m_cf, x), key_type(symbol_fset{})));
             }
             return retval;
         }
@@ -3006,10 +3005,7 @@ using pow_series_enabler
     = enable_if_t<conjunction<is_series<Series>, is_detected<series_pow_member_t, Series, T>>::value>;
 }
 
-namespace math
-{
-
-/// Specialisation of the piranha::math::pow() functor for piranha::series.
+/// Specialisation of the piranha::pow() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series with
  * a method with the same signature as piranha::series::pow().
@@ -3040,7 +3036,6 @@ public:
         return s.pow(x);
     }
 };
-}
 
 namespace detail
 {

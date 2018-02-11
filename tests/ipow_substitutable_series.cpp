@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
         auto tmp4 = (3 * x + y * y / 7).ipow_subs("y", 1, 2.123_r);
         BOOST_CHECK(tmp4.is_identical(math::ipow_subs(3 * x + y * y / 7, "y", 1, 2.123_r)));
         BOOST_CHECK((std::is_same<decltype(tmp4), g_series_type<real, monomial<int>>>::value));
-        BOOST_CHECK_EQUAL(tmp4, 3 * x + math::pow(2.123_r, 2) / 7);
+        BOOST_CHECK_EQUAL(tmp4, 3 * x + piranha::pow(2.123_r, 2) / 7);
         tmp4 = (3 * x + y * y / 7).ipow_subs("x", 2, 2.123_r);
         BOOST_CHECK(tmp4.is_identical(math::ipow_subs(3 * x + y * y / 7, "x", 2, 2.123_r)));
         BOOST_CHECK_EQUAL(tmp4, 3 * x + y * y / 7);

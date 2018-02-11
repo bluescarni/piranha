@@ -45,9 +45,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace math
-{
-
 // The default (empty) implementation.
 template <typename T, typename U, typename = void>
 class pow_impl
@@ -57,22 +54,22 @@ class pow_impl
 inline namespace impl
 {
 
-// Enabler for math::pow().
+// Enabler for pow().
 template <typename T, typename U>
-using math_pow_t_ = decltype(pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
+using pow_type_ = decltype(pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
 
 template <typename T, typename U>
-using math_pow_t = enable_if_t<is_returnable<math_pow_t_<T, U>>::value, math_pow_t_<T, U>>;
+using pow_type = enable_if_t<is_returnable<pow_type_<T, U>>::value, pow_type_<T, U>>;
 }
 
 // The exponentiation function.
 template <typename T, typename U>
-inline math_pow_t<T &&, U &&> pow(T &&x, U &&y)
+inline pow_type<T &&, U &&> pow(T &&x, U &&y)
 {
     return pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::forward<T>(x), std::forward<U>(y));
 }
 
-// Specialisation of the implementation of piranha::math::pow() for C++ arithmetic types.
+// Specialisation of the implementation of piranha::pow() for C++ arithmetic types.
 // It will use std::pow() if at least one of the types is an FP, and mp++ integral exponentiation
 // otherwise.
 #if defined(PIRANHA_HAVE_CONCEPTS)
@@ -102,7 +99,7 @@ public:
     }
 };
 
-// Specialisation of the implementation of piranha::math::pow() for mp++'s integers.
+// Specialisation of the implementation of piranha::pow() for mp++'s integers.
 // NOTE: this specialisation must be here (rather than integer.hpp) as in the integral-integral overload above we use
 // mppp::integer inside, so the declaration of mppp::integer must be avaiable. On the other hand, we cannot put this in
 // integer.hpp as the integral-integral overload is supposed to work without including mppp::integer.hpp.
@@ -121,14 +118,13 @@ public:
         return mppp::pow(std::forward<T1>(b), std::forward<U1>(e));
     }
 };
-}
 
 // Implementation of the type trait to detect exponentiability.
 inline namespace impl
 {
 
 template <typename T, typename U>
-using pow_t = decltype(math::pow(std::declval<const T &>(), std::declval<const U &>()));
+using pow_t = decltype(piranha::pow(std::declval<const T &>(), std::declval<const U &>()));
 }
 
 template <typename T, typename U>

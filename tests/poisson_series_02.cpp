@@ -110,14 +110,14 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
             BOOST_CHECK((has_ipow_subs<p_type2, typename p_type2::term_type::cf_type>::value));
             p_type2 x{"x"}, y{"y"};
             BOOST_CHECK_EQUAL((x * x * x + y * y).ipow_subs("x", integer(1), real(1.234)),
-                              y * y + math::pow(real(1.234), integer(3)));
+                              y * y + piranha::pow(real(1.234), integer(3)));
             BOOST_CHECK_EQUAL((x * x * x + y * y).ipow_subs("x", integer(3), real(1.234)), y * y + real(1.234));
             BOOST_CHECK_EQUAL(
                 (x * x * x + y * y).ipow_subs("x", integer(2), real(1.234)).ipow_subs("y", integer(2), real(-5.678)),
                 real(-5.678) + real(1.234) * x);
             BOOST_CHECK_EQUAL(math::ipow_subs(x * x * x + y * y, "x", integer(1), real(1.234))
                                   .ipow_subs("y", integer(1), real(-5.678)),
-                              math::pow(real(-5.678), integer(2)) + math::pow(real(1.234), integer(3)));
+                              piranha::pow(real(-5.678), integer(2)) + piranha::pow(real(1.234), integer(3)));
         }
 #endif
         p_type1 x{"x"}, y{"y"}, z{"z"};
@@ -201,7 +201,6 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 {
     using math::cos;
     using math::invert;
-    using math::pow;
     using math::sin;
     using div_type0 = divisor<short>;
     using ptype0 = polynomial<rational, monomial<short>>;
@@ -258,7 +257,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
                                 + 2 / 3_q * z * math::cos(12 * x - 9 * y) * invert(4 * a - 3 * b));
     // Test with existing divisors.
     tmp0 = 1 / 5_q * z * cos(3 * x + 6 * y) * invert(nu_x + 2 * nu_y);
-    BOOST_CHECK_EQUAL(tmp0.t_integrate(), 1 / 15_q * z * sin(3 * x + 6 * y) * pow(invert(nu_x + 2 * nu_y), 2));
+    BOOST_CHECK_EQUAL(tmp0.t_integrate(), 1 / 15_q * z * sin(3 * x + 6 * y) * piranha::pow(invert(nu_x + 2 * nu_y), 2));
     tmp0 = 1 / 5_q * z * cos(3 * x + 6 * y) * invert(nu_x + 2 * nu_y);
     BOOST_CHECK_EQUAL(tmp0.t_integrate({"a", "b"}),
                       1 / 15_q * z * sin(3 * x + 6 * y) * invert(nu_x + 2 * nu_y) * invert(a + 2 * b));
@@ -271,7 +270,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
     tmp0 = 1 / 5_q * z * cos(3 * x + 6 * y) * invert(nu_x + 2 * nu_y)
            + 1 / 3_q * z * z * sin(2 * x + 6 * y) * invert(nu_y);
     BOOST_CHECK_EQUAL(tmp0.t_integrate(),
-                      1 / 15_q * z * sin(3 * x + 6 * y) * pow(invert(nu_x + 2 * nu_y), 2)
+                      1 / 15_q * z * sin(3 * x + 6 * y) * piranha::pow(invert(nu_x + 2 * nu_y), 2)
                           + -1 / 6_q * z * z * cos(2 * x + 6 * y) * invert(nu_y) * invert(nu_x + 3 * nu_y));
     tmp0 = 1 / 5_q * z * cos(3 * x + 6 * y) * invert(nu_x + 2 * nu_y)
            + 1 / 3_q * z * z * sin(2 * x + 6 * y) * invert(nu_y);
@@ -327,7 +326,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
     BOOST_CHECK_EQUAL(math::invert(pt0{1}), 1);
     BOOST_CHECK_EQUAL(math::invert(pt0{2}), 0);
     BOOST_CHECK_THROW(math::invert(pt0{0}), mppp::zero_division_error);
-    BOOST_CHECK_EQUAL(math::invert(pt0{"x"}), math::pow(pt0{"x"}, -1));
+    BOOST_CHECK_EQUAL(math::invert(pt0{"x"}), piranha::pow(pt0{"x"}, -1));
     using pt1 = poisson_series<polynomial<rational, monomial<long>>>;
     BOOST_CHECK(is_invertible<pt1>::value);
     BOOST_CHECK((std::is_same<pt1, decltype(math::invert(pt1{}))>::value));
@@ -340,8 +339,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
     BOOST_CHECK(is_invertible<pt2>::value);
     BOOST_CHECK((std::is_same<pt2, decltype(math::invert(pt2{}))>::value));
     BOOST_CHECK_EQUAL(math::invert(pt2{1}), 1);
-    BOOST_CHECK_EQUAL(math::invert(pt2{.2}), math::pow(.2, -1));
-    BOOST_CHECK_EQUAL(math::invert(2 * pt2{"y"}), math::pow(2., -1) * pt2{"y"}.pow(-1));
+    BOOST_CHECK_EQUAL(math::invert(pt2{.2}), piranha::pow(.2, -1));
+    BOOST_CHECK_EQUAL(math::invert(2 * pt2{"y"}), piranha::pow(2., -1) * pt2{"y"}.pow(-1));
     BOOST_CHECK_THROW(math::invert(pt2{"x"} + pt2{"y"}), std::invalid_argument);
     // A couple of checks with eps.
     using pt3 = poisson_series<divisor_series<polynomial<rational, monomial<short>>, divisor<short>>>;
@@ -350,8 +349,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
     BOOST_CHECK_EQUAL(math::invert(pt3{-1 / 3_q}), -3);
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(pt3{"x"})), "1/[(x)]");
     BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-pt3{"x"} + pt3{"y"})), "-1/[(x-y)]");
-    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(pt3{"x"}, -1)), "x**-1");
-    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(pt3{"x"} * 3, -3)), "1/27*x**-3");
+    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(piranha::pow(pt3{"x"}, -1)), "x**-1");
+    BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(piranha::pow(pt3{"x"} * 3, -3)), "1/27*x**-3");
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_truncation_test)
@@ -413,14 +412,13 @@ BOOST_AUTO_TEST_CASE(poisson_series_multiplier_test)
     {
         using ps = poisson_series<polynomial<rational, monomial<short>>>;
         using math::cos;
-        using math::pow;
         using math::sin;
         settings::set_min_work_per_thread(1u);
         ps x{"x"}, y{"y"}, z{"z"};
         for (unsigned nt = 1u; nt <= 4u; ++nt) {
             settings::set_n_threads(nt);
             auto res = (x * cos(x) + y * sin(x)) * (z * cos(x) + x * sin(y));
-            auto cmp = -1 / 2_q * pow(x, 2) * sin(x - y) + 1 / 2_q * pow(x, 2) * sin(x + y)
+            auto cmp = -1 / 2_q * piranha::pow(x, 2) * sin(x - y) + 1 / 2_q * piranha::pow(x, 2) * sin(x + y)
                        + 1 / 2_q * y * z * sin(2 * x) + 1 / 2_q * x * y * cos(x - y) - 1 / 2_q * x * y * cos(x + y)
                        + x * z / 2 + 1 / 2_q * x * z * cos(2 * x);
             BOOST_CHECK_EQUAL(res, cmp);
@@ -431,7 +429,6 @@ BOOST_AUTO_TEST_CASE(poisson_series_multiplier_test)
     {
         using ps = poisson_series<polynomial<integer, monomial<short>>>;
         using math::cos;
-        using math::pow;
         using math::sin;
         settings::set_min_work_per_thread(1u);
         ps x{"x"}, y{"y"}, z{"z"};

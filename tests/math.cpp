@@ -427,14 +427,14 @@ BOOST_AUTO_TEST_CASE(math_canonical_test)
     // Poincare' variables.
     p_type2 P{"P"}, Q{"Q"}, p{"p"}, q{"q"}, P2{"P2"}, Q2{"Q2"};
     p_type2::register_custom_derivative(
-        "P", [&P2](const p_type2 &arg) { return arg.partial("P") + arg.partial("P2") * math::pow(P2, -1); });
+        "P", [&P2](const p_type2 &arg) { return arg.partial("P") + arg.partial("P2") * piranha::pow(P2, -1); });
     p_type2::register_custom_derivative(
-        "Q", [&Q2](const p_type2 &arg) { return arg.partial("Q") + arg.partial("Q2") * math::pow(Q2, -1); });
+        "Q", [&Q2](const p_type2 &arg) { return arg.partial("Q") + arg.partial("Q2") * piranha::pow(Q2, -1); });
     BOOST_CHECK((math::transformation_is_canonical({P2 * math::cos(p), Q2 * math::cos(q)},
                                                    {P2 * math::sin(p), Q2 * math::sin(q)}, {"P", "Q"}, {"p", "q"})));
-    BOOST_CHECK(
-        (!math::transformation_is_canonical({P * Q * math::cos(p) * q, Q * P * math::sin(3 * q) * p * math::pow(q, -1)},
-                                            {P * math::sin(p), Q * math::sin(q)}, {"P", "Q"}, {"p", "q"})));
+    BOOST_CHECK((!math::transformation_is_canonical(
+        {P * Q * math::cos(p) * q, Q * P * math::sin(3 * q) * p * piranha::pow(q, -1)},
+        {P * math::sin(p), Q * math::sin(q)}, {"P", "Q"}, {"p", "q"})));
     BOOST_CHECK((!math::transformation_is_canonical(std::vector<p_type2>{P2 * math::cos(p) * q, Q2 * math::cos(q) * p},
                                                     std::vector<p_type2>{P2 * math::sin(p), Q2 * math::sin(q)},
                                                     {"P", "Q"}, {"p", "q"})));

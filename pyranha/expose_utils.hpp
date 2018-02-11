@@ -587,9 +587,9 @@ class series_exposer
         pow_exposer(bp::class_<S> &series_class) : m_series_class(series_class) {}
         bp::class_<S> &m_series_class;
         template <typename T, typename U>
-        static auto pow_wrapper(const T &s, const U &x) -> decltype(piranha::math::pow(s, x))
+        static auto pow_wrapper(const T &s, const U &x) -> decltype(piranha::pow(s, x))
         {
-            return piranha::math::pow(s, x);
+            return piranha::pow(s, x);
         }
         template <typename T>
         void operator()(const T &,

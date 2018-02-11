@@ -373,8 +373,6 @@ struct fake_int_02 {
 
 namespace piranha
 {
-namespace math
-{
 
 template <typename T, typename U>
 class pow_impl<T, U,
@@ -383,6 +381,9 @@ class pow_impl<T, U,
 public:
     T operator()(const T &, const U &) const;
 };
+
+namespace math
+{
 
 template <typename T>
 class is_zero_impl<T, typename std::enable_if<std::is_same<T, fake_int_01>::value>::type>
@@ -421,13 +422,13 @@ struct pow_tester {
             BOOST_CHECK(p1.pow(0) == Cf(1));
             BOOST_CHECK(p1.pow(1) == Cf(0));
             p1 = 2;
-            BOOST_CHECK(math::pow(p1, 4) == math::pow(Cf(2), 4));
-            BOOST_CHECK(math::pow(p1, -4) == math::pow(Cf(2), -4));
+            BOOST_CHECK(piranha::pow(p1, 4) == piranha::pow(Cf(2), 4));
+            BOOST_CHECK(piranha::pow(p1, -4) == piranha::pow(Cf(2), -4));
             p1 = p_type1("x");
             p1 += 1;
-            BOOST_CHECK(math::pow(p1, 1) == p1);
+            BOOST_CHECK(piranha::pow(p1, 1) == p1);
             BOOST_CHECK(p1.pow(2u) == p1 * p1);
-            BOOST_CHECK(math::pow(p1, integer(3)) == p1 * p1 * p1);
+            BOOST_CHECK(piranha::pow(p1, integer(3)) == p1 * p1 * p1);
             BOOST_CHECK_THROW(p1.pow(-1), std::invalid_argument);
             // Coefficient series.
             typedef g_series_type<p_type1, Expo> p_type11;
@@ -435,13 +436,13 @@ struct pow_tester {
             BOOST_CHECK(p11.pow(0) == Cf(1));
             BOOST_CHECK(p11.pow(1) == Cf(0));
             p11 = 2;
-            BOOST_CHECK(math::pow(p11, 4) == math::pow(p_type1(2), 4));
-            BOOST_CHECK(math::pow(p11, -4) == math::pow(p_type1(2), -4));
+            BOOST_CHECK(piranha::pow(p11, 4) == piranha::pow(p_type1(2), 4));
+            BOOST_CHECK(piranha::pow(p11, -4) == piranha::pow(p_type1(2), -4));
             p11 = p_type11("x");
             p11 += 1;
-            BOOST_CHECK(math::pow(p11, 1) == p11);
+            BOOST_CHECK(piranha::pow(p11, 1) == p11);
             BOOST_CHECK(p11.pow(2u) == p11 * p11);
-            BOOST_CHECK(math::pow(p11, integer(3)) == p11 * p11 * p11);
+            BOOST_CHECK(piranha::pow(p11, integer(3)) == p11 * p11 * p11);
         }
     };
     template <typename Cf>
@@ -459,11 +460,11 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
         // Test expo with float-float arguments.
         BOOST_CHECK(p_type1{2.}.pow(0.5) == std::pow(2., 0.5));
         BOOST_CHECK(p_type1{3.}.pow(-0.5) == std::pow(3., -0.5));
-        BOOST_CHECK_THROW(math::pow(p_type1{"x"} + 1, 0.5), std::invalid_argument);
+        BOOST_CHECK_THROW(piranha::pow(p_type1{"x"} + 1, 0.5), std::invalid_argument);
     }
     // Check division by zero error.
     typedef g_series_type<rational, int> p_type2;
-    BOOST_CHECK_THROW(math::pow(p_type2{}, -1), mppp::zero_division_error);
+    BOOST_CHECK_THROW(piranha::pow(p_type2{}, -1), mppp::zero_division_error);
 #if defined(MPPP_WITH_MPFR)
     // Check the safe_cast mechanism.
     typedef g_series_type<real, int> p_type3;

@@ -108,8 +108,9 @@ struct is_unitary_impl<real> {
         return r.is_one();
     }
 };
+}
 
-// Specialisation of piranha::math::pow() for piranha::real.
+// Specialisation of piranha::pow() for piranha::real.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <typename U, mppp::RealOpTypes<U> T>
 class pow_impl<T, U>
@@ -125,6 +126,9 @@ public:
         return mppp::pow(std::forward<T1>(base), std::forward<U1>(exp));
     }
 };
+
+namespace math
+{
 
 template <>
 class sin_impl<real>

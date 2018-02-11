@@ -741,7 +741,7 @@ private:
     using eval_sum_type = decltype(std::declval<const value_type &>() * std::declval<const U &>());
     template <typename U>
     using eval_type_
-        = decltype(math::pow(std::declval<const eval_sum_type<U> &>(), std::declval<const value_type &>()));
+        = decltype(piranha::pow(std::declval<const eval_sum_type<U> &>(), std::declval<const value_type &>()));
     template <typename U>
     using eval_type = enable_if_t<
         conjunction<std::is_constructible<eval_type_<U>, const int &>, is_divisible_in_place<eval_type_<U>>,
@@ -755,7 +755,7 @@ public:
      * This method is available only if \p U supports the arithmetic operations necessary to construct the return type.
      *
      * The return value will be built via multiplications of the \f$ a_{i,j} \f$ by the input values,
-     * additions, divisions and exponentiations via piranha::math::pow().
+     * additions, divisions and exponentiations via piranha::pow().
      * If the divisor has no terms, 1 will be returned.
      *
      * @param values the values will be used for the evaluation.
@@ -797,7 +797,7 @@ public:
             }
             // NOTE: consider rewriting this in terms of multiplications as a performance
             // improvement - the eval_type deduction should be changed accordingly.
-            retval /= math::pow(tmp, it->e);
+            retval /= piranha::pow(tmp, it->e);
         }
         return retval;
     }

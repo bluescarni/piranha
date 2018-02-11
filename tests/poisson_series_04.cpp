@@ -106,9 +106,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
     BOOST_CHECK_EQUAL(partial(x * math::cos(2 * x + y), "y"), -x * math::sin(2 * x + y));
     BOOST_CHECK_EQUAL(partial(rational(3, 2) * math::cos(2 * x + y), "x"), -3 * math::sin(2 * x + y));
     BOOST_CHECK_EQUAL(partial(rational(3, 2) * x * math::cos(y), "y"), -rational(3, 2) * x * math::sin(+y));
-    BOOST_CHECK_EQUAL(partial(math::pow(x * math::cos(y), 5), "y"),
-                      5 * math::sin(-y) * x * math::pow(x * math::cos(y), 4));
-    BOOST_CHECK_EQUAL(partial(math::pow(x * math::cos(y), 5), "z"), 0);
+    BOOST_CHECK_EQUAL(partial(piranha::pow(x * math::cos(y), 5), "y"),
+                      5 * math::sin(-y) * x * piranha::pow(x * math::cos(y), 4));
+    BOOST_CHECK_EQUAL(partial(piranha::pow(x * math::cos(y), 5), "z"), 0);
     // y as implicit function of x: y = cos(x).
     p_type1::register_custom_derivative(
         "x", [x](const p_type1 &p) { return p.partial("x") - partial(p, "y") * math::sin(x); });
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
     typedef std::decay<decltype(*(p_type1{}.begin()))>::type pair_type;
     typedef std::decay<decltype(*(p_type1{}.begin()->first.begin()))>::type pair_type2;
     p_type1 x{"x"}, y{"y"};
-    auto s = math::pow(1 + x + y, 3) * math::cos(x) + math::pow(y, 3) * math::sin(x);
+    auto s = piranha::pow(1 + x + y, 3) * math::cos(x) + piranha::pow(y, 3) * math::sin(x);
     auto s_t = s.transform([](const pair_type &p) {
         return std::make_pair(p.first.filter([](const pair_type2 &p2) { return math::degree(p2.second) < 2; }),
                               p.second);
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
     auto tmp1 = (real(1.234) * 1_q + real(5.678) * 1_q) * math::cos(real(1.234) * short(1) + real(5.678) * short(1));
     BOOST_CHECK_EQUAL(math::evaluate(s1, dict), tmp1);
     BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s1, dict))>::value));
-    auto s2 = math::pow(y, 3) * math::sin(x + y);
-    auto tmp2 = (real(0) + real(1) * math::pow(real(1.234), 0) * math::pow(real(5.678), 3))
+    auto s2 = piranha::pow(y, 3) * math::sin(x + y);
+    auto tmp2 = (real(0) + real(1) * piranha::pow(real(1.234), 0) * piranha::pow(real(5.678), 3))
                 * math::sin(real(0) + real(1) * real(1.234) + real(1) * real(5.678));
     BOOST_CHECK_EQUAL(tmp2, math::evaluate(s2, dict));
     BOOST_CHECK((std::is_same<real, decltype(math::evaluate(s2, dict))>::value));
@@ -170,32 +170,34 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
         BOOST_CHECK((!has_subs<p_type1, std::string>::value));
         BOOST_CHECK(p_type1{}.template subs<integer>({{"x", integer(4)}}).empty());
         p_type1 x{"x"}, y{"y"};
-        auto s = (x + y) * math::cos(x) + math::pow(y, 3) * math::sin(x);
+        auto s = (x + y) * math::cos(x) + piranha::pow(y, 3) * math::sin(x);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", real(1.234)}}),
-                          (real(1.234) + y) * math::cos(real(1.234)) + math::pow(y, 3) * math::sin(real(1.234)));
+                          (real(1.234) + y) * math::cos(real(1.234)) + piranha::pow(y, 3) * math::sin(real(1.234)));
         BOOST_CHECK((std::is_same<decltype(s.template subs<real>({})), p_type1>::value));
         BOOST_CHECK((std::is_same<decltype(s.template subs<rational>({})), p_type1>::value));
-        s = (x + y) * math::cos(x + y) + math::pow(y, 3) * math::sin(x + y);
+        s = (x + y) * math::cos(x + y) + piranha::pow(y, 3) * math::sin(x + y);
         real r(1.234);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
                           (r + y) * (math::cos(r) * math::cos(y) - math::sin(r) * math::sin(y))
-                              + math::pow(y, 3) * (math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
+                              + piranha::pow(y, 3) * (math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
         BOOST_CHECK_EQUAL(subs<real>(s, {{"x", r}}),
                           (r + y) * (math::cos(r) * math::cos(y) - math::sin(r) * math::sin(y))
-                              + math::pow(y, 3) * (math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
+                              + piranha::pow(y, 3) * (math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
         BOOST_CHECK_EQUAL(subs<real>(s, {{"z", r}}), s);
-        s = (x + y) * math::cos(-x + y) + math::pow(y, 3) * math::sin(-x + y);
+        s = (x + y) * math::cos(-x + y) + piranha::pow(y, 3) * math::sin(-x + y);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
                           (r + y) * (math::cos(r) * math::cos(y) + math::sin(r) * math::sin(y))
-                              + math::pow(y, 3) * (-math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
-        s = (x + y) * math::cos(-2 * x + y) + math::pow(y, 3) * math::sin(-5 * x + y);
+                              + piranha::pow(y, 3) * (-math::sin(r) * math::cos(y) + math::cos(r) * math::sin(y)));
+        s = (x + y) * math::cos(-2 * x + y) + piranha::pow(y, 3) * math::sin(-5 * x + y);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
                           (r + y) * (math::cos(r * 2) * math::cos(y) + math::sin(r * 2) * math::sin(y))
-                              + math::pow(y, 3) * (-math::sin(r * 5) * math::cos(y) + math::cos(r * 5) * math::sin(y)));
-        s = (x + y) * math::cos(-2 * x + y) + math::pow(x, 3) * math::sin(-5 * x + y);
+                              + piranha::pow(y, 3)
+                                    * (-math::sin(r * 5) * math::cos(y) + math::cos(r * 5) * math::sin(y)));
+        s = (x + y) * math::cos(-2 * x + y) + piranha::pow(x, 3) * math::sin(-5 * x + y);
         BOOST_CHECK_EQUAL(s.template subs<real>({{"x", r}}),
                           (r + y) * (math::cos(r * 2) * math::cos(y) + math::sin(r * 2) * math::sin(y))
-                              + math::pow(r, 3) * (-math::sin(r * 5) * math::cos(y) + math::cos(r * 5) * math::sin(y)));
+                              + piranha::pow(r, 3)
+                                    * (-math::sin(r * 5) * math::cos(y) + math::cos(r * 5) * math::sin(y)));
         typedef poisson_series<polynomial<rational, monomial<short>>> p_type2;
         BOOST_CHECK((has_subs<p_type2, rational>::value));
         BOOST_CHECK((has_subs<p_type2, double>::value));
@@ -219,9 +221,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
         p_type2 c{"c"}, d{"d"};
         BOOST_CHECK_EQUAL(math::subs<p_type2>(a + math::cos(b) - math::cos(b), {{"b", c + d}}), a);
         // This was a manifestation of the bug in the rational ctor from float.
-        BOOST_CHECK_EQUAL(math::subs<integer>(-3 * math::pow(c, 4), {{"J_2", 0_z}}), -3 * math::pow(c, 4));
+        BOOST_CHECK_EQUAL(math::subs<integer>(-3 * piranha::pow(c, 4), {{"J_2", 0_z}}), -3 * piranha::pow(c, 4));
         // Test substitution with integral after math::sin/cos additional overload.
-        BOOST_CHECK_EQUAL(math::subs<int>(-3 * math::pow(c, 4), {{"J_2", 0}}), -3 * math::pow(c, 4));
+        BOOST_CHECK_EQUAL(math::subs<int>(-3 * piranha::pow(c, 4), {{"J_2", 0}}), -3 * piranha::pow(c, 4));
 #endif
     }
     {
@@ -231,7 +233,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
         BOOST_CHECK((has_subs<eps, rational>::value));
         BOOST_CHECK_EQUAL(math::subs<eps>(x, {{"x", y}}), y);
         BOOST_CHECK_EQUAL(math::subs<eps>(x, {{"x", x * y}}), x * y);
-        BOOST_CHECK_EQUAL(math::subs<eps>(x * math::pow(z, -1), {{"z", x * y}}), x * math::pow(x * y, -1));
+        BOOST_CHECK_EQUAL(math::subs<eps>(x * piranha::pow(z, -1), {{"z", x * y}}), x * piranha::pow(x * y, -1));
         BOOST_CHECK_EQUAL(math::subs<eps>(x * math::cos(z + y), {{"z", x - 2 * y}}), x * math::cos(x - y));
         BOOST_CHECK_EQUAL(math::subs<eps>(x * math::cos(x + y), {{"x", 2 * x}}), 2 * x * math::cos(2 * x + y));
         BOOST_CHECK_EQUAL(math::subs<eps>(x * math::cos(x + y), {{"y", 2 * x}}), x * math::cos(x + 2 * x));
