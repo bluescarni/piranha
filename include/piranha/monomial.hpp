@@ -997,14 +997,10 @@ private:
     }
     // Definition of the return type.
     template <typename U>
-    using ips_type = pow_t<U, integer>;
-    // Final enabler.
-    template <typename U>
-    using ipow_subs_type
-        = enable_if_t<conjunction<std::is_constructible<ips_type<U>, int>, is_returnable<ips_type<U>>>::value
-                          && (ipow_subs_d_assign_dispatcher<T>::value < 2u)
-                          && (ipow_subs_expo_assign_dispatcher<T>::value < 2u),
-                      ips_type<U>>;
+    using ipow_subs_type = enable_if_t<
+        conjunction<std::is_constructible<pow_t<U, integer>, int>, is_returnable<pow_t<U, integer>>>::value
+            && (ipow_subs_d_assign_dispatcher<T>::value < 2u) && (ipow_subs_expo_assign_dispatcher<T>::value < 2u),
+        pow_t<U, integer>>;
 
 public:
     /// Substitution of integral power.

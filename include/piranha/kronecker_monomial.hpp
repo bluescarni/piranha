@@ -960,11 +960,9 @@ public:
 private:
     // ipow subs utilities.
     template <typename U>
-    using ips_type = decltype(piranha::pow(std::declval<const U &>(), std::declval<const integer &>()));
-    template <typename U>
-    using ipow_subs_type
-        = enable_if_t<conjunction<std::is_constructible<ips_type<U>, int>, is_returnable<ips_type<U>>>::value,
-                      ips_type<U>>;
+    using ipow_subs_type = enable_if_t<
+        conjunction<std::is_constructible<pow_t<U, integer>, int>, is_returnable<pow_t<U, integer>>>::value,
+        pow_t<U, integer>>;
 
 public:
     /// Substitution of integral power.
