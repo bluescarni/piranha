@@ -133,6 +133,7 @@ struct abs_impl<mppp::integer<SSize>> {
         return mppp::abs(n);
     }
 };
+}
 
 template <std::size_t SSize>
 class sin_impl<mppp::integer<SSize>>
@@ -159,6 +160,9 @@ public:
         return mppp::integer<SSize>{1};
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::partial() for mp++'s integers.
 template <std::size_t SSize>

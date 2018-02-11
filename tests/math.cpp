@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
     typedef poisson_series<polynomial<rational, monomial<int>>> ps_type;
     BOOST_CHECK(has_pbracket<ps_type>::value);
     auto m = ps_type{"m"}, p = ps_type{"p"}, l = ps_type{"l"}, g = ps_type{"g"}, th = ps_type{"theta"};
-    auto H_p = p * p * (2 * m * l * l).pow(-1) + m * g * l * math::cos(th);
+    auto H_p = p * p * (2 * m * l * l).pow(-1) + m * g * l * piranha::cos(th);
     BOOST_CHECK_EQUAL(math::pbracket(H_p, H_p, {"p"}, {"theta"}), 0);
     // Two body problem.
     auto x = ps_type{"x"}, y = ps_type{"y"}, z = ps_type{"z"};
@@ -430,14 +430,15 @@ BOOST_AUTO_TEST_CASE(math_canonical_test)
         "P", [&P2](const p_type2 &arg) { return arg.partial("P") + arg.partial("P2") * piranha::pow(P2, -1); });
     p_type2::register_custom_derivative(
         "Q", [&Q2](const p_type2 &arg) { return arg.partial("Q") + arg.partial("Q2") * piranha::pow(Q2, -1); });
-    BOOST_CHECK((math::transformation_is_canonical({P2 * math::cos(p), Q2 * math::cos(q)},
-                                                   {P2 * math::sin(p), Q2 * math::sin(q)}, {"P", "Q"}, {"p", "q"})));
+    BOOST_CHECK(
+        (math::transformation_is_canonical({P2 * piranha::cos(p), Q2 * piranha::cos(q)},
+                                           {P2 * piranha::sin(p), Q2 * piranha::sin(q)}, {"P", "Q"}, {"p", "q"})));
     BOOST_CHECK((!math::transformation_is_canonical(
-        {P * Q * math::cos(p) * q, Q * P * math::sin(3 * q) * p * piranha::pow(q, -1)},
-        {P * math::sin(p), Q * math::sin(q)}, {"P", "Q"}, {"p", "q"})));
-    BOOST_CHECK((!math::transformation_is_canonical(std::vector<p_type2>{P2 * math::cos(p) * q, Q2 * math::cos(q) * p},
-                                                    std::vector<p_type2>{P2 * math::sin(p), Q2 * math::sin(q)},
-                                                    {"P", "Q"}, {"p", "q"})));
+        {P * Q * piranha::cos(p) * q, Q * P * piranha::sin(3 * q) * p * piranha::pow(q, -1)},
+        {P * piranha::sin(p), Q * piranha::sin(q)}, {"P", "Q"}, {"p", "q"})));
+    BOOST_CHECK((!math::transformation_is_canonical(
+        std::vector<p_type2>{P2 * piranha::cos(p) * q, Q2 * piranha::cos(q) * p},
+        std::vector<p_type2>{P2 * piranha::sin(p), Q2 * piranha::sin(q)}, {"P", "Q"}, {"p", "q"})));
     BOOST_CHECK(has_transformation_is_canonical<p_type1>::value);
     BOOST_CHECK(has_transformation_is_canonical<p_type1 &>::value);
     BOOST_CHECK(has_transformation_is_canonical<p_type1 const &>::value);

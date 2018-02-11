@@ -127,58 +127,65 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK_EQUAL(math::t_subs(p_type1{}, "a", 2, 3), 0);
     BOOST_CHECK_EQUAL(p_type1{"x"}.t_subs("a", 2, 3), p_type1{"x"});
     BOOST_CHECK_EQUAL(math::t_subs(p_type1{"x"}, "a", 2, 3), p_type1{"x"});
-    BOOST_CHECK_EQUAL(math::cos(p_type1{"x"}).t_subs("a", 2, 3), p_type1{"x"}.cos());
-    BOOST_CHECK_EQUAL(math::t_subs(math::cos(p_type1{"x"}), "a", 2, 3), p_type1{"x"}.cos());
-    BOOST_CHECK_EQUAL(math::t_subs(math::cos(p_type1{"x"}), "x", 2, 3), 2);
-    BOOST_CHECK_EQUAL(math::t_subs(math::sin(p_type1{"x"}), "x", 2, 3), 3);
-    BOOST_CHECK_EQUAL(math::t_subs(math::cos(p_type1{"x"}) + math::sin(p_type1{"x"}), "x", 2, 3), 5);
-    auto tmp1 = math::t_subs(4 * math::cos(p_type1{"x"} + p_type1{"y"}) + 3 * math::sin(p_type1{"x"} + p_type1{"y"}),
-                             "x", 2, 3);
+    BOOST_CHECK_EQUAL(piranha::cos(p_type1{"x"}).t_subs("a", 2, 3), p_type1{"x"}.cos());
+    BOOST_CHECK_EQUAL(math::t_subs(piranha::cos(p_type1{"x"}), "a", 2, 3), p_type1{"x"}.cos());
+    BOOST_CHECK_EQUAL(math::t_subs(piranha::cos(p_type1{"x"}), "x", 2, 3), 2);
+    BOOST_CHECK_EQUAL(math::t_subs(piranha::sin(p_type1{"x"}), "x", 2, 3), 3);
+    BOOST_CHECK_EQUAL(math::t_subs(piranha::cos(p_type1{"x"}) + piranha::sin(p_type1{"x"}), "x", 2, 3), 5);
+    auto tmp1 = math::t_subs(
+        4 * piranha::cos(p_type1{"x"} + p_type1{"y"}) + 3 * piranha::sin(p_type1{"x"} + p_type1{"y"}), "x", 2, 3);
     BOOST_CHECK((std::is_same<decltype(tmp1), p_type1>::value));
-    BOOST_CHECK_EQUAL(tmp1, 4 * 2 * math::cos(y) - 4 * 3 * math::sin(y) + 3 * 3 * math::cos(y) + 3 * 2 * math::sin(y));
-    auto tmp2 = math::t_subs(4 * math::cos(p_type1{"x"} - p_type1{"y"}) + 3 * math::sin(p_type1{"x"} - p_type1{"y"}),
-                             "x", 2, 3);
+    BOOST_CHECK_EQUAL(tmp1, 4 * 2 * piranha::cos(y) - 4 * 3 * piranha::sin(y) + 3 * 3 * piranha::cos(y)
+                                + 3 * 2 * piranha::sin(y));
+    auto tmp2 = math::t_subs(
+        4 * piranha::cos(p_type1{"x"} - p_type1{"y"}) + 3 * piranha::sin(p_type1{"x"} - p_type1{"y"}), "x", 2, 3);
     BOOST_CHECK((std::is_same<decltype(tmp2), p_type1>::value));
-    BOOST_CHECK_EQUAL(tmp2, 4 * 2 * math::cos(y) + 4 * 3 * math::sin(y) + 3 * 3 * math::cos(y) - 3 * 2 * math::sin(y));
-    auto tmp3 = math::t_subs(4 * math::cos(-p_type1{"x"} - p_type1{"y"}) + 3 * math::sin(-p_type1{"x"} - p_type1{"y"}),
-                             "x", 2, 3);
+    BOOST_CHECK_EQUAL(tmp2, 4 * 2 * piranha::cos(y) + 4 * 3 * piranha::sin(y) + 3 * 3 * piranha::cos(y)
+                                - 3 * 2 * piranha::sin(y));
+    auto tmp3 = math::t_subs(
+        4 * piranha::cos(-p_type1{"x"} - p_type1{"y"}) + 3 * piranha::sin(-p_type1{"x"} - p_type1{"y"}), "x", 2, 3);
     BOOST_CHECK((std::is_same<decltype(tmp3), p_type1>::value));
-    BOOST_CHECK_EQUAL(tmp3, 4 * 2 * math::cos(y) - 4 * 3 * math::sin(y) - 3 * 3 * math::cos(y) - 3 * 2 * math::sin(y));
+    BOOST_CHECK_EQUAL(tmp3, 4 * 2 * piranha::cos(y) - 4 * 3 * piranha::sin(y) - 3 * 3 * piranha::cos(y)
+                                - 3 * 2 * piranha::sin(y));
     // Some trigonometric identities from Wikipedia.
     p_type1 c{"c"}, s{"s"};
-    BOOST_CHECK_EQUAL(math::sin(3 * x).t_subs("x", c, s), 3 * c * c * s - s * s * s);
-    BOOST_CHECK_EQUAL(math::cos(3 * x).t_subs("x", c, s), c * c * c - 3 * s * s * c);
-    BOOST_CHECK_EQUAL((math::t_subs((10 * math::sin(x) - 5 * math::sin(3 * x) + math::sin(5 * x)) / 16, "x", c, s))
-                          .ipow_subs("c", integer(2), 1 - s * s),
-                      s * s * s * s * s);
-    BOOST_CHECK_EQUAL((math::t_subs((10 * math::cos(x) + 5 * math::cos(3 * x) + math::cos(5 * x)) / 16, "x", c, s))
-                          .ipow_subs("s", integer(2), 1 - c * c),
-                      c * c * c * c * c);
+    BOOST_CHECK_EQUAL(piranha::sin(3 * x).t_subs("x", c, s), 3 * c * c * s - s * s * s);
+    BOOST_CHECK_EQUAL(piranha::cos(3 * x).t_subs("x", c, s), c * c * c - 3 * s * s * c);
     BOOST_CHECK_EQUAL(
-        (math::t_subs((10 * math::sin(2 * x) - 5 * math::sin(6 * x) + math::sin(10 * x)) / 512, "x", c, s))
-            .template subs<p_type1>({{"c", math::cos(x)}, {"s", math::sin(x)}}),
-        piranha::pow(math::cos(x), 5) * piranha::pow(math::sin(x), 5));
-    BOOST_CHECK_EQUAL((math::cos(x) * math::cos(y)).t_subs("x", c, s), c * math::cos(y));
-    BOOST_CHECK_EQUAL((math::sin(x) * math::sin(y)).t_subs("x", c, s), s * math::sin(y));
-    BOOST_CHECK_EQUAL((math::sin(x) * math::cos(y)).t_subs("x", c, s), s * math::cos(y));
-    BOOST_CHECK_EQUAL((math::cos(x) * math::sin(y)).t_subs("x", c, s), c * math::sin(y));
-    BOOST_CHECK_EQUAL(4 * math::sin(2 * x).t_subs("x", c, s), 8 * s * c);
-    BOOST_CHECK_EQUAL(5 * math::cos(2 * x).t_subs("x", c, s), 5 * (c * c - s * s));
-    BOOST_CHECK_EQUAL((2 * math::sin(x + y) * math::cos(x - y)).t_subs("x", c, s), 2 * c * s + math::sin(2 * y));
-    BOOST_CHECK_EQUAL(math::sin(x + p_type1{"pi2"}).t_subs("pi2", 0, 1), math::cos(x));
-    BOOST_CHECK_EQUAL(math::cos(x + p_type1{"pi2"}).t_subs("pi2", 0, 1), -math::sin(x));
-    BOOST_CHECK_EQUAL(math::sin(x + p_type1{"pi"}).t_subs("pi", -1, 0), -math::sin(x));
-    BOOST_CHECK_EQUAL(math::cos(x + p_type1{"pi"}).t_subs("pi", -1, 0), -math::cos(x));
-    BOOST_CHECK_EQUAL(math::sin(-x + p_type1{"pi"}).t_subs("pi", -1, 0), math::sin(x));
-    BOOST_CHECK_EQUAL(math::cos(-x + p_type1{"pi"}).t_subs("pi", -1, 0), -math::cos(x));
-    BOOST_CHECK_EQUAL((math::cos(-x + p_type1{"pi"}) + math::cos(y)).t_subs("pi", -1, 0), -math::cos(x) + math::cos(y));
-    BOOST_CHECK_EQUAL((math::cos(-x + p_type1{"pi"}) + math::cos(y + p_type1{"pi"})).t_subs("pi", -1, 0),
-                      -math::cos(x) - math::cos(y));
-    BOOST_CHECK_EQUAL(math::cos(x + p_type1{"2pi"}).t_subs("2pi", 1, 0), math::cos(x));
-    BOOST_CHECK_EQUAL(math::sin(x + p_type1{"2pi"}).t_subs("2pi", 1, 0), math::sin(x));
-    BOOST_CHECK_EQUAL(math::cos(-x + p_type1{"2pi"}).t_subs("2pi", 1, 0), math::cos(x));
-    BOOST_CHECK_EQUAL(math::sin(-x + p_type1{"2pi"}).t_subs("2pi", 1, 0), -math::sin(x));
-    BOOST_CHECK_EQUAL(math::t_subs(math::sin(-x + p_type1{"2pi"}), "2pi", 1, 0), -math::sin(x));
+        (math::t_subs((10 * piranha::sin(x) - 5 * piranha::sin(3 * x) + piranha::sin(5 * x)) / 16, "x", c, s))
+            .ipow_subs("c", integer(2), 1 - s * s),
+        s * s * s * s * s);
+    BOOST_CHECK_EQUAL(
+        (math::t_subs((10 * piranha::cos(x) + 5 * piranha::cos(3 * x) + piranha::cos(5 * x)) / 16, "x", c, s))
+            .ipow_subs("s", integer(2), 1 - c * c),
+        c * c * c * c * c);
+    BOOST_CHECK_EQUAL(
+        (math::t_subs((10 * piranha::sin(2 * x) - 5 * piranha::sin(6 * x) + piranha::sin(10 * x)) / 512, "x", c, s))
+            .template subs<p_type1>({{"c", piranha::cos(x)}, {"s", piranha::sin(x)}}),
+        piranha::pow(piranha::cos(x), 5) * piranha::pow(piranha::sin(x), 5));
+    BOOST_CHECK_EQUAL((piranha::cos(x) * piranha::cos(y)).t_subs("x", c, s), c * piranha::cos(y));
+    BOOST_CHECK_EQUAL((piranha::sin(x) * piranha::sin(y)).t_subs("x", c, s), s * piranha::sin(y));
+    BOOST_CHECK_EQUAL((piranha::sin(x) * piranha::cos(y)).t_subs("x", c, s), s * piranha::cos(y));
+    BOOST_CHECK_EQUAL((piranha::cos(x) * piranha::sin(y)).t_subs("x", c, s), c * piranha::sin(y));
+    BOOST_CHECK_EQUAL(4 * piranha::sin(2 * x).t_subs("x", c, s), 8 * s * c);
+    BOOST_CHECK_EQUAL(5 * piranha::cos(2 * x).t_subs("x", c, s), 5 * (c * c - s * s));
+    BOOST_CHECK_EQUAL((2 * piranha::sin(x + y) * piranha::cos(x - y)).t_subs("x", c, s),
+                      2 * c * s + piranha::sin(2 * y));
+    BOOST_CHECK_EQUAL(piranha::sin(x + p_type1{"pi2"}).t_subs("pi2", 0, 1), piranha::cos(x));
+    BOOST_CHECK_EQUAL(piranha::cos(x + p_type1{"pi2"}).t_subs("pi2", 0, 1), -piranha::sin(x));
+    BOOST_CHECK_EQUAL(piranha::sin(x + p_type1{"pi"}).t_subs("pi", -1, 0), -piranha::sin(x));
+    BOOST_CHECK_EQUAL(piranha::cos(x + p_type1{"pi"}).t_subs("pi", -1, 0), -piranha::cos(x));
+    BOOST_CHECK_EQUAL(piranha::sin(-x + p_type1{"pi"}).t_subs("pi", -1, 0), piranha::sin(x));
+    BOOST_CHECK_EQUAL(piranha::cos(-x + p_type1{"pi"}).t_subs("pi", -1, 0), -piranha::cos(x));
+    BOOST_CHECK_EQUAL((piranha::cos(-x + p_type1{"pi"}) + piranha::cos(y)).t_subs("pi", -1, 0),
+                      -piranha::cos(x) + piranha::cos(y));
+    BOOST_CHECK_EQUAL((piranha::cos(-x + p_type1{"pi"}) + piranha::cos(y + p_type1{"pi"})).t_subs("pi", -1, 0),
+                      -piranha::cos(x) - piranha::cos(y));
+    BOOST_CHECK_EQUAL(piranha::cos(x + p_type1{"2pi"}).t_subs("2pi", 1, 0), piranha::cos(x));
+    BOOST_CHECK_EQUAL(piranha::sin(x + p_type1{"2pi"}).t_subs("2pi", 1, 0), piranha::sin(x));
+    BOOST_CHECK_EQUAL(piranha::cos(-x + p_type1{"2pi"}).t_subs("2pi", 1, 0), piranha::cos(x));
+    BOOST_CHECK_EQUAL(piranha::sin(-x + p_type1{"2pi"}).t_subs("2pi", 1, 0), -piranha::sin(x));
+    BOOST_CHECK_EQUAL(math::t_subs(piranha::sin(-x + p_type1{"2pi"}), "2pi", 1, 0), -piranha::sin(x));
 #if defined(MPPP_WITH_MPFR)
     // Real and mixed-series subs.
     typedef poisson_series<polynomial<real, monomial<short>>> p_type3;
@@ -188,18 +195,18 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK_EQUAL(p_type3{"x"}.cos().t_subs("x", real(.5), real(1.)), real(.5));
     BOOST_CHECK((std::is_same<decltype(x.t_subs("x", p_type3{"c"}, p_type3{"s"})), p_type3>::value));
     BOOST_CHECK_EQUAL(x.t_subs("x", p_type3{"c"}, p_type3{"s"}), p_type3{"x"});
-    BOOST_CHECK_EQUAL(math::sin(x).t_subs("x", p_type3{"c"}, p_type3{3.}), p_type3{3.});
+    BOOST_CHECK_EQUAL(piranha::sin(x).t_subs("x", p_type3{"c"}, p_type3{3.}), p_type3{3.});
     BOOST_CHECK_EQUAL(
-        piranha::pow(math::cos(p_type3{"x"}), 7).t_subs("x", real(.5), real(piranha::pow(real(3), .5)) / 2),
+        piranha::pow(piranha::cos(p_type3{"x"}), 7).t_subs("x", real(.5), real(piranha::pow(real(3), .5)) / 2),
         piranha::pow(real(.5), 7));
     BOOST_CHECK_EQUAL(
-        piranha::pow(math::sin(p_type3{"x"}), 7).t_subs("x", real(piranha::pow(real(3), .5)) / 2, real(.5)),
+        piranha::pow(piranha::sin(p_type3{"x"}), 7).t_subs("x", real(piranha::pow(real(3), .5)) / 2, real(.5)),
         piranha::pow(real(.5), 7));
     BOOST_CHECK_EQUAL(
-        math::t_subs(piranha::pow(math::sin(p_type3{"x"}), 7), "x", real(piranha::pow(real(3), .5)) / 2, real(.5)),
+        math::t_subs(piranha::pow(piranha::sin(p_type3{"x"}), 7), "x", real(piranha::pow(real(3), .5)) / 2, real(.5)),
         piranha::pow(real(.5), 7));
     BOOST_CHECK(math::abs(math::evaluate<real>(
-                    ((piranha::pow(math::sin(p_type3{"x"}), 5) * piranha::pow(math::cos(p_type3{"x"}), 5))
+                    ((piranha::pow(piranha::sin(p_type3{"x"}), 5) * piranha::pow(piranha::cos(p_type3{"x"}), 5))
                          .t_subs("x", real(piranha::pow(real(3), .5)) / 2, real(.5))
                      - piranha::pow(real(.5), 5) * piranha::pow(real(piranha::pow(real(3), .5)) / 2, 5))
                         .trim(),
@@ -230,7 +237,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
 {
     using stype = poisson_series<polynomial<rational, monomial<short>>>;
-    stype x("x"), y("y"), z = x + math::cos(x + y), tmp;
+    stype x("x"), y("y"), z = x + piranha::cos(x + y), tmp;
     std::stringstream ss;
     {
         boost::archive::text_oarchive oa(ss);

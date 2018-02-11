@@ -1050,16 +1050,16 @@ struct evaluate_tester {
         BOOST_CHECK_EQUAL(k1.template evaluate<integer>({0_z}, symbol_fset{"x"}), 0);
         k1 = k_type({T(2), T(-3)});
         BOOST_CHECK_EQUAL(k1.template evaluate<real>({real(3.2), real(-4.3)}, symbol_fset{"x", "y"}),
-                          math::cos((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
+                          piranha::cos((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
         k1.set_flavour(false);
         BOOST_CHECK_EQUAL(k1.template evaluate<real>({real(3.2), real(-4.3)}, symbol_fset{"x", "y"}),
-                          math::sin((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
+                          piranha::sin((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
         k1 = k_type({T(-2), T(-3)});
         BOOST_CHECK_EQUAL(k1.template evaluate<real>({real(3.2), real(-4.3)}, symbol_fset{"x", "y"}),
-                          math::cos((0. + (real(3.2) * -2)) + (real(-4.3) * -3)));
+                          piranha::cos((0. + (real(3.2) * -2)) + (real(-4.3) * -3)));
         k1.set_flavour(false);
         BOOST_CHECK_EQUAL(k1.template evaluate<real>({real(3.2), real(-4.3)}, symbol_fset{"x", "y"}),
-                          math::sin((0. + (real(3.2) * -2)) + (real(-4.3) * -3)));
+                          piranha::sin((0. + (real(3.2) * -2)) + (real(-4.3) * -3)));
         k1 = k_type({T(3), T(-2)});
         BOOST_CHECK_EQUAL(k1.template evaluate<rational>({2_q / 3, 1_q}, symbol_fset{"x", "y"}), 1);
         k1.set_flavour(false);
@@ -1114,8 +1114,8 @@ struct subs_tester {
 #if defined(MPPP_WITH_MPFR)
         auto ret2 = k1.template subs<real>({{0, real(5)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(5) * T(2)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, -math::sin(real(5) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::cos(real(5) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, -piranha::sin(real(5) * T(2)));
         BOOST_CHECK((ret2[0u].second == k_type({T(0), T(3)})));
         k_type tmp({T(0), T(3)});
         tmp.set_flavour(false);
@@ -1123,8 +1123,8 @@ struct subs_tester {
         k1.set_flavour(false);
         ret2 = k1.template subs<real>({{0, real(5)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(5) * T(2)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, math::cos(real(5) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::sin(real(5) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, piranha::cos(real(5) * T(2)));
         BOOST_CHECK((ret2[0u].second == k_type({T(0), T(3)})));
         BOOST_CHECK((ret2[1u].second == tmp));
         // Subs with no actual sub.
@@ -1148,15 +1148,15 @@ struct subs_tester {
         k1 = k_type({T(2), T(-3)});
         ret2 = k1.template subs<real>({{0, real(6)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(6) * T(2)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, math::sin(real(6) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::cos(real(6) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, piranha::sin(real(6) * T(2)));
         BOOST_CHECK((ret2[0u].second == k_type({T(0), T(3)})));
         BOOST_CHECK((ret2[1u].second == tmp));
         k1.set_flavour(false);
         ret2 = k1.template subs<real>({{0, real(6)}}, symbol_fset{"x", "y"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(6) * T(2)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, -math::cos(real(6) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::sin(real(6) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, -piranha::cos(real(6) * T(2)));
         BOOST_CHECK((ret2[0u].second == k_type({T(0), T(3)})));
         BOOST_CHECK((ret2[1u].second == tmp));
         if (std::is_same<signed char, T>::value) {
@@ -1166,8 +1166,8 @@ struct subs_tester {
         k1 = k_type({T(2), T(-2), T(1)});
         ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(7) * T(2)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, math::sin(real(7) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::cos(real(7) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, piranha::sin(real(7) * T(2)));
         tmp = k_type({T(0), T(2), T(-1)});
         BOOST_CHECK((ret2[0u].second == tmp));
         tmp.set_flavour(false);
@@ -1175,8 +1175,8 @@ struct subs_tester {
         k1.set_flavour(false);
         ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(7) * T(2)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, -math::cos(real(7) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::sin(real(7) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, -piranha::cos(real(7) * T(2)));
         BOOST_CHECK((ret2[1u].second == tmp));
         tmp.set_flavour(true);
         BOOST_CHECK((ret2[0u].second == tmp));
@@ -1184,8 +1184,8 @@ struct subs_tester {
         k1 = k_type({T(2), T(0), T(-1)});
         ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(7) * T(2)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, math::sin(real(7) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::cos(real(7) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, piranha::sin(real(7) * T(2)));
         tmp = k_type({T(0), T(0), T(1)});
         BOOST_CHECK((ret2[0u].second == tmp));
         tmp.set_flavour(false);
@@ -1193,8 +1193,8 @@ struct subs_tester {
         k1.set_flavour(false);
         ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(7) * T(2)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, -math::cos(real(7) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::sin(real(7) * T(2)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, -piranha::cos(real(7) * T(2)));
         BOOST_CHECK((ret2[1u].second == tmp));
         tmp.set_flavour(true);
         BOOST_CHECK((ret2[0u].second == tmp));
@@ -1202,8 +1202,8 @@ struct subs_tester {
         k1 = k_type({T(0), T(-1), T(1)});
         ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::cos(real(7) * T(0)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, math::sin(real(7) * T(0)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::cos(real(7) * T(0)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, piranha::sin(real(7) * T(0)));
         tmp = k_type({T(0), T(1), T(-1)});
         BOOST_CHECK((ret2[0u].second == tmp));
         tmp.set_flavour(false);
@@ -1211,8 +1211,8 @@ struct subs_tester {
         k1.set_flavour(false);
         ret2 = k1.template subs<real>({{0, real(7)}}, symbol_fset{"x", "y", "z"});
         BOOST_CHECK_EQUAL(ret2.size(), 2u);
-        BOOST_CHECK_EQUAL(ret2[0u].first, math::sin(real(7) * T(0)));
-        BOOST_CHECK_EQUAL(ret2[1u].first, -math::cos(real(7) * T(0)));
+        BOOST_CHECK_EQUAL(ret2[0u].first, piranha::sin(real(7) * T(0)));
+        BOOST_CHECK_EQUAL(ret2[1u].first, -piranha::cos(real(7) * T(0)));
         BOOST_CHECK((ret2[1u].second == tmp));
         tmp.set_flavour(true);
         BOOST_CHECK((ret2[0u].second == tmp));

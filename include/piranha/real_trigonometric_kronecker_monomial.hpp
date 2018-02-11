@@ -924,11 +924,11 @@ public:
     }
 
 private:
-    // The candidate type, resulting from math::cos()/math::sin() on T * U.
+    // The candidate type, resulting from piranha::cos()/piranha::sin() on T * U.
     template <typename U>
-    using eval_t_cos = decltype(math::cos(std::declval<const mul_t<T, U> &>()));
+    using eval_t_cos = cos_t<mul_t<T, U>>;
     template <typename U>
-    using eval_t_sin = decltype(math::sin(std::declval<const mul_t<T, U> &>()));
+    using eval_t_sin = sin_t<mul_t<T, U>>;
     // Definition of the evaluation type.
     template <typename U>
     using eval_type
@@ -954,7 +954,7 @@ public:
      * This template method is activated only if \p U supports the mathematical operations needed to compute
      * the return type.
      *
-     * The return value will be built by applying piranha::math::cos() or piranha::math:sin()
+     * The return value will be built by applying piranha::cos() or piranha::sin()
      * to the linear combination of the values in ``values`` with the multipliers.
      *
      * @param values the values will be used for the evaluation.
@@ -1008,10 +1008,9 @@ public:
 #endif
         }
         if (get_flavour()) {
-            // NOTE: move it, in the future math::cos() may exploit this.
-            return math::cos(std::move(tmp));
+            return piranha::cos(std::move(tmp));
         }
-        return math::sin(std::move(tmp));
+        return piranha::sin(std::move(tmp));
     }
 
 private:
@@ -1047,7 +1046,7 @@ public:
      * \left\{\left[\cos \left(nx+my\right),\cos c \right],\left[-\sin \left(nx+my\right),\sin c \right]\right\}
      * \f]
      * where \f$ \cos c \f$ and \f$ \sin c \f$ are returned as monomials, and \f$ \cos \left(nx+my\right) \f$ and \f$
-     * \sin \left(nx+my\right) \f$ are computed via piranha::math::cos() and piranha::math::sin(). If \p s is not
+     * \sin \left(nx+my\right) \f$ are computed via piranha::cos() and piranha::sin(). If \p s is not
      * in \p args, \f$ \cos \left(nx+my\right) \f$ will be initialised to 1 and \f$ \sin \left(nx+my\right) \f$ to 0.
      * If, after the substitution, the first nonzero multiplier in \f$ c \f$ is negative, \f$ c \f$ will be negated and
      * the other signs changed accordingly.
@@ -1115,7 +1114,7 @@ public:
             // Encode the modified vector of multipliers.
             const auto new_value = ka::encode(v);
             // Pre-compute the sin/cos of tmp.
-            auto s_tmp(math::sin(tmp)), c_tmp(math::cos(tmp));
+            auto s_tmp(piranha::sin(tmp)), c_tmp(piranha::cos(tmp));
             if (f) {
                 // cos(tmp+x) -> cos(tmp)*cos(x) - sin(tmp)*sin(x)
                 retval.emplace_back(std::move(c_tmp), real_trigonometric_kronecker_monomial(new_value, true));

@@ -130,15 +130,15 @@ class poisson_series
     // Sin/cos utils.
     // Types coming out of sin()/cos() for the base type. These will also be the final types.
     template <typename T>
-    using sin_type = decltype(math::sin(std::declval<const typename T::base &>()));
+    using sin_type = sin_t<typename T::base>;
     template <typename T>
-    using cos_type = decltype(math::cos(std::declval<const typename T::base &>()));
+    using cos_type = cos_t<typename T::base>;
     // Case 0: Poisson series is not suitable for special sin() implementation. Just forward to the base one, via
     // casting.
     template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value, int>::type = 0>
     sin_type<T> sin_impl() const
     {
-        return math::sin(*static_cast<const base *>(this));
+        return piranha::sin(*static_cast<const base *>(this));
     }
     // Case 1: Poisson series is suitable for special sin() implementation via poly. This can fail at runtime depending
     // on what is contained in the coefficients. The return type is the same as the base one, as in this routine we only
@@ -152,7 +152,7 @@ class poisson_series
     template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value, int>::type = 0>
     cos_type<T> cos_impl() const
     {
-        return math::cos(*static_cast<const base *>(this));
+        return piranha::cos(*static_cast<const base *>(this));
     }
     template <typename T = poisson_series, typename std::enable_if<detail::poly_in_cf<T>::value, int>::type = 0>
     cos_type<T> cos_impl() const
@@ -165,12 +165,12 @@ class poisson_series
     template <typename T>
     static cos_type<T> special_sin_cos_failure(const T &s, const std::true_type &)
     {
-        return math::cos(static_cast<const typename T::base &>(s));
+        return piranha::cos(static_cast<const typename T::base &>(s));
     }
     template <typename T>
     static sin_type<T> special_sin_cos_failure(const T &s, const std::false_type &)
     {
-        return math::sin(static_cast<const typename T::base &>(s));
+        return piranha::sin(static_cast<const typename T::base &>(s));
     }
     // Convert an input polynomial to a Poisson series of type RetT. The conversion
     // will be successful if the polynomial can be reduced to an integral linear combination of
@@ -555,11 +555,11 @@ public:
     /// Sine.
     /**
      * \note
-     * This template method is enabled only if math::sin() can be called on the class
-     * from which piranha::poisson_series derives (i.e., only if the default math::sin()
+     * This template method is enabled only if piranha::sin() can be called on the class
+     * from which piranha::poisson_series derives (i.e., only if the default piranha::sin()
      * implementation for series is appropriate).
      *
-     * In general, this method behaves exactly like the default implementation of piranha::math::sin() for series
+     * In general, this method behaves exactly like the default implementation of piranha::sin() for series
      * types. If, however, a polynomial appears in the hierarchy of coefficients, then this method
      * will attempt to extract an integral linear combination of symbolic arguments and use it to construct
      * a Poisson series with a single term, unitary coefficient and the trigonometric key built from the linear
@@ -575,7 +575,7 @@ public:
      * \f]
      *
      * If for any reason it is not possible to extract the linear integral combination,
-     * then this method will forward the call to the default implementation of piranha::math::sin() for series
+     * then this method will forward the call to the default implementation of piranha::sin() for series
      * types.
      *
      * @return the sine of \p this.
@@ -586,7 +586,7 @@ public:
      * - the constructors of coefficient, key and term types,
      * - the cast operator of piranha::integer,
      * - piranha::math::negate(),
-     * - piranha::math::sin(),
+     * - piranha::sin(),
      * - the extraction of a linear combination of integral arguments from the polynomial coefficient.
      */
     template <typename T = poisson_series>

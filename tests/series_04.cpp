@@ -305,8 +305,6 @@ struct mock_cf2 {
 
 namespace piranha
 {
-namespace math
-{
 
 // Provide mock sine/cosine implementation returning unusable return type.
 template <typename T>
@@ -338,7 +336,6 @@ public:
     mock_cf operator()(const T &) const;
 };
 }
-}
 
 // NOTE: here:
 // - g_series_type has a wrong sin() overload but a good cos() one, and g_series_type2 have suitable sin/cos members,
@@ -348,59 +345,59 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 {
     typedef g_series_type<double, int> p_type1;
     // What happens here:
-    // - p_type1 has math::sin() via its coefficient type,
-    // - g_series_type<mock_cf,int> has no sine because math::sin() on mock_cf is wrong,
-    // - math::cos() on p_type1 returns the -42 value from the method.
+    // - p_type1 has piranha::sin() via its coefficient type,
+    // - g_series_type<mock_cf,int> has no sine because piranha::sin() on mock_cf is wrong,
+    // - piranha::cos() on p_type1 returns the -42 value from the method.
     BOOST_CHECK(is_sine_type<p_type1>::value);
     BOOST_CHECK(is_cosine_type<p_type1>::value);
     BOOST_CHECK((!is_sine_type<g_series_type<mock_cf, int>>::value));
     BOOST_CHECK((is_cosine_type<g_series_type<mock_cf, int>>::value));
-    BOOST_CHECK_EQUAL(math::sin(p_type1{.5}), math::sin(.5));
-    BOOST_CHECK_EQUAL(math::cos(p_type1{.5}), -42);
-    BOOST_CHECK_THROW(math::sin(p_type1{"x"}), std::invalid_argument);
-    BOOST_CHECK_THROW(math::sin(p_type1{"x"} + 1), std::invalid_argument);
-    BOOST_CHECK_EQUAL(math::cos(p_type1{"x"}), -42);
-    BOOST_CHECK_EQUAL(math::cos(p_type1{"x"} - 1), -42);
+    BOOST_CHECK_EQUAL(piranha::sin(p_type1{.5}), piranha::sin(.5));
+    BOOST_CHECK_EQUAL(piranha::cos(p_type1{.5}), -42);
+    BOOST_CHECK_THROW(piranha::sin(p_type1{"x"}), std::invalid_argument);
+    BOOST_CHECK_THROW(piranha::sin(p_type1{"x"} + 1), std::invalid_argument);
+    BOOST_CHECK_EQUAL(piranha::cos(p_type1{"x"}), -42);
+    BOOST_CHECK_EQUAL(piranha::cos(p_type1{"x"} - 1), -42);
     typedef g_series_type2<double, int> p_type2;
     BOOST_CHECK(is_sine_type<p_type2>::value);
     BOOST_CHECK(is_cosine_type<p_type2>::value);
-    BOOST_CHECK_EQUAL(math::sin(p_type2{.5}), double(42));
-    BOOST_CHECK_EQUAL(math::cos(p_type2{.5}), double(-42));
+    BOOST_CHECK_EQUAL(piranha::sin(p_type2{.5}), double(42));
+    BOOST_CHECK_EQUAL(piranha::cos(p_type2{.5}), double(-42));
     typedef g_series_type2<p_type2, int> p_type3;
     BOOST_CHECK(is_sine_type<p_type3>::value);
     BOOST_CHECK(is_cosine_type<p_type3>::value);
-    BOOST_CHECK_EQUAL(math::sin(p_type3{.5}), double(42));
-    BOOST_CHECK_EQUAL(math::cos(p_type3{.5}), double(-42));
+    BOOST_CHECK_EQUAL(piranha::sin(p_type3{.5}), double(42));
+    BOOST_CHECK_EQUAL(piranha::cos(p_type3{.5}), double(-42));
     typedef g_series_type<mock_cf2, int> p_type4;
     BOOST_CHECK(is_sine_type<p_type4>::value);
     BOOST_CHECK(is_cosine_type<p_type4>::value);
-    BOOST_CHECK((std::is_same<decltype(math::sin(p_type4{})), g_series_type<mock_cf, int>>::value));
-    BOOST_CHECK((std::is_same<decltype(math::cos(p_type4{})), int>::value));
+    BOOST_CHECK((std::is_same<decltype(piranha::sin(p_type4{})), g_series_type<mock_cf, int>>::value));
+    BOOST_CHECK((std::is_same<decltype(piranha::cos(p_type4{})), int>::value));
     typedef g_series_type<mock_cf2, int> p_type4;
     BOOST_CHECK(is_sine_type<p_type4>::value);
     BOOST_CHECK(is_cosine_type<p_type4>::value);
-    BOOST_CHECK((std::is_same<decltype(math::sin(p_type4{})), g_series_type<mock_cf, int>>::value));
-    BOOST_CHECK((std::is_same<decltype(math::cos(p_type4{})), int>::value));
+    BOOST_CHECK((std::is_same<decltype(piranha::sin(p_type4{})), g_series_type<mock_cf, int>>::value));
+    BOOST_CHECK((std::is_same<decltype(piranha::cos(p_type4{})), int>::value));
     typedef g_series_type3<mock_cf2, int> p_type5;
     BOOST_CHECK(is_sine_type<p_type5>::value);
     BOOST_CHECK(is_cosine_type<p_type5>::value);
-    BOOST_CHECK((std::is_same<decltype(math::sin(p_type5{})), g_series_type3<mock_cf, int>>::value));
-    BOOST_CHECK((std::is_same<decltype(math::cos(p_type5{})), g_series_type3<mock_cf, int>>::value));
+    BOOST_CHECK((std::is_same<decltype(piranha::sin(p_type5{})), g_series_type3<mock_cf, int>>::value));
+    BOOST_CHECK((std::is_same<decltype(piranha::cos(p_type5{})), g_series_type3<mock_cf, int>>::value));
     // Check that casting a series type to its base type and then calling sin/cos still gets out the original
     // type. Test with series with and without members.
     typedef g_series_type3<double, int> p_type6;
     BOOST_CHECK(is_sine_type<p_type6>::value);
     BOOST_CHECK(is_cosine_type<p_type6>::value);
-    BOOST_CHECK((std::is_same<p_type6, decltype(math::sin(std::declval<const p_type6::base &>()))>::value));
-    BOOST_CHECK((std::is_same<p_type6, decltype(math::cos(std::declval<const p_type6::base &>()))>::value));
+    BOOST_CHECK((std::is_same<p_type6, decltype(piranha::sin(std::declval<const p_type6::base &>()))>::value));
+    BOOST_CHECK((std::is_same<p_type6, decltype(piranha::cos(std::declval<const p_type6::base &>()))>::value));
     typedef g_series_type4<double, int> p_type7;
     BOOST_CHECK(is_sine_type<p_type7>::value);
     BOOST_CHECK(is_cosine_type<p_type7>::value);
-    BOOST_CHECK((std::is_same<p_type7, decltype(math::sin(std::declval<const p_type7::base &>()))>::value));
-    BOOST_CHECK((std::is_same<p_type7, decltype(math::cos(std::declval<const p_type7::base &>()))>::value));
+    BOOST_CHECK((std::is_same<p_type7, decltype(piranha::sin(std::declval<const p_type7::base &>()))>::value));
+    BOOST_CHECK((std::is_same<p_type7, decltype(piranha::cos(std::declval<const p_type7::base &>()))>::value));
     // Test also with bad members.
-    BOOST_CHECK((std::is_same<p_type1, decltype(math::sin(std::declval<const p_type1::base &>()))>::value));
-    BOOST_CHECK((std::is_same<p_type1, decltype(math::cos(std::declval<const p_type1::base &>()))>::value));
+    BOOST_CHECK((std::is_same<p_type1, decltype(piranha::sin(std::declval<const p_type1::base &>()))>::value));
+    BOOST_CHECK((std::is_same<p_type1, decltype(piranha::cos(std::declval<const p_type1::base &>()))>::value));
 }
 
 BOOST_AUTO_TEST_CASE(series_iterator_test)

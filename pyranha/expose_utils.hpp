@@ -62,6 +62,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/invert.hpp>
 #include <piranha/lambdify.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/cos.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/power_series.hpp>
@@ -919,8 +920,8 @@ class series_exposer
     static void expose_sin_cos(
         typename std::enable_if<piranha::is_sine_type<S>::value && piranha::is_cosine_type<S>::value>::type * = nullptr)
     {
-        bp::def("_sin", &piranha::math::sin<const S &>);
-        bp::def("_cos", &piranha::math::cos<const S &>);
+        bp::def("_sin", &piranha::sin<const S &>);
+        bp::def("_cos", &piranha::cos<const S &>);
     }
     template <typename S>
     static void expose_sin_cos(typename std::enable_if<!piranha::is_sine_type<S>::value

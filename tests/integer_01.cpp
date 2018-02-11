@@ -204,16 +204,16 @@ struct sin_cos_tester {
     void operator()(const T &) const
     {
         using int_type = mppp::integer<T::value>;
-        BOOST_CHECK_EQUAL(math::sin(int_type()), 0);
-        BOOST_CHECK_EQUAL(math::cos(int_type()), 1);
-        BOOST_CHECK_EXCEPTION(math::sin(int_type(1)), std::domain_error, [](const std::domain_error &e) {
+        BOOST_CHECK_EQUAL(piranha::sin(int_type()), 0);
+        BOOST_CHECK_EQUAL(piranha::cos(int_type()), 1);
+        BOOST_CHECK_EXCEPTION(piranha::sin(int_type(1)), std::domain_error, [](const std::domain_error &e) {
             return boost::contains(e.what(), "cannot compute the sine of the non-zero integer 1");
         });
-        BOOST_CHECK_EXCEPTION(math::cos(int_type(1)), std::domain_error, [](const std::domain_error &e) {
+        BOOST_CHECK_EXCEPTION(piranha::cos(int_type(1)), std::domain_error, [](const std::domain_error &e) {
             return boost::contains(e.what(), "cannot compute the cosine of the non-zero integer 1");
         });
-        BOOST_CHECK((std::is_same<int_type, decltype(math::cos(int_type{}))>::value));
-        BOOST_CHECK((std::is_same<int_type, decltype(math::sin(int_type{}))>::value));
+        BOOST_CHECK((std::is_same<int_type, decltype(piranha::cos(int_type{}))>::value));
+        BOOST_CHECK((std::is_same<int_type, decltype(piranha::sin(int_type{}))>::value));
         BOOST_CHECK(is_sine_type<int_type>::value);
         BOOST_CHECK(is_cosine_type<int_type>::value);
         BOOST_CHECK(is_sine_type<int_type &>::value);

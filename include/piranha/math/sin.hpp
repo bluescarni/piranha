@@ -42,9 +42,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace math
-{
-
 // Default (empty) implementation.
 template <typename T, typename Enable = void>
 class sin_impl
@@ -54,22 +51,22 @@ class sin_impl
 inline namespace impl
 {
 
-// Enabler+result type for math::sin().
+// Enabler+result type for piranha::sin().
 template <typename T>
-using math_sin_t_ = decltype(sin_impl<uncvref_t<T>>{}(std::declval<T>()));
+using sin_type_ = decltype(sin_impl<uncvref_t<T>>{}(std::declval<T>()));
 
 template <typename T>
-using math_sin_t = enable_if_t<is_returnable<math_sin_t_<T>>::value, math_sin_t_<T>>;
+using sin_type = enable_if_t<is_returnable<sin_type_<T>>::value, sin_type_<T>>;
 }
 
 // Sine.
 template <typename T>
-inline math_sin_t<T &&> sin(T &&x)
+inline sin_type<T &&> sin(T &&x)
 {
     return sin_impl<uncvref_t<T>>{}(std::forward<T>(x));
 }
 
-// Specialisation of the implementation of piranha::math::sin() for C++ arithmetic types.
+// Specialisation of the implementation of piranha::sin() for C++ arithmetic types.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <CppArithmetic T>
 class sin_impl<T>
@@ -101,14 +98,13 @@ public:
         return impl(x, std::is_floating_point<T>{});
     }
 };
-}
 
 // Implementation of the type trait to detect the availability of sin().
 inline namespace impl
 {
 
 template <typename T>
-using sin_t = decltype(math::sin(std::declval<const T &>()));
+using sin_t = decltype(piranha::sin(std::declval<const T &>()));
 }
 
 template <typename T>

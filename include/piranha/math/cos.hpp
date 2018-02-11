@@ -42,9 +42,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace math
-{
-
 // Default (empty) implementation.
 template <typename T, typename Enable = void>
 class cos_impl
@@ -54,22 +51,22 @@ class cos_impl
 inline namespace impl
 {
 
-// Enabler+result type for math::cos().
+// Enabler+result type for cos().
 template <typename T>
-using math_cos_t_ = decltype(cos_impl<uncvref_t<T>>{}(std::declval<T>()));
+using cos_type_ = decltype(cos_impl<uncvref_t<T>>{}(std::declval<T>()));
 
 template <typename T>
-using math_cos_t = enable_if_t<is_returnable<math_cos_t_<T>>::value, math_cos_t_<T>>;
+using cos_type = enable_if_t<is_returnable<cos_type_<T>>::value, cos_type_<T>>;
 }
 
 // Cosine.
 template <typename T>
-inline math_cos_t<T &&> cos(T &&x)
+inline cos_type<T &&> cos(T &&x)
 {
     return cos_impl<uncvref_t<T>>{}(std::forward<T>(x));
 }
 
-// Specialisation of the implementation of piranha::math::cos() for C++ arithmetic types.
+// Specialisation of the implementation of piranha::cos() for C++ arithmetic types.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <CppArithmetic T>
 class cos_impl<T>
@@ -101,14 +98,13 @@ public:
         return impl(x, std::is_floating_point<T>{});
     }
 };
-}
 
 // Implementation of the type trait to detect the availability of cos().
 inline namespace impl
 {
 
 template <typename T>
-using cos_t = decltype(math::cos(std::declval<const T &>()));
+using cos_t = decltype(piranha::cos(std::declval<const T &>()));
 }
 
 template <typename T>

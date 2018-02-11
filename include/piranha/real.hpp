@@ -127,9 +127,6 @@ public:
     }
 };
 
-namespace math
-{
-
 template <>
 class sin_impl<real>
 {
@@ -151,6 +148,9 @@ public:
         return mppp::cos(std::forward<T>(r));
     }
 };
+
+namespace math
+{
 
 /// Specialisation of piranha::math::abs() for piranha::real.
 template <>

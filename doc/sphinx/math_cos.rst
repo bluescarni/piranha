@@ -5,24 +5,24 @@ Cosine
 
 *#include <piranha/math/cos.hpp>*
 
-.. cpp:function:: template <typename T> auto piranha::math::cos(T &&x)
+.. cpp:function:: template <typename T> auto piranha::cos(T &&x)
 
    This function computes :math:`\cos\left( x \right)`.
 
-   The implementation is delegated to the call operator of the :cpp:class:`piranha::math::cos_impl` function object.
+   The implementation is delegated to the call operator of the :cpp:class:`piranha::cos_impl` function object.
    The body of this function is equivalent to:
 
    .. code-block:: c++
 
-      return piranha::math::cos_impl<Tp>{}(x);
+      return piranha::cos_impl<Tp>{}(x);
 
    where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers,
-   and *x* is perfectly forwarded to the call operator of :cpp:class:`piranha::math::cos_impl`.
+   and *x* is perfectly forwarded to the call operator of :cpp:class:`piranha::cos_impl`.
    If the expression above is invalid, or if it returns a type which does not satisfy the
    :cpp:concept:`piranha::Returnable` concept,
    then this function will be disabled (i.e., it will not participate in overload resolution).
 
-   Piranha provides specialisations of :cpp:class:`piranha::math::cos_impl` for the following types:
+   Piranha provides specialisations of :cpp:class:`piranha::cos_impl` for the following types:
 
    * all of C++'s arithmetic types,
    * all :cpp:class:`mppp::integer <mppp::integer>` types (including :cpp:type:`piranha::integer`),
@@ -36,20 +36,20 @@ Cosine
 
    :return: :math:`\cos\left( x \right)`.
 
-   :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::math::cos_impl`.
+   :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::cos_impl`.
 
 Concepts
 --------
 
 .. cpp:concept:: template <typename T> piranha::CosineType
 
-   This concept is satisfied if :cpp:func:`piranha::math::cos()` can be called
+   This concept is satisfied if :cpp:func:`piranha::cos()` can be called
    with an argument of type ``T``. Specifically,
    this concept will be satisfied if
 
    .. code-block:: c++
 
-      piranha::math::cos(x)
+      piranha::cos(x)
 
    is a valid expression, where ``x`` is a reference to const ``T``.
 
@@ -58,16 +58,16 @@ Concepts
 Implementations
 ---------------
 
-.. cpp:class:: template <typename T, typename Enable = void> piranha::math::cos_impl
+.. cpp:class:: template <typename T, typename Enable = void> piranha::cos_impl
 
-   Unspecialised version of the function object implementing :cpp:func:`piranha::math::cos()`.
+   Unspecialised version of the function object implementing :cpp:func:`piranha::cos()`.
 
    This default implementation does not define any call operator, and thus no default implementation
-   of :cpp:func:`piranha::math::cos()` is available.
+   of :cpp:func:`piranha::cos()` is available.
 
-.. cpp:class:: template <piranha::CppArithmetic T> piranha::math::cos_impl<T>
+.. cpp:class:: template <piranha::CppArithmetic T> piranha::cos_impl<T>
 
-   Specialisation of the function object implementing :cpp:func:`piranha::math::cos()` for C++ arithmetic types.
+   Specialisation of the function object implementing :cpp:func:`piranha::cos()` for C++ arithmetic types.
 
    If ``T`` is a floating-point type, the result of the operation, computed via ``std::cos()``,
    will be of type ``T``.
@@ -77,29 +77,29 @@ Implementations
 
    :exception std\:\:domain_error: if ``T`` is an integral type and the input argument is not zero.
 
-.. cpp:class:: template <std::size_t SSize> piranha::math::cos_impl<mppp::integer<SSize>>
+.. cpp:class:: template <std::size_t SSize> piranha::cos_impl<mppp::integer<SSize>>
 
    *#include <piranha/integer.hpp>*
 
-   Specialisation of the function object implementing :cpp:func:`piranha::math::cos()` for :cpp:class:`mppp::integer <mppp::integer>`.
+   Specialisation of the function object implementing :cpp:func:`piranha::cos()` for :cpp:class:`mppp::integer <mppp::integer>`.
 
    The operation is successful only if the input argument is zero, in which case the result will be an instance of
    :cpp:class:`mppp::integer\<SSize\> <mppp::integer>` constructed from zero.
 
    :exception std\:\:domain_error: if the input argument is not zero.
 
-.. cpp:class:: template <std::size_t SSize> piranha::math::cos_impl<mppp::rational<SSize>>
+.. cpp:class:: template <std::size_t SSize> piranha::cos_impl<mppp::rational<SSize>>
 
    *#include <piranha/rational.hpp>*
 
-   Specialisation of the function object implementing :cpp:func:`piranha::math::cos()` for :cpp:class:`mppp::rational <mppp::rational>`.
+   Specialisation of the function object implementing :cpp:func:`piranha::cos()` for :cpp:class:`mppp::rational <mppp::rational>`.
 
    The operation is successful only if the input argument is zero, in which case the result will be an instance of
    :cpp:class:`mppp::rational\<SSize\> <mppp::rational>` constructed from one.
 
    :exception std\:\:domain_error: if the input argument is not zero.
 
-.. cpp:class:: template <> piranha::math::cos_impl<mppp::real>
+.. cpp:class:: template <> piranha::cos_impl<mppp::real>
 
    .. note::
 
@@ -108,7 +108,7 @@ Implementations
 
    *#include <piranha/real.hpp>*
 
-   Specialisation of the function object implementing :cpp:func:`piranha::math::cos()` for :cpp:class:`mppp::real <mppp::real>`.
+   Specialisation of the function object implementing :cpp:func:`piranha::cos()` for :cpp:class:`mppp::real <mppp::real>`.
 
    This implementation will invoke one of mp++'s :ref:`real cosine <mppp:real_trig>` overloads.
 

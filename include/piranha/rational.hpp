@@ -181,9 +181,6 @@ public:
     }
 };
 
-namespace math
-{
-
 template <std::size_t SSize>
 class sin_impl<mppp::rational<SSize>>
 {
@@ -209,6 +206,9 @@ public:
         return mppp::rational<SSize>{1};
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::abs() for mp++'s rationals.
 template <std::size_t SSize>

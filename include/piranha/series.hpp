@@ -3170,45 +3170,45 @@ inline auto series_sin_impl(const T &s) -> decltype(s.sin())
 
 struct series_cf_sin_functor {
     template <typename T>
-    auto operator()(const T &x) const -> decltype(math::sin(x))
+    auto operator()(const T &x) const -> decltype(piranha::sin(x))
     {
-        return math::sin(x);
+        return piranha::sin(x);
     }
     static constexpr const char *name = "sine";
 };
 
-// 2. coefficient type supports math::sin() with a result equal to the original coefficient type.
+// 2. coefficient type supports piranha::sin() with a result equal to the original coefficient type.
 // NOTE: this overload and the one below do not conflict with the one above because it takes a series
 // as input argument: when used on a concrete series type, it will have to go through a to-base
 // conversion in order to be selected.
-template <
-    typename Cf, typename Key, typename Derived,
-    typename std::enable_if<
-        is_series<Derived>::value
-            && std::is_same<typename Derived::term_type::cf_type,
-                            decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-        int>::type
-    = 0>
+template <typename Cf, typename Key, typename Derived,
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(piranha::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
+          = 0>
 inline Derived series_sin_impl(const series<Cf, Key, Derived> &s)
 {
     return apply_cf_functor<series_cf_sin_functor, Derived>(s);
 }
 
-// 3. coefficient type supports math::sin() with a result different from the original coefficient type and the series
+// 3. coefficient type supports piranha::sin() with a result different from the original coefficient type and the series
 // can be rebound to this new type.
-template <
-    typename Cf, typename Key, typename Derived,
-    typename std::enable_if<
-        is_series<Derived>::value
-            && !std::is_same<typename Derived::term_type::cf_type,
-                             decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-        int>::type
-    = 0>
-inline series_rebind<Derived, decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>
+template <typename Cf, typename Key, typename Derived,
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && !std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(piranha::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
+          = 0>
+inline series_rebind<Derived, decltype(piranha::sin(std::declval<const typename Derived::term_type::cf_type &>()))>
 series_sin_impl(const series<Cf, Key, Derived> &s)
 {
     using ret_type
-        = series_rebind<Derived, decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>;
+        = series_rebind<Derived, decltype(piranha::sin(std::declval<const typename Derived::term_type::cf_type &>()))>;
     return apply_cf_functor<series_cf_sin_functor, ret_type>(s);
 }
 
@@ -3237,39 +3237,39 @@ inline auto series_cos_impl(const T &s) -> decltype(s.cos())
 
 struct series_cf_cos_functor {
     template <typename T>
-    auto operator()(const T &x) const -> decltype(math::cos(x))
+    auto operator()(const T &x) const -> decltype(piranha::cos(x))
     {
-        return math::cos(x);
+        return piranha::cos(x);
     }
     static constexpr const char *name = "cosine";
 };
 
-template <
-    typename Cf, typename Key, typename Derived,
-    typename std::enable_if<
-        is_series<Derived>::value
-            && std::is_same<typename Derived::term_type::cf_type,
-                            decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-        int>::type
-    = 0>
+template <typename Cf, typename Key, typename Derived,
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(piranha::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
+          = 0>
 inline Derived series_cos_impl(const series<Cf, Key, Derived> &s)
 {
     return apply_cf_functor<series_cf_cos_functor, Derived>(s);
 }
 
-template <
-    typename Cf, typename Key, typename Derived,
-    typename std::enable_if<
-        is_series<Derived>::value
-            && !std::is_same<typename Derived::term_type::cf_type,
-                             decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-        int>::type
-    = 0>
-inline series_rebind<Derived, decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>
+template <typename Cf, typename Key, typename Derived,
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && !std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(piranha::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
+          = 0>
+inline series_rebind<Derived, decltype(piranha::cos(std::declval<const typename Derived::term_type::cf_type &>()))>
 series_cos_impl(const series<Cf, Key, Derived> &s)
 {
     using ret_type
-        = series_rebind<Derived, decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>;
+        = series_rebind<Derived, decltype(piranha::cos(std::declval<const typename Derived::term_type::cf_type &>()))>;
     return apply_cf_functor<series_cf_cos_functor, ret_type>(s);
 }
 
@@ -3278,15 +3278,12 @@ using series_cos_enabler =
     typename std::enable_if<true_tt<decltype(series_cos_impl(std::declval<const T &>()))>::value>::type;
 }
 
-namespace math
-{
-
-/// Specialisation of the piranha::math::sin() functor for piranha::series.
+/// Specialisation of the piranha::sin() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series and:
  * - either the series type provides a const <tt>%sin()</tt> method returning a type which satisfies
  *   piranha::is_returnable, or, missing this method,
- * - the series' coefficient type \p Cf supports math::sin() yielding a type \p T and either
+ * - the series' coefficient type \p Cf supports piranha::sin() yielding a type \p T and either
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
@@ -3301,7 +3298,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - the <tt>Series::sin()</tt> method,
-     * - piranha::math::sin(),
+     * - piranha::sin(),
      * - term, coefficient, and key construction and/or insertion via piranha::series::insert(),
      * - returning the result.
      */
@@ -3311,12 +3308,12 @@ public:
     }
 };
 
-/// Specialisation of the piranha::math::cos() functor for piranha::series.
+/// Specialisation of the piranha::cos() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series and:
  * - either the series type provides a const <tt>%cos()</tt> method returning a type which satisfies
  *   piranha::is_returnable, or, missing this method,
- * - the series' coefficient type \p Cf supports math::cos() yielding a type \p T and either
+ * - the series' coefficient type \p Cf supports piranha::cos() yielding a type \p T and either
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
@@ -3331,7 +3328,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - the <tt>Series::cos()</tt> method,
-     * - piranha::math::cos(),
+     * - piranha::cos(),
      * - term, coefficient, and key construction and/or insertion via piranha::series::insert(),
      * - returning the result.
      */
@@ -3340,7 +3337,6 @@ public:
         return detail::series_cos_impl(s);
     }
 };
-}
 
 namespace detail
 {
