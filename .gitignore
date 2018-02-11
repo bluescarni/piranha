@@ -2,8 +2,8 @@
 build*
 
 # Documentation.
-doc/sphinx/_build/
-doc/sphinx/conf.py
+doc/_build
+doc/conf.py
 
 # Temp files.
 *~

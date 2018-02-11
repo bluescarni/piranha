@@ -177,10 +177,6 @@ see https://www.gnu.org/licenses/. */
  * \todo is_unitary() should be implemented for real and series as well.
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.
- * \todo in the pyranha doc improvements, we should probably handle better unspecified exceptions and document
- * the return type as well for consistency (see lambdify docs) -> actually start using sphinx napoleon - UPDATE:
- * note also that the settings' methods' docstrings need to be filled out properly with exception specs, return types,
- * etc.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
  * \todo guidelines for type traits modernization:
  * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
