@@ -179,14 +179,14 @@ public:
     /**
      * @param args reference piranha::symbol_fset.
      *
-     * @return \p true if either the key's <tt>is_zero()</tt> method or piranha::math::is_zero() on the coefficient
+     * @return \p true if either the key's <tt>is_zero()</tt> method or piranha::is_zero() on the coefficient
      * return \p true, \p false otherwise.
      *
-     * @throws unspecified any exception thrown by piranha::math::is_zero() or by the key's <tt>is_zero()</tt> method.
+     * @throws unspecified any exception thrown by piranha::is_zero() or by the key's <tt>is_zero()</tt> method.
      */
     bool is_zero(const symbol_fset &args) const
     {
-        return math::is_zero(m_cf) || m_key.is_zero(args);
+        return piranha::is_zero(m_cf) || m_key.is_zero(args);
     }
     /// Coefficient member.
     mutable Cf m_cf;

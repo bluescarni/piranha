@@ -2304,7 +2304,7 @@ public:
      * calling type to the power of \p x. The exponentiation algorithm proceeds as follows:
      * - if the series is single-coefficient, the result is a single-coefficient series in which the coefficient
      *   is the original coefficient (or zero, if the calling series is empty) raised to the power of \p x;
-     * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
+     * - if \p x is zero (as established by piranha::is_zero()), a series with a single term
      *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised
      *   to the power of zero is 1 - including empty series);
      * - if \p x represents a non-negative integral value, the return value is constructed via repeated multiplications;
@@ -2323,7 +2323,7 @@ public:
      * - series, term, coefficient and key construction,
      * - insert(),
      * - is_single_coefficient(),
-     * - piranha::pow(), piranha::math::is_zero() and piranha::safe_cast(),
+     * - piranha::pow(), piranha::is_zero() and piranha::safe_cast(),
      * - series multiplication,
      * - memory errors in standard containers,
      * - threading primitives,
@@ -2357,7 +2357,7 @@ public:
             return retval;
         }
         // Handle the case of zero exponent.
-        if (math::is_zero(x)) {
+        if (piranha::is_zero(x)) {
             ret_type retval;
             retval.insert(r_term_type(r_cf_type(1), key_type(symbol_fset{})));
             return retval;
@@ -2970,8 +2970,9 @@ struct negate_impl<T, typename std::enable_if<is_series<T>::value>::type> {
         s.negate();
     }
 };
+}
 
-/// Specialisation of the piranha::math::is_zero() functor for piranha::series.
+/// Specialisation of the piranha::is_zero() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series.
  * The result will be computed via the series' <tt>empty()</tt> method.
@@ -2991,7 +2992,6 @@ public:
         return s.empty();
     }
 };
-}
 
 inline namespace impl
 {

@@ -92,8 +92,9 @@ struct negate_impl<mppp::integer<SSize>> {
         n.neg();
     }
 };
+}
 
-// Specialisation of the implementation of piranha::math::is_zero() for mp++'s integers.
+// Specialisation of the implementation of piranha::is_zero() for mp++'s integers.
 template <std::size_t SSize>
 class is_zero_impl<mppp::integer<SSize>>
 {
@@ -103,6 +104,9 @@ public:
         return n.is_zero();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::is_unitary() for mp++'s integers.
 template <std::size_t SSize>

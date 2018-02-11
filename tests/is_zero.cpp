@@ -51,8 +51,6 @@ struct trivial_d {
 
 namespace piranha
 {
-namespace math
-{
 
 template <>
 class is_zero_impl<trivial_a, void>
@@ -82,7 +80,6 @@ public:
     trivial_d operator()(const trivial_d &) const;
 };
 }
-}
 
 using namespace piranha;
 
@@ -97,14 +94,14 @@ BOOST_AUTO_TEST_CASE(is_zero_test_00)
     BOOST_CHECK(is_is_zero_type<std::complex<float>>::value);
     BOOST_CHECK(is_is_zero_type<std::complex<double> &>::value);
     BOOST_CHECK(is_is_zero_type<const std::complex<long double> &>::value);
-    BOOST_CHECK(math::is_zero(0));
-    BOOST_CHECK(!math::is_zero(1u));
-    BOOST_CHECK(math::is_zero(0.));
-    BOOST_CHECK(!math::is_zero(1.23l));
-    BOOST_CHECK(math::is_zero(std::complex<float>{0, 0}));
-    BOOST_CHECK(!math::is_zero(std::complex<double>{-1, 0}));
-    BOOST_CHECK(!math::is_zero(std::complex<double>{0, -1}));
-    BOOST_CHECK(!math::is_zero(std::complex<double>{1, 1}));
+    BOOST_CHECK(piranha::is_zero(0));
+    BOOST_CHECK(!piranha::is_zero(1u));
+    BOOST_CHECK(piranha::is_zero(0.));
+    BOOST_CHECK(!piranha::is_zero(1.23l));
+    BOOST_CHECK(piranha::is_zero(std::complex<float>{0, 0}));
+    BOOST_CHECK(!piranha::is_zero(std::complex<double>{-1, 0}));
+    BOOST_CHECK(!piranha::is_zero(std::complex<double>{0, -1}));
+    BOOST_CHECK(!piranha::is_zero(std::complex<double>{1, 1}));
     BOOST_CHECK((!is_is_zero_type<trivial>::value));
     BOOST_CHECK((!is_is_zero_type<trivial &>::value));
     BOOST_CHECK((!is_is_zero_type<trivial &&>::value));

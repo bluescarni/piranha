@@ -909,10 +909,10 @@ inline bool is_canonical_impl(const std::vector<T const *> &new_p, const std::ve
     for (decltype(new_p.size()) i = 0u; i < size; ++i) {
         for (decltype(new_p.size()) j = 0u; j < size; ++j) {
             // NOTE: no need for actually doing computations when i == j.
-            if (i != j && !math::is_zero(math::pbracket(*new_p[i], *new_p[j], p_list, q_list))) {
+            if (i != j && !piranha::is_zero(math::pbracket(*new_p[i], *new_p[j], p_list, q_list))) {
                 return false;
             }
-            if (i != j && !math::is_zero(math::pbracket(*new_q[i], *new_q[j], p_list, q_list))) {
+            if (i != j && !piranha::is_zero(math::pbracket(*new_q[i], *new_q[j], p_list, q_list))) {
                 return false;
             }
             // Poisson bracket needs to be zero for i != j, one for i == j.
@@ -956,7 +956,7 @@ namespace math
  * @throws unspecified any exception thrown by:
  * - piranha::math::pbracket(),
  * - construction and comparison of objects of the type returned by piranha::math::pbracket(),
- * - piranha::math::is_zero(),
+ * - piranha::is_zero(),
  * - memory errors in standard containers.
  */
 template <typename T, detail::is_canonical_enabler<T> = 0>
@@ -2453,11 +2453,11 @@ template <typename T>
 inline T gcd_euclidean(T a, T b)
 {
     while (true) {
-        if (math::is_zero(a)) {
+        if (piranha::is_zero(a)) {
             return b;
         }
         b %= a;
-        if (math::is_zero(b)) {
+        if (piranha::is_zero(b)) {
             return a;
         }
         a %= b;

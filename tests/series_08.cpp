@@ -382,9 +382,6 @@ public:
     T operator()(const T &, const U &) const;
 };
 
-namespace math
-{
-
 template <typename T>
 class is_zero_impl<T, typename std::enable_if<std::is_same<T, fake_int_01>::value>::type>
 {
@@ -398,7 +395,6 @@ class is_zero_impl<T, typename std::enable_if<std::is_same<T, fake_int_02>::valu
 public:
     bool operator()(const T &) const;
 };
-}
 
 template <typename T>
 struct safe_cast_impl<integer, T, typename std::enable_if<std::is_same<T, fake_int_01>::value>::type> {

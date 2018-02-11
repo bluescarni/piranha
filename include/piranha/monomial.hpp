@@ -252,14 +252,14 @@ public:
     }
     /// Check if the monomial is unitary.
     /**
-     * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.
+     * A monomial is unitary if, for all its elements, piranha::is_zero() returns \p true.
      *
      * @param args reference piranha::symbol_fset.
      *
      * @return \p true if the monomial is unitary, \p false otherwise.
      *
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-     * @throws unspecified any exception thrown by piranha::math::is_zero().
+     * @throws unspecified any exception thrown by piranha::is_zero().
      */
     bool is_unitary(const symbol_fset &args) const
     {
@@ -270,7 +270,8 @@ public:
                               + std::to_string(std::get<0>(sbe)) + ", while the reference symbol set has a size of "
                               + std::to_string(args.size()));
         }
-        return std::all_of(std::get<1>(sbe), std::get<2>(sbe), [](const T &element) { return math::is_zero(element); });
+        return std::all_of(std::get<1>(sbe), std::get<2>(sbe),
+                           [](const T &element) { return piranha::is_zero(element); });
     }
 
 private:
@@ -420,7 +421,7 @@ public:
      * @return a pair indicating if the monomial is linear.
      *
      * @throws std::invalid_argument if the sizes of ``this`` and ``args`` differ.
-     * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::math::is_unitary().
+     * @throws unspecified any exception thrown by piranha::is_zero() or piranha::math::is_unitary().
      */
     std::pair<bool, symbol_idx> is_linear(const symbol_fset &args) const
     {
@@ -437,7 +438,7 @@ public:
         for (size_type i = 0u; i < std::get<0>(sbe); ++i, ++std::get<1>(sbe)) {
             // NOTE: is_zero()'s availability is guaranteed by array_key's reqs,
             // is_unitary() is required by the monomial reqs.
-            if (math::is_zero(*std::get<1>(sbe))) {
+            if (piranha::is_zero(*std::get<1>(sbe))) {
                 continue;
             }
             if (!math::is_unitary(*std::get<1>(sbe))) {
@@ -564,7 +565,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - the construction of the return value,
      * - the exponent type's pre-decrement operator,
-     * - piranha::math::is_zero().
+     * - piranha::is_zero().
      */
     template <typename U = T, partial_enabler<U> = 0>
     std::pair<T, monomial> partial(const symbol_idx &p, const symbol_fset &args) const
@@ -577,7 +578,7 @@ public:
                               + std::to_string(args.size()) + ") differs from the size of the monomial ("
                               + std::to_string(std::get<0>(sbe)) + ")");
         }
-        if (p >= std::get<0>(sbe) || math::is_zero(std::get<1>(sbe)[p])) {
+        if (p >= std::get<0>(sbe) || piranha::is_zero(std::get<1>(sbe)[p])) {
             // Derivative wrt a variable not in the monomial: position is outside the bounds, or it refers to a
             // variable with zero exponent.
             return std::make_pair(T(0), monomial{args});
@@ -649,7 +650,7 @@ public:
      * @throws std::overflow_error if \p T is a C++ integral type and the integration leads
      * to integer overflow.
      * @throws unspecified any exception thrown by:
-     * - piranha::math::is_zero(),
+     * - piranha::is_zero(),
      * - exponent construction,
      * - push_back(),
      * - the exponent type's pre-increment operator.
@@ -671,7 +672,7 @@ public:
         auto it_args = args.begin();
         for (decltype(retval.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe), ++it_args) {
             const auto &cur_sym = *it_args;
-            if (math::is_zero(expo) && s < cur_sym) {
+            if (piranha::is_zero(expo) && s < cur_sym) {
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
                 // a new exponent.
@@ -685,7 +686,7 @@ public:
                 auto &ref = retval[i];
                 // Do the addition and check for zero later, to detect -1 expo.
                 ip_inc(ref, monomial_int_dispatcher<U>{});
-                if (unlikely(math::is_zero(ref))) {
+                if (unlikely(piranha::is_zero(ref))) {
                     piranha_throw(std::invalid_argument,
                                   "unable to perform monomial integration: a negative "
                                   "unitary exponent was encountered in correspondence of the variable '"
@@ -695,7 +696,7 @@ public:
             }
         }
         // If expo is still zero, it means we need to add a new exponent at the end.
-        if (math::is_zero(expo)) {
+        if (piranha::is_zero(expo)) {
             retval.push_back(one);
             expo = one;
         }
@@ -731,7 +732,7 @@ public:
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception resulting from:
      * - printing exponents to stream and the public interface of \p os,
-     * - piranha::math::is_zero(), piranha::math::is_unitary().
+     * - piranha::is_zero(), piranha::math::is_unitary().
      */
     void print(std::ostream &os, const symbol_fset &args) const
     {
@@ -744,7 +745,7 @@ public:
         bool empty_output = true;
         auto it_args = args.begin();
         for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe), ++it_args) {
-            if (!math::is_zero(*std::get<1>(sbe))) {
+            if (!piranha::is_zero(*std::get<1>(sbe))) {
                 // If we are going to print a symbol, and something has been printed before,
                 // then we are going to place the multiplication sign.
                 if (!empty_output) {
@@ -770,7 +771,7 @@ public:
      * @throws unspecified any exception resulting from:
      * - construction, comparison and assignment of exponents,
      * - printing exponents to stream and the public interface of \p os,
-     * - piranha::math::negate(), piranha::math::is_zero(), piranha::math::is_unitary().
+     * - piranha::math::negate(), piranha::is_zero(), piranha::math::is_unitary().
      */
     void print_tex(std::ostream &os, const symbol_fset &args) const
     {
@@ -787,7 +788,7 @@ public:
         auto it_args = args.begin();
         for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe), ++it_args) {
             cur_value = *std::get<1>(sbe);
-            if (!math::is_zero(cur_value)) {
+            if (!piranha::is_zero(cur_value)) {
                 // NOTE: use this weird form for the test because the presence of operator<()
                 // is already guaranteed and thus we don't need additional requirements on T.
                 // Maybe in the future we want to do it with a math::sign() function.

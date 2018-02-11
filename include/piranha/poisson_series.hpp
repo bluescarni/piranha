@@ -106,7 +106,7 @@ struct poisson_series_tag {
 // - once we have a selectable key type, we must take care that in a few places we assume that the value type
 //   of the key is a C++ integral, but this might not be the case any more (e.g., in the sin/cos implementation
 //   we will need a safe cast) -> also in integrate(), there are a few occurrences of this (e.g., == 0 should
-//   become math::is_zero() etc.). Will also need the is_integrable check on the key type.
+//   become piranha::is_zero() etc.). Will also need the is_integrable check on the key type.
 template <typename Cf>
 class poisson_series
     : public power_series<
@@ -472,12 +472,12 @@ class poisson_series
             for (const auto &n_int : tmp_int) {
                 // NOTE: gcd is safe, operating on integers.
                 math::gcd3(cd, cd, n_int);
-                if (!first_nonzero_found && !math::is_zero(n_int)) {
+                if (!first_nonzero_found && !piranha::is_zero(n_int)) {
                     piranha_assert(n_int > 0);
                     first_nonzero_found = true;
                 }
             }
-            if (unlikely(math::is_zero(cd))) {
+            if (unlikely(piranha::is_zero(cd))) {
                 piranha_throw(std::invalid_argument, "an invalid trigonometric term was encountered while "
                                                      "attempting a time integration");
             }
@@ -631,7 +631,7 @@ public:
      *
      * @throws std::invalid_argument if the integration procedure fails.
      * @throws unspecified any exception thrown by:
-     * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast() and
+     * - piranha::math::partial(), piranha::is_zero(), piranha::math::integrate(), piranha::safe_cast() and
      *   piranha::math::negate(),
      * - the assignment operator of piranha::symbol_fset,
      * - term construction,
@@ -659,7 +659,7 @@ public:
                 continue;
             }
             // The variable is in the monomial, let's check if the variable is also in the coefficient.
-            if (math::is_zero(math::partial(it->m_cf, name))) {
+            if (piranha::is_zero(math::partial(it->m_cf, name))) {
                 // No variable in the coefficient, proceed with the integrated key and divide by multiplier.
                 poisson_series tmp;
                 tmp.set_symbol_set(this->m_symbol_set);
@@ -704,7 +704,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - memory errors in standard containers,
      * - the public interfaces of piranha::symbol_fset, piranha::integer and piranha::series,
-     * - piranha::math::is_zero(), piranha::math::negate(),
+     * - piranha::is_zero(), piranha::math::negate(),
      * - the mathematical operations needed to compute the result,
      * - piranha::divisor::insert(),
      * - construction of the involved types.

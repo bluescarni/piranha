@@ -627,12 +627,12 @@ struct is_zero_tester {
             typedef g_series_type<p_type1, Expo> p_type11;
             BOOST_CHECK(is_is_zero_type<p_type1>::value);
             BOOST_CHECK(is_is_zero_type<p_type11>::value);
-            BOOST_CHECK(math::is_zero(p_type1{}));
-            BOOST_CHECK(math::is_zero(p_type11{}));
-            BOOST_CHECK(math::is_zero(p_type1{0}));
-            BOOST_CHECK(math::is_zero(p_type11{0}));
-            BOOST_CHECK(!math::is_zero(p_type1{1}));
-            BOOST_CHECK(!math::is_zero(p_type11{1}));
+            BOOST_CHECK(piranha::is_zero(p_type1{}));
+            BOOST_CHECK(piranha::is_zero(p_type11{}));
+            BOOST_CHECK(piranha::is_zero(p_type1{0}));
+            BOOST_CHECK(piranha::is_zero(p_type11{0}));
+            BOOST_CHECK(!piranha::is_zero(p_type1{1}));
+            BOOST_CHECK(!piranha::is_zero(p_type11{1}));
         }
     };
     template <typename Cf>

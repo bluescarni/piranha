@@ -95,26 +95,26 @@ struct is_zero_tester {
         BOOST_CHECK(is_is_zero_type<int_type &>::value);
         BOOST_CHECK(is_is_zero_type<const int_type &>::value);
         int_type n;
-        BOOST_CHECK(math::is_zero(n));
+        BOOST_CHECK(piranha::is_zero(n));
         n = 1;
-        BOOST_CHECK(!math::is_zero(n));
+        BOOST_CHECK(!piranha::is_zero(n));
         n = 101;
-        BOOST_CHECK(!math::is_zero(n));
+        BOOST_CHECK(!piranha::is_zero(n));
         n = -1;
-        BOOST_CHECK(!math::is_zero(n));
+        BOOST_CHECK(!piranha::is_zero(n));
         n = -101;
-        BOOST_CHECK(!math::is_zero(n));
+        BOOST_CHECK(!piranha::is_zero(n));
         n = 0;
         n.promote();
-        BOOST_CHECK(math::is_zero(n));
+        BOOST_CHECK(piranha::is_zero(n));
         n = 1;
-        BOOST_CHECK(!math::is_zero(n));
+        BOOST_CHECK(!piranha::is_zero(n));
         n = 101;
-        BOOST_CHECK(!math::is_zero(n));
+        BOOST_CHECK(!piranha::is_zero(n));
         n = -1;
-        BOOST_CHECK(!math::is_zero(n));
+        BOOST_CHECK(!piranha::is_zero(n));
         n = -101;
-        BOOST_CHECK(!math::is_zero(n));
+        BOOST_CHECK(!piranha::is_zero(n));
     }
 };
 

@@ -82,8 +82,9 @@ struct negate_impl<real> {
         r.neg();
     }
 };
+}
 
-// Specialisation of piranha::math::is_zero() for piranha::real.
+// Specialisation of piranha::is_zero() for piranha::real.
 template <>
 class is_zero_impl<real>
 {
@@ -93,6 +94,9 @@ public:
         return r.zero_p();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::is_unitary() for piranha::real.
 template <>

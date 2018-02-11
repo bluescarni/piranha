@@ -90,17 +90,17 @@ BOOST_AUTO_TEST_CASE(real_is_zero_test)
     BOOST_CHECK(is_is_zero_type<const real &>::value);
     BOOST_CHECK(is_is_zero_type<const real>::value);
     real r1;
-    BOOST_CHECK(math::is_zero(r1));
+    BOOST_CHECK(piranha::is_zero(r1));
     r1.neg();
-    BOOST_CHECK(math::is_zero(r1));
+    BOOST_CHECK(piranha::is_zero(r1));
     r1 = 123;
-    BOOST_CHECK(!math::is_zero(r1));
+    BOOST_CHECK(!piranha::is_zero(r1));
     r1 = real{"inf", 100};
-    BOOST_CHECK(!math::is_zero(r1));
+    BOOST_CHECK(!piranha::is_zero(r1));
     r1 = -1;
-    BOOST_CHECK(!math::is_zero(r1));
+    BOOST_CHECK(!piranha::is_zero(r1));
     r1 = real{"nan", 100};
-    BOOST_CHECK(!math::is_zero(r1));
+    BOOST_CHECK(!piranha::is_zero(r1));
 }
 
 BOOST_AUTO_TEST_CASE(real_pow_test)

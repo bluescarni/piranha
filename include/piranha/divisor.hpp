@@ -224,7 +224,7 @@ private:
         bool first_nonzero_found = false;
         value_type cd(0);
         for (const auto &n : p.v) {
-            if (!first_nonzero_found && !math::is_zero(n)) {
+            if (!first_nonzero_found && !piranha::is_zero(n)) {
                 if (n < 0) {
                     return false;
                 }
@@ -650,7 +650,7 @@ public:
             auto it_args = args.begin();
             for (typename v_type::size_type i = 0u; i < it->v.size(); ++i, ++it_args) {
                 // If the aij is zero, don't print anything.
-                if (math::is_zero(it->v[i])) {
+                if (piranha::is_zero(it->v[i])) {
                     continue;
                 }
                 // A positive aij, in case previous output exists, must be preceded
@@ -705,7 +705,7 @@ public:
             auto it_args = args.begin();
             for (typename v_type::size_type i = 0u; i < it->v.size(); ++i, ++it_args) {
                 // If the aij is zero, don't print anything.
-                if (math::is_zero(it->v[i])) {
+                if (piranha::is_zero(it->v[i])) {
                     continue;
                 }
                 // A positive aij, in case previous output exists, must be preceded
@@ -871,7 +871,7 @@ public:
      *
      * @throws std::invalid_argument if \p this is not compatible with \p args, or if the sizes of ``trim_mask``
      * and ``args`` differ.
-     * @throws unspecified any exception thrown by piranha::math::is_zero().
+     * @throws unspecified any exception thrown by piranha::is_zero().
      */
     void trim_identify(std::vector<char> &trim_mask, const symbol_fset &args) const
     {
@@ -887,7 +887,7 @@ public:
         const auto it_f = m_container.end();
         for (auto it = m_container.begin(); it != it_f; ++it) {
             for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
-                if (!math::is_zero(it->v[i])) {
+                if (!piranha::is_zero(it->v[i])) {
                     trim_mask[static_cast<decltype(trim_mask.size())>(i)] = 0;
                 }
             }
@@ -947,7 +947,7 @@ public:
      * @throws std::invalid_argument if \p args is not compatible with \p this or \p p, or \p p
      * is not less than the size of \p args.
      * @throws unspecified any exception thrown by:
-     * - piranha::math::is_zero(),
+     * - piranha::is_zero(),
      * - piranha::hash_set::insert().
      */
     std::pair<divisor, divisor> split(const symbol_idx &p, const symbol_fset &args) const
@@ -966,7 +966,7 @@ public:
         const auto it_f = m_container.end();
         for (auto it = m_container.begin(); it != it_f; ++it) {
             // NOTE: static cast is safe here, as we checked for compatibility.
-            if (math::is_zero(it->v[static_cast<s_type>(p)])) {
+            if (piranha::is_zero(it->v[static_cast<s_type>(p)])) {
                 retval.second.m_container.insert(*it);
             } else {
                 retval.first.m_container.insert(*it);

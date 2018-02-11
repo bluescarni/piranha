@@ -93,14 +93,14 @@ struct is_zero_tester {
         BOOST_CHECK(is_is_zero_type<const q_type &>::value);
         BOOST_CHECK(is_is_zero_type<const q_type>::value);
         q_type q;
-        BOOST_CHECK(math::is_zero(q));
+        BOOST_CHECK(piranha::is_zero(q));
         q = 1;
-        BOOST_CHECK(!math::is_zero(q));
+        BOOST_CHECK(!piranha::is_zero(q));
         q = "-3/5";
-        BOOST_CHECK(!math::is_zero(q));
+        BOOST_CHECK(!piranha::is_zero(q));
         q = "1";
         q -= 1;
-        BOOST_CHECK(math::is_zero(q));
+        BOOST_CHECK(piranha::is_zero(q));
     }
 };
 

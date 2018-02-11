@@ -584,7 +584,7 @@ public:
      * @throws std::invalid_argument if the integration procedure fails.
      * @throws unspecified any exception thrown by:
      * - the public interface of piranha::symbol_fset,
-     * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast()
+     * - piranha::math::partial(), piranha::is_zero(), piranha::math::integrate(), piranha::safe_cast()
      *   and piranha::math::negate(),
      * - term construction,
      * - coefficient construction, assignment and arithmetics,
@@ -609,7 +609,7 @@ public:
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // If the derivative of the coefficient is null, we just need to deal with
             // the integration of the key.
-            if (math::is_zero(math::partial(it->m_cf, name))) {
+            if (piranha::is_zero(math::partial(it->m_cf, name))) {
                 polynomial tmp;
                 tmp.set_symbol_set(aug_ss);
                 auto key_int = it->m_key.integrate(name, this->m_symbol_set);

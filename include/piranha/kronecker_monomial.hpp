@@ -805,7 +805,7 @@ public:
                 }
                 // Do the addition and check for zero later, to detect -1 expo.
                 retval[i] = static_cast<T>(retval[i] + T(1));
-                if (unlikely(math::is_zero(retval[i]))) {
+                if (unlikely(piranha::is_zero(retval[i]))) {
                     piranha_throw(std::invalid_argument,
                                   "unable to perform Kronecker monomial integration: a negative "
                                   "unitary exponent was encountered in correspondence of the variable '"

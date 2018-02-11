@@ -104,10 +104,7 @@ struct print_tex_coefficient_impl<mppp::rational<SSize>> {
     }
 };
 
-namespace math
-{
-
-// Specialisation of the implementation of piranha::math::is_zero() for mp++'s rationals.
+// Specialisation of the implementation of piranha::is_zero() for mp++'s rationals.
 template <std::size_t SSize>
 class is_zero_impl<mppp::rational<SSize>>
 {
@@ -117,6 +114,9 @@ public:
         return q.is_zero();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::is_unitary() for mp++'s rationals.
 template <std::size_t SSize>
