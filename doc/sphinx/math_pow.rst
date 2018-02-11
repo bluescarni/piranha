@@ -99,6 +99,11 @@ Implementations
 
 .. cpp:class:: template <typename U, mppp::RealOpTypes<U> T> piranha::pow_impl<T, U>
 
+   .. note::
+
+      This specialisation is available only if mp++ was configured with the ``MPPP_WITH_MPFR`` option enabled
+      (see the :ref:`mp++ installation instructions <mppp:installation>`).
+
    *#include <piranha/real.hpp>*
 
    Specialisation of the function object implementing :cpp:func:`piranha::pow()` for :cpp:class:`mppp::real <mppp::real>`.
@@ -106,8 +111,3 @@ Implementations
    This implementation will invoke one of mp++'s :ref:`real exponentiation <mppp:real_exponentiation>` overloads.
 
    :exception unspecified: any exception thrown by the invoked :ref:`real exponentiation <mppp:real_exponentiation>` overload.
-
-   .. note::
-
-      This specialisation is available only if mp++ was configured with the ``MPPP_WITH_MPFR`` option enabled
-      (see the :ref:`mp++ installation instructions <mppp:installation>`).

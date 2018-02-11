@@ -101,6 +101,11 @@ Implementations
 
 .. cpp:class:: template <> piranha::math::sin_impl<mppp::real>
 
+   .. note::
+
+      This specialisation is available only if mp++ was configured with the ``MPPP_WITH_MPFR`` option enabled
+      (see the :ref:`mp++ installation instructions <mppp:installation>`).
+
    *#include <piranha/real.hpp>*
 
    Specialisation of the function object implementing :cpp:func:`piranha::math::sin()` for :cpp:class:`mppp::real <mppp::real>`.
@@ -108,8 +113,3 @@ Implementations
    This implementation will invoke one of mp++'s :ref:`real sine <mppp:real_trig>` overloads.
 
    :exception unspecified: any exception thrown by the invoked :ref:`real sine <mppp:real_trig>` overload.
-
-   .. note::
-
-      This specialisation is available only if mp++ was configured with the ``MPPP_WITH_MPFR`` option enabled
-      (see the :ref:`mp++ installation instructions <mppp:installation>`).

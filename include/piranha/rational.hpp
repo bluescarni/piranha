@@ -67,15 +67,7 @@ using rational = mppp::rational<1>;
 inline namespace literals
 {
 
-/// Literal for arbitrary-precision rationals.
-/**
- * @param s a literal string.
- *
- * @return a piranha::rational constructed from \p s.
- *
- * @throws unspecified any exception thrown by the constructor of
- * piranha::rational from string.
- */
+// Literal for arbitrary-precision rationals.
 inline rational operator"" _q(const char *s)
 {
     return rational{s};

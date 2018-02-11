@@ -469,15 +469,7 @@ constexpr bool key_has_ipow_subs<Key, T>::value;
 inline namespace literals
 {
 
-/// Literal for arbitrary-precision integers.
-/**
- * @param s a literal string.
- *
- * @return a piranha::integer constructed from \p s.
- *
- * @throws unspecified any exception thrown by the constructor of
- * piranha::integer from string.
- */
+// Literal for arbitrary-precision integers.
 inline integer operator"" _z(const char *s)
 {
     return integer{s};
