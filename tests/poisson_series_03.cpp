@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_boost_s11n_test)
     BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, pst1>::value));
     {
         pst1 x{"x"}, y{"y"}, z{"z"};
-        const auto tmp = (x + y) * 3 + z * math::cos(x - y) + 1;
+        const auto tmp = (x + y) * 3 + z * piranha::cos(x - y) + 1;
         std::stringstream ss;
         {
             boost::archive::binary_oarchive oa(ss);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_boost_s11n_test)
     BOOST_CHECK((!has_boost_load<boost::archive::binary_oarchive, pst2>::value));
     {
         pst2 x{"x"}, y{"y"}, z{"z"};
-        const auto tmp = (x + y) * 3 * math::invert(z) + z * math::cos(x - y) + 1;
+        const auto tmp = (x + y) * 3 * math::invert(z) + z * piranha::cos(x - y) + 1;
         std::stringstream ss;
         {
             boost::archive::binary_oarchive oa(ss);
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_msgpack_s11n_test)
     BOOST_CHECK((!has_msgpack_convert<const pst1 &>::value));
     {
         pst1 x{"x"}, y{"y"}, z{"z"};
-        const auto tmp = (x + y) * 3 + z * math::cos(x - y) + 1;
+        const auto tmp = (x + y) * 3 + z * piranha::cos(x - y) + 1;
         msgpack::sbuffer sbuf;
         msgpack::packer<msgpack::sbuffer> p(sbuf);
         msgpack_pack(p, tmp, msgpack_format::binary);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_msgpack_s11n_test)
     BOOST_CHECK((!has_msgpack_convert<const pst2 &>::value));
     {
         pst2 x{"x"}, y{"y"}, z{"z"};
-        const auto tmp = (x + y) * 3 * math::invert(z) + z * math::cos(x - y) + 1;
+        const auto tmp = (x + y) * 3 * math::invert(z) + z * piranha::cos(x - y) + 1;
         msgpack::sbuffer sbuf;
         msgpack::packer<msgpack::sbuffer> p(sbuf);
         msgpack_pack(p, tmp, msgpack_format::binary);

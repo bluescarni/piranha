@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
                       (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(pt1{14})));
     boost_roundtrip_file(pt1{14});
     pt1 x{"x"}, y{"y"}, z{"z"};
-    const auto p1 = math::pow(3 * x + y, 10);
+    const auto p1 = piranha::pow(3 * x + y, 10);
     BOOST_CHECK_EQUAL(p1, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(p1)));
     BOOST_CHECK_EQUAL(p1, (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(p1)));
     boost_roundtrip_file(p1);
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_00)
         tmp += mdist(rng) * x;
         tmp += mdist(rng) * y;
         tmp += mdist(rng) * z;
-        tmp = math::pow(tmp, powdist(rng));
+        tmp = piranha::pow(tmp, powdist(rng));
         BOOST_CHECK_EQUAL(tmp, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(tmp)));
         BOOST_CHECK_EQUAL(tmp,
                           (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(tmp)));
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_01)
     boost_roundtrip_file(pt1{14});
     pt0 x{"x"};
     pt1 y{"y"}, z{"z"};
-    const auto p1 = math::pow(3 * x + y, 10);
+    const auto p1 = piranha::pow(3 * x + y, 10);
     BOOST_CHECK_EQUAL(p1, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(p1)));
     BOOST_CHECK_EQUAL(p1, (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(p1)));
     boost_roundtrip_file(p1);
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(series_boost_s11n_test_01)
         tmp += mdist(rng) * x;
         tmp += mdist(rng) * y;
         tmp += mdist(rng) * z;
-        tmp = math::pow(tmp, powdist(rng));
+        tmp = piranha::pow(tmp, powdist(rng));
         BOOST_CHECK_EQUAL(tmp, (boost_roundtrip<boost::archive::text_oarchive, boost::archive::text_iarchive>(tmp)));
         BOOST_CHECK_EQUAL(tmp,
                           (boost_roundtrip<boost::archive::binary_oarchive, boost::archive::binary_iarchive>(tmp)));
@@ -314,8 +314,8 @@ BOOST_AUTO_TEST_CASE(series_msgpack_s11n_test_00)
     for (auto f : {msgpack_format::portable, msgpack_format::binary}) {
         BOOST_CHECK_EQUAL(pt1{}, (msgpack_roundtrip(pt1{}, f)));
         BOOST_CHECK_EQUAL(pt1{"x"}, (msgpack_roundtrip(pt1{"x"}, f)));
-        BOOST_CHECK_EQUAL(math::pow(2 * pt1{"x"} - 3 * pt1{"y"}, 10),
-                          (msgpack_roundtrip(math::pow(2 * pt1{"x"} - 3 * pt1{"y"}, 10), f)));
+        BOOST_CHECK_EQUAL(piranha::pow(2 * pt1{"x"} - 3 * pt1{"y"}, 10),
+                          (msgpack_roundtrip(piranha::pow(2 * pt1{"x"} - 3 * pt1{"y"}, 10), f)));
     }
     // Some random testing.
     pt1 x{"x"}, y{"y"}, z{"z"};
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(series_msgpack_s11n_test_00)
             tmp += mdist(rng) * x;
             tmp += mdist(rng) * y;
             tmp += mdist(rng) * z;
-            tmp = math::pow(tmp, powdist(rng));
+            tmp = piranha::pow(tmp, powdist(rng));
             BOOST_CHECK_EQUAL(tmp, (msgpack_roundtrip(tmp, f)));
             msgpack_roundtrip_file(tmp);
         }
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(series_msgpack_s11n_test_01)
         BOOST_CHECK_EQUAL(pt1{12}, (msgpack_roundtrip(pt1{12}, f)));
         BOOST_CHECK_EQUAL(pt1{14}, (msgpack_roundtrip(pt1{14}, f)));
         msgpack_roundtrip_file(pt1{14});
-        const auto p1 = math::pow(3 * x + y, 10);
+        const auto p1 = piranha::pow(3 * x + y, 10);
         BOOST_CHECK_EQUAL(p1, (msgpack_roundtrip(p1, f)));
         BOOST_CHECK_EQUAL(p1, (msgpack_roundtrip(p1, f)));
         msgpack_roundtrip_file(p1);
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(series_msgpack_s11n_test_01)
             tmp += mdist(rng) * x;
             tmp += mdist(rng) * y;
             tmp += mdist(rng) * z;
-            tmp = math::pow(tmp, powdist(rng));
+            tmp = piranha::pow(tmp, powdist(rng));
             BOOST_CHECK_EQUAL(tmp, (msgpack_roundtrip(tmp, f)));
             msgpack_roundtrip_file(tmp);
         }

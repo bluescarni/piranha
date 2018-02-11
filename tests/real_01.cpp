@@ -90,17 +90,17 @@ BOOST_AUTO_TEST_CASE(real_is_zero_test)
     BOOST_CHECK(is_is_zero_type<const real &>::value);
     BOOST_CHECK(is_is_zero_type<const real>::value);
     real r1;
-    BOOST_CHECK(math::is_zero(r1));
+    BOOST_CHECK(piranha::is_zero(r1));
     r1.neg();
-    BOOST_CHECK(math::is_zero(r1));
+    BOOST_CHECK(piranha::is_zero(r1));
     r1 = 123;
-    BOOST_CHECK(!math::is_zero(r1));
+    BOOST_CHECK(!piranha::is_zero(r1));
     r1 = real{"inf", 100};
-    BOOST_CHECK(!math::is_zero(r1));
+    BOOST_CHECK(!piranha::is_zero(r1));
     r1 = -1;
-    BOOST_CHECK(!math::is_zero(r1));
+    BOOST_CHECK(!piranha::is_zero(r1));
     r1 = real{"nan", 100};
-    BOOST_CHECK(!math::is_zero(r1));
+    BOOST_CHECK(!piranha::is_zero(r1));
 }
 
 BOOST_AUTO_TEST_CASE(real_pow_test)
@@ -124,24 +124,24 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
 #endif
     {
         real r1{2}, r2{5};
-        BOOST_CHECK_EQUAL(math::pow(r1, r2), 32);
-        BOOST_CHECK_EQUAL(math::pow(r1, 5), 32);
-        BOOST_CHECK_EQUAL(math::pow(2, r2), 32);
-        BOOST_CHECK_EQUAL(math::pow(r1, 5.), 32);
-        BOOST_CHECK_EQUAL(math::pow(2.l, r2), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(r1, r2), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(r1, 5), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(2, r2), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(r1, 5.), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(2.l, r2), 32);
 #if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
-        BOOST_CHECK_EQUAL(math::pow(r1, __int128_t(5)), 32);
-        BOOST_CHECK_EQUAL(math::pow(__uint128_t(2), r2), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(r1, __int128_t(5)), 32);
+        BOOST_CHECK_EQUAL(piranha::pow(__uint128_t(2), r2), 32);
 #endif
     }
     {
         // Verify perfect forwarding.
         real r0{5, 100}, r1{2, 100};
-        auto res = math::pow(std::move(r0), r1);
+        auto res = piranha::pow(std::move(r0), r1);
         BOOST_CHECK(res == 25);
         BOOST_CHECK(r0.get_mpfr_t()->_mpfr_d == nullptr);
         r0 = real{5, 100};
-        auto res2 = math::pow(r0, std::move(r1));
+        auto res2 = piranha::pow(r0, std::move(r1));
         BOOST_CHECK(res2 == 25);
         BOOST_CHECK(r1.get_mpfr_t()->_mpfr_d == nullptr);
     }
@@ -161,14 +161,14 @@ BOOST_AUTO_TEST_CASE(real_fma_test)
 
 BOOST_AUTO_TEST_CASE(real_sin_cos_test)
 {
-    BOOST_CHECK_EQUAL(math::cos(real{0, 4}), 1);
-    BOOST_CHECK_EQUAL(math::sin(real{0, 4}), 0);
+    BOOST_CHECK_EQUAL(piranha::cos(real{0, 4}), 1);
+    BOOST_CHECK_EQUAL(piranha::sin(real{0, 4}), 0);
     // Check stealing semantics.
     real x{1.23, 100};
-    auto tmp = math::sin(std::move(x));
+    auto tmp = piranha::sin(std::move(x));
     BOOST_CHECK(x.get_mpfr_t()->_mpfr_d == nullptr);
     x = real{1.23, 100};
-    tmp = math::cos(std::move(x));
+    tmp = piranha::cos(std::move(x));
     BOOST_CHECK(x.get_mpfr_t()->_mpfr_d == nullptr);
 }
 

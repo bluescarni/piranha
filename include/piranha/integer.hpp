@@ -92,8 +92,9 @@ struct negate_impl<mppp::integer<SSize>> {
         n.neg();
     }
 };
+}
 
-// Specialisation of the implementation of piranha::math::is_zero() for mp++'s integers.
+// Specialisation of the implementation of piranha::is_zero() for mp++'s integers.
 template <std::size_t SSize>
 class is_zero_impl<mppp::integer<SSize>>
 {
@@ -103,6 +104,9 @@ public:
         return n.is_zero();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::is_unitary() for mp++'s integers.
 template <std::size_t SSize>
@@ -133,6 +137,7 @@ struct abs_impl<mppp::integer<SSize>> {
         return mppp::abs(n);
     }
 };
+}
 
 template <std::size_t SSize>
 class sin_impl<mppp::integer<SSize>>
@@ -159,6 +164,9 @@ public:
         return mppp::integer<SSize>{1};
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::partial() for mp++'s integers.
 template <std::size_t SSize>
@@ -469,15 +477,7 @@ constexpr bool key_has_ipow_subs<Key, T>::value;
 inline namespace literals
 {
 
-/// Literal for arbitrary-precision integers.
-/**
- * @param s a literal string.
- *
- * @return a piranha::integer constructed from \p s.
- *
- * @throws unspecified any exception thrown by the constructor of
- * piranha::integer from string.
- */
+// Literal for arbitrary-precision integers.
 inline integer operator"" _z(const char *s)
 {
     return integer{s};

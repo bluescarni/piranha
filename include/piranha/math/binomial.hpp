@@ -42,9 +42,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace math
-{
-
 // The default (empty) implementation.
 template <typename T, typename U, typename = void>
 class binomial_impl
@@ -54,18 +51,17 @@ class binomial_impl
 inline namespace impl
 {
 
-// Enabler for math::binomial().
+// Enabler for binomial().
 template <typename T, typename U>
-using math_binomial_type_
-    = decltype(math::binomial_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
+using binomial_type_ = decltype(binomial_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
 
 template <typename T, typename U>
-using math_binomial_type = enable_if_t<is_returnable<math_binomial_type_<T, U>>::value, math_binomial_type_<T, U>>;
+using binomial_type = enable_if_t<is_returnable<binomial_type_<T, U>>::value, binomial_type_<T, U>>;
 }
 
 // Generalised binomial coefficient.
 template <typename T, typename U>
-inline math_binomial_type<T &&, U &&> binomial(T &&x, U &&y)
+inline binomial_type<T &&, U &&> binomial(T &&x, U &&y)
 {
     return binomial_impl<uncvref_t<T>, uncvref_t<U>>{}(std::forward<T>(x), std::forward<U>(y));
 }
@@ -102,14 +98,13 @@ public:
         return mppp::binomial(std::forward<T1>(x), std::forward<U1>(y));
     }
 };
-}
 
-// Implementation of the type trait to detect the availability of math::binomial().
+// Implementation of the type trait to detect the availability of binomial().
 inline namespace impl
 {
 
 template <typename T, typename U>
-using binomial_t = decltype(math::binomial(std::declval<const T &>(), std::declval<const U &>()));
+using binomial_t = decltype(piranha::binomial(std::declval<const T &>(), std::declval<const U &>()));
 }
 
 template <typename T, typename U>

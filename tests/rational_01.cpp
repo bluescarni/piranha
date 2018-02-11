@@ -93,14 +93,14 @@ struct is_zero_tester {
         BOOST_CHECK(is_is_zero_type<const q_type &>::value);
         BOOST_CHECK(is_is_zero_type<const q_type>::value);
         q_type q;
-        BOOST_CHECK(math::is_zero(q));
+        BOOST_CHECK(piranha::is_zero(q));
         q = 1;
-        BOOST_CHECK(!math::is_zero(q));
+        BOOST_CHECK(!piranha::is_zero(q));
         q = "-3/5";
-        BOOST_CHECK(!math::is_zero(q));
+        BOOST_CHECK(!piranha::is_zero(q));
         q = "1";
         q -= 1;
-        BOOST_CHECK(math::is_zero(q));
+        BOOST_CHECK(piranha::is_zero(q));
     }
 };
 
@@ -116,80 +116,80 @@ struct pow_tester {
         using q_type = mppp::rational<T::value>;
         using int_type = typename q_type::int_t;
         // A few simple tests.
-        BOOST_CHECK_EQUAL(math::pow(q_type(), 0), 1);
-        BOOST_CHECK_EQUAL(math::pow(q_type(), 0u), 1);
-        BOOST_CHECK_EQUAL(math::pow(q_type(), int_type()), 1);
-        BOOST_CHECK_EQUAL(math::pow(q_type(), 1), 0);
-        BOOST_CHECK_EQUAL(math::pow(q_type(), 2u), 0);
-        BOOST_CHECK_EQUAL(math::pow(q_type(), 3), 0);
-        BOOST_CHECK_EQUAL(math::pow(q_type(), 4ull), 0);
-        BOOST_CHECK_EQUAL(math::pow(q_type(), int_type(5)), 0);
-        BOOST_CHECK_EQUAL(math::pow(q_type(), static_cast<unsigned char>(5)), 0);
-        BOOST_CHECK_THROW(math::pow(q_type(), -1), mppp::zero_division_error);
-        BOOST_CHECK_THROW(math::pow(q_type(), char(-2)), mppp::zero_division_error);
-        BOOST_CHECK_THROW(math::pow(q_type(), -3ll), mppp::zero_division_error);
-        BOOST_CHECK_THROW(math::pow(q_type(), int_type(-3)), mppp::zero_division_error);
-        BOOST_CHECK_EQUAL(math::pow(q_type(23, 45), 7), q_type(3404825447ull, 373669453125ull));
-        BOOST_CHECK_EQUAL(math::pow(q_type(-23, 45), 7), q_type(-3404825447ll, 373669453125ull));
-        BOOST_CHECK_EQUAL(math::pow(q_type(-23, 45), -7), q_type(373669453125ull, -3404825447ll));
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), 0), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), 0u), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), int_type()), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), 1), 0);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), 2u), 0);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), 3), 0);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), 4ull), 0);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), int_type(5)), 0);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(), static_cast<unsigned char>(5)), 0);
+        BOOST_CHECK_THROW(piranha::pow(q_type(), -1), mppp::zero_division_error);
+        BOOST_CHECK_THROW(piranha::pow(q_type(), char(-2)), mppp::zero_division_error);
+        BOOST_CHECK_THROW(piranha::pow(q_type(), -3ll), mppp::zero_division_error);
+        BOOST_CHECK_THROW(piranha::pow(q_type(), int_type(-3)), mppp::zero_division_error);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(23, 45), 7), q_type(3404825447ull, 373669453125ull));
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(-23, 45), 7), q_type(-3404825447ll, 373669453125ull));
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(-23, 45), -7), q_type(373669453125ull, -3404825447ll));
         // Rational-fp.
         const auto radix = std::numeric_limits<double>::radix;
         BOOST_CHECK((is_exponentiable<q_type, float>::value));
         BOOST_CHECK((is_exponentiable<q_type, double>::value));
-        BOOST_CHECK_EQUAL(math::pow(q_type(1, radix), 2.), std::pow(1. / radix, 2.));
-        BOOST_CHECK((std::is_same<float, decltype(math::pow(q_type(1), 1.f))>::value));
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(1, radix), 2.), std::pow(1. / radix, 2.));
+        BOOST_CHECK((std::is_same<float, decltype(piranha::pow(q_type(1), 1.f))>::value));
 #if defined(MPPP_WITH_MPFR)
-        BOOST_CHECK((std::is_same<long double, decltype(math::pow(q_type(1, radix), 2.l))>::value));
-        BOOST_CHECK((std::is_same<long double, decltype(math::pow(2.l, q_type(1, radix)))>::value));
+        BOOST_CHECK((std::is_same<long double, decltype(piranha::pow(q_type(1, radix), 2.l))>::value));
+        BOOST_CHECK((std::is_same<long double, decltype(piranha::pow(2.l, q_type(1, radix)))>::value));
 #endif
         // Rational-rational.
         BOOST_CHECK((is_exponentiable<q_type, q_type>::value));
-        BOOST_CHECK_THROW(math::pow(q_type(1, radix), q_type(1, radix)), std::domain_error);
-        BOOST_CHECK_EQUAL(math::pow(q_type(2, 3), q_type(2)), q_type(4, 9));
-        BOOST_CHECK_EQUAL(math::pow(q_type(2, 3), q_type(-2)), q_type(9, 4));
-        BOOST_CHECK((std::is_same<q_type, decltype(math::pow(q_type(1, radix), q_type(1, radix)))>::value));
+        BOOST_CHECK_THROW(piranha::pow(q_type(1, radix), q_type(1, radix)), std::domain_error);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(2, 3), q_type(2)), q_type(4, 9));
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(2, 3), q_type(-2)), q_type(9, 4));
+        BOOST_CHECK((std::is_same<q_type, decltype(piranha::pow(q_type(1, radix), q_type(1, radix)))>::value));
         // Special cases.
-        BOOST_CHECK_EQUAL(math::pow(q_type(1), q_type(2, 3)), 1);
-        BOOST_CHECK_EQUAL(math::pow(q_type(1), q_type(-2, 3)), 1);
-        BOOST_CHECK_EQUAL(math::pow(q_type(0), q_type(2, 3)), 0);
-        BOOST_CHECK_EQUAL(math::pow(q_type(0), q_type(0)), 1);
-        BOOST_CHECK_THROW(math::pow(q_type(0), q_type(-2, 3)), mppp::zero_division_error);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(1), q_type(2, 3)), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(1), q_type(-2, 3)), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(0), q_type(2, 3)), 0);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(0), q_type(0)), 1);
+        BOOST_CHECK_THROW(piranha::pow(q_type(0), q_type(-2, 3)), mppp::zero_division_error);
         // Fp-rational.
         BOOST_CHECK((is_exponentiable<float, q_type>::value));
         BOOST_CHECK((is_exponentiable<double, q_type>::value));
-        BOOST_CHECK((std::is_same<decltype(math::pow(2., q_type(1, radix))), double>::value));
-        BOOST_CHECK((std::is_same<decltype(math::pow(2.f, q_type(1, radix))), float>::value));
-        BOOST_CHECK_EQUAL(math::pow(2., q_type(1, radix)), std::pow(2., 1. / radix));
+        BOOST_CHECK((std::is_same<decltype(piranha::pow(2., q_type(1, radix))), double>::value));
+        BOOST_CHECK((std::is_same<decltype(piranha::pow(2.f, q_type(1, radix))), float>::value));
+        BOOST_CHECK_EQUAL(piranha::pow(2., q_type(1, radix)), std::pow(2., 1. / radix));
         // Integral-rational.
         BOOST_CHECK((is_exponentiable<int, q_type>::value));
         BOOST_CHECK((is_exponentiable<int_type, q_type>::value));
-        BOOST_CHECK((std::is_same<q_type, decltype(math::pow(2, q_type(1, radix)))>::value));
-        BOOST_CHECK((std::is_same<q_type, decltype(math::pow(int_type(2), q_type(1, radix)))>::value));
-        BOOST_CHECK_THROW(math::pow(2, q_type(1, radix)), std::domain_error);
-        BOOST_CHECK_THROW(math::pow(int_type(2), q_type(1, radix)), std::domain_error);
-        BOOST_CHECK_EQUAL(math::pow(2, q_type(2)), 4);
-        BOOST_CHECK_EQUAL(math::pow(int_type(3), q_type(2)), 9);
+        BOOST_CHECK((std::is_same<q_type, decltype(piranha::pow(2, q_type(1, radix)))>::value));
+        BOOST_CHECK((std::is_same<q_type, decltype(piranha::pow(int_type(2), q_type(1, radix)))>::value));
+        BOOST_CHECK_THROW(piranha::pow(2, q_type(1, radix)), std::domain_error);
+        BOOST_CHECK_THROW(piranha::pow(int_type(2), q_type(1, radix)), std::domain_error);
+        BOOST_CHECK_EQUAL(piranha::pow(2, q_type(2)), 4);
+        BOOST_CHECK_EQUAL(piranha::pow(int_type(3), q_type(2)), 9);
 #if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
         BOOST_CHECK((is_exponentiable<__int128_t, q_type>::value));
         BOOST_CHECK((is_exponentiable<__uint128_t, q_type>::value));
         BOOST_CHECK((is_exponentiable<q_type, __int128_t>::value));
         BOOST_CHECK((is_exponentiable<q_type, __uint128_t>::value));
-        BOOST_CHECK_EQUAL(math::pow(__int128_t(2), q_type(2)), 4);
-        BOOST_CHECK_EQUAL(math::pow(__uint128_t(2), q_type(2)), 4);
-        BOOST_CHECK_EQUAL(math::pow(q_type(2), __int128_t(2)), 4);
-        BOOST_CHECK_EQUAL(math::pow(q_type(2), __uint128_t(2)), 4);
+        BOOST_CHECK_EQUAL(piranha::pow(__int128_t(2), q_type(2)), 4);
+        BOOST_CHECK_EQUAL(piranha::pow(__uint128_t(2), q_type(2)), 4);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(2), __int128_t(2)), 4);
+        BOOST_CHECK_EQUAL(piranha::pow(q_type(2), __uint128_t(2)), 4);
 #endif
         // Special cases.
-        BOOST_CHECK_EQUAL(math::pow(1, q_type(2, 3)), 1);
-        BOOST_CHECK_EQUAL(math::pow(int_type(1), q_type(2, 3)), 1);
-        BOOST_CHECK_EQUAL(math::pow(1, q_type(2, -3)), 1);
-        BOOST_CHECK_EQUAL(math::pow(int_type(1), q_type(-2, 3)), 1);
-        BOOST_CHECK_EQUAL(math::pow(0, q_type(2, 3)), 0);
-        BOOST_CHECK_EQUAL(math::pow(int_type(0), q_type(2, 3)), 0);
-        BOOST_CHECK_EQUAL(math::pow(0, q_type(0)), 1);
-        BOOST_CHECK_EQUAL(math::pow(int_type(0), q_type(0, 3)), 1);
-        BOOST_CHECK_THROW(math::pow(0, q_type(-1, 3)), mppp::zero_division_error);
-        BOOST_CHECK_THROW(math::pow(int_type(0), q_type(-1, 3)), mppp::zero_division_error);
+        BOOST_CHECK_EQUAL(piranha::pow(1, q_type(2, 3)), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(int_type(1), q_type(2, 3)), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(1, q_type(2, -3)), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(int_type(1), q_type(-2, 3)), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(0, q_type(2, 3)), 0);
+        BOOST_CHECK_EQUAL(piranha::pow(int_type(0), q_type(2, 3)), 0);
+        BOOST_CHECK_EQUAL(piranha::pow(0, q_type(0)), 1);
+        BOOST_CHECK_EQUAL(piranha::pow(int_type(0), q_type(0, 3)), 1);
+        BOOST_CHECK_THROW(piranha::pow(0, q_type(-1, 3)), mppp::zero_division_error);
+        BOOST_CHECK_THROW(piranha::pow(int_type(0), q_type(-1, 3)), mppp::zero_division_error);
     }
 };
 
@@ -256,14 +256,14 @@ struct sin_cos_tester {
     void operator()(const T &) const
     {
         using q_type = mppp::rational<T::value>;
-        BOOST_CHECK_EQUAL(math::sin(q_type()), 0);
-        BOOST_CHECK_EQUAL(math::cos(q_type()), 1);
-        BOOST_CHECK((std::is_same<q_type, decltype(math::cos(q_type()))>::value));
-        BOOST_CHECK((std::is_same<q_type, decltype(math::sin(q_type()))>::value));
-        BOOST_CHECK_EXCEPTION(math::sin(q_type(1)), std::domain_error, [](const std::domain_error &e) {
+        BOOST_CHECK_EQUAL(piranha::sin(q_type()), 0);
+        BOOST_CHECK_EQUAL(piranha::cos(q_type()), 1);
+        BOOST_CHECK((std::is_same<q_type, decltype(piranha::cos(q_type()))>::value));
+        BOOST_CHECK((std::is_same<q_type, decltype(piranha::sin(q_type()))>::value));
+        BOOST_CHECK_EXCEPTION(piranha::sin(q_type(1)), std::domain_error, [](const std::domain_error &e) {
             return boost::contains(e.what(), "cannot compute the sine of the non-zero rational 1");
         });
-        BOOST_CHECK_EXCEPTION(math::cos(q_type(1)), std::domain_error, [](const std::domain_error &e) {
+        BOOST_CHECK_EXCEPTION(piranha::cos(q_type(1)), std::domain_error, [](const std::domain_error &e) {
             return boost::contains(e.what(), "cannot compute the cosine of the non-zero rational 1");
         });
         BOOST_CHECK(is_sine_type<q_type>::value);
@@ -497,16 +497,16 @@ struct rational_binomial_tester {
         BOOST_CHECK((!are_binomial_types<rat_type, void>::value));
         BOOST_CHECK((!are_binomial_types<int_type, rat_type>::value));
         BOOST_CHECK((!are_binomial_types<rat_type, double>::value));
-        BOOST_CHECK((std::is_same<decltype(math::binomial(rat_type{7, 3}, 4)), rat_type>::value));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, 4), (rat_type{-7, 243}));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, -3}, int_type{4}), (rat_type{1820, 243}));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, static_cast<signed char>(-4)), 0);
+        BOOST_CHECK((std::is_same<decltype(piranha::binomial(rat_type{7, 3}, 4)), rat_type>::value));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, 4), (rat_type{-7, 243}));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, -3}, int_type{4}), (rat_type{1820, 243}));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, static_cast<signed char>(-4)), 0);
 #if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
         BOOST_CHECK((are_binomial_types<rat_type, __int128_t>::value));
         BOOST_CHECK((are_binomial_types<rat_type, __uint128_t>::value));
         BOOST_CHECK((!are_binomial_types<__int128_t, rat_type>::value));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, __int128_t(4)), (rat_type{-7, 243}));
-        BOOST_CHECK_EQUAL(math::binomial(rat_type{7, 3}, __uint128_t(4)), (rat_type{-7, 243}));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, __int128_t(4)), (rat_type{-7, 243}));
+        BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, __uint128_t(4)), (rat_type{-7, 243}));
 #endif
     }
 };

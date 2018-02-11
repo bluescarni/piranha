@@ -67,15 +67,7 @@ using rational = mppp::rational<1>;
 inline namespace literals
 {
 
-/// Literal for arbitrary-precision rationals.
-/**
- * @param s a literal string.
- *
- * @return a piranha::rational constructed from \p s.
- *
- * @throws unspecified any exception thrown by the constructor of
- * piranha::rational from string.
- */
+// Literal for arbitrary-precision rationals.
 inline rational operator"" _q(const char *s)
 {
     return rational{s};
@@ -112,10 +104,7 @@ struct print_tex_coefficient_impl<mppp::rational<SSize>> {
     }
 };
 
-namespace math
-{
-
-// Specialisation of the implementation of piranha::math::is_zero() for mp++'s rationals.
+// Specialisation of the implementation of piranha::is_zero() for mp++'s rationals.
 template <std::size_t SSize>
 class is_zero_impl<mppp::rational<SSize>>
 {
@@ -125,6 +114,9 @@ public:
         return q.is_zero();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::is_unitary() for mp++'s rationals.
 template <std::size_t SSize>
@@ -153,8 +145,9 @@ struct negate_impl<mppp::rational<SSize>> {
         q.neg();
     }
 };
+}
 
-// Specialisation of the implementation of piranha::math::pow() for mp++'s rationals.
+// Specialisation of the implementation of piranha::pow() for mp++'s rationals.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <typename U, mppp::RationalOpTypes<U> T>
 class pow_impl<T, U>
@@ -171,7 +164,7 @@ public:
     }
 };
 
-// Specialisation of the implementation of piranha::math::binomial() for mp++ rational top argument.
+// Specialisation of the implementation of piranha::binomial() for mp++ rational top argument.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <std::size_t SSize, mppp::RationalIntegralInteroperable<SSize> T>
 class binomial_impl<mppp::rational<SSize>, T>
@@ -213,6 +206,9 @@ public:
         return mppp::rational<SSize>{1};
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::abs() for mp++'s rationals.
 template <std::size_t SSize>

@@ -38,10 +38,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace math
-{
-
-// Default functor for the implementation of piranha::math::is_zero().
+// Default functor for the implementation of piranha::is_zero().
 template <typename T, typename = void>
 class is_zero_impl
 {
@@ -65,7 +62,7 @@ inline bool is_zero(const T &x)
     return is_zero_impl<T>{}(x);
 }
 
-// Specialisation of the piranha::math::is_zero() functor for C++ complex floating-point types.
+// Specialisation of the piranha::is_zero() functor for C++ complex floating-point types.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <CppComplex T>
 class is_zero_impl<T>
@@ -80,16 +77,15 @@ public:
         return c.real() == typename T::value_type(0) && c.imag() == typename T::value_type(0);
     }
 };
-}
 
 inline namespace impl
 {
 
 template <typename T>
-using is_zero_t = decltype(math::is_zero(std::declval<const T &>()));
+using is_zero_t = decltype(piranha::is_zero(std::declval<const T &>()));
 }
 
-// Type trait to detect the presence of the piranha::math::is_zero() function.
+// Type trait to detect the presence of the piranha::is_zero() function.
 template <typename T>
 using is_is_zero_type = is_detected<is_zero_t, T>;
 

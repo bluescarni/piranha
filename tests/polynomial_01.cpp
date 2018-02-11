@@ -508,14 +508,14 @@ struct pow_tester {
         {
             typedef polynomial<Cf, monomial<Expo>> p_type;
             p_type p{"x"};
-            BOOST_CHECK_EQUAL((2 * p).pow(4), p_type{math::pow(Cf(1) * 2, 4)} * p * p * p * p);
+            BOOST_CHECK_EQUAL((2 * p).pow(4), p_type{piranha::pow(Cf(1) * 2, 4)} * p * p * p * p);
             p *= p_type{"y"}.pow(2);
-            BOOST_CHECK_EQUAL((3 * p).pow(4), p_type{math::pow(Cf(1) * 3, 4)} * p * p * p * p);
+            BOOST_CHECK_EQUAL((3 * p).pow(4), p_type{piranha::pow(Cf(1) * 3, 4)} * p * p * p * p);
             if (!std::is_unsigned<Expo>::value) {
                 BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p.pow(-1)), "x**-1*y**-2");
             }
-            BOOST_CHECK_EQUAL(p.pow(0), p_type{math::pow(Cf(1), 0)});
-            BOOST_CHECK_EQUAL(p_type{3}.pow(4), math::pow(Cf(3), 4));
+            BOOST_CHECK_EQUAL(p.pow(0), p_type{piranha::pow(Cf(1), 0)});
+            BOOST_CHECK_EQUAL(p_type{3}.pow(4), piranha::pow(Cf(3), 4));
             BOOST_CHECK_THROW((p + p_type{"x"}).pow(-1), std::invalid_argument);
             BOOST_CHECK_EQUAL((p + p_type{"x"}).pow(0), Cf(1));
         }
@@ -552,14 +552,13 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 {
     using math::partial;
-    using math::pow;
     typedef polynomial<rational, monomial<short>> p_type1;
     p_type1 x{"x"}, y{"y"};
     BOOST_CHECK_EQUAL(partial(x * y, "x"), y);
     BOOST_CHECK_EQUAL(partial(x * y, "y"), x);
-    BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y, 2)).pow(10), "y"),
-                      10 * (x * y + x - 3 * pow(y, 2)).pow(9) * (x - 6 * y));
-    BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y, 2)).pow(10), "z"), 0);
+    BOOST_CHECK_EQUAL(partial((x * y + x - 3 * piranha::pow(y, 2)).pow(10), "y"),
+                      10 * (x * y + x - 3 * piranha::pow(y, 2)).pow(9) * (x - 6 * y));
+    BOOST_CHECK_EQUAL(partial((x * y + x - 3 * piranha::pow(y, 2)).pow(10), "z"), 0);
     BOOST_CHECK(is_differentiable<p_type1>::value);
     BOOST_CHECK(has_pbracket<p_type1>::value);
     BOOST_CHECK(has_transformation_is_canonical<p_type1>::value);

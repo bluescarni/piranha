@@ -106,7 +106,7 @@ struct poisson_series_tag {
 // - once we have a selectable key type, we must take care that in a few places we assume that the value type
 //   of the key is a C++ integral, but this might not be the case any more (e.g., in the sin/cos implementation
 //   we will need a safe cast) -> also in integrate(), there are a few occurrences of this (e.g., == 0 should
-//   become math::is_zero() etc.). Will also need the is_integrable check on the key type.
+//   become piranha::is_zero() etc.). Will also need the is_integrable check on the key type.
 template <typename Cf>
 class poisson_series
     : public power_series<
@@ -130,15 +130,15 @@ class poisson_series
     // Sin/cos utils.
     // Types coming out of sin()/cos() for the base type. These will also be the final types.
     template <typename T>
-    using sin_type = decltype(math::sin(std::declval<const typename T::base &>()));
+    using sin_type = sin_t<typename T::base>;
     template <typename T>
-    using cos_type = decltype(math::cos(std::declval<const typename T::base &>()));
+    using cos_type = cos_t<typename T::base>;
     // Case 0: Poisson series is not suitable for special sin() implementation. Just forward to the base one, via
     // casting.
     template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value, int>::type = 0>
     sin_type<T> sin_impl() const
     {
-        return math::sin(*static_cast<const base *>(this));
+        return piranha::sin(*static_cast<const base *>(this));
     }
     // Case 1: Poisson series is suitable for special sin() implementation via poly. This can fail at runtime depending
     // on what is contained in the coefficients. The return type is the same as the base one, as in this routine we only
@@ -152,7 +152,7 @@ class poisson_series
     template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value, int>::type = 0>
     cos_type<T> cos_impl() const
     {
-        return math::cos(*static_cast<const base *>(this));
+        return piranha::cos(*static_cast<const base *>(this));
     }
     template <typename T = poisson_series, typename std::enable_if<detail::poly_in_cf<T>::value, int>::type = 0>
     cos_type<T> cos_impl() const
@@ -165,12 +165,12 @@ class poisson_series
     template <typename T>
     static cos_type<T> special_sin_cos_failure(const T &s, const std::true_type &)
     {
-        return math::cos(static_cast<const typename T::base &>(s));
+        return piranha::cos(static_cast<const typename T::base &>(s));
     }
     template <typename T>
     static sin_type<T> special_sin_cos_failure(const T &s, const std::false_type &)
     {
-        return math::sin(static_cast<const typename T::base &>(s));
+        return piranha::sin(static_cast<const typename T::base &>(s));
     }
     // Convert an input polynomial to a Poisson series of type RetT. The conversion
     // will be successful if the polynomial can be reduced to an integral linear combination of
@@ -472,12 +472,12 @@ class poisson_series
             for (const auto &n_int : tmp_int) {
                 // NOTE: gcd is safe, operating on integers.
                 math::gcd3(cd, cd, n_int);
-                if (!first_nonzero_found && !math::is_zero(n_int)) {
+                if (!first_nonzero_found && !piranha::is_zero(n_int)) {
                     piranha_assert(n_int > 0);
                     first_nonzero_found = true;
                 }
             }
-            if (unlikely(math::is_zero(cd))) {
+            if (unlikely(piranha::is_zero(cd))) {
                 piranha_throw(std::invalid_argument, "an invalid trigonometric term was encountered while "
                                                      "attempting a time integration");
             }
@@ -555,11 +555,11 @@ public:
     /// Sine.
     /**
      * \note
-     * This template method is enabled only if math::sin() can be called on the class
-     * from which piranha::poisson_series derives (i.e., only if the default math::sin()
+     * This template method is enabled only if piranha::sin() can be called on the class
+     * from which piranha::poisson_series derives (i.e., only if the default piranha::sin()
      * implementation for series is appropriate).
      *
-     * In general, this method behaves exactly like the default implementation of piranha::math::sin() for series
+     * In general, this method behaves exactly like the default implementation of piranha::sin() for series
      * types. If, however, a polynomial appears in the hierarchy of coefficients, then this method
      * will attempt to extract an integral linear combination of symbolic arguments and use it to construct
      * a Poisson series with a single term, unitary coefficient and the trigonometric key built from the linear
@@ -575,7 +575,7 @@ public:
      * \f]
      *
      * If for any reason it is not possible to extract the linear integral combination,
-     * then this method will forward the call to the default implementation of piranha::math::sin() for series
+     * then this method will forward the call to the default implementation of piranha::sin() for series
      * types.
      *
      * @return the sine of \p this.
@@ -586,7 +586,7 @@ public:
      * - the constructors of coefficient, key and term types,
      * - the cast operator of piranha::integer,
      * - piranha::math::negate(),
-     * - piranha::math::sin(),
+     * - piranha::sin(),
      * - the extraction of a linear combination of integral arguments from the polynomial coefficient.
      */
     template <typename T = poisson_series>
@@ -631,7 +631,7 @@ public:
      *
      * @throws std::invalid_argument if the integration procedure fails.
      * @throws unspecified any exception thrown by:
-     * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast() and
+     * - piranha::math::partial(), piranha::is_zero(), piranha::math::integrate(), piranha::safe_cast() and
      *   piranha::math::negate(),
      * - the assignment operator of piranha::symbol_fset,
      * - term construction,
@@ -659,7 +659,7 @@ public:
                 continue;
             }
             // The variable is in the monomial, let's check if the variable is also in the coefficient.
-            if (math::is_zero(math::partial(it->m_cf, name))) {
+            if (piranha::is_zero(math::partial(it->m_cf, name))) {
                 // No variable in the coefficient, proceed with the integrated key and divide by multiplier.
                 poisson_series tmp;
                 tmp.set_symbol_set(this->m_symbol_set);
@@ -704,7 +704,7 @@ public:
      * @throws unspecified any exception thrown by:
      * - memory errors in standard containers,
      * - the public interfaces of piranha::symbol_fset, piranha::integer and piranha::series,
-     * - piranha::math::is_zero(), piranha::math::negate(),
+     * - piranha::is_zero(), piranha::math::negate(),
      * - the mathematical operations needed to compute the result,
      * - piranha::divisor::insert(),
      * - construction of the involved types.

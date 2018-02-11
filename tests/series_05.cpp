@@ -253,8 +253,8 @@ public:
 // Check that sin/cos methods that return unreturnable types on a series are disabled.
 BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 {
-    BOOST_CHECK_EQUAL(math::sin(g_series_type2<double, int>{}), math::sin(0.));
-    BOOST_CHECK_EQUAL(math::cos(g_series_type2<double, int>{}), math::cos(0.));
+    BOOST_CHECK_EQUAL(piranha::sin(g_series_type2<double, int>{}), piranha::sin(0.));
+    BOOST_CHECK_EQUAL(piranha::cos(g_series_type2<double, int>{}), piranha::cos(0.));
 }
 
 // Some evaluation tests after we added the improved checking + error message logic in series.

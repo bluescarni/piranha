@@ -879,7 +879,7 @@ struct evaluate_tester {
             BOOST_CHECK((key_is_evaluable<k_type, integer>::value));
             k_type k1;
             BOOST_CHECK((std::is_same<decltype(k1.evaluate(std::vector<integer>{}, symbol_fset{})),
-                                      decltype(math::pow(integer{}, T{}))>::value));
+                                      decltype(piranha::pow(integer{}, T{}))>::value));
             BOOST_CHECK_EQUAL(k1.evaluate(std::vector<integer>{}, symbol_fset{}), 1);
             BOOST_CHECK_EXCEPTION(k1.evaluate(std::vector<integer>{}, symbol_fset{"x"}), std::invalid_argument,
                                   [](const std::invalid_argument &e) {
@@ -912,25 +912,25 @@ struct evaluate_tester {
             k1 = k_type({T(2), T(4)});
             BOOST_CHECK_EQUAL(k1.evaluate(std::vector<integer>{3_z, 4_z}, symbol_fset{"x", "y"}), 2304);
             BOOST_CHECK((std::is_same<decltype(k1.evaluate(std::vector<double>{3.2, -4.3}, symbol_fset{"x", "y"})),
-                                      decltype(math::pow(double{}, T{}))>::value));
+                                      decltype(piranha::pow(double{}, T{}))>::value));
             BOOST_CHECK_EQUAL(k1.evaluate(std::vector<double>{3.2, -4.3}, symbol_fset{"x", "y"}),
-                              math::pow(3.2, 2) * math::pow(-4.3, 4));
+                              piranha::pow(3.2, 2) * piranha::pow(-4.3, 4));
             BOOST_CHECK((std::is_same<decltype(k1.evaluate(std::vector<rational>{rational(4, -3), rational(-1, -2)},
                                                            symbol_fset{"x", "y"})),
-                                      decltype(math::pow(rational{}, T{}))>::value));
+                                      decltype(piranha::pow(rational{}, T{}))>::value));
             BOOST_CHECK_EQUAL(
                 k1.evaluate(std::vector<rational>{rational(4, -3), rational(-1, -2)}, symbol_fset{"x", "y"}),
-                math::pow(rational(4, -3), 2) * math::pow(rational(-1, -2), 4));
+                piranha::pow(rational(4, -3), 2) * piranha::pow(rational(-1, -2), 4));
             k1 = k_type({T(-2), T(-4)});
             BOOST_CHECK_EQUAL(
                 k1.evaluate(std::vector<rational>{rational(4, -3), rational(-1, -2)}, symbol_fset{"x", "y"}),
-                math::pow(rational(4, -3), -2) * math::pow(rational(-1, -2), -4));
+                piranha::pow(rational(4, -3), -2) * piranha::pow(rational(-1, -2), -4));
 #if defined(MPPP_WITH_MPFR)
             BOOST_CHECK(
                 (std::is_same<decltype(k1.evaluate(std::vector<real>{real(5.678), real(1.234)}, symbol_fset{"x", "y"})),
-                              decltype(math::pow(real{}, T{}))>::value));
+                              decltype(piranha::pow(real{}, T{}))>::value));
             BOOST_CHECK_EQUAL(k1.evaluate(std::vector<real>{real(5.678), real(1.234)}, symbol_fset{"x", "y"}),
-                              math::pow(real(5.678), T(-2)) * math::pow(real(1.234), T(-4)));
+                              piranha::pow(real(5.678), T(-2)) * piranha::pow(real(1.234), T(-4)));
 #endif
         }
     };
@@ -975,7 +975,7 @@ struct subs_tester {
             BOOST_CHECK_EQUAL(ret.size(), 1u);
             BOOST_CHECK_EQUAL(ret[0].first, 1u);
             BOOST_CHECK(ret[0].second == k1);
-            BOOST_CHECK((std::is_same<decltype(ret[0].first), decltype(math::pow(integer{}, T{}))>::value));
+            BOOST_CHECK((std::is_same<decltype(ret[0].first), decltype(piranha::pow(integer{}, T{}))>::value));
             BOOST_CHECK_EXCEPTION(k1.template subs<integer>({}, symbol_fset{"x"}), std::invalid_argument,
                                   [](const std::invalid_argument &e) {
                                       return boost::contains(e.what(), "cannot perform substitution in a monomial: the "
@@ -1003,7 +1003,7 @@ struct subs_tester {
             auto ret2 = k1.template subs<real>({{0, real(-2.345)}}, symbol_fset{"x", "y"});
             BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
             BOOST_CHECK_EQUAL(ret2.size(), 1u);
-            BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(2)));
+            BOOST_CHECK_EQUAL(ret2[0u].first, piranha::pow(real(-2.345), T(2)));
             BOOST_CHECK((ret2[0u].second == k_type{T(0), T(3)}));
 #endif
             auto ret3 = k1.template subs<rational>({{0, -1_q / 2}}, symbol_fset{"x", "y"});
@@ -1235,11 +1235,11 @@ struct ipow_subs_tester {
             BOOST_CHECK(ret[0u].second == k1);
             ret = k1.ipow_subs(0, integer(1), integer(4), symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(4), T(2)));
+            BOOST_CHECK_EQUAL(ret[0u].first, piranha::pow(integer(4), T(2)));
             BOOST_CHECK(ret[0u].second == k_type({T(0)}));
             ret = k1.ipow_subs(0, integer(2), integer(4), symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(4), T(1)));
+            BOOST_CHECK_EQUAL(ret[0u].first, piranha::pow(integer(4), T(1)));
             BOOST_CHECK(ret[0u].second == k_type({T(0)}));
             ret = k1.ipow_subs(0, integer(-1), integer(4), symbol_fset{"x"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
@@ -1258,11 +1258,11 @@ struct ipow_subs_tester {
                                   });
             ret = k1.ipow_subs(0, integer(3), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
+            BOOST_CHECK_EQUAL(ret[0u].first, piranha::pow(integer(2), T(2)));
             BOOST_CHECK((ret[0u].second == k_type{T(1), T(2)}));
             ret = k1.ipow_subs(0, integer(4), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(1)));
+            BOOST_CHECK_EQUAL(ret[0u].first, piranha::pow(integer(2), T(1)));
             BOOST_CHECK((ret[0u].second == k_type{T(3), T(2)}));
             ret = k1.ipow_subs(0, integer(-4), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
@@ -1275,16 +1275,16 @@ struct ipow_subs_tester {
             BOOST_CHECK((ret[0u].second == k_type{T(-7), T(2)}));
             ret = k1.ipow_subs(0, integer(-4), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(1)));
+            BOOST_CHECK_EQUAL(ret[0u].first, piranha::pow(integer(2), T(1)));
             BOOST_CHECK((ret[0u].second == k_type{T(-3), T(2)}));
             ret = k1.ipow_subs(0, integer(-3), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
+            BOOST_CHECK_EQUAL(ret[0u].first, piranha::pow(integer(2), T(2)));
             BOOST_CHECK((ret[0u].second == k_type{T(-1), T(2)}));
             k1 = k_type({T(2), T(-7)});
             ret = k1.ipow_subs(1, integer(-3), integer(2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret.size(), 1u);
-            BOOST_CHECK_EQUAL(ret[0u].first, math::pow(integer(2), T(2)));
+            BOOST_CHECK_EQUAL(ret[0u].first, piranha::pow(integer(2), T(2)));
             BOOST_CHECK((ret[0u].second == k_type{T(2), T(-1)}));
             BOOST_CHECK_EXCEPTION(
                 k1.ipow_subs(1, integer(0), integer(2), symbol_fset{"x", "y"}), std::invalid_argument,
@@ -1296,13 +1296,13 @@ struct ipow_subs_tester {
 #if defined(MPPP_WITH_MPFR)
             auto ret2 = k1.ipow_subs(0, integer(-4), real(-2.345), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret2.size(), 1u);
-            BOOST_CHECK_EQUAL(ret2[0u].first, math::pow(real(-2.345), T(1)));
+            BOOST_CHECK_EQUAL(ret2[0u].first, piranha::pow(real(-2.345), T(1)));
             BOOST_CHECK((ret2[0u].second == k_type{T(-3), T(2)}));
             BOOST_CHECK((std::is_same<real, decltype(ret2[0u].first)>::value));
 #endif
             auto ret3 = k1.ipow_subs(0, integer(-3), rational(-1, 2), symbol_fset{"x", "y"});
             BOOST_CHECK_EQUAL(ret3.size(), 1u);
-            BOOST_CHECK_EQUAL(ret3[0u].first, math::pow(rational(-1, 2), T(2)));
+            BOOST_CHECK_EQUAL(ret3[0u].first, piranha::pow(rational(-1, 2), T(2)));
             BOOST_CHECK((ret3[0u].second == k_type{T(-1), T(2)}));
             BOOST_CHECK((std::is_same<rational, decltype(ret3[0u].first)>::value));
         }

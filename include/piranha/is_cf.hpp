@@ -34,6 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/detail/init.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/is_zero.hpp>
 #include <piranha/print_coefficient.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/type_traits.hpp>

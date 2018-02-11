@@ -82,8 +82,9 @@ struct negate_impl<real> {
         r.neg();
     }
 };
+}
 
-// Specialisation of piranha::math::is_zero() for piranha::real.
+// Specialisation of piranha::is_zero() for piranha::real.
 template <>
 class is_zero_impl<real>
 {
@@ -93,6 +94,9 @@ public:
         return r.zero_p();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::is_unitary() for piranha::real.
 template <>
@@ -108,8 +112,9 @@ struct is_unitary_impl<real> {
         return r.is_one();
     }
 };
+}
 
-// Specialisation of piranha::math::pow() for piranha::real.
+// Specialisation of piranha::pow() for piranha::real.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <typename U, mppp::RealOpTypes<U> T>
 class pow_impl<T, U>
@@ -147,6 +152,9 @@ public:
         return mppp::cos(std::forward<T>(r));
     }
 };
+
+namespace math
+{
 
 /// Specialisation of piranha::math::abs() for piranha::real.
 template <>

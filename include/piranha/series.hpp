@@ -1925,8 +1925,7 @@ private:
     // Exponentiation machinery.
     // The type resulting from the exponentiation of the coefficient of a series U to the power of T.
     template <typename T, typename U>
-    using pow_cf_type
-        = decltype(math::pow(std::declval<const typename U::term_type::cf_type &>(), std::declval<const T &>()));
+    using pow_cf_type = pow_t<typename U::term_type::cf_type, T>;
     // Type resulting from exponentiation via multiplication.
     template <typename U>
     using pow_m_type = decltype(std::declval<const U &>() * std::declval<const U &>());
@@ -2305,7 +2304,7 @@ public:
      * calling type to the power of \p x. The exponentiation algorithm proceeds as follows:
      * - if the series is single-coefficient, the result is a single-coefficient series in which the coefficient
      *   is the original coefficient (or zero, if the calling series is empty) raised to the power of \p x;
-     * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
+     * - if \p x is zero (as established by piranha::is_zero()), a series with a single term
      *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised
      *   to the power of zero is 1 - including empty series);
      * - if \p x represents a non-negative integral value, the return value is constructed via repeated multiplications;
@@ -2324,7 +2323,7 @@ public:
      * - series, term, coefficient and key construction,
      * - insert(),
      * - is_single_coefficient(),
-     * - piranha::math::pow(), piranha::math::is_zero() and piranha::safe_cast(),
+     * - piranha::pow(), piranha::is_zero() and piranha::safe_cast(),
      * - series multiplication,
      * - memory errors in standard containers,
      * - threading primitives,
@@ -2351,14 +2350,14 @@ public:
             ret_type retval;
             if (empty()) {
                 // An empty series is equal to zero.
-                retval.insert(r_term_type(math::pow(cf_type(0), x), key_type(symbol_fset{})));
+                retval.insert(r_term_type(piranha::pow(cf_type(0), x), key_type(symbol_fset{})));
             } else {
-                retval.insert(r_term_type(math::pow(m_container.begin()->m_cf, x), key_type(symbol_fset{})));
+                retval.insert(r_term_type(piranha::pow(m_container.begin()->m_cf, x), key_type(symbol_fset{})));
             }
             return retval;
         }
         // Handle the case of zero exponent.
-        if (math::is_zero(x)) {
+        if (piranha::is_zero(x)) {
             ret_type retval;
             retval.insert(r_term_type(r_cf_type(1), key_type(symbol_fset{})));
             return retval;
@@ -2971,8 +2970,9 @@ struct negate_impl<T, typename std::enable_if<is_series<T>::value>::type> {
         s.negate();
     }
 };
+}
 
-/// Specialisation of the piranha::math::is_zero() functor for piranha::series.
+/// Specialisation of the piranha::is_zero() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series.
  * The result will be computed via the series' <tt>empty()</tt> method.
@@ -2992,7 +2992,6 @@ public:
         return s.empty();
     }
 };
-}
 
 inline namespace impl
 {
@@ -3006,10 +3005,7 @@ using pow_series_enabler
     = enable_if_t<conjunction<is_series<Series>, is_detected<series_pow_member_t, Series, T>>::value>;
 }
 
-namespace math
-{
-
-/// Specialisation of the piranha::math::pow() functor for piranha::series.
+/// Specialisation of the piranha::pow() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series with
  * a method with the same signature as piranha::series::pow().
@@ -3040,7 +3036,6 @@ public:
         return s.pow(x);
     }
 };
-}
 
 namespace detail
 {
@@ -3175,45 +3170,45 @@ inline auto series_sin_impl(const T &s) -> decltype(s.sin())
 
 struct series_cf_sin_functor {
     template <typename T>
-    auto operator()(const T &x) const -> decltype(math::sin(x))
+    auto operator()(const T &x) const -> decltype(piranha::sin(x))
     {
-        return math::sin(x);
+        return piranha::sin(x);
     }
     static constexpr const char *name = "sine";
 };
 
-// 2. coefficient type supports math::sin() with a result equal to the original coefficient type.
+// 2. coefficient type supports piranha::sin() with a result equal to the original coefficient type.
 // NOTE: this overload and the one below do not conflict with the one above because it takes a series
 // as input argument: when used on a concrete series type, it will have to go through a to-base
 // conversion in order to be selected.
-template <
-    typename Cf, typename Key, typename Derived,
-    typename std::enable_if<
-        is_series<Derived>::value
-            && std::is_same<typename Derived::term_type::cf_type,
-                            decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-        int>::type
-    = 0>
+template <typename Cf, typename Key, typename Derived,
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(piranha::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
+          = 0>
 inline Derived series_sin_impl(const series<Cf, Key, Derived> &s)
 {
     return apply_cf_functor<series_cf_sin_functor, Derived>(s);
 }
 
-// 3. coefficient type supports math::sin() with a result different from the original coefficient type and the series
+// 3. coefficient type supports piranha::sin() with a result different from the original coefficient type and the series
 // can be rebound to this new type.
-template <
-    typename Cf, typename Key, typename Derived,
-    typename std::enable_if<
-        is_series<Derived>::value
-            && !std::is_same<typename Derived::term_type::cf_type,
-                             decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-        int>::type
-    = 0>
-inline series_rebind<Derived, decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>
+template <typename Cf, typename Key, typename Derived,
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && !std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(piranha::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
+          = 0>
+inline series_rebind<Derived, decltype(piranha::sin(std::declval<const typename Derived::term_type::cf_type &>()))>
 series_sin_impl(const series<Cf, Key, Derived> &s)
 {
     using ret_type
-        = series_rebind<Derived, decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>;
+        = series_rebind<Derived, decltype(piranha::sin(std::declval<const typename Derived::term_type::cf_type &>()))>;
     return apply_cf_functor<series_cf_sin_functor, ret_type>(s);
 }
 
@@ -3242,39 +3237,39 @@ inline auto series_cos_impl(const T &s) -> decltype(s.cos())
 
 struct series_cf_cos_functor {
     template <typename T>
-    auto operator()(const T &x) const -> decltype(math::cos(x))
+    auto operator()(const T &x) const -> decltype(piranha::cos(x))
     {
-        return math::cos(x);
+        return piranha::cos(x);
     }
     static constexpr const char *name = "cosine";
 };
 
-template <
-    typename Cf, typename Key, typename Derived,
-    typename std::enable_if<
-        is_series<Derived>::value
-            && std::is_same<typename Derived::term_type::cf_type,
-                            decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-        int>::type
-    = 0>
+template <typename Cf, typename Key, typename Derived,
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(piranha::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
+          = 0>
 inline Derived series_cos_impl(const series<Cf, Key, Derived> &s)
 {
     return apply_cf_functor<series_cf_cos_functor, Derived>(s);
 }
 
-template <
-    typename Cf, typename Key, typename Derived,
-    typename std::enable_if<
-        is_series<Derived>::value
-            && !std::is_same<typename Derived::term_type::cf_type,
-                             decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
-        int>::type
-    = 0>
-inline series_rebind<Derived, decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>
+template <typename Cf, typename Key, typename Derived,
+          typename std::enable_if<
+              is_series<Derived>::value
+                  && !std::is_same<
+                         typename Derived::term_type::cf_type,
+                         decltype(piranha::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,
+              int>::type
+          = 0>
+inline series_rebind<Derived, decltype(piranha::cos(std::declval<const typename Derived::term_type::cf_type &>()))>
 series_cos_impl(const series<Cf, Key, Derived> &s)
 {
     using ret_type
-        = series_rebind<Derived, decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>;
+        = series_rebind<Derived, decltype(piranha::cos(std::declval<const typename Derived::term_type::cf_type &>()))>;
     return apply_cf_functor<series_cf_cos_functor, ret_type>(s);
 }
 
@@ -3283,15 +3278,12 @@ using series_cos_enabler =
     typename std::enable_if<true_tt<decltype(series_cos_impl(std::declval<const T &>()))>::value>::type;
 }
 
-namespace math
-{
-
-/// Specialisation of the piranha::math::sin() functor for piranha::series.
+/// Specialisation of the piranha::sin() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series and:
  * - either the series type provides a const <tt>%sin()</tt> method returning a type which satisfies
  *   piranha::is_returnable, or, missing this method,
- * - the series' coefficient type \p Cf supports math::sin() yielding a type \p T and either
+ * - the series' coefficient type \p Cf supports piranha::sin() yielding a type \p T and either
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
@@ -3306,7 +3298,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - the <tt>Series::sin()</tt> method,
-     * - piranha::math::sin(),
+     * - piranha::sin(),
      * - term, coefficient, and key construction and/or insertion via piranha::series::insert(),
      * - returning the result.
      */
@@ -3316,12 +3308,12 @@ public:
     }
 };
 
-/// Specialisation of the piranha::math::cos() functor for piranha::series.
+/// Specialisation of the piranha::cos() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series and:
  * - either the series type provides a const <tt>%cos()</tt> method returning a type which satisfies
  *   piranha::is_returnable, or, missing this method,
- * - the series' coefficient type \p Cf supports math::cos() yielding a type \p T and either
+ * - the series' coefficient type \p Cf supports piranha::cos() yielding a type \p T and either
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
@@ -3336,7 +3328,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - the <tt>Series::cos()</tt> method,
-     * - piranha::math::cos(),
+     * - piranha::cos(),
      * - term, coefficient, and key construction and/or insertion via piranha::series::insert(),
      * - returning the result.
      */
@@ -3345,7 +3337,6 @@ public:
         return detail::series_cos_impl(s);
     }
 };
-}
 
 namespace detail
 {

@@ -518,7 +518,7 @@ public:
      *
      * This exponentiation override will check if the polynomial consists of a single-term with non-unitary
      * key. In that case, the return polynomial will consist of a single term with coefficient computed via
-     * piranha::math::pow() and key computed via the monomial exponentiation method. Otherwise, the base
+     * piranha::pow() and key computed via the monomial exponentiation method. Otherwise, the base
      * (i.e., default) exponentiation method will be used.
      *
      * @param x exponent.
@@ -527,7 +527,7 @@ public:
      *
      * @throws unspecified any exception thrown by:
      * - the <tt>is_unitary()</tt> and exponentiation methods of the key type,
-     * - piranha::math::pow(),
+     * - piranha::pow(),
      * - construction of coefficient, key and term,
      * - piranha::series::insert() , piranha::series::set_symbol_set() and piranha::series::pow().
      */
@@ -539,7 +539,7 @@ public:
         typedef typename term_type::cf_type cf_type;
         typedef typename term_type::key_type key_type;
         if (this->size() == 1u && !this->m_container.begin()->m_key.is_unitary(this->m_symbol_set)) {
-            cf_type cf(math::pow(this->m_container.begin()->m_cf, x));
+            cf_type cf(piranha::pow(this->m_container.begin()->m_cf, x));
             key_type key(this->m_container.begin()->m_key.pow(x, this->m_symbol_set));
             ret_type retval;
             retval.set_symbol_set(this->m_symbol_set);
@@ -584,7 +584,7 @@ public:
      * @throws std::invalid_argument if the integration procedure fails.
      * @throws unspecified any exception thrown by:
      * - the public interface of piranha::symbol_fset,
-     * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast()
+     * - piranha::math::partial(), piranha::is_zero(), piranha::math::integrate(), piranha::safe_cast()
      *   and piranha::math::negate(),
      * - term construction,
      * - coefficient construction, assignment and arithmetics,
@@ -609,7 +609,7 @@ public:
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
             // If the derivative of the coefficient is null, we just need to deal with
             // the integration of the key.
-            if (math::is_zero(math::partial(it->m_cf, name))) {
+            if (piranha::is_zero(math::partial(it->m_cf, name))) {
                 polynomial tmp;
                 tmp.set_symbol_set(aug_ss);
                 auto key_int = it->m_key.integrate(name, this->m_symbol_set);

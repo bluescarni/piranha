@@ -325,7 +325,7 @@ class divisor_series
                 bool first_nonzero_found = false, need_negate = false;
                 integer cd;
                 for (auto &n : v_int) {
-                    if (!first_nonzero_found && !math::is_zero(n)) {
+                    if (!first_nonzero_found && !piranha::is_zero(n)) {
                         if (n < 0) {
                             need_negate = true;
                         }
@@ -453,7 +453,7 @@ public:
      * - the extraction of an integral linear combination of symbols from \p p,
      * - memory errors in standard containers,
      * - the public interface of piranha::symbol_fset,
-     * - piranha::math::is_zero(), piranha::math::negate(),
+     * - piranha::is_zero(), piranha::math::negate(),
      * - the construction of terms, coefficients and keys,
      * - piranha::divisor::insert(),
      * - piranha::series::insert(), piranha::series::set_symbol_set(),

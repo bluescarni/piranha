@@ -364,7 +364,7 @@ public:
      * @param args the reference piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the sizes of \p this or \p trim_mask differ from the size of \p args.
-     * @throws unspecified any exception thrown by piranha::math::is_zero().
+     * @throws unspecified any exception thrown by piranha::is_zero().
      */
     void trim_identify(std::vector<char> &trim_mask, const symbol_fset &args) const
     {
@@ -381,7 +381,7 @@ public:
                               + ") differs from the size of the mask (" + std::to_string(trim_mask.size()) + ")");
         }
         for (decltype(trim_mask.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe)) {
-            if (!math::is_zero(*std::get<1>(sbe))) {
+            if (!piranha::is_zero(*std::get<1>(sbe))) {
                 // The current element of the array is nonzero, set the
                 // corresponding element in the mask to zero.
                 trim_mask[i] = 0;

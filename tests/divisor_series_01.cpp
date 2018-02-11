@@ -80,10 +80,10 @@ struct test_00_tester {
         BOOST_CHECK_EQUAL(s0 * s0, 9);
         BOOST_CHECK_EQUAL(s0 * 4, 12);
         BOOST_CHECK_EQUAL(4 * s0, 12);
-        BOOST_CHECK_EQUAL(math::pow(s0, 3), 27);
-        BOOST_CHECK_EQUAL(math::cos(s_type{0}), 1);
-        BOOST_CHECK_EQUAL(math::sin(s_type{0}), 0);
-        BOOST_CHECK_EQUAL(math::evaluate<int>(math::pow(s0, 3), {{"x", 4}}), 27);
+        BOOST_CHECK_EQUAL(piranha::pow(s0, 3), 27);
+        BOOST_CHECK_EQUAL(piranha::cos(s_type{0}), 1);
+        BOOST_CHECK_EQUAL(piranha::sin(s_type{0}), 0);
+        BOOST_CHECK_EQUAL(math::evaluate<int>(piranha::pow(s0, 3), {{"x", 4}}), 27);
         BOOST_CHECK(is_differentiable<s_type>::value);
         BOOST_CHECK_EQUAL(s_type{1}.partial("x"), 0);
         if (std::is_base_of<detail::polynomial_tag, T>::value) {
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
         // Define an EPS.
         using ps_type = poisson_series<s_type>;
         ps_type a{"a"}, b{"b"}, c{"c"};
-        auto p1 = 3 * a * b * math::cos(3 * c);
+        auto p1 = 3 * a * b * piranha::cos(3 * c);
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate()), "a*b*1/[(\\nu_{c})]*sin(3*c)");
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate().partial("a")), "b*1/[(\\nu_{c})]*sin(3*c)");
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate().partial("b")), "a*1/[(\\nu_{c})]*sin(3*c)");
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK((std::is_same<s_type, decltype(math::invert(s_type{}))>::value));
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)), "1/[(x)]");
         BOOST_CHECK_EQUAL(math::invert(s_type{2}), 1 / 2_q);
-        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x, -1)), "x**-1");
+        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(piranha::pow(x, -1)), "x**-1");
         BOOST_CHECK_THROW(math::invert(null), mppp::zero_division_error);
         BOOST_CHECK((std::is_same<decltype(x.invert()), s_type>::value));
         BOOST_CHECK((std::is_same<decltype(math::invert(x)), s_type>::value));
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK((std::is_same<s_type, decltype(math::invert(s_type{}))>::value));
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)), "1/[(x)]");
         BOOST_CHECK_EQUAL(math::invert(s_type{2}), 1 / 2_q);
-        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x, -1)), "x**-1");
+        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(piranha::pow(x, -1)), "x**-1");
         BOOST_CHECK_THROW(math::invert(null), mppp::zero_division_error);
         BOOST_CHECK((std::is_same<decltype(x.invert()), s_type>::value));
         BOOST_CHECK((std::is_same<decltype(math::invert(x)), s_type>::value));
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK((std::is_same<s_type, decltype(math::invert(s_type{}))>::value));
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)), "1/[(x)]");
         BOOST_CHECK_EQUAL(math::invert(s_type{2}), 1 / 2_q);
-        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x, -1)), "x**-1");
+        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(piranha::pow(x, -1)), "x**-1");
         BOOST_CHECK_THROW(math::invert(null), mppp::zero_division_error);
         BOOST_CHECK((std::is_same<decltype(x.invert()), s_type>::value));
         BOOST_CHECK((std::is_same<decltype(math::invert(x)), s_type>::value));
@@ -390,13 +390,13 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         BOOST_CHECK(is_invertible<s_type>::value);
         BOOST_CHECK((std::is_same<s_type, decltype(math::invert(s_type{}))>::value));
         s_type x{"x"}, y{"y"}, null;
-        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2 * x, -1)), "1/2*x**-1");
+        BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(piranha::pow(2 * x, -1)), "1/2*x**-1");
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(2 * x)), "1/2*1/[(x)]");
-        BOOST_CHECK_THROW(math::invert(math::cos(2 * x)), std::invalid_argument);
-        BOOST_CHECK_THROW(math::pow(x + y, -1), std::invalid_argument);
+        BOOST_CHECK_THROW(math::invert(piranha::cos(2 * x)), std::invalid_argument);
+        BOOST_CHECK_THROW(piranha::pow(x + y, -1), std::invalid_argument);
         BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-2 * x + 4 * y)), "-1/2*1/[(x-2*y)]");
         BOOST_CHECK_THROW(math::invert(null), mppp::zero_division_error);
-        BOOST_CHECK_THROW(math::pow(null, -1), mppp::zero_division_error);
+        BOOST_CHECK_THROW(piranha::pow(null, -1), mppp::zero_division_error);
     }
 }
 

@@ -263,21 +263,22 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
         BOOST_CHECK((!has_truncate_degree<st, std::string>::value));
         st x("x"), y("y"), z("z"), a("a"), b("b");
         // (x + y**2/4 + 3*x*y*z/7) * cos(a) + (x*y+y*z/3+3*z**2*x/8) * sin(a+b)
-        st s0 = (x + y * y / 4 + 3 * z * x * y / 7) * math::cos(a)
-                + (x * y + z * y / 3 + 3 * z * z * x / 8) * math::sin(a + b);
+        st s0 = (x + y * y / 4 + 3 * z * x * y / 7) * piranha::cos(a)
+                + (x * y + z * y / 3 + 3 * z * z * x / 8) * piranha::sin(a + b);
         BOOST_CHECK_EQUAL(s0.truncate_degree(2),
-                          (x + y * y / 4) * math::cos(a) + (x * y + z * y / 3) * math::sin(a + b));
-        BOOST_CHECK_EQUAL(math::truncate_degree(s0, 1l), x * math::cos(a));
+                          (x + y * y / 4) * piranha::cos(a) + (x * y + z * y / 3) * piranha::sin(a + b));
+        BOOST_CHECK_EQUAL(math::truncate_degree(s0, 1l), x * piranha::cos(a));
         BOOST_CHECK_EQUAL(math::truncate_degree(s0, -1ll), 0);
         BOOST_CHECK_EQUAL(math::truncate_degree(s0, 1l, {"x"}),
-                          (x + y * y / 4 + 3 * z * x * y / 7) * math::cos(a)
-                              + (x * y + z * y / 3 + 3 * z * z * x / 8) * math::sin(a + b));
+                          (x + y * y / 4 + 3 * z * x * y / 7) * piranha::cos(a)
+                              + (x * y + z * y / 3 + 3 * z * z * x / 8) * piranha::sin(a + b));
         BOOST_CHECK_EQUAL(math::truncate_degree(s0, char(0), {"x"}),
-                          y * y / 4 * math::cos(a) + z * y / 3 * math::sin(a + b));
+                          y * y / 4 * piranha::cos(a) + z * y / 3 * piranha::sin(a + b));
         BOOST_CHECK_EQUAL(math::truncate_degree(s0, char(1), {"y", "x"}),
-                          x * math::cos(a) + (z * y / 3 + 3 * z * z * x / 8) * math::sin(a + b));
+                          x * piranha::cos(a) + (z * y / 3 + 3 * z * z * x / 8) * piranha::sin(a + b));
         BOOST_CHECK_EQUAL(math::truncate_degree(s0, integer(1), {"z"}),
-                          (x + y * y / 4 + 3 * z * x * y / 7) * math::cos(a) + (x * y + z * y / 3) * math::sin(a + b));
+                          (x + y * y / 4 + 3 * z * x * y / 7) * piranha::cos(a)
+                              + (x * y + z * y / 3) * piranha::sin(a + b));
         // Test with non-existing variable.
         BOOST_CHECK_EQUAL(math::truncate_degree(s0, 0, {"foo", "bar"}), s0);
     }

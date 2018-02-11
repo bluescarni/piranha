@@ -56,6 +56,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/polynomial.hpp>
 #include <piranha/rational.hpp>
@@ -612,7 +613,7 @@ struct evaluate_tester {
 #if defined(MPPP_WITH_MPFR)
         // A simple test with real.
         BOOST_CHECK_EQUAL(d.template evaluate<real>({-1.5_r, 2.5_r}, symbol_fset{"x", "y"}),
-                          1 / (math::pow(-1.5_r - 2.5_r * 2, 2) * math::pow(-1.5_r * 2 + 7 * 2.5_r, 3)));
+                          1 / (piranha::pow(-1.5_r - 2.5_r * 2, 2) * piranha::pow(-1.5_r * 2 + 7 * 2.5_r, 3)));
 #endif
     }
 };

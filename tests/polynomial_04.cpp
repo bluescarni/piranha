@@ -222,29 +222,30 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
         BOOST_CHECK_EQUAL(p_type1{"x"}.template subs<integer>({{"x", integer(1)}}), 1);
         BOOST_CHECK_EQUAL(p_type1{"x"}.template subs<p_type1>({{"x", p_type1{"x"}}}), p_type1{"x"});
         p_type1 x{"x"}, y{"y"}, z{"z"};
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).template subs<integer>({{"x", integer(3)}}), 9 + 3 * y + z);
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).template subs<rational>({{"y", rational(3, 2)}}),
+        BOOST_CHECK_EQUAL((piranha::pow(x, 2) + x * y + z).template subs<integer>({{"x", integer(3)}}), 9 + 3 * y + z);
+        BOOST_CHECK_EQUAL((piranha::pow(x, 2) + x * y + z).template subs<rational>({{"y", rational(3, 2)}}),
                           x * x + x * rational(3, 2) + z);
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).template subs<rational>({{"k", rational(3, 2)}}),
+        BOOST_CHECK_EQUAL((piranha::pow(x, 2) + x * y + z).template subs<rational>({{"k", rational(3, 2)}}),
                           x * x + x * y + z);
-        BOOST_CHECK_EQUAL(math::pow(x, -1).template subs<p_type1>({{"x", math::pow(x, -1)}}), x);
+        BOOST_CHECK_EQUAL(piranha::pow(x, -1).template subs<p_type1>({{"x", piranha::pow(x, -1)}}), x);
         BOOST_CHECK_EQUAL(
-            (math::pow(x, 2) + x * y + z)
+            (piranha::pow(x, 2) + x * y + z)
                 .template subs<rational>({{"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}),
-            math::evaluate<rational>(math::pow(x, 2) + x * y + z,
+            math::evaluate<rational>(piranha::pow(x, 2) + x * y + z,
                                      {{"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
         BOOST_CHECK_EQUAL(
-            math::subs<rational>(math::pow(x, 2) + x * y + z,
+            math::subs<rational>(piranha::pow(x, 2) + x * y + z,
                                  {{"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}),
-            math::evaluate<rational>(math::pow(x, 2) + x * y + z,
+            math::evaluate<rational>(piranha::pow(x, 2) + x * y + z,
                                      {{"x", rational(3, 2)}, {"y", rational(4, 5)}, {"z", -rational(6, 7)}}));
         BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.template subs<integer>({{"x", integer(1)}})), p_type1>::value));
         BOOST_CHECK(
             (std::is_same<decltype(p_type1{"x"}.template subs<rational>({{"x", rational(1)}})), p_type1>::value));
-        BOOST_CHECK_EQUAL((math::pow(x, 2) + x * y + z).template subs<rational>({{"k", rational(3, 2)}}),
+        BOOST_CHECK_EQUAL((piranha::pow(x, 2) + x * y + z).template subs<rational>({{"k", rational(3, 2)}}),
                           x * x + x * y + z);
-        BOOST_CHECK_EQUAL((math::pow(y + 4 * z, 5) * math::pow(x, -1)).template subs<rational>({{"x", rational(3)}}),
-                          (math::pow(y + 4 * z, 5)) / 3);
+        BOOST_CHECK_EQUAL(
+            (piranha::pow(y + 4 * z, 5) * piranha::pow(x, -1)).template subs<rational>({{"x", rational(3)}}),
+            (piranha::pow(y + 4 * z, 5)) / 3);
     }
 #if defined(MPPP_WITH_MPFR)
     {
@@ -255,11 +256,11 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
         BOOST_CHECK((!has_subs<p_type2, std::string>::value));
         p_type2 x{"x"}, y{"y"};
         BOOST_CHECK_EQUAL((x * x * x + y * y).template subs<real>({{"x", real(1.234)}}),
-                          y * y + math::pow(real(1.234), 3));
+                          y * y + piranha::pow(real(1.234), 3));
         BOOST_CHECK_EQUAL((x * x * x + y * y).template subs<real>({{"x", real(1.234)}, {"y", real(-5.678)}}),
-                          math::pow(real(-5.678), 2) + math::pow(real(1.234), 3));
+                          piranha::pow(real(-5.678), 2) + piranha::pow(real(1.234), 3));
         BOOST_CHECK_EQUAL(math::subs<real>(x * x * x + y * y, {{"x", real(1.234)}, {"y", real(-5.678)}}),
-                          math::pow(real(-5.678), 2) + math::pow(real(1.234), 3));
+                          piranha::pow(real(-5.678), 2) + piranha::pow(real(1.234), 3));
     }
 #endif
     typedef polynomial<integer, monomial<long>> p_type3;
@@ -271,10 +272,11 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
     BOOST_CHECK_EQUAL(
         (x * x * x + y * y + z * y * x)
             .template subs<integer>({{"x", integer(2)}, {"y", integer(-3)}, {"z", integer(4)}, {"k", integer()}}),
-        math::pow(integer(2), 3) + math::pow(integer(-3), 2) + integer(2) * integer(-3) * integer(4));
+        piranha::pow(integer(2), 3) + piranha::pow(integer(-3), 2) + integer(2) * integer(-3) * integer(4));
     BOOST_CHECK_EQUAL(math::subs<integer>(x * x * x + y * y + z * y * x,
                                           {{"x", integer(2)}, {"y", integer(-3)}, {"z", integer(4)}, {"k", integer()}}),
-                      math::pow(integer(2), 3) + math::pow(integer(-3), 2) + integer(2) * integer(-3) * integer(4));
+                      piranha::pow(integer(2), 3) + piranha::pow(integer(-3), 2)
+                          + integer(2) * integer(-3) * integer(4));
     BOOST_CHECK_EQUAL(
         (x * x * x + y * y + z * y * x)
             .template subs<integer>({{"x", integer(0)}, {"y", integer(0)}, {"z", integer(0)}, {"k", integer()}}),

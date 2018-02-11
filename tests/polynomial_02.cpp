@@ -251,14 +251,14 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
         BOOST_CHECK((has_ipow_subs<p_type2, integer>::value));
         p_type2 x{"x"}, y{"y"};
         BOOST_CHECK_EQUAL((x * x * x + y * y).ipow_subs("x", integer(1), real(1.234)),
-                          y * y + math::pow(real(1.234), 3));
+                          y * y + piranha::pow(real(1.234), 3));
         BOOST_CHECK_EQUAL((x * x * x + y * y).ipow_subs("x", integer(3), real(1.234)), y * y + real(1.234));
         BOOST_CHECK_EQUAL(
             (x * x * x + y * y).ipow_subs("x", integer(2), real(1.234)).ipow_subs("y", integer(2), real(-5.678)),
             real(-5.678) + real(1.234) * x);
         BOOST_CHECK_EQUAL(
             math::ipow_subs(x * x * x + y * y, "x", integer(1), real(1.234)).ipow_subs("y", integer(1), real(-5.678)),
-            math::pow(real(-5.678), 2) + math::pow(real(1.234), 3));
+            piranha::pow(real(-5.678), 2) + piranha::pow(real(1.234), 3));
     }
 #endif
     {
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(polynomial_invert_test)
     BOOST_CHECK_EQUAL(math::invert(pt0{1}), 1);
     BOOST_CHECK_EQUAL(math::invert(pt0{2}), 0);
     BOOST_CHECK_THROW(math::invert(pt0{0}), mppp::zero_division_error);
-    BOOST_CHECK_EQUAL(math::invert(pt0{"x"}), math::pow(pt0{"x"}, -1));
+    BOOST_CHECK_EQUAL(math::invert(pt0{"x"}), piranha::pow(pt0{"x"}, -1));
     using pt1 = polynomial<rational, monomial<long>>;
     BOOST_CHECK(is_invertible<pt1>::value);
     BOOST_CHECK((std::is_same<pt1, decltype(math::invert(pt1{}))>::value));

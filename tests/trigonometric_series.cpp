@@ -55,8 +55,6 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 {
-    using math::cos;
-    using math::sin;
     typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
     p_type1 x{"x"}, y{"y"};
     BOOST_CHECK_EQUAL(x.t_degree(), 0);
@@ -177,12 +175,13 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
     BOOST_CHECK_EQUAL(math::t_degree(p_type2{}), 0);
     BOOST_CHECK_EQUAL(math::t_degree(p_type2{"x"}), 0);
     BOOST_CHECK_EQUAL(math::t_degree(p_type2{p_type1{"x"}}), 0);
-    BOOST_CHECK_EQUAL(math::t_degree(p_type2{math::cos(p_type1{"x"})}), 1);
-    BOOST_CHECK_EQUAL(math::t_degree(p_type2{math::cos(p_type1{"x"} - p_type1{"y"})}), 0);
-    BOOST_CHECK_EQUAL(math::t_ldegree(p_type2{1 + math::cos(p_type1{"x"} + p_type1{"y"})}), 0);
-    BOOST_CHECK_EQUAL(math::t_order(p_type2{math::cos(p_type1{"x"} - p_type1{"y"})}), 2);
+    BOOST_CHECK_EQUAL(math::t_degree(p_type2{piranha::cos(p_type1{"x"})}), 1);
+    BOOST_CHECK_EQUAL(math::t_degree(p_type2{piranha::cos(p_type1{"x"} - p_type1{"y"})}), 0);
+    BOOST_CHECK_EQUAL(math::t_ldegree(p_type2{1 + piranha::cos(p_type1{"x"} + p_type1{"y"})}), 0);
+    BOOST_CHECK_EQUAL(math::t_order(p_type2{piranha::cos(p_type1{"x"} - p_type1{"y"})}), 2);
     BOOST_CHECK_EQUAL(
-        math::t_lorder(p_type2{math::cos(p_type1{"x"} - p_type1{"y"}) + math::cos(p_type1{"x"} + p_type1{"y"})}), 2);
+        math::t_lorder(p_type2{piranha::cos(p_type1{"x"} - p_type1{"y"}) + piranha::cos(p_type1{"x"} + p_type1{"y"})}),
+        2);
     // Type traits checks.
     using t_deg_type = decltype(std::make_signed<std::size_t>::type(0) + std::make_signed<std::size_t>::type(0));
     BOOST_CHECK((std::is_same<t_deg_type, decltype(math::t_degree(p_type1{}))>::value));
@@ -361,7 +360,7 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_failures_test)
 BOOST_AUTO_TEST_CASE(trigonometric_series_serialization_test)
 {
     using stype = poisson_series<polynomial<rational, monomial<short>>>;
-    stype x("x"), y("y"), z = y + math::cos(x + y), tmp;
+    stype x("x"), y("y"), z = y + piranha::cos(x + y), tmp;
     std::stringstream ss;
     {
         boost::archive::text_oarchive oa(ss);
