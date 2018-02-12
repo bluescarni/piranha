@@ -21,7 +21,7 @@ conda config --add channels conda-forge --force
 conda_pkgs="cmake boost-cpp bzip2 zlib msgpack-c mppp"
 
 if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
-    conda_pkgs="$conda_pkgs pip"
+    conda_pkgs="$conda_pkgs pip python=3"
 fi
 
 conda create -q -p $deps_dir -y $conda_pkgs
