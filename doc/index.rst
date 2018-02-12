@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the Piranha documentation!
-=====================================
+Welcome to Piranha's documentation!
+===================================
 
 Piranha is a computer-algebra library for the symbolic manipulation of sparse
 multivariate polynomials and other closely-related symbolic objects

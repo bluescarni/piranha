@@ -11,7 +11,7 @@ if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
     # Make sure we run CMake and generate the sphinx config file.
     CXX=g++-4.8 CC=gcc-4.8 cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes ../;
 
-    cd ../doc/sphinx;
+    cd ../doc;
     pip install sphinx requests[security] guzzle_sphinx_theme;
     export SPHINX_OUTPUT=`make html linkcheck 2>&1 >/dev/null`;
     if [[ "${SPHINX_OUTPUT}" != "" ]]; then
