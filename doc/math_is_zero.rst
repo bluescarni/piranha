@@ -56,7 +56,7 @@ Concepts
 Implementations
 ---------------
 
-.. cpp:class:: template <typename T, typename Enable = void> piranha::is_zero_impl
+.. cpp:class:: template <typename T> piranha::is_zero_impl
 
    Unspecialised version of the function object implementing :cpp:func:`piranha::is_zero()`.
 

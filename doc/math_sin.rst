@@ -58,7 +58,7 @@ Concepts
 Implementations
 ---------------
 
-.. cpp:class:: template <typename T, typename Enable = void> piranha::sin_impl
+.. cpp:class:: template <typename T> piranha::sin_impl
 
    Unspecialised version of the function object implementing :cpp:func:`piranha::sin()`.
 

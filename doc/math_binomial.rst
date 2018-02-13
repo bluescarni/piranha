@@ -58,7 +58,7 @@ Concepts
 Implementations
 ---------------
 
-.. cpp:class:: template <typename T, typename U, typename Enable = void> piranha::binomial_impl
+.. cpp:class:: template <typename T, typename U> piranha::binomial_impl
 
    Unspecialised version of the function object implementing :cpp:func:`piranha::binomial()`.
 

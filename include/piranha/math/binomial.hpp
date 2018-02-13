@@ -43,7 +43,12 @@ namespace piranha
 {
 
 // The default (empty) implementation.
-template <typename T, typename U, typename = void>
+template <typename T, typename U
+#if !defined(PIRANHA_HAVE_CONCEPTS)
+          ,
+          typename = void
+#endif
+          >
 class binomial_impl
 {
 };

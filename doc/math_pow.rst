@@ -59,7 +59,7 @@ Concepts
 Implementations
 ---------------
 
-.. cpp:class:: template <typename T, typename U, typename Enable = void> piranha::pow_impl
+.. cpp:class:: template <typename T, typename U> piranha::pow_impl
 
    Unspecialised version of the function object implementing :cpp:func:`piranha::pow()`.
 
