@@ -11,3 +11,4 @@ The following subsections contain the detailed documentation of piranha's public
    numerical_types.rst
    concepts.rst
    math.rst
+   key_interface.rst
