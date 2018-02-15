@@ -557,16 +557,6 @@ public:
     {
         return m_container.empty() || (m_container.begin()->v.size() == args.size());
     }
-    /// Zero check.
-    /**
-     * A divisor can never be zero.
-     *
-     * @return \p false.
-     */
-    bool is_zero(const symbol_fset &) const
-    {
-        return false;
-    }
     /// Check if divisor is unitary.
     /**
      * Only an empty divisor is considered unitary.

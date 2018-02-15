@@ -204,7 +204,6 @@ struct key02 {
     bool operator==(const key02 &) const;
     bool operator!=(const key02 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;

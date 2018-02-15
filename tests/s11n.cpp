@@ -370,7 +370,6 @@ struct keya {
     bool operator==(const keya &) const;
     bool operator!=(const keya &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     keya merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
@@ -393,7 +392,6 @@ struct keyb {
     bool operator==(const keyb &) const;
     bool operator!=(const keyb &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     keyb merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
@@ -681,7 +679,6 @@ struct key01 {
     bool operator==(const key01 &) const;
     bool operator!=(const key01 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     key01 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
@@ -707,7 +704,6 @@ struct key02 {
     bool operator==(const key02 &) const;
     bool operator!=(const key02 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;

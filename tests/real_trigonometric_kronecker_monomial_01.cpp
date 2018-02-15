@@ -52,6 +52,7 @@ see https://www.gnu.org/licenses/. */
 #endif
 
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
@@ -237,14 +238,14 @@ struct is_zero_tester {
     void operator()(const T &) const
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
-        BOOST_CHECK(!k_type().is_zero(symbol_fset{}));
-        BOOST_CHECK(!k_type(symbol_fset{"a"}).is_zero(symbol_fset{}));
-        BOOST_CHECK(!(k_type{0, 0}.is_zero(symbol_fset{})));
-        BOOST_CHECK(!(k_type(1, false).is_zero(symbol_fset{"a"})));
-        BOOST_CHECK((k_type(0, false).is_zero(symbol_fset{"a"})));
+        BOOST_CHECK(!piranha::key_is_zero(k_type(), symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(k_type(symbol_fset{"a"}), symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(k_type{0, 0}, symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(k_type(1, false), symbol_fset{"a"}));
+        BOOST_CHECK(piranha::key_is_zero(k_type(0, false), symbol_fset{"a"}));
         k_type k{0, -1};
         k.set_flavour(false);
-        BOOST_CHECK(!k.is_zero(symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(k, symbol_fset{}));
     }
 };
 

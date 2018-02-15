@@ -51,7 +51,6 @@ struct mock_key {
     bool operator==(const mock_key &) const;
     bool operator!=(const mock_key &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     mock_key merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
@@ -72,7 +71,6 @@ struct mock_key_00 {
     bool operator==(const mock_key_00 &) const;
     bool operator!=(const mock_key_00 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     mock_key_00 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;

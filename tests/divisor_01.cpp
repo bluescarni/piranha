@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/vector_hasher.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
@@ -351,17 +352,17 @@ struct ci_tester {
         using d_type = divisor<T>;
         d_type d0;
         BOOST_CHECK(d0.is_compatible(symbol_fset{}));
-        BOOST_CHECK(!d0.is_zero(symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(d0, symbol_fset{}));
         BOOST_CHECK(d0.is_compatible(symbol_fset{"foo", "bar"}));
-        BOOST_CHECK(!d0.is_zero(symbol_fset{"foo", "bar"}));
+        BOOST_CHECK(!piranha::key_is_zero(d0, symbol_fset{"foo", "bar"}));
         std::vector<T> tmp;
         T exponent(1);
         tmp = {T(1)};
         d0.insert(tmp.begin(), tmp.end(), exponent);
         BOOST_CHECK(!d0.is_compatible(symbol_fset{"foo", "bar"}));
-        BOOST_CHECK(!d0.is_zero(symbol_fset{"foo", "bar"}));
+        BOOST_CHECK(!piranha::key_is_zero(d0, symbol_fset{"foo", "bar"}));
         BOOST_CHECK(!d0.is_compatible(symbol_fset{}));
-        BOOST_CHECK(!d0.is_zero(symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(d0, symbol_fset{}));
     }
 };
 

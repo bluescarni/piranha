@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_monomial.hpp>
@@ -297,9 +298,9 @@ struct is_zero_tester {
         {
             typedef monomial<T, U> monomial_type;
             monomial_type m0;
-            BOOST_CHECK(!m0.is_zero(symbol_fset{}));
+            BOOST_CHECK(!piranha::key_is_zero(m0, symbol_fset{}));
             monomial_type m1{T(0)};
-            BOOST_CHECK(!m1.is_zero(symbol_fset({"foobarize"})));
+            BOOST_CHECK(!piranha::key_is_zero(m1, symbol_fset({"foobarize"})));
         }
     };
     template <typename T>

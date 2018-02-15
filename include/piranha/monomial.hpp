@@ -240,16 +240,6 @@ public:
     {
         return this->size() == args.size();
     }
-    /// Zero check.
-    /**
-     * A monomial is never zero.
-     *
-     * @return \p false.
-     */
-    bool is_zero(const symbol_fset &) const
-    {
-        return false;
-    }
     /// Check if the monomial is unitary.
     /**
      * A monomial is unitary if, for all its elements, piranha::is_zero() returns \p true.

@@ -35,6 +35,7 @@ see https://www.gnu.org/licenses/. */
 #include <vector>
 
 #include <piranha/detail/init.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -48,7 +49,6 @@ namespace piranha
  * Key types must implement the following methods:
  * @code{.unparsed}
  * bool is_compatible(const symbol_fset &) const;
- * bool is_zero(const symbol_fset &) const;
  * bool is_unitary(const symbol_fset &) const;
  * T merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
  * void print(std::ostream &, const symbol_fset &) const;
@@ -56,6 +56,10 @@ namespace piranha
  * void trim_identify(std::vector<char> &, const symbol_fset &) const;
  * T trim(const std::vector<char> &, const symbol_fset &) const;
  * @endcode
+ *
+ * They must also satisfy the following type traits:
+ * - piranha::is_key_is_zero_type.
+ *
  * Additionally, \p T must also be constructible from a const piranha::symbol_fset reference and satisfy the following
  * type traits: piranha::is_container_element, piranha::is_equality_comparable and piranha::is_hashable.
  */
@@ -67,8 +71,6 @@ class is_key
 {
     template <typename U>
     using is_compatible_t = decltype(std::declval<const U &>().is_compatible(std::declval<symbol_fset const &>()));
-    template <typename U>
-    using is_zero_t = decltype(std::declval<const U &>().is_zero(std::declval<symbol_fset const &>()));
     template <typename U>
     using merge_symbols_t = decltype(std::declval<const U &>().merge_symbols(
         std::declval<const symbol_idx_fmap<symbol_fset> &>(), std::declval<symbol_fset const &>()));
@@ -89,11 +91,10 @@ class is_key
     static const bool implementation_defined
         = conjunction<is_container_element<T>, std::is_constructible<T, const symbol_fset &>, is_equality_comparable<T>,
                       is_hashable<T>, std::is_same<detected_t<is_compatible_t, T>, bool>,
-                      std::is_same<detected_t<is_zero_t, T>, bool>, std::is_same<detected_t<merge_symbols_t, T>, T>,
-                      std::is_same<detected_t<is_unitary_t, T>, bool>, std::is_same<detected_t<print_t, T>, void>,
-                      std::is_same<detected_t<print_tex_t, T>, void>,
-                      std::is_same<detected_t<trim_identify_t, T>, void>,
-                      std::is_same<detected_t<trim_t, T>, T>>::value;
+                      std::is_same<detected_t<merge_symbols_t, T>, T>, std::is_same<detected_t<is_unitary_t, T>, bool>,
+                      std::is_same<detected_t<print_t, T>, void>, std::is_same<detected_t<print_tex_t, T>, void>,
+                      std::is_same<detected_t<trim_identify_t, T>, void>, std::is_same<detected_t<trim_t, T>, T>,
+                      is_key_is_zero_type<T>>::value;
 
 public:
     /// Value of the type trait.

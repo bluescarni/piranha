@@ -364,16 +364,6 @@ public:
         // Value is compatible if it is within the bounds for the given size.
         return (m_value >= std::get<1u>(l) && m_value <= std::get<2u>(l));
     }
-    /// Zero check.
-    /**
-     * A monomial is never zero.
-     *
-     * @return \p false.
-     */
-    bool is_zero(const symbol_fset &) const
-    {
-        return false;
-    }
     /// Merge symbols.
     /**
      * This method will return a copy of \p this in which the value 0 has been inserted

@@ -39,6 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/is_zero.hpp>
@@ -185,11 +186,11 @@ struct zero_tester {
             using term_type = term<Cf, Key>;
             symbol_fset args;
             term_type t1;
-            BOOST_CHECK_EQUAL(t1.is_zero(args), (t1.m_key.is_zero(args) || piranha::is_zero(t1.m_cf)));
+            BOOST_CHECK_EQUAL(t1.is_zero(args), (piranha::key_is_zero(t1.m_key, args) || piranha::is_zero(t1.m_cf)));
             BOOST_CHECK(t1.is_zero(args));
             term_type t2;
             t2.m_cf = 1;
-            BOOST_CHECK_EQUAL(t2.is_zero(args), (t2.m_key.is_zero(args) || piranha::is_zero(t2.m_cf)));
+            BOOST_CHECK_EQUAL(t2.is_zero(args), (piranha::key_is_zero(t2.m_key, args) || piranha::is_zero(t2.m_cf)));
             BOOST_CHECK(!t2.is_zero(args));
         }
     };
