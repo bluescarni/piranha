@@ -6,9 +6,9 @@ Reference
 The following subsections contain the detailed documentation of piranha's public classes and functions.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   numerical_types.rst
    concepts.rst
+   numerical_types.rst
    math.rst
    key_interface.rst
