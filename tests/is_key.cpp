@@ -215,6 +215,11 @@ struct hash<key02> {
 };
 
 template <>
+struct hash<key02a> {
+    std::size_t operator()(const key02a &) const;
+};
+
+template <>
 struct hash<key03> {
 };
 
