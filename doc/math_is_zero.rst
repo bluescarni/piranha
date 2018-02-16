@@ -7,7 +7,7 @@ Detect zero
 
 .. cpp:function:: template <typename T> bool piranha::is_zero(const T &x)
 
-   This function returns ``true`` if ``x`` is equal to zero, ``false`` otherwise.
+   This function returns ``true`` if *x* is equal to zero, ``false`` otherwise.
 
    The implementation is delegated to the call operator of the :cpp:class:`piranha::is_zero_impl` function object.
    The body of this function is equivalent to:
@@ -17,8 +17,8 @@ Detect zero
       return piranha::is_zero_impl<T>{}(x);
 
    If the expression above is invalid, or if it returns a type which is not
-   :cpp:concept:`convertible <piranha::Convertible>` to ``bool``,
-   then this function will be disabled (i.e., it will not participate in overload resolution).
+   :cpp:concept:`~piranha::Convertible` to ``bool``, then this function will
+   be disabled (i.e., it will not participate in overload resolution).
 
    Piranha provides specialisations of :cpp:class:`piranha::is_zero_impl` for the following types:
 
@@ -33,7 +33,7 @@ Detect zero
 
    :param x: the input argument.
 
-   :return: ``true`` if ``x`` is zero, ``false`` otherwise.
+   :return: ``true`` if *x* is zero, ``false`` otherwise.
 
    :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::is_zero_impl`.
 
