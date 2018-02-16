@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
 #include <piranha/math/pow.hpp>
@@ -76,7 +77,6 @@ struct key02 {
     bool operator!=(const key02 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
@@ -92,6 +92,16 @@ namespace std
 template <>
 struct hash<key02> {
     std::size_t operator()(const key02 &) const;
+};
+}
+
+namespace piranha
+{
+template <>
+class key_is_one_impl<key02>
+{
+public:
+    bool operator()(const key02 &, const symbol_fset &) const;
 };
 }
 

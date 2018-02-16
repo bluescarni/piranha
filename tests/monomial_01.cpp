@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/key/key_is_zero.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
@@ -315,7 +316,7 @@ BOOST_AUTO_TEST_CASE(monomial_is_zero_test)
     tuple_for_each(expo_types{}, is_zero_tester{});
 }
 
-struct is_unitary_tester {
+struct key_is_one_tester {
     template <typename T>
     struct runner {
         template <typename U>
@@ -323,16 +324,16 @@ struct is_unitary_tester {
         {
             typedef monomial<T, U> key_type;
             key_type k(symbol_fset{});
-            BOOST_CHECK(k.is_unitary(symbol_fset{}));
+            BOOST_CHECK(piranha::key_is_one(k, symbol_fset{}));
             key_type k2(symbol_fset{"a"});
-            BOOST_CHECK(k2.is_unitary(symbol_fset{"a"}));
+            BOOST_CHECK(piranha::key_is_one(k2, symbol_fset{"a"}));
             k2[0] = 1;
-            BOOST_CHECK(!k2.is_unitary(symbol_fset{"a"}));
+            BOOST_CHECK(!piranha::key_is_one(k2, symbol_fset{"a"}));
             k2[0] = 0;
-            BOOST_CHECK(k2.is_unitary(symbol_fset{"a"}));
+            BOOST_CHECK(piranha::key_is_one(k2, symbol_fset{"a"}));
             BOOST_CHECK_EXCEPTION(
-                k2.is_unitary(symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
-                    return boost::contains(e.what(), "invalid sizes in the invocation of is_unitary() for a monomial: "
+                piranha::key_is_one(k2, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                    return boost::contains(e.what(), "invalid sizes in the invocation of key_is_one() for a monomial: "
                                                      "the monomial has a size of 1, while the reference symbol set has "
                                                      "a size of 0");
                 });
@@ -345,9 +346,9 @@ struct is_unitary_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(monomial_is_unitary_test)
+BOOST_AUTO_TEST_CASE(monomial_key_is_one_test)
 {
-    tuple_for_each(expo_types{}, is_unitary_tester{});
+    tuple_for_each(expo_types{}, key_is_one_tester{});
 }
 
 struct degree_tester {

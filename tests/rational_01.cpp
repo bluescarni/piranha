@@ -52,6 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
@@ -439,26 +440,26 @@ BOOST_AUTO_TEST_CASE(rational_safe_cast_test)
     tuple_for_each(size_types{}, safe_cast_tester{});
 }
 
-struct is_unitary_tester {
+struct is_one_tester {
     template <typename T>
     void operator()(const T &) const
     {
         using q_type = mppp::rational<T::value>;
-        BOOST_CHECK(!math::is_unitary(q_type{}));
-        BOOST_CHECK(!math::is_unitary(q_type{-1}));
-        BOOST_CHECK(!math::is_unitary(q_type{-1, 5}));
-        BOOST_CHECK(!math::is_unitary(q_type{1, 5}));
-        BOOST_CHECK(!math::is_unitary(q_type{5, -5}));
-        BOOST_CHECK(math::is_unitary(q_type{1}));
-        BOOST_CHECK(math::is_unitary(q_type{-1, -1}));
-        BOOST_CHECK(math::is_unitary(q_type{-5, -5}));
-        BOOST_CHECK(math::is_unitary(q_type{5, 5}));
+        BOOST_CHECK(!piranha::is_one(q_type{}));
+        BOOST_CHECK(!piranha::is_one(q_type{-1}));
+        BOOST_CHECK(!piranha::is_one(q_type{-1, 5}));
+        BOOST_CHECK(!piranha::is_one(q_type{1, 5}));
+        BOOST_CHECK(!piranha::is_one(q_type{5, -5}));
+        BOOST_CHECK(piranha::is_one(q_type{1}));
+        BOOST_CHECK(piranha::is_one(q_type{-1, -1}));
+        BOOST_CHECK(piranha::is_one(q_type{-5, -5}));
+        BOOST_CHECK(piranha::is_one(q_type{5, 5}));
     }
 };
 
-BOOST_AUTO_TEST_CASE(rational_is_unitary_test)
+BOOST_AUTO_TEST_CASE(rational_is_one_test)
 {
-    tuple_for_each(size_types{}, is_unitary_tester{});
+    tuple_for_each(size_types{}, is_one_tester{});
 }
 
 struct negate_tester {

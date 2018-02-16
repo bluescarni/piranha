@@ -68,6 +68,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/invert.hpp>
 #include <piranha/is_cf.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
@@ -2140,11 +2141,11 @@ public:
      *
      * @return \p true in case of single-coefficient series, \p false otherwise.
      *
-     * @throws unspecified any exception thrown by the <tt>is_unitary()</tt> method of the key type.
+     * @throws unspecified any exception thrown by piranha::key_is_one().
      */
     bool is_single_coefficient() const
     {
-        return (empty() || (size() == 1u && m_container.begin()->m_key.is_unitary(m_symbol_set)));
+        return (empty() || (size() == 1u && piranha::key_is_one(m_container.begin()->m_key, m_symbol_set)));
     }
     /// Insert term.
     /**

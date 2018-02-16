@@ -35,3 +35,4 @@ Comparisons
    :maxdepth: 1
 
    math_is_zero.rst
+   math_is_one.rst

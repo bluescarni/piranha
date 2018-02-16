@@ -52,6 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
@@ -283,27 +284,27 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_merge_args_test)
     tuple_for_each(int_types{}, merge_args_tester{});
 }
 
-struct is_unitary_tester {
+struct key_is_one_tester {
     template <typename T>
     void operator()(const T &) const
     {
         using k_type = kronecker_monomial<T>;
         k_type k1;
-        BOOST_CHECK(k1.is_unitary(symbol_fset{}));
+        BOOST_CHECK(piranha::key_is_one(k1, symbol_fset{}));
         k_type k2({-1});
-        BOOST_CHECK(!k2.is_unitary(symbol_fset{"a"}));
+        BOOST_CHECK(!piranha::key_is_one(k2, symbol_fset{"a"}));
         k_type k3({0});
-        BOOST_CHECK(k3.is_unitary(symbol_fset{"a"}));
+        BOOST_CHECK(piranha::key_is_one(k3, symbol_fset{"a"}));
         k_type k4({0, 0});
-        BOOST_CHECK(k4.is_unitary(symbol_fset{"a", "b"}));
+        BOOST_CHECK(piranha::key_is_one(k4, symbol_fset{"a", "b"}));
         k_type k5({0, 1});
-        BOOST_CHECK(!k5.is_unitary(symbol_fset{"a", "b"}));
+        BOOST_CHECK(!piranha::key_is_one(k5, symbol_fset{"a", "b"}));
     }
 };
 
-BOOST_AUTO_TEST_CASE(kronecker_monomial_is_unitary_test)
+BOOST_AUTO_TEST_CASE(kronecker_monomial_key_is_one_test)
 {
-    tuple_for_each(int_types{}, is_unitary_tester{});
+    tuple_for_each(int_types{}, key_is_one_tester{});
 }
 
 struct degree_tester {

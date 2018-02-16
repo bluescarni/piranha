@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
@@ -277,18 +278,18 @@ BOOST_AUTO_TEST_CASE(real_ternary_arith_test)
     BOOST_CHECK(out == -4);
 }
 
-BOOST_AUTO_TEST_CASE(real_is_unitary_test)
+BOOST_AUTO_TEST_CASE(real_is_one_test)
 {
     real out;
-    BOOST_CHECK(!math::is_unitary(out));
+    BOOST_CHECK(!piranha::is_one(out));
     out = 1.234;
-    BOOST_CHECK(!math::is_unitary(out));
+    BOOST_CHECK(!piranha::is_one(out));
     out = 1;
-    BOOST_CHECK(math::is_unitary(out));
+    BOOST_CHECK(piranha::is_one(out));
     out = real{"inf", 5};
-    BOOST_CHECK(!math::is_unitary(out));
+    BOOST_CHECK(!piranha::is_one(out));
     out = real{"-nan", 5};
-    BOOST_CHECK(!math::is_unitary(out));
+    BOOST_CHECK(!piranha::is_one(out));
 }
 
 #else

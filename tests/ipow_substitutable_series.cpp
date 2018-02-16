@@ -51,6 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/rational.hpp>
@@ -164,6 +165,14 @@ struct hash<new_monomial<T>> {
     {
         return m.hash();
     }
+};
+}
+
+namespace piranha
+{
+template <typename T>
+class key_is_one_impl<new_monomial<T>> : public key_is_one_impl<monomial<T>>
+{
 };
 }
 

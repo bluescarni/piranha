@@ -58,6 +58,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/key/key_is_zero.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
@@ -430,14 +431,6 @@ public:
     {
         return real_trigonometric_kronecker_monomial(detail::km_merge_symbols<v_type, ka>(ins_map, args, m_value),
                                                      m_flavour);
-    }
-    /// Check if monomial is unitary.
-    /**
-     * @return \p true if all the multipliers are zero and the flavour is \p true, \p false otherwise.
-     */
-    bool is_unitary(const symbol_fset &) const
-    {
-        return (!m_value && m_flavour);
     }
 
 private:
@@ -1434,6 +1427,17 @@ public:
     bool operator()(const real_trigonometric_kronecker_monomial<T> &r, const symbol_fset &) const
     {
         return r.get_int() == T(0) && !r.get_flavour();
+    }
+};
+
+// Specialisation of piranha::key_is_one() for rtkm.
+template <typename T>
+class key_is_one_impl<real_trigonometric_kronecker_monomial<T>>
+{
+public:
+    bool operator()(const real_trigonometric_kronecker_monomial<T> &r, const symbol_fset &) const
+    {
+        return r.get_int() == T(0) && r.get_flavour();
     }
 };
 }

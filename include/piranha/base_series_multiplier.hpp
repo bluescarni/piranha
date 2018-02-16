@@ -54,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>
@@ -276,7 +277,7 @@ private:
     void finalise_impl(T &s) const
     {
         // Nothing to do if the lcm is unitary.
-        if (math::is_unitary(this->m_lcm)) {
+        if (piranha::is_one(this->m_lcm)) {
             return;
         }
         // NOTE: this has to be the square of the lcm, as in addition to uniformising

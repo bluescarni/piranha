@@ -56,6 +56,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math/cos.hpp>
 #include <piranha/math/pow.hpp>
@@ -526,31 +527,6 @@ BOOST_AUTO_TEST_CASE(math_has_truncate_degree_test)
     BOOST_CHECK((!has_truncate_degree<float &&, double &>::value));
 }
 
-BOOST_AUTO_TEST_CASE(math_is_unitary_test)
-{
-    BOOST_CHECK(has_is_unitary<int>::value);
-    BOOST_CHECK(has_is_unitary<const int>::value);
-    BOOST_CHECK(has_is_unitary<int &>::value);
-    BOOST_CHECK(has_is_unitary<float>::value);
-    BOOST_CHECK(has_is_unitary<double>::value);
-    BOOST_CHECK(has_is_unitary<double &&>::value);
-    BOOST_CHECK(!has_is_unitary<std::string>::value);
-    BOOST_CHECK(!has_is_unitary<std::string &>::value);
-    BOOST_CHECK(!has_is_unitary<const std::string &>::value);
-    BOOST_CHECK(math::is_unitary(1));
-    BOOST_CHECK(math::is_unitary(1ull));
-    BOOST_CHECK(math::is_unitary(char(1)));
-    BOOST_CHECK(math::is_unitary(1.));
-    BOOST_CHECK(math::is_unitary(1.f));
-    BOOST_CHECK(!math::is_unitary(0));
-    BOOST_CHECK(!math::is_unitary(-1));
-    BOOST_CHECK(!math::is_unitary(2ull));
-    BOOST_CHECK(!math::is_unitary(0.));
-    BOOST_CHECK(!math::is_unitary(-1.));
-    BOOST_CHECK(!math::is_unitary(2.f));
-    BOOST_CHECK(!math::is_unitary(2.5f));
-}
-
 // Mock key subs method only for certain types.
 struct mock_key {
     mock_key() = default;
@@ -563,7 +539,6 @@ struct mock_key {
     bool operator!=(const mock_key &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     mock_key merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -577,6 +552,17 @@ namespace std
 template <>
 struct hash<mock_key> {
     std::size_t operator()(const mock_key &) const;
+};
+}
+
+namespace piranha
+{
+
+template <>
+class key_is_one_impl<mock_key>
+{
+public:
+    bool operator()(const mock_key &, const symbol_fset &) const;
 };
 }
 

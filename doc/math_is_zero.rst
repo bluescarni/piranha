@@ -33,7 +33,7 @@ Detect zero
 
    :param x: the input argument.
 
-   :return: ``true`` if *x* is zero, ``false`` otherwise.
+   :return: ``true`` if *x* is equal to zero, ``false`` otherwise.
 
    :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::is_zero_impl`.
 

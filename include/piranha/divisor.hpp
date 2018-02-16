@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
@@ -557,16 +558,6 @@ public:
     {
         return m_container.empty() || (m_container.begin()->v.size() == args.size());
     }
-    /// Check if divisor is unitary.
-    /**
-     * Only an empty divisor is considered unitary.
-     *
-     * @return \p true if \p this is empty, \p false otherwise.
-     */
-    bool is_unitary(const symbol_fset &) const
-    {
-        return m_container.empty();
-    }
     /// Merge symbols.
     /**
      * This method will return a copy of \p this in which, for every factor of the divisor, the value 0 has been
@@ -1050,6 +1041,17 @@ private:
 
 template <typename T>
 const std::size_t divisor<T>::multiply_arity;
+
+// Implementation of piranha::key_is_one() for divisor.
+template <typename T>
+class key_is_one_impl<divisor<T>>
+{
+public:
+    bool operator()(const divisor<T> &d, const symbol_fset &) const
+    {
+        return d._container().empty();
+    }
+};
 }
 
 #if defined(PIRANHA_WITH_BOOST_S11N)

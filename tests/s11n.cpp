@@ -57,6 +57,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/demangle.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -371,7 +372,6 @@ struct keya {
     bool operator!=(const keya &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     keya merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
@@ -393,7 +393,6 @@ struct keyb {
     bool operator!=(const keyb &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     keyb merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
@@ -414,6 +413,20 @@ struct boost_save_impl<Archive, boost_s11n_key_wrapper<keya>> {
 template <typename Archive>
 struct boost_load_impl<Archive, boost_s11n_key_wrapper<keya>> {
     void operator()(Archive &, boost_s11n_key_wrapper<keya> &) const;
+};
+
+template <>
+class key_is_one_impl<keya>
+{
+public:
+    bool operator()(const keya &, const symbol_fset &) const;
+};
+
+template <>
+class key_is_one_impl<keyb>
+{
+public:
+    bool operator()(const keyb &, const symbol_fset &) const;
 };
 }
 
@@ -680,7 +693,6 @@ struct key01 {
     bool operator!=(const key01 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     key01 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
@@ -705,7 +717,6 @@ struct key02 {
     bool operator!=(const key02 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
     key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     template <typename T, typename U>
@@ -732,6 +743,24 @@ struct hash<key01> {
 template <>
 struct hash<key02> {
     std::size_t operator()(const key02 &) const;
+};
+}
+
+namespace piranha
+{
+
+template <>
+class key_is_one_impl<key01>
+{
+public:
+    bool operator()(const key01 &, const symbol_fset &) const;
+};
+
+template <>
+class key_is_one_impl<key02>
+{
+public:
+    bool operator()(const key02 &, const symbol_fset &) const;
 };
 }
 

@@ -27,7 +27,7 @@ Detect zero keys
    :param x: the input key.
    :param s: the :cpp:type:`piranha::symbol_fset` associated to *x*.
 
-   :return: ``true`` if *x* is zero, ``false`` otherwise.
+   :return: ``true`` if *x* is equal to zero, ``false`` otherwise.
 
    :exception unspecified: any exception thrown by the call operator of :cpp:class:`piranha::key_is_zero_impl`.
 

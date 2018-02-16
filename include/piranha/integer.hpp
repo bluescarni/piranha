@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
@@ -105,23 +106,19 @@ public:
     }
 };
 
-namespace math
-{
-
-/// Specialisation of the implementation of piranha::math::is_unitary() for mp++'s integers.
+// Specialisation of the implementation of piranha::is_one() for mp++'s integers.
 template <std::size_t SSize>
-struct is_unitary_impl<mppp::integer<SSize>> {
-    /// Call operator.
-    /**
-     * @param n the integer to be tested.
-     *
-     * @return \p true if \p n is equal to 1, \p false otherwise.
-     */
+class is_one_impl<mppp::integer<SSize>>
+{
+public:
     bool operator()(const mppp::integer<SSize> &n) const
     {
         return n.is_one();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::abs() for mp++'s integers.
 template <std::size_t SSize>

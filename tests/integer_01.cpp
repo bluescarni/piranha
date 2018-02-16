@@ -147,32 +147,32 @@ BOOST_AUTO_TEST_CASE(integer_multiply_accumulate_test)
     tuple_for_each(size_types{}, addmul_tester{});
 }
 
-struct is_unitary_tester {
+struct is_one_tester {
     template <typename T>
     void operator()(const T &) const
     {
         using int_type = mppp::integer<T::value>;
-        BOOST_CHECK(has_is_unitary<int_type>::value);
-        BOOST_CHECK(has_is_unitary<const int_type>::value);
-        BOOST_CHECK(has_is_unitary<int_type &>::value);
-        BOOST_CHECK(has_is_unitary<const int_type &>::value);
+        BOOST_CHECK(is_is_one_type<int_type>::value);
+        BOOST_CHECK(is_is_one_type<const int_type>::value);
+        BOOST_CHECK(is_is_one_type<int_type &>::value);
+        BOOST_CHECK(is_is_one_type<const int_type &>::value);
         int_type n;
-        BOOST_CHECK(!math::is_unitary(n));
+        BOOST_CHECK(!piranha::is_one(n));
         n = 1;
-        BOOST_CHECK(math::is_unitary(n));
+        BOOST_CHECK(piranha::is_one(n));
         n = -1;
-        BOOST_CHECK(!math::is_unitary(n));
+        BOOST_CHECK(!piranha::is_one(n));
         n.promote();
-        BOOST_CHECK(!math::is_unitary(n));
+        BOOST_CHECK(!piranha::is_one(n));
         n = 1;
         n.promote();
-        BOOST_CHECK(math::is_unitary(n));
+        BOOST_CHECK(piranha::is_one(n));
     }
 };
 
-BOOST_AUTO_TEST_CASE(integer_is_unitary_test)
+BOOST_AUTO_TEST_CASE(integer_is_one_test)
 {
-    tuple_for_each(size_types{}, is_unitary_tester{});
+    tuple_for_each(size_types{}, is_one_tester{});
 }
 
 struct abs_tester {

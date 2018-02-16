@@ -57,81 +57,6 @@ namespace piranha
 namespace math
 {
 
-/// Default functor for the implementation of piranha::math::is_unitary().
-/**
- * This functor should be specialised via the \p std::enable_if mechanism. The default implementation defines a call
- * operator which is enabled only if the argument type is constructible from the C++ \p int type and \p T is equality
- * comparable.
- */
-template <typename T, typename = void>
-struct is_unitary_impl {
-private:
-    template <typename U>
-    using enabler =
-        typename std::enable_if<std::is_constructible<U, int>::value && is_equality_comparable<U>::value, int>::type;
-
-public:
-    /// Call operator.
-    /**
-     * \note
-     * This template method is enabled only if \p U can be constructed from \p int and \p U is
-     * equality comparable.
-     *
-     * The operator will compare \p x to an instance of \p U constructed from the literal 1.
-     *
-     * @param x argument to be tested.
-     *
-     * @return \p true if \p x is equal to 1, \p false otherwise.
-     *
-     * @throws unspecified any exception thrown by the construction or comparison of instances of type \p U or by
-     * the conversion of the result to \p bool.
-     */
-    template <typename U, enabler<U> = 0>
-    bool operator()(const U &x) const
-    {
-        return x == U(1);
-    }
-};
-}
-
-namespace detail
-{
-
-// Enabler for piranha::math::is_unitary().
-template <typename T>
-using math_is_unitary_enabler = typename std::enable_if<
-    std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())), bool>::value, int>::type;
-}
-
-namespace math
-{
-
-/// Unitary test.
-/**
- * \note
- * This function is enabled only if <tt>is_unitary_impl<T>{}(x)</tt> is a valid expression, returning a type
- * which is implicitly convertible to \p bool.
- *
- * Test if value is equal to 1. The actual implementation of this function is in the piranha::math::is_unitary_impl
- * functor's
- * call operator. The body of this function is equivalent to:
- * @code
- * return is_unitary_impl<T>{}(x);
- * @endcode
- *
- * @param x value to be tested.
- *
- * @return \p true if value is equal to 1, \p false otherwise.
- *
- * @throws unspecified any exception thrown by the call operator of the piranha::math::is_unitary_impl functor, or by
- * the conversion of the result to \p bool.
- */
-template <typename T, detail::math_is_unitary_enabler<T> = 0>
-inline bool is_unitary(const T &x)
-{
-    return is_unitary_impl<T>{}(x);
-}
-
 /// Default functor for the implementation of piranha::math::negate().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will
@@ -1903,27 +1828,6 @@ public:
 // Static init.
 template <typename T>
 const bool key_has_t_lorder<T>::value;
-
-/// Type trait to detect the presence of the piranha::math::is_unitary() function.
-/**
- * The type trait will be \p true if piranha::math::is_unitary() can be successfully called on instances of \p T.
- */
-template <typename T>
-class has_is_unitary : detail::sfinae_types
-{
-    typedef typename std::decay<T>::type Td;
-    template <typename T1>
-    static auto test(const T1 &t) -> decltype(math::is_unitary(t), void(), yes());
-    static no test(...);
-    static const bool implementation_defined = std::is_same<decltype(test(std::declval<Td>())), yes>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
-
-template <typename T>
-const bool has_is_unitary<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::subs function.
 /**

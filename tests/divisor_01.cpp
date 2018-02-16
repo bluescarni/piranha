@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/vector_hasher.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/key/key_is_zero.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
@@ -371,25 +372,25 @@ BOOST_AUTO_TEST_CASE(divisor_ci_test)
     tuple_for_each(value_types{}, ci_tester{});
 }
 
-struct is_unitary_tester {
+struct key_is_one_tester {
     template <typename T>
     void operator()(const T &) const
     {
         using d_type = divisor<T>;
         d_type d0;
-        BOOST_CHECK(d0.is_unitary(symbol_fset{}));
-        BOOST_CHECK(d0.is_unitary(symbol_fset{"foo"}));
+        BOOST_CHECK(piranha::key_is_one(d0, symbol_fset{}));
+        BOOST_CHECK(piranha::key_is_one(d0, symbol_fset{"foo"}));
         std::vector<T> tmp;
         T exponent(1);
         tmp = {T(1)};
         d0.insert(tmp.begin(), tmp.end(), exponent);
-        BOOST_CHECK(!d0.is_unitary(symbol_fset{"foo"}));
+        BOOST_CHECK(!piranha::key_is_one(d0, symbol_fset{"foo"}));
     }
 };
 
-BOOST_AUTO_TEST_CASE(divisor_is_unitary_test)
+BOOST_AUTO_TEST_CASE(divisor_key_is_one_test)
 {
-    tuple_for_each(value_types{}, is_unitary_tester{});
+    tuple_for_each(value_types{}, key_is_one_tester{});
 }
 
 struct merge_symbols_tester {
