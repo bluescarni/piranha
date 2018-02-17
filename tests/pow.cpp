@@ -98,12 +98,16 @@ BOOST_AUTO_TEST_CASE(pow_fp_test)
     BOOST_CHECK((std::is_same<decltype(piranha::pow(2.f, 2)), decltype(std::pow(2.f, 2))>::value));
     BOOST_CHECK((std::is_same<decltype(piranha::pow(2.f, char(2))), double>::value));
     BOOST_CHECK((is_exponentiable<double, double>::value));
+    BOOST_CHECK((is_exponentiable<double>::value));
     BOOST_CHECK((!is_exponentiable<void, double>::value));
     BOOST_CHECK((!is_exponentiable<double, void>::value));
     BOOST_CHECK((!is_exponentiable<void, void>::value));
+    BOOST_CHECK((!is_exponentiable<void>::value));
     BOOST_CHECK((is_exponentiable<double, unsigned short>::value));
     BOOST_CHECK((is_exponentiable<double &, double>::value));
+    BOOST_CHECK((is_exponentiable<double &>::value));
     BOOST_CHECK((is_exponentiable<const double, double>::value));
+    BOOST_CHECK((is_exponentiable<const double>::value));
     BOOST_CHECK((is_exponentiable<double &, double &>::value));
     BOOST_CHECK((is_exponentiable<double &, double const &>::value));
     BOOST_CHECK((is_exponentiable<double, double &>::value));
@@ -111,6 +115,7 @@ BOOST_AUTO_TEST_CASE(pow_fp_test)
     BOOST_CHECK((is_exponentiable<double, float>::value));
     BOOST_CHECK((is_exponentiable<double, int>::value));
     BOOST_CHECK((is_exponentiable<float, char>::value));
+    BOOST_CHECK((!is_exponentiable<std::string>::value));
 }
 
 using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,
@@ -174,6 +179,7 @@ struct int_pow_tester {
             // Test here the various piranha::pow() overloads as well.
             // Integer--integer.
             BOOST_CHECK((is_exponentiable<int_type, int_type>::value));
+            BOOST_CHECK((is_exponentiable<int_type>::value));
             BOOST_CHECK((std::is_same<int_type, decltype(piranha::pow(int_type(1), int_type(1)))>::value));
             BOOST_CHECK_EQUAL(piranha::pow(int_type(2), int_type(3)), 8);
             // Integer -- integral.
@@ -220,6 +226,7 @@ struct integer_pow_tester {
     {
         using int_type = mppp::integer<T::value>;
         BOOST_CHECK((is_exponentiable<int_type, int_type>::value));
+        BOOST_CHECK((is_exponentiable<int_type>::value));
         BOOST_CHECK((!is_exponentiable<int_type, void>::value));
         BOOST_CHECK((!is_exponentiable<void, int_type>::value));
         BOOST_CHECK((!is_exponentiable<int_type, std::string>::value));
@@ -270,11 +277,14 @@ BOOST_AUTO_TEST_CASE(pow_integer_test)
     BOOST_CHECK_EQUAL(piranha::pow(-3ll, static_cast<unsigned short>(3)), -27);
     BOOST_CHECK((std::is_same<integer, decltype(piranha::pow(-3ll, static_cast<unsigned short>(3)))>::value));
     BOOST_CHECK((is_exponentiable<int, int>::value));
+    BOOST_CHECK((is_exponentiable<int>::value));
     BOOST_CHECK((is_exponentiable<int, char>::value));
     BOOST_CHECK((is_exponentiable<unsigned, long long>::value));
     BOOST_CHECK((!is_exponentiable<mppp::integer<1>, mppp::integer<2>>::value));
     BOOST_CHECK((!is_exponentiable<mppp::integer<2>, mppp::integer<1>>::value));
     BOOST_CHECK((!is_exponentiable<integer, std::string>::value));
     BOOST_CHECK((!is_exponentiable<b_00, b_00>::value));
+    BOOST_CHECK((!is_exponentiable<b_00>::value));
     BOOST_CHECK((!is_exponentiable<b_01, b_01>::value));
+    BOOST_CHECK((!is_exponentiable<b_01>::value));
 }

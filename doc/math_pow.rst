@@ -42,7 +42,7 @@ Exponentiation
 Concepts
 --------
 
-.. cpp:concept:: template <typename T, typename U> piranha::Exponentiable
+.. cpp:concept:: template <typename T, typename U = T> piranha::Exponentiable
 
    This concept is satisfied if :cpp:func:`piranha::pow()` can be called
    with a base of type ``T`` and an exponent of type ``U``. Specifically,

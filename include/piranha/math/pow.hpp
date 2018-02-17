@@ -127,12 +127,13 @@ template <typename T, typename U>
 using pow_t = decltype(piranha::pow(std::declval<const T &>(), std::declval<const U &>()));
 }
 
-template <typename T, typename U>
-using is_exponentiable = is_detected<pow_t, T, U>;
+template <typename T, typename U = T>
+struct is_exponentiable : is_detected<pow_t, T, U> {
+};
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
-template <typename T, typename U>
+template <typename T, typename U = T>
 concept bool Exponentiable = is_exponentiable<T, U>::value;
 
 #endif
