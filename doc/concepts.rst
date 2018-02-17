@@ -39,6 +39,11 @@ Type categories
 
    This concept is satisfied if ``T`` is a C++ complex floating-point type, or a cv-qualified version thereof.
 
+.. cpp:concept:: template <typename T> piranha::NonConst
+
+   This concept is satisfied if ``T`` is *not* a const-qualified type, as established by the standard ``std::is_const``
+   type trait.
+
 Type properties
 ---------------
 

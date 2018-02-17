@@ -184,6 +184,9 @@ concept bool Constructible = std::is_constructible<T, Args...>::value;
 template <typename From, typename To>
 concept bool Convertible = std::is_convertible<From, To>::value;
 
+template <typename T>
+concept bool NonConst = !std::is_const<T>::value;
+
 #endif
 
 template <typename T>
