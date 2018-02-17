@@ -41,7 +41,7 @@ Binomial coefficient
 Concepts
 --------
 
-.. cpp:concept:: template <typename T, typename U> piranha::BinomialTypes
+.. cpp:concept:: template <typename T, typename U = T> piranha::BinomialTypes
 
    This concept is satisfied if :cpp:func:`piranha::binomial()` can be called
    with a top argument of type ``T`` and a bottom argument of type ``U``. Specifically,

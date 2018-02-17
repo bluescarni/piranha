@@ -22,22 +22,22 @@ Type categories
 
 .. cpp:concept:: template <typename T> piranha::CppArithmetic
 
-   This concept is satisfied it ``T`` is a C++ arithmetic type, or a cv-qualified version thereof,
+   This concept is satisfied if ``T`` is a C++ arithmetic type, or a cv-qualified version thereof,
    as established by the standard ``std::is_arithmetic`` type trait.
 
 .. cpp:concept:: template <typename T> piranha::CppIntegral
 
-   This concept is satisfied it ``T`` is a C++ integral type, or a cv-qualified version thereof,
+   This concept is satisfied if ``T`` is a C++ integral type, or a cv-qualified version thereof,
    as established by the standard ``std::is_integral`` type trait.
 
 .. cpp:concept:: template <typename T> piranha::CppFloatingPoint
 
-   This concept is satisfied it ``T`` is a C++ floating-point type, or a cv-qualified version thereof,
+   This concept is satisfied if ``T`` is a C++ floating-point type, or a cv-qualified version thereof,
    as established by the standard ``std::is_floating_point`` type trait.
 
 .. cpp:concept:: template <typename T> piranha::CppComplex
 
-   This concept is satisfied it ``T`` is a C++ complex floating-point type, or a cv-qualified version thereof.
+   This concept is satisfied if ``T`` is a C++ complex floating-point type, or a cv-qualified version thereof.
 
 Type properties
 ---------------
