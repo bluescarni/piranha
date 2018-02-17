@@ -2,6 +2,6 @@
     "files.exclude": {
         "**/.git": true,
         "build*": true,
-        "doc/sphinx/_build/": true
+        "doc/_build/": true
     }
 }
