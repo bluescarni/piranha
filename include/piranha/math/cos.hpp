@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/type_traits.hpp>
 
