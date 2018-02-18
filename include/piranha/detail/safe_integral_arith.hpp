@@ -176,7 +176,7 @@ inline T safe_int_sub_impl(T a, T b, const std::true_type &)
 
 // The unsigned sub implementation.
 template <typename T>
-inline T safe_sub_add_impl(T a, T b, const std::false_type &)
+inline T safe_int_sub_impl(T a, T b, const std::false_type &)
 {
     if (unlikely(a < b)) {
         piranha_throw(std::overflow_error, safe_int_arith_err("subtraction", a, b));
