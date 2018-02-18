@@ -53,10 +53,10 @@ build_script:
 - cd build
 
 - if [%BUILD_TYPE%]==[MSVC15_clang] cmake .. -GNinja -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER=clang-cl -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_TEST_NSPLIT=%TEST_NSPLIT% -DPIRANHA_TEST_SPLIT_NUM=%SPLIT_TEST_NUM%
-- if [%BUILD_TYPE%]==[MSVC15_clang] cmake --build . -- -j1
+- if [%BUILD_TYPE%]==[MSVC15_clang] cmake --build . -- -j1 -v
 
 - if [%BUILD_TYPE%]==[MSVC17_clang] cmake .. -GNinja -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER=clang-cl -DCMAKE_BUILD_TYPE=Debug -DPIRANHA_BUILD_TESTS=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_TEST_NSPLIT=%TEST_NSPLIT% -DPIRANHA_TEST_SPLIT_NUM=%SPLIT_TEST_NUM%
-- if [%BUILD_TYPE%]==[MSVC17_clang] cmake --build . -- -j1
+- if [%BUILD_TYPE%]==[MSVC17_clang] cmake --build . -- -j1 -v
 
 test_script:
 - if [%BUILD_TYPE%]==[MSVC15_clang] ctest -V
