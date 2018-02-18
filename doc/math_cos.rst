@@ -58,7 +58,7 @@ Concepts
 Implementations
 ---------------
 
-.. cpp:class:: template <typename T, typename Enable = void> piranha::cos_impl
+.. cpp:class:: template <typename T> piranha::cos_impl
 
    Unspecialised version of the function object implementing :cpp:func:`piranha::cos()`.
 

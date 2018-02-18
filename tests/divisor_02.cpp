@@ -44,6 +44,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/gcd3.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
@@ -144,10 +145,7 @@ struct boost_s11n_tester {
                 }
                 T g(0);
                 for (const auto &dv : divs) {
-                    math::gcd3(g, g, dv);
-                }
-                if (g < 0) {
-                    g = T(-g);
+                    piranha::gcd3(g, g, dv);
                 }
                 for (auto &dv : divs) {
                     dv = T(dv / g);
@@ -254,10 +252,7 @@ struct msgpack_s11n_tester {
                     }
                     T g(0);
                     for (const auto &dv : divs) {
-                        math::gcd3(g, g, dv);
-                    }
-                    if (g < 0) {
-                        g = T(-g);
+                        piranha::gcd3(g, g, dv);
                     }
                     for (auto &dv : divs) {
                         dv = T(dv / g);

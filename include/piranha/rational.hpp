@@ -50,6 +50,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
@@ -115,23 +116,19 @@ public:
     }
 };
 
-namespace math
-{
-
-/// Specialisation of the implementation of piranha::math::is_unitary() for mp++'s rationals.
+// Specialisation of the implementation of piranha::is_one() for mp++'s rationals.
 template <std::size_t SSize>
-struct is_unitary_impl<mppp::rational<SSize>> {
-    /// Call operator.
-    /**
-     * @param q the rational to be tested.
-     *
-     * @return \p true if \p q is equal to one, \p false otherwise.
-     */
+class is_one_impl<mppp::rational<SSize>>
+{
+public:
     bool operator()(const mppp::rational<SSize> &q) const
     {
         return q.is_one();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::negate() for mp++'s rationals.
 template <std::size_t SSize>

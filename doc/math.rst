@@ -18,6 +18,8 @@ Number theoretic functions
    :maxdepth: 1
 
    math_binomial.rst
+   math_gcd.rst
+   math_gcd3.rst
 
 Trigonometry
 ------------
@@ -35,3 +37,4 @@ Comparisons
    :maxdepth: 1
 
    math_is_zero.rst
+   math_is_one.rst

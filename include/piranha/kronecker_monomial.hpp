@@ -56,6 +56,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/is_zero.hpp>
@@ -364,16 +365,6 @@ public:
         // Value is compatible if it is within the bounds for the given size.
         return (m_value >= std::get<1u>(l) && m_value <= std::get<2u>(l));
     }
-    /// Zero check.
-    /**
-     * A monomial is never zero.
-     *
-     * @return \p false.
-     */
-    bool is_zero(const symbol_fset &) const
-    {
-        return false;
-    }
     /// Merge symbols.
     /**
      * This method will return a copy of \p this in which the value 0 has been inserted
@@ -403,15 +394,6 @@ public:
     kronecker_monomial merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map, const symbol_fset &args) const
     {
         return kronecker_monomial(detail::km_merge_symbols<v_type, ka>(ins_map, args, m_value));
-    }
-    /// Check if monomial is unitary.
-    /**
-     * @return \p true if all the exponents are zero, \p false otherwise.
-     */
-    bool is_unitary(const symbol_fset &) const
-    {
-        // A kronecker code will be zero if all components are zero.
-        return !m_value;
     }
 
 private:
@@ -1167,6 +1149,19 @@ private:
 
 /// Alias for piranha::kronecker_monomial with default type.
 using k_monomial = kronecker_monomial<>;
+
+// Implementation of piranha::key_is_one() for kronecker_monomial.
+template <typename T>
+class key_is_one_impl<kronecker_monomial<T>>
+{
+public:
+    bool operator()(const kronecker_monomial<T> &k, const symbol_fset &) const
+    {
+        // A zero kronecker code means all exponents are zero, and thus
+        // the monomial is unitary.
+        return !k.get_int();
+    }
+};
 }
 
 #if defined(PIRANHA_WITH_BOOST_S11N)

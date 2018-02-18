@@ -26,8 +26,8 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_MATH_IS_ZERO_HPP
-#define PIRANHA_MATH_IS_ZERO_HPP
+#ifndef PIRANHA_MATH_IS_ONE_HPP
+#define PIRANHA_MATH_IS_ONE_HPP
 
 #include <type_traits>
 #include <utility>
@@ -39,9 +39,9 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-// Default functor for the implementation of piranha::is_zero().
+// Default functor for the implementation of piranha::is_one().
 template <typename T, typename = void>
-class is_zero_impl
+class is_one_impl
 {
 public:
     // NOTE: the equality comparable requirement already implies that the return type of
@@ -51,31 +51,30 @@ public:
         enable_if_t<conjunction<std::is_constructible<U, const int &>, is_equality_comparable<U>>::value, int> = 0>
     bool operator()(const U &x) const
     {
-        return x == U(0);
+        return x == U(1);
     }
 };
 
-template <
-    typename T,
-    enable_if_t<std::is_convertible<decltype(is_zero_impl<T>{}(std::declval<const T &>())), bool>::value, int> = 0>
-inline bool is_zero(const T &x)
+template <typename T,
+          enable_if_t<std::is_convertible<decltype(is_one_impl<T>{}(std::declval<const T &>())), bool>::value, int> = 0>
+inline bool is_one(const T &x)
 {
-    return is_zero_impl<T>{}(x);
+    return is_one_impl<T>{}(x);
 }
 
-// Specialisation of the piranha::is_zero() functor for C++ complex floating-point types.
+// Specialisation of the piranha::is_one() functor for C++ complex floating-point types.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <CppComplex T>
-class is_zero_impl<T>
+class is_one_impl<T>
 #else
 template <typename T>
-class is_zero_impl<T, enable_if_t<is_cpp_complex<T>::value>>
+class is_one_impl<T, enable_if_t<is_cpp_complex<T>::value>>
 #endif
 {
 public:
     bool operator()(const T &c) const
     {
-        return c.real() == typename T::value_type(0) && c.imag() == typename T::value_type(0);
+        return c.real() == typename T::value_type(1) && c.imag() == typename T::value_type(0);
     }
 };
 
@@ -83,17 +82,17 @@ inline namespace impl
 {
 
 template <typename T>
-using is_zero_t = decltype(piranha::is_zero(std::declval<const T &>()));
+using is_one_t = decltype(piranha::is_one(std::declval<const T &>()));
 }
 
-// Type trait to detect the presence of the piranha::is_zero() function.
+// Type trait to detect the presence of the piranha::is_one() function.
 template <typename T>
-using is_is_zero_type = is_detected<is_zero_t, T>;
+using is_is_one_type = is_detected<is_one_t, T>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-concept bool IsZeroType = is_is_zero_type<T>::value;
+concept bool IsOneType = is_is_one_type<T>::value;
 
 #endif
 }

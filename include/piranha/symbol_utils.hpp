@@ -55,10 +55,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-/// Flat set of symbols.
-/**
- * This data structure represents an ordered set of symbols.
- */
+// Flat set of symbols.
 using symbol_fset = boost::container::flat_set<std::string>;
 
 /// Flat map of symbols.

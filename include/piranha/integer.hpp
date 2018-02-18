@@ -49,6 +49,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/gcd.hpp>
+#include <piranha/math/gcd3.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
@@ -105,23 +108,19 @@ public:
     }
 };
 
-namespace math
-{
-
-/// Specialisation of the implementation of piranha::math::is_unitary() for mp++'s integers.
+// Specialisation of the implementation of piranha::is_one() for mp++'s integers.
 template <std::size_t SSize>
-struct is_unitary_impl<mppp::integer<SSize>> {
-    /// Call operator.
-    /**
-     * @param n the integer to be tested.
-     *
-     * @return \p true if \p n is equal to 1, \p false otherwise.
-     */
+class is_one_impl<mppp::integer<SSize>>
+{
+public:
     bool operator()(const mppp::integer<SSize> &n) const
     {
         return n.is_one();
     }
 };
+
+namespace math
+{
 
 /// Specialisation of the implementation of piranha::math::abs() for mp++'s integers.
 template <std::size_t SSize>
@@ -346,47 +345,31 @@ struct div3_impl<mppp::integer<SSize>> {
         mppp::tdiv_q(out, a, b);
     }
 };
+}
 
-/// Specialisation of the implementation of piranha::math::gcd() for mp++'s integers.
+// Specialisation of the implementation of piranha::gcd() for mp++'s integers.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <typename U, mppp::IntegerIntegralOpTypes<U> T>
-struct gcd_impl<T, U>
+class gcd_impl<T, U>
 #else
 template <typename T, typename U>
-struct gcd_impl<T, U, enable_if_t<mppp::are_integer_integral_op_types<T, U>::value>>
+class gcd_impl<T, U, enable_if_t<mppp::are_integer_integral_op_types<T, U>::value>>
 #endif
 {
-    /// Call operator, overload for mp++'s integers.
-    /**
-     * @param a the first argument.
-     * @param b the second argument.
-     *
-     * @return the GCD of \p a and \p b.
-     */
+public:
+    // Call operator, overload for mp++'s integers.
     template <std::size_t SSize>
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &a, const mppp::integer<SSize> &b) const
     {
         return mppp::gcd(a, b);
     }
-    /// Call operator, mp++ integer - integral overload.
-    /**
-     * @param a the first argument.
-     * @param b the second argument.
-     *
-     * @return the GCD of \p a and \p b.
-     */
+    // Call operator, mp++ integer - integral overload.
     template <std::size_t SSize, typename T1>
     mppp::integer<SSize> operator()(const mppp::integer<SSize> &a, const T1 &b) const
     {
         return operator()(a, mppp::integer<SSize>{b});
     }
-    /// Call operator, integral - mp++ integer overload.
-    /**
-     * @param a the first argument.
-     * @param b the second argument.
-     *
-     * @return the GCD of \p a and \p b.
-     */
+    // Call operator, integral - mp++ integer overload.
     template <std::size_t SSize, typename T1>
     mppp::integer<SSize> operator()(const T1 &a, const mppp::integer<SSize> &b) const
     {
@@ -394,21 +377,17 @@ struct gcd_impl<T, U, enable_if_t<mppp::are_integer_integral_op_types<T, U>::val
     }
 };
 
-/// Specialisation of the implementation of piranha::math::gcd3() for mp++'s integers.
+// Specialisation of the implementation of piranha::gcd3() for mp++'s integers.
 template <std::size_t SSize>
-struct gcd3_impl<mppp::integer<SSize>> {
-    /// Call operator.
-    /**
-     * @param out return value.
-     * @param a first argument.
-     * @param b second argument.
-     */
+class gcd3_impl<mppp::integer<SSize>, mppp::integer<SSize>, mppp::integer<SSize>>
+{
+public:
+    // Call operator.
     void operator()(mppp::integer<SSize> &out, const mppp::integer<SSize> &a, const mppp::integer<SSize> &b) const
     {
         mppp::gcd(out, a, b);
     }
 };
-}
 
 /// Type trait to detect the availability of the piranha::math::ipow_subs() function.
 /**

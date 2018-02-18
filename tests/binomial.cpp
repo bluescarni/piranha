@@ -88,11 +88,14 @@ public:
 BOOST_AUTO_TEST_CASE(binomial_test_00)
 {
     BOOST_CHECK((!are_binomial_types<double, double>::value));
+    BOOST_CHECK((!are_binomial_types<double>::value));
     BOOST_CHECK((!are_binomial_types<void, double>::value));
+    BOOST_CHECK((!are_binomial_types<void>::value));
     BOOST_CHECK((!are_binomial_types<double, void>::value));
-    BOOST_CHECK((!are_binomial_types<void, void>::value));
     BOOST_CHECK((!are_binomial_types<b_00, b_00>::value));
+    BOOST_CHECK((!are_binomial_types<b_00>::value));
     BOOST_CHECK((!are_binomial_types<b_01, b_01>::value));
+    BOOST_CHECK((!are_binomial_types<b_01>::value));
 }
 
 struct binomial_tester {
@@ -101,8 +104,11 @@ struct binomial_tester {
     {
         using int_type = mppp::integer<T::value>;
         BOOST_CHECK((are_binomial_types<int_type, int_type>::value));
+        BOOST_CHECK((are_binomial_types<int_type>::value));
         BOOST_CHECK((are_binomial_types<int_type, int_type &>::value));
+        BOOST_CHECK((are_binomial_types<int_type &>::value));
         BOOST_CHECK((are_binomial_types<const int_type, int_type &>::value));
+        BOOST_CHECK((are_binomial_types<const int_type>::value));
         BOOST_CHECK((are_binomial_types<int_type, int>::value));
         BOOST_CHECK((are_binomial_types<int_type, unsigned>::value));
         BOOST_CHECK((are_binomial_types<int_type, long>::value));
@@ -146,6 +152,7 @@ BOOST_AUTO_TEST_CASE(binomial_test_01)
     // Check the ints.
     using int_type = integer;
     BOOST_CHECK((are_binomial_types<int, int>::value));
+    BOOST_CHECK((are_binomial_types<int>::value));
     BOOST_CHECK_EQUAL(piranha::binomial(4, 2), piranha::binomial(int_type(4), 2));
     BOOST_CHECK((are_binomial_types<char, unsigned>::value));
     BOOST_CHECK_EQUAL(piranha::binomial(char(4), 2u), piranha::binomial(int_type(4), 2));

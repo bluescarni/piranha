@@ -37,6 +37,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/init.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -179,14 +180,14 @@ public:
     /**
      * @param args reference piranha::symbol_fset.
      *
-     * @return \p true if either the key's <tt>is_zero()</tt> method or piranha::is_zero() on the coefficient
+     * @return \p true if either piranha::is_zero() on the coefficient or piranha::key_is_zero() on the key
      * return \p true, \p false otherwise.
      *
-     * @throws unspecified any exception thrown by piranha::is_zero() or by the key's <tt>is_zero()</tt> method.
+     * @throws unspecified any exception thrown by piranha::is_zero() or by piranha::key_is_zero().
      */
     bool is_zero(const symbol_fset &args) const
     {
-        return piranha::is_zero(m_cf) || m_key.is_zero(args);
+        return piranha::is_zero(m_cf) || piranha::key_is_zero(m_key, args);
     }
     /// Coefficient member.
     mutable Cf m_cf;

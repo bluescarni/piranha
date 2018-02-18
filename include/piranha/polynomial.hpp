@@ -67,6 +67,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/ipow_substitutable_series.hpp>
 #include <piranha/is_cf.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/kronecker_monomial.hpp>
@@ -526,7 +527,7 @@ public:
      * @return \p this to the power of \p x.
      *
      * @throws unspecified any exception thrown by:
-     * - the <tt>is_unitary()</tt> and exponentiation methods of the key type,
+     * - piranha::key_is_one() and the exponentiation methods of the key type,
      * - piranha::pow(),
      * - construction of coefficient, key and term,
      * - piranha::series::insert() , piranha::series::set_symbol_set() and piranha::series::pow().
@@ -538,7 +539,7 @@ public:
         typedef typename ret_type::term_type term_type;
         typedef typename term_type::cf_type cf_type;
         typedef typename term_type::key_type key_type;
-        if (this->size() == 1u && !this->m_container.begin()->m_key.is_unitary(this->m_symbol_set)) {
+        if (this->size() == 1u && !piranha::key_is_one(this->m_container.begin()->m_key, this->m_symbol_set)) {
             cf_type cf(piranha::pow(this->m_container.begin()->m_cf, x));
             key_type key(this->m_container.begin()->m_key.pow(x, this->m_symbol_set));
             ret_type retval;

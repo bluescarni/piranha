@@ -58,6 +58,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
@@ -397,16 +399,6 @@ public:
         }
         return true;
     }
-    /// Zero check.
-    /**
-     * A trigonometric monomial is zero if all multipliers are zero and the flavour is \p false.
-     *
-     * @return ignorability flag.
-     */
-    bool is_zero(const symbol_fset &) const
-    {
-        return m_value == value_type(0) && !m_flavour;
-    }
     /// Merge symbols.
     /**
      * This method will return a copy of \p this in which the value 0 has been inserted
@@ -439,14 +431,6 @@ public:
     {
         return real_trigonometric_kronecker_monomial(detail::km_merge_symbols<v_type, ka>(ins_map, args, m_value),
                                                      m_flavour);
-    }
-    /// Check if monomial is unitary.
-    /**
-     * @return \p true if all the multipliers are zero and the flavour is \p true, \p false otherwise.
-     */
-    bool is_unitary(const symbol_fset &) const
-    {
-        return (!m_value && m_flavour);
     }
 
 private:
@@ -1434,6 +1418,28 @@ const std::size_t real_trigonometric_kronecker_monomial<T>::multiply_arity;
 
 /// Alias for piranha::real_trigonometric_kronecker_monomial with default type.
 using rtk_monomial = real_trigonometric_kronecker_monomial<>;
+
+// Specialisation of piranha::key_is_zero() for rtkm.
+template <typename T>
+class key_is_zero_impl<real_trigonometric_kronecker_monomial<T>>
+{
+public:
+    bool operator()(const real_trigonometric_kronecker_monomial<T> &r, const symbol_fset &) const
+    {
+        return r.get_int() == T(0) && !r.get_flavour();
+    }
+};
+
+// Specialisation of piranha::key_is_one() for rtkm.
+template <typename T>
+class key_is_one_impl<real_trigonometric_kronecker_monomial<T>>
+{
+public:
+    bool operator()(const real_trigonometric_kronecker_monomial<T> &r, const symbol_fset &) const
+    {
+        return r.get_int() == T(0) && r.get_flavour();
+    }
+};
 }
 
 #if defined(PIRANHA_WITH_BOOST_S11N)

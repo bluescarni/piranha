@@ -34,8 +34,11 @@ see https://www.gnu.org/licenses/. */
 #include <cstddef>
 #include <functional>
 #include <iostream>
-#include <piranha/symbol_utils.hpp>
 #include <vector>
+
+#include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_is_zero.hpp>
+#include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
 
@@ -52,13 +55,47 @@ struct key02 {
     bool operator==(const key02 &) const;
     bool operator!=(const key02 &) const;
     bool is_compatible(const symbol_fset &) const;
-    bool is_zero(const symbol_fset &) const;
     key02 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
     key02 trim(const std::vector<char> &, const symbol_fset &) const;
+};
+
+// This will have a wrong specialisation of key_is_zero.
+struct key02a {
+    key02a() = default;
+    key02a(const key02a &) = default;
+    key02a(key02a &&) noexcept;
+    key02a &operator=(const key02a &) = default;
+    key02a &operator=(key02a &&) noexcept;
+    key02a(const symbol_fset &);
+    bool operator==(const key02a &) const;
+    bool operator!=(const key02a &) const;
+    bool is_compatible(const symbol_fset &) const;
+    key02a merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    key02a trim(const std::vector<char> &, const symbol_fset &) const;
+};
+
+// This does not have a specialisation of key_is_one().
+struct key02b {
+    key02b() = default;
+    key02b(const key02b &) = default;
+    key02b(key02b &&) noexcept;
+    key02b &operator=(const key02b &) = default;
+    key02b &operator=(key02b &&) noexcept;
+    key02b(const symbol_fset &);
+    bool operator==(const key02b &) const;
+    bool operator!=(const key02b &) const;
+    bool is_compatible(const symbol_fset &) const;
+    key02b merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
+    void print(std::ostream &, const symbol_fset &) const;
+    void print_tex(std::ostream &, const symbol_fset &) const;
+    void trim_identify(std::vector<char> &, const symbol_fset &) const;
+    key02b trim(const std::vector<char> &, const symbol_fset &) const;
 };
 
 struct key03 {
@@ -71,9 +108,7 @@ struct key03 {
     bool operator==(const key03 &) const;
     bool operator!=(const key03 &) const;
     bool is_compatible(const symbol_fset &) const;
-    bool is_zero(const symbol_fset &) const;
     key03 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -90,9 +125,7 @@ struct key04 {
     bool operator==(const key04 &) const;
     bool operator!=(const key04 &) const;
     bool is_compatible(const symbol_fset &) const;
-    bool is_zero(const symbol_fset &) const;
     key04 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -109,9 +142,7 @@ struct key05 {
     bool operator==(const key05 &) const;
     bool operator!=(const key05 &) const;
     bool is_compatible(const symbol_fset &);
-    bool is_zero(const symbol_fset &) const;
     key05 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -128,9 +159,7 @@ struct key06 {
     bool operator==(const key06 &) const;
     bool operator!=(const key06 &) const;
     bool is_compatible(const symbol_fset &) const;
-    bool is_zero(const symbol_fset &) const;
     key06 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -147,9 +176,7 @@ struct key06a {
     bool operator==(const key06a &) const;
     bool operator!=(const key06a &) const;
     bool is_compatible(const symbol_fset &) const;
-    bool is_zero(const symbol_fset &) const;
     key06a merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -166,7 +193,6 @@ struct key07 {
     bool operator==(const key07 &) const;
     bool operator!=(const key07 &) const;
     bool is_compatible(const symbol_fset &) const;
-    bool is_zero(const symbol_fset &) const;
     key07 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
@@ -184,9 +210,7 @@ struct key08 {
     bool operator==(const key08 &) const;
     bool operator!=(const key08 &) const;
     bool is_compatible(const symbol_fset &) const;
-    bool is_zero(const symbol_fset &) const;
     key08 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -199,6 +223,16 @@ namespace std
 template <>
 struct hash<key02> {
     std::size_t operator()(const key02 &) const;
+};
+
+template <>
+struct hash<key02a> {
+    std::size_t operator()(const key02a &) const;
+};
+
+template <>
+struct hash<key02b> {
+    std::size_t operator()(const key02b &) const;
 };
 
 template <>
@@ -236,6 +270,29 @@ struct hash<key08> {
 };
 }
 
+namespace piranha
+{
+
+template <>
+class key_is_one_impl<key02>
+{
+public:
+    bool operator()(const key02 &, const symbol_fset &) const;
+};
+
+template <>
+class key_is_one_impl<key06>
+{
+public:
+    bool operator()(const key06 &, const symbol_fset &) const;
+};
+
+template <>
+class key_is_zero_impl<key02a>
+{
+};
+}
+
 BOOST_AUTO_TEST_CASE(is_key_test_00)
 {
     BOOST_CHECK(!is_key<void>::value);
@@ -247,6 +304,8 @@ BOOST_AUTO_TEST_CASE(is_key_test_00)
     BOOST_CHECK(!is_key<key01>::value);
     BOOST_CHECK(!is_key<const key01 &>::value);
     BOOST_CHECK(is_key<key02>::value);
+    BOOST_CHECK(!is_key<key02a>::value);
+    BOOST_CHECK(!is_key<key02b>::value);
     BOOST_CHECK(!is_key<key02 &>::value);
     BOOST_CHECK(!is_key<key02 &&>::value);
     BOOST_CHECK(!is_key<const key02>::value);

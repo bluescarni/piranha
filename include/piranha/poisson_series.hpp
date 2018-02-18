@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/gcd3.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/power_series.hpp>
@@ -471,7 +472,7 @@ class poisson_series
             bool first_nonzero_found = false;
             for (const auto &n_int : tmp_int) {
                 // NOTE: gcd is safe, operating on integers.
-                math::gcd3(cd, cd, n_int);
+                piranha::gcd3(cd, cd, n_int);
                 if (!first_nonzero_found && !piranha::is_zero(n_int)) {
                     piranha_assert(n_int > 0);
                     first_nonzero_found = true;
@@ -481,8 +482,8 @@ class poisson_series
                 piranha_throw(std::invalid_argument, "an invalid trigonometric term was encountered while "
                                                      "attempting a time integration");
             }
-            // Take the abs of the cd.
-            cd.abs();
+            // NOTE: gcd is always non-negative for integers.
+            piranha_assert(cd.sgn() == 1);
             // Divide the vector by the common divisor.
             for (auto &n_int : tmp_int) {
                 n_int /= cd;

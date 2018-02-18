@@ -36,6 +36,7 @@ see https://www.gnu.org/licenses/. */
 #include <iostream>
 #include <vector>
 
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
@@ -51,9 +52,7 @@ struct mock_key {
     bool operator==(const mock_key &) const;
     bool operator!=(const mock_key &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     mock_key merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -72,9 +71,7 @@ struct mock_key_00 {
     bool operator==(const mock_key_00 &) const;
     bool operator!=(const mock_key_00 &) const;
     bool is_compatible(const symbol_fset &) const noexcept;
-    bool is_zero(const symbol_fset &) const noexcept;
     mock_key_00 merge_symbols(const symbol_idx_fmap<symbol_fset> &, const symbol_fset &) const;
-    bool is_unitary(const symbol_fset &) const;
     void print(std::ostream &, const symbol_fset &) const;
     void print_tex(std::ostream &, const symbol_fset &) const;
     void trim_identify(std::vector<char> &, const symbol_fset &) const;
@@ -92,6 +89,24 @@ struct hash<mock_key> {
 template <>
 struct hash<mock_key_00> {
     std::size_t operator()(const mock_key_00 &) const;
+};
+}
+
+namespace piranha
+{
+
+template <>
+class key_is_one_impl<mock_key>
+{
+public:
+    bool operator()(const mock_key &, const symbol_fset &) const;
+};
+
+template <>
+class key_is_one_impl<mock_key_00>
+{
+public:
+    bool operator()(const mock_key_00 &, const symbol_fset &) const;
 };
 }
 

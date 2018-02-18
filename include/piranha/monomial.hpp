@@ -60,7 +60,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/rational.hpp>
@@ -88,7 +90,7 @@ namespace piranha
  *
  * \p T and \p S must be suitable for use as first and third template arguments in piranha::array_key. Additionally,
  * \p T must be copy-assignable and it must satisfy the following type-traits:
- * - piranha::has_is_unitary,
+ * - piranha::is_is_one_type,
  * - piranha::is_ostreamable,
  * - piranha::has_negate.
  *
@@ -103,7 +105,7 @@ namespace piranha
 template <typename T, typename S = std::integral_constant<std::size_t, 0u>>
 class monomial : public array_key<T, monomial<T, S>, S>
 {
-    PIRANHA_TT_CHECK(has_is_unitary, T);
+    PIRANHA_TT_CHECK(is_is_one_type, T);
     PIRANHA_TT_CHECK(is_ostreamable, T);
     PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
@@ -239,39 +241,6 @@ public:
     bool is_compatible(const symbol_fset &args) const
     {
         return this->size() == args.size();
-    }
-    /// Zero check.
-    /**
-     * A monomial is never zero.
-     *
-     * @return \p false.
-     */
-    bool is_zero(const symbol_fset &) const
-    {
-        return false;
-    }
-    /// Check if the monomial is unitary.
-    /**
-     * A monomial is unitary if, for all its elements, piranha::is_zero() returns \p true.
-     *
-     * @param args reference piranha::symbol_fset.
-     *
-     * @return \p true if the monomial is unitary, \p false otherwise.
-     *
-     * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-     * @throws unspecified any exception thrown by piranha::is_zero().
-     */
-    bool is_unitary(const symbol_fset &args) const
-    {
-        const auto sbe = this->size_begin_end();
-        if (unlikely(args.size() != std::get<0>(sbe))) {
-            piranha_throw(std::invalid_argument,
-                          "invalid sizes in the invocation of is_unitary() for a monomial: the monomial has a size of "
-                              + std::to_string(std::get<0>(sbe)) + ", while the reference symbol set has a size of "
-                              + std::to_string(args.size()));
-        }
-        return std::all_of(std::get<1>(sbe), std::get<2>(sbe),
-                           [](const T &element) { return piranha::is_zero(element); });
     }
 
 private:
@@ -421,7 +390,7 @@ public:
      * @return a pair indicating if the monomial is linear.
      *
      * @throws std::invalid_argument if the sizes of ``this`` and ``args`` differ.
-     * @throws unspecified any exception thrown by piranha::is_zero() or piranha::math::is_unitary().
+     * @throws unspecified any exception thrown by piranha::is_zero() or piranha::is_one().
      */
     std::pair<bool, symbol_idx> is_linear(const symbol_fset &args) const
     {
@@ -437,11 +406,11 @@ public:
         size_type n_linear = 0u, candidate = 0u;
         for (size_type i = 0u; i < std::get<0>(sbe); ++i, ++std::get<1>(sbe)) {
             // NOTE: is_zero()'s availability is guaranteed by array_key's reqs,
-            // is_unitary() is required by the monomial reqs.
+            // is_one() is required by the monomial reqs.
             if (piranha::is_zero(*std::get<1>(sbe))) {
                 continue;
             }
-            if (!math::is_unitary(*std::get<1>(sbe))) {
+            if (!piranha::is_one(*std::get<1>(sbe))) {
                 return std::make_pair(false, symbol_idx{0});
             }
             candidate = i;
@@ -709,7 +678,7 @@ private:
     template <typename U, enable_if_t<mppp::is_rational<U>::value, int> = 0>
     static void print_exponent(std::ostream &os, const U &e)
     {
-        if (math::is_unitary(e.get_den())) {
+        if (piranha::is_one(e.get_den())) {
             os << e;
         } else {
             os << '(' << e << ')';
@@ -732,7 +701,7 @@ public:
      * @throws std::invalid_argument if the sizes of \p args and \p this differ.
      * @throws unspecified any exception resulting from:
      * - printing exponents to stream and the public interface of \p os,
-     * - piranha::is_zero(), piranha::math::is_unitary().
+     * - piranha::is_zero(), piranha::is_one().
      */
     void print(std::ostream &os, const symbol_fset &args) const
     {
@@ -753,7 +722,7 @@ public:
                 }
                 os << *it_args;
                 empty_output = false;
-                if (!math::is_unitary(*std::get<1>(sbe))) {
+                if (!piranha::is_one(*std::get<1>(sbe))) {
                     os << "**";
                     print_exponent(os, *std::get<1>(sbe));
                 }
@@ -771,7 +740,7 @@ public:
      * @throws unspecified any exception resulting from:
      * - construction, comparison and assignment of exponents,
      * - printing exponents to stream and the public interface of \p os,
-     * - piranha::math::negate(), piranha::is_zero(), piranha::math::is_unitary().
+     * - piranha::math::negate(), piranha::is_zero(), piranha::is_one().
      */
     void print_tex(std::ostream &os, const symbol_fset &args) const
     {
@@ -799,7 +768,7 @@ public:
                     cur_oss = std::addressof(oss_den);
                 }
                 *cur_oss << "{" << *it_args << "}";
-                if (!math::is_unitary(cur_value)) {
+                if (!piranha::is_one(cur_value)) {
                     *cur_oss << "^{" << detail::prepare_for_print(cur_value) << "}";
                 }
             }
@@ -1234,6 +1203,25 @@ public:
 
 template <typename T, typename S>
 const std::size_t monomial<T, S>::multiply_arity;
+
+// Implementation of piranha::key_is_one() for monomial.
+template <typename T, typename S>
+class key_is_one_impl<monomial<T, S>>
+{
+public:
+    bool operator()(const monomial<T, S> &m, const symbol_fset &s) const
+    {
+        const auto sbe = m.size_begin_end();
+        if (unlikely(s.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument,
+                          "invalid sizes in the invocation of key_is_one() for a monomial: the monomial has a size of "
+                              + std::to_string(std::get<0>(sbe)) + ", while the reference symbol set has a size of "
+                              + std::to_string(s.size()));
+        }
+        return std::all_of(std::get<1>(sbe), std::get<2>(sbe),
+                           [](const T &element) { return piranha::is_zero(element); });
+    }
+};
 }
 
 #if defined(PIRANHA_WITH_BOOST_S11N)

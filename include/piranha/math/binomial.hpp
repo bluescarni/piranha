@@ -43,7 +43,12 @@ namespace piranha
 {
 
 // The default (empty) implementation.
-template <typename T, typename U, typename = void>
+template <typename T, typename U
+#if !defined(PIRANHA_HAVE_CONCEPTS)
+          ,
+          typename = void
+#endif
+          >
 class binomial_impl
 {
 };
@@ -107,12 +112,13 @@ template <typename T, typename U>
 using binomial_t = decltype(piranha::binomial(std::declval<const T &>(), std::declval<const U &>()));
 }
 
-template <typename T, typename U>
-using are_binomial_types = is_detected<binomial_t, T, U>;
+template <typename T, typename U = T>
+struct are_binomial_types : is_detected<binomial_t, T, U> {
+};
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
-template <typename T, typename U>
+template <typename T, typename U = T>
 concept bool BinomialTypes = are_binomial_types<T, U>::value;
 
 #endif

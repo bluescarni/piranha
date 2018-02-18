@@ -52,6 +52,8 @@ see https://www.gnu.org/licenses/. */
 #endif
 
 #include <piranha/integer.hpp>
+#include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
@@ -237,14 +239,14 @@ struct is_zero_tester {
     void operator()(const T &) const
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
-        BOOST_CHECK(!k_type().is_zero(symbol_fset{}));
-        BOOST_CHECK(!k_type(symbol_fset{"a"}).is_zero(symbol_fset{}));
-        BOOST_CHECK(!(k_type{0, 0}.is_zero(symbol_fset{})));
-        BOOST_CHECK(!(k_type(1, false).is_zero(symbol_fset{"a"})));
-        BOOST_CHECK((k_type(0, false).is_zero(symbol_fset{"a"})));
+        BOOST_CHECK(!piranha::key_is_zero(k_type(), symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(k_type(symbol_fset{"a"}), symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(k_type{0, 0}, symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(k_type(1, false), symbol_fset{"a"}));
+        BOOST_CHECK(piranha::key_is_zero(k_type(0, false), symbol_fset{"a"}));
         k_type k{0, -1};
         k.set_flavour(false);
-        BOOST_CHECK(!k.is_zero(symbol_fset{}));
+        BOOST_CHECK(!piranha::key_is_zero(k, symbol_fset{}));
     }
 };
 
@@ -335,22 +337,22 @@ BOOST_AUTO_TEST_CASE(rtkm_merge_symbols_test)
     tuple_for_each(int_types{}, merge_symbols_tester{});
 }
 
-struct is_unitary_tester {
+struct key_is_one_tester {
     template <typename T>
     void operator()(const T &) const
     {
         typedef real_trigonometric_kronecker_monomial<T> k_type;
         typedef kronecker_array<T> ka;
         k_type k1;
-        BOOST_CHECK(k1.is_unitary(symbol_fset{}));
+        BOOST_CHECK(piranha::key_is_one(k1, symbol_fset{}));
         k_type k2({1});
-        BOOST_CHECK(!k2.is_unitary(symbol_fset{"a"}));
+        BOOST_CHECK(!piranha::key_is_one(k2, symbol_fset{"a"}));
         k_type k3({0});
-        BOOST_CHECK(k3.is_unitary(symbol_fset{"a"}));
+        BOOST_CHECK(piranha::key_is_one(k3, symbol_fset{"a"}));
         k_type k4({0, 0});
-        BOOST_CHECK(k4.is_unitary(symbol_fset{"a", "b"}));
+        BOOST_CHECK(piranha::key_is_one(k4, symbol_fset{"a", "b"}));
         k_type k5({0, 1});
-        BOOST_CHECK(!k5.is_unitary(symbol_fset{"a", "b"}));
+        BOOST_CHECK(!piranha::key_is_one(k5, symbol_fset{"a", "b"}));
         symbol_fset vs2;
         const auto &l = ka::get_limits();
         typedef decltype(l.size()) size_type;
@@ -361,17 +363,17 @@ struct is_unitary_tester {
         vs2 = symbol_fset({"a"});
         k2 = k_type{0};
         k2.set_flavour(false);
-        BOOST_CHECK(!k2.is_unitary(vs2));
+        BOOST_CHECK(!piranha::key_is_one(k2, vs2));
         k2.set_flavour(true);
-        BOOST_CHECK(k2.is_unitary(vs2));
+        BOOST_CHECK(piranha::key_is_one(k2, vs2));
         k2 = k_type{1, 1};
-        BOOST_CHECK(!k2.is_unitary(vs2));
+        BOOST_CHECK(!piranha::key_is_one(k2, vs2));
     }
 };
 
-BOOST_AUTO_TEST_CASE(rtkm_is_unitary_test)
+BOOST_AUTO_TEST_CASE(rtkm_key_is_one_test)
 {
-    tuple_for_each(int_types{}, is_unitary_tester{});
+    tuple_for_each(int_types{}, key_is_one_tester{});
 }
 
 struct t_degree_tester {

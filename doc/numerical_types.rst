@@ -49,12 +49,12 @@ Rationals
    :exception unspecified: any exception thrown by the constructor of :cpp:type:`piranha::rational`
      from string.
 
-Multiprecision floats
----------------------
+Multiprecision reals
+--------------------
 
 .. note::
 
-   Multiprecision floats are available only if mp++ was configured with the ``MPPP_WITH_MPFR`` option enabled
+   Multiprecision real numbers are available only if mp++ was configured with the ``MPPP_WITH_MPFR`` option enabled
    (see the :ref:`mp++ installation instructions <mppp:installation>`).
 
 *#include <piranha/real.hpp>*

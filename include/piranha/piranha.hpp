@@ -174,7 +174,6 @@ see https://www.gnu.org/licenses/. */
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
  * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
- * \todo is_unitary() should be implemented for real and series as well.
  * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
  * in the type-traits rework.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
@@ -200,6 +199,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/ipow_substitutable_series.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_is_zero.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
@@ -208,6 +209,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/gcd.hpp>
+#include <piranha/math/gcd3.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>

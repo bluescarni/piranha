@@ -54,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
@@ -95,24 +96,16 @@ public:
     }
 };
 
-namespace math
-{
-
-/// Specialisation of the implementation of piranha::math::is_unitary() for piranha::real.
+// Specialisation of piranha::is_one() for piranha::real.
 template <>
-struct is_unitary_impl<real> {
-    /// Call operator.
-    /**
-     * @param r the value to be tested.
-     *
-     * @return \p true if \p r is exactly one, \p false otherwise.
-     */
+class is_one_impl<real>
+{
+public:
     bool operator()(const real &r) const
     {
         return r.is_one();
     }
 };
-}
 
 // Specialisation of piranha::pow() for piranha::real.
 #if defined(PIRANHA_HAVE_CONCEPTS)
