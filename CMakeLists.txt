@@ -76,7 +76,13 @@ if(YACMA_COMPILER_IS_MSVC)
 			"-Wno-unknown-pragmas"
 			"-Wno-unused-parameter"
 			"-Wno-sign-compare"
-			"-Wno-deprecated-declarations")
+			"-Wno-deprecated-declarations"
+			"-Wno-deprecated-dynamic-exception-spec"
+			"-Wno-old-style-cast"
+			"-Wno-sign-conversion"
+			"-Wno-non-virtual-dtor"
+			"-Wno-deprecated"
+			"-Wno-shorten-64-to-32")
 		list(APPEND PIRANHA_CXX_FLAGS_DEBUG ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		list(APPEND PIRANHA_CXX_FLAGS_RELEASE ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		unset(_PIRANHA_CLANG_CL_DISABLED_WARNINGS)
